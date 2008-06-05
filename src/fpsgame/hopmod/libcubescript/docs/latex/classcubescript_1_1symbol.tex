@@ -1,0 +1,94 @@
+\section{cubescript::symbol Class Reference}
+\label{classcubescript_1_1symbol}\index{cubescript::symbol@{cubescript::symbol}}
+The base class for \doxyref{symbol}{p.}{classcubescript_1_1symbol} types.  
+
+
+{\tt \#include $<$cubescript.hpp$>$}
+
+Inherited by {\bf cubescript::alias}, {\bf cubescript::functionN}, and {\bf cubescript::variable\_\-base$<$ T $>$}.
+
+\subsection*{Public Types}
+\begin{CompactItemize}
+\item 
+typedef boost::function2$<$ void, {\bf exception} $\ast$, std::string $>$ {\bf apply\_\-handler\_\-t}
+\item 
+typedef boost::function2$<$ void, {\bf exception} $\ast$, std::string $>$ {\bf value\_\-handler\_\-t}
+\end{CompactItemize}
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+virtual {\bf $\sim$symbol} ()
+\item 
+virtual std::string {\bf apply} (std::list$<$ std::string $>$ \&args, {\bf domain} $\ast$d)=0
+\begin{CompactList}\small\item\em Apply the list of arguments to the \doxyref{symbol}{p.}{classcubescript_1_1symbol}. \item\end{CompactList}\item 
+virtual void {\bf async\_\-apply} (std::list$<$ std::string $>$ \&args, {\bf domain} $\ast$d, {\bf apply\_\-handler\_\-t} handler)
+\item 
+virtual std::string {\bf value} () const=0
+\begin{CompactList}\small\item\em Return a string representation of the \doxyref{symbol}{p.}{classcubescript_1_1symbol} value. \item\end{CompactList}\item 
+virtual void {\bf async\_\-value} ({\bf value\_\-handler\_\-t} handler) const
+\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+The base class for \doxyref{symbol}{p.}{classcubescript_1_1symbol} types. 
+
+A derived \doxyref{symbol}{p.}{classcubescript_1_1symbol} object acts as an adapter between the native and CubeScript \doxyref{runtime}{p.}{namespacecubescript_1_1runtime}, performing the necessary string-type conversions and mapping operations. Symbol types are unintrusive to the native mapping's interface, meaning there are no signs of registered functions or variables in C++ being accessible from a scripting language. 
+
+
+
+\subsection{Member Typedef Documentation}
+\index{cubescript::symbol@{cubescript::symbol}!apply_handler_t@{apply\_\-handler\_\-t}}
+\index{apply_handler_t@{apply\_\-handler\_\-t}!cubescript::symbol@{cubescript::symbol}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}typedef boost::function2$<$void,{\bf exception} $\ast$,std::string$>$ {\bf cubescript::symbol::apply\_\-handler\_\-t}}\label{classcubescript_1_1symbol_d7bebb4bda98f3c0d242355e217306c9}
+
+
+\index{cubescript::symbol@{cubescript::symbol}!value_handler_t@{value\_\-handler\_\-t}}
+\index{value_handler_t@{value\_\-handler\_\-t}!cubescript::symbol@{cubescript::symbol}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}typedef boost::function2$<$void,{\bf exception} $\ast$,std::string$>$ {\bf cubescript::symbol::value\_\-handler\_\-t}}\label{classcubescript_1_1symbol_c4d49cf7a88fd6f0a01ba327f40a5153}
+
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{cubescript::symbol@{cubescript::symbol}!~symbol@{$\sim$symbol}}
+\index{~symbol@{$\sim$symbol}!cubescript::symbol@{cubescript::symbol}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}cubescript::symbol::$\sim$symbol ()\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1symbol_ebaee05576d16f4f4b559ae13d3a9dc4}
+
+
+
+
+\subsection{Member Function Documentation}
+\index{cubescript::symbol@{cubescript::symbol}!apply@{apply}}
+\index{apply@{apply}!cubescript::symbol@{cubescript::symbol}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}virtual std::string cubescript::symbol::apply (std::list$<$ std::string $>$ \& {\em args}, {\bf domain} $\ast$ {\em d})\hspace{0.3cm}{\tt  [pure virtual]}}\label{classcubescript_1_1symbol_839f4427f3d8267b338fcba1accb628a}
+
+
+Apply the list of arguments to the \doxyref{symbol}{p.}{classcubescript_1_1symbol}. 
+
+
+
+Implemented in {\bf cubescript::function0$<$ ret\_\-t $>$} \doxyref{}{p.}{classcubescript_1_1function0_bb0a4b183b155ce431b8def2557e2577}, {\bf cubescript::function1$<$ ret\_\-t, arg1\_\-t $>$} \doxyref{}{p.}{classcubescript_1_1function1_ebb12e3880ba418f17237e091ea5a817}, {\bf cubescript::function2$<$ ret\_\-t, arg1\_\-t, arg2\_\-t $>$} \doxyref{}{p.}{classcubescript_1_1function2_dcfa9466790cd561c3afc9aed30a496d}, {\bf cubescript::function3$<$ ret\_\-t, arg1\_\-t, arg2\_\-t, arg3\_\-t $>$} \doxyref{}{p.}{classcubescript_1_1function3_ffd4b48820c6f38f0c6c9408f4eb9c91}, {\bf cubescript::function4$<$ ret\_\-t, arg1\_\-t, arg2\_\-t, arg3\_\-t, arg4\_\-t $>$} \doxyref{}{p.}{classcubescript_1_1function4_2c89dcc8344e219bbc74880b858e5179}, {\bf cubescript::functionX$<$ ret\_\-t $>$} \doxyref{}{p.}{classcubescript_1_1functionX_815c0d80cf1cc0b813172e3911eb0460}, {\bf cubescript::variable\_\-base$<$ T $>$} \doxyref{}{p.}{classcubescript_1_1variable__base_e49eb744388167ea3424dc6887680f03}, {\bf cubescript::bounded\_\-variable$<$ T, min, max $>$} \doxyref{}{p.}{classcubescript_1_1bounded__variable_698d73f28d94865f295c8bec6ba18281}, and {\bf cubescript::alias} \doxyref{}{p.}{classcubescript_1_1alias_ab9a131626a9d735e78244fba718399f}.\index{cubescript::symbol@{cubescript::symbol}!async_apply@{async\_\-apply}}
+\index{async_apply@{async\_\-apply}!cubescript::symbol@{cubescript::symbol}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}virtual void cubescript::symbol::async\_\-apply (std::list$<$ std::string $>$ \& {\em args}, {\bf domain} $\ast$ {\em d}, {\bf apply\_\-handler\_\-t} {\em handler})\hspace{0.3cm}{\tt  [inline, virtual]}}\label{classcubescript_1_1symbol_b4b4b70d7cf1dc4626cf18d839a88bf0}
+
+
+\index{cubescript::symbol@{cubescript::symbol}!value@{value}}
+\index{value@{value}!cubescript::symbol@{cubescript::symbol}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}virtual std::string cubescript::symbol::value () const\hspace{0.3cm}{\tt  [pure virtual]}}\label{classcubescript_1_1symbol_24b48dca489c3b713f0bc98810980d6a}
+
+
+Return a string representation of the \doxyref{symbol}{p.}{classcubescript_1_1symbol} value. 
+
+This method is called by the expression evaluator when the \doxyref{symbol}{p.}{classcubescript_1_1symbol} name is prefixed by \$. 
+
+Implemented in {\bf cubescript::functionN} \doxyref{}{p.}{classcubescript_1_1functionN_ec3abc9266b3e0530212da9702917b46}, {\bf cubescript::variable\_\-base$<$ T $>$} \doxyref{}{p.}{classcubescript_1_1variable__base_51bd2469cc69e012ac6e92945c8ee079}, and {\bf cubescript::alias} \doxyref{}{p.}{classcubescript_1_1alias_759475301949e6c206f1b33f5d17c1c1}.\index{cubescript::symbol@{cubescript::symbol}!async_value@{async\_\-value}}
+\index{async_value@{async\_\-value}!cubescript::symbol@{cubescript::symbol}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}virtual void cubescript::symbol::async\_\-value ({\bf value\_\-handler\_\-t} {\em handler}) const\hspace{0.3cm}{\tt  [inline, virtual]}}\label{classcubescript_1_1symbol_59b897a8bc1772675f5aac94fac32725}
+
+
+
+
+The documentation for this class was generated from the following files:\begin{CompactItemize}
+\item 
+include/{\bf cubescript.hpp}\item 
+src/{\bf cubescript.cpp}\end{CompactItemize}

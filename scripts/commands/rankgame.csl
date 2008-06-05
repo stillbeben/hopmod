@@ -1,0 +1,9 @@
+
+if (strcmp (player_priv $cn) "admin") [
+    if (>= (listlen $arguments) 4) [
+        ranked_mode = (at $arguments 1)
+        ranked_map = (at $arguments 2)
+        ranked_gametime = (at $arguments 3)
+        exec [./scripts/rankgame.csl]
+    ] [privmsg $cn (err "Missing arguments.")]
+] [privmsg $cn (err "Permission denied.")]

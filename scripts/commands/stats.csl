@@ -1,0 +1,2 @@
+
+script_pipe [./commands/stats.sh] [@(player_name $cn) @cn] []

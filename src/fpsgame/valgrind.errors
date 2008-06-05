@@ -1,0 +1,23 @@
+==11813== Conditional jump or move depends on uninitialised value(s)
+==11813==    at 0x8063A91: fpsserver::serverupdate(int, int) (fpsserver.h:1973)
+==11813==    by 0x804E6DC: serverslice(unsigned) (server.cpp:543)
+==11813==    by 0x804B450: (within /home/sauerbraten/cvshead/sauerbraten/src/sauer_server)
+==11813== 
+==11813== Conditional jump or move depends on uninitialised value(s)
+==11813==    at 0x8063ABC: fpsserver::serverupdate(int, int) (fpsserver.h:1973)
+==11813==    by 0x804E6DC: serverslice(unsigned) (server.cpp:543)
+==11813==    by 0x804B450: (within /home/sauerbraten/cvshead/sauerbraten/src/sauer_server)
+==11813== 
+==11813== Syscall param socketcall.sendmsg(msg.msg_iov[i]) points to uninitialised byte(s)
+==11813==    at 0x4236FFC: sendmsg (in /lib/libc-2.5.so)
+==11813==    by 0x806A95C: enet_protocol_send_outgoing_commands (protocol.c:1406)
+==11813==    by 0x806AD1F: enet_host_service (protocol.c:1500)
+==11813==    by 0x804EAAA: serverslice(unsigned) (server.cpp:568)
+==11813==    by 0x804B450: (within /home/sauerbraten/cvshead/sauerbraten/src/sauer_server)
+==11813==  Address 0x42ADB06 is 102 bytes inside a block of size 5,976 alloc'd
+==11813==    at 0x402239B: malloc (vg_replace_malloc.c:149)
+==11813==    by 0x8068C7F: enet_malloc (callbacks.c:34)
+==11813==    by 0x80689E5: enet_host_create (host.c:30)
+==11813==    by 0x804ECE7: initserver(bool) (server.cpp:659)
+==11813==    by 0x804B450: (within /home/sauerbraten/cvshead/sauerbraten/src/sauer_server)
+==11813== 

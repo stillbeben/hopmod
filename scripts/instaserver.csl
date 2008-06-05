@@ -1,0 +1,46 @@
+
+if (! (&& (symbol? insta_maps) (symbol? insta_maps_count))) [
+    log_error "List of instagib maps not found in main server configuration!"
+    throw runtime.early_exit
+]
+
+if (&& (symbol? finish_insta_conf) (= $finish_insta_conf 0) [
+    log_error "Same configuration is already loaded!"
+    throw runtime.early_exit
+]
+
+finish_insta_conf = 0
+
+event_handler $onsetmap [
+    if (! $finish_insta_conf) [
+        mapname (at $insta_maps (mod $gamecount $insta_maps_count))
+        gamemode instagib
+    ] [
+        cancel_handler
+    ]
+]
+
+event_handler $onmapvote [
+    reference cn arg1
+    reference mode arg2
+    reference map arg3
+    
+    if (! $finish_insta_conf) [
+        if (= (strcmp $mode "instagib") 0) [
+            privmsg $cn "Only instagib mode is allowed at this time."
+            veto 1
+        ]
+    ] [
+        cancel_handler
+    ]
+]
+
+cancel_insta_conf = [
+    finish_insta_conf = 1
+    log "instagib configuration will soon be unloaded"
+    msg "The instagib session will be over at the end of this game."
+]
+
+log "instagib server configuration loaded, exec 'cancel_insta_conf' function to end this conf."
+
+msg (format "Server is going into instagib mode, the nextmap will be %1." (at $insta_maps (mod $gamecount $insta_maps_count)) )

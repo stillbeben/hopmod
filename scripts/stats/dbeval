@@ -1,0 +1,6 @@
+#!/bin/env tclsh
+load ./stats/tclsqlite-3.5.9.so sqlite3
+sqlite3 db stats/data/stats.db
+db eval [lindex $argv 0]
+puts -nonewline [db last_insert_rowid]
+db close

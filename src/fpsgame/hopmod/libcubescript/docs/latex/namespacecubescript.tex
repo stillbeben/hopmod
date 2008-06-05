@@ -1,0 +1,225 @@
+\section{cubescript Namespace Reference}
+\label{namespacecubescript}\index{cubescript@{cubescript}}
+
+
+\subsection*{Classes}
+\begin{CompactItemize}
+\item 
+class {\bf exception}
+\begin{CompactList}\small\item\em The base class for \doxyref{exception}{p.}{classcubescript_1_1exception} types. \item\end{CompactList}\item 
+class {\bf unknown\_\-symbol}
+\begin{CompactList}\small\item\em Unknown \doxyref{symbol}{p.}{classcubescript_1_1symbol} \doxyref{exception}{p.}{classcubescript_1_1exception} class. \item\end{CompactList}\item 
+class {\bf exec\_\-failure}
+\begin{CompactList}\small\item\em Execution failure \doxyref{exception}{p.}{classcubescript_1_1exception} class. \item\end{CompactList}\item 
+class {\bf symbol}
+\begin{CompactList}\small\item\em The base class for \doxyref{symbol}{p.}{classcubescript_1_1symbol} types. \item\end{CompactList}\item 
+class {\bf domain}
+\begin{CompactList}\small\item\em Holds a set of symbols. \item\end{CompactList}\item 
+class {\bf domain\_\-chain}
+\begin{CompactList}\small\item\em Merge multiple domains into a single accessible \doxyref{domain}{p.}{classcubescript_1_1domain}. \item\end{CompactList}\item 
+class {\bf construct}
+\begin{CompactList}\small\item\em The base class for \doxyref{construct}{p.}{classcubescript_1_1construct} types. \item\end{CompactList}\item 
+struct {\bf void\_\-t}
+\begin{CompactList}\small\item\em Pseudo void type. \item\end{CompactList}\item 
+class {\bf functionN}
+\item 
+class {\bf function0}
+\item 
+class {\bf function1}
+\item 
+class {\bf function2}
+\item 
+class {\bf function3}
+\item 
+class {\bf function4}
+\item 
+class {\bf functionX}
+\item 
+class {\bf variable\_\-base}
+\begin{CompactList}\small\item\em The base class for \doxyref{variable}{p.}{classcubescript_1_1variable} \doxyref{symbol}{p.}{classcubescript_1_1symbol} types. \item\end{CompactList}\item 
+class {\bf variable}
+\begin{CompactList}\small\item\em Variable Symbol. \item\end{CompactList}\item 
+class {\bf variable\_\-ref}
+\begin{CompactList}\small\item\em Variable Symbol. \item\end{CompactList}\item 
+class {\bf bounded\_\-variable}
+\begin{CompactList}\small\item\em Bounded \doxyref{variable}{p.}{classcubescript_1_1variable} \doxyref{symbol}{p.}{classcubescript_1_1symbol}. \item\end{CompactList}\item 
+class {\bf alias}
+\begin{CompactList}\small\item\em The \doxyref{symbol}{p.}{classcubescript_1_1symbol} class for hosting aliases. \item\end{CompactList}\end{CompactItemize}
+\subsection*{Namespaces}
+\begin{CompactItemize}
+\item 
+namespace {\bf cons}
+\item 
+namespace {\bf runtime}
+\end{CompactItemize}
+\subsection*{Functions}
+\begin{CompactItemize}
+\item 
+std::string {\bf compose\_\-string} (const std::string \&)
+\begin{CompactList}\small\item\em Make string safe for use in CubeScript. \item\end{CompactList}\item 
+std::string {\bf exec\_\-block} (const std::string \&input, {\bf domain} $\ast$aDomain)
+\begin{CompactList}\small\item\em Execute a block of CubeScript code. \item\end{CompactList}\item 
+std::string {\bf exec\_\-script} (std::istream \&input, {\bf domain} $\ast$aDomain)
+\begin{CompactList}\small\item\em Execute a script of CubeScript code. \item\end{CompactList}\item 
+std::string {\bf exec\_\-file} (const std::string \&filename, {\bf domain} $\ast$aDomain)
+\begin{CompactList}\small\item\em Execute a CubeScript file. \item\end{CompactList}\item 
+{\bf DEFINE\_\-GENERIC\_\-EXCEPTION} (parse\_\-error)
+\item 
+{\bf DEFINE\_\-GENERIC\_\-EXCEPTION} (runtime\_\-error)
+\item 
+{\bf DEFINE\_\-GENERIC\_\-EXCEPTION} (logic\_\-error)
+\item 
+{\footnotesize template$<$typename T$>$ }\\void {\bf parse\_\-type} (const std::string \&str, std::vector$<$ T $>$ \&v)
+\item 
+{\footnotesize template$<$typename T$>$ }\\void {\bf parse\_\-type} (const std::string \&str, std::list$<$ T $>$ \&v)
+\item 
+{\footnotesize template$<$typename T$>$ }\\void {\bf parse\_\-type} (const std::string \&str, T \&v)
+\item 
+{\footnotesize template$<$typename T$>$ }\\T {\bf parse\_\-type} (const std::string \&str)
+\item 
+{\footnotesize template$<$$>$ }\\std::string {\bf parse\_\-type$<$ std::string $>$} (const std::string \&str)
+\item 
+{\footnotesize template$<$typename T$>$ }\\T {\bf parse\_\-pushback\_\-container\_\-list} (const std::string \&str)
+\item 
+{\footnotesize template$<$typename T$>$ }\\std::string {\bf \_\-\_\-print\_\-type} (std::vector$<$ T $>$)
+\item 
+{\footnotesize template$<$typename T$>$ }\\std::string {\bf \_\-\_\-print\_\-type} (std::list$<$ T $>$ \&)
+\item 
+{\footnotesize template$<$typename T$>$ }\\std::string {\bf \_\-\_\-print\_\-type} (T value)
+\item 
+{\footnotesize template$<$typename T$>$ }\\std::string {\bf print\_\-type} (T value)
+\item 
+{\footnotesize template$<$$>$ }\\std::string {\bf print\_\-type$<$ void\_\-t $>$} ({\bf void\_\-t} v)
+\item 
+{\footnotesize template$<$typename T$>$ }\\std::string {\bf print\_\-forward\_\-container\_\-list} (const T \&data)
+\item 
+{\footnotesize template$<$typename SymbolType, typename T$>$ }\\void {\bf bind} (T \&var, const char $\ast$name, {\bf domain} $\ast$table)
+\begin{CompactList}\small\item\em A helper function for registering a \doxyref{symbol}{p.}{classcubescript_1_1symbol} object to a \doxyref{domain}{p.}{classcubescript_1_1domain}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Function Documentation}
+\index{cubescript@{cubescript}!__print_type@{\_\-\_\-print\_\-type}}
+\index{__print_type@{\_\-\_\-print\_\-type}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ std::string cubescript::\_\-\_\-print\_\-type (T {\em value})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_c90e8dbdde2a6b437e4a364ad1ebb889}
+
+
+\index{cubescript@{cubescript}!__print_type@{\_\-\_\-print\_\-type}}
+\index{__print_type@{\_\-\_\-print\_\-type}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ std::string cubescript::\_\-\_\-print\_\-type (std::list$<$ T $>$ \&)\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_80318c0d7585a0cb13f3e0ed639fc1c2}
+
+
+\index{cubescript@{cubescript}!__print_type@{\_\-\_\-print\_\-type}}
+\index{__print_type@{\_\-\_\-print\_\-type}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ std::string cubescript::\_\-\_\-print\_\-type (std::vector$<$ T $>$)\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_f45c4950c4c29c985a79c264cc806520}
+
+
+\index{cubescript@{cubescript}!bind@{bind}}
+\index{bind@{bind}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename SymbolType, typename T$>$ void cubescript::bind (T \& {\em var}, const char $\ast$ {\em name}, domain $\ast$ {\em table})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_42024bbadc9549f2b92f064f42fa0904}
+
+
+A helper function for registering a \doxyref{symbol}{p.}{classcubescript_1_1symbol} object to a \doxyref{domain}{p.}{classcubescript_1_1domain}. 
+
+\begin{Desc}
+\item[Note:]Ownership of the \doxyref{symbol}{p.}{classcubescript_1_1symbol} object is assumed by the specified \doxyref{domain}{p.}{classcubescript_1_1domain}. \end{Desc}
+\index{cubescript@{cubescript}!compose_string@{compose\_\-string}}
+\index{compose_string@{compose\_\-string}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::compose\_\-string (const std::string \&)}\label{namespacecubescript_7bbce850725a45aa9fa957fc4755196a}
+
+
+Make string safe for use in CubeScript. 
+
+The function quotes (prepends a \char`\"{}$\backslash$\char`\"{} character) to any characters that would cause a string construst parser to end prematurely. \index{cubescript@{cubescript}!DEFINE_GENERIC_EXCEPTION@{DEFINE\_\-GENERIC\_\-EXCEPTION}}
+\index{DEFINE_GENERIC_EXCEPTION@{DEFINE\_\-GENERIC\_\-EXCEPTION}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}cubescript::DEFINE\_\-GENERIC\_\-EXCEPTION (logic\_\-error)}\label{namespacecubescript_e32b9abba15ffc2e5ced1ca1c2ad4ce0}
+
+
+\index{cubescript@{cubescript}!DEFINE_GENERIC_EXCEPTION@{DEFINE\_\-GENERIC\_\-EXCEPTION}}
+\index{DEFINE_GENERIC_EXCEPTION@{DEFINE\_\-GENERIC\_\-EXCEPTION}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}cubescript::DEFINE\_\-GENERIC\_\-EXCEPTION (runtime\_\-error)}\label{namespacecubescript_d43621f322e472af7a4eeb28a8d4a137}
+
+
+\index{cubescript@{cubescript}!DEFINE_GENERIC_EXCEPTION@{DEFINE\_\-GENERIC\_\-EXCEPTION}}
+\index{DEFINE_GENERIC_EXCEPTION@{DEFINE\_\-GENERIC\_\-EXCEPTION}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}cubescript::DEFINE\_\-GENERIC\_\-EXCEPTION (parse\_\-error)}\label{namespacecubescript_f6f56db4265039cb8b64fccc2efe123e}
+
+
+\index{cubescript@{cubescript}!exec_block@{exec\_\-block}}
+\index{exec_block@{exec\_\-block}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::exec\_\-block (const std::string \& {\em input}, domain $\ast$ {\em aDomain})}\label{namespacecubescript_04c467f90ae595705c7e4d9fdef593c7}
+
+
+Execute a block of CubeScript code. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em input}]a block of code (excluding the outer square brackets). \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]eval result the string result of the last expression evaluation or the string argument passed to the last calling of the result function. \end{Desc}
+\index{cubescript@{cubescript}!exec_file@{exec\_\-file}}
+\index{exec_file@{exec\_\-file}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::exec\_\-file (const std::string \& {\em filename}, domain $\ast$ {\em aDomain})}\label{namespacecubescript_5f36361daa19c427ae38c5b41acc59fc}
+
+
+Execute a CubeScript file. 
+
+\begin{Desc}
+\item[Returns:]eval result the result string of the last expression evaluation.\end{Desc}
+This helper function opens and passes a file input stream to exec\_\-script. \index{cubescript@{cubescript}!exec_script@{exec\_\-script}}
+\index{exec_script@{exec\_\-script}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::exec\_\-script (std::istream \& {\em input}, domain $\ast$ {\em aDomain})}\label{namespacecubescript_7f2f0cce620ec808262e6cd06f73a410}
+
+
+Execute a script of CubeScript code. 
+
+\begin{Desc}
+\item[Returns:]eval result the result string of the last expression evaluation.\end{Desc}
+Expressions are parsed and evaluated until the input stream reaches EOF.
+
+The difference between this function and exec\_\-block is on error an \doxyref{exec\_\-failure}{p.}{classcubescript_1_1exec__failure} \doxyref{exception}{p.}{classcubescript_1_1exception} is thrown, containing the line number referencing the bad code and a pointer to the original raised \doxyref{exception}{p.}{classcubescript_1_1exception}. \index{cubescript@{cubescript}!parse_pushback_container_list@{parse\_\-pushback\_\-container\_\-list}}
+\index{parse_pushback_container_list@{parse\_\-pushback\_\-container\_\-list}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ T cubescript::parse\_\-pushback\_\-container\_\-list (const std::string \& {\em str})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_2b92ba22d5eedcd671329fcd681a5529}
+
+
+\index{cubescript@{cubescript}!parse_type@{parse\_\-type}}
+\index{parse_type@{parse\_\-type}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ T cubescript::parse\_\-type (const std::string \& {\em str})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_41126c47ca81fba929c78b0b61700d00}
+
+
+\index{cubescript@{cubescript}!parse_type@{parse\_\-type}}
+\index{parse_type@{parse\_\-type}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ void cubescript::parse\_\-type (const std::string \& {\em str}, T \& {\em v})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_322f1580f65c490883fa89d7294076aa}
+
+
+\index{cubescript@{cubescript}!parse_type@{parse\_\-type}}
+\index{parse_type@{parse\_\-type}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ void cubescript::parse\_\-type (const std::string \& {\em str}, std::list$<$ T $>$ \& {\em v})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_80e27f79afb1ec9c5aad238d0ef2409b}
+
+
+\index{cubescript@{cubescript}!parse_type@{parse\_\-type}}
+\index{parse_type@{parse\_\-type}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ void cubescript::parse\_\-type (const std::string \& {\em str}, std::vector$<$ T $>$ \& {\em v})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_e37e08a7b5072327d130a9fbcc2a0080}
+
+
+\index{cubescript@{cubescript}!parse_type< std::string >@{parse\_\-type$<$ std::string $>$}}
+\index{parse_type< std::string >@{parse\_\-type$<$ std::string $>$}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$$>$ std::string cubescript::parse\_\-type$<$ std::string $>$ (const std::string \& {\em str})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_2b5acc5589f3405a1ab7060e57488f0a}
+
+
+\index{cubescript@{cubescript}!print_forward_container_list@{print\_\-forward\_\-container\_\-list}}
+\index{print_forward_container_list@{print\_\-forward\_\-container\_\-list}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ std::string cubescript::print\_\-forward\_\-container\_\-list (const T \& {\em data})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_74d0bd6437082469d7ddf5f354d14ccf}
+
+
+\index{cubescript@{cubescript}!print_type@{print\_\-type}}
+\index{print_type@{print\_\-type}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T$>$ std::string cubescript::print\_\-type (T {\em value})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_e27fc9d8747e5e87a77df62bb5a3346a}
+
+
+\index{cubescript@{cubescript}!print_type< void_t >@{print\_\-type$<$ void\_\-t $>$}}
+\index{print_type< void_t >@{print\_\-type$<$ void\_\-t $>$}!cubescript@{cubescript}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$$>$ std::string cubescript::print\_\-type$<$ {\bf void\_\-t} $>$ (void\_\-t {\em v})\hspace{0.3cm}{\tt  [inline]}}\label{namespacecubescript_445d6e75542864ce8d09418fe1f0883a}
+
+

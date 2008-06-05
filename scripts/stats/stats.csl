@@ -1,0 +1,67 @@
+
+latestgame = (now)
+gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
+db = [system [stats/dbeval @(shell_quote $arg1)]]
+
+event_handler $onconnect [
+    parameters cn
+    if (! (player_has_var $cn id)) [create_player_record $cn]
+]
+
+event_handler $ondisconnect [
+    parameters cn
+    
+    update_player_record cn
+]
+
+event_handler $ondamage [
+    parameters target actor damage gun
+]
+
+event_handler $ondeath [
+    parameters offender victim
+    
+    if (strcmp $offender $victim) [
+        player_var $offender suicides (+ 1 (player_var $offender suicides))
+    ] [
+        player_var $offender frags (+ 1 (player_var $offender frags))
+    ]
+    
+    player_var $victim deaths (+ 1 (player_var $victim deaths))
+]
+
+event_handler $onitempickup [
+    parameters cn type
+    
+]
+
+event_handler $onmapchange [
+
+    latestgame = (now)
+    
+    if (! (symbol? rankgame)) [rankgame = 0]
+    if (! (symbol? demofile)) [demofile = ""]
+    
+    match_id = (db [insert into matches (gameid,datetime,gamemode,mapname,ranked,duration,demofile) values
+        (@(format "\"%1\",\"%2\",\"%3\",\"%4\",%5,%6,\"%7\"" (gameid) (datetime (now)) $gamemode $mapname $rankgame 0 $demofile))])
+    
+    foreach (players) [
+        reference cn arg1
+        create_player_record $cn
+    ]
+]
+
+create_player_record = [
+    parameters cn
+    if (symbol? match_id) [
+        player_var $cn id (db [insert into players (match_id,name,team,ipaddr,frags,deaths,suicides) 
+            values (@(format "%1,\"%2\",\"%3\",\"%4\",0,0,0" $match_id (player_name $cn) (player_team $cn) (player_ip $cn)))])
+    ]
+]
+
+update_player_record = [
+    parameters cn
+    if (player_has_var $cn id) [
+       
+    ]
+]

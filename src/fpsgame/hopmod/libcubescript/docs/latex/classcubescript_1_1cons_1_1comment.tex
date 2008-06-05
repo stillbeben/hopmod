@@ -1,0 +1,60 @@
+\section{cubescript::cons::comment Class Reference}
+\label{classcubescript_1_1cons_1_1comment}\index{cubescript::cons::comment@{cubescript::cons::comment}}
+{\tt \#include $<$cubescript.hpp$>$}
+
+Inherits {\bf cubescript::construct}.
+
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+bool {\bf parse} (std::istream \&)
+\begin{CompactList}\small\item\em Parse CubeScript code. \item\end{CompactList}\item 
+std::string {\bf eval} ()
+\item 
+std::string {\bf formed} () const
+\begin{CompactList}\small\item\em Returns a reformed representation of the parsed \doxyref{construct}{p.}{classcubescript_1_1construct}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+The \doxyref{comment}{p.}{classcubescript_1_1cons_1_1comment} \doxyref{construct}{p.}{classcubescript_1_1construct} allows the CubeScript programmer to write non-code text into a script; \doxyref{comment}{p.}{classcubescript_1_1cons_1_1comment} constructs are ignored by the \doxyref{expression}{p.}{classcubescript_1_1cons_1_1expression} evaluator. Comments begins with \char`\"{}//\char`\"{} and are terminated by a newline character. 
+
+
+
+\subsection{Member Function Documentation}
+\index{cubescript::cons::comment@{cubescript::cons::comment}!parse@{parse}}
+\index{parse@{parse}!cubescript::cons::comment@{cubescript::cons::comment}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool cubescript::cons::comment::parse (std::istream \& {\em input})\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1cons_1_1comment_39a766c0312bc20c4039fc5edc7ff9b9}
+
+
+Parse CubeScript code. 
+
+\begin{Desc}
+\item[Returns:]The return value is True when parsing is complete, otherwise False is the return value.\end{Desc}
+The parse method is stream-oriented; when the current function call cannot complete the parsing, because not enough input has been given yet, the function will return to the caller, who will be responsible to re-call the function when more input data is received - the parsing state is preserved among multiple function calls until parsing is complete.
+
+When a parsing error is detected an \doxyref{exception}{p.}{classcubescript_1_1exception} of parse\_\-error type is thrown. 
+
+Implements {\bf cubescript::construct} \doxyref{}{p.}{classcubescript_1_1construct_c5a0e0ebea9d4e8e581a747fe19435ec}.\index{cubescript::cons::comment@{cubescript::cons::comment}!eval@{eval}}
+\index{eval@{eval}!cubescript::cons::comment@{cubescript::cons::comment}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::cons::comment::eval ()\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1cons_1_1comment_f5f6b9a99cbe70c8b016673882695765}
+
+
+\begin{Desc}
+\item[Returns:]Empty \doxyref{string}{p.}{classcubescript_1_1cons_1_1string}. \end{Desc}
+
+
+Implements {\bf cubescript::construct} \doxyref{}{p.}{classcubescript_1_1construct_8641596e22eeb981508e7a92890875ee}.\index{cubescript::cons::comment@{cubescript::cons::comment}!formed@{formed}}
+\index{formed@{formed}!cubescript::cons::comment@{cubescript::cons::comment}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::cons::comment::formed () const\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1cons_1_1comment_ddb7a7898995db8b9790e97557bb82d2}
+
+
+Returns a reformed representation of the parsed \doxyref{construct}{p.}{classcubescript_1_1construct}. 
+
+
+
+Implements {\bf cubescript::construct} \doxyref{}{p.}{classcubescript_1_1construct_9d78c8b9b3f9d2bd69535c3fbd04b7e5}.
+
+The documentation for this class was generated from the following files:\begin{CompactItemize}
+\item 
+include/{\bf cubescript.hpp}\item 
+src/{\bf cubescript.cpp}\end{CompactItemize}

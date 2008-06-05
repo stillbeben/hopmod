@@ -1,0 +1,26 @@
+
+CREATE TABLE matches (
+    id          INTEGER PRIMARY KEY,
+    gameid      TEXT UNIQUE, 
+    datetime    TEXT,
+    gamemode    TEXT,
+    mapname     TEXT,
+    ranked      INTEGER,
+    duration    INTEGER,
+    demofile    TEXT,
+    syncd       INTEGER
+);
+
+CREATE TABLE players (
+    id          INTEGER PRIMARY KEY,
+    match_id    INTEGER UNIQUE,
+    name        TEXT,
+    team        TEXT,
+    ipaddr      TEXT,
+    frags       INTEGER,
+    deaths      INTEGER,
+    suicides    INTEGER,
+    hits        INTEGER,
+    misses      INTEGER,
+    damage      INTEGER
+);

@@ -1,0 +1,81 @@
+\section{cubescript::alias Class Reference}
+\label{classcubescript_1_1alias}\index{cubescript::alias@{cubescript::alias}}
+The \doxyref{symbol}{p.}{classcubescript_1_1symbol} class for hosting aliases.  
+
+
+{\tt \#include $<$cubescript.hpp$>$}
+
+Inherits {\bf cubescript::symbol}.
+
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+void {\bf push} (const std::string \&)
+\begin{CompactList}\small\item\em Push value onto \doxyref{alias}{p.}{classcubescript_1_1alias} stack. \item\end{CompactList}\item 
+bool {\bf pop} ()
+\begin{CompactList}\small\item\em Remove latest value from \doxyref{alias}{p.}{classcubescript_1_1alias} stack. \item\end{CompactList}\item 
+{\bf void\_\-t} {\bf result} (std::string)
+\begin{CompactList}\small\item\em Set the result to be returned from the apply method. \item\end{CompactList}\item 
+std::string {\bf apply} (std::list$<$ std::string $>$ \&args, {\bf domain} $\ast$)
+\begin{CompactList}\small\item\em Call the \doxyref{alias}{p.}{classcubescript_1_1alias} with the given argument list. \item\end{CompactList}\item 
+std::string {\bf value} () const
+\begin{CompactList}\small\item\em Get the alias's stored value. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+The \doxyref{symbol}{p.}{classcubescript_1_1symbol} class for hosting aliases. 
+
+An \doxyref{alias}{p.}{classcubescript_1_1alias} in the CubeScript programming language is a named string which can be executed or its stored value returned; an \doxyref{alias}{p.}{classcubescript_1_1alias} can serve as a \doxyref{variable}{p.}{classcubescript_1_1variable} or function for the script writer. Aliases are typically created and exist at \doxyref{runtime}{p.}{namespacecubescript_1_1runtime} only; the \doxyref{alias}{p.}{classcubescript_1_1alias} assignment function registers newly created aliases to the \doxyref{domain}{p.}{classcubescript_1_1domain} passed from the expression object. 
+
+
+
+\subsection{Member Function Documentation}
+\index{cubescript::alias@{cubescript::alias}!push@{push}}
+\index{push@{push}!cubescript::alias@{cubescript::alias}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void cubescript::alias::push (const std::string \&)}\label{classcubescript_1_1alias_140f0def62433682f384fdc81b3a532e}
+
+
+Push value onto \doxyref{alias}{p.}{classcubescript_1_1alias} stack. 
+
+The \doxyref{alias}{p.}{classcubescript_1_1alias} object stores a stack of values, when the apply or value method is called, the last pushed value is always the value used by these two methods.
+
+\begin{Desc}
+\item[Note:]push and pop are accessible \doxyref{runtime}{p.}{namespacecubescript_1_1runtime} functions. \end{Desc}
+\index{cubescript::alias@{cubescript::alias}!pop@{pop}}
+\index{pop@{pop}!cubescript::alias@{cubescript::alias}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool cubescript::alias::pop ()}\label{classcubescript_1_1alias_eb2b194a839755478571ec4593d0fd5b}
+
+
+Remove latest value from \doxyref{alias}{p.}{classcubescript_1_1alias} stack. 
+
+\index{cubescript::alias@{cubescript::alias}!result@{result}}
+\index{result@{result}!cubescript::alias@{cubescript::alias}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf void\_\-t} cubescript::alias::result (std::string)}\label{classcubescript_1_1alias_935f2c85a6a086a2b20609a1a1cd1eb5}
+
+
+Set the result to be returned from the apply method. 
+
+As an accessible core \doxyref{runtime}{p.}{namespacecubescript_1_1runtime} function, it allows the scripter to explicitly set a return value from an \doxyref{alias}{p.}{classcubescript_1_1alias} function call, by default, the return value of the \doxyref{alias}{p.}{classcubescript_1_1alias} is the return value of the last expression in alias's code block. \index{cubescript::alias@{cubescript::alias}!apply@{apply}}
+\index{apply@{apply}!cubescript::alias@{cubescript::alias}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::alias::apply (std::list$<$ std::string $>$ \& {\em args}, {\bf domain} $\ast$)\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1alias_ab9a131626a9d735e78244fba718399f}
+
+
+Call the \doxyref{alias}{p.}{classcubescript_1_1alias} with the given argument list. 
+
+Evaluates the stored code block, with the given arguments. The passed arguments are accessible, by the \doxyref{alias}{p.}{classcubescript_1_1alias} code block, under \doxyref{symbol}{p.}{classcubescript_1_1symbol} names using the convention \$arg[1 to n], for example \$arg1 and \$arg2. 
+
+Implements {\bf cubescript::symbol} \doxyref{}{p.}{classcubescript_1_1symbol_839f4427f3d8267b338fcba1accb628a}.\index{cubescript::alias@{cubescript::alias}!value@{value}}
+\index{value@{value}!cubescript::alias@{cubescript::alias}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::alias::value () const\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1alias_759475301949e6c206f1b33f5d17c1c1}
+
+
+Get the alias's stored value. 
+
+
+
+Implements {\bf cubescript::symbol} \doxyref{}{p.}{classcubescript_1_1symbol_24b48dca489c3b713f0bc98810980d6a}.
+
+The documentation for this class was generated from the following files:\begin{CompactItemize}
+\item 
+include/{\bf cubescript.hpp}\item 
+src/{\bf cubescript.cpp}\end{CompactItemize}

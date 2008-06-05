@@ -1,0 +1,31 @@
+"instagib_maps" = ["complex" "douze" "fanatic_quake" "aard3c" "metl3" "academy" "hog2" "wake5"]
+"ffa/default_maps" = ["nmp8_d" "ruby"]
+"ctf_maps" = ["face-capture" "akroseum" "urban_c" "frostbyte" "wdcd"]
+
+"small_instagib_maps" = ["complex" "douze" "academy" "metl3" "aard3c"]
+"medium_instagib_maps" = ["ot" "orion" "wake5" "space" "id" "douze" "academy" "shadowed"]
+"large_instagib_maps" = ["fanatic_quake" "curvedm" "lostinspace" "pgdm" "ksauer1" "wdcd" "relic" "urban_c" "shadowed"]
+
+nextmap = [
+    parameters maplist
+    local listsize (listlen $maplist)
+    map = (at $maplist (mod $gamecount $listsize))
+    if (strcmp $map $currentmap) [map = (at $maplist (mod (+ $gamecount 1) $listsize))]
+    result $map
+]
+
+gamesize = [
+    local count (- $playercount (countspecs))
+    if(< $count 5) [result small] [
+        if (< $count 8) [result medium] [result large]
+    ]
+]
+
+mapsetname = [
+    concatword (if $custom_maprotation_balance [result (concatword (gamesize) _)] [result ""]) $gamemode _maps
+]
+
+setnextmap = [
+    local mapset (mapsetname)
+    if (symbol? mapset) [mapname (nextmap (value $mapset))] [log_error (concatword $mapset "not found, letting clients decide next map.")]
+]

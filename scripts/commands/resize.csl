@@ -1,0 +1,6 @@
+
+if (strcmp (player_priv $cn) "admin") [
+    if (>= (listlen $arguments) 2) [
+        maxclients (at $arguments 1)
+    ] [privmsg $cn (err "Missing argument.")]
+] [privmsg $cn (err "Permission denied.")]

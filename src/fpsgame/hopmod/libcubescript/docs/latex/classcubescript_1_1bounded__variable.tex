@@ -1,0 +1,50 @@
+\section{cubescript::bounded\_\-variable$<$ T, min, max $>$ Class Template Reference}
+\label{classcubescript_1_1bounded__variable}\index{cubescript::bounded_variable@{cubescript::bounded\_\-variable}}
+Bounded \doxyref{variable}{p.}{classcubescript_1_1variable} \doxyref{symbol}{p.}{classcubescript_1_1symbol}.  
+
+
+{\tt \#include $<$cubescript.hpp$>$}
+
+Inherits {\bf cubescript::variable\_\-ref$<$ T $>$$<$ T $>$}.
+
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+{\bf bounded\_\-variable} (T \&ref)
+\item 
+std::string {\bf apply} (std::list$<$ std::string $>$ \&args, {\bf domain} $\ast$d)
+\begin{CompactList}\small\item\em Assign value to \doxyref{variable}{p.}{classcubescript_1_1variable}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+\subsubsection*{template$<$typename T, T min, T max$>$ class cubescript::bounded\_\-variable$<$ T, min, max $>$}
+
+Bounded \doxyref{variable}{p.}{classcubescript_1_1variable} \doxyref{symbol}{p.}{classcubescript_1_1symbol}. 
+
+An \doxyref{exception}{p.}{classcubescript_1_1exception} is thrown when an out-of-bound value is attempted to be assigned, in such a case, the value stored previously is restored. 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{cubescript::bounded_variable@{cubescript::bounded\_\-variable}!bounded_variable@{bounded\_\-variable}}
+\index{bounded_variable@{bounded\_\-variable}!cubescript::bounded_variable@{cubescript::bounded\_\-variable}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T, T min, T max$>$ {\bf cubescript::bounded\_\-variable}$<$ T, min, max $>$::{\bf bounded\_\-variable} (T \& {\em ref})\hspace{0.3cm}{\tt  [inline]}}\label{classcubescript_1_1bounded__variable_0d42498d962bec442f0ac8b500dc61bf}
+
+
+
+
+\subsection{Member Function Documentation}
+\index{cubescript::bounded_variable@{cubescript::bounded\_\-variable}!apply@{apply}}
+\index{apply@{apply}!cubescript::bounded_variable@{cubescript::bounded\_\-variable}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}template$<$typename T, T min, T max$>$ std::string {\bf cubescript::bounded\_\-variable}$<$ T, min, max $>$::apply (std::list$<$ std::string $>$ \& {\em args}, {\bf domain} $\ast$)\hspace{0.3cm}{\tt  [inline, virtual]}}\label{classcubescript_1_1bounded__variable_698d73f28d94865f295c8bec6ba18281}
+
+
+Assign value to \doxyref{variable}{p.}{classcubescript_1_1variable}. 
+
+Expects one argument only, providing any more arguments will result in an \doxyref{exception}{p.}{classcubescript_1_1exception} being thrown. The value passed is expected to have a string representation that can be lexically casted to the variable's type, incompatible notation will result in an \doxyref{exception}{p.}{classcubescript_1_1exception} being thrown. 
+
+Reimplemented from {\bf cubescript::variable\_\-base$<$ T $>$} \doxyref{}{p.}{classcubescript_1_1variable__base_e49eb744388167ea3424dc6887680f03}.
+
+The documentation for this class was generated from the following file:\begin{CompactItemize}
+\item 
+include/{\bf cubescript.hpp}\end{CompactItemize}

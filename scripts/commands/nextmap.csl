@@ -1,0 +1,6 @@
+
+if $custom_maprotation_enabled [
+    if $custom_maprotation_balance [privmsg $cn (err "Next map is undetermined.")] [
+            privmsg $cn (info (format "Next map is %1." (nextmap (value (mapsetname)))))
+        ]
+] [privmsg $cn (err "Map rotation is client controlled.")]

@@ -1,0 +1,21 @@
+
+last_update = (now)
+track_file_updates = []
+
+track_file_for_update = [
+    parameters filename
+    if (path? $filename) [
+        track_file_updates = (concat $track_file_updates $filename)
+    ]
+]
+
+server_update = [
+    foreach $track_file_updates [
+       if (> (file_modified $arg1) $last_update) [
+            log (format "Performing server update: %1 file has recently changed." $arg1)
+            log_status "Restarting server..."
+            restarter
+            shutdown
+        ]
+    ]
+]

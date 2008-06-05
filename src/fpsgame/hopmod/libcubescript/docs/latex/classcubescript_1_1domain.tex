@@ -1,0 +1,119 @@
+\section{cubescript::domain Class Reference}
+\label{classcubescript_1_1domain}\index{cubescript::domain@{cubescript::domain}}
+Holds a set of symbols.  
+
+
+{\tt \#include $<$cubescript.hpp$>$}
+
+Inherited by {\bf cubescript::domain\_\-chain}.
+
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+virtual {\bf $\sim$domain} ()
+\item 
+virtual void {\bf register\_\-symbol} (const std::string \&id, {\bf symbol} $\ast$s)
+\begin{CompactList}\small\item\em Register a \doxyref{symbol}{p.}{classcubescript_1_1symbol}. \item\end{CompactList}\item 
+virtual {\bf symbol} $\ast$ {\bf lookup\_\-symbol} (const std::string \&, bool search\_\-global=true) const 
+\begin{CompactList}\small\item\em Search for a \doxyref{symbol}{p.}{classcubescript_1_1symbol}. \item\end{CompactList}\item 
+{\bf symbol} $\ast$ {\bf require\_\-symbol} (const std::string \&id, bool search\_\-global=true) const
+\begin{CompactList}\small\item\em Same as lookup \doxyref{symbol}{p.}{classcubescript_1_1symbol} method except if \doxyref{symbol}{p.}{classcubescript_1_1symbol} not found \doxyref{unknown\_\-symbol}{p.}{classcubescript_1_1unknown__symbol} \doxyref{exception}{p.}{classcubescript_1_1exception} is thrown. \item\end{CompactList}\item 
+virtual void {\bf adopt\_\-symbol} ({\bf symbol} $\ast$)
+\begin{CompactList}\small\item\em Give ownership of \doxyref{symbol}{p.}{classcubescript_1_1symbol} to \doxyref{domain}{p.}{classcubescript_1_1domain} object. \item\end{CompactList}\end{CompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{CompactItemize}
+\item 
+static {\bf domain} $\ast$ {\bf global} ()
+\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+Holds a set of symbols. 
+
+The \doxyref{domain}{p.}{classcubescript_1_1domain} class is useful for grouping related symbols and restricting use of these symbols to a specific environment. 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{cubescript::domain@{cubescript::domain}!~domain@{$\sim$domain}}
+\index{~domain@{$\sim$domain}!cubescript::domain@{cubescript::domain}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}cubescript::domain::$\sim$domain ()\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1domain_9bccf07acdbb7774abdb6c1562864b25}
+
+
+
+
+\subsection{Member Function Documentation}
+\index{cubescript::domain@{cubescript::domain}!register_symbol@{register\_\-symbol}}
+\index{register_symbol@{register\_\-symbol}!cubescript::domain@{cubescript::domain}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void cubescript::domain::register\_\-symbol (const std::string \& {\em id}, {\bf symbol} $\ast$ {\em s})\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1domain_f35252ce95cee0a4da39a2dd7e0416ec}
+
+
+Register a \doxyref{symbol}{p.}{classcubescript_1_1symbol}. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em id}]name of \doxyref{symbol}{p.}{classcubescript_1_1symbol} \item[{\em s}]pointer to \doxyref{symbol}{p.}{classcubescript_1_1symbol} object.\end{description}
+\end{Desc}
+The \doxyref{domain}{p.}{classcubescript_1_1domain} class does not hold responsibilty for the deletion of its registered \doxyref{symbol}{p.}{classcubescript_1_1symbol} objects - the \doxyref{domain}{p.}{classcubescript_1_1domain} maintains a weak ownership of these symbols. Note: registered symbols MUST live as long as the dependant \doxyref{domain}{p.}{classcubescript_1_1domain}.
+
+If the given id argument conflicts with a prior \doxyref{symbol}{p.}{classcubescript_1_1symbol} registration, the existing \doxyref{symbol}{p.}{classcubescript_1_1symbol} reference will be overwritten. 
+
+Reimplemented in {\bf cubescript::domain\_\-chain} \doxyref{}{p.}{classcubescript_1_1domain__chain_781170692b4a8fe341cecaf234f5e3b8}.\index{cubescript::domain@{cubescript::domain}!lookup_symbol@{lookup\_\-symbol}}
+\index{lookup_symbol@{lookup\_\-symbol}!cubescript::domain@{cubescript::domain}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf symbol} $\ast$ cubescript::domain::lookup\_\-symbol (const std::string \&, bool {\em search\_\-global} = {\tt true}) const\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1domain_65f53177800faab132bfe723ed9f3256}
+
+
+Search for a \doxyref{symbol}{p.}{classcubescript_1_1symbol}. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em id}]name of \doxyref{symbol}{p.}{classcubescript_1_1symbol}. \item[{\em search\_\-global}]search global \doxyref{domain}{p.}{classcubescript_1_1domain} if value is true. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]pointer to a \doxyref{symbol}{p.}{classcubescript_1_1symbol} object, if \doxyref{symbol}{p.}{classcubescript_1_1symbol} not found value is NULL. \end{Desc}
+
+
+Reimplemented in {\bf cubescript::domain\_\-chain} \doxyref{}{p.}{classcubescript_1_1domain__chain_f2c67f11f27270ec4ca09d006aeb8c5b}.\index{cubescript::domain@{cubescript::domain}!require_symbol@{require\_\-symbol}}
+\index{require_symbol@{require\_\-symbol}!cubescript::domain@{cubescript::domain}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf symbol} $\ast$ cubescript::domain::require\_\-symbol (const std::string \& {\em id}, bool {\em search\_\-global} = {\tt true}) const}\label{classcubescript_1_1domain_ebca6be2589a0fa18cfe99644402d139}
+
+
+Same as lookup \doxyref{symbol}{p.}{classcubescript_1_1symbol} method except if \doxyref{symbol}{p.}{classcubescript_1_1symbol} not found \doxyref{unknown\_\-symbol}{p.}{classcubescript_1_1unknown__symbol} \doxyref{exception}{p.}{classcubescript_1_1exception} is thrown. 
+
+\begin{Desc}
+\item[Parameters:]
+\begin{description}
+\item[{\em id}]name of \doxyref{symbol}{p.}{classcubescript_1_1symbol}. \item[{\em search\_\-global}]search global \doxyref{domain}{p.}{classcubescript_1_1domain} if value is true. \end{description}
+\end{Desc}
+\begin{Desc}
+\item[Returns:]pointer to a \doxyref{symbol}{p.}{classcubescript_1_1symbol} object. \end{Desc}
+\index{cubescript::domain@{cubescript::domain}!global@{global}}
+\index{global@{global}!cubescript::domain@{cubescript::domain}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf domain} $\ast$ cubescript::domain::global ()\hspace{0.3cm}{\tt  [static]}}\label{classcubescript_1_1domain_50e7fa0a8c6305f79bce70d905d5dc6d}
+
+
+\begin{Desc}
+\item[Returns:]Pointer to the global \doxyref{domain}{p.}{classcubescript_1_1domain} instance. \end{Desc}
+\begin{Desc}
+\item[See also:]register\_\-core\_\-functions \end{Desc}
+\index{cubescript::domain@{cubescript::domain}!adopt_symbol@{adopt\_\-symbol}}
+\index{adopt_symbol@{adopt\_\-symbol}!cubescript::domain@{cubescript::domain}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void cubescript::domain::adopt\_\-symbol ({\bf symbol} $\ast$)\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1domain_59214d36b857209df97cf909223676a3}
+
+
+Give ownership of \doxyref{symbol}{p.}{classcubescript_1_1symbol} to \doxyref{domain}{p.}{classcubescript_1_1domain} object. 
+
+Adopted symbols are deleted in the domain's destructor. This method should be used when the original owner of the \doxyref{symbol}{p.}{classcubescript_1_1symbol} will not be keeping a reference of it.
+
+\begin{Desc}
+\item[Warning:]The class maintains no safety against duplicate admissions and doesn't check if adopting symbols are registered with the \doxyref{domain}{p.}{classcubescript_1_1domain}. \end{Desc}
+
+
+Reimplemented in {\bf cubescript::domain\_\-chain} \doxyref{}{p.}{classcubescript_1_1domain__chain_5d5ded4b97c9d12ab8e60f772e9ec259}.
+
+The documentation for this class was generated from the following files:\begin{CompactItemize}
+\item 
+include/{\bf cubescript.hpp}\item 
+src/{\bf cubescript.cpp}\end{CompactItemize}

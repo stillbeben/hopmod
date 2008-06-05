@@ -1,0 +1,72 @@
+\section{cubescript::cons::block Class Reference}
+\label{classcubescript_1_1cons_1_1block}\index{cubescript::cons::block@{cubescript::cons::block}}
+{\tt \#include $<$cubescript.hpp$>$}
+
+Inherits {\bf cubescript::construct}.
+
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+{\bf block} ()
+\item 
+bool {\bf parse} (std::istream \&)
+\begin{CompactList}\small\item\em Parse CubeScript code. \item\end{CompactList}\item 
+std::string {\bf eval} ()
+\begin{CompactList}\small\item\em Evaluate the parsed \doxyref{construct}{p.}{classcubescript_1_1construct}. The result of the evaluation. \item\end{CompactList}\item 
+std::string {\bf formed} () const
+\begin{CompactList}\small\item\em Returns a reformed representation of the parsed \doxyref{construct}{p.}{classcubescript_1_1construct}. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+The \doxyref{block}{p.}{classcubescript_1_1cons_1_1block} \doxyref{construct}{p.}{classcubescript_1_1construct} is useful for expressing multiline \doxyref{string}{p.}{classcubescript_1_1cons_1_1string} literals. Its syntax is: \char`\"{}[\char`\"{} $<$arbitrary-string$>$ \char`\"{}]\char`\"{}. The arbitrary \doxyref{string}{p.}{classcubescript_1_1cons_1_1string} is any characters from the ascii character set, and can include closed sub-block constructs (e.g. \char`\"{}[some string [a sub block]]\char`\"{}), also \char`\"{}@\char`\"{} characters are interpreted as part of a \doxyref{macro}{p.}{classcubescript_1_1cons_1_1macro} \doxyref{construct}{p.}{classcubescript_1_1construct}.
+
+The \doxyref{block}{p.}{classcubescript_1_1cons_1_1block} and \doxyref{string}{p.}{classcubescript_1_1cons_1_1string} \doxyref{construct}{p.}{classcubescript_1_1construct} are semantically the same thing, an \doxyref{alias}{p.}{classcubescript_1_1alias} is assigned with a value or code (it depends how you use the \doxyref{alias}{p.}{classcubescript_1_1alias}) of \doxyref{string}{p.}{classcubescript_1_1cons_1_1string} type. The \doxyref{block}{p.}{classcubescript_1_1cons_1_1block} \doxyref{construct}{p.}{classcubescript_1_1construct} is better for expressing code. 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{cubescript::cons::block@{cubescript::cons::block}!block@{block}}
+\index{block@{block}!cubescript::cons::block@{cubescript::cons::block}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}cubescript::cons::block::block ()}\label{classcubescript_1_1cons_1_1block_a1f8ea0c19ed360766c7a7987c98a266}
+
+
+
+
+\subsection{Member Function Documentation}
+\index{cubescript::cons::block@{cubescript::cons::block}!parse@{parse}}
+\index{parse@{parse}!cubescript::cons::block@{cubescript::cons::block}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool cubescript::cons::block::parse (std::istream \& {\em input})\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1cons_1_1block_88791243924c74f611a77b33910f3479}
+
+
+Parse CubeScript code. 
+
+\begin{Desc}
+\item[Returns:]The return value is True when parsing is complete, otherwise False is the return value.\end{Desc}
+The parse method is stream-oriented; when the current function call cannot complete the parsing, because not enough input has been given yet, the function will return to the caller, who will be responsible to re-call the function when more input data is received - the parsing state is preserved among multiple function calls until parsing is complete.
+
+When a parsing error is detected an \doxyref{exception}{p.}{classcubescript_1_1exception} of parse\_\-error type is thrown. 
+
+Implements {\bf cubescript::construct} \doxyref{}{p.}{classcubescript_1_1construct_c5a0e0ebea9d4e8e581a747fe19435ec}.\index{cubescript::cons::block@{cubescript::cons::block}!eval@{eval}}
+\index{eval@{eval}!cubescript::cons::block@{cubescript::cons::block}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::cons::block::eval ()\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1cons_1_1block_88aefebb266f200f40222e484b5b151c}
+
+
+Evaluate the parsed \doxyref{construct}{p.}{classcubescript_1_1construct}. The result of the evaluation. 
+
+
+
+Implements {\bf cubescript::construct} \doxyref{}{p.}{classcubescript_1_1construct_8641596e22eeb981508e7a92890875ee}.\index{cubescript::cons::block@{cubescript::cons::block}!formed@{formed}}
+\index{formed@{formed}!cubescript::cons::block@{cubescript::cons::block}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string cubescript::cons::block::formed () const\hspace{0.3cm}{\tt  [virtual]}}\label{classcubescript_1_1cons_1_1block_04921faca262e077d88f5f165432063f}
+
+
+Returns a reformed representation of the parsed \doxyref{construct}{p.}{classcubescript_1_1construct}. 
+
+
+
+Implements {\bf cubescript::construct} \doxyref{}{p.}{classcubescript_1_1construct_9d78c8b9b3f9d2bd69535c3fbd04b7e5}.
+
+The documentation for this class was generated from the following files:\begin{CompactItemize}
+\item 
+include/{\bf cubescript.hpp}\item 
+src/{\bf cubescript.cpp}\end{CompactItemize}
