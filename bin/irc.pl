@@ -118,15 +118,15 @@ sub process_command {
                 &toirccommandlog("Console($nick): $1");  return }	
 		##### KICK
 		if ( $command =~ /$botcommandname.* kick.* ([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={KICK}=-\x03 $nick kicked $1"); &toserverpipe("server_kick $1"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={KICK}=-\x03 $nick kicked $1"); &toserverpipe("kick $1"); 
 		&toirccommandlog("No problem $nick, consider $1 gone"); return }
 		##### CLEARBANS
 		if ( $command =~ /$botcommandname.* clearbans/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034CLEARBANS\x03 $nick has cleared bans"); &toserverpipe("server_clearbans"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034CLEARBANS\x03 $nick has cleared bans"); &toserverpipe("clearbans"); 
 		&toirccommandlog("Master $nick I have cleared bans for you"); return }
 		##### SPECTATOR
 		if ( $command =~ /$botcommandname.* spec.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={SPEC}=-\x03 $nick has spec'd $1"); &toserverpipe("server_spectator $1 1"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={SPEC}=-\x03 $nick has spec'd $1"); &toserverpipe("spectator $1 1"); 
 		&toirccommandlog("$nick I have spec'd $1 "); return }
 		##### TICKLE
 		if ( $command =~ /tickle.* $botcommandname.*/i )
@@ -136,34 +136,34 @@ sub process_command {
 		{ &sendtoirc("hey $nick hows it going?");return }
 		##### UNSPECTATOR
 		if ( $command =~ /$botcommandname.* unspec.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03]         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("server_spectator $1 0"); 
+		{ &sendtoirc("\x03\x036IRC\x03]         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("spectator $1 0"); 
 		&toirccommandlog("$nick I have unspec'd $1 "); return }
 		##### MUTE
 		if ( $command =~ /$botcommandname.* mute.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MUTE}=-\x03 $nick muted $1"); &toserverpipe("server_mute $1 1");
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MUTE}=-\x03 $nick muted $1"); &toserverpipe("user_var $1 mute 1");
 		&toirccommandlog("$nick Muting $1, what a spammer"); return }
 		##### UNMUTE
 		if ( $command =~ /$botcommandname.* unmute.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNMUTE}=-\x03 $nick Unmuted $1"); &toserverpipe("server_mute $1 0"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNMUTE}=-\x03 $nick Unmuted $1"); &toserverpipe("user_var $1 mute 0"); 
 		&toirccommandlog("$nick Unmuted $1, I guess he learned his lesson"); return }
 		##### GIVEMASTER
 		if ( $command =~ /$botcommandname.* givemaster.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={GIVEMASTER}=-\x03 $nick gave master to $1"); &toserverpipe("server_master $1 1");
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={GIVEMASTER}=-\x03 $nick gave master to $1"); &toserverpipe("master $1 1");
 		&toirccommandlog("ok ok $nick I gave master to $1"); return }
 		##### TAKEMASTER
 		if ( $command =~ /$botcommandname.* takemaster.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("server_master $1 0"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("master $1 0"); 
 		&toirccommandlog("ok ok $nick I stole master from $1"); return }
 		##### MASTER
 		if ( $command =~ /$botcommandname.* master.*/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERCHECK}=-\x03 current master [\x0312$master\x03]") ; return }
 		##### MASTERMODE
 		if ( $command =~ /$botcommandname.* mastermode.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERMODE}=-\x03 $nick changed mastermode to $1"); &toserverpipe("server_mastermode $1"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERMODE}=-\x03 $nick changed mastermode to $1"); &toserverpipe("mastermode $1"); 
 		&toirccommandlog("Gotcha $nick changing mastermode to $1"); return }
 		##### MAPCHANGE
 		if ( $command =~ /$botcommandname.*map.*(instagib|ffa|capture) (.+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MAPCHANGE}=-\x03 $nick changed  map to mode $1 map $2"); &toserverpipe("server_changemap $1 $2"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MAPCHANGE}=-\x03 $nick changed  map to mode $1 map $2"); &toserverpipe("changemap $1 $2"); 
 		&toirccommandlog("Good choice $nick changing the map to mode $1 map $2"); return }
 		##### HELP
 		if ( $command =~ /$botcommandname.*help/i )
@@ -201,7 +201,7 @@ scores = \"\"
 
 loop i (listlen (clients)) [
    cn = (at (clients) \$i)
-   line = (format \"\%4 \F\%1/D\%2/A\%3 \%5\" (get_client_frags \$cn) (get_client_deaths \$cn) (get_client_accuracy \$cn) (get_client_name \$cn))
+   line = (format \"\%4 F\%1/D\%2/A\%3 \%5\" (get_player_frags \$cn) (get_player_deaths \$cn) (get_player_accuracy \$cn) (get_player_name \$cn))
    scores = (concat \$scores \$line)
 ]
 if (! (strcmp \$scores \"\" )) [
@@ -330,11 +330,11 @@ loop i (listlen (clients)) [
    scores = (concat \$scores \$line)
 ]
 if (! (strcmp \$scores \"\" )) [
-server_log (concat \"WHO      \" \$scores)
+log (concat \"WHO      \" \$scores)
 ]
 if (strcmp \$scores \"\" ) [
 P
-server_log \"Apparently no one is connected\"
+log \"Apparently no one is connected\"
 ]
 ");
 	
@@ -387,7 +387,7 @@ sub toserverpipe {
 sub toirccommandlog {
         my $send = shift;
         my $ts = scalar localtime;
-        open (FILE, '>>', $irccommand_log ) or die $!;
+        open (FILE, '>>', $irccommand_log ) or warn $!;
         print FILE ("[$ts] $send\n");
         close (FILE);
 }
