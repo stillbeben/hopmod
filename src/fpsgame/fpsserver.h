@@ -540,6 +540,7 @@ struct fpsserver : igameserver
                                 const std::string &,
                                 const std::string & >       func_daemon;
     cubescript::function1<void_,pid_t>                      func_kill; //TODO move to libcubescript system runtime
+    cubescript::function1<void_,int>                        func_server_sleep;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -641,6 +642,7 @@ struct fpsserver : igameserver
         func_logfile(boost::bind(&fpsserver::create_logfile_function,this,_1,_2)),
         func_daemon(boost::bind(&fpsserver::spawn_daemon,this,_1,_2,_3,_4)),
         func_kill(boost::bind(&fpsserver::kill_process,this,_1)),
+        func_server_sleep(boost::bind(&fpsserver::server_sleep,this,_1)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -723,6 +725,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("logfile",&func_logfile);
         server_domain.register_symbol("daemon",&func_daemon);
         server_domain.register_symbol("kill",&func_kill);
+        server_domain.register_symbol("server_sleep",&func_server_sleep);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3209,5 +3212,13 @@ struct fpsserver : igameserver
                 default: throw cubescript::error_key("runtime.function.kill.kill_failed");
             }
         }
+    }
+    
+    void_ server_sleep(int ms)
+    {
+        timespec sleeptime;
+        sleeptime.tv_sec=ms/1000;
+        sleeptime.tv_nsec=(ms-sleeptime.tv_sec*1000)*1000000;
+        if(nanosleep(&sleeptime,&sleeptime)==-1) throw cubescript::error_key("runtime.function.server_sleep.returned_early");
     }
 };
