@@ -382,7 +382,7 @@ sub showalias {
 
 sub toserverpipe {
         my $command = shift;
-        open (FILE, '+>', $server_pipe) or die $!; print FILE "$command"; close (FILE);
+        open (FILE, '>', $server_pipe ) or die $!; print FILE "$command\n"; close (FILE);
 }
 sub toirccommandlog {
         my $send = shift;
