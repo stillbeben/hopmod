@@ -114,7 +114,7 @@ sub process_command {
 		
 		##### SAY
 		if ( $command =~ /$botcommandname.* say\s(.+)/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("server_broadcast \"Console($nick): $1\"");
+                { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console \"Console($nick): $1\"");
                 &toirccommandlog("Console($nick): $1");  return }	
 		##### KICK
 		if ( $command =~ /$botcommandname.* kick.* ([0-9]+)/i )
@@ -155,7 +155,7 @@ sub process_command {
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("master $1 0"); 
 		&toirccommandlog("ok ok $nick I stole master from $1"); return }
 		##### MASTER
-		if ( $command =~ /$botcommandname.* master.*/i )
+		if ( $command =~ /$botcommandname.* master .*/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERCHECK}=-\x03 current master [\x0312$master\x03]") ; return }
 		##### MASTERMODE
 		if ( $command =~ /$botcommandname.* mastermode.*\s([0-9]+)/i )
