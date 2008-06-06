@@ -205,7 +205,9 @@ void script_pipe::read_script_pipe(bool allow_write)
     }
     while(readlen>0);
     
-    while(m_code.str().length()) run_code(allow_write);
+    while(!m_code.eof()) run_code(allow_write);
+    
+    m_code.clear();
 }
 
 void script_pipe::read_error_pipe()
@@ -251,7 +253,6 @@ void script_pipe::run_code(bool allow_write)
         {
             cubescript::consume_terminator(m_code);
             m_code.str(m_code.str().substr(m_code.tellg()));
-            
             result=m_expn->eval();
             
             del_expn=true;
