@@ -101,17 +101,16 @@ int main(int argc,const char ** argv)
     sigaction(SIGTERM,&terminate_action,NULL);
     sigaction(SIGPIPE,&terminate_action,NULL);
     
-    while(!feof(script_write))
+    while(!(feof(script_write) && ferror(script_write)))
     {
         FILE * pipe=fopen(filename,"r");
-        
         if(!pipe)
         {
             fprintf(error,"unable to open file (errno %i)\n",errno);
             return 1;
         }
         
-        while(!feof(script_write) && !feof(pipe) )
+        while(!(feof(script_write) && ferror(script_write)) && !(feof(pipe) && ferror(pipe)) )
         {
             char line[128];
             line[0]='\0';

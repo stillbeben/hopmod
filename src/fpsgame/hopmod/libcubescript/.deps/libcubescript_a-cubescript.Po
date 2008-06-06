@@ -364,7 +364,14 @@ libcubescript_a-cubescript.o libcubescript_a-cubescript.o:  \
   /usr/include/sys/stat.h /usr/include/bits/stat.h /usr/include/errno.h \
   /usr/include/bits/errno.h /usr/include/linux/errno.h \
   /usr/include/asm/errno.h /usr/include/asm-generic/errno.h \
-  /usr/include/asm-generic/errno-base.h /usr/include/regex.h
+  /usr/include/asm-generic/errno-base.h /usr/include/regex.h \
+  /usr/include/fcntl.h /usr/include/bits/fcntl.h /usr/include/bits/uio.h \
+  /usr/include/sys/wait.h /usr/include/bits/signum.h \
+  /usr/include/bits/siginfo.h /usr/include/bits/sigaction.h \
+  /usr/include/bits/sigcontext.h /usr/include/asm/sigcontext.h \
+  /usr/include/linux/compiler.h /usr/include/bits/sigstack.h \
+  /usr/include/sys/ucontext.h /usr/include/bits/sigthread.h \
+  /usr/include/sys/resource.h /usr/include/bits/resource.h
 
 include/cubescript.hpp:
 
@@ -1187,3 +1194,33 @@ boost_1_34_0/boost/bind/placeholders.hpp:
 /usr/include/asm-generic/errno-base.h:
 
 /usr/include/regex.h:
+
+/usr/include/fcntl.h:
+
+/usr/include/bits/fcntl.h:
+
+/usr/include/bits/uio.h:
+
+/usr/include/sys/wait.h:
+
+/usr/include/bits/signum.h:
+
+/usr/include/bits/siginfo.h:
+
+/usr/include/bits/sigaction.h:
+
+/usr/include/bits/sigcontext.h:
+
+/usr/include/asm/sigcontext.h:
+
+/usr/include/linux/compiler.h:
+
+/usr/include/bits/sigstack.h:
+
+/usr/include/sys/ucontext.h:
+
+/usr/include/bits/sigthread.h:
+
+/usr/include/sys/resource.h:
+
+/usr/include/bits/resource.h:
