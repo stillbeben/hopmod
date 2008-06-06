@@ -535,6 +535,11 @@ struct fpsserver : igameserver
     cubescript::function0<void_>                            func_shutdown;
     cubescript::function0<void_>                            func_restarter;
     cubescript::function2<void_,std::string,std::string>    func_logfile;
+    cubescript::function4<pid_t,const std::string &,
+                                const std::vector<std::string> &,
+                                const std::string &,
+                                const std::string & >       func_daemon;
+    cubescript::function1<void_,pid_t>                      func_kill; //TODO move to libcubescript system runtime
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -634,6 +639,8 @@ struct fpsserver : igameserver
         func_shutdown(boost::bind(&fpsserver::shutdown,this)),
         func_restarter(boost::bind(&fpsserver::create_restarter,this)),
         func_logfile(boost::bind(&fpsserver::create_logfile_function,this,_1,_2)),
+        func_daemon(boost::bind(&fpsserver::spawn_daemon,this,_1,_2,_3,_4)),
+        func_kill(boost::bind(&fpsserver::kill_process,this,_1)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -714,6 +721,8 @@ struct fpsserver : igameserver
         server_domain.register_symbol("shutdown",&func_shutdown);
         server_domain.register_symbol("restarter",&func_restarter);
         server_domain.register_symbol("logfile",&func_logfile);
+        server_domain.register_symbol("daemon",&func_daemon);
+        server_domain.register_symbol("kill",&func_kill);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3132,5 +3141,73 @@ struct fpsserver : igameserver
         server_domain.register_symbol(funcname,newfunc,cubescript::domain::ADOPT_SYMBOL);
         
         return void_();
+    }
+    
+    inline void log_daemon_error(const std::string & msg)
+    {
+        FILE * file=fopen("logs/daemon.log","a");
+        if(!file) return;
+        fputs(msg.c_str(),file);
+        fputs("\n",file);
+        fclose(file);
+    }
+    
+    pid_t spawn_daemon(const std::string & filename,const std::vector<std::string> & args,const std::string & stdoutfile,const std::string & stderrfile)
+    {
+        pid_t pid=fork();
+        
+        if(pid==0)
+        {
+            int maxfd=getdtablesize();
+            for(int i=0; i<maxfd; i++) ::close(i);
+            umask(0);
+            setsid();
+            
+            if(open("/dev/null",O_RDONLY)==-1)
+            {
+                log_daemon_error("cannot open /dev/null");
+                exit(1);
+            }
+            
+            if(open(stdoutfile.c_str(),O_WRONLY | O_APPEND | O_CREAT,420)==-1)
+            {
+                log_daemon_error("cannot open stdout file");
+                exit(1);
+            }
+            
+            if(open(stderrfile.c_str(),O_WRONLY | O_APPEND | O_CREAT,420)==-1)
+            {
+                log_daemon_error("cannot open stderr file");
+                exit(1);
+            }
+            
+            char ** argv=new char * [args.size()+1];
+            for(int i=0; i<args.size(); i++) argv[i]=newstring(args[i].c_str());
+            argv[args.size()]=NULL;
+            
+            execv(filename.c_str(),argv);
+            
+            std::ostringstream execfail;
+            execfail<<filename<<" not executed."<<std::endl;
+            log_daemon_error(execfail.str());
+            
+            exit(1);
+        }
+        else if(pid==-1) throw cubescript::error_key("runtime.function.daemon.fork_failed");
+        
+        return pid;
+    }
+    
+    void_ kill_process(pid_t pid)
+    {
+        if(::kill(pid,SIGTERM)==-1)
+        {
+            switch(errno)
+            {
+                case EPERM: throw cubescript::error_key("runtime.function.kill.permission_denied");
+                case ESRCH: throw cubescript::error_key("runtime.function.kill.pid_not_found");
+                default: throw cubescript::error_key("runtime.function.kill.kill_failed");
+            }
+        }
     }
 };
