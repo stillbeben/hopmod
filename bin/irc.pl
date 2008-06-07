@@ -4,11 +4,10 @@ use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Switch;
 use Config::Auto;
-use vars qw($master $irccommand_log $repeatcount $config $version $lastline $tailfile $ircport $username $botcommandname $zippy @zippy $network $botname $channel $pwd $server_pipe $state_tbl $server_log @word @STATE $scn $sip $sname);
+use vars qw($master $irccommand_log $repeatcount $config $version $lastline $tailfile $ircport $username $botcommandname $zippy @zippy $network $botname $channel $pwd $server_pipe $server_log @word @STATE $scn $sip $sname);
 
 $pwd = `cat /tmp/.pwd`; chomp ($pwd);
 $server_pipe    = $pwd . '/serverexec';
-$state_tbl      = $pwd . '/ext/tmp/state.tbl';
 $server_log     = $pwd . '/logs/server.log';
 $irccommand_log	= $pwd . '/logs/irccommand.log';
 $repeatcount = 1 ;
@@ -112,31 +111,31 @@ sub process_command {
 		if ( ! $poco_object->is_channel_operator( $channel, $nick )) { &sendtoirc("Sorry you must be an operator to issues commands"); return }
 		##### COMMAND PROCESSING #####
 		
-		##### SAY
+		##### SAY #####
 		if ( $command =~ /$botcommandname.* say\s(.+)/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console \"Console($nick): $1\"");
+                { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console '$nick' $1");
                 &toirccommandlog("Console($nick): $1");  return }	
-		##### KICK
+		##### KICK #####
 		if ( $command =~ /$botcommandname.* kick.* ([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={KICK}=-\x03 $nick kicked $1"); &toserverpipe("kick $1"); 
 		&toirccommandlog("No problem $nick, consider $1 gone"); return }
-		##### CLEARBANS
+		##### CLEARBANS #####
 		if ( $command =~ /$botcommandname.* clearbans/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034CLEARBANS\x03 $nick has cleared bans"); &toserverpipe("clearbans"); 
 		&toirccommandlog("Master $nick I have cleared bans for you"); return }
-		##### SPECTATOR
+		##### SPECTATOR ######
 		if ( $command =~ /$botcommandname.* spec.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={SPEC}=-\x03 $nick has spec'd $1"); &toserverpipe("spectator $1 1"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={SPEC}=-\x03 $nick has spec'd $1"); &toserverpipe("spec $1"); 
 		&toirccommandlog("$nick I have spec'd $1 "); return }
-		##### TICKLE
+		##### TICKLE ######
 		if ( $command =~ /tickle.* $botcommandname.*/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={WISDOM}=-\x03 $zippy[ rand scalar @zippy ]"); return }
-		##### HI
+		##### HI ######
 		if ( $command =~ /hi.* $botcommandname.*/i )
 		{ &sendtoirc("hey $nick hows it going?");return }
-		##### UNSPECTATOR
+		##### UNSPECTATOR ######
 		if ( $command =~ /$botcommandname.* unspec.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03]         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("spectator $1 0"); 
+		{ &sendtoirc("\x03\x036IRC\x03]         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("unspec $1"); 
 		&toirccommandlog("$nick I have unspec'd $1 "); return }
 		##### MUTE
 		if ( $command =~ /$botcommandname.* mute.*\s([0-9]+)/i )
@@ -146,39 +145,39 @@ sub process_command {
 		if ( $command =~ /$botcommandname.* unmute.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNMUTE}=-\x03 $nick Unmuted $1"); &toserverpipe("user_var $1 mute 0"); 
 		&toirccommandlog("$nick Unmuted $1, I guess he learned his lesson"); return }
-		##### GIVEMASTER
+		##### GIVEMASTER #####
 		if ( $command =~ /$botcommandname.* givemaster.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={GIVEMASTER}=-\x03 $nick gave master to $1"); &toserverpipe("setmaster $1 1");
 		&toirccommandlog("ok ok $nick I gave master to $1"); return }
-		##### TAKEMASTER Working
+		##### TAKEMASTER #####
 		if ( $command =~ /$botcommandname.* takemaster.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("setmaster $1 0"); 
 		&toirccommandlog("ok ok $nick I stole master from $1"); return }
-		##### MASTER
+		##### MASTER 
 		if ( $command =~ /$botcommandname.* master .*/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERCHECK}=-\x03 current master [\x0312$master\x03]") ; return }
-		##### MASTERMODE working
+		##### MASTERMODE #####
 		if ( $command =~ /$botcommandname.* mastermode.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERMODE}=-\x03 $nick changed mastermode to $1"); &toserverpipe("mastermode $1"); 
 		&toirccommandlog("Gotcha $nick changing mastermode to $1"); return }
-		##### MAPCHANGE
+		##### MAPCHANGE #####
 		if ( $command =~ /$botcommandname.*map.*(instagib|ffa|capture) (.+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MAPCHANGE}=-\x03 $nick changed  map to mode $1 map $2"); &toserverpipe("changemap $1 $2"); 
 		&toirccommandlog("Good choice $nick changing the map to mode $1 map $2"); return }
-		##### HELP
+		##### HELP #####
 		if ( $command =~ /$botcommandname.*help/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={HELP}=-\x03 help can be found here http://hopmod.e-topic.info/index.php5?title=IRC_Bot"); return}
-		##### WHO
+		##### WHO #####
 		if ( $command =~ /$botcommandname.*who/i )
 		{ &show_state; return}
 		##### CLEARSTATE
 		if ( $command =~ /$botcommandname.*clearstate/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={STATE}=-\x03 $nick cleared state"); undef @STATE ; return}
-		##### DIE
+		##### DIE #####
 		if ( $command =~ /$botcommandname.*die/i ) 
 		{&sendtoirc("\x03\x036IRC\x03         \x034-={DIE}=-\x03 $nick terminated the bot") ;&toirccommandlog("$nick has killed the bot");
 		exit }
-		##### VERSION
+		##### VERSION #####
 		if ( $command =~ /$botcommandname.*version/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={VERSION}=-\x03 SauerBot V$version by -=PunDit=- #quicksilver"); return}
 		##### SAUERPING
@@ -188,14 +187,14 @@ sub process_command {
 		if ( $command =~ /$botcommandname.*restart.*server/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={RESTART SAUER}=-\x03 $nick restarted the server process"); `cd $pwd; ./sauerserverctl restart`;
 		&toirccommandlog("Restarting Server"); return }
-		##### SHOWALIAS
+		##### SHOWALIAS 
                 if ( $command =~ /$botcommandname.* showalias.*\s([0-9]+.*)/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={ALIAS}=-\x03 $nick checking for aliases on CN $1"); &showalias($1); 
 		&toirccommandlog("Gotcha $nick checking for aliases"); return }
 		##### SCORE
 		if ( $command =~ /$botcommandname.* score.*/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={SCORE}=-\x03 $nick checking the score"); 
-		&toserverpipe("who");
+		&toserverpipe("irc_score");
 		 return }
 		
 		if ( $command =~ /$botcommandname/i )
@@ -244,52 +243,52 @@ sub filterlog {
 	
 	##### TEXT FORMATTING #####
 	
-	##### CONNECT
-	if ($line =~ /(.+\([0-9]+\))(\(.+\)) connected./)
+	##### CONNECT #####
+	if ($line =~ /(.+\([0-9]+\))(\(.+\)) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 $2" }
-	##### DISCONNECT
-	if ($line =~ /(.+\([0-9]+\))(\(.+\)) disconnected./)
+	##### DISCONNECT #####
+	if ($line =~ /(.+\([0-9]+\)) disconnected .+, (.*)/)
 	{ return "\x032DISCONNECT\x03 \x0312$1\x03 $2" }
-	##### RENAME
-	if ($line =~ /(.+)\(([0-9]+)\) has renamed to (.+)\(.+\)/) 
-	{ $sname = $3 ; $scn = $2 ; &update_state ; return  "\x032RENAME\x03     \x0312$1$2\x03 has renamed to \x037$3$4\x03"}
+	##### RENAME #####
+	if ($line =~ /(.+)\(([0-9]+)\) renamed to (.+)/) 
+	{ $sname = $3 ; $scn = $2 ; &update_state ; return  "\x032RENAME\x03     \x0312$1($2)\x03 has renamed to \x037$3($2)\x03"}
 	##### REGISTRATION
         if ($line =~  /#register/i) 
 	{return "REGISTRATION";} # Filter Server Registration
-	##### CHAT
-	if ($line =~  /(.+\([0-9]+\)) says (.+)/) 
-	{ return "\x033CHAT\x03       \x0312$1\x03 screams \x033$2\x03" }# Highlight game chat green
-	##### MAP CHANGE
-	if ($line =~ /New game (.+) (.+) @ (.+)/) 
-	{ return "\x032NEWMAP\x03     New map \x037$1\x03 on \x037$2\x03 at $3" }
-	##### MASTER
-	if ($line =~ /(.+\([0-9]+\)) claimed master./) 
+	##### CHAT #####
+	if ($line =~  /(.+\([0-9]+\)): (.+)/) 
+	{ return "\x033CHAT\x03       \x0312$1\x03 --> \x033$2\x03" }# Highlight game chat green
+	##### MAP CHANGE #####
+	if ($line =~ /new game: (.*), (.*), (.*)/) 
+	{ return "\x032NEWMAP\x03     New map \x037$3\x03 \x037$2\x03 and $1 " }
+	##### MASTER #####
+	if ($line =~ /(.+\([0-9]+\)) claimed master/) 
 	{ $master = $1 ; return "\x034MASTER\x03     \x0312$1\x03 took master." }
 	##### RELEASE MASTER
-	if ($line =~ /(.+\([0-9]+\)) relinquished master\/admin./) 
+	if ($line =~ /(.+\([0-9]+\)) relinquished privilewwwwwwwged status./) 
 	{ $master = "NULL" ; return "\x034UNMASTADM\x03   \x0312$1\x03" }
-	##### KICK BAN
-	if ($line =~ /(.+\([0-9]+\)) kick\/banned for:(.+)\.\.\.by master./) 
-	{ return "\x034KICK\x03      Master $master kicked \x0312$1\x03 for $2" }
+	##### KICK BAN #####
+	if ($line =~ /(.*) was kicked by (.*)/) 
+	{ return "\x034KICK\x03      Master \x034$1\x03 kicked \x0312$2\x03" }
 	##### KICK BAN 2
 	if ($line =~ /(.+\([0-9]+\)) kick\/banned for:(.+)\.\.\.by console./) 
 	{ return "\x034KICK\x03      Console kicked \x0312$1\x03 for $2" }
 	##### ADMIN
-	if ($line =~ /(.+\([0-9]+\)) claimed admin./) 
+	if ($line =~ /(.+\([0-9]+\)) claimed admin/) 
 	{ $master = $1 ; return "\x034ADMIN\x03       \x0312$1\x03 took admin" }
 	##### TEAM CHANGE
-	if ($line =~ /(.+\([0-9]+\)) changed teams from (.+) to (.+)./) 
+	if ($line =~ /(.+\([0-9]+\)) changed teams from (.+) to (.+)/) 
 	{ return "\x034CHANGETEAM\x03\x0312$1\x03 changed teams from \x037$2\x03 to \x037$3\x03" }
-	##### MAP VOTE
+	##### MAP VOTE #####
 	if ($line =~ /(.+\([0-9]+\)) suggests (.+) on map (.+)/) 
 	{ return "\x033SUGGEST\x03    \x0312$1\x03 suggests \x037$2\x03 on \x037$3\x03" }
 	##### SERVER RESTART
 	if ($line =~ /Server started (.+)/) 
 	{ return "\x034SERVER\x03    Server Restarted at \x03$1\x03" }
-	##### MASTERMODE
+	##### MASTERMODE #####
 	if ($line =~ /mastermode is now ([0-9])/) 
 	{ return "\x034MASTERMODE\x03  Mastermode is now \x0312$1\x03" }
-	##### SAY
+	##### WHO #####
 	if ($line =~ /	^WHO/g) {
 		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
 			$line =~ s/(\S*)\(([0-9]*)\)/\x0312$1\[$2\]\x03/ ;	
@@ -325,9 +324,7 @@ sub showalias {
         my $hash;
 	my $alias;
 	if ( $CN =~  /(^[0-9]*[0-9]+$)/i) {
-		open (FILE, '+<', $state_tbl)  ; my @FILE = <FILE>; close (FILE);
-		if ( ! -e $state_tbl ) { @FILE = @STATE }
-		foreach (@FILE) {
+		foreach (@STATE) {
 			split (/ /, $_); if ( $_[2] eq $CN ) { $IP = $_[1] }
 		}
 	} else { $IP = $CN }
