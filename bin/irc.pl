@@ -19,12 +19,12 @@ $master = "NULL";
 
 
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
-$botcommandname = $config->{botcommandname};
+$botcommandname = $config->{irc_botcommandname};
 
 #Config File Overrides
-if ( defined $config->{logfile} ) { $server_log = "$config->{logfile}" }
-if ( defined $config->{irccommandlog} ) { $irccommand_log = "$config->{irccommandlog}" }
-if ( defined $config->{serverpipe} ) { $server_pipe = "$config->{serverpipe}" }
+if ( defined $config->{irc_serverlogfile} ) { $server_log = "$config->{irc_serverlogfile}" }
+if ( defined $config->{irc_commandlog} ) { $irccommand_log = "$config->{irc_commandlog}" }
+if ( defined $config->{irc_serverpipe} ) { $server_pipe = "$config->{irc_serverpipe}" }
 
 
 
@@ -54,19 +54,19 @@ sub bot_start {
 	my $kernel  = $_[KERNEL];
 	my $heap    = $_[HEAP];
 	my $session = $_[SESSION];
-	my %channels = ( $config->{channel}   => '' ); 
+	my %channels = ( $config->{irc_channel}   => '' ); 
 	$heap->{connector} = POE::Component::IRC::Plugin::Connector->new();
 	$irc->plugin_add( 'FollowTail' => POE::Component::IRC::Plugin::FollowTail->new( filename => $server_log,));
 	$irc->plugin_add('AutoJoin', POE::Component::IRC::Plugin::AutoJoin->new( Channels => \%channels, RejoinOnKick => 1));
 	$irc->plugin_add( 'Connector' => $heap->{connector} );
 	$irc->yield( register => "all" );
-	my $nick = $config->{botname};
+	my $nick = $config->{irc_botname};
 	$irc->yield( connect =>
 		{ Nick => $nick,
-			Username => $config->{username},
-			Ircname  => $config->{username},
-			Server   => $config->{network},
-			Port     => $config->{ircport},
+			Username => $config->{irc_username},
+			Ircname  => $config->{irc_username},
+			Server   => $config->{irc_network},
+			Port     => $config->{irc_port},
 		}
 		);
 	$kernel->delay( 'lag_o_meter' => 60 );
@@ -77,7 +77,7 @@ sub lag_o_meter {
 	return;
 }
 sub on_connect {
-	$irc->yield( join => $config->{channel} );
+	$irc->yield( join => $config->{irc_channel} );
 }
 sub on_public {
 	my ( $kernel, $sender, $who, $where, $msg ) = @_[ KERNEL, SENDER, ARG0, ARG1, ARG2 ];
@@ -99,13 +99,13 @@ sub on_private {
 
 sub on_tail_input {
 	my ($kernel, $sender, $filename, $input) = @_[KERNEL, SENDER, ARG0, ARG1];
-        $irc->yield( privmsg => $config->{channel} => &filterlog($_[ARG1]) );
+        $irc->yield( privmsg => $config->{irc_channel} => &filterlog($_[ARG1]) );
 }
 sub process_command {
 	my $sender = shift;
 	my $who = shift;
 	my $command = shift;
-	my $channel = $config->{channel};
+	my $channel = $config->{irc_channel};
 	my $nick = ( split /!/, $who )[0];
     	my $poco_object = $sender->get_heap();
 	if ( $command =~ /$botcommandname/i  )                            {
@@ -212,10 +212,10 @@ sub filterlog {
 	##### SPAM PROTECTION
 	if ($line eq $lastline) { 
 		
-		if ( $repeatcount < $config->{spamlines} ) {
+		if ( $repeatcount < $config->{irc_spamlines} ) {
 			$repeatcount++; 
 		} else {
-			if ( $repeatcount == $config->{spamlines} ) { $repeatcount++ ; return "\x034SPAM Detected! Discarding subsequent repeats -->\x0312 " . $line } else { return }
+			if ( $repeatcount == $config->{irc_spamlines} ) { $repeatcount++ ; return "\x034SPAM Detected! Discarding subsequent repeats -->\x0312 " . $line } else { return }
 		}
 	} else { $repeatcount = 1 }	
 	
@@ -307,7 +307,7 @@ sub show_state {
 }
 sub sendtoirc {
 	my $send = shift; 
-	$irc->yield( privmsg => $config->{channel} => "\x034$send\x03" );
+	$irc->yield( privmsg => $config->{irc_channel} => "\x034$send\x03" );
 }
 
 sub sauerping {
