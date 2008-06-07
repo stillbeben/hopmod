@@ -29,9 +29,13 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <signal.h>
 
 extern int g_argc;
 extern char * const * g_argv;
+extern igameserver * sv;
+
+static void shutdown_from_signal(int);
 
 struct fpsserver : igameserver
 {
@@ -2531,6 +2535,14 @@ struct fpsserver : igameserver
         var_mapname.readonly(true);
         var_gamemode.readonly(true);
         sync_game_settings();
+        
+        struct sigaction terminate_action;
+        sigemptyset(&terminate_action.sa_mask);
+        terminate_action.sa_handler=shutdown_from_signal;
+        terminate_action.sa_flags=0;
+        
+        sigaction(SIGINT,&terminate_action,NULL);
+        sigaction(SIGTERM,&terminate_action,NULL);
     }
     
     const char *privname(int type)
@@ -3223,3 +3235,10 @@ struct fpsserver : igameserver
         if(nanosleep(&sleeptime,&sleeptime)==-1) throw cubescript::error_key("runtime.function.server_sleep.returned_early");
     }
 };
+
+static void shutdown_from_signal(int i)
+{
+    fpsserver * svobj=dynamic_cast<fpsserver *>(sv);
+    if(svobj) svobj->shutdown();
+    exit(1);
+}
