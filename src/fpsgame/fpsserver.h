@@ -663,10 +663,10 @@ struct fpsserver : igameserver
         
         m_script_pipes(std::cerr),
         
-        svtext_min_interval(1000), 
-        svsetmaster_min_interval(10000),
-        svkick_min_interval(30000),
-        svmapvote_min_interval(5000),
+        svtext_min_interval(0), 
+        svsetmaster_min_interval(0),
+        svkick_min_interval(0),
+        svmapvote_min_interval(0),
         
         scriptable_events(&server_domain)
     {
