@@ -148,16 +148,16 @@ sub process_command {
 		&toirccommandlog("$nick Unmuted $1, I guess he learned his lesson"); return }
 		##### GIVEMASTER
 		if ( $command =~ /$botcommandname.* givemaster.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={GIVEMASTER}=-\x03 $nick gave master to $1"); &toserverpipe("master $1 1");
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={GIVEMASTER}=-\x03 $nick gave master to $1"); &toserverpipe("setmaster $1 1");
 		&toirccommandlog("ok ok $nick I gave master to $1"); return }
-		##### TAKEMASTER
+		##### TAKEMASTER Working
 		if ( $command =~ /$botcommandname.* takemaster.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("master $1 0"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("setmaster $1 0"); 
 		&toirccommandlog("ok ok $nick I stole master from $1"); return }
 		##### MASTER
 		if ( $command =~ /$botcommandname.* master .*/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERCHECK}=-\x03 current master [\x0312$master\x03]") ; return }
-		##### MASTERMODE
+		##### MASTERMODE working
 		if ( $command =~ /$botcommandname.* mastermode.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERMODE}=-\x03 $nick changed mastermode to $1"); &toserverpipe("mastermode $1"); 
 		&toirccommandlog("Gotcha $nick changing mastermode to $1"); return }
