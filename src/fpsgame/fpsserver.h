@@ -2950,7 +2950,7 @@ struct fpsserver : igameserver
     
     void_ console_setmaster(int cn,bool value)
     {
-        setmaster(get_ci(cn),value);
+        setmaster(get_ci(cn),value,"",true);
     }
     
     void_ approvemaster(int cn)
