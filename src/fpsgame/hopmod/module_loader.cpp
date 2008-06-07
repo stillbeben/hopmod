@@ -25,6 +25,7 @@ void_ module_loader::load_wrapper(std::list<std::string> & args,domain * aDomain
 {
     std::string filename=functionN::pop_arg<std::string>(args);
     load(filename,aDomain);
+    return void_();
 }
 
 void module_loader::load(const std::string & filename,domain * aDomain)

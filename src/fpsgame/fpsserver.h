@@ -1566,7 +1566,7 @@ struct fpsserver : igameserver
                 if(ci->lastupdate==-1) ci->lastupdate=totalmillis;
                 else
                 {
-                    ci->lag=0.5*ci->lag+0.5*max(0,30-(totalmillis-ci->lastupdate));
+                    ci->lag=(ci->lag/2)+(max(0,30-(totalmillis-ci->lastupdate))/2);
                     ci->lastupdate=totalmillis;
                 }
                 break;
@@ -2810,6 +2810,7 @@ struct fpsserver : igameserver
         int mins=-1;
         if(arglist.size()) mins=cubescript::functionN::pop_arg<int>(arglist);
         add_pending_ban(cn,mins);
+        return void_();
     }
     
     void add_pending_ban(int cn,int mins)
@@ -2861,12 +2862,15 @@ struct fpsserver : igameserver
             ci->sendprivmsg(privmsg.str().c_str());
             sendf(cn, 1, "ri3", SV_CURRENTMASTER, cn, ci->privilege);
         }
+        
+        return void_();
     }
     
     void_ clearbans()
     {
         bannedips.setsize(0);
         sendservmsg("cleared all bans");
+        return void_();
     }
     
     void_ set_interm(int milli)
@@ -2879,6 +2883,7 @@ struct fpsserver : igameserver
             if(smode) smode->intermission();
         }
         interm=gamemillis+milli;
+        return void_();
     }
     
     void sync_game_settings()
@@ -2911,6 +2916,8 @@ struct fpsserver : igameserver
         
         cubescript::arguments args;
         scriptable_events.dispatch(&on_spectator,args & cn & val,NULL);
+        
+        return void_();
     }
     
     std::string get_player_status(int cn)
@@ -2964,6 +2971,7 @@ struct fpsserver : igameserver
     {
         if(value) get_ci(cn)->wantsmaster=true;
         setmaster(get_ci(cn),value,"",value ? true : false);
+        return void_();
     }
     
     void_ approvemaster(int cn)
@@ -2971,6 +2979,7 @@ struct fpsserver : igameserver
         setmaster(get_ci(cn), true, "", true);
         cubescript::arguments args;
         scriptable_events.dispatch(&on_approvemaster,args & cn & -1,NULL);
+        return void_();
     }
     
     int get_player_frags(int cn){return get_ci(cn)->state.frags;}
@@ -3007,21 +3016,24 @@ struct fpsserver : igameserver
         if(gmode==-1) throw cubescript::error_key("runtime.function.changemap.invalid_gamemode");
         sendf(-1, 1, "risii", SV_MAPCHANGE, mapname.c_str(), gmode, 1);
         changemap(mapname.c_str(),gmode);
+        return void_();
     }
     
-    void_ recorddemo(bool val){recorddemo(val,"");}
+    void_ recorddemo(bool val){recorddemo(val,""); return void_();}
     void_ recorddemo(bool val,const std::string & filename)
     {
         demonextmatch = val!=0;
         demofilename=filename;
         s_sprintfd(msg)("demo recording is %s for next match", demonextmatch ? "enabled" : "disabled"); 
         sendservmsg(msg);
+        return void_();
     }
     
     void_ stopdemo()
     {
         if(m_demo) enddemoplayback();
         else enddemorecord();
+        return void_();
     }
     
     void_ add_allowhost(const std::string & hostname)
@@ -3031,6 +3043,7 @@ struct fpsserver : igameserver
             result->h_addrtype==AF_INET && 
             result->h_length==4 && 
             result->h_addr_list[0] ) allowedips.add(*((in_addr_t *)result->h_addr_list[0]));
+        return void_();
     }
     
     void_ add_denyhost(const std::string & hostname)
@@ -3047,6 +3060,7 @@ struct fpsserver : igameserver
             b.ip = ip;
             allowedips.removeobj(b.ip);
         }
+        return void_();
     }
     
     int get_player_ping(int cn){return get_ci(cn)->ping;}
@@ -3082,7 +3096,7 @@ struct fpsserver : igameserver
     std::string shell_quote(const std::string & str)
     {
         std::string result;
-        for(int i=0; i<str.length(); i++)
+        for(unsigned int i=0; i<str.length(); i++)
         {
             if(is_shell_syntax(str[i])) result+='\\';
             result+=str[i];
@@ -3130,6 +3144,7 @@ struct fpsserver : igameserver
             dup2(open(stdfile,O_CREAT | O_WRONLY | O_APPEND,484),2);
             execv(g_argv[0],g_argv);
         }
+        return void_();
     }
     
     void_ write_to_logfile(const std::string & msg,FILE * file)
@@ -3198,7 +3213,7 @@ struct fpsserver : igameserver
             }
             
             char ** argv=new char * [args.size()+1];
-            for(int i=0; i<args.size(); i++) argv[i]=newstring(args[i].c_str());
+            for(unsigned int i=0; i<args.size(); i++) argv[i]=newstring(args[i].c_str());
             argv[args.size()]=NULL;
             
             execv(filename.c_str(),argv);
@@ -3225,6 +3240,7 @@ struct fpsserver : igameserver
                 default: throw cubescript::error_key("runtime.function.kill.kill_failed");
             }
         }
+        return void_();
     }
     
     void_ server_sleep(int ms)
@@ -3233,6 +3249,7 @@ struct fpsserver : igameserver
         sleeptime.tv_sec=ms/1000;
         sleeptime.tv_nsec=(ms-sleeptime.tv_sec*1000)*1000000;
         if(nanosleep(&sleeptime,&sleeptime)==-1) throw cubescript::error_key("runtime.function.server_sleep.returned_early");
+        return void_();
     }
 };
 

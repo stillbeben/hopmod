@@ -133,4 +133,5 @@ _void event_handler_service::cancel_named_handler(int id,const std::string & nam
     event_handler * handler=m_handler[id];
     if(!handler) throw cubescript::error_key("runtime.function.event_handler.bad_event_id");
     handler->cancel_handler(name);
+    return _void();
 }

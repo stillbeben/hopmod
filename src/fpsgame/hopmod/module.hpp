@@ -25,6 +25,7 @@ private:
 class module
 {
 public:
+    virtual ~module(){}//only defined to stop the compiler whining.
     virtual void register_symbols(module_domain_accessor *)=0;
 };
 

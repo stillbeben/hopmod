@@ -51,11 +51,11 @@ void stopwatch::resume()
 
 stopwatch::milliseconds stopwatch::get_elapsed()const
 {
-    assert(m_stop!=-1);
+    assert(m_stop!=(stopwatch::milliseconds)-1);
     return m_stop-m_start;
 }
 
 bool stopwatch::running()const
 {
-    return m_start!=-1 && m_stop==-1;
+    return m_start!=(stopwatch::milliseconds)-1 && m_stop==(stopwatch::milliseconds)-1;
 }

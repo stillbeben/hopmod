@@ -13,7 +13,7 @@ void sleep_service::register_function(cubescript::domain * aDomain)
 
 void sleep_service::run()
 {
-    while(!m_jobs.empty() && get_ticks() >= m_jobs.top().m_launchtime)
+    while(!m_jobs.empty() && get_ticks() >= (time_t)m_jobs.top().m_launchtime)
     {
         sleep_job job=m_jobs.top();
         m_jobs.pop();
