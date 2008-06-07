@@ -252,7 +252,6 @@ void script_pipe::run_code(bool allow_write)
         if( m_expn->parse(m_code) )
         {
             cubescript::consume_terminator(m_code);
-            m_code.str(m_code.str().substr(m_code.tellg()));
             result=m_expn->eval();
             
             del_expn=true;
@@ -274,7 +273,7 @@ void script_pipe::run_code(bool allow_write)
         del_expn=true;
     }
     
-    result+="\n";
+    result+="\n\n";
     if(allow_write) write(m_out,result.c_str(),result.length());
     
     if(del_expn)
