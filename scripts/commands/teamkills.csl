@@ -1,0 +1,20 @@
+
+if (teamgame) [
+    if $teamkill_limit_enabled [
+        local tks (player_var $cn teamkills)
+        if (strcmp $tks "") [tks = "0"]
+        
+        local freq 0
+        local times (player_var $cn teamkill_times)
+        if (listlen $times) [
+            freq = (count_intervals $times (mins 1))
+        ]
+        
+        local freqmsg ""
+        if $freq [freqmsg = [ (@freq in the last minute)]]
+        
+        privmsg $cn (info [Teamkill restrictions per game: maxcount=@teamkill_limit maxrate=@teamkill_maxrate per min.])
+        privmsg $cn (info (format "Your teamkill stats: %1 teamkills%2." $tks $freqmsg))
+    
+    ] [privmsg $cn (err "Team kill restrictions not implemented.")]
+] [privmsg $cn (err "Not in team game.")]

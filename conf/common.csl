@@ -155,3 +155,9 @@ add_intervals = [
     if (< $num 2) 0 [(+ (- (at $lst (- $num 2)) (at $lst (- $num 1))) (add_intervals $lst (- $num 1)))]
 ]
 
+count_intervals = [
+    parameters list duration
+    local i 0
+    while [&& (< $i @(listlen $list)) [< (- $uptime (at $list $i)) $duration]] [i = (+ $i 1)]
+    result $i
+]
