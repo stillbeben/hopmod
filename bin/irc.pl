@@ -18,7 +18,7 @@ $master = "NULL";
 
 
 
-$config = Config::Auto::parse("../conf/irc.conf" , format => "space");
+$config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 $botcommandname = $config->{botcommandname};
 
 #Config File Overrides
@@ -195,22 +195,7 @@ sub process_command {
 		##### SCORE
 		if ( $command =~ /$botcommandname.* score.*/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={SCORE}=-\x03 $nick checking the score"); 
-		&toserverpipe("
-		output = []
-scores = \"\"
-
-loop i (listlen (clients)) [
-   cn = (at (clients) \$i)
-   line = (format \"\%4 F\%1/D\%2/A\%3 \%5\" (get_player_frags \$cn) (get_player_deaths \$cn) (get_player_accuracy \$cn) (get_player_name \$cn))
-   scores = (concat \$scores \$line)
-]
-if (! (strcmp \$scores \"\" )) [
-server_log (concat \"SCORE      \" \$scores)	
-]			
-if (strcmp \$scores \"\" ) [
-server_log \"Apparently no one is connected\"
-]	
-			");
+		&toserverpipe("who");
 		 return }
 		
 		if ( $command =~ /$botcommandname/i )
@@ -317,26 +302,7 @@ sub filterlog {
 }
 
 sub show_state {
-&toserverpipe("
-
-
-
-                output = []
-scores = \"\"
-
-loop i (listlen (clients)) [
-   cn = (at (clients) \$i)
-   line = (format \"\%1(\%2)\" (get_client_name \$cn) (\$cn)) 
-   scores = (concat \$scores \$line)
-]
-if (! (strcmp \$scores \"\" )) [
-log (concat \"WHO      \" \$scores)
-]
-if (strcmp \$scores \"\" ) [
-P
-log \"Apparently no one is connected\"
-]
-");
+&toserverpipe("who");
 	
 }
 sub sendtoirc {

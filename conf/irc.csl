@@ -1,0 +1,15 @@
+
+who = [
+scores = ""
+foreach (players) [
+parameters cn
+line = (format "%1(%2)" (player_name $cn)($cn))
+scores = (concat $scores $line)
+]
+if (! (strcmp $scores "")) [
+log (concat "WHO      " $scores)
+]
+if (strcmp $scores "" ) [
+log "Apparently no one is connected"
+]
+]
