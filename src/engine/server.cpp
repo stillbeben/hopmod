@@ -170,7 +170,12 @@ ENetSocket pongsock = ENET_SOCKET_NULL;
 
 void cleanupserver()
 {
-    if(serverhost) enet_host_destroy(serverhost);
+    if(serverhost)
+    {
+        loopv(clients) disconnect_client(clients[i]->num,DISC_NONE);
+        enet_host_flush(serverhost);
+        //enet_host_destroy(serverhost);
+    }
 }
 
 void sendfile(int cn, int chan, FILE *file, const char *format, ...)

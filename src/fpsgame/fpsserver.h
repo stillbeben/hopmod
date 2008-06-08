@@ -31,9 +31,11 @@
 #include <errno.h>
 #include <signal.h>
 
+//defined in engine/server.cpp
 extern int g_argc;
 extern char * const * g_argv;
 extern igameserver * sv;
+void cleanupserver();
 
 static void shutdown_from_signal(int);
 
@@ -3123,6 +3125,7 @@ struct fpsserver : igameserver
     void_ shutdown()
     {
         scriptable_events.dispatch(&on_shutdown,cubescript::args0(),NULL);
+        cleanupserver();
         m_script_pipes.shutdown();
         for(std::list<FILE *>::iterator it=m_logfiles.begin(); it!=m_logfiles.end(); ++it) fclose(*it);
         exit(0);
