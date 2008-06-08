@@ -227,16 +227,16 @@ sub filterlog {
 		$nick[0] =~ s/(\!|\~|\^|\*|\?|\#|\`|\||\\|\<|\>|'|"|\(|\)|\[|\]|\$|\;|\&|\\)/\\$1/g; 
 		if ( $nick[0] eq "" ) { $nick[0] = "noone" }
 		if ( $ip eq "" ) { $ip = "127.0.0.1" }
+		if ($line =~ /(.+)\(([0-9]+)\)\((.+)\) connected/ )
+		{ $sname = $1 ; $scn = $2 ; $sip = $ip ; &add_state}
+		
+		if ($line =~ /(.+)\(([0-9]+)\)\((.+)\) disconnected/ )
+		{ $sname = $1 ; $scn = $2 ; $sip = $ip ; &remove_state}
+		
 		if ( -e '$pwd/ext/bin/verify.pl') {
 			my $VERIFY = `$pwd/ext/bin/verify.pl --name=$nick[0] --ip=$ip --writestate=no --showmask=no`;
 		$line =~ s/$ip/$VERIFY/g; } else { $line =~ s/$ip/Masked/g }
-		
-		if ($line =~ /(.+)\(([0-9]+)\)\((.+)\).connected./ )
-		{ $sname = $1 ; $scn = $2 ; $sip = $ip ; &add_state}
-		
-		if ($line =~ /(.+)\(([0-9]+)\)\((.+)\).disconnected./ )
-		{ $sname = $1 ; $scn = $2 ; $sip = $ip ; &remove_state}
-		
+				
 		#return $line;
 	}
 	
@@ -244,10 +244,10 @@ sub filterlog {
 	##### TEXT FORMATTING #####
 	
 	##### CONNECT #####
-	if ($line =~ /(.+\([0-9]+\))(\(.+\)) connected/)
+	if ($line =~ /(.*\([0-9]+\))(\(.+\)) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 $2" }
 	##### DISCONNECT #####
-	if ($line =~ /(.+\([0-9]+\)) disconnected .+, (.*)/)
+	if ($line =~ /(.+\([0-9]+\)) disconnected, (.+)/)
 	{ return "\x032DISCONNECT\x03 \x0312$1\x03 $2" }
 	##### RENAME #####
 	if ($line =~ /(.+)\(([0-9]+)\) renamed to (.+)/) 
