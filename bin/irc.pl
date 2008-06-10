@@ -260,39 +260,40 @@ sub filterlog {
 	{ return "\x033CHAT\x03       \x0312$1\x03 --> \x033$2\x03" }# Highlight game chat green
 	##### MAP CHANGE #####
 	if ($line =~ /new game: (.*), (.*), (.*)/) 
-	{ return "\x032NEWMAP\x03     New map \x037$3\x03 \x037$2\x03 and $1 " }
+	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for \x037$2\x03 with \x037$1\x03 " }
 	##### MASTER #####
 	if ($line =~ /(.+\([0-9]+\)) claimed master/) 
 	{ $master = $1 ; return "\x034MASTER\x03     \x0312$1\x03 took master." }
-	##### RELEASE MASTER
-	if ($line =~ /(.+\([0-9]+\)) relinquished privilewwwwwwwged status./) 
-	{ $master = "NULL" ; return "\x034UNMASTADM\x03   \x0312$1\x03" }
+	##### RELEASE MASTER #####
+	if ($line =~ /(.+\([0-9]+\)) relinquished privileged status./) 
+	{ $master = "NULL" ; return "\x034UNMASTADM\x03   \x0312$1\x03 relinquished privileged status" }
 	##### KICK BAN #####
 	if ($line =~ /(.*) was kicked by (.*)/) 
 	{ return "\x034KICK\x03      Master \x034$1\x03 kicked \x0312$2\x03" }
 	##### KICK BAN 2
 	if ($line =~ /(.+\([0-9]+\)) kick\/banned for:(.+)\.\.\.by console./) 
 	{ return "\x034KICK\x03      Console kicked \x0312$1\x03 for $2" }
-	##### ADMIN
+	##### ADMIN #####
 	if ($line =~ /(.+\([0-9]+\)) claimed admin/) 
 	{ $master = $1 ; return "\x034ADMIN\x03       \x0312$1\x03 took admin" }
 	##### TEAM CHANGE
-	if ($line =~ /(.+\([0-9]+\)) changed teams from (.+) to (.+)/) 
-	{ return "\x034CHANGETEAM\x03\x0312$1\x03 changed teams from \x037$2\x03 to \x037$3\x03" }
+	if ($line =~ /(.+\([0-9]+\)) changed team to (.+)/) 
+	{ return "\x034CHANGETEAM \x03\x0312$1\x03 changed teams to \x037$3\x03" }
 	##### MAP VOTE #####
 	if ($line =~ /(.+\([0-9]+\)) suggests (.+) on map (.+)/) 
 	{ return "\x033SUGGEST\x03    \x0312$1\x03 suggests \x037$2\x03 on \x037$3\x03" }
-	##### SERVER RESTART
-	if ($line =~ /Server started (.+)/) 
-	{ return "\x034SERVER\x03    Server Restarted at \x03$1\x03" }
+	##### SERVER RESTART #####
+	if ($line =~ /server started (.+)/) 
+	{ return "\x034SERVER\x03    Server Restarted at \x037$1\x03" }
 	##### MASTERMODE #####
 	if ($line =~ /mastermode is now ([0-9])/) 
 	{ return "\x034MASTERMODE\x03  Mastermode is now \x0312$1\x03" }
 	##### WHO #####
-	if ($line =~ /	^WHO/g) {
+	if ($line =~ /^WHO/g) {
 		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
 			$line =~ s/(\S*)\(([0-9]*)\)/\x0312$1\[$2\]\x03/ ;	
 		}
+	$line =~ s/WHO/\x034WHO\x03/;
 	return $line
 	}
 	
