@@ -1,0 +1,6 @@
+
+if (strcmp (player_priv $cn) "admin") [
+    if (>= (listlen $arguments) 2) [
+        player_var (at $arguments 1) mute 0
+    ] [privmsg $cn (err "Missing cn argument.")]
+] [privmsg $cn (err "Permission denied.")]
