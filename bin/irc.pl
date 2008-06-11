@@ -139,11 +139,11 @@ sub process_command {
 		&toirccommandlog("$nick I have unspec'd $1 "); return }
 		##### MUTE
 		if ( $command =~ /$botcommandname.* mute.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MUTE}=-\x03 $nick muted $1"); &toserverpipe("user_var $1 mute 1");
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MUTE}=-\x03 $nick muted $1"); &toserverpipe("player_var $1 mute 1");
 		&toirccommandlog("$nick Muting $1, what a spammer"); return }
 		##### UNMUTE
 		if ( $command =~ /$botcommandname.* unmute.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNMUTE}=-\x03 $nick Unmuted $1"); &toserverpipe("user_var $1 mute 0"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNMUTE}=-\x03 $nick Unmuted $1"); &toserverpipe("player_var $1 mute 0"); 
 		&toirccommandlog("$nick Unmuted $1, I guess he learned his lesson"); return }
 		##### GIVEMASTER #####
 		if ( $command =~ /$botcommandname.* givemaster.*\s([0-9]+)/i )
