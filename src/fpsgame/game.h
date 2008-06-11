@@ -379,7 +379,6 @@ struct fpsent : dynent, fpsstate
     int superdamage;
     int frags, deaths, totaldamage, totalshots;
     editinfo *edit;
-    vec deltapos, newpos;
     float deltayaw, deltapitch, newyaw, newpitch;
     int smoothmillis;
 

@@ -158,6 +158,7 @@ struct entities : icliententities
                 d->pitch = 0;
                 d->vel = vec(0, 0, 0);//vec(cosf(RAD*(d->yaw-90)), sinf(RAD*(d->yaw-90)), 0);
                 entinmap(d);
+                updatedynentcache(d);
                 cl.playsoundc(S_TELEPORT, d);
                 break;
             }

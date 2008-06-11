@@ -177,6 +177,8 @@ struct weaponstate
         bnc.offset = hudgunorigin(type==BNC_GRENADE ? GUN_GL : -1, from, to, owner);
         bnc.offset.sub(bnc.o);
         bnc.offsetmillis = OFFSETMILLIS;
+
+        bnc.resetinterp();
     }
 
     void bounceupdate(int time)

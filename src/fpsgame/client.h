@@ -40,7 +40,7 @@ struct clientcom : iclientcom
         CCOMMAND(getname, "", (clientcom *self), result(self->player1->name));
         CCOMMAND(getteam, "", (clientcom *self), result(self->player1->team));
         CCOMMAND(getclientfocus, "", (clientcom *self), intret(self->getclientfocus()));
-        CCOMMAND(getclientname, "", (clientcom *self, int *cn), result(self->getclientname(*cn)));
+        CCOMMAND(getclientname, "i", (clientcom *self, int *cn), result(self->getclientname(*cn)));
     }
 
     void switchname(const char *name)
@@ -49,6 +49,7 @@ struct clientcom : iclientcom
         { 
             c2sinit = false; 
             filtertext(player1->name, name, false, MAXNAMELEN);
+            if(!player1->name[0]) s_strcpy(player1->name, "unnamed");
         }
         else conoutf("your name is: %s", cl.colorname(player1));
     }
@@ -130,8 +131,11 @@ struct clientcom : iclientcom
     {
         char *end;
         int n = strtol(arg, &end, 10);
-        if(!cl.players.inrange(n)) return -1;
-        if(*arg && !*end) return n;
+        if(*arg && !*end) 
+        {
+            if(n!=player1->clientnum && !cl.players.inrange(n)) return -1;
+            return n;
+        }
         // try case sensitive first
         loopi(cl.numdynents())
         {
@@ -391,7 +395,12 @@ struct clientcom : iclientcom
                     updatephysstate(d);
                     updatepos(d);
                 }
-                if(cl.smoothmove() && d->smoothmillis>=0 && oldpos.dist(d->o) < cl.smoothdist())
+                if(d->state==CS_DEAD)
+                {
+                    d->resetinterp();
+                    d->smoothmillis = 0;
+                }
+                else if(cl.smoothmove() && d->smoothmillis>=0 && oldpos.dist(d->o) < cl.smoothdist())
                 {
                     d->newpos = d->o;
                     d->newyaw = d->yaw;
@@ -562,6 +571,7 @@ struct clientcom : iclientcom
                     cl.stopfollowing();
                     cl.sb.showscores(true);
                 }
+                else d->resetinterp();
                 d->state = CS_DEAD;
                 break;
             }
@@ -628,6 +638,7 @@ struct clientcom : iclientcom
 
             case SV_SPAWN:
             {
+                if(d) d->respawn();
                 parsestate(d, p);
                 if(!d) break;
                 d->state = CS_SPAWNING;
@@ -906,6 +917,7 @@ struct clientcom : iclientcom
                         cl.stopfollowing();
                         cl.sb.showscores(true);
                     }
+                    else s->resetinterp();
                 }
                 break;
             }
@@ -947,16 +959,17 @@ struct clientcom : iclientcom
 
             case SV_BASES:
             {
-                int base = 0, ammotype;
-                while((ammotype = getint(p))>=0)
+                int numbases = getint(p);
+                loopi(numbases)
                 {
+                    int ammotype = getint(p);
                     string owner, enemy;
                     getstring(text, p);
                     s_strcpy(owner, text);
                     getstring(text, p);
                     s_strcpy(enemy, text);
                     int converted = getint(p), ammo = getint(p);
-                    cl.cpc.initbase(base++, ammotype, owner, enemy, converted, ammo);
+                    cl.cpc.initbase(i, ammotype, owner, enemy, converted, ammo);
                 }
                 break;
             }
@@ -1250,6 +1263,7 @@ struct clientcom : iclientcom
             vec dir;
             vecfromyawpitch(player1->yaw, player1->pitch, 1, 0, dir);
             player1->o.add(dir.mul(-32));
+            player1->resetinterp();
         }
     }
 };

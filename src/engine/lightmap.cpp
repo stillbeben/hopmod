@@ -379,8 +379,8 @@ void calcskylight(const vec &o, const vec &normal, float tolerance, uchar *skyli
     loopk(3) skylight[k] = uchar(ambient + (max(int(hdr.skylight[k]), ambient) - ambient)*hit/17.0f);
 }
 
-VAR(blurlms, 0, 0, 2);
-VAR(blurskylight, 0, 0, 2);
+VARR(blurlms, 0, 0, 2);
+VARR(blurskylight, 0, 0, 2);
 
 void blurlightmap(int n)
 {

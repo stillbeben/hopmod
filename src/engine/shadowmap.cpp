@@ -11,7 +11,7 @@ VAR(shadowmapheight, 0, 32, 128);
 VARP(shadowmapdist, 128, 256, 512);
 VARFP(fpshadowmap, 0, 0, 1, cleanshadowmap());
 VARFP(shadowmapprecision, 0, 0, 1, cleanshadowmap());
-VAR(shadowmapambient, 0, 0, 0xFFFFFF);
+VARR(shadowmapambient, 0, 0, 0xFFFFFF);
 
 VARP(blurshadowmap, 0, 1, 3);
 VARP(blursmsigma, 1, 100, 200);
@@ -27,7 +27,7 @@ void setshadowdir(int angle)
     shadowdir.rotate_around_z(angle*RAD);
 }
 
-VARF(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
+VARFR(shadowmapangle, 0, 0, 360, setshadowdir(shadowmapangle));
 
 void guessshadowdir()
 {

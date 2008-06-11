@@ -84,7 +84,7 @@ ident *newident(const char *name)
     ident *id = idents->access(name);
     if(!id)
     {
-        ident init(ID_ALIAS, newstring(name), newstring(""), persistidents);
+        ident init(ID_ALIAS, newstring(name), newstring(""), persistidents ? IDF_PERSIST : 0);
         id = idents->access(init.name, &init);
     }
     return id;
@@ -114,7 +114,7 @@ void aliasa(const char *name, char *action)
     ident *b = idents->access(name);
     if(!b) 
     {
-        ident b(ID_ALIAS, newstring(name), action, persistidents);
+        ident b(ID_ALIAS, newstring(name), action, persistidents ? IDF_PERSIST : 0);
         if(overrideidents) b.override = OVERRIDDEN;
         idents->access(b.name, &b);
     }
@@ -131,7 +131,11 @@ void aliasa(const char *name, char *action)
         else 
         {
             if(b->override != NO_OVERRIDE) b->override = NO_OVERRIDE;
-            if(b->persist != persistidents) b->persist = persistidents;
+            if(persistidents)
+            {
+                if(!(b->flags & IDF_PERSIST)) b->flags |= IDF_PERSIST;
+            }
+            else if(b->flags & IDF_PERSIST) b->flags &= ~IDF_PERSIST;
         }
     }
 }
@@ -142,26 +146,26 @@ COMMAND(alias, "ss");
 
 // variable's and commands are registered through globals, see cube.h
 
-int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), bool persist)
+int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, persist);
+    ident v(ID_VAR, name, min, cur, max, storage, (void *)fun, flags);
     idents->access(name, &v);
     return cur;
 }
 
-float fvariable(const char *name, float cur, float *storage, void (*fun)(), bool persist)
+float fvariable(const char *name, float cur, float *storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_FVAR, name, cur, storage, (void *)fun, persist);
+    ident v(ID_FVAR, name, cur, storage, (void *)fun, flags);
     idents->access(name, &v);
     return cur;
 }
 
-char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), bool persist)
+char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), int flags)
 {
     if(!idents) idents = new identtable;
-    ident v(ID_SVAR, name, newstring(cur), storage, (void *)fun, persist);
+    ident v(ID_SVAR, name, newstring(cur), storage, (void *)fun, flags);
     idents->access(name, &v);
     return v.val.s;
 }
@@ -205,6 +209,19 @@ int getvarmax(const char *name)
 }
 bool identexists(const char *name) { return idents->access(name)!=NULL; }
 ident *getident(const char *name) { return idents->access(name); }
+
+void touchvar(const char *name)
+{
+    ident *id = idents->access(name);
+    if(id) switch(id->type)
+    {
+        case ID_VAR:
+        case ID_FVAR:
+        case ID_SVAR:
+            id->changed();
+            break;
+    }
+}
 
 const char *getalias(const char *name)
 {
@@ -473,9 +490,9 @@ char *executeret(const char *p)               // all evaluation happens here, re
                     else
                     {
                         #define OVERRIDEVAR(saveval, resetval) \
-                            if(overrideidents) \
+                            if(overrideidents || id->flags&IDF_OVERRIDE) \
                             { \
-                                if(id->persist) \
+                                if(id->flags&IDF_PERSIST) \
                                 { \
                                     conoutf(CON_ERROR, "cannot override persistent variable %s", id->name); \
                                     break; \
@@ -579,8 +596,7 @@ void writecfg()
     fprintf(f, "\n");
     writecrosshairs(f);
     enumerate(*idents, ident, id,
-        if(!id.persist) continue;
-        switch(id.type)
+        if(id.flags&IDF_PERSIST) switch(id.type)
         {
             case ID_VAR: fprintf(f, "%s %d\n", id.name, *id.storage.i); break;
             case ID_FVAR: fprintf(f, "%s %f\n", id.name, *id.storage.f); break;
@@ -591,7 +607,7 @@ void writecfg()
     writebinds(f);
     fprintf(f, "\n");
     enumerate(*idents, ident, id,
-        if(id.type==ID_ALIAS && id.persist && id.override==NO_OVERRIDE && !strstr(id.name, "nextmap_") && id.action[0])
+        if(id.type==ID_ALIAS && id.flags&IDF_PERSIST && id.override==NO_OVERRIDE && !strstr(id.name, "nextmap_") && id.action[0])
         {
             fprintf(f, "\"%s\" = [%s]\n", id.name, id.action);
         }

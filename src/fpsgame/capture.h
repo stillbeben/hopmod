@@ -26,7 +26,7 @@ struct capturestate
         string name, info;
         extentity *ent;
 #endif
-        int ammotype, ammo, owners, enemies, converted, capturetime;
+        int ammogroup, ammotype, ammo, owners, enemies, converted, capturetime;
 
         baseinfo() { reset(); }
 
@@ -42,6 +42,7 @@ struct capturestate
             noenemy();
             owner[0] = '\0';
             capturetime = -1;
+            ammogroup = 0;
             ammotype = 0;
             ammo = 0;
             owners = 0;
@@ -152,8 +153,14 @@ struct capturestate
     void addbase(int ammotype, const vec &o)
     {
         baseinfo &b = bases.add();
-        b.ammotype = ammotype ? ammotype : rnd(5)+1;
+        b.ammogroup = min(ammotype, 0);
+        b.ammotype = ammotype > 0 ? ammotype : rnd(5)+1;
         b.o = o;
+
+        if(b.ammogroup) 
+        {
+            loopv(bases) if(b.ammogroup==bases[i].ammogroup) b.ammotype = bases[i].ammotype;
+        }
     }
 
     void initbase(int i, int ammotype, const char *owner, const char *enemy, int converted, int ammo)
@@ -467,15 +474,15 @@ struct captureclient : capturestate
     void sendbases(ucharbuf &p)
     {
         putint(p, SV_BASES);
+        putint(p, bases.length());
         loopv(bases)
         {
             baseinfo &b = bases[i];
-            putint(p, max(b.ammotype, 0));
+            putint(p, b.ammotype);
             putint(p, int(b.o.x*DMF));
             putint(p, int(b.o.y*DMF));
             putint(p, int(b.o.z*DMF));
         }
-        putint(p, -1);
     }
 
     void updatebase(int i, const char *owner, const char *enemy, int converted, int ammo)
@@ -742,6 +749,7 @@ struct captureservmode : capturestate, servmode
             }
         }
         putint(p, SV_BASES);
+        putint(p, bases.length());
         loopv(bases)
         {
             baseinfo &b = bases[i];
@@ -751,7 +759,6 @@ struct captureservmode : capturestate, servmode
             putint(p, b.converted);
             putint(p, b.ammo);
         }
-        putint(p, -1);
     }
 
     void endcheck()
@@ -822,14 +829,15 @@ struct captureservmode : capturestate, servmode
 
     void parsebases(ucharbuf &p)
     {
-        int ammotype;
-        while((ammotype = getint(p))>=0)
+        int numbases = getint(p);
+        loopi(numbases)
         {
+            int ammotype = getint(p);
             vec o;
             o.x = getint(p)/DMF;
             o.y = getint(p)/DMF;
             o.z = getint(p)/DMF;
-            if(notgotbases) addbase(ammotype>=GUN_SG && ammotype<=GUN_PISTOL ? ammotype : 0, o);
+            if(notgotbases) addbase(ammotype>=GUN_SG && ammotype<=GUN_PISTOL ? ammotype : min(ammotype, 0), o);
         }
         if(notgotbases)
         {

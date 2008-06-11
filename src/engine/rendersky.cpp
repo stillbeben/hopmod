@@ -30,22 +30,23 @@ Texture *loadskyoverlay(const char *basename)
     return t;
 }
 
-SVARF(skybox, "", { if(skybox[0]) loadsky(skybox, sky); }); 
-FVAR(spinsky, 0);
-VAR(yawsky, 0, 0, 360);
-SVARF(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
-FVAR(spinclouds, 0);
-VAR(yawclouds, 0, 0, 360);
-FVAR(cloudclip, 0.5f);
-SVARF(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
-FVAR(cloudscrollx, 0);
-FVAR(cloudscrolly, 0);
-FVAR(cloudscale, 1);
-FVAR(spincloudlayer, 0);
-FVAR(yawcloudlayer, 0);
-FVAR(cloudheight, 0.2f);
-FVAR(cloudfade, 0.2f);
-VAR(cloudsubdiv, 4, 16, 64);
+SVARFR(skybox, "", { if(skybox[0]) loadsky(skybox, sky); }); 
+FVARR(spinsky, 0);
+VARR(yawsky, 0, 0, 360);
+SVARFR(cloudbox, "", { if(cloudbox[0]) loadsky(cloudbox, clouds); });
+FVARR(spinclouds, 0);
+VARR(yawclouds, 0, 0, 360);
+FVARR(cloudclip, 0.5f);
+SVARFR(cloudlayer, "", { if(cloudlayer[0]) cloudoverlay = loadskyoverlay(cloudlayer); });
+FVARR(cloudscrollx, 0);
+FVARR(cloudscrolly, 0);
+FVARR(cloudscale, 1);
+FVARR(spincloudlayer, 0);
+FVARR(yawcloudlayer, 0);
+FVARR(cloudheight, 0.2f);
+FVARR(cloudfade, 0.2f);
+VARR(cloudsubdiv, 4, 16, 64);
+VARR(cloudcolour, 0, 0xFFFFFF, 0xFFFFFF);
 
 void draw_envbox_face(float s0, float t0, int x0, int y0, int z0,
                       float s1, float t1, int x1, int y1, int z1,
@@ -109,7 +110,8 @@ void draw_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty = 0
 {
     float z = -w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
     glBindTexture(GL_TEXTURE_2D, overlay ? overlay->id : notexture->id);
-    glColor3f(1, 1, 1);
+    float r = (cloudcolour>>16)/255.0f, g = ((cloudcolour>>8)&255)/255.0f, b = (cloudcolour&255)/255.0f;
+    glColor3f(r, g, b);
     glBegin(GL_POLYGON);
     loopi(cloudsubdiv)
     {
@@ -124,9 +126,9 @@ void draw_env_overlay(int w, Texture *overlay = NULL, float tx = 0, float ty = 0
     {
         vec p(1, 1, 0);
         p.rotate_around_z((-2.0f*M_PI*i)/cloudsubdiv);
-        glColor4f(1, 1, 1, 1);
+        glColor4f(r, g, b, 1);
         glTexCoord2f(tx + p.x*tsz, ty + p.y*tsz); glVertex3f(p.x*psz, p.y*psz, z);
-        glColor4f(1, 1, 1, 0);
+        glColor4f(r, g, b, 0);
         glTexCoord2f(tx + p.x*tsz2, ty + p.y*tsz2); glVertex3f(p.x*w, p.y*w, z);
     }
     glEnd();    
@@ -307,7 +309,7 @@ void drawskybox(int farplane, bool limited)
     if(fog) glEnable(GL_FOG);
 }
 
-VARN(skytexture, useskytexture, 0, 1, 1);
+VARNR(skytexture, useskytexture, 0, 1, 1);
 
 int explicitsky = 0;
 double skyarea = 0;

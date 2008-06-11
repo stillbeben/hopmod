@@ -280,10 +280,6 @@ void gl_checkextensions()
         extern int fpdepthfx;
         if(hasTF && (!strstr(renderer, "GeForce") || !checkseries(renderer, 6000, 6600)))
             fpdepthfx = 1; // FP filtering causes software fallback on 6200?
-
-#ifdef __APPLE__
-        floatvtx = 1; // workaround for strange reported slowdown involving short vertex coords on 8800 under OS X 10.5.3 + 8800
-#endif
     }
     else if(strstr(vendor, "Intel"))
     {
@@ -735,8 +731,8 @@ void disablepolygonoffset(GLenum type)
     glMatrixMode(GL_MODELVIEW);
 }
 
-VAR(fog, 16, 4000, 1000024);
-VAR(fogcolour, 0, 0x8099B3, 0xFFFFFF);
+VARR(fog, 16, 4000, 1000024);
+VARR(fogcolour, 0, 0x8099B3, 0xFFFFFF);
 
 void setfogplane(const plane &p, bool flush)
 {
@@ -1076,7 +1072,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
 
     xtravertsva = xtraverts = glde = gbatches = 0;
 
-    visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, size, size, 90);
+    visiblecubes(90, 90);
 
     if(limitsky()) drawskybox(farplane, true);
 
@@ -1146,8 +1142,8 @@ void gl_drawframe(int w, int h)
    
     updatedynlights();
 
-    fovy = float(curfov*h)/w;
     aspect = w/float(h);
+    fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
     
     int fogmat = lookupmaterial(camera1->o), abovemat = MAT_AIR;
     float fogblend = 1.0f, causticspass = 0.0f;
@@ -1191,7 +1187,7 @@ void gl_drawframe(int w, int h)
         else dopostfx = true;
     }
 
-    visiblecubes(worldroot, hdr.worldsize/2, 0, 0, 0, w, h, curfov);
+    visiblecubes(curfov, fovy);
     
     if(shadowmap && !hasFBO) rendershadowmap();
 
@@ -1504,10 +1500,10 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
             if(editmode || showeditstats)
             {
                 static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
-                if(lastmillis - laststats >= statrate)
+                if(totalmillis - laststats >= statrate)
                 {
                     memcpy(prevstats, curstats, sizeof(prevstats));
-                    laststats = lastmillis - (lastmillis%statrate);
+                    laststats = totalmillis - (totalmillis%statrate);
                 }
                 int nextstats[8] =
                 {

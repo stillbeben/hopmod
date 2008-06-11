@@ -277,7 +277,7 @@ struct Reflection
 Reflection *findreflection(int height);
 
 VARP(reflectdist, 0, 2000, 10000);
-VAR(waterfog, 0, 150, 10000);
+VARR(waterfog, 0, 150, 10000);
 
 void getwatercolour(uchar *wcol)
 {
@@ -310,7 +310,7 @@ void waterfallcolour(int *r, int *g, int *b)
 
 COMMAND(waterfallcolour, "iii");
 
-VAR(lavafog, 0, 50, 10000);
+VARR(lavafog, 0, 50, 10000);
 
 void getlavacolour(uchar *lcol)
 {
@@ -393,7 +393,7 @@ void cleanupwaterTMUs(bool refract)
     }
 }
 
-VAR(waterspec, 0, 150, 1000);
+VARR(waterspec, 0, 150, 1000);
 
 Reflection reflections[MAXREFLECTIONS];
 Reflection waterfallrefraction;
@@ -1070,8 +1070,9 @@ void maskreflection(Reflection &ref, float offset, bool reflect)
 }
 
 VAR(reflectscissor, 0, 1, 1);
+VAR(reflectvfc, 0, 1, 1);
 
-static bool calcscissorbox(Reflection &ref, int size, int &sx, int &sy, int &sw, int &sh)
+static bool calcscissorbox(Reflection &ref, int size, float &minyaw, float &maxyaw, float &minpitch, float &maxpitch, int &sx, int &sy, int &sw, int &sh)
 {
     materialsurface &m0 = *ref.matsurfs[0];
     int dim = dimension(m0.orient), r = R[dim], c = C[dim];
@@ -1132,6 +1133,13 @@ static bool calcscissorbox(Reflection &ref, int size, int &sx, int &sy, int &sw,
     sy1 = max(sy1, -1.0f);
     sx2 = min(sx2, 1.0f);
     sy2 = min(sy2, 1.0f);
+    if(reflectvfc)
+    {
+        minyaw = atan2(sx1, projmatrix[0]);
+        maxyaw = atan2(sx2, projmatrix[0]);
+        minpitch = atan2(sy1, projmatrix[5]);
+        maxpitch = atan2(sy2, projmatrix[5]);
+    }
     sx = int(floor((hasFBO ? 0 : screen->w-size) + (sx1+1)*0.5f*size));
     sy = int(floor((hasFBO ? 0 : screen->h-size) + (sy1+1)*0.5f*size));
     sw = max(int(ceil((hasFBO ? 0 : screen->w-size) + (sx2+1)*0.5f*size)) - sx, 0);
@@ -1166,8 +1174,9 @@ void drawreflections()
         ref.lastupdate = totalmillis;
         lastdrawn = n;
 
+        float minyaw = -M_PI, maxyaw = M_PI, minpitch = -M_PI, maxpitch = M_PI;
         int sx, sy, sw, sh;
-        bool scissor = reflectscissor && calcscissorbox(ref, size, sx, sy, sw, sh);
+        bool scissor = reflectscissor && calcscissorbox(ref, size, minyaw, maxyaw, minpitch, maxpitch, sx, sy, sw, sh);
         if(scissor) glScissor(sx, sy, sw, sh);
         else
         {
@@ -1182,7 +1191,9 @@ void drawreflections()
             if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             maskreflection(ref, offset, true);
             if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
+            reflectvfcP(ref.height+offset, minyaw, maxyaw, minpitch, maxpitch);
             drawreflection(ref.height+offset, false, false);
+            restorevfcP();
             if(scissor) glDisable(GL_SCISSOR_TEST);
             if(!hasFBO)
             {
@@ -1197,7 +1208,9 @@ void drawreflections()
             if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
             maskreflection(ref, offset, false);
             if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
+            reflectvfcP(-1, minyaw, maxyaw, minpitch, maxpitch);
             drawreflection(ref.height+offset, true, ref.depth>=10000);
+            restorevfcP();
             if(scissor) glDisable(GL_SCISSOR_TEST);
             if(!hasFBO)
             {
@@ -1224,8 +1237,9 @@ void drawreflections()
         refs++;
         ref.lastupdate = totalmillis;
 
+        float minyaw = -M_PI, maxyaw = M_PI, minpitch = -M_PI, maxpitch = M_PI;
         int sx, sy, sw, sh;
-        bool scissor = reflectscissor && calcscissorbox(ref, size, sx, sy, sw, sh);
+        bool scissor = reflectscissor && calcscissorbox(ref, size, minyaw, maxyaw, minpitch, maxpitch, sx, sy, sw, sh);
         if(scissor) glScissor(sx, sy, sw, sh);
         else
         {
@@ -1238,7 +1252,9 @@ void drawreflections()
         if(scissor && !nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
         maskreflection(ref, -0.1f, false);
         if(scissor && nvidia_scissor_bug) glEnable(GL_SCISSOR_TEST);
+        reflectvfcP(-1, minyaw, maxyaw, minpitch, maxpitch);
         drawreflection(-1, true, false); 
+        restorevfcP();
         if(scissor) glDisable(GL_SCISSOR_TEST);
         if(!hasFBO)
         {

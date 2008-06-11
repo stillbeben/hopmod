@@ -211,6 +211,7 @@ struct fpsclient : igameclient
             player1->yaw = target->yaw;    
             player1->pitch = target->state==CS_DEAD ? 0 : target->pitch;
             player1->o = target->o;
+            player1->resetinterp();
         }
     }
 
@@ -263,7 +264,7 @@ struct fpsclient : igameclient
                 }
                 else moveplayer(d, 1, false);
             }
-            else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, 1, false);
+            else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, 1, true);
         }
     }
 
@@ -431,6 +432,7 @@ struct fpsclient : igameclient
         else
         {
             d->move = d->strafe = 0;
+            d->resetinterp();
             playsound(S_DIE1+rnd(2), &d->o);
             if(!restore) ws.superdamageeffect(d->vel, d);
         }
@@ -442,6 +444,7 @@ struct fpsclient : igameclient
         {
             d->editstate = CS_DEAD;
             if(d==player1) d->deaths++;
+            else d->resetinterp();
             return;
         }
         else if(d->state!=CS_ALIVE || intermission) return;
@@ -669,8 +672,8 @@ struct fpsclient : igameclient
         if(d->type==ENT_INANIMATE) return;
         if     (waterlevel>0) { if(material!=MAT_LAVA) playsound(S_SPLASH1, d==player1 ? NULL : &d->o); }
         else if(waterlevel<0) playsound(material==MAT_LAVA ? S_BURN : S_SPLASH2, d==player1 ? NULL : &d->o);
-        if     (floorlevel>0) { if(local) playsoundc(S_JUMP, (fpsent *)d); else if(d->type==ENT_AI) playsound(S_JUMP, &d->o); }
-        else if(floorlevel<0) { if(local) playsoundc(S_LAND, (fpsent *)d); else if(d->type==ENT_AI) playsound(S_LAND, &d->o); }
+        if     (floorlevel>0) { if(d==player1 || d->type!=ENT_PLAYER) playsoundc(S_JUMP, (fpsent *)d); }
+        else if(floorlevel<0) { if(d==player1 || d->type!=ENT_PLAYER) playsoundc(S_LAND, (fpsent *)d); }
     }
 
     void playsoundc(int n, fpsent *d = NULL) 

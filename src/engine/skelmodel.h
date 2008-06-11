@@ -786,7 +786,11 @@ struct skelmodel : animmodel
                 loopi(numbones)
                 {
                     boneinfo &info = bones[i];
-                    if(info.interpindex < 0 || info.parent < 0 || bones[info.parent].interpindex >= 0) continue;
+                    if(info.interpindex < 0 || info.parent < 0 || bones[info.parent].interpindex >= 0) 
+                    {
+                        frame[i].fixantipodal(framebones[i]);
+                        continue;
+                    }
                     dualquat d = frame[i];
                     int parent = info.parent;
                     while(parent >= 0 && bones[parent].interpindex < 0)
@@ -795,6 +799,7 @@ struct skelmodel : animmodel
                         parent = bones[parent].parent;
                     }
                     d.normalize();
+                    d.fixantipodal(framebones[i]);
                     frame[i] = d;
                 }
                 optimizedframes++;
@@ -984,8 +989,10 @@ struct skelmodel : animmodel
             }
             loopi(numinterpbones)
             {
-                sc.bdata[i].normalize();
-                sc.bdata[i].mul(invbones[i]);
+                dualquat &d = sc.bdata[i];
+                d.normalize();
+                d.mul(invbones[i]);
+                d.fixantipodal(sc.bdata[0]);
             }
         }
 
@@ -1417,6 +1424,7 @@ struct skelmodel : animmodel
         {
             if(!bc.bdata) bc.bdata = new dualquat[vblends];
             dualquat *dst = bc.bdata - (skel->usegpuskel ? skel->numgpubones : skel->numinterpbones);
+            bool normalize = !skel->usegpuskel || vweights<=1;
             loopv(blendcombos)
             {
                 const blendcombo &c = blendcombos[i];
@@ -1430,6 +1438,7 @@ struct skelmodel : animmodel
                     d.accumulate(sc.bdata[c.interpbones[2]], c.weights[2]);
                     if(c.weights[3]) d.accumulate(sc.bdata[c.interpbones[3]], c.weights[3]);
                 }
+                if(normalize) d.normalize();
             }
         }
 
