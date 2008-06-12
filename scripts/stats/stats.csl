@@ -1,7 +1,11 @@
 
 latestgame = (now)
 gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
-db = [system [stats/dbeval @(shell_quote $arg1)]]
+
+//new sqlite3 statsdb
+
+sqlite3 open "scripts/stats/data/stats.db"
+sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
 
 event_handler $onconnect [
     parameters cn
@@ -42,8 +46,12 @@ event_handler $onmapchange [
     if (! (symbol? rankgame)) [rankgame = 0]
     if (! (symbol? demofile)) [demofile = ""]
     
-    match_id = (db [insert into matches (gameid,datetime,gamemode,mapname,ranked,duration,demofile) values
-        (@(format "\"%1\",\"%2\",\"%3\",\"%4\",%5,%6,\"%7\"" (gameid) (datetime (now)) $gamemode $mapname $rankgame 0 $demofile))])
+    local input_datetime (datetime (now))
+    local input_gameid (gameid)
+    
+    sqlite3 eval [insert into matches (gameid,datetime,gamemode,mapname) values 
+        ($input_gameid, $input_datetime, $gamemode, $mapname)] []
+    match_id = (sqlite3 last_rowid)
     
     foreach (players) [
         reference cn arg1
@@ -54,8 +62,15 @@ event_handler $onmapchange [
 create_player_record = [
     parameters cn
     if (symbol? match_id) [
-        player_var $cn id (db [insert into players (match_id,name,team,ipaddr,frags,deaths,suicides) 
-            values (@(format "%1,\"%2\",\"%3\",\"%4\",0,0,0" $match_id (player_name $cn) (player_team $cn) (player_ip $cn)))])
+        
+        local name (player_name $cn)
+        local team (player_team $cn)
+        local ipaddr (player_ip $cn)
+        
+        sqlite3 eval [insert into players (match_id,name,team,ipaddr,frags,deaths,suicides) values 
+            ($match_id, $name, $team, $ipaddr, 0, 0, 0)] []
+        
+        player_var $cn stats_id (sqlite3 last_rowid)
     ]
 ]
 

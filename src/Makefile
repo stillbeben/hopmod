@@ -52,7 +52,8 @@ mkfifochan:
 	$(CC) fpsgame/hopmod/mkfifochan.c -o../bin/mkfifochan
 
 plugins:
-	$(CXX) fpsgame/hopmod/modules/geoip.cpp fpsgame/hopmod/module.cpp fpsgame/hopmod/libcubescript/libcubescript.a -DCUBESCRIPT_MODULE $(HOPMOD_CXXFLAGS) -lGeoIP -shared -fPIC -o../lib/geoip.csm
+	$(CXX) fpsgame/hopmod/modules/geoip.cpp fpsgame/hopmod/module_loader.cpp fpsgame/hopmod/libcubescript/libcubescript.a -DCUBESCRIPT_MODULE $(HOPMOD_CXXFLAGS) -lGeoIP -shared -fPIC -o../lib/geoip.csm
+	$(CXX) fpsgame/hopmod/modules/sqlite3.cpp fpsgame/hopmod/module_loader.cpp fpsgame/hopmod/libcubescript/libcubescript.a -DCUBESCRIPT_MODULE $(HOPMOD_CXXFLAGS) -lsqlite3 -shared -fPIC -o../lib/sqlite3.csm
 
 server:	libenet libcubescript $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) -o ../bin/sauer_server $(SERVER_OBJS) $(SERVER_LIBS)  

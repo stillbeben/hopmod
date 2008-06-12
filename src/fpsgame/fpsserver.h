@@ -567,7 +567,7 @@ struct fpsserver : igameserver
     
     script_pipe_service m_script_pipes;
     sleep_service m_sleep_jobs;
-    cubescript::module_loader m_modules;
+    //cubescript::module_loader m_modules;
     std::list<FILE *> m_logfiles;
     
     stopwatch::milliseconds svtext_min_interval;
@@ -754,7 +754,8 @@ struct fpsserver : igameserver
         
         m_script_pipes.register_function(&server_domain);
         m_sleep_jobs.register_function(&server_domain);
-        m_modules.register_functions(&server_domain);
+        cubescript::register_module_loader(&server_domain);
+        //m_modules.register_functions(&server_domain);
         
         scriptable_events.register_event("onstartup",&on_startup);
         scriptable_events.register_event("onshutdown",&on_shutdown);

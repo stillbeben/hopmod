@@ -1,9 +1,9 @@
 
-#include "../module.hpp"
+#include "../module_loader.hpp"
 #include <boost/bind.hpp>
 #include <GeoIP.h>
 #include <string>
-  
+
 class geoip_module:public cubescript::module
 {
 public:
@@ -12,10 +12,9 @@ public:
         m_geoip=GeoIP_open("share/GeoIP.dat",GEOIP_STANDARD);
     }
     
-    void register_symbols(cubescript::module_domain_accessor * domain)
+    void register_symbols(cubescript::module::domain_accessor * domain)
     {
-        static cubescript::function1<std::string,const std::string &> func_country(boost::bind(&geoip_module::get_country,this,_1));
-        
+        static cubescript::module::symbol_delegate< cubescript::function1<std::string,const std::string &> > func_country(boost::bind(&geoip_module::get_country,this,_1));
         domain->register_symbol("country",&func_country);
     }
 private:
@@ -30,9 +29,4 @@ private:
     GeoIP * m_geoip;
 };
 
-static geoip_module modinst;
-
-cubescript::module * get_csmodule_object()
-{
-    return &modinst;
-}
+IMPLEMENT_CUBESCRIPT_MODULE(geoip_module);
