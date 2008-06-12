@@ -2,19 +2,19 @@
 latestgame = (now)
 gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
 
-new_sqlite3 statsdb
+new sqlite3 statsdb
 statsdb open "scripts/stats/data/stats.db"
 statsdb onerror [log_error [Stats SQL Error: @arg1]]
 
 event_handler $onconnect [
     parameters cn
-    if (! (player_has_var $cn id)) [create_player_record $cn]
+    if (! (player_has_var $cn stats_id)) [create_player_record $cn]
 ]
 
 event_handler $ondisconnect [
+ log_status "ondisconnect"
     parameters cn
-    
-    update_player_record cn
+    update_player_record $cn
 ]
 
 event_handler $ondamage [
@@ -35,11 +35,10 @@ event_handler $ondeath [
 
 event_handler $onitempickup [
     parameters cn type
-    
 ]
 
 event_handler $onmapchange [
-
+log_status "onmapchange"
     latestgame = (now)
     
     if (! (symbol? rankgame)) [rankgame = 0]
@@ -56,6 +55,10 @@ event_handler $onmapchange [
         reference cn arg1
         create_player_record $cn
     ]
+]
+
+event_handler $onshutdown [
+    statsdb close
 ]
 
 create_player_record = [
@@ -75,7 +78,15 @@ create_player_record = [
 
 update_player_record = [
     parameters cn
-    if (player_has_var $cn id) [
-       
+    if (player_has_var $cn stats_id) [
+    
+        local id (player_var $cn stats_id)
+        local name (player_name $cn)
+        local team (player_team $cn)
+        local frags (player_var $cn frags)
+        local deaths (player_var $cn deaths)
+        local suicides (player_var $cn suicides)
+        
+        statsdb eval [update players set name=$name, team=$team,frags=$frags,deaths=$deaths,suicides=$suicides where id=$id] []
     ]
 ]
