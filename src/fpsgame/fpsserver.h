@@ -15,6 +15,7 @@
 #include "hopmod/module_loader.hpp"
 #include "hopmod/wovar.hpp"
 #include "hopmod/playerid.hpp"
+#include "hopmod/sqlite3.hpp"
 
 #include <boost/bind.hpp>
 #include <sstream>
@@ -755,7 +756,9 @@ struct fpsserver : igameserver
         m_script_pipes.register_function(&server_domain);
         m_sleep_jobs.register_function(&server_domain);
         cubescript::register_module_loader(&server_domain);
-        //m_modules.register_functions(&server_domain);
+    #ifdef USE_SQLITE3
+        cubescript::register_sqlite3(&server_domain);
+    #endif
         
         scriptable_events.register_event("onstartup",&on_startup);
         scriptable_events.register_event("onshutdown",&on_shutdown);

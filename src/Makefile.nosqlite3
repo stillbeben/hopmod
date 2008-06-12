@@ -1,5 +1,5 @@
 HOPMOD_CXXFLAGS= \
-    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript` -DUSE_SQLITE3
+    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript`
 
 HOPMOD_OBJS= \
     fpsgame/hopmod/textformat.o \
@@ -8,8 +8,7 @@ HOPMOD_OBJS= \
     fpsgame/hopmod/script_pipe.o \
     fpsgame/hopmod/sleep.o \
     fpsgame/hopmod/module.o \
-    fpsgame/hopmod/module_loader.o \
-    fpsgame/hopmod/sqlite3.o
+    fpsgame/hopmod/module_loader.o
 
 CXXOPTFLAGS= -O3 -fomit-frame-pointer
 INCLUDES= -Ishared -Iengine -Ifpsgame -Irpggame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags`
@@ -17,7 +16,7 @@ CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) -g $(HOPMOD_CXXFLAGS)
 
 PLATFORM_PREFIX=native
 
-SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl -lsqlite3
+SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl
 
 SERVER_OBJS= \
 	shared/tools-standalone.o \
