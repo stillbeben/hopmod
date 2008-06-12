@@ -2,10 +2,9 @@
 latestgame = (now)
 gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
 
-//new sqlite3 statsdb
-
-sqlite3 open "scripts/stats/data/stats.db"
-sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
+new_sqlite3 statsdb
+statsdb open "scripts/stats/data/stats.db"
+statsdb onerror [log_error [Stats SQL Error: @arg1]]
 
 event_handler $onconnect [
     parameters cn
@@ -49,9 +48,9 @@ event_handler $onmapchange [
     local input_datetime (datetime (now))
     local input_gameid (gameid)
     
-    sqlite3 eval [insert into matches (gameid,datetime,gamemode,mapname) values 
+    statsdb eval [insert into matches (gameid,datetime,gamemode,mapname) values 
         ($input_gameid, $input_datetime, $gamemode, $mapname)] []
-    match_id = (sqlite3 last_rowid)
+    match_id = (statsdb last_rowid)
     
     foreach (players) [
         reference cn arg1
@@ -67,10 +66,10 @@ create_player_record = [
         local team (player_team $cn)
         local ipaddr (player_ip $cn)
         
-        sqlite3 eval [insert into players (match_id,name,team,ipaddr,frags,deaths,suicides) values 
+        statsdb eval [insert into players (match_id,name,team,ipaddr,frags,deaths,suicides) values 
             ($match_id, $name, $team, $ipaddr, 0, 0, 0)] []
         
-        player_var $cn stats_id (sqlite3 last_rowid)
+        player_var $cn stats_id (statsdb last_rowid)
     ]
 ]
 
