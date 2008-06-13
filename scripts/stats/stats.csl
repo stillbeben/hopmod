@@ -6,15 +6,20 @@ new sqlite3 statsdb
 statsdb open "scripts/stats/data/stats.db"
 statsdb onerror [log_error [Stats SQL Error: @arg1]]
 
+recording_stats = 0
+
+newstatsp = [
+    ! (strcmp $gamemode "coopedit")
+]
+
 event_handler $onconnect [
     parameters cn
-    if (! (player_has_var $cn stats_id)) [create_player_record $cn]
+    if (&& $recording_stats [! (player_has_var $cn stats_id)]) [create_player_record $cn]
 ]
 
 event_handler $ondisconnect [
- log_status "ondisconnect"
     parameters cn
-    update_player_record $cn
+    if $recording_stats [update_player_record $cn]
 ]
 
 event_handler $ondamage [
@@ -35,10 +40,14 @@ event_handler $ondeath [
 
 event_handler $onitempickup [
     parameters cn type
+    player_var $cn $type (+ 1 (player_var $cn $type))
+]
+
+event_handler $onendgame [
+    if $recording_stats update_player_records
 ]
 
 event_handler $onmapchange [
-log_status "onmapchange"
     latestgame = (now)
     
     if (! (symbol? rankgame)) [rankgame = 0]
@@ -47,39 +56,69 @@ log_status "onmapchange"
     local input_datetime (datetime (now))
     local input_gameid (gameid)
     
-    statsdb eval [insert into matches (gameid,datetime,gamemode,mapname) values 
-        ($input_gameid, $input_datetime, $gamemode, $mapname)] []
-    match_id = (statsdb last_rowid)
+    recording_stats = (newstatsp)
     
-    foreach (players) [
-        reference cn arg1
-        create_player_record $cn
+    if $recording_stats [
+        statsdb eval [insert into matches (gameid,datetime,gamemode,mapname) values 
+            ($input_gameid, $input_datetime, $gamemode, $mapname)] []
+        match_id = (statsdb last_rowid)
+        foreach (players) [
+            reference cn arg1
+            create_player_record $cn
+        ]
     ]
 ]
 
 event_handler $onshutdown [
+    if $recording_stats update_player_records
     statsdb close
 ]
 
 create_player_record = [
     parameters cn
-    if (symbol? match_id) [
-        
+    if $recording_stats [
         local name (player_name $cn)
         local team (player_team $cn)
         local ipaddr (player_ip $cn)
         
-        statsdb eval [insert into players (match_id,name,team,ipaddr,frags,deaths,suicides) values 
-            ($match_id, $name, $team, $ipaddr, 0, 0, 0)] []
+        statsdb eval [insert into players (match_id,name,team,ipaddr) values 
+            ($match_id, $name, $team, $ipaddr)] []
         
         player_var $cn stats_id (statsdb last_rowid)
+        player_var $cn frags 0
+        player_var $cn deaths 0
+        player_var $cn suicides 0
+        
+        if (itemsgame) [create_items_record $cn]
     ]
+]
+
+create_items_record = [
+    parameters cn
+    
+    local player_id (player_var $cn stats_id)
+    
+    statsdb eval [insert into itempickups (player_id) values ($player_id)] []
+    
+    player_var $cn items_id (statsdb last_rowid)
+    player_var $cn boost 0
+    player_var $cn health 0
+    player_var $cn shells 0
+    player_var $cn bullets 0
+    player_var $cn rockets 0
+    player_var $cn rounds 0
+    player_var $cn grenades 0
+    player_var $cn cartridges 0
+    player_var $cn greenarmor 0
+    player_var $cn yellowarmor 0
+    player_var $cn quad 0
 ]
 
 update_player_record = [
     parameters cn
     if (player_has_var $cn stats_id) [
-    
+        log_status [updating record for player @cn]
+        
         local id (player_var $cn stats_id)
         local name (player_name $cn)
         local team (player_team $cn)
@@ -88,5 +127,36 @@ update_player_record = [
         local suicides (player_var $cn suicides)
         
         statsdb eval [update players set name=$name, team=$team,frags=$frags,deaths=$deaths,suicides=$suicides where id=$id] []
+        
+        if (player_has_var $cn items_id) [update_items_record $cn]
     ]
+]
+
+update_items_record = [
+    parameters cn
+    
+    local items_id (player_var $cn items_id)
+    local boost (player_var $cn boost)
+    local health (player_var $cn health)
+    local shells (player_var $cn shells)
+    local bullets (player_var $cn bullets)
+    local rockets (player_var $cn rockets)
+    local rounds (player_var $cn rounds)
+    local grenades (player_var $cn grenades)
+    local cartridges (player_var $cn cartridges)
+    local greenarmor (player_var $cn greenarmor)
+    local yellowarmor (player_var $cn yellowarmor)
+    local quad (player_var $cn quad)
+    
+    statsdb eval [update itempickups set boost=$boost,health=$health,shells=$shells,bullets=$bullets,
+        rockets=$rockets,rounds=$rounds,grenades=$grenades,cartridges=$cartridges,greenarmor=$greenarmor,
+        yellowarmor=$yellowarmor,quad=$quad where id=$items_id] []
+]
+
+update_player_records = [
+    statsdb eval [begin transaction] []
+    foreach (players) [
+        update_player_record $arg1
+    ]
+    statsdb eval [commit transaction] []
 ]

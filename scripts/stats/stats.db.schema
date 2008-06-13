@@ -1,4 +1,4 @@
-
+ 
 CREATE TABLE matches (
     id          INTEGER PRIMARY KEY,
     gameid      TEXT UNIQUE, 
@@ -10,17 +10,30 @@ CREATE TABLE matches (
     demofile    TEXT,
     syncd       INTEGER
 );
-
 CREATE TABLE players (
     id          INTEGER PRIMARY KEY,
-    match_id    INTEGER UNIQUE,
+    match_id    INTEGER UNIQUE REFERENCES matches(id),
     name        TEXT,
     team        TEXT,
     ipaddr      TEXT,
-    frags       INTEGER,
-    deaths      INTEGER,
-    suicides    INTEGER,
-    hits        INTEGER,
-    misses      INTEGER,
-    damage      INTEGER
+    frags       INTEGER DEFAULT 0,
+    deaths      INTEGER DEFAULT 0,
+    suicides    INTEGER DEFAULT 0,
+    hits        INTEGER DEFAULT 0,
+    misses      INTEGER DEFAULT 0
+);
+CREATE TABLE itempickups (
+    id          INTEGER PRIMARY KEY,
+    player_id   INTEGER UNIQUE REFERENCES players(id),
+    boost       INTEGER DEFAULT 0,
+    health      INTEGER DEFAULT 0,
+    shells      INTEGER DEFAULT 0, 
+    bullets     INTEGER DEFAULT 0,
+    rockets     INTEGER DEFAULT 0,
+    rounds      INTEGER DEFAULT 0,
+    grenades    INTEGER DEFAULT 0,
+    cartridges  INTEGER DEFAULT 0,
+    greenarmor  INTEGER DEFAULT 0,
+    yellowarmor INTEGER DEFAULT 0,
+    quad        INTEGER DEFAULT 0
 );

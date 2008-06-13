@@ -136,7 +136,7 @@ struct fpsserver : igameserver
         int lastdeath, lastspawn, lifesequence;
         int lastshot;
         projectilestate<8> rockets, grenades;
-        int frags, deaths, teamkills, shotdamage, damage;
+        int frags, deaths, teamkills, shotdamage, damage,hits,misses;
 
         int lasttimeplayed, timeplayed;
         float effectiveness;
@@ -164,7 +164,7 @@ struct fpsserver : igameserver
             timeplayed = 0;
             effectiveness = 0;
 
-            frags = deaths = teamkills = shotdamage = damage = 0;
+            frags = deaths = teamkills = shotdamage = damage = hits = misses = 0;
             
             respawn();
         }
@@ -183,7 +183,7 @@ struct fpsserver : igameserver
     {
         uint ip;
         string name;
-        int maxhealth, frags, deaths, teamkills, shotdamage, damage;
+        int maxhealth, frags, deaths, teamkills, shotdamage, damage, hits,misses;
         int timeplayed;
         float effectiveness;
 
@@ -197,6 +197,8 @@ struct fpsserver : igameserver
             damage = gs.damage;
             timeplayed = gs.timeplayed;
             effectiveness = gs.effectiveness;
+            hits = gs.hits;
+            misses = gs.misses;
         }
 
         void restore(gamestate &gs)
@@ -508,6 +510,9 @@ struct fpsserver : igameserver
     cubescript::function1<int,int>                          func_player_conid;
     cubescript::function1<std::string,int>                  func_player_priv;
     cubescript::function1<int,int>                          func_player_frags;
+    cubescript::function1<int,int>                          func_player_deaths;
+    cubescript::function1<int,int>                          func_player_hits;
+    cubescript::function1<int,int>                          func_player_misses;
     cubescript::function1<std::string,int>                  func_player_gun;
     cubescript::function1<int,int>                          func_player_health;
     cubescript::function1<int,int>                          func_player_maxhealth;
@@ -597,6 +602,7 @@ struct fpsserver : igameserver
     event_handler on_timeupdate;
     event_handler on_itempickup;
     event_handler on_damage;
+    event_handler on_endgame;
     
     fpsserver() : pending_bans(0), notgotitems(true), notgotbases(false), gamemode(0), gamecount(0), playercount(0), concount(0), interm(0), minremain(0), mapreload(false), lastsend(0), mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), assassinmode(*this), ctfmode(*this), smode(NULL), 
         
@@ -613,6 +619,9 @@ struct fpsserver : igameserver
         func_player_conid(boost::bind(&fpsserver::get_player_conid,this,_1)),
         func_player_priv(boost::bind(&fpsserver::get_player_priv,this,_1)),
         func_player_frags(boost::bind(&fpsserver::get_player_frags,this,_1)),
+        func_player_deaths(boost::bind(&fpsserver::get_player_deaths,this,_1)),
+        func_player_hits(boost::bind(&fpsserver::get_player_hits,this,_1)),
+        func_player_misses(boost::bind(&fpsserver::get_player_misses,this,_1)),
         func_player_gun(boost::bind(&fpsserver::get_player_gun,this,_1)),
         func_player_health(boost::bind(&fpsserver::get_player_health,this,_1)),
         func_player_maxhealth(boost::bind(&fpsserver::get_player_maxhealth,this,_1)),
@@ -697,6 +706,9 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_conid",&func_player_conid);
         server_domain.register_symbol("player_priv",&func_player_priv);
         server_domain.register_symbol("player_frags",&func_player_frags);
+        server_domain.register_symbol("player_deaths",&func_player_deaths);
+        server_domain.register_symbol("player_hits",&func_player_hits);
+        server_domain.register_symbol("player_misses",&func_player_misses);
         server_domain.register_symbol("player_gun",&func_player_gun);
         server_domain.register_symbol("player_health",&func_player_health);
         server_domain.register_symbol("player_maxhealth",&func_player_maxhealth);
@@ -780,6 +792,7 @@ struct fpsserver : igameserver
         scriptable_events.register_event("ontimeupdate",&on_timeupdate);
         scriptable_events.register_event("onitempickup",&on_itempickup);
         scriptable_events.register_event("ondamage",&on_damage);
+        scriptable_events.register_event("onendgame",&on_endgame);
     }
     
     void *newinfo() { return new clientinfo; }
@@ -1233,6 +1246,8 @@ struct fpsserver : igameserver
  
     void changemap(const char *s, int mode,int gametime=600000)
     {
+        scriptable_events.dispatch(&on_endgame,cubescript::args0(),NULL);
+        
         if(m_demo) enddemoplayback();
         else enddemorecord();
         
@@ -1662,6 +1677,7 @@ struct fpsserver : igameserver
                 loopk(3) shot.shot.from[k] = getint(p)/DMF;
                 loopk(3) shot.shot.to[k] = getint(p)/DMF;
                 int hits = getint(p);
+                if(hits) ci->state.hits+=hits; else ci->state.misses++;
                 loopk(hits)
                 {
                     gameevent &hit = ci->addevent();
@@ -2989,6 +3005,9 @@ struct fpsserver : igameserver
     }
     
     int get_player_frags(int cn){return get_ci(cn)->state.frags;}
+    int get_player_deaths(int cn){return get_ci(cn)->state.deaths;}
+    int get_player_hits(int cn){return get_ci(cn)->state.hits;}
+    int get_player_misses(int cn){return get_ci(cn)->state.misses;}
     std::string get_player_gun(int cn){return guns[get_ci(cn)->state.gunselect].name;}
     int get_player_health(int cn){return get_ci(cn)->state.health;}
     int get_player_maxhealth(int cn){return get_ci(cn)->state.maxhealth;}
