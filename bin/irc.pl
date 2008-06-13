@@ -137,11 +137,11 @@ sub process_command {
 		if ( $command =~ /$botcommandname.* unspec.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03]         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("unspec $1"); 
 		&toirccommandlog("$nick I have unspec'd $1 "); return }
-		##### MUTE
+		##### MUTE #####
 		if ( $command =~ /$botcommandname.* mute.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MUTE}=-\x03 $nick muted $1"); &toserverpipe("player_var $1 mute 1");
 		&toirccommandlog("$nick Muting $1, what a spammer"); return }
-		##### UNMUTE
+		##### UNMUTE #####
 		if ( $command =~ /$botcommandname.* unmute.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNMUTE}=-\x03 $nick Unmuted $1"); &toserverpipe("player_var $1 mute 0"); 
 		&toirccommandlog("$nick Unmuted $1, I guess he learned his lesson"); return }
@@ -155,7 +155,8 @@ sub process_command {
 		&toirccommandlog("ok ok $nick I stole master from $1"); return }
 		##### MASTER 
 		if ( $command =~ /$botcommandname.* master .*/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERCHECK}=-\x03 current master [\x0312$master\x03]") ; return }
+		{ &sendtoirc("masterwho") ; return }
+
 		##### MASTERMODE #####
 		if ( $command =~ /$botcommandname.* mastermode.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERMODE}=-\x03 $nick changed mastermode to $1"); &toserverpipe("mastermode $1"); 
@@ -169,10 +170,7 @@ sub process_command {
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={HELP}=-\x03 help can be found here http://hopmod.e-topic.info/index.php5?title=IRC_Bot"); return}
 		##### WHO #####
 		if ( $command =~ /$botcommandname.*who/i )
-		{ &show_state; return}
-		##### CLEARSTATE
-		if ( $command =~ /$botcommandname.*clearstate/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={STATE}=-\x03 $nick cleared state"); undef @STATE ; return}
+		{ &toserverpipe("who"); return}
 		##### DIE #####
 		if ( $command =~ /$botcommandname.*die/i ) 
 		{&sendtoirc("\x03\x036IRC\x03         \x034-={DIE}=-\x03 $nick terminated the bot") ;&toirccommandlog("$nick has killed the bot");
@@ -301,10 +299,6 @@ sub filterlog {
 	return $line;
 }
 
-sub show_state {
-&toserverpipe("who");
-	
-}
 sub sendtoirc {
 	my $send = shift; 
 	$irc->yield( privmsg => $config->{irc_channel} => "\x034$send\x03" );
@@ -354,34 +348,6 @@ sub toirccommandlog {
         open (FILE, '>>', $irccommand_log ) or warn $!;
         print FILE ("[$ts] $send\n");
         close (FILE);
-}
-sub remove_state {
-	my @DATA;
-	if ( $master eq "$sname($scn)" ) { $master = "NULL" }
-        foreach (@STATE) {
-                split (/\s/,$_);
-                if ( $_[1] eq $sip ) { } else { push (@DATA, $_) }
-        }
-	@STATE = @DATA;
-	return;
-}
-sub update_state {
-	my @DATA;
-        foreach (@STATE) {
-                split (/\s/, $_);
-                if ( $_[2] eq $scn && $_[0] ne $sname ) { push (@DATA, "$sname $sip $scn") } else { push (@DATA, $_) } 
-        }
-	@STATE = @DATA;
-	return;
-}
-sub add_state {
-	my @DATA;
-        foreach (@STATE) {
-                split (/\s/, $_);
-                if ( $_[0] eq $sname && $_[1] eq $sip ) {return }
-        }
-	push (@STATE, "$sname $sip $scn") ;
-	return;
 }
 @zippy = (
 	"Save the whales. Collect the whole set ",

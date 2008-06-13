@@ -13,3 +13,8 @@ if (strcmp $scores "" ) [
 log "Apparently no one is connected"
 ]
 ]
+
+masterwho = [
+cm = (format "%1(%2)" (player_name $currentmaster)($currentmaster))
+log (concat "MASTER    " $cm)
+]
