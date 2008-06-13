@@ -1473,12 +1473,9 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
     glLoadIdentity();
     glOrtho(0, w*3, h*3, 0, -1, 1);
 
-    int abovegameplayhud = (editmode || showeditstats ? h*3 - (editmode ? 5 : 3)*FONTH : int(h*3*cl->abovegameplayhud()));
-    int hoff = abovegameplayhud - FONTH*3/2;
-
-    rendercommand(FONTH/2, hoff, w*3-FONTH);
-
     drawcrosshair(w, h);
+
+    int abovehud = h*3 - FONTH;
 
     if(!hidehud)
     {
@@ -1493,10 +1490,6 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
             if(showfpsrange) draw_textf("fps %d+%d-%d", w*3-7*FONTH, h*3-100, fps, bestdiff, worstdiff);
             else draw_textf("fps %d", w*3-5*FONTH, h*3-100, fps);
 
-            if(editmode)
-            {
-                draw_textf("cube %s%d", FONTH/2, abovegameplayhud, selchildcount<0 ? "1/" : "", abs(selchildcount));
-            }
             if(editmode || showeditstats)
             {
                 static int laststats = 0, prevstats[8] = { 0, 0, 0, 0, 0, 0, 0 }, curstats[8] = { 0, 0, 0, 0, 0, 0, 0 };
@@ -1518,24 +1511,42 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
                 };
                 loopi(8) if(prevstats[i]==curstats[i]) curstats[i] = nextstats[i];
 
-                draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/2, abovegameplayhud+(editmode ? 2 : 0)*FONTH, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
-                draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/2, abovegameplayhud+(editmode ? 3 : 1)*FONTH, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+                abovehud -= 2*FONTH;
+                draw_textf("wtr:%dk(%d%%) wvt:%dk(%d%%) evt:%dk eva:%dk", FONTH/2, abovehud, wtris/1024, curstats[0], wverts/1024, curstats[1], curstats[2], curstats[3]);
+                draw_textf("ond:%d va:%d gl:%d(%d) oq:%d lm:%d rp:%d pvs:%d", FONTH/2, abovehud+FONTH, allocnodes*8, allocva, curstats[4], curstats[5], curstats[6], lightmaps.length(), curstats[7], getnumviewcells());
+                g3d_limitscale((2*abovehud - h*3) / float(h*3));
             }
-        }
 
-        if(editmode) 
-        {
-            char *editinfo = executeret("edithud");
-            if(editinfo)
+            if(editmode)
             {
-                draw_text(editinfo, FONTH/2, abovegameplayhud+FONTH);
-                DELETEA(editinfo);
+                abovehud -= FONTH;
+                draw_textf("cube %s%d", FONTH/2, abovehud, selchildcount<0 ? "1/" : "", abs(selchildcount));
+
+                char *editinfo = executeret("edithud");
+                if(editinfo)
+                {
+                    abovehud -= FONTH;
+                    draw_text(editinfo, FONTH/2, abovehud);
+                    DELETEA(editinfo);
+                }
             }
         }
 
-        if(!showeditstats) cl->gameplayhud(w, h);
+        if(!editmode && !showeditstats) 
+        {
+            cl->gameplayhud(w, h);
+            abovehud = int(h*3*cl->abovegameplayhud());
+            g3d_limitscale((2*abovehud - h*3) / float(h*3));
+        }
+
         render_texture_panel(w, h);
     }
+    else g3d_limitscale((2*abovehud - h*3) / float(h*3));
+
+    glLoadIdentity();
+    glOrtho(0, w*3, h*3, 0, -1, 1);
+
+    rendercommand(FONTH/2, abovehud - FONTH*3/2, w*3-FONTH);
 
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);

@@ -292,9 +292,9 @@ struct gui : g3d_gui
         }
     }
 
-    char *field(const char *name, int color, int length, int height, const char *initval)
+    char *field(const char *name, int color, int length, int height, const char *initval, int initmode)
     {	
-        editor *e = useeditor(name, false, false, initval); // generate a new editor if necessary
+        editor *e = useeditor(name, initmode, false, initval); // generate a new editor if necessary
         if(layoutpass)
         {
             if(initval && e->mode==EDITORFOCUSED && (e!=currentfocus() || fieldmode == FIELDSHOW))
@@ -327,7 +327,7 @@ struct gui : g3d_gui
             {
                 if(mousebuttons&G3D_DOWN) //mouse request focus
                 {   
-                    useeditor(name, false, true); 
+                    useeditor(name, initmode, true); 
                     e->mark(false);
                     fieldmode = FIELDEDIT;
                 } 
@@ -647,19 +647,19 @@ struct gui : g3d_gui
     g3d_callback *cb;
     bool gui2d;
 
-    static float basescale;
+    static float basescale, maxscale;
     static bool passthrough;
     static vec light;
 
     void adjustscale()
     {
-        float aspect = float(screen->h)/float(screen->w), fit = 1.0f;
         int w = xsize + (skinx[2]-skinx[1])*SKIN_SCALE + (skinx[10]-skinx[9])*SKIN_SCALE, h = ysize + (skiny[8]-skiny[6])*SKIN_SCALE;
         if(tcurrent) h += ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE + FONTH-2*INSERT;
         else h += (skiny[5]-skiny[3])*SKIN_SCALE;
 
-        if(w*aspect*basescale>1) fit = 1.0f/(w*aspect*basescale);
-        if(h*basescale*fit>1) fit *= 1.0f/(h*basescale*fit);
+        float aspect = float(screen->h)/float(screen->w), fit = 1.0f;
+        if(w*aspect*basescale>1.0f) fit = 1.0f/(w*aspect*basescale);
+        if(h*basescale*fit>maxscale) fit *= maxscale/(h*basescale*fit);
         origin = vec(0.5f-((w-xsize)/2 - (skinx[2]-skinx[1])*SKIN_SCALE)*aspect*scale.x*fit, 0.5f + (0.5f*h-(skiny[8]-skiny[6])*SKIN_SCALE)*scale.y*fit, 0);
         scale = vec(aspect*scale.x*fit, scale.y*fit, 1);
     }
@@ -802,7 +802,7 @@ const gui::patch gui::patches[] =
 };
 
 vector<gui::list> gui::lists;
-float gui::basescale, gui::hitx, gui::hity;
+float gui::basescale, gui::maxscale = 1, gui::hitx, gui::hity;
 bool gui::passthrough, gui::shouldmergehits = false, gui::shouldautotab = true;
 vec gui::light;
 int gui::curdepth, gui::curlist, gui::xsize, gui::ysize, gui::curx, gui::cury;
@@ -913,7 +913,7 @@ bool g3d_movecursor(int dx, int dy)
 }
 
 VARNP(guifollow, useguifollow, 0, 1, 1);
-VARNP(gui2d, usegui2d, 0, 0, 1);
+VARNP(gui2d, usegui2d, 0, 1, 1);
 
 void g3d_addgui(g3d_callback *cb, vec &origin, int flags)
 {
@@ -925,6 +925,11 @@ void g3d_addgui(g3d_callback *cb, vec &origin, int flags)
     g.savedorigin = &origin;
     g.dist = camera1->o.dist(g.origin);
     g.gui2d = gui2d;
+}
+
+void g3d_limitscale(float scale)
+{
+    gui::maxscale = scale;
 }
 
 int g3d_sort(gui *a, gui *b) { return (int)(a->dist>b->dist)*2-1; }

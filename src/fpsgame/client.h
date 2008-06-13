@@ -41,6 +41,8 @@ struct clientcom : iclientcom
         CCOMMAND(getteam, "", (clientcom *self), result(self->player1->team));
         CCOMMAND(getclientfocus, "", (clientcom *self), intret(self->getclientfocus()));
         CCOMMAND(getclientname, "i", (clientcom *self, int *cn), result(self->getclientname(*cn)));
+        CCOMMAND(getclientnum, "s", (clientcom *self, char *name), intret(name[0] ? self->parseplayer(name) : self->player1->clientnum));
+        CCOMMAND(listclients, "i", (clientcom *self, int *local), self->listclients(*local!=0));
     }
 
     void switchname(const char *name)
@@ -111,6 +113,7 @@ struct clientcom : iclientcom
         addmsg(SV_EDITMODE, "ri", on ? 1 : 0);
         if(player1->state==CS_DEAD) cl.deathstate(player1, true);
         else if(player1->state==CS_EDITING && player1->editstate==CS_DEAD) cl.sb.showscores(false);
+        setvar("zoom", -1, true);
     }
 
     int getclientfocus()
@@ -149,6 +152,27 @@ struct clientcom : iclientcom
             if(o && !strcasecmp(arg, o->name)) return o->clientnum;
         }
         return -1;
+    }
+
+    void listclients(bool local)
+    {
+        vector<char> buf;
+        string cn;
+        int numclients = 0;
+        if(local)
+        {
+            s_sprintf(cn)("%d", player1->clientnum);
+            buf.put(cn, strlen(cn));
+            numclients++;
+        }
+        loopv(cl.players) if(cl.players[i])
+        {
+            s_sprintf(cn)("%d", cl.players[i]->clientnum);
+            if(numclients++) buf.add(' ');
+            buf.put(cn, strlen(cn));
+        }
+        buf.add('\0');
+        result(buf.getbuf());
     }
 
     void clearbans()

@@ -1617,6 +1617,8 @@ VAR(thumbtime, 0, 50, 1000);
 
 static int lastthumbnail = 0;
 
+VARP(texgui2d, 0, 1, 1);
+
 struct texturegui : g3d_callback 
 {
     bool menuon;
@@ -1673,7 +1675,7 @@ struct texturegui : g3d_callback
         if(!menuon) return;
         filltexlist();
         if(!editmode || camera1->o.dist(menupos) > menuautoclose) menuon = false;
-        else g3d_addgui(this, menupos, GUI_2D);
+        else g3d_addgui(this, menupos, texgui2d ? GUI_2D : 0);
     }
 } gui;
 
@@ -1695,8 +1697,6 @@ void render_texture_panel(int w, int h)
 {
     if((texpaneltimer -= curtime)>0 && editmode)
     {
-        glDepthMask(GL_FALSE);
-        glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glLoadIdentity();
         int width = w*1800/h;
@@ -1758,7 +1758,7 @@ void render_texture_panel(int w, int h)
             }
             y += s+gap;
         }
-        glDisable(GL_BLEND);
-        glDepthMask(GL_TRUE);
+
+        defaultshader->set();
     }
 }

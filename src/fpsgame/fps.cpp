@@ -865,6 +865,8 @@ struct fpsclient : igameclient
         if(m_capture) cpc.capturehud(d, w, h);
         else if(m_ctf) ctf.drawhud(d, w, h);
         else if(m_assassin && d==player1) asc.drawhud(w, h);
+
+        glEnable(GL_BLEND);
     }
 
     IVARP(teamcrosshair, 0, 1, 1);

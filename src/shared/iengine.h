@@ -268,6 +268,8 @@ struct Texture;
 
 enum { G3D_DOWN = 1, G3D_UP = 2, G3D_PRESSED = 4, G3D_ROLLOVER = 8, G3D_DRAGGED = 16 };
 
+enum { EDITORFOCUSED = 1, EDITORUSED, EDITORFOREVER };
+
 struct g3d_gui
 {
     virtual ~g3d_gui() {}
@@ -303,7 +305,7 @@ struct g3d_gui
 	virtual void progress(float percent) = 0;
 	virtual void strut(int size) = 0;
     virtual void space(int size) = 0;
-    virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL) = 0;
+    virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED) = 0;
     virtual void mergehits(bool on) = 0;
 };
 
@@ -327,4 +329,5 @@ extern void g3d_addgui(g3d_callback *cb, vec &origin, int flags = 0);
 extern bool g3d_movecursor(int dx, int dy);
 extern void g3d_cursorpos(float &x, float &y);
 extern void g3d_resetcursor();
+extern void g3d_limitscale(float scale);
 

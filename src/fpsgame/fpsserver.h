@@ -2663,8 +2663,8 @@ struct fpsserver : igameserver
         return DISC_NONE;
     }
 
-    void clientdisconnect(int n) 
-    { 
+    void clientdisconnect(int n)
+    {
         clientinfo *ci = (clientinfo *)getinfo(n);
         if(ci->privilege) setmaster(ci, false);
         if(smode) smode->leavegame(ci, true);
@@ -2684,7 +2684,7 @@ struct fpsserver : igameserver
         scriptable_events.dispatch(&on_disconnect,args & n & ci->disc_reason,NULL);
         
         clients.removeobj(ci);
-        
+
         if(clients.empty())
         {
             bannedips.setsize(0); // bans clear when server empties
@@ -2692,7 +2692,6 @@ struct fpsserver : igameserver
             var_gamemode.readonly(true);
             sync_game_settings();
         }
-        else checkvotes();
     }
 
     const char *servername() { return "sauerbratenserver"; }
