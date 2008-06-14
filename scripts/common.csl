@@ -138,7 +138,7 @@ privconsole = [
 
 notalk = [
     parameters time reason
-    sleep $time [allow_talk = @allow_talk; disallow_talk_reason = @disallow_talk_reason]
+    sleep $time [allow_talk = @allow_talk; disallow_talk_reason = [@@disallow_talk_reason]]
     allow_talk = 0
     disallow_talk_reason = $reason
 ]
