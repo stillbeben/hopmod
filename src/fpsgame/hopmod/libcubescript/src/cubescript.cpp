@@ -1011,7 +1011,18 @@ std::string proto_object::apply(std::list<std::string> & arglist,domain * aDomai
         m_members.link(aDomain);
         link=true;
     }
-    std::string result=operation->apply(arglist,&m_members);
+    
+    std::string result;
+    
+    try
+    {
+        result=operation->apply(arglist,&m_members);
+    }
+    catch(const error_key &)
+    {
+        if(link) m_members.unlink();
+        throw;
+    }
     
     if(link) m_members.unlink();
     

@@ -47,13 +47,16 @@
 #include <boost/type_traits.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/bool.hpp>
+#include <boost/bind.hpp>
+#include <boost/ref.hpp>
 
-struct void_{};
-struct _void{};
+struct void_{}; //deprecated
+struct _void{}; //deprecated
 
 namespace cubescript{
 
 /*!
+    @deprecated
     @brief Pseudo void type.
     
     The native void type cannot be used as a return type on functions that are
@@ -790,6 +793,7 @@ struct mutable_value
     template<> struct name<type>:public boost::true_type{};
 
 DEFINE_TYPE_TRAIT(is_alias_function,alias_function);
+DEFINE_TYPE_TRAIT(is_const_cstr,const char *);
 
 template<typename T> struct is_shared_ptr:public boost::false_type{};
 template<typename T> struct is_shared_ptr< boost::shared_ptr<T> >:public boost::true_type{};
@@ -833,6 +837,16 @@ public:
         alias_function m_func;
     };
     
+    class const_cstr_argument
+    {
+    public:
+        const_cstr_argument(std::list<std::string> & arglist,domain *)
+         :m_value(functionN::pop_arg<std::string>(arglist)){}
+        operator const char *(){return m_value.c_str();}
+    private:
+        std::string m_value;
+    };
+    
     template<typename T>
     class pointer_argument
     {
@@ -858,24 +872,52 @@ public:
             typename boost::mpl::if_<
                 boost::mpl::bool_<is_shared_ptr<value_type>::value>,
                 pointer_argument<value_type>,
-                value_argument<value_type>
+                typename boost::mpl::if_<
+                    boost::mpl::bool_<is_const_cstr<T>::value>,
+                    const_cstr_argument,
+                    value_argument<value_type>
+                >::type
             >::type
+        >::type type;
+    };
+    
+    struct void_call
+    {
+        template<typename FuncT> inline
+            std::string invoke(FuncT func){func(); return "";}
+    };
+    
+    template<typename Ret>
+    struct nonvoid_call
+    {
+        template<typename FuncT> inline
+            std::string invoke(FuncT func){return print_type<Ret>(func());}
+    };
+    
+    template<typename Ret>
+    struct call_handler
+    {
+        typedef typename
+        boost::mpl::if_<
+            boost::mpl::bool_<boost::is_void<Ret>::value>,
+            void_call,
+            nonvoid_call<Ret>
         >::type type;
     };
 };
 
-template<typename ret_t>
+template<typename RetT>
 class function0:public functionN
 {
 public:
     template<typename F>
     function0(F func):m_func(func){}
-    std::string apply(std::list<std::string> & args,domain *){return print_type<ret_t>(m_func());}
+    std::string apply(std::list<std::string> & args,domain *){return print_type<RetT>(m_func());}
 private:
-    boost::function0<ret_t> m_func;
+    boost::function0<RetT> m_func;
 };
 
-template<typename ret_t,typename arg1_t>
+template<typename RetT,typename Arg1_T>
 class function1:public functionN
 {
 public:
@@ -883,14 +925,15 @@ public:
     function1(F func):m_func(func){}
     std::string apply(std::list<std::string> & args,domain * aDomain)
     {
-        typename argument_handler<arg1_t>::type arg1(args,aDomain);
-        return print_type<ret_t>(m_func(arg1));
+        typename argument_handler<Arg1_T>::type arg1(args,aDomain);
+        typename call_handler<RetT>::type invoker;
+        return invoker.invoke(boost::bind(m_func,arg1));
     }
 private:
-    boost::function1<ret_t,arg1_t> m_func;
+    boost::function1<RetT,Arg1_T> m_func;
 };
 
-template<typename ret_t,typename arg1_t,typename arg2_t>
+template<typename RetT,typename Arg1_T,typename Arg2_T>
 class function2:public functionN
 {
 public:
@@ -898,15 +941,16 @@ public:
     function2(F func):m_func(func){}
     std::string apply(std::list<std::string> & args,domain * aDomain)
     {
-        typename argument_handler<arg1_t>::type arg1(args,aDomain);
-        typename argument_handler<arg2_t>::type arg2(args,aDomain);
-        return print_type<ret_t>(m_func(arg1,arg2));
+        typename argument_handler<Arg1_T>::type arg1(args,aDomain);
+        typename argument_handler<Arg2_T>::type arg2(args,aDomain);
+        typename call_handler<RetT>::type invoker;
+        return invoker.invoke(boost::bind(m_func,arg1,arg2));
     }
 private:
-    boost::function2<ret_t,arg1_t,arg2_t> m_func;
+    boost::function2<RetT,Arg1_T,Arg2_T> m_func;
 };
 
-template<typename ret_t,typename arg1_t,typename arg2_t,typename arg3_t>
+template<typename RetT,typename Arg1_T,typename Arg2_T,typename Arg3_T>
 class function3:public functionN
 {
 public:
@@ -914,16 +958,17 @@ public:
     function3(F func):m_func(func){}
     std::string apply(std::list<std::string> & args,domain * aDomain)
     {
-        typename argument_handler<arg1_t>::type arg1(args,aDomain);
-        typename argument_handler<arg2_t>::type arg2(args,aDomain);
-        typename argument_handler<arg3_t>::type arg3(args,aDomain);
-        return print_type<ret_t>(m_func(arg1,arg2,arg3));
+        typename argument_handler<Arg1_T>::type arg1(args,aDomain);
+        typename argument_handler<Arg2_T>::type arg2(args,aDomain);
+        typename argument_handler<Arg3_T>::type arg3(args,aDomain);
+        typename call_handler<RetT>::type invoker;
+        return invoker.invoke(boost::bind(m_func,arg1,arg2,arg3));
     }
 private:
-    boost::function3<ret_t,arg1_t,arg2_t,arg3_t> m_func;
+    boost::function3<RetT,Arg1_T,Arg2_T,Arg3_T> m_func;
 };
 
-template<typename ret_t,typename arg1_t,typename arg2_t,typename arg3_t,typename arg4_t>
+template<typename RetT,typename Arg1_T,typename Arg2_T,typename Arg3_T,typename Arg4_T>
 class function4:public functionN
 {
 public:
@@ -931,17 +976,18 @@ public:
     function4(F func):m_func(func){}
     std::string apply(std::list<std::string> & args,domain * aDomain)
     {
-        typename argument_handler<arg1_t>::type arg1(args,aDomain);
-        typename argument_handler<arg2_t>::type arg2(args,aDomain);
-        typename argument_handler<arg3_t>::type arg3(args,aDomain);
-        typename argument_handler<arg4_t>::type arg4(args,aDomain);
-        return print_type<ret_t>(m_func(arg1,arg2,arg3,arg4));
+        typename argument_handler<Arg1_T>::type arg1(args,aDomain);
+        typename argument_handler<Arg2_T>::type arg2(args,aDomain);
+        typename argument_handler<Arg3_T>::type arg3(args,aDomain);
+        typename argument_handler<Arg4_T>::type arg4(args,aDomain);
+        typename call_handler<RetT>::type invoker;
+        return invoker.invoke(boost::bind(m_func,arg1,arg2,arg3,arg4));
     }
 private:
-    boost::function4<ret_t,arg1_t,arg2_t,arg3_t,arg4_t> m_func;
+    boost::function4<RetT,Arg1_T,Arg2_T,Arg3_T,Arg4_T> m_func;
 };
 
-template<typename ret_t>
+template<typename RetT>
 class functionV:public functionN
 {
 public:
@@ -949,10 +995,11 @@ public:
     functionV(F func):m_func(func){}
     std::string apply(std::list<std::string> & args,domain * d)
     {
-        return print_type<ret_t>(m_func(args,d));
+        typename call_handler<RetT>::type invoker;
+        return invoker.invoke(boost::bind(m_func,boost::ref(args),d));
     }
 private:
-    boost::function2<ret_t,std::list<std::string> &,domain *> m_func;
+    boost::function2<RetT,std::list<std::string> &,domain *> m_func;
 };
 
 /*!
