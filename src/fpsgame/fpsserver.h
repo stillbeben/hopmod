@@ -565,6 +565,10 @@ struct fpsserver : igameserver
     cubescript::variable_ref<int>                           var_playercount;
     cubescript::variable_ref<int>                           var_uptime;
     cubescript::variable_ref<int>                           var_timeleft;
+    cubescript::variable_ref<bool>                          var_allow_mm_veto; bool allow_mm_veto;
+    cubescript::variable_ref<bool>                          var_allow_mm_locked; bool allow_mm_locked;
+    cubescript::variable_ref<bool>                          var_allow_mm_private; bool allow_mm_private;
+    cubescript::variable_ref<bool>                          var_autoapprove; bool autoapprove;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -604,7 +608,12 @@ struct fpsserver : igameserver
     event_handler on_damage;
     event_handler on_endgame;
     
-    fpsserver() : pending_bans(0), notgotitems(true), notgotbases(false), gamemode(0), gamecount(0), playercount(0), concount(0), interm(0), minremain(0), mapreload(false), lastsend(0), mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), assassinmode(*this), ctfmode(*this), smode(NULL), 
+    fpsserver() : pending_bans(0), notgotitems(true), notgotbases(false), gamemode(0), gamecount(0), 
+        playercount(0), concount(0), interm(0), minremain(0), mapreload(false), lastsend(0), 
+        mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), 
+        mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), 
+        demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), 
+        assassinmode(*this), ctfmode(*this), smode(NULL),
         
         func_flood_protection(boost::bind(&fpsserver::set_flood_protection,this,_1,_2)),
         func_log_status(boost::bind(&fpsserver::log_status,this,_1)),
@@ -671,6 +680,10 @@ struct fpsserver : igameserver
         var_playercount(playercount),
         var_uptime(totalmillis),
         var_timeleft(minremain),
+        var_allow_mm_veto(allow_mm_veto), allow_mm_veto(true),
+        var_allow_mm_locked(allow_mm_locked), allow_mm_locked(true),
+        var_allow_mm_private(allow_mm_private), allow_mm_private(true),
+        var_autoapprove(autoapprove), autoapprove(false),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -757,6 +770,10 @@ struct fpsserver : igameserver
         server_domain.register_symbol("playercount",&var_playercount); var_playercount.readonly(true);
         server_domain.register_symbol("uptime",&var_uptime);
         server_domain.register_symbol("timeleft",&var_timeleft); var_timeleft.readonly(true);
+        server_domain.register_symbol("allow_mm_veto",&var_allow_mm_veto);
+        server_domain.register_symbol("allow_mm_locked",&var_allow_mm_locked);
+        server_domain.register_symbol("allow_mm_private",&var_allow_mm_private);
+        server_domain.register_symbol("autoapprove",&var_autoapprove);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);
@@ -1915,6 +1932,7 @@ struct fpsserver : igameserver
             case SV_MASTERMODE:
             {
                 int mm = getint(p);
+                update_mastermask();
                 if(ci->privilege && mm>=MM_OPEN && mm<=MM_PRIVATE)
                 {
                     if(ci->privilege>=PRIV_ADMIN || (mastermask&(1<<mm)))
@@ -2090,6 +2108,7 @@ struct fpsserver : igameserver
             case SV_APPROVEMASTER:
             {
                 int mn = getint(p);
+                update_mastermask();
                 if(mastermask&MM_AUTOAPPROVE || ci->state.state==CS_SPECTATOR) break;
                 clientinfo *candidate = (clientinfo *)getinfo(mn);
                 if(!candidate || !candidate->wantsmaster || mn==sender || getclientip(mn)==getclientip(sender)) break;
@@ -2579,6 +2598,7 @@ struct fpsserver : igameserver
 
     void setmaster(clientinfo *ci, bool val, const char *pass = "", bool approved = false)
     {
+        update_mastermask();
         if(approved && (!val || !ci->wantsmaster)) return;
         const char *name = "";
         if(val)
@@ -3275,6 +3295,15 @@ struct fpsserver : igameserver
         sleeptime.tv_nsec=(ms-sleeptime.tv_sec*1000)*1000000;
         if(nanosleep(&sleeptime,&sleeptime)==-1) throw cubescript::error_key("runtime.function.server_sleep.returned_early");
         return void_();
+    }
+    
+    void update_mastermask()
+    {
+        mastermask &= ~(1<<MM_VETO) & ~(1<<MM_LOCKED) & ~(1<<MM_PRIVATE) & ~MM_AUTOAPPROVE;
+        mastermask |= (allow_mm_veto<<MM_VETO);
+        mastermask |= (allow_mm_locked<<MM_LOCKED);
+        mastermask |= (allow_mm_private<<MM_PRIVATE);
+        if(autoapprove) mastermask |= MM_AUTOAPPROVE;
     }
 };
 

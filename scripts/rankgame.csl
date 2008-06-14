@@ -8,6 +8,11 @@ if (! $record_player_stats) [
     throw runtime.svconf.rankgame.stats_disabled
 ]
 
+if (! $allow_mm_locked) [
+    msg (err "Rank game setup failed! Server doesn't allow locked mastermode.")
+    throw runtime.svconf.rankgame.mm_locked_disabled
+]
+
 print_details = [
     result (format "playing %1 on map %2 for 10 minutes." $ranked_mode $ranked_map)
 ]
