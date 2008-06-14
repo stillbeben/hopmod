@@ -1,39 +1,50 @@
- 
+
 CREATE TABLE matches (
-    id          INTEGER PRIMARY KEY,
-    gameid      TEXT UNIQUE, 
-    datetime    TEXT,
-    gamemode    TEXT,
-    mapname     TEXT,
-    ranked      INTEGER,
-    duration    INTEGER,
-    demofile    TEXT,
-    syncd       INTEGER
+    id                  INTEGER PRIMARY KEY,
+    gameid              TEXT UNIQUE, 
+    datetime            TEXT,
+    gamemode            TEXT,
+    mapname             TEXT,
+    ranked              INTEGER,
+    duration            INTEGER,
+    demofile            TEXT,
+    syncd               INTEGER
 );
 CREATE TABLE players (
-    id          INTEGER PRIMARY KEY,
-    match_id    INTEGER UNIQUE REFERENCES matches(id),
-    name        TEXT,
-    team        TEXT,
-    ipaddr      TEXT,
-    frags       INTEGER DEFAULT 0,
-    deaths      INTEGER DEFAULT 0,
-    suicides    INTEGER DEFAULT 0,
-    hits        INTEGER DEFAULT 0,
-    misses      INTEGER DEFAULT 0
+    id                  INTEGER PRIMARY KEY,
+    match_id            INTEGER UNIQUE REFERENCES matches(id),
+    name                TEXT,
+    team                TEXT,
+    ipaddr              TEXT,
+    frags               INTEGER DEFAULT 0,
+    deaths              INTEGER DEFAULT 0,
+    suicides            INTEGER DEFAULT 0,
+    hits                INTEGER DEFAULT 0,
+    misses              INTEGER DEFAULT 0,
+    damage              INTEGER DEFAULT 0
 );
 CREATE TABLE itempickups (
-    id          INTEGER PRIMARY KEY,
-    player_id   INTEGER UNIQUE REFERENCES players(id),
-    boost       INTEGER DEFAULT 0,
-    health      INTEGER DEFAULT 0,
-    shells      INTEGER DEFAULT 0, 
-    bullets     INTEGER DEFAULT 0,
-    rockets     INTEGER DEFAULT 0,
-    rounds      INTEGER DEFAULT 0,
-    grenades    INTEGER DEFAULT 0,
-    cartridges  INTEGER DEFAULT 0,
-    greenarmor  INTEGER DEFAULT 0,
-    yellowarmor INTEGER DEFAULT 0,
-    quad        INTEGER DEFAULT 0
+    id                  INTEGER PRIMARY KEY,
+    player_id           INTEGER UNIQUE REFERENCES players(id),
+    boost               INTEGER DEFAULT 0,
+    health              INTEGER DEFAULT 0,
+    shells              INTEGER DEFAULT 0, 
+    bullets             INTEGER DEFAULT 0,
+    rockets             INTEGER DEFAULT 0,
+    rounds              INTEGER DEFAULT 0,
+    grenades            INTEGER DEFAULT 0,
+    cartridges          INTEGER DEFAULT 0,
+    greenarmor          INTEGER DEFAULT 0,
+    yellowarmor         INTEGER DEFAULT 0,
+    quad                INTEGER DEFAULT 0
+);
+CREATE TABLE gunusage (
+    id                  INTEGER PRIMARY KEY,
+    player_id           INTEGER UNIQUE REFERENCES players(id),
+    pistol              INTEGER DEFAULT 0,
+    rifle               INTEGER DEFAULT 0, 
+    shotgun             INTEGER DEFAULT 0,
+    chaingun            INTEGER DEFAULT 0,
+    rocketlauncher      INTEGER DEFAULT 0,
+    grenadelauncher     INTEGER DEFAULT 0
 );

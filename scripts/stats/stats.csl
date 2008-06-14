@@ -12,6 +12,10 @@ newstatsp = [
     ! (strcmp $gamemode "coopedit")
 ]
 
+mongunsp = [
+    ! (match insta $gamemode)
+]
+
 event_handler $onconnect [
     parameters cn
     if (&& $recording_stats [! (player_has_var $cn stats_id)]) [create_player_record $cn]
@@ -24,6 +28,7 @@ event_handler $ondisconnect [
 
 event_handler $ondamage [
     parameters target actor damage gun
+    player_var $actor damage (+ $damage (player_var $actor damage))
 ]
 
 event_handler $ondeath [
@@ -33,6 +38,7 @@ event_handler $ondeath [
         player_var $offender suicides (+ 1 (player_var $offender suicides))
     ] [
         player_var $offender frags (+ 1 (player_var $offender frags))
+        player_var $offender (player_gun $offender) (+ 1 player_var $offender (player_gun $offender))
     ]
     
     player_var $victim deaths (+ 1 (player_var $victim deaths))
@@ -90,6 +96,7 @@ create_player_record = [
         player_var $cn suicides 0
         
         if (itemsgame) [create_items_record $cn]
+        if (mongunsp) [create_gunusage_record $cn]
     ]
 ]
 
@@ -114,6 +121,22 @@ create_items_record = [
     player_var $cn quad 0
 ]
 
+create_gunusage_record = [
+    parameters cn
+    
+    local player_id (player_var $cn stats_id)
+    
+    statsdb eval [insert into gunusage (player_id) values ($player_id)] []
+    
+    player_var $cn gunusage_id (statsdb last_rowid)
+    player_var $cn pistol 0
+    player_var $cn rifle 0
+    player_var $cn shotgun 0
+    player_var $cn chaingun 0
+    player_var $cn rocketlauncher 0
+    player_var $cn grenadelauncher 0
+]
+
 update_player_record = [
     parameters cn
     if (player_has_var $cn stats_id) [
@@ -125,10 +148,15 @@ update_player_record = [
         local frags (player_var $cn frags)
         local deaths (player_var $cn deaths)
         local suicides (player_var $cn suicides)
+        local hits (player_hits $cn)
+        local misses (player_misses $cn)
+        local damage (player_var $cn damage)
         
-        statsdb eval [update players set name=$name, team=$team,frags=$frags,deaths=$deaths,suicides=$suicides where id=$id] []
+        statsdb eval [update players set name=$name, team=$team,frags=$frags,deaths=$deaths,
+            suicides=$suicides, hits=$hits,misses=$misses, damage=$damage where id=$id] []
         
         if (player_has_var $cn items_id) [update_items_record $cn]
+        if (player_has_var $cn gunusage_id) [update_gunusage_record $cn]
     ]
 ]
 
@@ -151,6 +179,21 @@ update_items_record = [
     statsdb eval [update itempickups set boost=$boost,health=$health,shells=$shells,bullets=$bullets,
         rockets=$rockets,rounds=$rounds,grenades=$grenades,cartridges=$cartridges,greenarmor=$greenarmor,
         yellowarmor=$yellowarmor,quad=$quad where id=$items_id] []
+]
+
+update_gunusage_record = [
+    parameters cn
+    
+    local gunusage_id (player_var $cn gunusage_id)
+    local pistol (player_var $cn pistol)
+    local rifle (player_var $cn pistol)
+    local shotgun (player_var $cn shotgun)
+    local chaingun (player_var $cn chaingun)
+    local rocketlauncher (player_var $cn rocketlauncher)
+    local grenadelauncher (player_var $cn grenadelauncher)
+    
+    statsdb eval [update gunusage set pistol=$pistol,rifle=$rifle,shotgun=$shotgun,chaingun=$chaingun,
+        rocketlauncher=$rocketlauncher,grenadelauncher=$grenadelauncher where id=$gunusage_id] []
 ]
 
 update_player_records = [
