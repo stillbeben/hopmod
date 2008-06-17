@@ -467,14 +467,14 @@ struct decalrenderer
                 uchar vismask = vismasks[i] & ~avoid;
                 if(!vismask) continue;
                 uchar vertused = fvmasks[vismask];
-                bool solid = cu[i].ext && isclipped(cu[i].ext->material) && cu[i].ext->material!=MAT_CLIP;
+                bool solid = cu[i].ext && isclipped(cu[i].ext->material&MATF_VOLUME);
                 vec v[8];
                 loopj(8) if(vertused&(1<<j)) calcvert(cu[i], co.x, co.y, co.z, size, v[j], j, solid);
                 loopj(6) if(vismask&(1<<j)) gendecaltris(cu[i], j, v, solid || (flataxisface(cu[i], j) && faceedges(cu[i], j)==F_SOLID));
             }
             else
             {
-                bool solid = cu[i].ext && isclipped(cu[i].ext->material) && cu[i].ext->material!=MAT_CLIP;
+                bool solid = cu[i].ext && isclipped(cu[i].ext->material&MATF_VOLUME);
                 uchar vismask = 0;
                 loopj(6) if(!(avoid&(1<<j)) && (solid ? visiblematerial(cu[i], j, co.x, co.y, co.z, size)==MATSURF_VISIBLE : cu[i].texture[j]!=DEFAULT_SKY && visibleface(cu[i], j, co.x, co.y, co.z, size))) vismask |= 1<<j;
                 if(!vismask) continue;
@@ -489,9 +489,9 @@ struct decalrenderer
 
 decalrenderer decals[] =
 {
-    decalrenderer("data/scorch.png", DF_ROTATE, 500),
-    decalrenderer("data/blood.png", DF_RND4|DF_ROTATE|DF_INVMOD),
-    decalrenderer("<decal>data/bullet.png", DF_OVERBRIGHT)
+    decalrenderer("packages/particles/scorch.png", DF_ROTATE, 500),
+    decalrenderer("packages/particles/blood.png", DF_RND4|DF_ROTATE|DF_INVMOD),
+    decalrenderer("<decal>packages/particles/bullet.png", DF_OVERBRIGHT)
 };
 
 void initdecals()

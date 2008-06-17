@@ -279,8 +279,8 @@ struct ctfclient : ctfstate
     {
         flag &f = flags[i];
         settexture(f.team==ctfteamflag(cl.player1->team) ? 
-                    (flagblip ? "data/blip_blue_flag.png" : "data/blip_blue.png") : 
-                    (flagblip ? "data/blip_red_flag.png" : "data/blip_red.png"));
+                    (flagblip ? "packages/hud/blip_blue_flag.png" : "packages/hud/blip_blue.png") : 
+                    (flagblip ? "packages/hud/blip_red_flag.png" : "packages/hud/blip_red.png"));
         float scale = radarscale<=0 || radarscale>cl.maxradarscale() ? cl.maxradarscale() : radarscale;
         vec dir;
         if(flagblip) dir = f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc);
@@ -309,11 +309,10 @@ struct ctfclient : ctfstate
             }
         }
 
-        glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         int x = 1800*w/h*34/40, y = 1800*1/40, s = 1800*w/h*5/40;
         glColor3f(1, 1, 1);
-        settexture("data/radar.png");
+        settexture("packages/hud/radar.png");
         glBegin(GL_QUADS);
         drawradar(float(x), float(y), float(s));
         glEnd();
@@ -342,7 +341,6 @@ struct ctfclient : ctfstate
                 glPopMatrix();
             }
         }
-        glDisable(GL_BLEND);
     }
 
     vec interpflagpos(flag &f, float &angle)

@@ -382,7 +382,7 @@ struct captureclient : capturestate
    
     void drawblips(fpsent *d, int x, int y, int s, int type, bool skipenemy = false)
     {
-        const char *textures[3] = {"data/blip_red.png", "data/blip_grey.png", "data/blip_blue.png"};
+        const char *textures[3] = {"packages/hud/blip_red.png", "packages/hud/blip_grey.png", "packages/hud/blip_blue.png"};
         settexture(textures[max(type+1, 0)]);
         glBegin(GL_QUADS);
         float scale = radarscale<=0 || radarscale>cl.maxradarscale() ? cl.maxradarscale() : radarscale;
@@ -417,11 +417,10 @@ struct captureclient : capturestate
 
     void capturehud(fpsent *d, int w, int h)
     {
-        glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         int x = 1800*w/h*34/40, y = 1800*1/40, s = 1800*w/h*5/40;
         glColor3f(1, 1, 1);
-        settexture("data/radar.png");
+        settexture("packages/hud/radar.png");
         glBegin(GL_QUADS);
         drawradar(float(x), float(y), float(s));
         glEnd();
@@ -442,7 +441,6 @@ struct captureclient : capturestate
                 glPopMatrix();
             }
         }
-        glDisable(GL_BLEND);
     }
 
     void setupbases()

@@ -789,7 +789,7 @@ struct fpsclient : igameclient
 
     void drawicon(float tx, float ty, int x, int y)
     {
-        settexture("data/items.png");
+        settexture("packages/hud/items.png");
         glBegin(GL_QUADS);
         tx /= 384;
         ty /= 128;
@@ -862,11 +862,12 @@ struct fpsclient : igameclient
             if(g==GUN_PISTOL) { g = 4; r = 0; }
             drawicon((float)(g*64), (float)r, 1220, 1650);
         }
+
+        glEnable(GL_BLEND);
+
         if(m_capture) cpc.capturehud(d, w, h);
         else if(m_ctf) ctf.drawhud(d, w, h);
         else if(m_assassin && d==player1) asc.drawhud(w, h);
-
-        glEnable(GL_BLEND);
     }
 
     IVARP(teamcrosshair, 0, 1, 1);

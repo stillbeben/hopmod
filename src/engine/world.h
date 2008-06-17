@@ -8,7 +8,7 @@ enum                            // hardcoded texture numbers
     DEFAULT_CEIL
 };
 
-#define MAPVERSION 26           // bump if map format changes, see worldio.cpp
+#define MAPVERSION 27           // bump if map format changes, see worldio.cpp
 
 struct header                   // map file format header
 {
@@ -43,7 +43,8 @@ enum
 };
 
 #define isliquid(mat) ((mat)==MAT_WATER || (mat)==MAT_LAVA)
-#define isclipped(mat) ((mat) >= MAT_CLIP && (mat) < MAT_NOCLIP)
+#define isclipped(mat) ((mat)==MAT_GLASS)
+#define isdeadly(mat) ((mat)==MAT_LAVA)
 
 // VVEC_FRAC must be between 0..3
 #define VVEC_FRAC 3

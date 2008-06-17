@@ -584,7 +584,7 @@ static const float WOBBLE = 1.25f;
 struct fireballrenderer : listrenderer
 {
     fireballrenderer(int type)
-        : listrenderer("data/explosion.jpg", type, 0, 0)
+        : listrenderer("packages/particles/explosion.jpg", type, 0, 0)
     {}
 
     void startrender()

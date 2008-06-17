@@ -194,7 +194,16 @@ void loadc(gzFile f, cube &c)
     else
     {
         uchar mask = gzgetc(f);
-        if(mask & 0x80) ext(c).material = gzgetc(f);
+        if(mask & 0x80) 
+        {
+            int mat = gzgetc(f);
+            if(hdr.version < 27)
+            {
+                static uchar matconv[] = { MAT_AIR, MAT_WATER, MAT_CLIP, MAT_GLASS|MAT_CLIP, MAT_NOCLIP, MAT_LAVA|MAT_DEATH, MAT_AICLIP, MAT_DEATH };
+                mat = size_t(mat) < sizeof(matconv)/sizeof(matconv[0]) ? matconv[mat] : MAT_AIR;
+            }
+            ext(c).material = mat;
+        }
         if(mask & 0x3F)
         {
             uchar lit = 0, bright = 0;
@@ -282,7 +291,7 @@ bool save_world(const char *mname, bool nolms)
     hdr.version = MAPVERSION;
     hdr.numents = 0;
     const vector<extentity *> &ents = et->getents();
-    loopv(ents) if(ents[i]->type!=ET_EMPTY) hdr.numents++;
+    loopv(ents) if(ents[i]->type!=ET_EMPTY || nolms) hdr.numents++;
     hdr.numpvs = nolms ? 0 : getnumviewcells();
     hdr.lightmaps = nolms ? 0 : lightmaps.length();
     header tmp = hdr;
@@ -303,7 +312,7 @@ bool save_world(const char *mname, bool nolms)
     char *ebuf = new char[et->extraentinfosize()];
     loopv(ents)
     {
-        if(ents[i]->type!=ET_EMPTY)
+        if(ents[i]->type!=ET_EMPTY || nolms)
         {
             entity tmp = *ents[i];
             endianswap(&tmp.o, sizeof(int), 3);

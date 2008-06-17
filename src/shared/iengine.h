@@ -1,16 +1,29 @@
 // the interface the game uses to access the engine
 
-enum                            // cube empty-space materials
+enum
 {
-    MAT_AIR = 0,                // the default, fill the empty space with air
-    MAT_WATER,                  // fill with water, showing waves at the surface
-    MAT_CLIP,                   // collisions always treat cube as solid
-    MAT_GLASS,                  // behaves like clip but is blended blueish
-    MAT_NOCLIP,                 // collisions always treat cube as empty
-    MAT_LAVA,                   // fill with lava
-    MAT_AICLIP,                 // clip monsters only
-    MAT_DEATH,                  // force player suicide
-    MAT_EDIT                    // basis for the edit volumes of the above materials
+    MATF_VOLUME_SHIFT = 0,
+    MATF_CLIP_SHIFT   = 3,
+    MATF_FLAG_SHIFT   = 5,
+
+    MATF_VOLUME = 7 << MATF_VOLUME_SHIFT,
+    MATF_CLIP   = 3 << MATF_CLIP_SHIFT,
+    MATF_FLAGS  = 7 << MATF_FLAG_SHIFT
+};
+
+enum // cube empty-space materials
+{
+    MAT_AIR   = 0,                      // the default, fill the empty space with air
+    MAT_WATER = 1 << MATF_VOLUME_SHIFT, // fill with water, showing waves at the surface
+    MAT_LAVA  = 2 << MATF_VOLUME_SHIFT, // fill with lava
+    MAT_GLASS = 3 << MATF_VOLUME_SHIFT, // behaves like clip but is blended blueish
+
+    MAT_NOCLIP = 1 << MATF_CLIP_SHIFT,  // collisions always treat cube as empty
+    MAT_CLIP   = 2 << MATF_CLIP_SHIFT,  // collisions always treat cube as solid
+    MAT_AICLIP = 3 << MATF_CLIP_SHIFT,  // clip monsters only
+
+    MAT_DEATH  = 1 << MATF_FLAG_SHIFT,  // force player suicide
+    MAT_EDIT   = 4 << MATF_FLAG_SHIFT   // edit-only surfaces
 };
 
 extern void lightent(extentity &e, float height = 8.0f);

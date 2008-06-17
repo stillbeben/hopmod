@@ -284,7 +284,7 @@ float raycube(const vec &o, const vec &ray, float radius, int mode, int size, ex
 
         cube &c = *lc;
         if((dist>0 || !(mode&RAY_SKIPFIRST)) &&
-           (((mode&RAY_CLIPMAT) && c.ext && isclipped(c.ext->material) && c.ext->material != MAT_CLIP) ||
+           (((mode&RAY_CLIPMAT) && c.ext && isclipped(c.ext->material&MATF_VOLUME)) ||
             ((mode&RAY_EDITMAT) && c.ext && c.ext->material != MAT_AIR) ||
             (!(mode&RAY_PASS) && lsize==size && !isempty(c)) ||
             isentirelysolid(c) ||
@@ -704,12 +704,11 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
         else
         {
             bool solid = false;
-            if(c[i].ext) switch(c[i].ext->material)
+            if(c[i].ext) switch(c[i].ext->material&MATF_CLIP)
             {
                 case MAT_NOCLIP: continue;
                 case MAT_AICLIP: if(d->type==ENT_AI) solid = true; break;
                 case MAT_CLIP: if(d->type<ENT_CAMERA) solid = true; break;
-                case MAT_GLASS: solid = true; break;
             }
             if(!solid && isempty(c[i])) continue;
             if(!cubecollide(d, dir, cutoff, c[i], o.x, o.y, o.z, size, solid)) return false;
@@ -735,12 +734,11 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
     }
     if(c->children) return octacollide(d, dir, cutoff, bo, bs, c->children, ivec(bo).mask(~((2<<scale)-1)), 1<<scale);
     bool solid = false;
-    if(c->ext) switch(c->ext->material)
+    if(c->ext) switch(c->ext->material&MATF_CLIP)
     {
         case MAT_NOCLIP: return true;
         case MAT_AICLIP: if(d->type==ENT_AI) solid = true; break;
         case MAT_CLIP: if(d->type<ENT_CAMERA) solid = true; break;
-        case MAT_GLASS: solid = true; break;
     }
     if(!solid && isempty(*c)) return true;
     int csize = 2<<scale, cmask = ~(csize-1);
@@ -1246,7 +1244,7 @@ void modifygravity(physent *pl, bool water, int curtime)
 bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 {
     int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (3*pl->aboveeye - pl->eyeheight)/4));
-    bool water = isliquid(material);
+    bool water = isliquid(material&MATF_VOLUME);
     bool floating = pl->state==CS_EDITING || (pl->type!=ENT_CAMERA && pl->state==CS_SPECTATOR);
     float secs = curtime/1000.f;
 
@@ -1282,7 +1280,7 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 
         d.mul(f);
         loopi(moveres) if(!move(pl, d)) { if(pl->type==ENT_CAMERA) return false; if(++collisions<5) i--; } // discrete steps collision detection & sliding
-        if(timeinair > 800 && !pl->timeinair) // if we land after long time must have been a high jump, make thud sound
+        if(timeinair > 800 && !pl->timeinair && !water) // if we land after long time must have been a high jump, make thud sound
         {
             cl->physicstrigger(pl, local, -1, 0);
         }
@@ -1315,13 +1313,13 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
         if(pl->inwater && !water)
         {
             material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->eyeheight)/2));
-            water = isliquid(material);
+            water = isliquid(material&MATF_VOLUME);
         }
-        if(!pl->inwater && water) cl->physicstrigger(pl, local, 0, -1, material);
+        if(!pl->inwater && water) cl->physicstrigger(pl, local, 0, -1, material&MATF_VOLUME);
         else if(pl->inwater && !water) cl->physicstrigger(pl, local, 0, 1, pl->inwater);
-        pl->inwater = water ? material : MAT_AIR;
+        pl->inwater = water ? material&MATF_VOLUME : MAT_AIR;
 
-        if(pl->state==CS_ALIVE && (pl->o.z < 0 || material==MAT_LAVA || material==MAT_DEATH)) cl->suicide(pl);
+        if(pl->state==CS_ALIVE && (pl->o.z < 0 || material&MAT_DEATH)) cl->suicide(pl);
     }
 
     return true;

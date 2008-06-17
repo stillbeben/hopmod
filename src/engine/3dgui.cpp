@@ -28,6 +28,7 @@ static float cursorx = 0.5f, cursory = 0.5f;
 #define INSERT (3*SKIN_SCALE)
 
 VARP(guiautotab, 6, 16, 40);
+VARP(guiclicktab, 0, 0, 1);
 
 struct gui : g3d_gui
 {
@@ -124,7 +125,7 @@ struct gui : g3d_gui
                 y1 = cury - ((skiny[5]-skiny[1])-(skiny[3]-skiny[2]))*SKIN_SCALE-h,
                 y2 = cury;
             bool hit = tcurrent && windowhit==this && hitx>=x1 && hity>=y1 && hitx<x2 && hity<y2;
-            if(hit) 
+            if(hit && (!guiclicktab || mousebuttons&G3D_DOWN)) 
             {	
                 *tcurrent = tpos; //roll-over to switch tab
                 color = 0xFF0000;

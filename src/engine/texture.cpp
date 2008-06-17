@@ -525,7 +525,7 @@ void settexture(const char *name, bool clamp)
 }
 
 vector<Slot> slots;
-Slot materialslots[MAT_EDIT];
+Slot materialslots[MATF_VOLUME+1];
 
 int curtexnum = 0, curmatslot = -1;
 
@@ -539,7 +539,7 @@ COMMAND(texturereset, "");
 
 void materialreset()
 {
-    loopi(MAT_EDIT) materialslots[i].reset();
+    loopi(MATF_VOLUME+1) materialslots[i].reset();
 }
 
 COMMAND(materialreset, "");
@@ -595,7 +595,7 @@ void autograss(char *name)
     Slot &s = slots.last();
     DELETEA(s.autograss);
     s_sprintfd(pname)("packages/%s", name);
-    s.autograss = newstring(name[0] ? pname : "data/grass.png");
+    s.autograss = newstring(name[0] ? pname : "packages/textures/grass.png");
 }
 COMMAND(autograss, "s");
 
@@ -782,7 +782,7 @@ Slot dummyslot;
 
 Slot &lookuptexture(int slot, bool load)
 {
-    Slot &s = slot<0 && slot>-MAT_EDIT ? materialslots[-slot] : (slots.inrange(slot) ? slots[slot] : (slots.empty() ? dummyslot : slots[0]));
+    Slot &s = slot<0 && slot>=-MATF_VOLUME ? materialslots[-slot] : (slots.inrange(slot) ? slots[slot] : (slots.empty() ? dummyslot : slots[0]));
     if(s.loaded || !load) return s;
     loopv(s.sts)
     {
@@ -791,11 +791,11 @@ Slot &lookuptexture(int slot, bool load)
         switch(t.type)
         {
             case TEX_ENVMAP:
-                if(hasCM && (renderpath!=R_FIXEDFUNCTION || (slot<0 && slot>-MAT_EDIT))) t.t = cubemapload(t.name);
+                if(hasCM && (renderpath!=R_FIXEDFUNCTION || (slot<0 && slot>=-MATF_VOLUME))) t.t = cubemapload(t.name);
                 break;
 
             default:
-                texcombine(s, i, t, slot<0 && slot>-MAT_EDIT);
+                texcombine(s, i, t, slot<0 && slot>=-MATF_VOLUME);
                 break;
         }
     }
@@ -803,7 +803,7 @@ Slot &lookuptexture(int slot, bool load)
     return s;
 }
 
-Shader *lookupshader(int slot) { return slot<0 && slot>-MAT_EDIT ? materialslots[-slot].shader : (slots.inrange(slot) ? slots[slot].shader : defaultshader); }
+Shader *lookupshader(int slot) { return slot<0 && slot>=-MATF_VOLUME ? materialslots[-slot].shader : (slots.inrange(slot) ? slots[slot].shader : defaultshader); }
 
 Texture *loadthumbnail(Slot &slot)
 {
@@ -1196,7 +1196,7 @@ void cleanuptextures()
 {
     clearenvmaps();
     loopv(slots) slots[i].cleanup();
-    loopi(MAT_EDIT) materialslots[i].cleanup();
+    loopi(MATF_VOLUME+1) materialslots[i].cleanup();
     vector<Texture *> transient;
     enumerate(textures, Texture, tex,
         DELETEA(tex.alphamask);
