@@ -5,14 +5,20 @@ CREATE TABLE matches (
     datetime            TEXT,
     gamemode            TEXT,
     mapname             TEXT,
-    ranked              INTEGER,
+    ranked              INTEGER DEFAULT 0,
     duration            INTEGER,
     demofile            TEXT,
-    syncd               INTEGER
+    syncd               INTEGER DEFAULT 0
+);
+CREATE TABLE logevents (
+    id                  INTEGER PRIMARY KEY,
+    match_id            INTEGER REFERENCES matches(id),
+    time                TEXT,
+    message             TEXT
 );
 CREATE TABLE players (
     id                  INTEGER PRIMARY KEY,
-    match_id            INTEGER UNIQUE REFERENCES matches(id),
+    match_id            INTEGER REFERENCES matches(id),
     name                TEXT,
     team                TEXT,
     ipaddr              TEXT,
@@ -21,11 +27,12 @@ CREATE TABLE players (
     suicides            INTEGER DEFAULT 0,
     hits                INTEGER DEFAULT 0,
     misses              INTEGER DEFAULT 0,
-    damage              INTEGER DEFAULT 0
+    damage              INTEGER DEFAULT 0,
+    kicked              BOOLEAN DEFAULT 0
 );
 CREATE TABLE itempickups (
     id                  INTEGER PRIMARY KEY,
-    player_id           INTEGER UNIQUE REFERENCES players(id),
+    player_id           INTEGER REFERENCES players(id),
     boost               INTEGER DEFAULT 0,
     health              INTEGER DEFAULT 0,
     shells              INTEGER DEFAULT 0, 
@@ -40,11 +47,47 @@ CREATE TABLE itempickups (
 );
 CREATE TABLE gunusage (
     id                  INTEGER PRIMARY KEY,
-    player_id           INTEGER UNIQUE REFERENCES players(id),
+    player_id           INTEGER REFERENCES players(id),
     pistol              INTEGER DEFAULT 0,
     rifle               INTEGER DEFAULT 0, 
     shotgun             INTEGER DEFAULT 0,
     chaingun            INTEGER DEFAULT 0,
     rocketlauncher      INTEGER DEFAULT 0,
     grenadelauncher     INTEGER DEFAULT 0
+);
+CREATE TABLE ctfteams (
+    id                  INTEGER PRIMARY KEY,
+    match_id            INTEGER REFERENCES matches(id),
+    name                TEXT,
+    score               INTEGER DEFAULT 0,
+    pickups             INTEGER DEFAULT 0,
+    drops               INTEGER DEFAULT 0,
+    returns             INTEGER DEFAULT 0,
+    resets              INTEGER DEFAULT 0
+);
+CREATE TABLE ctfplayers (
+    id                  INTEGER PRIMARY KEY,
+    player_id           INTEGER REFERENCES players(id),
+    team_id             INTEGER REFERENCES ctfteams(id),
+    pickups             INTEGER DEFAULT 0,
+    drops               INTEGER DEFAULT 0,
+    scored              INTEGER DEFAULT 0,
+    defended            INTEGER DEFAULT 0,
+    returns             INTEGER DEFAULT 0,
+    teamkills           INTEGER DEFAULT 0
+);
+CREATE TABLE captureteams (
+    id                  INTEGER PRIMARY KEY,
+    match_id            INTEGER REFERENCES matches(id),
+    name                TEXT,
+    score               INTEGER DEFAULT 0,
+    captured            INTEGER DEFAULT 0,
+    lost                INTEGER DEFAULT 0,
+    win                 BOOLEAN DEFAULT 0
+);
+CREATE TABLE captureplayers (
+    id                  INTEGER PRIMARY KEY,
+    player_id           INTEGER REFERENCES players(id),
+    team_id             INTEGER REFERENCES captureteams(id),
+    teamkills           INTEGER DEFAULT 0
 );

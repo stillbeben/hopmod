@@ -119,6 +119,9 @@ struct ctfservmode : ctfstate, servmode
             ivec o(vec(ci->state.o).mul(DMF));
             sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, o.x, o.y, o.z); 
             ctfstate::dropflag(i, o.tovec().div(DMF), sv.lastmillis);
+
+            cubescript::arguments args;
+            sv.scriptable_events.dispatch(&sv.on_dropflag,args & ci->clientnum,NULL);
         }
     } 
 
@@ -159,6 +162,9 @@ struct ctfservmode : ctfstate, servmode
                 returnflag(relay);
                 goal.score++;
                 sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, relay, i, goal.score);
+                
+                cubescript::arguments args;
+                sv.scriptable_events.dispatch(&sv.on_scoreflag,args & ci->clientnum,NULL);
             }
         }
     }
@@ -173,6 +179,9 @@ struct ctfservmode : ctfstate, servmode
             if(!f.droptime || f.owner>=0) return;
             ctfstate::returnflag(i);
             sendf(-1, 1, "ri3", SV_RETURNFLAG, ci->clientnum, i);
+            
+            cubescript::arguments args;
+            sv.scriptable_events.dispatch(&sv.on_returnflag,args & ci->clientnum,NULL);
         }
         else
         {
@@ -180,6 +189,9 @@ struct ctfservmode : ctfstate, servmode
             loopv(flags) if(flags[i].owner==ci->clientnum) return;
             ctfstate::takeflag(i, ci->clientnum);
             sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
+            
+            cubescript::arguments args;
+            sv.scriptable_events.dispatch(&sv.on_takeflag,args & ci->clientnum,NULL);
         }
     }
 
@@ -191,8 +203,13 @@ struct ctfservmode : ctfstate, servmode
             flag &f = flags[i];
             if(f.owner<0 && f.droptime && sv.lastmillis - f.droptime >= RESETFLAGTIME)
             {
+                int lastowner=f.owner;
+                
                 returnflag(i);
                 sendf(-1, 1, "ri2", SV_RESETFLAG, i);
+                
+                cubescript::arguments args;
+                sv.scriptable_events.dispatch(&sv.on_resetflag,args & lastowner,NULL);
             }
         }
     }

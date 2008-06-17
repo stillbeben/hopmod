@@ -550,10 +550,12 @@ std::string cons::expression::eval()
         
         return result;
     }
-    catch(script_error<symbol_error> &){throw;}
-    catch(script_error<error_key> &){throw;}
-    catch(symbol_error & key) {throw expr_error<symbol_error>(key,formed());}
-    catch(error_key & key){throw expr_error<error_key>(key,formed());}
+    catch(const script_error<symbol_error> &){throw;}
+    catch(const script_error<error_key> &){throw;}
+    catch(const expr_error<symbol_error> &){throw;}
+    catch(const expr_error<error_key> &){throw;}
+    catch(const symbol_error & key) {throw expr_error<symbol_error>(key,formed());}
+    catch(const error_key & key){throw expr_error<error_key>(key,formed());}
 }
 
 std::string cons::expression::formed()const

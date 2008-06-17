@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -521,6 +522,7 @@ struct fpsserver : igameserver
     cubescript::function2<bool,int,const std::string &>     func_player_has_var;
     cubescript::function1<int,int>                          func_player_ping;
     cubescript::function1<int,int>                          func_player_lag;
+    cubescript::function1<bool,int>                         func_player_has_flag;
     cubescript::function1<std::string,int>                  func_get_disc_reason;
     cubescript::function2<void_,int,const std::string &>    func_setpriv;
     cubescript::function0<void_>                            func_clearbans;
@@ -529,6 +531,7 @@ struct fpsserver : igameserver
     cubescript::function1<void_,int>                        func_spec;
     cubescript::function1<void_,int>                        func_unspec;
     cubescript::function0<std::vector<int> >                func_players;
+    cubescript::function0<std::vector<std::string> >        func_teams;
     cubescript::function2<void_,int,bool>                   func_setmaster;
     cubescript::function1<void_,int>                        func_approve;
     cubescript::function2<void_,std::string,std::string>    func_changemap;
@@ -607,6 +610,15 @@ struct fpsserver : igameserver
     event_handler on_itempickup;
     event_handler on_damage;
     event_handler on_endgame;
+    event_handler on_takeflag;
+    event_handler on_dropflag;
+    event_handler on_returnflag;
+    event_handler on_resetflag;
+    event_handler on_scoreflag;
+    event_handler on_sayteam;
+    event_handler on_capturebase;
+    event_handler on_lostbase;
+    event_handler on_wincapture;
     
     fpsserver() : pending_bans(0), notgotitems(true), notgotbases(false), gamemode(0), gamecount(0), 
         playercount(0), concount(0), interm(0), minremain(0), mapreload(false), lastsend(0), 
@@ -639,6 +651,7 @@ struct fpsserver : igameserver
         func_player_has_var(boost::bind(&fpsserver::has_player_var,this,_1,_2)),
         func_player_ping(boost::bind(&fpsserver::get_player_ping,this,_1)),
         func_player_lag(boost::bind(&fpsserver::get_player_lag,this,_1)),
+        func_player_has_flag(boost::bind(&fpsserver::player_has_flag,this,_1)),
         func_get_disc_reason(boost::bind(&fpsserver::get_disc_reason,this,_1)),
         func_setpriv(boost::bind(&fpsserver::setpriv,this,_1,_2)),
         func_clearbans(boost::bind(&fpsserver::clearbans,this)),
@@ -647,6 +660,7 @@ struct fpsserver : igameserver
         func_spec(boost::bind(&fpsserver::set_spectator,this,_1,true)),
         func_unspec(boost::bind(&fpsserver::set_spectator,this,_1,false)),
         func_players(boost::bind(&fpsserver::players,this)),
+        func_teams(boost::bind(&fpsserver::get_team_names,this)),
         func_setmaster(boost::bind(&fpsserver::console_setmaster,this,_1,_2)),
         func_approve(boost::bind(&fpsserver::approvemaster,this,_1)),
         func_changemap(boost::bind(&fpsserver::changemap_,this,_1,_2)),
@@ -730,6 +744,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_has_var",&func_player_has_var);
         server_domain.register_symbol("player_ping",&func_player_ping);
         server_domain.register_symbol("player_lag",&func_player_lag);
+        server_domain.register_symbol("player_has_flag",&func_player_has_flag);
         server_domain.register_symbol("disc_reason",&func_get_disc_reason);
         server_domain.register_symbol("setpriv",&func_setpriv);
         server_domain.register_symbol("clearbans",&func_clearbans);
@@ -738,6 +753,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("spec",&func_spec);
         server_domain.register_symbol("unspec",&func_unspec);
         server_domain.register_symbol("players",&func_players);
+        server_domain.register_symbol("teams",&func_teams);
         server_domain.register_symbol("setmaster",&func_setmaster);
         server_domain.register_symbol("approve",&func_approve);
         server_domain.register_symbol("changemap",&func_changemap);
@@ -745,6 +761,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("stopdemo",&func_stopdemo);
         server_domain.register_symbol("allowhost",&func_allowhost);
         server_domain.register_symbol("denyhost",&func_denyhost);
+        server_domain.register_symbol("capture_teamscore",&func_capture_score);
         server_domain.register_symbol("shell_quote",&func_shell_quote);
         server_domain.register_symbol("teamgame",&func_teamgame);
         server_domain.register_symbol("itemsgame",&func_itemsgame);
@@ -782,6 +799,16 @@ struct fpsserver : igameserver
         
         cubescript::bind(g_argv[0],"SERVER_FILENAME",&server_domain);
         
+        cubescript::bind((int)DISC_NONE,"DISC_NONE",&server_domain);
+        cubescript::bind((int)DISC_EOP,"DISC_EOP",&server_domain);
+        cubescript::bind((int)DISC_CN,"DISC_CN",&server_domain);
+        cubescript::bind((int)DISC_KICK,"DISC_KICK",&server_domain);
+        cubescript::bind((int)DISC_TAGT,"DISC_TAGT",&server_domain);
+        cubescript::bind((int)DISC_IPBAN,"DISC_IPBAN",&server_domain);
+        cubescript::bind((int)DISC_PRIVATE,"DISC_PRIVATE",&server_domain);
+        cubescript::bind((int)DISC_MAXCLIENTS,"DISC_MAXCLIENTS",&server_domain);
+        cubescript::bind((int)DISC_NUM,"DISC_NUM",&server_domain);
+        
         m_script_pipes.register_function(&server_domain);
         m_sleep_jobs.register_function(&server_domain);
         cubescript::register_module_loader(&server_domain);
@@ -810,6 +837,15 @@ struct fpsserver : igameserver
         scriptable_events.register_event("onitempickup",&on_itempickup);
         scriptable_events.register_event("ondamage",&on_damage);
         scriptable_events.register_event("onendgame",&on_endgame);
+        scriptable_events.register_event("ontakeflag",&on_takeflag);
+        scriptable_events.register_event("ondropflag",&on_dropflag);
+        scriptable_events.register_event("onreturnflag",&on_returnflag);
+        scriptable_events.register_event("onresetflag",&on_resetflag);
+        scriptable_events.register_event("onscoreflag",&on_scoreflag);
+        scriptable_events.register_event("onsayteam",&on_sayteam);
+        scriptable_events.register_event("oncapturebase",&on_capturebase);
+        scriptable_events.register_event("onlostbase",&on_lostbase);
+        scriptable_events.register_event("onwincapture",&on_wincapture);
     }
     
     void *newinfo() { return new clientinfo; }
@@ -924,7 +960,8 @@ struct fpsserver : igameserver
                 sendservmsg(msg);
             }
             sendf(-1, 1, "risii", SV_MAPCHANGE, ci->mapvote, ci->modevote, 1);
-            changemap(ci->mapvote, ci->modevote,gamelimit);
+            gamemode=ci->modevote;
+            changemap(ci->mapvote, ci->modevote,m_teammode ? 900000 : 600000);
         }
         else 
         {
@@ -1772,6 +1809,10 @@ struct fpsserver : igameserver
                     if(t==ci || t->state.state==CS_SPECTATOR || strcmp(ci->team, t->team)) continue;
                     sendf(t->clientnum, 1, "riis", SV_SAYTEAM, ci->clientnum, text);
                 }
+                
+                cubescript::arguments args;
+                scriptable_events.dispatch(&on_sayteam,args & ci->clientnum & std::string(text),NULL);
+                
                 break;
             }
 
@@ -3117,6 +3158,13 @@ struct fpsserver : igameserver
         throw cubescript::error_key("runtime.function.capture_score.team_not_found");
     }
     
+    bool player_has_flag(int cn)
+    {
+        if(smode==&ctfmode) loopv(ctfmode.flags) if(ctfmode.flags[i].owner==get_ci(cn)->clientnum) return true;
+        else throw cubescript::error_key("runtime.function.player_has_flag.not_ctf_mode");
+        return false;
+    }
+    
     void clear_pgvars()
     {
         for(player_map<clientinfo::varmap>::iterator player=vars.begin(); player!=vars.end(); ++player)
@@ -3304,6 +3352,15 @@ struct fpsserver : igameserver
         mastermask |= (allow_mm_locked<<MM_LOCKED);
         mastermask |= (allow_mm_private<<MM_PRIVATE);
         if(autoapprove) mastermask |= MM_AUTOAPPROVE;
+    }
+    
+    std::vector<std::string> get_team_names()const
+    {
+        std::set<std::string> teams;
+        loopv(clients) teams.insert(clients[i]->team);
+        std::vector<std::string> result;
+        std::copy(teams.begin(),teams.end(),std::back_inserter(result));
+        return result;
     }
 };
 

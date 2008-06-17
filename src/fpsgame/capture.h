@@ -695,7 +695,23 @@ struct captureservmode : capturestate, servmode
             baseinfo &b = bases[i];
             if(b.enemy[0])
             {
-                if((!b.owners || !b.enemies) && b.occupy(b.enemy, (m_noitemsrail ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t)==1) addscore(b.owner, CAPTURESCORE);
+                if((!b.owners || !b.enemies))
+                {
+                    string lastowner;
+                    s_strcpy(lastowner,b.owner);
+                    int action=b.occupy(b.enemy, (m_noitemsrail ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t);
+                    if(action==1)
+                    {
+                        addscore(b.owner, CAPTURESCORE);
+                        cubescript::arguments args;
+                        sv.scriptable_events.dispatch(&sv.on_capturebase,args & std::string(b.owner),NULL);
+                    }
+                    else if(action==0)
+                    {
+                        cubescript::arguments args;
+                        sv.scriptable_events.dispatch(&sv.on_lostbase,args & std::string(lastowner),NULL);
+                    }
+                }
                 sendbaseinfo(i);
             }
             else if(b.owner[0])
@@ -787,14 +803,17 @@ struct captureservmode : capturestate, servmode
         if(!lastteam) return;
         findscore(lastteam).total = 10000;
         sendf(-1, 1, "risi", SV_TEAMSCORE, lastteam, 10000);
-        sv.startintermission(); 
+        sv.startintermission();
+        
+        cubescript::arguments args;
+        sv.scriptable_events.dispatch(&sv.on_wincapture,args & std::string(lastteam),NULL);
     }
 
     void entergame(clientinfo *ci) 
     {
         if(notgotbases || ci->state.state!=CS_ALIVE) return;
         enterbases(ci->team, ci->state.o);
-    }        
+    }
 
     void spawned(clientinfo *ci)
     {

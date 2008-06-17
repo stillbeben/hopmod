@@ -8,22 +8,30 @@ statsdb onerror [log_error [Stats SQL Error: @arg1]]
 
 recording_stats = 0
 
-newstatsp = [
-    ! (strcmp $gamemode "coopedit")
-]
-
-mongunsp = [
-    ! (match insta $gamemode)
-]
+newstatsp = [&& $playercount (! (strcmp $gamemode "coopedit"))]
+mongunsp = [! (match insta $gamemode)]
+ctfp = [match ctf $gamemode]
+capturep = [match capture $gamemode]
 
 event_handler $onconnect [
     parameters cn
-    if (&& $recording_stats [! (player_has_var $cn stats_id)]) [create_player_record $cn]
+    if $recording_stats [
+        if (! (player_has_var $cn stats_id)) [
+            create_player_record $cn
+            log_event (format "%1 connected" (player_name $cn))
+        ]
+    ] [create_match_record]
 ]
 
 event_handler $ondisconnect [
-    parameters cn
-    if $recording_stats [update_player_record $cn]
+    parameters cn reason
+    if $recording_stats [
+        update_player_record $cn
+        
+        discmsg = "disconnected"
+        if (! (= $reason $DISC_NONE)) [discmsg = (format "disconnected (%1)" (disc_reason $reason))]
+        log_event (format "%1 %2" (player_name $cn) $discmsg)
+    ]
 ]
 
 event_handler $ondamage [
@@ -34,14 +42,25 @@ event_handler $ondamage [
 event_handler $ondeath [
     parameters offender victim
     
-    if (strcmp $offender $victim) [
+    if (= $offender $victim) [
         player_var $offender suicides (+ 1 (player_var $offender suicides))
     ] [
         player_var $offender frags (+ 1 (player_var $offender frags))
-        player_var $offender (player_gun $offender) (+ 1 player_var $offender (player_gun $offender))
+        player_var $offender (player_gun $offender) (+ 1 (player_var $offender (player_gun $offender)))
+        
+        local teamkill (&& (teamgame) [strcmp (player_team $offender) (player_team $victim)])
+        
+        if (! (player_has_var $offender teamkills)) [
+            player_var $offender teamkills (+ 1 (player_var $offender teamkills))
+        ]
+        
+        if (&& (! $teamkill) (= 1 (player_var $victim had_flag))) [
+            player_var $offender ctf_defended (+ 1 (player_var $offender ctf_defended))
+        ]
     ]
     
     player_var $victim deaths (+ 1 (player_var $victim deaths))
+    player_var $victim had_flag 0
 ]
 
 event_handler $onitempickup [
@@ -50,7 +69,17 @@ event_handler $onitempickup [
 ]
 
 event_handler $onendgame [
-    if $recording_stats update_player_records
+    if $recording_stats [
+        update_player_records
+        
+        if (capturep) [
+            foreach (teams) [
+                local team_id (get_captureteam_id $arg1)
+                local score (capture_teamscore $arg1)
+                statsdb eval [update captureteams set score=$score where id=$team_id] []
+            ]
+        ]
+    ]
 ]
 
 event_handler $onmapchange [
@@ -59,25 +88,113 @@ event_handler $onmapchange [
     if (! (symbol? rankgame)) [rankgame = 0]
     if (! (symbol? demofile)) [demofile = ""]
     
+    create_match_record
+]
+
+event_handler $onrename [
+    parameters cn oldname newname
+    if $recording_stats [
+        log_event (format "%1 renamed to %2" $oldname $newname)
+    ]
+]
+
+event_handler $onreteam [
+    parameters cn oldteam newteam
+    if $recording_stats [
+        log_event (format "%1 changed to team %2" (player_name $cn) $newteam)
+        
+        if (ctfp) [
+            update_ctfplayer_record $cn
+            create_ctfplayer_record $cn
+        ]
+    ]
+]
+
+event_handler $onspectator [
+    parameters cn value
+    if $value [action = "joined"] [action = "left"]
+    if $recording_stats [
+        log_event (format "%1 %2 spectators" $action)
+    ]
+]
+
+event_handler $onkick [
+    paramaters target master
+    if $recording_stats [
+        log_event (format "%1 was kicked by %2" (player_name $target) (player_name $master))
+    ]
+]
+
+event_handler $ontakeflag [
+    parameters cn
+    player_var $cn ctf_pickups (+ 1 (player_var $cn ctf_pickups))
+]
+
+event_handler $ondropflag [
+    parameters cn
+    player_var $cn ctf_drops (+ 1 (player_var $cn ctf_drops))
+    player_var $cn had_flag 1
+]
+
+event_handler $onreturnflag [
+    parameters cn
+    player_var $cn ctf_returns (+ 1 (player_var $cn ctf_returns))
+]
+
+event_handler $onresetflag [
+    parameters owner
+    local team_id (player_var $owner ctf_team_id)
+    statsdb eval [update ctfteams set resets=resets+1 where id=$team_id] []
+]
+
+event_handler $onscoreflag [
+    parameters cn
+    player_var $cn ctf_scored (+ 1 (player_var $cn ctf_scored))
+]
+
+event_handler $oncapturebase [
+    parameters team
+    local team_id (get_captureteam_id $team)
+    statsdb eval [update captureteams set captured=captured+1 where id=$team_id] []
+]
+
+event_handler $onlostbase [
+    parameters team
+    local team_id (get_captureteam_id $team)
+    statsdb eval [update captureteams set lost=lost+1 where id=$team_id] []
+]
+
+event_handler $onwincapture [
+    parameters team
+    local team_id (get_captureteam_id $team)
+    statsdb eval [update captureteams set win=1 where id=$team_id] []
+]
+
+event_handler $onshutdown [
+    if $recording_stats [
+        update_player_records
+        log_event "server shutdown"
+    ]
+    statsdb close
+]
+
+create_match_record = [
+    recording_stats = (newstatsp)
+    
     local input_datetime (datetime (now))
     local input_gameid (gameid)
-    
-    recording_stats = (newstatsp)
     
     if $recording_stats [
         statsdb eval [insert into matches (gameid,datetime,gamemode,mapname) values 
             ($input_gameid, $input_datetime, $gamemode, $mapname)] []
         match_id = (statsdb last_rowid)
+        if (ctfp) create_ctfteam_records
+        if (capturep) create_captureteam_records
         foreach (players) [
             reference cn arg1
             create_player_record $cn
         ]
-    ]
-]
-
-event_handler $onshutdown [
-    if $recording_stats update_player_records
-    statsdb close
+    ] [match_id = -1]
 ]
 
 create_player_record = [
@@ -97,6 +214,8 @@ create_player_record = [
         
         if (itemsgame) [create_items_record $cn]
         if (mongunsp) [create_gunusage_record $cn]
+        if (ctfp) [create_ctfplayer_record $cn]
+        if (capturep) [create_captureplayer_record $cn]
     ]
 ]
 
@@ -151,12 +270,17 @@ update_player_record = [
         local hits (player_hits $cn)
         local misses (player_misses $cn)
         local damage (player_var $cn damage)
+        local kicked (player_var $cn kicked)
         
-        statsdb eval [update players set name=$name, team=$team,frags=$frags,deaths=$deaths,
-            suicides=$suicides, hits=$hits,misses=$misses, damage=$damage where id=$id] []
+        if (strcmp $kicked "") [kicked = 0]
+        
+        statsdb eval [update players set name=$name,team=$team,frags=$frags,deaths=$deaths,
+            suicides=$suicides,hits=$hits,misses=$misses,damage=$damage,kicked=$kicked where id=$id] []
         
         if (player_has_var $cn items_id) [update_items_record $cn]
         if (player_has_var $cn gunusage_id) [update_gunusage_record $cn]
+        if (player_has_var $cn ctf_id) [update_ctfplayer_record $cn]
+        if (player_has_var $cn capture_id) [update_captureplayer_record $cn]
     ]
 ]
 
@@ -202,4 +326,115 @@ update_player_records = [
         update_player_record $arg1
     ]
     statsdb eval [commit transaction] []
+]
+
+create_ctfteam_records = [
+    statsdb eval [begin transaction] []
+    foreach (teams) [
+        reference teamname arg1
+        create_ctfteam_record $teamname
+    ]
+    statsdb eval [commit transaction] []
+]
+
+create_ctfteam_record = [
+    reference teamname arg1
+    statsdb eval [insert into ctfteams (match_id,name) values ($match_id,$teamname)] []
+    result (statsdb last_rowid)
+]
+
+get_ctfteam_id = [
+    parameters teamname
+    local id -1
+    statsdb eval [select id from ctfteams where name=$teamname and match_id=$match_id] [id = (column id)]
+    if (= $id -1) [id = (create_ctfteam_record $teamname)]
+    result $id
+]
+
+create_ctfplayer_record = [
+    parameters cn
+    
+    //TODO resume existing record
+    
+    local player_id (player_var $cn stats_id)
+    local team_id (get_ctfteam_id (player_team $cn))
+    
+    statsdb eval [insert into ctfplayers (player_id,team_id) values ($player_id,$team_id)] []
+    
+    player_var $cn ctf_id (statsdb last_rowid)
+    player_var $cn ctf_team_id $team_id
+    player_var $cn ctf_pickups 0
+    player_var $cn ctf_drops 0
+    player_var $cn ctf_scored 0
+    player_var $cn ctf_defended 0
+    player_var $cn ctf_returns 0
+]
+
+update_ctfplayer_record = [
+    parameters cn
+    
+    local ctfplayer_id (player_var $cn ctf_id)
+    local pickups (player_var $cn ctf_pickups)
+    local drops (player_var $cn ctf_drops)
+    local scored (player_var $cn ctf_scored)
+    local defended (player_var $cn ctf_defended)
+    local returns (player_var $cn ctf_returns)
+    local teamkills (player_var $cn teamkills)
+    
+    if (strcmp $teamkills "") [teamkills = 0]
+    
+    statsdb eval [update ctfplayers set pickups=$pickups,drops=$drops,scored=$scored,
+        defended=$defended,returns=$returns,teamkills=$teamkills where id=$ctfplayer_id] []
+    
+    local team_id (player_var $cn ctf_team_id)
+    statsdb eval [update ctfteams set score=score+$scored,drops=drops+$drops,
+        returns=returns+$returns where id=$team_id] []
+]
+
+create_captureteam_record = [
+    parameters teamname
+    statsdb eval [insert into captureteams (match_id,name) values ($match_id,$teamname)] []
+    result (statsdb last_rowid)
+]
+
+create_captureteam_records = [
+    statsdb eval [begin transaction] []
+    foreach (teams) [
+        create_captureteam_record $arg1
+    ]
+    statsdb eval [commit transaction] []
+]
+
+get_captureteam_id = [
+    parameters teamname
+    local id -1
+    statsdb eval [select id from captureteams where name=$teamname and match_id=$match_id] [id = (column id)]
+    if (= $id -1) [id = (create_captureteam_record $teamname)]
+    result $id
+]
+
+create_captureplayer_record = [
+    parameters cn
+    
+    local player_id (player_var $cn stats_id)
+    local team_id (get_captureteam_id (player_team $cn))
+    
+    statsdb eval [insert into captureplayers (player_id,team_id) values ($player_id,$team_id)] []
+    
+    player_var $cn capture_id (statsdb last_rowid)
+]
+
+update_captureplayer_record = [
+    parameters cn
+    local teamkills (player_var $cn teamkills)
+    if (strcmp $teamkills "") [teamkills = 0]
+    statsdb eval [update captureplayers set teamkills=$teamkills] []
+]
+
+log_event = [
+    parameters message
+    if (! (symbol? match_id)) [throw runtime.script.stats.log_event.missing_match_id]
+    local timenow (time (now))
+    log_status [match id: @match_id]
+    statsdb eval [insert into logevents (match_id,time,message) values ($match_id,$timenow,$message)] []
 ]

@@ -21,5 +21,5 @@ mapsetname = [
 
 setnextmap = [
     local mapset (mapsetname)
-    if (symbol? mapset) [mapname (nextmap (value $mapset))] [log_error (concatword $mapset "not found, letting clients decide next map.")]
+    if (symbol? $mapset) [mapname (nextmap (value $mapset))] [log_error (concatword $mapset " not found, letting clients decide next map.")]
 ]
