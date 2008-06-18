@@ -514,6 +514,7 @@ struct fpsserver : igameserver
     cubescript::function1<int,int>                          func_player_deaths;
     cubescript::function1<int,int>                          func_player_hits;
     cubescript::function1<int,int>                          func_player_misses;
+    cubescript::function1<std::string,int>                  func_player_accuracy;
     cubescript::function1<std::string,int>                  func_player_gun;
     cubescript::function1<int,int>                          func_player_health;
     cubescript::function1<int,int>                          func_player_maxhealth;
@@ -643,6 +644,7 @@ struct fpsserver : igameserver
         func_player_deaths(boost::bind(&fpsserver::get_player_deaths,this,_1)),
         func_player_hits(boost::bind(&fpsserver::get_player_hits,this,_1)),
         func_player_misses(boost::bind(&fpsserver::get_player_misses,this,_1)),
+        func_player_accuracy(boost::bind(&fpsserver::get_player_accuracy,this,_1)),
         func_player_gun(boost::bind(&fpsserver::get_player_gun,this,_1)),
         func_player_health(boost::bind(&fpsserver::get_player_health,this,_1)),
         func_player_maxhealth(boost::bind(&fpsserver::get_player_maxhealth,this,_1)),
@@ -736,6 +738,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_deaths",&func_player_deaths);
         server_domain.register_symbol("player_hits",&func_player_hits);
         server_domain.register_symbol("player_misses",&func_player_misses);
+        server_domain.register_symbol("player_accuracy",&func_player_accuracy);
         server_domain.register_symbol("player_gun",&func_player_gun);
         server_domain.register_symbol("player_health",&func_player_health);
         server_domain.register_symbol("player_maxhealth",&func_player_maxhealth);
@@ -3068,6 +3071,14 @@ struct fpsserver : igameserver
     int get_player_deaths(int cn){return get_ci(cn)->state.deaths;}
     int get_player_hits(int cn){return get_ci(cn)->state.hits;}
     int get_player_misses(int cn){return get_ci(cn)->state.misses;}
+    std::string get_player_accuracy(int cn)
+    {
+        int hits=get_player_hits(cn);
+        int misses=get_player_misses(cn);
+        std::ostringstream out;
+        out<<(int)((hits/(hits+misses))*100)<<"%";
+        return out.str();
+    }
     std::string get_player_gun(int cn){return guns[get_ci(cn)->state.gunselect].name;}
     int get_player_health(int cn){return get_ci(cn)->state.health;}
     int get_player_maxhealth(int cn){return get_ci(cn)->state.maxhealth;}

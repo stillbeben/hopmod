@@ -1,0 +1,53 @@
+
+print_current_stats = [
+    parameters cn
+    local frags (player_var $cn frags)
+    local deaths (player_var $cn deaths)
+    local suicides (player_var $cn suicides)
+    local damage (player_var $cn damage)
+    local acc (player_accuracy $cn)
+    local suicides_msg ""
+    if (> $suicides 0) [suicides_msg = [(@suicides suicides)]]
+    privmsg $cn (info (format "Frags: %1 Deaths: %2 %3 Accuracy: %4" $frags $deaths $suicides_msg $acc))
+    if (ctfp) [
+        local scored (player_var $cn ctf_scored)
+        local pickups (player_var $cn ctf_pickups)
+        local drops (player_var $cn ctf_drops)
+        local returns (player_var $cn ctf_returns)
+        local defended (player_var $cn ctf_defended)
+        privmsg $cn (info (format "Scored: %1 Pickups: %2 Drops: %3 Returns: %4 Defended: %5" $scored $pickups $drops $returns $defended))
+    ]
+]
+
+print_total_stats = [
+    parameters cn
+    local name (player_name $cn)
+    local frags 0
+    local deaths 0
+    local suicides 0
+    statsdb eval [select sum(frags) as total_frags,
+                         sum(deaths) as total_deaths,
+                         sum(suicides) as total_suicides
+        from players where name=$name] [
+        frags = (column total_frags)
+        deaths = (column total_deaths)
+        suicides = (column total_suicides)
+    ]
+    local suicides_msg ""
+    if (> $suicides 0) [suicides_msg = [(@suicides suicides)]]
+    //TODO print accuracy
+    privmsg $cn (info (format "Frags: %1 Deaths: %2 %3" $frags $deaths $suicides_msg))
+]
+
+print_global_stats = [
+    parameters cn
+    privmsg $cn (err "Global player statistics logging is not available yet.")
+]
+
+if $record_player_stats [
+    if (= (listlen $arguments) 1) [print_current_stats $cn] [
+        local command (at $arguments 1)
+        if (strcmp $command "total") [print_total_stats $cn] []
+        if (strcmp $command "global") [print_global_stats $cn] []
+    ]
+] [privmsg $cn (err "Player statistics logging is disabled on this server.")]
