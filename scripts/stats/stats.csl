@@ -114,7 +114,7 @@ event_handler $onspectator [
     parameters cn value
     if $value [action = "joined"] [action = "left"]
     if $recording_stats [
-        log_event (format "%1 %2 spectators" $action)
+        log_event (format "%1 %2 spectators" (player_name $cn) $action)
     ]
 ]
 
