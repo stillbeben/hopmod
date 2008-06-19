@@ -37,6 +37,10 @@
 extern int g_argc;
 extern char * const * g_argv;
 extern igameserver * sv;
+extern size_t total_bsend;
+extern size_t total_brec;
+extern size_t tx_packets;
+extern size_t rx_packets;
 void cleanupserver();
 
 static void shutdown_from_signal(int);
@@ -573,6 +577,10 @@ struct fpsserver : igameserver
     cubescript::variable_ref<bool>                          var_allow_mm_locked; bool allow_mm_locked;
     cubescript::variable_ref<bool>                          var_allow_mm_private; bool allow_mm_private;
     cubescript::variable_ref<bool>                          var_autoapprove; bool autoapprove;
+    cubescript::variable_ref<size_t>                        var_tx_bytes;
+    cubescript::variable_ref<size_t>                        var_rx_bytes;
+    cubescript::variable_ref<size_t>                        var_tx_packets;
+    cubescript::variable_ref<size_t>                        var_rx_packets;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -700,6 +708,10 @@ struct fpsserver : igameserver
         var_allow_mm_locked(allow_mm_locked), allow_mm_locked(true),
         var_allow_mm_private(allow_mm_private), allow_mm_private(true),
         var_autoapprove(autoapprove), autoapprove(false),
+        var_tx_bytes(total_bsend),
+        var_rx_bytes(total_brec),
+        var_tx_packets(tx_packets),
+        var_rx_packets(rx_packets),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -794,6 +806,10 @@ struct fpsserver : igameserver
         server_domain.register_symbol("allow_mm_locked",&var_allow_mm_locked);
         server_domain.register_symbol("allow_mm_private",&var_allow_mm_private);
         server_domain.register_symbol("autoapprove",&var_autoapprove);
+        server_domain.register_symbol("tx_bytes",&var_tx_bytes); var_tx_bytes.readonly(true);
+        server_domain.register_symbol("rx_bytes",&var_rx_bytes); var_rx_bytes.readonly(true);
+        server_domain.register_symbol("tx_packets",&var_tx_packets); var_tx_packets.readonly(true);
+        server_domain.register_symbol("rx_packets",&var_rx_packets); var_tx_packets.readonly(true);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);

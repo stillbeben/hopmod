@@ -165,6 +165,8 @@ vector<client *> clients;
 
 ENetHost *serverhost = NULL;
 size_t bsend = 0, brec = 0;
+size_t total_bsend = 0, total_brec = 0;
+size_t tx_packets = 0 , rx_packets = 0;
 int laststatus = 0; 
 ENetSocket pongsock = ENET_SOCKET_NULL;
 
@@ -248,6 +250,8 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
         {
             enet_peer_send(clients[n]->peer, chan, packet);
             bsend += packet->dataLength;
+            total_bsend += packet->dataLength;
+            tx_packets++;
             break;
         }
 
@@ -604,6 +608,8 @@ void serverslice(uint timeout)   // main server update, called from main loop in
             case ENET_EVENT_TYPE_RECEIVE:
             {
                 brec += event.packet->dataLength;
+                total_brec += event.packet->dataLength;
+                rx_packets++;
                 client *c = (client *)event.peer->data;
                 if(c) process(event.packet, c->num, event.channelID);
                 if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
