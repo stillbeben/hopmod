@@ -12,23 +12,27 @@ log (concat "WHO      " $scores)
 if (strcmp $scores "" ) [
 log "Apparently no one is connected"
 ]
+server_log (concat \"WHO      \" \$scores)
 ]
+
+
+
+
+
 score = [
 
 scores = ""
 foreach (players) [
 parameters cn
-   line = (format \"\%4 \F\%1/D\%2/A\%3 \%5\" (get_client_frags \$cn) (get_client_deaths \$cn) (get_client_accuracy \$cn) (get_client_name \$cn))
+line = (format "%3 F%1/D%2" (player_frags $cn) (player_deaths $cn)(player_name $cn))
 scores = (concat $scores $line)
 ]
 if (! (strcmp $scores "")) [
-log (concat "WHO      " $scores)
+log (concat "SCORE      " $scores)
 ]
 if (strcmp $scores "" ) [
 log "Apparently no one is connected"
 ]
-]
-
 server_log (concat \"SCORE      \" \$scores)
 ]
 
