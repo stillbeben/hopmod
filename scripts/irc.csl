@@ -18,3 +18,9 @@ masterwho = [
 cm = (format "%1(%2)" (player_name $currentmaster)($currentmaster))
 log (concat "MASTER    " $cm)
 ]
+
+getvar = [
+output = (value $arg1)
+line = (format "IRC         -\={GETVAR %2}\=- is %1" $output $arg1 )
+log $line
+]

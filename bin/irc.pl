@@ -194,6 +194,18 @@ sub process_command {
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={SCORE}=-\x03 $nick checking the score"); 
 		&toserverpipe("irc_score");
 		 return }
+		##### SETMOTD #####
+		if ( $command =~ /$botcommandname.* setmotd (.*)/i )
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MOTD}=-\x03 changed to $1")
+		&toserverpipe("motd = \"$1\""); return}
+
+		##### GETMOTD #####
+                if ( $command =~ /$botcommandname.* getmotd/i )
+                { &toserverpipe("getvar motd"); return } 
+
+		##### GETVAR #####
+		if ( $command =~ /$botcommandname.* getvar (.*)/i )
+                { &toserverpipe("getvar $1"); return }
 		
 		if ( $command =~ /$botcommandname/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={DOESNOTCOMPUTE}=-\x03 What the hell are you trying to tell me $nick");return }
@@ -225,11 +237,6 @@ sub filterlog {
 		$nick[0] =~ s/(\!|\~|\^|\*|\?|\#|\`|\||\\|\<|\>|'|"|\(|\)|\[|\]|\$|\;|\&|\\)/\\$1/g; 
 		if ( $nick[0] eq "" ) { $nick[0] = "noone" }
 		if ( $ip eq "" ) { $ip = "127.0.0.1" }
-		if ($line =~ /(.+)\(([0-9]+)\)\((.+)\) connected/ )
-		{ $sname = $1 ; $scn = $2 ; $sip = $ip ; &add_state}
-		
-		if ($line =~ /(.+)\(([0-9]+)\)\((.+)\) disconnected/ )
-		{ $sname = $1 ; $scn = $2 ; $sip = $ip ; &remove_state}
 		
 		if ( -e '$pwd/ext/bin/verify.pl') {
 			my $VERIFY = `$pwd/ext/bin/verify.pl --name=$nick[0] --ip=$ip --writestate=no --showmask=no`;
@@ -294,6 +301,9 @@ sub filterlog {
 	$line =~ s/WHO/\x034WHO\x03/;
 	return $line
 	}
+	##### GETVAR #####
+        if ($line =~ /^IRC .*-={GETVAR (.*)}=- is (.*)/)
+        { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
 	
 
 	return $line;
