@@ -3092,7 +3092,8 @@ struct fpsserver : igameserver
         int hits=get_player_hits(cn);
         int misses=get_player_misses(cn);
         std::ostringstream out;
-        out<<(int)((hits/(hits+misses))*100)<<"%";
+        if(hits) out<<(int)((hits/(hits+misses))*100)<<"%";
+        else out<<"0%";
         return out.str();
     }
     std::string get_player_gun(int cn){return guns[get_ci(cn)->state.gunselect].name;}
