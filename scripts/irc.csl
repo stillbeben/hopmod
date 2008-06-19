@@ -13,6 +13,24 @@ if (strcmp $scores "" ) [
 log "Apparently no one is connected"
 ]
 ]
+score = [
+
+scores = ""
+foreach (players) [
+parameters cn
+   line = (format \"\%4 \F\%1/D\%2/A\%3 \%5\" (get_client_frags \$cn) (get_client_deaths \$cn) (get_client_accuracy \$cn) (get_client_name \$cn))
+scores = (concat $scores $line)
+]
+if (! (strcmp $scores "")) [
+log (concat "WHO      " $scores)
+]
+if (strcmp $scores "" ) [
+log "Apparently no one is connected"
+]
+]
+
+server_log (concat \"SCORE      \" \$scores)
+]
 
 masterwho = [
 cm = (format "%1(%2)" (player_name $currentmaster)($currentmaster))
@@ -24,3 +42,12 @@ output = (value $arg1)
 line = (format "IRC         -\={GETVAR %2}\=- is %1" $output $arg1 )
 log $line
 ]
+
+showalias = [
+//output = (player_ip $arg1)
+//line = (format "IRC         -\={SHOWALIAS}\=- %1" $output  )
+line = "IRC         -\={SHOWALIAS}\=- 10.2.10.1"
+log $line
+]
+
+

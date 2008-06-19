@@ -187,12 +187,12 @@ sub process_command {
 		&toirccommandlog("Restarting Server"); return }
 		##### SHOWALIAS 
                 if ( $command =~ /$botcommandname.* showalias.*\s([0-9]+.*)/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={ALIAS}=-\x03 $nick checking for aliases on CN $1"); &showalias($1); 
+                { &sendtoirc("\x03\x036IRC\x03         \x034-={ALIAS}=-\x03 $nick checking for aliases on CN $1"); &toserverpipe("showalias $1"); 
 		&toirccommandlog("Gotcha $nick checking for aliases"); return }
 		##### SCORE
 		if ( $command =~ /$botcommandname.* score.*/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={SCORE}=-\x03 $nick checking the score"); 
-		&toserverpipe("irc_score");
+		&toserverpipe("score");
 		 return }
 		##### SETMOTD #####
 		if ( $command =~ /$botcommandname.* setmotd (.*)/i )
@@ -231,7 +231,7 @@ sub filterlog {
 	$lastline = $line;
 	
 	##### VERIFICATION IP REPLACEMENT
-	if ($line =~  /([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)/i) {
+	if ($line =~  /\(([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)\)/i) {
 		my $ip = "$1.$2.$3.$4";
 		if ( $line =~ /(.*)\([0-9]*\)/ ){ $nick[0] = $1; }
 		$nick[0] =~ s/(\!|\~|\^|\*|\?|\#|\`|\||\\|\<|\>|'|"|\(|\)|\[|\]|\$|\;|\&|\\)/\\$1/g; 
@@ -328,11 +328,7 @@ sub showalias {
         my %hash;
         my $hash;
 	my $alias;
-	if ( $CN =~  /(^[0-9]*[0-9]+$)/i) {
-		foreach (@STATE) {
-			split (/ /, $_); if ( $_[2] eq $CN ) { $IP = $_[1] }
-		}
-	} else { $IP = $CN }
+	
 	if ( ! $IP ) { &sendtoirc ("Connection Number Not Found") ; return }
         open (FILE, '+<', $server_log) or die $!;
         my @FILE = <FILE>;
