@@ -12,6 +12,7 @@ struct ctfstate
         int team, score, droptime;
 #ifdef CTFSERV
         int owner;
+        int last_owner;
 #else
         bool pickup;
         fpsent *owner;
@@ -28,6 +29,7 @@ struct ctfstate
             droploc = spawnloc = vec(0, 0, 0);
 #ifdef CTFSERV
             owner = -1;
+            last_owner = -1;
 #else
             pickup = false;
             owner = NULL;
@@ -76,6 +78,7 @@ struct ctfstate
         f.droploc = o;
         f.droptime = droptime;
 #ifdef CTFSERV
+        if(f.owner!=-1) f.last_owner = f.owner;
         f.owner = -1;
 #else
         f.pickup = false;
@@ -88,6 +91,7 @@ struct ctfstate
         flag &f = flags[i];
         f.droptime = 0;
 #ifdef CTFSERV
+        if(f.owner!=-1) f.last_owner = f.owner;
         f.owner = -1;
 #else
         f.pickup = false;
@@ -203,13 +207,11 @@ struct ctfservmode : ctfstate, servmode
             flag &f = flags[i];
             if(f.owner<0 && f.droptime && sv.lastmillis - f.droptime >= RESETFLAGTIME)
             {
-                int lastowner=f.owner;
-                
                 returnflag(i);
                 sendf(-1, 1, "ri2", SV_RESETFLAG, i);
                 
                 cubescript::arguments args;
-                sv.scriptable_events.dispatch(&sv.on_resetflag,args & lastowner,NULL);
+                sv.scriptable_events.dispatch(&sv.on_resetflag,args & f.last_owner,NULL);
             }
         }
     }
