@@ -529,7 +529,7 @@ uchar *retrieveservers(uchar *buf, int buflen)
 }
 #endif
 
-#define DEFAULTCLIENTS 6
+#define DEFAULTCLIENTS 64
 
 int uprate = 0, maxclients = DEFAULTCLIENTS;
 const char *ip = "", *master = NULL;
