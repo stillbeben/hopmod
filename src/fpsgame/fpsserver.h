@@ -217,6 +217,8 @@ struct fpsserver : igameserver
             gs.damage = damage;
             gs.timeplayed = timeplayed;
             gs.effectiveness = effectiveness;
+            gs.hits=hits;
+            gs.misses=misses;
         }
     };
 
