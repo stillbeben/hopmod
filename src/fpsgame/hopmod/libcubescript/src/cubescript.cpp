@@ -517,9 +517,15 @@ std::string cons::expression::eval()
                 bool is_word=dynamic_cast<word *>(next);
                 if(is_word && arg.length()>1 && arg[0]=='$')
                 {
-                    arg=arg.substr(1);
-                    symbol * s=get_domain()->require_symbol(arg);
-                    arg=s->value();
+                    int resolutions;
+                    for(resolutions=1; resolutions < arg.length()-1 && arg[resolutions]=='$'; resolutions++) ;
+                    arg=arg.substr(resolutions);
+                    symbol * s;
+                    for(int i=0; i<resolutions; i++)
+                    {
+                        s=get_domain()->require_symbol(arg);
+                        arg=s->value();
+                    }
                 }
                 
                 args.push_back(arg);
@@ -779,11 +785,10 @@ bool alias::pop()
     return true;
 }
 
-void_t alias::result(std::string str)
+void alias::result(std::string str)
 {
     m_result=str;
     m_set_result=true;
-    return void_t();
 }
 
 std::string alias::apply(std::list<std::string> & args,domain * parent_domain)
@@ -816,16 +821,16 @@ std::string alias::apply(std::list<std::string> & args,domain * parent_domain)
         local_domain.register_symbol(argname,&(arglist.back()));
     }
     
-    function1<void_t,std::string> result_func(std::bind1st(std::mem_fun(&alias::result),this));
+    function1<void,std::string> result_func(std::bind1st(std::mem_fun(&alias::result),this));
     local_domain.register_symbol("result",&result_func);
     
-    function2<void_t,const std::string &,const std::string &> local_func(boost::bind(&alias::create_sub_alias,this,m_local,_1,_2));
+    function2<void,const std::string &,const std::string &> local_func(boost::bind(&alias::create_sub_alias,this,m_local,_1,_2));
     local_domain.register_symbol("local",&local_func);
     
-    function2<void_t,const std::string &,const std::string &> reference_func(boost::bind(&alias::create_reference,this,m_local,m_local,_1,_2));
+    function2<void,const std::string &,const std::string &> reference_func(boost::bind(&alias::create_reference,this,m_local,m_local,_1,_2));
     local_domain.register_symbol("reference",&reference_func);
     
-    functionV<void_t> parameters_func(boost::bind(&alias::create_parameter_refs,this,_1,_2));
+    functionV<void> parameters_func(boost::bind(&alias::create_parameter_refs,this,_1,_2));
     local_domain.register_symbol("parameters",&parameters_func);
     
     std::string eval_result=eval_block(&write_domain);
@@ -898,26 +903,23 @@ std::string alias::save(const std::string & id)const
     return form.str();
 }
 
-void_t alias::create_sub_alias(domain * aDomain,const std::string & name,const std::string & code)
+void alias::create_sub_alias(domain * aDomain,const std::string & name,const std::string & code)
 {
     alias * subAlias=aDomain->get_or_create_symbol<alias>(name,alias(),domain::SEARCH_LOCAL_ONLY);
     subAlias->pop();
     subAlias->push(code);
-    return void_t();
 }
 
-void_t alias::create_reference(domain * lookupDomain,domain * registerDomain,const std::string & refname,const std::string & dstname)
+void alias::create_reference(domain * lookupDomain,domain * registerDomain,const std::string & refname,const std::string & dstname)
 {
     symbol * dst=lookupDomain->lookup_symbol(dstname);
     if(!dst) throw symbol_error("runtime.unknown_symbol",dstname);
     if(dynamic_cast<reference *>(dst)) throw error_key("runtime.reference.refers_to_reference");
 
     registerDomain->get_or_create_symbol<reference>(refname,reference(*dst),domain::SEARCH_LOCAL_ONLY);
-    
-    return void_t();
 }
 
-void_t alias::create_parameter_refs(std::list<std::string> & arglist,domain *)
+void alias::create_parameter_refs(std::list<std::string> & arglist,domain *)
 {
     if(arglist.size() > parse_type<int>(m_local->require_symbol("numargs")->value())) throw error_key("runtime.function.parameters.not_enough_passed");
     char argname[]={'a','r','g','0','\0'};
@@ -927,7 +929,6 @@ void_t alias::create_parameter_refs(std::list<std::string> & arglist,domain *)
         create_reference(m_local,m_local,arglist.front(),argname);
         arglist.pop_front();
     }
-    return void_t();
 }
 
 alias_function::alias_function(const std::string & code,domain * aDomain)
@@ -1067,12 +1068,11 @@ std::string proto_object::call_super_operation(std::list<std::string> & arglist,
     return opsym->apply(arglist,aDomain);
 }
 
-void_ proto_object::create_function(const std::string & id,const std::string & code)
+void proto_object::create_function(const std::string & id,const std::string & code)
 {
     alias * func=new alias;
     func->push(code);
     m_members.register_symbol(id,func,domain::ADOPT_SYMBOL);
-    return void_();
 }
 
 object_adaptor::object_adaptor(domain * aDomain):proto_object(aDomain){}
@@ -1084,31 +1084,28 @@ std::string null::value()const{throw error_key("runtime.null_object");}
 
 namespace runtime{
 
-void_t assign_alias(std::list<std::string> & args,domain * aDomain)
+void assign_alias(std::list<std::string> & args,domain * aDomain)
 {
     std::string id=functionN::pop_arg<std::string>(args);
     std::string code=functionN::pop_arg<std::string>(args);
     alias * aAlias=aDomain->get_or_create_symbol<alias>(id,alias());
     while(aAlias->pop()) ;
     aAlias->push(code);
-    return void_t();
 }
 
-void_t push_alias(std::list<std::string> & args,domain * aDomain)
+void push_alias(std::list<std::string> & args,domain * aDomain)
 {
     std::string id=functionN::pop_arg<std::string>(args);
     std::string code=functionN::pop_arg<std::string>(args);
     alias * aAlias=aDomain->get_or_create_symbol<alias>(id,alias());
     aAlias->push(code);
-    return void_t();
 }
 
-void_t pop_alias(std::list<std::string> & args,domain * aDomain)
+void pop_alias(std::list<std::string> & args,domain * aDomain)
 {
     std::string id=functionN::pop_arg<std::string>(args);
     alias * aAlias=aDomain->get_or_create_symbol<alias>(id,alias());
     aAlias->pop();
-    return void_t();
 }
 
 inline int math_add(int a,int b){return a + b;}
@@ -1149,7 +1146,7 @@ std::string control_if(std::list<std::string> & args,domain * context)
     return runner.apply(noargs,context);
 }
 
-void_t control_loop(std::list<std::string> & args,domain * parent_domain)
+void control_loop(std::list<std::string> & args,domain * parent_domain)
 {
     std::string counter=functionN::pop_arg<std::string>(args);
     int n=functionN::pop_arg<int>(args);
@@ -1171,11 +1168,9 @@ void_t control_loop(std::list<std::string> & args,domain * parent_domain)
         alias_body.apply(noargs,&tmp_domain);
         alias_counter.pop();
     }
-    
-    return void_t();
 }
 
-void_t control_while(std::list<std::string> & args,domain * context)
+void control_while(std::list<std::string> & args,domain * context)
 {
     alias cond;
     cond.push(functionN::pop_arg<std::string>(args));
@@ -1186,8 +1181,6 @@ void_t control_while(std::list<std::string> & args,domain * context)
     std::list<std::string> noargs;
     
     while(parse_type<bool>(cond.apply(noargs,context))) body.apply(noargs,context);
-    
-    return void_t();
 }
 
 bool predicate_symbol(std::list<std::string> & args,domain * context)
@@ -1210,13 +1203,12 @@ int list_len(std::vector<std::string> list)
     return list.size();
 }
 
-void_t _throw(std::string key)
+void _throw(std::string key)
 {
     if(key.compare(0,8,"runtime.")!=0) throw error_key("runtime.invalid_throw");
     static std::string s_key; //FIXME not thread safe!
     s_key=key;
     throw error_key(s_key.c_str());
-    return void_t();
 }
 
 inline bool strcmp(std::string a,std::string b){return a==b;}
@@ -1308,7 +1300,7 @@ bool match(const std::string & pattern,const std::string & str)
     }
 }
 
-void_ foreach(const std::list<std::string> & list,alias_function & code)
+void foreach(const std::list<std::string> & list,alias_function & code)
 {
     for(std::list<std::string>::const_iterator it=list.begin();
         it!=list.end();
@@ -1317,8 +1309,6 @@ void_ foreach(const std::list<std::string> & list,alias_function & code)
         arguments args;
         code.run(args & (*it));
     }
-    
-    return void_();
 }
 
 time_t get_time_now()
@@ -1432,21 +1422,18 @@ std::string dump(std::list<std::string> & arglist,domain * aDomain)
     else return "";
 }
 
-void_ create_object(std::list<std::string> & arglist,domain * aDomain)
+void create_object(std::list<std::string> & arglist,domain * aDomain)
 {
     std::string className=functionN::pop_arg<std::string>(arglist);
     std::string objectName=functionN::pop_arg<std::string>(arglist);
     
     aDomain->register_symbol(objectName.c_str(),aDomain->get_symbol_of_kind<proto_object>(className)->clone(),domain::ADOPT_SYMBOL);
-    
-    return void_();
 }
 
-void_ delete_object(std::list<std::string> & arglist,domain * aDomain)
+void delete_object(std::list<std::string> & arglist,domain * aDomain)
 {
     std::string objectName=functionN::pop_arg<std::string>(arglist);
     aDomain->register_symbol(objectName.c_str(),new null,domain::ADOPT_SYMBOL);
-    return void_();
 }
 
 std::string get_symbol_value(std::list<std::string> & arglist,domain * aDomain)
@@ -1457,22 +1444,22 @@ std::string get_symbol_value(std::list<std::string> & arglist,domain * aDomain)
 
 void register_base_functions(domain * aDomain)
 {
-    static functionV<void_t> func_assign_alias(&assign_alias);
-    static functionV<void_t> func_push_alias(&push_alias);
-    static functionV<void_t> func_pop_alias(&pop_alias);
+    static functionV<void> func_assign_alias(&assign_alias);
+    static functionV<void> func_push_alias(&push_alias);
+    static functionV<void> func_pop_alias(&pop_alias);
     
     aDomain->register_symbol("alias",&func_assign_alias);
     aDomain->register_symbol("push",&func_push_alias);
     aDomain->register_symbol("pop",&func_pop_alias);
 
-    static function1<void_t,std::string> func_throw(&_throw);
+    static function1<void,std::string> func_throw(&_throw);
     static functionV<std::string> func_try(&_try);
     
     aDomain->register_symbol("throw",&func_throw);
     aDomain->register_symbol("try",&func_try);
     
-    static functionV<void_> func_new(&create_object);
-    static functionV<void_> func_delete(&delete_object);
+    static functionV<void> func_new(&create_object);
+    static functionV<void> func_delete(&delete_object);
     
     aDomain->register_symbol("new",&func_new);
     aDomain->register_symbol("delete",&func_delete);
@@ -1527,8 +1514,8 @@ void register_core_functions(domain * aDomain)
     aDomain->register_symbol("^",&func_logic_xor);
     
     static functionV<std::string> func_control_if(&control_if);
-    static functionV<void_t> func_control_loop(&control_loop);
-    static functionV<void_t> func_control_while(&control_while);
+    static functionV<void> func_control_loop(&control_loop);
+    static functionV<void> func_control_while(&control_while);
     
     aDomain->register_symbol("if",&func_control_if);
     aDomain->register_symbol("loop",&func_control_loop);
@@ -1540,7 +1527,7 @@ void register_core_functions(domain * aDomain)
     
     static function2<std::string,std::vector<std::string>,int> func_list_at(&list_at);
     static function1<int,std::vector<std::string> > func_list_len(&list_len);
-    static function2<void_,const std::list<std::string>,alias_function &> func_foreach(&foreach);
+    static function2<void,const std::list<std::string>,alias_function &> func_foreach(&foreach);
     
     aDomain->register_symbol("at",&func_list_at);
     aDomain->register_symbol("listlen",&func_list_len);
@@ -1598,11 +1585,10 @@ void register_core_functions(domain * aDomain)
 }
 
 inline
-void_t exec(std::list<std::string> & args,domain * context)
+void exec(std::list<std::string> & args,domain * context)
 {
     std::string filename=functionN::pop_arg<std::string>(args);
     exec_file(filename,context);
-    return void_t();
 }
 
 bool filesystem_path(const std::string & filename)
@@ -1624,7 +1610,7 @@ int get_file_modified(const std::string & filename)
     return info.st_mtim.tv_sec;
 }
 
-void_t include(std::list<std::string> & args,domain * aDomain)
+void include(std::list<std::string> & args,domain * aDomain)
 {
     const std::vector<std::string> & include_path=*aDomain->get_symbol_of_kind<variable<std::vector<std::string> > >("include_path");
     
@@ -1643,8 +1629,6 @@ void_t include(std::list<std::string> & args,domain * aDomain)
     if(full_filename.empty()) throw error_key("runtime.function.include.file_not_found");
     
     exec_file(full_filename,aDomain);
-    
-    return void_t();
 }
 
 inline
@@ -1688,13 +1672,13 @@ std::string system_exec(const std::string & filename)
 
 void register_system_functions(domain * aDomain)
 {
-    static functionV<void_t> func_exec(&exec);
+    static functionV<void> func_exec(&exec);
     aDomain->register_symbol("exec",&func_exec);
     
     variable< std::vector<std::string> > * var_include_path=new variable<std::vector<std::string> >;
     aDomain->register_symbol("include_path",var_include_path,domain::ADOPT_SYMBOL);
     
-    static functionV<void_t> func_include(&include);
+    static functionV<void> func_include(&include);
     aDomain->register_symbol("include",&func_include);
     
     static function1<bool,const std::string &> func_path(&filesystem_path);

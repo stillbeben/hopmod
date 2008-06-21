@@ -195,11 +195,11 @@ public:
     std::string save(const std::string &)const;
     
 private:
-    void_t create_sub_alias(domain *,const std::string &,const std::string &);
-    void_t create_reference(domain *,domain *,const std::string &,const std::string &);
-    void_t create_parameter_refs(std::list<std::string> &,domain *);
+    void create_sub_alias(domain *,const std::string &,const std::string &);
+    void create_reference(domain *,domain *,const std::string &,const std::string &);
+    void create_parameter_refs(std::list<std::string> &,domain *);
 
-    void_t result(std::string);
+    void result(std::string);
     
     std::string eval_block(domain *);
     std::stack<std::string> m_blocks;
@@ -1217,11 +1217,11 @@ private:
     
     function1<std::string,const std::string &> m_func_value;
     functionV<std::string> m_func_super;
-    function2<void_,const std::string &,const std::string &> m_func_function;
+    function2<void,const std::string &,const std::string &> m_func_function;
 
     std::string get_member_value(const std::string &)const;
     std::string call_super_operation(std::list<std::string> &,domain *);
-    void_ create_function(const std::string &,const std::string &);
+    void create_function(const std::string &,const std::string &);
     
     std::string m_operation;
     domain m_members;
