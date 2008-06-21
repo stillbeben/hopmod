@@ -1893,6 +1893,9 @@ struct fpsserver : igameserver
                 
                 if(oldname[0] && strcmp(oldname,ci->name))
                 {
+                    clientinfo::varmap cvars=vars[playerid(oldname,getclientip(ci->clientnum))];
+                    vars[ci->id()]=cvars;
+                    
                     cubescript::arguments args;
                     scriptable_events.dispatch(&on_rename,args & ci->clientnum & std::string(oldname) & std::string(ci->name),NULL);
                 }
