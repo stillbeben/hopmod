@@ -1453,7 +1453,7 @@ struct fpsserver : igameserver
             }
             else
             {
-                gamelimit=600000;
+                gamelimit=-1;
                 smapname[0]='\0';
                 var_mapname.readonly(false);
                 var_gamemode.readonly(false);
@@ -1463,6 +1463,8 @@ struct fpsserver : igameserver
                 sync_game_settings();
                 if(smapname[0])
                 {
+                    if(gamelimit==-1) gamelimit=get_default_gamelimit();
+                    
                     sendf(-1, 1, "risii", SV_MAPCHANGE, smapname, gamemode,1);
                     changemap(smapname,gamemode,gamelimit);
                 }
