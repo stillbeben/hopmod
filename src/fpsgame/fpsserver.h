@@ -905,7 +905,7 @@ struct fpsserver : igameserver
     
     static int modecode(const char * str)
     {
-        for(int i=0; i<18; i++) if(strcmp(modestr(i),str)==0) return i;
+        for(int i=0; i<19; i++) if(strcmp(modestr(i),str)==0) return i;
         return -1;
     }
     
