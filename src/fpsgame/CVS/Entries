@@ -3,13 +3,13 @@
 /game.h/1.117/Wed Jun 11 21:33:09 2008//
 /monster.h/1.71/Wed Jun 11 21:33:09 2008//
 /movable.h/1.10/Wed Jun 11 21:33:09 2008//
-/scoreboard.h/1.89/Thu Jun  5 20:07:58 2008//
 /weapon.h/1.198/Wed Jun 11 21:33:09 2008//
-/client.h/1.220/Fri Jun 13 23:28:20 2008//
-/fpsserver.h/1.264/Result of merge+Fri Jun 13 23:28:21 2008//
 /assassin.h/1.11/Tue Jun 17 15:08:03 2008//
-/capture.h/1.124/Result of merge//
-/ctf.h/1.26/Result of merge//
 /extinfo.h/1.5/Tue Jun 17 15:08:03 2008//
-/fps.cpp/1.265/Tue Jun 17 15:08:03 2008//
+/capture.h/1.125/Result of merge//
+/client.h/1.222/Sat Jun 21 11:38:43 2008//
+/ctf.h/1.29/Result of merge+Sat Jun 21 11:39:13 2008//
+/fps.cpp/1.270/Sat Jun 21 11:39:14 2008//
+/fpsserver.h/1.265/Result of merge+Sat Jun 21 11:40:29 2008//
+/scoreboard.h/1.92/Sat Jun 21 11:40:29 2008//
 D

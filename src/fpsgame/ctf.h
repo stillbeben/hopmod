@@ -5,6 +5,7 @@ struct ctfstate
 {
     static const int MAXFLAGS = 100;
     static const int FLAGRADIUS = 16;
+    static const int FLAGLIMIT = 10;
 
     struct flag
     {
@@ -98,6 +99,13 @@ struct ctfstate
         f.owner = NULL;
 #endif
     }
+
+    int totalscore(int team)
+    {
+        int score = 0;
+        loopv(flags) if(flags[i].team==team) score += flags[i].score;
+        return score;
+    }
 };
 
 #ifdef CTFSERV
@@ -169,6 +177,8 @@ struct ctfservmode : ctfstate, servmode
                 
                 cubescript::arguments args;
                 sv.scriptable_events.dispatch(&sv.on_scoreflag,args & ci->clientnum,NULL);
+
+                if(totalscore(goal.team) >= FLAGLIMIT) sv.startintermission();
             }
         }
     }
@@ -339,9 +349,21 @@ struct ctfclient : ctfstate
                 glPushMatrix();
                 glLoadIdentity();
                 glOrtho(0, w*900/h, 900, 0, -1, 1);
-                draw_textf("%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, wait);
+                bool flash = wait>0 && d==cl.player1 && cl.lastspawnattempt>=d->lastpain && cl.lastmillis < cl.lastspawnattempt+100;
+                draw_textf("%s%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, flash ? "\f3" : "", wait);
                 glPopMatrix();
             }
+        }
+    }
+
+    void removeplayer(fpsent *d)
+    {
+        loopv(flags) if(flags[i].owner == d) 
+        {
+            flag &f = flags[i];
+            f.interploc.x = -1;
+            f.interptime = 0;
+            ctfstate::dropflag(i, f.owner->o, 1);
         }
     }
 
@@ -518,6 +540,9 @@ struct ctfclient : ctfstate
         }
         conoutf(CON_GAMEINFO, "%s scored for %s team", d==cl.player1 ? "you" : cl.colorname(d), f.team==ctfteamflag(cl.player1->team) ? "your" : "the enemy");
         playsound(S_FLAGSCORE);
+
+        int total = totalscore(f.team);
+        if(total >= FLAGLIMIT) conoutf(CON_GAMEINFO, "%s team captured %d flags", f.team==ctfteamflag(cl.player1->team) ? "your" : "the enemy", total);
     }
 
     void takeflag(fpsent *d, int i)

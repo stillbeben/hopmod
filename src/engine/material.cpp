@@ -149,8 +149,9 @@ int findmaterial(const char *name)
     
 int visiblematerial(cube &c, int orient, int x, int y, int z, int size, uchar matmask)
 {   
+    if(!c.ext) return MATSURF_NOT_VISIBLE;
     uchar mat = c.ext->material&matmask;
-    if(c.ext) switch(mat)
+    switch(mat)
     {
     case MAT_AIR:
          break;

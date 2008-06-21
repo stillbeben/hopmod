@@ -1367,7 +1367,11 @@ void drawcrosshair(int w, int h)
     { 
         int index = cl->selectcrosshair(r, g, b);
         if(index < 0) return;
-        if(!crosshairfx) index = 0;
+        if(!crosshairfx)
+        {
+            index = 0;
+            r = g = b = 1;
+        }
         crosshair = crosshairs[index];
         if(!crosshair) 
         {
@@ -1383,10 +1387,10 @@ void drawcrosshair(int w, int h)
     float y = cy*h*3.0f - (windowhit ? 0 : chsize/2.0f);
     glBindTexture(GL_TEXTURE_2D, crosshair->id);
     glBegin(GL_QUADS);
-    glTexCoord2d(0.0, 0.0); glVertex2f(x,          y);
-    glTexCoord2d(1.0, 0.0); glVertex2f(x + chsize, y);
-    glTexCoord2d(1.0, 1.0); glVertex2f(x + chsize, y + chsize);
-    glTexCoord2d(0.0, 1.0); glVertex2f(x,          y + chsize);
+    glTexCoord2f(0, 0); glVertex2f(x,          y);
+    glTexCoord2f(1, 0); glVertex2f(x + chsize, y);
+    glTexCoord2f(1, 1); glVertex2f(x + chsize, y + chsize);
+    glTexCoord2f(0, 1); glVertex2f(x,          y + chsize);
     glEnd();
 }
 
@@ -1458,10 +1462,10 @@ void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat)
             glColor3fv(overlay);
         }
         glBegin(GL_QUADS);
-        glVertex2i(0, 0);
-        glVertex2i(w, 0);
-        glVertex2i(w, h);
-        glVertex2i(0, h);
+        glVertex2f(0, 0);
+        glVertex2f(w, 0);
+        glVertex2f(w, h);
+        glVertex2f(0, h);
         glEnd();
     }
 

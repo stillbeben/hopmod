@@ -318,7 +318,7 @@ void drawbb(const ivec &bo, const ivec &br, const vec &camera, int scale, const 
         loopj(4)
         {
             const ivec &cc = cubecoords[fv[i][j]];
-            glVertex3i(((cc.x ? bo.x+br.x : bo.x) - origin.x) << scale,
+            glVertex3f(((cc.x ? bo.x+br.x : bo.x) - origin.x) << scale,
                        ((cc.y ? bo.y+br.y : bo.y) - origin.y) << scale,
                        ((cc.z ? bo.z+br.z : bo.z) - origin.z) << scale);
         }

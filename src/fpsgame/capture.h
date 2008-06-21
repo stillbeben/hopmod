@@ -437,7 +437,8 @@ struct captureclient : capturestate
                 glPushMatrix();
                 glLoadIdentity();
                 glOrtho(0, w*900/h, 900, 0, -1, 1);
-                draw_textf("%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, wait);
+                bool flash = wait>0 && d==cl.player1 && cl.lastspawnattempt>=d->lastpain && cl.lastmillis < cl.lastspawnattempt+100;
+                draw_textf("%s%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, flash ? "\f3" : "", wait);
                 glPopMatrix();
             }
         }

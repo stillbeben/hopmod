@@ -618,11 +618,11 @@ struct skelmodel : animmodel
     struct boneinfo
     {
         const char *name;
-        int parent, children, next, interpindex, interpparent;
+        int parent, children, next, interpindex, interpparent, interpgroup;
         float pitchscale, pitchoffset, pitchmin, pitchmax;
         dualquat base;
 
-        boneinfo() : name(NULL), parent(-1), children(-1), next(-1), interpindex(-1), interpparent(-1), pitchscale(0), pitchoffset(0), pitchmin(0), pitchmax(0) {}
+        boneinfo() : name(NULL), parent(-1), children(-1), next(-1), interpindex(-1), interpparent(-1), interpgroup(0), pitchscale(0), pitchoffset(0), pitchmin(0), pitchmax(0) {}
         ~boneinfo()
         {
             DELETEA(name);
@@ -735,7 +735,12 @@ struct skelmodel : animmodel
 
         void remapbones()
         {
-            loopi(numbones) bones[i].interpindex = -1;
+            loopi(numbones) 
+            {
+                boneinfo &info = bones[i];
+                info.interpindex = -1;
+                info.interpgroup = i;
+            }
             numgpubones = 0;
             loopv(users)
             {
@@ -743,13 +748,21 @@ struct skelmodel : animmodel
                 loopvj(group->blendcombos)
                 {
                     blendcombo &c = group->blendcombos[j];
+                    int group = c.bones[0];
+                    for(int k = 1; k < 4; k++) if(c.weights[k]) group = min(group, int(c.bones[k]));
                     loopk(4) if(c.weights[k])
                     {
                         boneinfo &info = bones[c.bones[k]];
                         if(info.interpindex<0) info.interpindex = numgpubones++;
                         c.interpbones[k] = info.interpindex;
+                        info.interpgroup = min(info.interpgroup, group);
                     }
                 }
+            }
+            loopi(numbones) 
+            {
+                int group = bones[i].interpgroup;
+                bones[i].interpgroup = group < i ? bones[group].interpindex : -1;
             }
             numinterpbones = numgpubones;
             loopi(numbones)
@@ -992,7 +1005,11 @@ struct skelmodel : animmodel
                 dualquat &d = sc.bdata[i];
                 d.normalize();
                 d.mul(invbones[i]);
-                d.fixantipodal(sc.bdata[0]);
+            }
+            loopi(numbones) 
+            {
+                const boneinfo &b = bones[i];
+                if(b.interpgroup>=0) sc.bdata[b.interpindex].fixantipodal(sc.bdata[b.interpgroup]);
             }
         }
 

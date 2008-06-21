@@ -980,7 +980,7 @@ struct fpsserver : igameserver
             }
             sendf(-1, 1, "risii", SV_MAPCHANGE, ci->mapvote, ci->modevote, 1);
             gamemode=ci->modevote;
-            changemap(ci->mapvote, ci->modevote,m_teammode ? 900000 : 600000);
+            changemap(ci->mapvote, ci->modevote, get_default_gamelimit() );
         }
         else 
         {
@@ -1449,7 +1449,7 @@ struct fpsserver : igameserver
                 sendf(-1, 1, "risii", SV_MAPCHANGE, best->map, best->mode, 1);
                 
                 gamemode=best->mode;
-                changemap(best->map, best->mode, m_teammode ? 900000 : 600000);
+                changemap(best->map, best->mode, get_default_gamelimit() );
             }
             else
             {
@@ -3390,6 +3390,8 @@ struct fpsserver : igameserver
         std::copy(teams.begin(),teams.end(),std::back_inserter(result));
         return result;
     }
+    
+    int get_default_gamelimit()const{return (m_teammode && !m_ctf ? 900000 : 600000);}
 };
 
 static void shutdown_from_signal(int i)

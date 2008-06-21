@@ -35,7 +35,7 @@ struct fpsclient : igameclient
     vec swaydir;
     int respawned, suicided;
     int lastslowmohealth, slowmorealtimestart;
-    int lasthit;
+    int lasthit, lastspawnattempt;
 
     int following, followdir;
 
@@ -64,6 +64,7 @@ struct fpsclient : igameclient
           maptime(0), minremain(0), respawnent(-1), 
           swaymillis(0), swaydir(0, 0, 0),
           respawned(-1), suicided(-1), 
+          lasthit(0), lastspawnattempt(0),
           following(-1), followdir(0), openmainmenu(true),
           player1(spawnstate(new fpsent())),
           ws(*this), ms(*this), mo(*this), sb(*this), fr(*this), et(*this), cc(*this), 
@@ -98,6 +99,7 @@ struct fpsclient : igameclient
         if(arg[0] ? player1->state==CS_SPECTATOR : following>=0)
         {
             following = arg[0] ? cc.parseplayer(arg) : -1;
+            if(following==player1->clientnum) following = -1;
             followdir = 0;
             conoutf("follow %s", following>=0 ? "on" : "off");
         }
@@ -352,7 +354,8 @@ struct fpsclient : igameclient
                 int wait = m_capture ? cpc.respawnwait(player1) : ctf.respawnwait(player1);
                 if(wait>0)
                 {
-                    conoutf(CON_GAMEINFO, "\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
+                    lastspawnattempt = lastmillis; 
+                    //conoutf(CON_GAMEINFO, "\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
                     return;
                 }
             }
@@ -547,7 +550,7 @@ struct fpsclient : igameclient
         return players.inrange(cn) ? players[cn] : NULL;
     }
 
-    void clientdisconnected(int cn)
+    void clientdisconnected(int cn, bool notify = true)
     {
         if(!players.inrange(cn)) return;
         if(following==cn) 
@@ -557,11 +560,12 @@ struct fpsclient : igameclient
         }
         fpsent *d = players[cn];
         if(!d) return; 
-        if(d->name[0]) conoutf("player %s disconnected", colorname(d));
+        if(notify && d->name[0]) conoutf("player %s disconnected", colorname(d));
         ws.removebouncers(d);
         ws.removeprojectiles(d);
         removetrackedparticles(d);
         if(m_assassin) asc.removeplayer(d);
+        else if(m_ctf) ctf.removeplayer(d); 
         DELETEP(players[cn]);
         cleardynentcache();
     }
@@ -794,10 +798,10 @@ struct fpsclient : igameclient
         tx /= 384;
         ty /= 128;
         int s = 120;
-        glTexCoord2f(tx,        ty);        glVertex2i(x,   y);
-        glTexCoord2f(tx+1/6.0f, ty);        glVertex2i(x+s, y);
-        glTexCoord2f(tx+1/6.0f, ty+1/2.0f); glVertex2i(x+s, y+s);
-        glTexCoord2f(tx,        ty+1/2.0f); glVertex2i(x,   y+s);
+        glTexCoord2f(tx,        ty);        glVertex2f(x,   y);
+        glTexCoord2f(tx+1/6.0f, ty);        glVertex2f(x+s, y);
+        glTexCoord2f(tx+1/6.0f, ty+1/2.0f); glVertex2f(x+s, y+s);
+        glTexCoord2f(tx,        ty+1/2.0f); glVertex2f(x,   y+s);
         glEnd();
     }
  

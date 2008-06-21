@@ -95,9 +95,7 @@ struct clientcom : iclientcom
         player1->lifesequence = 0;
         player1->privilege = PRIV_NONE;
         spectator = false;
-        removetrackedparticles();
-        loopv(cl.players) DELETEP(cl.players[i]);
-        cleardynentcache();
+        loopv(cl.players) if(cl.players[i]) cl.clientdisconnected(i, false);
     }
 
     bool allowedittoggle()
@@ -930,7 +928,11 @@ struct clientcom : iclientcom
                 if(!s) return;
                 if(val)
                 {
-                    if(s==player1 && editmode) toggleedit();
+                    if(s==player1)
+                    {
+                        if(editmode) toggleedit();
+                        if(s->state==CS_DEAD) cl.sb.showscores(false);
+                    }
                     s->state = CS_SPECTATOR;
                 }
                 else if(s->state==CS_SPECTATOR) 

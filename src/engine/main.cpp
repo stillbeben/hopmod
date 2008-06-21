@@ -187,10 +187,10 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
 #else
             int sz = 256, x = (w-sz)/2, y = min(384, h-256);
             glBegin(GL_QUADS);
-            glTexCoord2f(0, 0); glVertex2i(x,    y);
-            glTexCoord2f(1, 0); glVertex2i(x+sz, y);
-            glTexCoord2f(1, 1); glVertex2i(x+sz, y+sz);
-            glTexCoord2f(0, 1); glVertex2i(x,    y+sz);
+            glTexCoord2f(0, 0); glVertex2f(x,    y);
+            glTexCoord2f(1, 0); glVertex2f(x+sz, y);
+            glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
+            glTexCoord2f(0, 1); glVertex2f(x,    y+sz);
 #endif
             glEnd();
             glEnable(GL_BLEND);
@@ -212,10 +212,10 @@ void computescreen(const char *text, Texture *t, const char *overlaytext)
         int x = (w-512)/2, y = 128;
         settexture("data/sauer_logo_512_256a.png");
         glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2i(x,     y);
-        glTexCoord2f(1, 0); glVertex2i(x+512, y);
-        glTexCoord2f(1, 1); glVertex2i(x+512, y+256);
-        glTexCoord2f(0, 1); glVertex2i(x,     y+256);
+        glTexCoord2f(0, 0); glVertex2f(x,     y);
+        glTexCoord2f(1, 0); glVertex2f(x+512, y);
+        glTexCoord2f(1, 1); glVertex2f(x+512, y+256);
+        glTexCoord2f(0, 1); glVertex2f(x,     y+256);
         glEnd();
         SDL_GL_SwapBuffers();
     }
@@ -314,10 +314,10 @@ void show_out_of_renderloop_progress(float bar1, const char *text1, float bar2, 
         x *= 3;
         y *= 3;
         glBegin(GL_QUADS);
-        glTexCoord2f(0, 0); glVertex2i(x,    y);
-        glTexCoord2f(1, 0); glVertex2i(x+sz, y);
-        glTexCoord2f(1, 1); glVertex2i(x+sz, y+sz);
-        glTexCoord2f(0, 1); glVertex2i(x,    y+sz);
+        glTexCoord2f(0, 0); glVertex2f(x,    y);
+        glTexCoord2f(1, 0); glVertex2f(x+sz, y);
+        glTexCoord2f(1, 1); glVertex2f(x+sz, y+sz);
+        glTexCoord2f(0, 1); glVertex2f(x,    y+sz);
         glEnd();
     }
 
