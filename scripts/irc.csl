@@ -48,9 +48,8 @@ log $line
 ]
 
 showalias = [
-//output = (player_ip $arg1)
-//line = (format "IRC         -\={SHOWALIAS}\=- %1" $output  )
-line = "IRC         -\={SHOWALIAS}\=- 10.2.10.1"
+output = (player_ip $arg1)
+line = (format "COMMAND SHOWALIAS %1" $output  )
 log $line
 ]
 

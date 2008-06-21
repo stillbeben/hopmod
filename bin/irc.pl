@@ -112,8 +112,8 @@ sub process_command {
 		##### COMMAND PROCESSING #####
 		
 		##### SAY #####
-		if ( $command =~ /$botcommandname.* say\s(.+)/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console '$nick' $1");
+		if ( $command =~ /$botcommandname.* say (.*)/i )
+                { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console $nick [$1]");
                 &toirccommandlog("Console($nick): $1");  return }	
 		##### KICK #####
 		if ( $command =~ /$botcommandname.* kick.* ([0-9]+)/i )
@@ -187,13 +187,11 @@ sub process_command {
 		&toirccommandlog("Restarting Server"); return }
 		##### SHOWALIAS 
                 if ( $command =~ /$botcommandname.* showalias.*\s([0-9]+.*)/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={ALIAS}=-\x03 $nick checking for aliases on CN $1"); &toserverpipe("showalias $1"); 
+                { &toserverpipe("showalias $1"); 
 		&toirccommandlog("Gotcha $nick checking for aliases"); return }
-		##### SCORE
+		##### SCORE #####
 		if ( $command =~ /$botcommandname.* score.*/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={SCORE}=-\x03 $nick checking the score"); 
-		&toserverpipe("score");
-		 return }
+		{ &toserverpipe("score"); return }
 		##### SETMOTD #####
 		if ( $command =~ /$botcommandname.* setmotd (.*)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MOTD}=-\x03 changed to $1")
@@ -256,7 +254,7 @@ sub filterlog {
 	{ return "\x032DISCONNECT\x03 \x0312$1\x03 $2" }
 	##### RENAME #####
 	if ($line =~ /(.+)\(([0-9]+)\) renamed to (.+)/) 
-	{ $sname = $3 ; $scn = $2 ; &update_state ; return  "\x032RENAME\x03     \x0312$1($2)\x03 has renamed to \x037$3($2)\x03"}
+	{ return  "\x032RENAME\x03     \x0312$1($2)\x03 has renamed to \x037$3($2)\x03"}
 	##### REGISTRATION
         if ($line =~  /#register/i) 
 	{return "REGISTRATION";} # Filter Server Registration
@@ -305,6 +303,9 @@ sub filterlog {
         if ($line =~ /^IRC .*-={GETVAR (.*)}=- is (.*)/)
         { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
 	
+	##### SHOWALAIS
+	if ($line =~ /COMMAND SHOWALIAS (.*)/) 
+	{ &showalias("$1") ; return}
 
 	return $line;
 }
@@ -320,28 +321,27 @@ sub sauerping {
 }
 
 sub showalias {
-        my $CN = shift;
+	my $IP = shift;
         my @array1;
         my @array2;
-        my $IP = "";
         my @ITEM ;
         my %hash;
         my $hash;
 	my $alias;
-	
+	chomp ($IP);
 	if ( ! $IP ) { &sendtoirc ("Connection Number Not Found") ; return }
         open (FILE, '+<', $server_log) or die $!;
         my @FILE = <FILE>;
         close (FILE);
         foreach (@FILE) {
-                if ( $_ =~ /([\S]*)\Q(\E([0-9]+)\Q)\E.([0-9]+.[0-9]+.[0-9]+.[0-9]+). connected./i ) {
+                if ( $_ =~ /([\S]*)\Q(\E([0-9]+)\Q)\E.([0-9]+.[0-9]+.[0-9]+.[0-9]+). connected/i ) {
                         if ( "$IP" eq "$3" ) { push (@array1, $1) }
                 }
         }
         foreach (@array1) { $hash{$_}++ };
         foreach (sort keys %hash) { push @array2, $_ };
 	foreach (@array2) {  $alias = $alias . " $_" }
-	&sendtoirc ($alias);
+	&sendtoirc ("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03 $alias");
 }
 
 sub toserverpipe {
