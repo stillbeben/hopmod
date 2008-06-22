@@ -37,8 +37,8 @@ server_log (concat \"SCORE      \" \$scores)
 ]
 
 masterwho = [
-cm = (format "%1(%2)" (player_name $currentmaster)($currentmaster))
-log (concat "MASTER    " $cm)
+cm = (format "COMMAND CURRENTMASTER %1(%2)" (player_name $currentmaster)($currentmaster))
+log $cm
 ]
 
 getvar = [

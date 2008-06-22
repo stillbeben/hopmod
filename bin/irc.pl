@@ -154,8 +154,8 @@ sub process_command {
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("setmaster $1 0"); 
 		&toirccommandlog("ok ok $nick I stole master from $1"); return }
 		##### MASTER 
-		if ( $command =~ /$botcommandname.* master .*/i )
-		{ &sendtoirc("masterwho") ; return }
+		if ( $command =~ /$botcommandname.* master/i )
+		{ &toserverpipe("masterwho") ; return }
 
 		##### MASTERMODE #####
 		if ( $command =~ /$botcommandname.* mastermode.*\s([0-9]+)/i )
@@ -204,6 +204,8 @@ sub process_command {
 		##### GETVAR #####
 		if ( $command =~ /$botcommandname.* getvar (.*)/i )
                 { &toserverpipe("getvar $1"); return }
+		
+		
 		
 		if ( $command =~ /$botcommandname/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={DOESNOTCOMPUTE}=-\x03 What the hell are you trying to tell me $nick");return }
@@ -303,9 +305,17 @@ sub filterlog {
         if ($line =~ /^IRC .*-={GETVAR (.*)}=- is (.*)/)
         { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
 	
-	##### SHOWALAIS
+	##### MASTER #####
+        if ($line =~ /COMMAND CURRENTMASTER (.*)/)
+        { return "\x03\x036IRC\x03         \x034-={MASTER}=-\x03 is \x037$1\03" }
+	
+	##### SHOWALAIS #####
 	if ($line =~ /COMMAND SHOWALIAS (.*)/) 
 	{ &showalias("$1") ; return}
+	
+	##### SPECTATOR #####
+	if ($line =~ /(.+\([0-9]+\)) (.*) spectators/) 
+	{ return "\x034SPECTATOR\x03 \x0312$1\x03 $2 spectators" }
 
 	return $line;
 }
