@@ -135,7 +135,7 @@ sub process_command {
 		{ &sendtoirc("hey $nick hows it going?");return }
 		##### UNSPECTATOR ######
 		if ( $command =~ /$botcommandname.* unspec.*\s([0-9]+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03]         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("unspec $1"); 
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("unspec $1"); 
 		&toirccommandlog("$nick I have unspec'd $1 "); return }
 		##### MUTE #####
 		if ( $command =~ /$botcommandname.* mute.*\s([0-9]+)/i )
@@ -153,7 +153,7 @@ sub process_command {
 		if ( $command =~ /$botcommandname.* takemaster.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("setmaster $1 0"); 
 		&toirccommandlog("ok ok $nick I stole master from $1"); return }
-		##### MASTER 
+		##### MASTER #####
 		if ( $command =~ /$botcommandname.* master/i )
 		{ &toserverpipe("masterwho") ; return }
 
@@ -174,18 +174,18 @@ sub process_command {
 		##### DIE #####
 		if ( $command =~ /$botcommandname.*die/i ) 
 		{&sendtoirc("\x03\x036IRC\x03         \x034-={DIE}=-\x03 $nick terminated the bot") ;&toirccommandlog("$nick has killed the bot");
-		exit }
+		&toserverpipe("restart_ircbot") }
 		##### VERSION #####
 		if ( $command =~ /$botcommandname.*version/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={VERSION}=-\x03 SauerBot V$version by -=PunDit=- #quicksilver"); return}
 		##### SAUERPING
 		if ( $command =~ /$botcommandname.*sauerping/i )
 		{ &sauerping ; return }
-		##### RESTART SERVER
+		##### RESTART SERVER #####
 		if ( $command =~ /$botcommandname.*restart.*server/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={RESTART SAUER}=-\x03 $nick restarted the server process"); `cd $pwd; ./sauerserverctl restart`;
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={RESTART SAUER}=-\x03 $nick restarted the server process"); &toserverpipe("restarter; shutdown");
 		&toirccommandlog("Restarting Server"); return }
-		##### SHOWALIAS 
+		##### SHOWALIAS #####
                 if ( $command =~ /$botcommandname.* showalias.*\s([0-9]+.*)/i )
                 { &toserverpipe("showalias $1"); 
 		&toirccommandlog("Gotcha $nick checking for aliases"); return }

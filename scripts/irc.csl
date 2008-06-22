@@ -53,4 +53,7 @@ line = (format "COMMAND SHOWALIAS %1" $output  )
 log $line
 ]
 
-
+restart_ircbot = [
+  kill $irc_pid
+  irc_pid = (daemon bin/irc.pl [] logs/irc.log logs/irc.log)
+]
