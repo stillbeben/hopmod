@@ -111,6 +111,9 @@ script_pipe::script_pipe(const std::string & filename,const std::vector<std::str
         dup2(error_pipe[1],2);
         ::close(error_pipe[1]);
         
+        int maxfd=getdtablesize();
+        for(int i=3; i<maxfd; i++) ::close(i);
+        
         char ** args=new char *[argsv.size()+2];
         args[0]=new char[filename.length()+1];
         strcpy(args[0],filename.c_str());

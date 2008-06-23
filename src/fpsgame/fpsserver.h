@@ -3266,7 +3266,7 @@ struct fpsserver : igameserver
             int maxfd=getdtablesize(); for(int i=0; i<maxfd; i++) ::close(i);
             int status;
             waitpid(child,&status,0);
-            sleep(1);
+            sleep(2);
             umask(0);
             open("/dev/null",O_RDONLY);
             dup2(open(stdfile,O_CREAT | O_WRONLY | O_APPEND,484),2);
