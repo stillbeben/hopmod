@@ -118,15 +118,15 @@ sub process_command {
 		##### KICK #####
 		if ( $command =~ /$botcommandname.* kick.* ([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={KICK}=-\x03 $nick kicked $1"); &toserverpipe("kick $1"); 
-		&toirccommandlog("No problem $nick, consider $1 gone"); return }
+		&toirccommandlog("$nick KICKED $1"); return }
 		##### CLEARBANS #####
 		if ( $command =~ /$botcommandname.* clearbans/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034CLEARBANS\x03 $nick has cleared bans"); &toserverpipe("clearbans"); 
-		&toirccommandlog("Master $nick I have cleared bans for you"); return }
+		&toirccommandlog("$nick CLEARED BANS"); return }
 		##### SPECTATOR ######
 		if ( $command =~ /$botcommandname.* spec.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={SPEC}=-\x03 $nick has spec'd $1"); &toserverpipe("spec $1"); 
-		&toirccommandlog("$nick I have spec'd $1 "); return }
+		&toirccommandlog("$nick has SPECTATED $1"); return }
 		##### TICKLE ######
 		if ( $command =~ /tickle.* $botcommandname.*/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={WISDOM}=-\x03 $zippy[ rand scalar @zippy ]"); return }
@@ -136,35 +136,37 @@ sub process_command {
 		##### UNSPECTATOR ######
 		if ( $command =~ /$botcommandname.* unspec.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("unspec $1"); 
-		&toirccommandlog("$nick I have unspec'd $1 "); return }
+		&toirccommandlog("$nick has UNSPECTATED $1 "); return }
 		##### MUTE #####
 		if ( $command =~ /$botcommandname.* mute.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MUTE}=-\x03 $nick muted $1"); &toserverpipe("player_var $1 mute 1");
-		&toirccommandlog("$nick Muting $1, what a spammer"); return }
+		&toirccommandlog("$nick MUTED $1"); return }
 		##### UNMUTE #####
 		if ( $command =~ /$botcommandname.* unmute.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNMUTE}=-\x03 $nick Unmuted $1"); &toserverpipe("player_var $1 mute 0"); 
-		&toirccommandlog("$nick Unmuted $1, I guess he learned his lesson"); return }
+		&toirccommandlog("$nick UNMUTED $1"); return }
 		##### GIVEMASTER #####
 		if ( $command =~ /$botcommandname.* givemaster.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={GIVEMASTER}=-\x03 $nick gave master to $1"); &toserverpipe("setmaster $1 1");
-		&toirccommandlog("ok ok $nick I gave master to $1"); return }
+		&toirccommandlog("$nick GIVEMASTER $1"); return }
+
 		##### TAKEMASTER #####
 		if ( $command =~ /$botcommandname.* takemaster.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("setmaster $1 0"); 
-		&toirccommandlog("ok ok $nick I stole master from $1"); return }
+		&toirccommandlog("$nick TAKEMASTER $1"); return }
 		##### MASTER #####
 		if ( $command =~ /$botcommandname.* master/i )
-		{ &toserverpipe("masterwho") ; return }
+		{ &toserverpipe("masterwho") ;
+		&toirccommandlog("$nick MASTERWHO $1"); return }
 
 		##### MASTERMODE #####
 		if ( $command =~ /$botcommandname.* mastermode.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERMODE}=-\x03 $nick changed mastermode to $1"); &toserverpipe("mastermode $1"); 
-		&toirccommandlog("Gotcha $nick changing mastermode to $1"); return }
+		&toirccommandlog("$nick MASTERMODE $1"); return }
 		##### MAPCHANGE #####
 		if ( $command =~ /$botcommandname.*map.*(instagib|ffa|capture) (.+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MAPCHANGE}=-\x03 $nick changed  map to mode $1 map $2"); &toserverpipe("changemap $1 $2"); 
-		&toirccommandlog("Good choice $nick changing the map to mode $1 map $2"); return }
+		&toirccommandlog("$nick MAP $1 $2"); return }
 		##### HELP #####
 		if ( $command =~ /$botcommandname.*help/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={HELP}=-\x03 help can be found here http://hopmod.e-topic.info/index.php5?title=IRC_Bot"); return}
@@ -173,8 +175,9 @@ sub process_command {
 		{ &toserverpipe("who"); return}
 		##### DIE #####
 		if ( $command =~ /$botcommandname.*die/i ) 
-		{&sendtoirc("\x03\x036IRC\x03         \x034-={DIE}=-\x03 $nick terminated the bot") ;&toirccommandlog("$nick has killed the bot");
-		&toserverpipe("restart_ircbot") }
+		{&sendtoirc("\x03\x036IRC\x03         \x034-={DIE}=-\x03 $nick terminated the bot") ;
+		&toserverpipe("restart_ircbot") ; 
+		&toirccommandlog("$nick RESTART_IRCBOT"); return }
 		##### VERSION #####
 		if ( $command =~ /$botcommandname.*version/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={VERSION}=-\x03 SauerBot V$version by -=PunDit=- #quicksilver"); return}
@@ -184,26 +187,30 @@ sub process_command {
 		##### RESTART SERVER #####
 		if ( $command =~ /$botcommandname.*restart.*server/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={RESTART SAUER}=-\x03 $nick restarted the server process"); &toserverpipe("restarter; shutdown");
-		&toirccommandlog("Restarting Server"); return }
+		&toirccommandlog("$nick RESTART_SERVER"); return }
 		##### SHOWALIAS #####
                 if ( $command =~ /$botcommandname.* showalias.*\s([0-9]+.*)/i )
                 { &toserverpipe("showalias $1"); 
-		&toirccommandlog("Gotcha $nick checking for aliases"); return }
+		&toirccommandlog("$nick SHOWALIAS $1"); return }
 		##### SCORE #####
 		if ( $command =~ /$botcommandname.* score.*/i )
-		{ &toserverpipe("score"); return }
+		{ &toserverpipe("score");
+		&toirccommandlog("$nick SCORE"); return }
 		##### SETMOTD #####
 		if ( $command =~ /$botcommandname.* setmotd (.*)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MOTD}=-\x03 changed to $1")
-		&toserverpipe("motd = \"$1\""); return}
+		&toserverpipe("motd = \"$1\""); 
+		&toirccommandlog("$nick SETMOTD $1"); return }
 
 		##### GETMOTD #####
                 if ( $command =~ /$botcommandname.* getmotd/i )
-                { &toserverpipe("getvar motd"); return } 
+                { &toserverpipe("getvar motd"); 
+		&toirccommandlog("$nick GETMOTD"); return }
 
 		##### GETVAR #####
 		if ( $command =~ /$botcommandname.* getvar (.*)/i )
-                { &toserverpipe("getvar $1"); return }
+                { &toserverpipe("getvar $1");
+		&toirccommandlog("$nick GETVAR $1"); return }
 		
 		
 		
@@ -217,18 +224,6 @@ sub process_command {
 sub filterlog {
 	my @nick;
 	my $line = shift;
-	
-	##### SPAM PROTECTION
-	if ($line eq $lastline) { 
-		
-		if ( $repeatcount < $config->{irc_spamlines} ) {
-			$repeatcount++; 
-		} else {
-			if ( $repeatcount == $config->{irc_spamlines} ) { $repeatcount++ ; return "\x034SPAM Detected! Discarding subsequent repeats -->\x0312 " . $line } else { return }
-		}
-	} else { $repeatcount = 1 }	
-	
-	$lastline = $line;
 	
 	##### VERIFICATION IP REPLACEMENT
 	if ($line =~  /\(([0-9]+)[.]([0-9]+)[.]([0-9]+)[.]([0-9]+)\)/i) {
