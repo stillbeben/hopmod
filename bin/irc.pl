@@ -204,13 +204,20 @@ sub process_command {
 
 		##### GETMOTD #####
                 if ( $command =~ /$botcommandname.* getmotd/i )
-                { &toserverpipe("getvar motd"); 
+		{&sendtoirc("updating");
+                &toserverpipe("getvar motd"); 
 		&toirccommandlog("$nick GETMOTD"); return }
 
 		##### GETVAR #####
 		if ( $command =~ /$botcommandname.* getvar (.*)/i )
                 { &toserverpipe("getvar $1");
 		&toirccommandlog("$nick GETVAR $1"); return }
+	
+
+		#####UPDATE#####	
+		if ( $command =~ /$botcommandname.* update/i )
+                { &toserverpipe("updating"); &update;
+                &toirccommandlog("$nick UPDATE"); return }
 		
 		
 		
@@ -347,6 +354,13 @@ sub showalias {
         foreach (sort keys %hash) { push @array2, $_ };
 	foreach (@array2) {  $alias = $alias . " $_" }
 	&sendtoirc ("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03 $alias");
+}
+
+sub update {
+	my $output = `svn update bin/irc.pl scripts/irc.csl`;
+	sendtoirc ($output);
+	return;
+
 }
 
 sub toserverpipe {
