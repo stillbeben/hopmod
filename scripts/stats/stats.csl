@@ -260,8 +260,7 @@ create_gunusage_record = [
 update_player_record = [
     parameters cn
     if (player_has_var $cn stats_id) [
-        log_status [updating record for player @cn]
-        
+    
         local id (player_var $cn stats_id)
         local name (player_name $cn)
         local team (player_team $cn)
@@ -436,6 +435,5 @@ log_event = [
     parameters message
     if (! (symbol? match_id)) [throw runtime.script.stats.log_event.missing_match_id]
     local timenow (time (now))
-    log_status [match id: @match_id]
     statsdb eval [insert into logevents (match_id,time,message) values ($match_id,$timenow,$message)] []
 ]
