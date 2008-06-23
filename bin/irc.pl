@@ -358,7 +358,7 @@ sub showalias {
 
 sub update {
 	my $output = `svn update bin/irc.pl scripts/irc.csl`;
-	sendtoirc ($output);
+	sendtoirc ("\x03\x036IRC\x03         \x034-={BOT_UPDATE}=-\x03 \x037$output\03");
 	return;
 
 }
