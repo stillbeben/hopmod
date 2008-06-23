@@ -166,7 +166,9 @@ int sqlite3db::get_column_index(const std::string & name,sqlite3_stmt * stmt)
 
 std::string sqlite3db::get_column_text(const std::string & name,sqlite3_stmt * stmt)
 {
-    return std::string((const char *)sqlite3_column_text(stmt,get_column_index(name,stmt)));
+    const char * text=(const char *)sqlite3_column_text(stmt,get_column_index(name,stmt));
+    if(!text) text="";
+    return std::string(text);
 }
 
 void sqlite3db::error_callback()
