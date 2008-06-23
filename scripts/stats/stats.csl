@@ -95,6 +95,9 @@ event_handler $onrename [
     parameters cn oldname newname
     if $recording_stats [
         log_event (format "%1 renamed to %2" $oldname $newname)
+        
+        update_player_record $cn
+        create_player_record $cn
     ]
 ]
 
@@ -103,10 +106,8 @@ event_handler $onreteam [
     if $recording_stats [
         log_event (format "%1 changed to team %2" (player_name $cn) $newteam)
         
-        if (ctfp) [
-            update_ctfplayer_record $cn
-            create_ctfplayer_record $cn
-        ]
+        update_player_record $cn
+        create_player_record $cn
     ]
 ]
 
