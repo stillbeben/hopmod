@@ -213,7 +213,6 @@ sub process_command {
                 { &toserverpipe("getvar $1");
 		&toirccommandlog("$nick GETVAR $1"); return }
 	
-
 		#####UPDATE#####	
 		if ( $command =~ /$botcommandname.* update/i )
                 { &toserverpipe("updating"); &update;
@@ -300,25 +299,39 @@ sub filterlog {
 		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
 			$line =~ s/(\S*)\(([0-9]*)\)/\x0312$1\[$2\]\x03/ ;	
 		}
-	$line =~ s/WHO/\x034WHO\x03/;
-	return $line
-	}
+	$line =~ s/WHO/\x034WHO\x03/; return $line}
+	
+	##### SCORE #####
+	if ($line =~ /^SCORE/g) {
+		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
+			$line =~ s/(\S*)\(([0-9]*)\) F[0-9]*\/D[0-9]*\//\x0312$1\[$2\]\x03 F$3\/D$4/ ;	
+		}
+	$line =~ s/WHO/\x034WHO\x03/; return $line}	
 	##### GETVAR #####
         if ($line =~ /^IRC .*-={GETVAR (.*)}=- is (.*)/)
         { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
-	
 	##### MASTER #####
         if ($line =~ /COMMAND CURRENTMASTER (.*)/)
         { return "\x03\x036IRC\x03         \x034-={MASTER}=-\x03 is \x037$1\03" }
-	
 	##### SHOWALAIS #####
 	if ($line =~ /COMMAND SHOWALIAS (.*)/) 
 	{ &showalias("$1") ; return}
-	
 	##### SPECTATOR #####
 	if ($line =~ /(.+\([0-9]+\)) (.*) spectators/) 
 	{ return "\x034SPECTATOR\x03 \x0312$1\x03 $2 spectators" }
-
+	##### SERVER UPDATE #####
+	if ($line =~  /(^Performing server update:.*)/) 
+	{ return "\x034SERVER\x03 \x0312$1\x03" }
+	##### SERVER SHUTDOWN #####
+	if ($line =~  /^server shutdown (.*)/) 
+	{ return "\x034SERVER\x03 \x0312Server Shutdown at $1\x03" }
+	##### IRC BOT SHUTDOWN #####
+	if ($line =~  /Terminating irc bot/) 
+	{ return "\x034SERVER\x03 \x0312IRC Bot Shutdown Initiated\x03" }
+	##### NEW COOP MAP #####
+	if ($line =~  /(.+\([0-9]+\)) set new map of size ([0-9]*)/) 
+	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size \x037$2\x03" }
+	
 	return $line;
 }
 
