@@ -300,13 +300,12 @@ sub filterlog {
 			$line =~ s/(\S*)\(([0-9]*)\)/\x0312$1\[$2\]\x03/ ;	
 		}
 	$line =~ s/WHO/\x034WHO\x03/; return $line}
-	
 	##### SCORE #####
 	if ($line =~ /^SCORE/g) {
-		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
-			$line =~ s/(\S*)\(([0-9]*)\) F[0-9]*\/D[0-9]*\//\x0312$1\[$2\]\x03 F$3\/D$4/ ;	
+		while ( $line =~ /(\S*) F([0-9]*)\/D([0-9]*)/g ) {
+			$line =~ s/(\S*) F([0-9]*)\/D([0-9]*)/\x0312$1\x03 [F\x033$2\x03\/D\x034$3\x03]/ ;	
 		}
-	$line =~ s/WHO/\x034WHO\x03/; return $line}	
+	$line =~ s/SCORE/\x034SCORE\x03/; return $line}	
 	##### GETVAR #####
         if ($line =~ /^IRC .*-={GETVAR (.*)}=- is (.*)/)
         { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
@@ -331,6 +330,9 @@ sub filterlog {
 	##### NEW COOP MAP #####
 	if ($line =~  /(.+\([0-9]+\)) set new map of size ([0-9]*)/) 
 	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size \x037$2\x03" }
+	##### APPROVE MASTER #####
+	if ($line =~  /(.+\([0-9]+\)) approved for master by (.+\([0-9]+\))/) 
+	{ return "\x032APPROVE\x03     \x0312$1\x03 was approved for master by \x0312$2\x03" }	
 	
 	return $line;
 }
