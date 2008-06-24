@@ -43,6 +43,8 @@ POE::Session->create(
 		irc_msg    => \&on_private,
 		irc_whois  => \&on_whois,
 		irc_tail_input	=> \&on_tail_input,
+		irc_error	=> \&on_error,
+		irc_socketerr	=> \&on_disconnect,
 	},
 	package_states => [ 
 	main => [ qw(bot_start lag_o_meter ) ],
@@ -95,7 +97,18 @@ sub on_private {
 	print " [$ts] <$nick:$channel> $msg\n";
 	&process_command($sender, $nick, $msg);
 }
+sub on_error {
+	my ( $kernel, $sender, $error ) = @_[ KERNEL, SENDER, ARG0 ];
+	my $ts = scalar localtime;
+	print " [$ts] ERROR $error\n";
 
+}
+sub on_disconnect {
+        my ( $kernel, $sender, $error ) = @_[ KERNEL, SENDER, ARG0 ];
+        my $ts = scalar localtime;
+        print " [$ts] ERROR $error\n";
+
+}
 sub on_tail_input {
 	my ($kernel, $sender, $filename, $input) = @_[KERNEL, SENDER, ARG0, ARG1];
         $irc->yield( privmsg => $config->{irc_channel} => &filterlog($_[ARG1]) );
@@ -297,14 +310,12 @@ sub filterlog {
 	##### WHO #####
 	if ($line =~ /^WHO/g) {
 		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
-			$line =~ s/(\S*)\(([0-9]*)\)/\x0312$1\[$2\]\x03/ ;	
-		}
+			$line =~ s/(\S*)\(([0-9]*)\)/\x0312$1\[$2\]\x03/}
 	$line =~ s/WHO/\x034WHO\x03/; return $line}
 	##### SCORE #####
 	if ($line =~ /^SCORE/g) {
 		while ( $line =~ /(\S*) F([0-9]*)\/D([0-9]*)/g ) {
-			$line =~ s/(\S*) F([0-9]*)\/D([0-9]*)/\x0312$1\x03 [F\x033$2\x03\/D\x034$3\x03]/ ;	
-		}
+			$line =~ s/(\S*) F([0-9]*)\/D([0-9]*)/\x0312$1\x03 [F\x033$2\x03\/D\x034$3\x03]/}
 	$line =~ s/SCORE/\x034SCORE\x03/; return $line}	
 	##### GETVAR #####
         if ($line =~ /^IRC .*-={GETVAR (.*)}=- is (.*)/)
@@ -355,6 +366,7 @@ sub showalias {
         my %hash;
         my $hash;
 	my $alias;
+	my $counter = 0;
 	chomp ($IP);
 	if ( ! $IP ) { &sendtoirc ("Connection Number Not Found") ; return }
         open (FILE, '+<', $server_log) or die $!;
@@ -367,7 +379,8 @@ sub showalias {
         }
         foreach (@array1) { $hash{$_}++ };
         foreach (sort keys %hash) { push @array2, $_ };
-	foreach (@array2) {  $alias = $alias . " $_" }
+	foreach (@array2) { $alias = $alias . " $_" }
+	
 	&sendtoirc ("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03 $alias");
 }
 
