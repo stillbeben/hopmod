@@ -26,7 +26,6 @@ if ( defined $config->{irc_commandlog} ) { $irccommand_log = "$config->{irc_comm
 if ( defined $config->{irc_serverpipe} ) { $server_pipe = "$config->{irc_serverpipe}" }
 
 
-
 print "Starting SauerBot V$version by -={Pundit}=- #quicksilver\@irc.gamesurge.net \n";
 if ( -e '$pwd/ext/bin/verify.pl') { 
 	print "[Detected AuthMod, enabling verification features]\n"; 
@@ -68,6 +67,7 @@ sub bot_start {
 			Ircname  => $config->{irc_username},
 			Server   => $config->{irc_network},
 			Port     => $config->{irc_port},
+			Debug	 => $config->{irc_debug},
 		}
 		);
 	$kernel->delay( 'lag_o_meter' => 60 );
@@ -78,6 +78,10 @@ sub lag_o_meter {
 	return;
 }
 sub on_connect {
+	my ( $kernel, $sender, $message, $message2 ) = @_[ KERNEL, SENDER, ARG0, ARG1 ];
+	my $ts = scalar localtime;
+	print " [$ts] Connected to $message\n";
+	print " [$ts] $message2";
 	$irc->yield( join => $config->{irc_channel} );
 }
 sub on_public {
