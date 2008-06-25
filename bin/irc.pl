@@ -186,7 +186,7 @@ sub process_command {
 		&toirccommandlog("$nick RESTART_IRCBOT"); return }
 		##### VERSION #####
 		if ( $command =~ /$config->{irc_botcommandname}.*version/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={VERSION}=-\x03 SauerBot V$version by -=PunDit=- #quicksilver"); return}
+                { &sendtoirc("\x03\x036IRC\x03         \x034-={VERSION}=-\x03 HopBot V$version by -=PunDit=- #hopmod"); return}
 		##### SAUERPING
 		if ( $command =~ /$config->{irc_botcommandname}.*sauerping/i )
 		{ &sauerping ; return }
@@ -220,7 +220,7 @@ sub process_command {
 		&toirccommandlog("$nick GETVAR $1"); return }
 	
 		#####UPDATE#####	
-		if ( $command =~ /$config->{irc_botcommandname}.* update/i )
+		if ( $command =~ /$config->{irc_botcommandname}.* update $config->{irc_adminpw}/i )
                 { &toserverpipe("updating"); &update;
                 &toirccommandlog("$nick UPDATE"); return }
 		
