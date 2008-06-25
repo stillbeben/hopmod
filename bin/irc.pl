@@ -120,7 +120,7 @@ sub process_command {
 		##### SAY #####
 		if ( $command =~ /$config->{irc_botcommandname}.* say (.*)/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console $nick [$1]");
-                &toirccommandlog("Console($nick): $1");  return }	
+                &toirccommandlog("Console($nick): $1"); print "Console($nick): $1"; return }	
 		##### KICK #####
 		if ( $command =~ /$config->{irc_botcommandname}.* kick.* ([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={KICK}=-\x03 $nick kicked $1"); &toserverpipe("kick $1"); 
@@ -268,8 +268,8 @@ sub filterlog {
         if ($line =~  /#register/i) 
 	{return "REGISTRATION";} # Filter Server Registration
 	##### CHAT #####
-	if ($line =~  /(\S*\([0-9]+\)): (.+)/) 
-	{ return "\x033CHAT\x03       \x0312$1\x03 --> \x033$2\x03" }# Highlight game chat green
+	if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.+)/) 
+	{ return "\x033CHAT\x03       \x0312$1$2\x03 --> \x033$3\x03" }# Highlight game chat green
 	##### MAP CHANGE #####
 	if ($line =~ /new game: (.*), (.*), (.*)/) 
 	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for \x037$2\x03 with \x037$1\x03 " }
