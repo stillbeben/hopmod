@@ -1119,6 +1119,10 @@ inline float math_fadd(float a,float b){return a+b;}
 inline float math_fsub(float a,float b){return a-b;}
 inline float math_fmul(float a,float b){return a*b;}
 inline float math_fdiv(float a,float b){return a/b;}
+#include <math.h>
+inline float math_round(float a){return roundf(a);}
+inline float math_ceil(float a){return ceilf(a);}
+inline float math_floor(float a){return floorf(a);}
 
 inline bool comp_equal(int a,int b){return a == b;}
 inline bool comp_nequal(int a,int b){return a != b;}
@@ -1488,6 +1492,9 @@ void register_core_functions(domain * aDomain)
     static function2<float,float,float> func_math_fsub(&math_fsub);
     static function2<float,float,float> func_math_fmul(&math_fmul);
     static function2<float,float,float> func_math_fdiv(&math_fdiv);
+    static function1<float,float> func_math_round(&math_round);
+    static function1<float,float> func_math_ceil(&math_ceil);
+    static function1<float,float> func_math_floor(&math_floor);
     
     aDomain->register_symbol("+",&func_math_add);
     aDomain->register_symbol("-",&func_math_sub);
@@ -1500,6 +1507,9 @@ void register_core_functions(domain * aDomain)
     aDomain->register_symbol("fsub",&func_math_fsub);
     aDomain->register_symbol("fmul",&func_math_fmul);
     aDomain->register_symbol("fdiv",&func_math_fdiv);
+    aDomain->register_symbol("round",&func_math_round);
+    aDomain->register_symbol("ceil",&func_math_ceil);
+    aDomain->register_symbol("floor",&func_math_floor);
     
     static function2<bool,int,int> func_comp_equal(&comp_equal);
     static function2<bool,int,int> func_comp_nequal(&comp_nequal);

@@ -25,18 +25,22 @@ print_total_stats = [
     local frags 0
     local deaths 0
     local suicides 0
+    local max_frags 0
     statsdb eval [select sum(frags) as total_frags,
                          sum(deaths) as total_deaths,
-                         sum(suicides) as total_suicides
+                         sum(suicides) as total_suicides,
+                         max(frags) as max_frags
         from players where name=$name] [
         frags = (column total_frags)
         deaths = (column total_deaths)
         suicides = (column total_suicides)
+        max_frags = (column max_frags)
     ]
     local suicides_msg ""
     if (> $suicides 0) [suicides_msg = [(@suicides suicides)]]
     //TODO print accuracy
     privmsg $cn (info (format "Frags: %1 Deaths: %2 %3" $frags $deaths $suicides_msg))
+    privmsg $cn (info (format "Max Frags: %1" $max_frags))
 ]
 
 print_global_stats = [
