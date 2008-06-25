@@ -8,7 +8,7 @@ use Config::Auto;
 use vars qw($master $repeatcount $config $version $lastline $zippy @zippy @word );
 
 $repeatcount = 1 ;
-$version = "1.11"; #<----Do NOT change this or I will kill you
+$version = "1.12"; #<----Do NOT change this or I will kill you
 
 
 
@@ -256,43 +256,43 @@ sub filterlog {
 	##### TEXT FORMATTING #####
 	
 	##### CONNECT #####
-	if ($line =~ /(\s*.*\([0-9]+\))(\(.+\)) connected/)
+	if ($line =~ /(\S*\([0-9]+\))(\(.+\)) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 $2" }
 	##### DISCONNECT #####
-	if ($line =~ /(\s*.+\([0-9]+\)) disconnected, (.+)/)
+	if ($line =~ /(\S*\([0-9]+\)) disconnected, (.+)/)
 	{ return "\x032DISCONNECT\x03 \x0312$1\x03 $2" }
 	##### RENAME #####
-	if ($line =~ /(\s*.+)\(([0-9]+)\) renamed to (.+)/) 
-	{ return  "\x032RENAME\x03     \x0312$1($2)\x03 has renamed to \x037$3($2)\x03"}
+	if ($line =~ /(\S*\([0-9]+\)) renamed to (.+)/) 
+	{ return  "\x032RENAME\x03     \x0312$1\x03 has renamed to \x037$2\x03"}
 	##### REGISTRATION
         if ($line =~  /#register/i) 
 	{return "REGISTRATION";} # Filter Server Registration
 	##### CHAT #####
-	if ($line =~  /(\s*.+\([0-9]+\)): (.+)/) 
+	if ($line =~  /(\S*\([0-9]+\)): (.+)/) 
 	{ return "\x033CHAT\x03       \x0312$1\x03 --> \x033$2\x03" }# Highlight game chat green
 	##### MAP CHANGE #####
 	if ($line =~ /new game: (.*), (.*), (.*)/) 
 	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for \x037$2\x03 with \x037$1\x03 " }
 	##### MASTER #####
-	if ($line =~ /(\s*.+\([0-9]+\)) claimed master/) 
+	if ($line =~ /(\S*\([0-9]+\)) claimed master/) 
 	{ $master = $1 ; return "\x034MASTER\x03     \x0312$1\x03 took master." }
 	##### RELEASE MASTER #####
-	if ($line =~ /(\s*.+\([0-9]+\)) relinquished privileged status./) 
+	if ($line =~ /(\S*\([0-9]+\)) relinquished privileged status./) 
 	{ $master = "NULL" ; return "\x034UNMASTADM\x03   \x0312$1\x03 relinquished privileged status" }
 	##### KICK BAN #####
-	if ($line =~ /(\s*.*) was kicked by (.*)/) 
+	if ($line =~ /(\S*) was kicked by (.*)/) 
 	{ return "\x034KICK\x03      Master \x034$1\x03 kicked \x0312$2\x03" }
 	##### KICK BAN 2
-	if ($line =~ /(\s*.+\([0-9]+\)) kick\/banned for:(.+)\.\.\.by console./) 
+	if ($line =~ /(\S*\([0-9]+\)) kick\/banned for:(.+)\.\.\.by console./) 
 	{ return "\x034KICK\x03      Console kicked \x0312$1\x03 for $2" }
 	##### ADMIN #####
-	if ($line =~ /(\s*.+\([0-9]+\)) claimed admin/) 
+	if ($line =~ /(\S*\([0-9]+\)) claimed admin/) 
 	{ $master = $1 ; return "\x034ADMIN\x03       \x0312$1\x03 took admin" }
 	##### TEAM CHANGE
-	if ($line =~ /(\s*.+\([0-9]+\)) changed team to (.+)/) 
+	if ($line =~ /(\S*\([0-9]+\)) changed team to (.+)/) 
 	{ return "\x034CHANGETEAM \x03\x0312$1\x03 changed teams to \x037$3\x03" }
 	##### MAP VOTE #####
-	if ($line =~ /(\s*.+\([0-9]+\)) suggests (.+) on map (.+)/) 
+	if ($line =~ /(\S*\([0-9]+\)) suggests (.+) on map (.+)/) 
 	{ return "\x033SUGGEST\x03    \x0312$1\x03 suggests \x037$2\x03 on \x037$3\x03" }
 	##### SERVER RESTART #####
 	if ($line =~ /server started (.+)/) 
@@ -320,7 +320,7 @@ sub filterlog {
 	if ($line =~ /COMMAND SHOWALIAS (.*)/) 
 	{ &showalias("$1") ; return}
 	##### SPECTATOR #####
-	if ($line =~ /(\s*.+\([0-9]+\)) (.*) spectators/) 
+	if ($line =~ /(\S*\([0-9]+\)) (.*) spectators/) 
 	{ return "\x034SPECTATOR\x03 \x0312$1\x03 $2 spectators" }
 	##### SERVER UPDATE #####
 	if ($line =~  /(Performing server update:.*)/) 
@@ -332,11 +332,14 @@ sub filterlog {
 	if ($line =~  /Terminating irc bot/) 
 	{ return "\x034SERVER\x03 \x0312IRC Bot Shutdown Initiated\x03" }
 	##### NEW COOP MAP #####
-	if ($line =~  /(\s*.+\([0-9]+\)) set new map of size ([0-9]*)/) 
+	if ($line =~  /(\S*\([0-9]+\)) set new map of size ([0-9]*)/) 
 	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size \x037$2\x03" }
 	##### APPROVE MASTER #####
-	if ($line =~  /(\s*.+\([0-9]+\)) approved for master by (.+\([0-9]+\))/) 
+	if ($line =~  /(\S*\([0-9]+\)) approved for master by (.+\([0-9]+\))/) 
 	{ return "\x032APPROVE\x03     \x0312$1\x03 was approved for master by \x0312$2\x03" }	
+	##### GENERIC #####
+	if ($line =~  /Apparently no one is connected/)
+        { return "Apparently no one is connected" }
 	
 	return $line;
 }
