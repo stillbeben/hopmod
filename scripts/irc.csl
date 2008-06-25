@@ -12,7 +12,6 @@ log (concat "WHO      " $scores)
 if (strcmp $scores "" ) [
 log "Apparently no one is connected"
 ]
-server_log (concat \"WHO      \" \$scores)
 ]
 
 
@@ -33,7 +32,6 @@ log (concat "SCORE      " $scores)
 if (strcmp $scores "" ) [
 log "Apparently no one is connected"
 ]
-server_log (concat \"SCORE      \" \$scores)
 ]
 
 masterwho = [
