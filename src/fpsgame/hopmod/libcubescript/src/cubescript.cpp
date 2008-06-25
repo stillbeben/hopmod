@@ -1115,6 +1115,10 @@ inline int math_div(int a,int b){if(b==0) throw error_key("runtime.divide_by_zer
 inline int math_mod(int a,int b){return a % b;}
 inline int math_min(int a,int b){return a < b? a : b;}
 inline int math_max(int a,int b){return a > b? a : b;}
+inline float math_fadd(float a,float b){return a+b;}
+inline float math_fsub(float a,float b){return a-b;}
+inline float math_fmul(float a,float b){return a*b;}
+inline float math_fdiv(float a,float b){return a/b;}
 
 inline bool comp_equal(int a,int b){return a == b;}
 inline bool comp_nequal(int a,int b){return a != b;}
@@ -1480,6 +1484,10 @@ void register_core_functions(domain * aDomain)
     static function2<int,int,int> func_math_mod(&math_mod);
     static function2<int,int,int> func_math_min(&math_min);
     static function2<int,int,int> func_math_max(&math_max);
+    static function2<float,float,float> func_math_fadd(&math_fadd);
+    static function2<float,float,float> func_math_fsub(&math_fsub);
+    static function2<float,float,float> func_math_fmul(&math_fmul);
+    static function2<float,float,float> func_math_fdiv(&math_fdiv);
     
     aDomain->register_symbol("+",&func_math_add);
     aDomain->register_symbol("-",&func_math_sub);
@@ -1488,6 +1496,10 @@ void register_core_functions(domain * aDomain)
     aDomain->register_symbol("mod",&func_math_mod);
     aDomain->register_symbol("min",&func_math_min);
     aDomain->register_symbol("max",&func_math_max);
+    aDomain->register_symbol("fadd",&func_math_fadd);
+    aDomain->register_symbol("fsub",&func_math_fsub);
+    aDomain->register_symbol("fmul",&func_math_fmul);
+    aDomain->register_symbol("fdiv",&func_math_fdiv);
     
     static function2<bool,int,int> func_comp_equal(&comp_equal);
     static function2<bool,int,int> func_comp_nequal(&comp_nequal);
