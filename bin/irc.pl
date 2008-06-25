@@ -6,14 +6,14 @@ use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC
 use Switch;
 use Config::Auto;
 use vars qw($master $repeatcount $config $version $lastline $zippy @zippy @word );
+$config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
+
+#Module Processing
+if ( $config->{irc_trmodule} eq "1" ) { use REST::Google::Translate }
+
 
 $repeatcount = 1 ;
 $version = "1.12"; #<----Do NOT change this or I will kill you
-
-
-
-
-$config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 
 #Config File Overrides
 if ( defined $config->{irc_serverlogfile} ) {  }
@@ -113,6 +113,8 @@ sub process_command {
 	my $channel = $config->{irc_channel};
 	my $nick = ( split /!/, $who )[0];
     	my $poco_object = $sender->get_heap();
+	if ( $command =~ /!tr (ja|en|de|it|fr)\|(ja|en|de|it|fr) (.+)/i & $config->{irc_trmodule} eq "1" )
+                { my $tr = &translate($1,$2,$3); &sendtoirc("\x03\x036IRC\x03         \x034-={TRANSLATE}=-\x03 $tr"); return }
 	if ( $command =~ /$config->{irc_botcommandname}/i  )                            {
 		if ( ! $poco_object->is_channel_operator( $channel, $nick )) { &sendtoirc("Sorry you must be an operator to issues commands"); return }
 		##### COMMAND PROCESSING #####
@@ -120,7 +122,12 @@ sub process_command {
 		##### SAY #####
 		if ( $command =~ /$config->{irc_botcommandname}.* say (.*)/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console $nick [$1]");
-                &toirccommandlog("Console($nick): $1"); print "Console($nick): $1"; return }	
+		&toirccommandlog("Console($nick): $1"); print "Console($nick): $1"; return }
+		##### TRSAY #####
+		if ( $command =~ /$config->{irc_botcommandname}.* trsay (ja|en|de|it|fr|es|ru)\|(ja|en|de|it|fr|es|ru) (.+)/i & $config->{irc_trmodule} eq "1" ) {
+                my $say = &translate($1,$2,$3);  
+		&sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$say\x03");
+                &toserverpipe("console $nick [$say]"); &toirccommandlog("Console($nick): $say"); print "Console($nick): $say"; return }	
 		##### KICK #####
 		if ( $command =~ /$config->{irc_botcommandname}.* kick.* ([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={KICK}=-\x03 $nick kicked $1"); &toserverpipe("kick $1"); 
@@ -269,7 +276,7 @@ sub filterlog {
 	{return "REGISTRATION";} # Filter Server Registration
 	##### CHAT #####
 	if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.+)/) 
-	{ return "\x033CHAT\x03       \x0312$1$2\x03 --> \x033$3\x03" }# Highlight game chat green
+	{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" }# Highlight game chat green
 	##### MAP CHANGE #####
 	if ($line =~ /new game: (.*), (.*), (.*)/) 
 	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for \x037$2\x03 with \x037$1\x03 " }
@@ -397,6 +404,23 @@ sub toirccommandlog {
         open (FILE, '>>', $config->{irc_commandlog} ) or warn $!;
         print FILE ("[$ts] $send\n");
         close (FILE);
+}
+sub translate {
+        my $langfrom = shift;
+        my $langto = shift;
+        my $text = shift;
+        my $lang = "$langfrom|$langto";
+        REST::Google::Translate->http_referer('http://example.com');
+        my $res = REST::Google::Translate->new(
+                q => $text,
+                langpair => $lang
+        );
+
+        warn "response status failure" if $res->responseStatus != 200;
+
+        my $translated = $res->responseData->translatedText;
+
+	return $translated;
 }
 @zippy = (
 	"Save the whales. Collect the whole set ",
