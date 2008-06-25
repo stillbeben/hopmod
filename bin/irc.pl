@@ -9,7 +9,7 @@ use vars qw($master $repeatcount $config $version $lastline $zippy @zippy @word 
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 
 #Module Processing
-if ( $config->{irc_trmodule} eq "1" ) { use REST::Google::Translate }
+#if ( $config->{irc_trmodule} eq "1" ) { use REST::Google::Translate }
 
 
 $repeatcount = 1 ;
