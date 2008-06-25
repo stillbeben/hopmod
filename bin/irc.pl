@@ -310,12 +310,12 @@ sub filterlog {
 	if ($line =~ /WHO/g) {
 		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
 			$line =~ s/(\S*)\(([0-9]*)\)/\x0312$1\[$2\]\x03/}
-	$line =~ s/WHO/\x034WHO\x03/; return $line}
+	$line =~ s/.* WHO/\x034WHO\x03/; return $line}
 	##### SCORE #####
 	if ($line =~ /SCORE/g) {
 		while ( $line =~ /(\S*) F([0-9]*)\/D([0-9]*)/g ) {
 			$line =~ s/(\S*) F([0-9]*)\/D([0-9]*)/\x0312$1\x03 [F\x033$2\x03\/D\x034$3\x03]/}
-	$line =~ s/SCORE/\x034SCORE\x03/; return $line}	
+	$line =~ s/.* SCORE/\x034SCORE\x03/; return $line}	
 	##### GETVAR #####
         if ($line =~ /IRC .*-={GETVAR (.*)}=- is (.*)/)
         { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
