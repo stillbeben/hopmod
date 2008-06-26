@@ -1,57 +1,60 @@
 
 who = [
-scores = ""
-foreach (players) [
-parameters cn
-line = (format "%1(%2)" (player_name $cn)($cn))
-scores = (concat $scores $line)
+	scores = ""
+	foreach (players) [
+		parameters cn
+		line = (format "%1(%2)" (player_name $cn)($cn))
+		scores = (concat $scores $line)
+	]
+	if (! (strcmp $scores "")) [
+	log (concat "WHO      " $scores)
 ]
-if (! (strcmp $scores "")) [
-log (concat "WHO      " $scores)
+	if (strcmp $scores "" ) [
+		log "Apparently no one is connected"
+	]
 ]
-if (strcmp $scores "" ) [
-log "Apparently no one is connected"
-]
-]
-
-
-
-
 
 score = [
-
-scores = ""
-foreach (players) [
-parameters cn
-line = (format "%3 F%1/D%2" (player_frags $cn) (player_deaths $cn)(player_name $cn))
-scores = (concat $scores $line)
-]
-if (! (strcmp $scores "")) [
-log (concat "SCORE      " $scores)
-]
-if (strcmp $scores "" ) [
-log "Apparently no one is connected"
-]
+	scores = ""
+	foreach (players) [
+		parameters cn
+		line = (format "%3 F%1/D%2" (player_frags $cn) (player_deaths $cn)(player_name $cn))
+		scores = (concat $scores $line)
+	]
+	if (! (strcmp $scores "")) [
+		log (concat "SCORE      " $scores)
+	]
+	if (strcmp $scores "" ) [
+		log "Apparently no one is connected"
+	]
 ]
 
 masterwho = [
-cm = (format "COMMAND CURRENTMASTER %1(%2)" (player_name $currentmaster)($currentmaster))
-log $cm
+	cm = ""
+	if ( != $currentmaster -1) [
+		cm = (format "COMMAND CURRENTMASTER %1(%2)" (player_name $currentmaster)($currentmaster))
+	]
+	if (! (strcmp $cm "")) [
+		log $cm
+	]
+	if (strcmp $cm "") [
+		log "COMMAND CURRENTMASTER NULL"
+	]
 ]
 
 getvar = [
-output = (value $arg1)
-line = (format "IRC         -\={GETVAR %2}\=- is %1" $output $arg1 )
-log $line
+	output = (value $arg1)
+	line = (format "IRC         -\={GETVAR %2}\=- is %1" $output $arg1 )
+	log $line
 ]
 
 showalias = [
-output = (player_ip $arg1)
-line = (format "COMMAND SHOWALIAS %1" $output  )
-log $line
+	output = (player_ip $arg1)
+	line = (format "COMMAND SHOWALIAS %1" $output  )
+	log $line
 ]
 
 restart_ircbot = [
-  kill $irc_pid
-  irc_pid = (daemon bin/irc.pl [] logs/irc.log logs/irc.log)
+	kill $irc_pid
+	irc_pid = (daemon bin/irc.pl [] logs/irc.log logs/irc.log)
 ]
