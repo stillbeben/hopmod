@@ -3,11 +3,11 @@ who = [
 	scores = ""
 	foreach (players) [
 		parameters cn
-		line = (format "%1(%2)(P%3)" (player_name $cn)($cn)(player_ping $cn))
+		line = (format "N%1 C%2 P%3" (player_name $cn)($cn)(player_ping $cn))
 		scores = (concat $scores $line)
 	]
 	if (! (strcmp $scores "")) [
-	log (concat "WHO      " $scores)
+	log (concat "COMMAND WHO      " $scores)
 ]
 	if (strcmp $scores "" ) [
 		log "Apparently no one is connected"

@@ -318,15 +318,15 @@ sub filterlog {
 	if ($line =~ /mastermode is now ([0-9])/) 
 	{ return "\x034MASTERMODE\x03  Mastermode is now \x0312$1\x03" }
 	##### WHO #####
-	if ($line =~ /WHO/g) {
-		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
-			$line =~ s/(\S*)\(([0-9]*)\)\(([0-9]*)\)/\x0312$1\[P$2\]\x036[P$3\]\x03/}
-	$line =~ s/.* WHO/\x034WHO\x03/; return $line}
+	if ($line =~ /COMMAND WHO/g) {
+		while ( $line =~ /N(\S*) C(\S*) P(\S*)/g ) {
+			$line =~ s/N(\S*) C(\S*) P(\S*)/\x0312$1\x03\(C\x033$2\x03\/P\x034$3\x03\)\x03/}
+	$line =~ s/.* COMMAND WHO/\x03\x036IRC\x03         \x034-={WHO}=-\x03 is /; return $line}
 	##### SCORE #####
 	if ($line =~ /SCORE/g) {
 		while ( $line =~ /(\S*) F([0-9]*)\/D([0-9]*)/g ) {
 			$line =~ s/(\S*) F([0-9]*)\/D([0-9]*)/\x0312$1\x03 [F\x033$2\x03\/D\x034$3\x03]/}
-	$line =~ s/.* SCORE/\x034SCORE\x03/; return $line}	
+	$line =~ s/.* SCORE/\x03\x036IRC\x03         \x034-={SCORE}=-\x03 is /; return $line}	
 	##### GETVAR #####
         if ($line =~ /IRC .*-={GETVAR (.*)}=- is (.*)/)
         { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
