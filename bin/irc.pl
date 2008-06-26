@@ -209,8 +209,8 @@ sub process_command {
 		{ &toserverpipe("score");
 		&toirccommandlog("$nick SCORE"); return }
 		##### SETMOTD #####
-		if ( $command =~ /$config->{irc_botcommandname}.* setmotd (.*)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MOTD}=-\x03 changed to $1")
+		if ( $command =~ /$config->{irc_botcommandname}.* setmotd (.*)/i)
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MOTD}=-\x03 changed to $1");
 		&toserverpipe("motd = \"$1\""); 
 		&toirccommandlog("$nick SETMOTD $1"); return }
 
