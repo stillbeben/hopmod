@@ -3,7 +3,7 @@ who = [
 	scores = ""
 	foreach (players) [
 		parameters cn
-		line = (format "%1(%2)" (player_name $cn)($cn))
+		line = (format "%1(%2)[P%3]" (player_name $cn)($cn)(player_ping $cn))
 		scores = (concat $scores $line)
 	]
 	if (! (strcmp $scores "")) [
