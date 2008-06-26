@@ -320,7 +320,7 @@ sub filterlog {
 	##### WHO #####
 	if ($line =~ /WHO/g) {
 		while ( $line =~ /(\S*)\([0-9]*\)/g ) {
-			$line =~ s/(\S*)\(([0-9]*)\)\[[0-9]*\]/\x0312$1\[P$2\]\x036[P$3\]\x03/}
+			$line =~ s/(\S*)\(([0-9]*)\)\(([0-9]*)\)/\x0312$1\[P$2\]\x036[P$3\]\x03/}
 	$line =~ s/.* WHO/\x034WHO\x03/; return $line}
 	##### SCORE #####
 	if ($line =~ /SCORE/g) {
