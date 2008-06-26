@@ -26,20 +26,31 @@ print_total_stats = [
     local deaths 0
     local suicides 0
     local max_frags 0
+    local accuracy 0
+    local gamecount 0
+    local kpd 0
     statsdb eval [select sum(frags) as total_frags,
                          sum(deaths) as total_deaths,
                          sum(suicides) as total_suicides,
-                         max(frags) as max_frags
+                         max(frags) as max_frags,
+                         sum(hits) as total_hits,
+                         sum(misses) as total_misses,
+                         count(*) as gamecount
         from players where name=$name] [
         frags = (column total_frags)
         deaths = (column total_deaths)
         suicides = (column total_suicides)
         max_frags = (column max_frags)
+        local hits (column total_hits)
+        local misses (column total_misses)
+        if (= (+ $hits $misses) 0) [hits = 0; misses = 1]
+        accuracy = (concatword (round (fmul (fdiv $hits (+ $hits $misses)) 100)) %)
+        gamecount = (column gamecount)
+        kpd = (fdiv $frags $deaths)
     ]
     local suicides_msg ""
     if (> $suicides 0) [suicides_msg = [(@suicides suicides)]]
-    //TODO print accuracy
-    privmsg $cn (info (format "Frags: %1 Deaths: %2 %3" $frags $deaths $suicides_msg))
+    privmsg $cn (info (format "Games: %1 Frags: %2 Deaths: %3 %4 Accuracy: %5 KPD: %6" $gamecount $frags $deaths $suicides_msg $accuracy $kpd))
     privmsg $cn (info (format "Max Frags: %1" $max_frags))
 ]
 
