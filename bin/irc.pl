@@ -307,7 +307,7 @@ sub filterlog {
 	{ $master = $1 ; return "\x034ADMIN\x03       \x0312$1\x03 took admin" }
 	##### TEAM CHANGE
 	if ($line =~ /(\S*\([0-9]+\)) changed team to (.+)/) 
-	{ return "\x034CHANGETEAM \x03\x0312$1\x03 changed teams to \x037$3\x03" }
+	{ return "\x034CHANGETEAM \x03\x0312$1\x03 changed teams to \x037$2\x03" }
 	##### MAP VOTE #####
 	if ($line =~ /(\S*\([0-9]+\)) suggests (.+) on map (.+)/) 
 	{ return "\x033SUGGEST\x03    \x0312$1\x03 suggests \x037$2\x03 on \x037$3\x03" }
