@@ -5,13 +5,13 @@ use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Switch;
 use Config::Auto;
-use vars qw($master $repeatcount $config $version $lastline $zippy @zippy @word );
+use vars qw($master $config $version $zippy @zippy $hopvar );
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 
 #Module Processing
 eval { require REST::Google::Translate } ;
 
-$repeatcount = 1 ;
+
 $version = "1.14"; #<----Do NOT change this or I will kill you
 
 #Config File Overrides
@@ -209,7 +209,7 @@ sub process_command {
 		&toirccommandlog("$nick SCORE"); return }
 		##### SETMOTD #####
 		if ( $command =~ /$config->{irc_botcommandname}.* setmotd (.*)/i)
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MOTD}=-\x03 changed to \x037$1\x03");
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MOTD}=-\x03 $nick changed to \x037$1\x03");
 		&toserverpipe("motd = \"$1\""); 
 		&toirccommandlog("$nick SETMOTD $1"); return }
 		##### GETMOTD #####
@@ -223,13 +223,14 @@ sub process_command {
 		&toirccommandlog("$nick GETSLOTS"); return }
 		##### SETSLOTS #####
 		if ( $command =~ /$config->{irc_botcommandname}.* setslots (.*)/i)
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={SLOTS}=-\x03 changed to \x037$1\x03");
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={SLOTS}=-\x03 $nick changed to \x037$1\x03");
 		&toserverpipe("maxclients $1"); 
 		&toirccommandlog("$nick SETSLOTS $1"); return }
 		##### GETVAR #####
 		if ( $command =~ /$config->{irc_botcommandname}.* getvar (.*)/i )
-                { &toserverpipe("getvar $1");
-		&toirccommandlog("$nick GETVAR $1"); return }
+                { $hopvar = $1; if ( $hopvar eq "irc_adminpw" ) { $hopvar = "title" }
+		&toserverpipe("getvar $hopvar");
+		&toirccommandlog("$nick GETVAR $hopvar"); return }
 		
 		#######################################PASSWORD PROTECTED COMMANDS
 		##### UPDATE #####	
@@ -238,7 +239,7 @@ sub process_command {
                 &toirccommandlog("$nick UPDATE"); return }
 		##### CUBESCRIPT ##### 
 		if ( $command =~ /$config->{irc_botcommandname}.* cubescript (.*) $config->{irc_adminpw}/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={CUBESCRIPT}=-\x03 executed \x037$1\x03"); &toserverpipe($1);
+                { &sendtoirc("\x03\x036IRC\x03         \x034-={CUBESCRIPT}=-\x03 $nick executed \x037$1\x03"); &toserverpipe($1);
                 &toirccommandlog("$nick CUBESCRIPT $1"); return }
 		
 		
@@ -284,7 +285,7 @@ sub filterlog {
         if ($line =~  /#register/i) 
 	{return "REGISTRATION";} # Filter Server Registration
 	##### CHAT #####
-	if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.+)/) 
+	if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.*)/) 
 	{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" }# Highlight game chat green
 	##### MAP CHANGE #####
 	if ($line =~ /new game: (.*), (.*), (.*)/) 

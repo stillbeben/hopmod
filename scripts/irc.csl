@@ -43,8 +43,15 @@ masterwho = [
 ]
 
 getvar = [
-	output = (value $arg1)
-	line = (format "IRC         -\={GETVAR %2}\=- is %1" $output $arg1 )
+	if (symbol? $arg1) [ output = $$arg1 	
+		output = $$arg1
+		if $output  [
+			line = (format "IRC         -\={GETVAR %2}\=- is %1" $output $arg1 )
+		]
+	]
+	if (! (symbol? $arg1)) [
+		line = (format "IRC         -\={GETVAR %1}\=- is INVALID or NULL VAR" $arg1 )
+	]
 	log $line
 ]
 
