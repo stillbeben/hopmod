@@ -3346,11 +3346,14 @@ struct fpsserver : igameserver
             for(unsigned int i=0; i<args.size(); i++) argv[i]=newstring(args[i].c_str());
             argv[args.size()]=NULL;
             
-            execv(filename.c_str(),argv);
-            
-            std::ostringstream execfail;
-            execfail<<filename<<" not executed."<<std::endl;
-            log_daemon_error(execfail.str());
+            if(fork()==0)
+            {
+                execv(filename.c_str(),argv);
+                
+                std::ostringstream execfail;
+                execfail<<filename<<" not executed."<<std::endl;
+                log_daemon_error(execfail.str());
+            }
             
             exit(1);
         }
