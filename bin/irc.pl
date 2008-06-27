@@ -351,7 +351,7 @@ sub filterlog {
 	{ &showalias("$1") ; return}
 	##### SPECTATOR #####
 	if ($line =~ /(\S*\([0-9]+\)) (.*) spectators/) 
-	{ return "\x034SPECTATOR\x03 \x0312$1\x03 $2 spectators" }
+	{ return "\x034SPECTATOR\x03  \x0312$1\x03 $2 spectators" }
 	##### SERVER UPDATE #####
 	if ($line =~  /(Performing server update:.*)/) 
 	{ return "\x034SERVER\x03 \x0312$1\x03" }
