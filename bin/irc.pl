@@ -8,6 +8,7 @@ use Config::Auto;
 use vars qw($master $config $version $zippy @zippy $hopvar );
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 
+
 #Module Processing
 eval { require REST::Google::Translate } ;
 
@@ -20,6 +21,8 @@ if ( defined $config->{irc_commandlog} ) { }
 if ( defined $config->{irc_serverpipe} ) {  }
 
 print "Starting HopBot V$version by -={Pundit}=- #hopmod\@irc.gamesurge.net \n";
+
+&toserverpipe("irc_pid = $$"); #Send the server my pid for restarting purposes.
 
 my ($irc) = POE::Component::IRC::State->spawn();
 POE::Session->create(
@@ -363,7 +366,7 @@ sub filterlog {
 	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size \x037$2\x03" }
 	##### APPROVE MASTER #####
 	if ($line =~  /(\S*\([0-9]+\)) approved for master by (.+\([0-9]+\))/) 
-	{ return "\x032APPROVE\x03     \x0312$1\x03 was approved for master by \x0312$2\x03" }	
+	{ return "\x032APPROVE\x03    \x0312$1\x03 was approved for master by \x0312$2\x03" }	
 	
 	##### GENERIC #####
 	if ($line =~  /Apparently no one is connected/)
