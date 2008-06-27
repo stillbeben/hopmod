@@ -163,3 +163,15 @@ count_intervals = [
 ]
 
 do = [arg1]
+
+erase1st = [
+    parameters lst
+    local newlst ""
+    local first 1
+    foreach $lst [
+        if (! $first) [
+            newlst = (concat $newlst $arg1)
+        ] [ first = 0 ]
+    ]
+    result $newlst
+]
