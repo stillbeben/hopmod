@@ -908,7 +908,9 @@ struct fpsserver : igameserver
     
     static int modecode(const char * str)
     {
-        for(int i=0; i<19; i++) if(strcmp(modestr(i),str)==0) return i;
+        std::string name=str;
+        for(unsigned int i=0; i<name.length(); i++) if(name[i]=='_') name[i]=' ';
+        for(int i=0; i<19; i++) if(strcmp(modestr(i),name.c_str())==0) return i;
         return -1;
     }
     
