@@ -169,14 +169,21 @@ sub process_command {
 		if ( $command =~ /$config->{irc_botcommandname}.* master/i )
 		{ &toserverpipe("masterwho") ;
 		&toirccommandlog("$nick MASTERWHO $1"); return }
-
+		##### GIVEINVMASTER #####
+		if ( $command =~ /$config->{irc_botcommandname}.* givemaster.*\s([0-9]+)/i )
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={GIVEINVMASTER}=-\x03 $nick gave invisible master to $1"); &toserverpipe("setpriv $1 master");
+		&toirccommandlog("$nick GIVEINVMASTER $1"); return }
+		##### TAKEINVMASTER #####
+		if ( $command =~ /$config->{irc_botcommandname}.* takemaster.*\s([0-9]+)/i )
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEINVMASTER}=-\x03 $nick took invisible master from $1"); &toserverpipe("setpriv $1 none"); 
+		&toirccommandlog("$nick TAKEINVMASTER $1"); return }
 		##### MASTERMODE #####
 		if ( $command =~ /$config->{irc_botcommandname}.* mastermode.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MASTERMODE}=-\x03 $nick changed mastermode to $1"); &toserverpipe("mastermode $1"); 
 		&toirccommandlog("$nick MASTERMODE $1"); return }
 		##### MAPCHANGE #####
-		if ( $command =~ /$config->{irc_botcommandname}.*map.*(instagib|ffa|capture) (.+)/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MAPCHANGE}=-\x03 $nick changed  map to mode $1 map $2"); &toserverpipe("changemap $1 $2"); 
+		if ( $command =~ /$config->{irc_botcommandname}.*map (\S+) (\S+)/i )
+		{ &sendtoirc("\x03\x036IRC\x03         \x034-={MAPCHANGE}=-\x03 $nick changed map to \x037$1\x03 on \x037$2\x03"); &toserverpipe("changemap $1 $2"); 
 		&toirccommandlog("$nick MAP $1 $2"); return }
 		##### HELP #####
 		if ( $command =~ /$config->{irc_botcommandname}.*help/i )
@@ -231,7 +238,10 @@ sub process_command {
                 { $hopvar = $1; if ( $hopvar eq "irc_adminpw" ) { $hopvar = "title" }
 		&toserverpipe("getvar $hopvar");
 		&toirccommandlog("$nick GETVAR $hopvar"); return }
-		
+		##### STATUS #####
+		if ( $command =~ /$config->{irc_botcommandname}.* status/i )
+                { &toserverpipe("status");
+		&toirccommandlog("$nick STATUS"); return }
 		#######################################PASSWORD PROTECTED COMMANDS
 		##### UPDATE #####	
 		if ( $command =~ /$config->{irc_botcommandname}.* update $config->{irc_adminpw}/i )
@@ -320,7 +330,7 @@ sub filterlog {
 	##### WHO #####
 	if ($line =~ /COMMAND WHO/g) {
 		while ( $line =~ /N(\S*) C(\S*) P(\S*)/g ) {
-			$line =~ s/N(\S*) C(\S*) P(\S*)/\x0312$1\x03\(C\x033$2\x03\/P\x034$3\x03\)\x03/}
+			$line =~ s/N(\S*) C(\S*) P(\S*)/\x0312$1\x03\(\x033C\x03\x037$2\x03\/\x034P\x037$3\x03\)\x03/}
 	$line =~ s/.* COMMAND WHO/\x03\x036IRC\x03         \x034-={WHO}=-\x03 is /; return $line}
 	##### SCORE #####
 	if ($line =~ /SCORE/g) {
@@ -354,6 +364,7 @@ sub filterlog {
 	##### APPROVE MASTER #####
 	if ($line =~  /(\S*\([0-9]+\)) approved for master by (.+\([0-9]+\))/) 
 	{ return "\x032APPROVE\x03     \x0312$1\x03 was approved for master by \x0312$2\x03" }	
+	
 	##### GENERIC #####
 	if ($line =~  /Apparently no one is connected/)
         { return "Apparently no one is connected" }
