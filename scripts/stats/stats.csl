@@ -50,11 +50,6 @@ event_handler $ondeath [
         
         local teamkill (&& (teamgame) [strcmp (player_team $offender) (player_team $victim)])
         
-        if (! (player_has_var $offender teamkills)) [
-            log "DEBUG teamkills variable was missing"
-            player_var $offender teamkills (+ 1 (player_var $offender teamkills))
-        ]
-        
         if (&& (! $teamkill) (= 1 (player_var $victim had_flag))) [
             player_var $offender ctf_defended (+ 1 (player_var $offender ctf_defended))
         ]
