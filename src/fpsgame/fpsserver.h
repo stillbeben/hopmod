@@ -2773,7 +2773,7 @@ struct fpsserver : igameserver
         savescore(ci);
         sendf(-1, 1, "ri2", SV_CDIS, n);
         
-        if(ci->connected) playercount--;
+        if(ci->connected && ci->state.state!=CS_SPY) playercount--;
         
         if(playercount==0)
         {
@@ -2810,7 +2810,7 @@ struct fpsserver : igameserver
             return;
         }
 
-        putint(p, clients.length());
+        putint(p, playercount);
         putint(p, 5);                   // number of attrs following
         putint(p, PROTOCOL_VERSION);    // a // generic attributes, passed back below
         putint(p, gamemode);            // b
@@ -3425,6 +3425,7 @@ struct fpsserver : igameserver
         if(smode) smode->leavegame(spinfo);
         spinfo->state.state = CS_SPY;
         spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
+        playercount--;
     }
 };
 
