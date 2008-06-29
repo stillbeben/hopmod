@@ -120,7 +120,7 @@ sub process_command {
 		
 		##### SAY #####
 		if ( $command =~ /$config->{irc_botcommandname}.* say (.*)/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console $nick [$1]");
+                { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console [$nick] [$1]");
 		&toirccommandlog("Console($nick): $1"); print "Console($nick): $1"; return }
 		##### TRSAY #####
 		if ( $command =~ /$config->{irc_botcommandname}.* trsay (ja|en|de|it|fr|es|ru)\|(ja|en|de|it|fr|es|ru) (.+)/i & $config->{irc_trmodule} eq "1" ) {
