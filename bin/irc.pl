@@ -5,7 +5,7 @@ use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Switch;
 use Config::Auto;
-use vars qw($master $config $version $zippy @zippy $hopvar );
+use vars qw($master $config $version $zippy @zippy $hopvar @irc );
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 
 
@@ -114,8 +114,6 @@ sub process_command {
 	my $channel = $config->{irc_channel};
 	my $nick = ( split /!/, $who )[0];
     	my $poco_object = $sender->get_heap();
-	if ( $command =~ /!tr (ja|en|de|it|fr)\|(ja|en|de|it|fr) (.+)/i & $config->{irc_trmodule} eq "1" )
-                { my $tr = &translate($1,$2,$3); &sendtoirc("\x03\x036IRC\x03         \x034-={TRANSLATE}=-\x03 $tr"); return }
 	if ( $command =~ /$config->{irc_botcommandname}/i  )                            {
 		if ( ! $poco_object->is_channel_operator( $channel, $nick )) { &sendtoirc("Sorry you must be an operator to issues commands"); return }
 		##### COMMAND PROCESSING #####
@@ -128,7 +126,10 @@ sub process_command {
 		if ( $command =~ /$config->{irc_botcommandname}.* trsay (ja|en|de|it|fr|es|ru)\|(ja|en|de|it|fr|es|ru) (.+)/i & $config->{irc_trmodule} eq "1" ) {
                 my $say = &translate($1,$2,$3);  
 		&sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$say\x03");
-                &toserverpipe("console $nick [$say]"); &toirccommandlog("Console($nick): $say"); print "Console($nick): $say"; return }	
+                &toserverpipe("console $nick [$say]"); &toirccommandlog("Console($nick): $say"); print "Console($nick): $say"; return }
+		##### TRANSLATE #####
+		if ( $command =~ /$config->{irc_botcommandname}.* translate (ja|en|de|it|fr)\|(ja|en|de|it|fr) (.+)/i & $config->{irc_trmodule} eq "1" )
+                { my $tr = &translate($1,$2,$3); &sendtoirc("\x03\x036IRC\x03         \x034-={TRANSLATE}=-\x03 $tr"); return }
 		##### KICK #####
 		if ( $command =~ /$config->{irc_botcommandname}.* kick.* ([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={KICK}=-\x03 $nick kicked $1"); &toserverpipe("kick $1"); 
@@ -311,7 +312,7 @@ sub filterlog {
 	{ $master = "NULL" ; return "\x034UNMASTADM\x03   \x0312$1\x03 relinquished privileged status" }
 	##### KICK BAN #####
 	if ($line =~ /(\S*) was kicked by (.*)/) 
-	{ return "\x034KICK\x03      Master \x034$1\x03 kicked \x0312$2\x03" }
+	{ return "\x034KICK\x03      Master \x034$2\x03 kicked \x0312$1\x03" }
 	##### KICK BAN 2
 	if ($line =~ /(\S*\([0-9]+\)) kick\/banned for:(.+)\.\.\.by console./) 
 	{ return "\x034KICK\x03      Console kicked \x0312$1\x03 for $2" }
@@ -332,8 +333,8 @@ sub filterlog {
 	{ return "\x034MASTERMODE\x03  Mastermode is now \x0312$1\x03" }
 	##### WHO #####
 	if ($line =~ /COMMAND WHO/g) {
-		while ( $line =~ /N(\S*) C(\S*) P(\S*)/g ) {
-			$line =~ s/N(\S*) C(\S*) P(\S*)/\x0312$1\x03\(\x033C\x03\x037$2\x03\/\x034P\x037$3\x03\)\x03/}
+		while ( $line =~ /N=(\S*) C=(\S*) P=(\S*)/g ) {
+			$line =~ s/N=(\S*) C=(\S*) P=(\S*)/\x0312$1\x03\($2\)\x03/}
 	$line =~ s/.* COMMAND WHO/\x03\x036IRC\x03         \x034-={WHO}=-\x03 is /; return $line}
 	##### SCORE #####
 	if ($line =~ /SCORE/g) {
@@ -367,16 +368,19 @@ sub filterlog {
 	##### APPROVE MASTER #####
 	if ($line =~  /(\S*\([0-9]+\)) approved for master by (.+\([0-9]+\))/) 
 	{ return "\x032APPROVE\x03    \x0312$1\x03 was approved for master by \x0312$2\x03" }	
-	
 	##### GENERIC #####
 	if ($line =~  /Apparently no one is connected/)
         { return "Apparently no one is connected" }
+	##### STATUS #####
+        if ($line =~ /COMMAND STATUS map=(\S*) mode=(\S*) time=(\S*) master=(\S*) mm=(\S*) playercount=(\S*)/)
+        {return "\x03\x036IRC\x03         \x034-={STATUS}=-\x03 Map \x037$1\x03 Mode \x037$2\x03 Timeleft \x037$3\x03 Master \x037$4\x03 Mastermode \x037$5\x03 Playercount \x037$6\x03" }
 	
 	return $line;
 }
 
 sub sendtoirc {
 	my $send = shift; 
+	
 	$irc->yield( privmsg => $config->{irc_channel} => "\x034$send\x03" );
 }
 
