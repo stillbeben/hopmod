@@ -564,6 +564,7 @@ struct fpsserver : igameserver
                                 const std::string & >       func_daemon;
     cubescript::function1<void_,pid_t>                      func_kill; //TODO move to libcubescript system runtime
     cubescript::function1<void_,int>                        func_server_sleep;
+    cubescript::function1<void,int>                         func_spy;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -695,6 +696,7 @@ struct fpsserver : igameserver
         func_daemon(boost::bind(&fpsserver::spawn_daemon,this,_1,_2,_3,_4)),
         func_kill(boost::bind(&fpsserver::kill_process,this,_1)),
         func_server_sleep(boost::bind(&fpsserver::server_sleep,this,_1)),
+        func_spy(boost::bind(&fpsserver::enter_spymode,this,_1)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -793,6 +795,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("daemon",&func_daemon);
         server_domain.register_symbol("kill",&func_kill);
         server_domain.register_symbol("server_sleep",&func_server_sleep);
+        server_domain.register_symbol("spy",&func_spy);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -1844,6 +1847,13 @@ struct fpsserver : igameserver
 
             case SV_INITC2S:
             {
+                if(ci->state.state==CS_SPY)
+                {
+                    getstring(text,p); //name
+                    getstring(text,p); //team
+                    break;
+                }
+                
                 QUEUE_MSG;
                 string oldname; oldname[0]='\0'; if(ci->name[0]) s_strcpy(oldname,ci->name);
                 string oldteam; oldteam[0]='\0'; if(ci->team[0]) s_strcpy(oldteam,ci->team);
@@ -3406,6 +3416,16 @@ struct fpsserver : igameserver
     }
     
     int get_default_gamelimit()const{return (m_teammode && !m_ctf ? 900000 : 600000);}
+    
+    void enter_spymode(int cn)
+    {
+        clientinfo * spinfo=get_ci(cn);
+        loopv(clients) if(clients[i]->clientnum!=cn) sendf(clients[i]->clientnum, 1, "ri2", SV_CDIS, cn);
+        sendf(cn, 1, "ri3", SV_SPECTATOR, cn, 1);
+        if(smode) smode->leavegame(spinfo);
+        spinfo->state.state = CS_SPY;
+        spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
+    }
 };
 
 static void shutdown_from_signal(int i)

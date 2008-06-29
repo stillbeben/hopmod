@@ -66,6 +66,8 @@ event_handler $onitempickup [
 
 event_handler $onendgame [
     if $recording_stats [
+        log_status "DEBUG stats onendgame event"
+    
         update_player_records
         
         if (capturep) [
