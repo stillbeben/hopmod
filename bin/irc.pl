@@ -406,15 +406,16 @@ sub sendtoirc {
 }
 sub splittoirc {
 	my $prefix = shift;
+	my $arrLen = scalar @split; 
 	my $temp = "";
 	my $j = 0;
 	my $temp2 = "";
 	foreach (@split) {
 		$temp2 = "$temp2 " . $_;
 		$j++;
-		if ( $j == 7 ) { &toprivateirc("$prefix $temp2") ; $temp2 ="" ; $j = 0 }
+		if ( $j == 7 ) { if ( $arrLen > 14 ) {&toprivateirc("$prefix $temp2") } else { &sendtoirc("$temp2") } ; $temp2 ="" ; $j = 0 }
 	}
-	if ( $temp2 ne "" ) { &toprivateirc("$prefix $temp2"); }
+	if ( $temp2 ne "" ) { if ( $arrLen > 14 ) {&toprivateirc("$prefix $temp2") } else { &sendtoirc("$temp2") }}
 	undef @split; return  	
 }
 
