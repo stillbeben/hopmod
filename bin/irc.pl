@@ -126,7 +126,7 @@ sub process_command {
 		if ( $command =~ /$config->{irc_botcommandname}.* trsay (ja|en|de|it|fr|es|ru)\|(ja|en|de|it|fr|es|ru) (.+)/i & $config->{irc_trmodule} eq "1" ) {
                 my $say = &translate($1,$2,$3);  
 		&sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$say\x03");
-                &toserverpipe("console $nick [$say]"); &toirccommandlog("Console($nick): $say"); print "Console($nick): $say"; return }
+                &toserverpipe("console [$nick] [$say]"); &toirccommandlog("Console($nick): $say"); print "Console($nick): $say"; return }
 		##### TRANSLATE #####
 		if ( $command =~ /$config->{irc_botcommandname}.* translate (ja|en|de|it|fr)\|(ja|en|de|it|fr) (.+)/i & $config->{irc_trmodule} eq "1" )
                 { my $tr = &translate($1,$2,$3); &sendtoirc("\x03\x036IRC\x03         \x034-={TRANSLATE}=-\x03 $tr"); return }
