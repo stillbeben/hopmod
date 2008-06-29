@@ -13,7 +13,7 @@ $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 eval { require REST::Google::Translate } ;
 
 
-$version = "1.14"; #<----Do NOT change this or I will kill you
+$version = "1.15"; #<----Do NOT change this or I will kill you
 
 #Config File Overrides
 if ( defined $config->{irc_serverlogfile} ) {  }
