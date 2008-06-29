@@ -413,9 +413,9 @@ sub splittoirc {
 	foreach (@split) {
 		$temp2 = "$temp2 " . $_;
 		$j++;
-		if ( $j == 7 ) { if ( $arrLen > 14 ) {&toprivateirc("$prefix $temp2") } else { &sendtoirc("$temp2") } ; $temp2 ="" ; $j = 0 }
+		if ( $j == 7 ) { if ( $arrLen > 14 ) {&toprivateirc("$prefix $temp2") } else { &sendtoirc("$prefix $temp2") } ; $temp2 ="" ; $j = 0 }
 	}
-	if ( $temp2 ne "" ) { if ( $arrLen > 14 ) {&toprivateirc("$prefix $temp2") } else { &sendtoirc("$temp2") }}
+	if ( $temp2 ne "" ) { if ( $arrLen > 14 ) {&toprivateirc("$prefix $temp2") } else { &sendtoirc("$prefix $temp2") }}
 	undef @split; return  	
 }
 
