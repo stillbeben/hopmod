@@ -3,11 +3,11 @@ who = [
 	scores = ""
 	foreach (players) [
 		parameters cn
-		line = (format "N%1 C%2 P%3" (player_name $cn)($cn)(player_ping $cn))
+		line = (format "N=%1C=%2P=%3 " (player_name $cn)($cn)(player_ping $cn))
 		scores = (concat $scores $line)
 	]
 	if (! (strcmp $scores "")) [
-	log (concat "COMMAND WHO      " $scores)
+	log (concat "COMMAND WHO " $scores)
 ]
 	if (strcmp $scores "" ) [
 		log "Apparently no one is connected"
@@ -18,11 +18,11 @@ score = [
 	scores = ""
 	foreach (players) [
 		parameters cn
-		line = (format "%3 F%1/D%2" (player_frags $cn) (player_deaths $cn)(player_name $cn))
+		line = (format "N=%3F=%1D=%2" (player_frags $cn) (player_deaths $cn)(player_name $cn))
 		scores = (concat $scores $line)
 	]
 	if (! (strcmp $scores "")) [
-		log (concat "SCORE      " $scores)
+		log (concat "COMMAND SCORE " $scores)
 	]
 	if (strcmp $scores "" ) [
 		log "Apparently no one is connected"
@@ -64,4 +64,9 @@ showalias = [
 restart_ircbot = [
 	kill $irc_pid
 	irc_pid = (daemon bin/irc.pl [] logs/irc.log logs/irc.log)
+]
+
+status = [
+	game_status = ( format "COMMAND STATUS map=%1 mode=%2 time=%3 master=%4 mm=%5 playercount=%6" $currentmap $gamemode $timeleft (player_name $currentmaster) $mastermode $playercount)
+	log $game_status
 ]

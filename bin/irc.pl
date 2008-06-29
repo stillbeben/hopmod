@@ -5,7 +5,7 @@ use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Switch;
 use Config::Auto;
-use vars qw($master $config $version $zippy @zippy $hopvar @irc );
+use vars qw($topriv $master $config $version $zippy @zippy $hopvar @irc @split);
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 
 
@@ -194,7 +194,7 @@ sub process_command {
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={HELP}=-\x03 help can be found here http://hopmod.e-topic.info/index.php5?title=IRC_Bot"); return}
 		##### WHO #####
 		if ( $command =~ /$config->{irc_botcommandname}.*who/i )
-		{ &toserverpipe("who"); return}
+		{ $topriv = $nick ; &toserverpipe("who"); return}
 		##### DIE #####
 		if ( $command =~ /$config->{irc_botcommandname}.*die/i ) 
 		{&sendtoirc("\x03\x036IRC\x03         \x034-={DIE}=-\x03 $nick terminated the bot") ;
@@ -216,7 +216,7 @@ sub process_command {
 		&toirccommandlog("$nick SHOWALIAS $1"); return }
 		##### SCORE #####
 		if ( $command =~ /$config->{irc_botcommandname}.* score.*/i )
-		{ &toserverpipe("score");
+		{ $topriv = $nick ; &toserverpipe("score");
 		&toirccommandlog("$nick SCORE"); return }
 		##### SETMOTD #####
 		if ( $command =~ /$config->{irc_botcommandname}.* setmotd (.*)/i)
@@ -333,14 +333,32 @@ sub filterlog {
 	{ return "\x034MASTERMODE\x03  Mastermode is now \x0312$1\x03" }
 	##### WHO #####
 	if ($line =~ /COMMAND WHO/g) {
-		while ( $line =~ /N=(\S*) C=(\S*) P=(\S*)/g ) {
-			$line =~ s/N=(\S*) C=(\S*) P=(\S*)/\x0312$1\x03\($2\)\x03/}
-	$line =~ s/.* COMMAND WHO/\x03\x036IRC\x03         \x034-={WHO}=-\x03 is /; return $line}
-	##### SCORE #####
-	if ($line =~ /SCORE/g) {
-		while ( $line =~ /(\S*) F([0-9]*)\/D([0-9]*)/g ) {
-			$line =~ s/(\S*) F([0-9]*)\/D([0-9]*)/\x0312$1\x03 [F\x033$2\x03\/D\x034$3\x03]/}
-	$line =~ s/.* SCORE/\x03\x036IRC\x03         \x034-={SCORE}=-\x03 is /; return $line}	
+		my $temp = "";
+		my @temp = split (/ /, $line);
+		foreach (@temp) {
+			if ( $_ =~ /N=/ ) { 
+				$temp = $_;  
+				$temp =~ s/N=(\S*)C=(\S*)P=(\S*)/\x0312$1\x03\($2\)\x03  /;
+				push (@split, $temp);
+			}
+		}
+	&splittoirc("\x03\x036IRC\x03         \x034-={WHO}=-\x03 is");
+	return; 
+	} 
+		##### SCORE #####
+	if ($line =~ /COMMAND SCORE/g) {
+		my $temp = "";
+		my @temp = split (/ /, $line);
+		foreach (@temp) {
+			if ( $_ =~ /N=/ ) { 
+				$temp = $_;  
+				$temp =~ s/N=(\S*)F=(\S*)D=(\S*)/\x0312$1\x03\[\x033$2\x03\/\x034$3\x03\]  /;
+				push (@split, $temp);
+			}
+		}
+	&splittoirc("\x03\x036SCORE\x03 [\x033kills\x03/\x034deaths\x03]");
+	return;
+	}
 	##### GETVAR #####
         if ($line =~ /IRC .*-={GETVAR (.*)}=- is (.*)/)
         { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
@@ -377,11 +395,27 @@ sub filterlog {
 	
 	return $line;
 }
+sub toprivateirc {
+	my $send = shift; 
+	$irc->yield( privmsg => $topriv => "\x034$send\x03" );
+}
 
 sub sendtoirc {
 	my $send = shift; 
-	
 	$irc->yield( privmsg => $config->{irc_channel} => "\x034$send\x03" );
+}
+sub splittoirc {
+	my $prefix = shift;
+	my $temp = "";
+	my $j = 0;
+	my $temp2 = "";
+	foreach (@split) {
+		$temp2 = "$temp2 " . $_;
+		$j++;
+		if ( $j == 7 ) { &toprivateirc("$prefix $temp2") ; $temp2 ="" ; $j = 0 }
+	}
+	if ( $temp2 ne "" ) { &toprivateirc("$prefix $temp2"); }
+	undef @split; return  	
 }
 
 sub sauerping {
@@ -411,8 +445,8 @@ sub showalias {
         foreach (@array1) { $hash{$_}++ };
         foreach (sort keys %hash) { push @array2, $_ };
 	foreach (@array2) { $alias = $alias . " $_" }
-	
-	&sendtoirc ("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03 $alias");
+	@split = @array2;
+	&splittoirc ("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03");
 }
 
 sub update {
