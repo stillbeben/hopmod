@@ -13,7 +13,7 @@ $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 eval { require REST::Google::Translate } ;
 
 
-$version = "1.15"; #<----Do NOT change this or I will kill you
+$version = "1.14"; #<----Do NOT change this or I will kill you
 
 #Config File Overrides
 if ( defined $config->{irc_serverlogfile} ) {  }
@@ -193,8 +193,8 @@ sub process_command {
 		if ( $command =~ /$config->{irc_botcommandname}.*help/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={HELP}=-\x03 help can be found here http://hopmod.e-topic.info/index.php5?title=IRC_Bot"); return}
 		##### WHO #####
-		if ( $command =~ /$config->{irc_botcommandname}.*who/i )
-		{ $topriv = $nick ; &toserverpipe("who"); return}
+		if ( $command =~ /$config->{irc_botcommandname}.*who\s*(.*)/i )
+		{ $topriv = $nick ; &toserverpipe("who $1"); return}
 		##### DIE #####
 		if ( $command =~ /$config->{irc_botcommandname}.*die/i ) 
 		{&sendtoirc("\x03\x036IRC\x03         \x034-={DIE}=-\x03 $nick terminated the bot") ;
@@ -212,7 +212,7 @@ sub process_command {
 		&toirccommandlog("$nick RESTART_SERVER"); return }
 		##### SHOWALIAS #####
                 if ( $command =~ /$config->{irc_botcommandname}.* showalias.*\s([0-9]+.*)/i )
-                { &toserverpipe("showalias $1"); 
+                { &toserverpipe("showalias $1"); $topriv = $nick;
 		&toirccommandlog("$nick SHOWALIAS $1"); return }
 		##### SCORE #####
 		if ( $command =~ /$config->{irc_botcommandname}.* score.*/i )
