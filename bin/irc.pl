@@ -352,7 +352,7 @@ sub filterlog {
 		foreach (@temp) {
 			if ( $_ =~ /N=/ ) { 
 				$temp = $_;  
-				$temp =~ s/N=(\S*)F=(\S*)D=(\S*)/\x0312$1\x03\[\x033$2\x03\/\x034$3\x03\]  /;
+				$temp =~ s/N=(\S*)F=(\S*)D=(\S*)/\x0312$1\x03\[\x033 $2\x03 \/\x034 $3 \x03\]  /;
 				push (@split, $temp);
 			}
 		}
