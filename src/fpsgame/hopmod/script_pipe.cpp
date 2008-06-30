@@ -313,9 +313,11 @@ void script_pipe::close()
 
 void script_pipe::kill()
 {
-    ::kill(m_child_pid,SIGTERM);
     ::close(m_in);
     ::close(m_out);
+    ::kill(m_child_pid,SIGTERM);
+    int childstatus=0;
+    waitpid(m_child_pid,&childstatus,0);
     m_in=-1;
     m_out=-1;
     m_child_pid=-1;

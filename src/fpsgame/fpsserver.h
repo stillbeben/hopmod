@@ -3275,15 +3275,12 @@ struct fpsserver : igameserver
         pid_t child=fork();
         if(child!=0)
         {
-            string stdfile;
-            s_strcpy(stdfile,ttyname(1));
-            int maxfd=getdtablesize(); for(int i=0; i<maxfd; i++) ::close(i);
             int status;
             waitpid(child,&status,0);
-            sleep(2);
             umask(0);
-            open("/dev/null",O_RDONLY);
-            dup2(open(stdfile,O_CREAT | O_WRONLY | O_APPEND,484),2);
+            m_script_pipes.shutdown();
+            int maxfd=getdtablesize(); for(int i=3; i<maxfd; i++) ::close(i);
+            //TODO log returned status (if error) of parent process
             execv(g_argv[0],g_argv);
         }
         return void_();
@@ -3369,7 +3366,12 @@ struct fpsserver : igameserver
             
             exit(1);
         }
-        else if(pid==-1) throw cubescript::error_key("runtime.function.daemon.fork_failed");
+        else
+        {
+            int status=0;
+            waitpid(pid,&status,0);
+            if(pid==-1) throw cubescript::error_key("runtime.function.daemon.fork_failed");
+        }
         
         return pid;
     }
