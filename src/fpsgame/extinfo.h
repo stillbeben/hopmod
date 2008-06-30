@@ -31,7 +31,7 @@
 
     void extinfoplayer(ucharbuf &p, clientinfo *ci)
     {
-        if(ci->state.state==CS_SPY) return;
+        if(ci->spy) return;
         
         ucharbuf q = p;
         putint(q, EXT_PLAYERSTATS_RESP_STATS); // send player stats following

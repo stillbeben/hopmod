@@ -250,6 +250,7 @@ struct fpsserver : igameserver
         int lag;
         bool ban;
         int bantime;
+        bool spy;
         
         enum var_type
         {
@@ -294,6 +295,7 @@ struct fpsserver : igameserver
             ping=0;
             lastupdate=-1;
             lag=0;
+            spy=false;
         }
         
         void sendprivmsg(const char * msg)
@@ -1847,7 +1849,7 @@ struct fpsserver : igameserver
 
             case SV_INITC2S:
             {
-                if(ci->state.state==CS_SPY)
+                if(ci->spy)
                 {
                     getstring(text,p); //name
                     getstring(text,p); //team
@@ -2300,7 +2302,7 @@ struct fpsserver : igameserver
             loopv(clients)
             {
                 clientinfo *oi = clients[i];
-                if(oi->clientnum==n) continue;
+                if(oi->clientnum==n || oi->spy) continue;
                 if(p.remaining() < 256)
                 {
                     enet_packet_resize(packet, packet->dataLength + MAXTRANS);
@@ -2773,7 +2775,7 @@ struct fpsserver : igameserver
         savescore(ci);
         sendf(-1, 1, "ri2", SV_CDIS, n);
         
-        if(ci->connected && ci->state.state!=CS_SPY) playercount--;
+        if(ci->connected && !ci->spy) playercount--;
         
         if(playercount==0)
         {
@@ -3045,7 +3047,6 @@ struct fpsserver : igameserver
     std::string get_player_status(int cn)
     {
         std::string status;
-        
         switch(get_ci(cn)->state.state)
         {
             case CS_ALIVE: status="alive"; break;
@@ -3054,8 +3055,9 @@ struct fpsserver : igameserver
             case CS_LAGGED: status="lagged"; break;
             case CS_SPECTATOR: status="spectator"; break;
             case CS_EDITING: status="editing"; break;
+            default: status=""; break;
         }
-        
+        if(get_ci(cn)->spy) status="spying";
         return status;
     }
     
@@ -3422,11 +3424,22 @@ struct fpsserver : igameserver
     void enter_spymode(int cn)
     {
         clientinfo * spinfo=get_ci(cn);
-        loopv(clients) if(clients[i]->clientnum!=cn) sendf(clients[i]->clientnum, 1, "ri2", SV_CDIS, cn);
+        if(spinfo->spy) return;
+        loopv(clients) if(clients[i]->clientnum!=cn)
+        {
+            if(spinfo->privilege > PRIV_NONE)
+            {
+                sendf(clients[i]->clientnum, 1, "ri3", SV_CURRENTMASTER, cn,0);
+                currentmaster = -1;
+                spinfo->hidden_priv=true;
+            }
+            sendf(clients[i]->clientnum, 1, "ri2", SV_CDIS, cn);
+        }
         sendf(cn, 1, "ri3", SV_SPECTATOR, cn, 1);
         if(smode) smode->leavegame(spinfo);
-        spinfo->state.state = CS_SPY;
+        spinfo->state.state = CS_SPECTATOR;
         spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
+        spinfo->spy=true;
         playercount--;
     }
 };
