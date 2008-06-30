@@ -1,16 +1,18 @@
 
 who = [
-	scores = ""
-	foreach (players) [
-		parameters cn
-		line = (format "N=%1C=%2P=%3 " (player_name $cn)($cn)(player_ping $cn))
-		scores = (concat $scores $line)
-	]
-	if (! (strcmp $scores "")) [
-	log (concat "COMMAND WHO " $scores)
-]
-	if (strcmp $scores "" ) [
-		log "Apparently no one is connected"
+	if (! (symbol? arg1)) [  
+		scores = ""
+		foreach (players) [
+			parameters cn
+			line = (format "N=%1C=%2P=%3 " (player_name $cn)($cn)(player_ping $cn))
+			scores = (concat $scores $line)
+		]
+		if (! (strcmp $scores "")) [
+		log (concat "COMMAND WHO " $scores)
+		]
+		if (strcmp $scores "" ) [
+			log "Apparently no one is connected"
+		]
 	]
 ]
 

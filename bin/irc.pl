@@ -390,7 +390,7 @@ sub filterlog {
 	if ($line =~  /Apparently no one is connected/)
         { return "Apparently no one is connected" }
 	##### STATUS #####
-        if ($line =~ /COMMAND STATUS map=(\S*) mode=(\S*) time=(\S*) master=(\S*) mm=(\S*) playercount=(\S*)/)
+        if ($line =~ /COMMAND STATUS map=(\S*) mode=(.*) time=(\S*) master=(\S*) mm=(\S*) playercount=(\S*)/)
         {return "\x03\x036IRC\x03         \x034-={STATUS}=-\x03 Map \x037$1\x03 Mode \x037$2\x03 Timeleft \x037$3\x03 Master \x037$4\x03 Mastermode \x037$5\x03 Playercount \x037$6\x03" }
 	
 	return $line;
