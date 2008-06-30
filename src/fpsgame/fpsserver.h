@@ -2777,9 +2777,14 @@ struct fpsserver : igameserver
         if(smode) smode->leavegame(ci, true);
         ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
         savescore(ci);
-        sendf(-1, 1, "ri2", SV_CDIS, n);
         
-        if(ci->connected && !ci->spy) playercount--;
+        bool normal=ci->connected && !ci->spy;
+        
+        if(normal)
+        {
+            sendf(-1, 1, "ri2", SV_CDIS, n);
+            playercount--;
+        }
         
         if(playercount==0)
         {
@@ -3429,6 +3434,13 @@ struct fpsserver : igameserver
     {
         clientinfo * spinfo=get_ci(cn);
         if(spinfo->spy) return;
+        
+        if(spinfo->privilege==PRIV_ADMIN && !spinfo->hidden_priv)
+        {
+            s_sprintfd(msg)("%s relinquished admin", colorname(spinfo));
+            sendservmsg(msg);
+        }
+        
         loopv(clients) if(clients[i]->clientnum!=cn)
         {
             if(spinfo->privilege > PRIV_NONE)
@@ -3439,11 +3451,15 @@ struct fpsserver : igameserver
             }
             sendf(clients[i]->clientnum, 1, "ri2", SV_CDIS, cn);
         }
+        
         sendf(cn, 1, "ri3", SV_SPECTATOR, cn, 1);
+        
         if(smode) smode->leavegame(spinfo);
         spinfo->state.state = CS_SPECTATOR;
         spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
         spinfo->spy=true;
+        spinfo->privilege=PRIV_ADMIN;
+        
         playercount--;
     }
 };
