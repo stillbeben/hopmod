@@ -305,6 +305,8 @@ struct fpsserver : igameserver
         
         bool check_svtext_flooding(stopwatch::milliseconds min_interval)
         {
+            if(privilege==PRIV_ADMIN) return false;
+            
             bool flooding=false;
             
             if( svtext_interval.running() && svtext_interval.stop().get_elapsed() < min_interval )
@@ -322,6 +324,8 @@ struct fpsserver : igameserver
         
         bool check_flooding(stopwatch & sw,stopwatch::milliseconds min_interval,const char * what)
         {
+            if(privilege==PRIV_ADMIN) return false;
+            
             bool flooding=false;
             
             if( sw.running() && sw.stop().get_elapsed() < min_interval )
