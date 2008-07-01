@@ -73,7 +73,7 @@
         if(m_capture)
         {
             loopv(capturemode.scores) scores.add(teamscore(capturemode.scores[i].team, capturemode.scores[i].total));
-            loopv(clients) if(clients[i]->team[0]) //check all teams available, since capturemode.scores contains only teams with scores
+            loopv(clients) if(clients[i]->team[0] && !clients[i]->spy) //check all teams available, since capturemode.scores contains only teams with scores
             {
                 teamscore *ts = NULL;
                 loopvj(scores) if(!strcmp(scores[j].name, clients[i]->team)) { ts = &scores[i]; break; }
@@ -143,7 +143,7 @@
                 clientinfo *ci = NULL;
                 if(cn >= 0)
                 {
-                    loopv(clients) if(clients[i]->clientnum == cn) { ci = clients[i]; break; }
+                    loopv(clients) if(clients[i]->clientnum == cn && !clients[i]->spy) { ci = clients[i]; break; }
                     if(!ci)
                     {
                         putint(p, EXT_ERROR); //client requested by id was not found
@@ -157,9 +157,9 @@
                 ucharbuf q = p; //remember buffer position
                 putint(q, EXT_PLAYERSTATS_RESP_IDS); //send player ids following
                 if(ci) putint(q, ci->clientnum);
-                else loopv(clients) putint(q, clients[i]->clientnum);
+                else loopv(clients) if(!clients[i]->spy) putint(q, clients[i]->clientnum);
                 sendserverinforeply(q);
-            
+                
                 if(ci) extinfoplayer(p, ci);
                 else loopv(clients) extinfoplayer(p, clients[i]);
                 return;
