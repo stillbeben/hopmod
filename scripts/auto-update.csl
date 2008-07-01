@@ -12,7 +12,7 @@ track_file_for_update = [
 server_update = [
     foreach $track_file_updates [
        if (> (file_modified $arg1) $last_update) [
-            log (format "Performing server update: %1 file has recently changed." $arg1)
+            log (format "Performing server update because %1 file has been modified." $arg1)
             log_status "Restarting server..."
             restarter
             shutdown
