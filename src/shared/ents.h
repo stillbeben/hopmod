@@ -40,6 +40,8 @@ struct extentity : entity                       // part of the entity that doesn
     extentity() : visible(false), triggerstate(TRIGGER_RESET), lasttrigger(0), attached(NULL) {}
 };
 
+#define MAXENTS 10000
+
 //extern vector<extentity *> ents;                // map entities
 
 enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATOR};

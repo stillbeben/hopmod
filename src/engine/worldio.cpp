@@ -450,8 +450,9 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     show_out_of_renderloop_progress(0, "loading entities...");
 
     vector<extentity *> &ents = et->getents();
-    char *ebuf = new char[et->extraentinfosize()];
-    loopi(hdr.numents)
+    int einfosize = et->extraentinfosize();
+    char *ebuf = einfosize > 0 ? new char[einfosize] : NULL;
+    loopi(min(hdr.numents, MAXENTS))
     {
         extentity &e = *et->newentity();
         ents.add(&e);
@@ -462,7 +463,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         e.inoctanode = false;
         if(samegame)
         {
-            if(et->extraentinfosize()) gzread(f, ebuf, et->extraentinfosize());
+            if(einfosize > 0) gzread(f, ebuf, einfosize);
             et->readent(e, ebuf); 
         }
         else
@@ -482,7 +483,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         {
             if(e.type>=ET_GAMESPECIFIC || hdr.version<=14)
             {
-                ents.pop();
+                et->deleteentity(ents.pop());
                 continue;
             }
         }
@@ -500,7 +501,13 @@ bool load_world(const char *mname, const char *cname)        // still supports a
             e.attr3 = e.attr4 = 0;
         }
     }
-    delete[] ebuf;
+    if(ebuf) delete[] ebuf;
+
+    if(hdr.numents > MAXENTS) 
+    {
+        conoutf(CON_WARN, "warning: map has %d entities", hdr.numents);
+        gzseek(f, (hdr.numents-MAXENTS)*(sizeof(entity) + einfosize), SEEK_CUR);
+    }
 
     show_out_of_renderloop_progress(0, "loading octree...");
     worldroot = loadchildren(f);

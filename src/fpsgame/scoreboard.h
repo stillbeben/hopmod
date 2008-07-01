@@ -328,12 +328,14 @@ struct scoreboard : g3d_callback
                 loopv(spectators) 
                 {
                     fpsent *o = spectators[i];
+                    int status = 0xFFFFDD;
+                    if(o->privilege) status = o->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
                     if(o==cl.player1 && highlightscore())
                     {
                         g.pushlist();
                         g.background(0x808080, 3);
                     }
-                    g.text(cl.colorname(o), 0xFFFFDD, mdl.ffaicon);
+                    g.text(cl.colorname(o), status, mdl.ffaicon);
                     if(o==cl.player1 && highlightscore()) g.poplist();
                 }
                 g.poplist();

@@ -1962,7 +1962,7 @@ struct fpsserver : igameserver
             {
                 if((ci->state.state==CS_SPECTATOR && !ci->privilege) || !notgotitems) { while(getint(p)>=0 && !p.overread()) getint(p); break; }
                 int n;
-                while((n = getint(p))>=0 && !p.overread())
+                while((n = getint(p))>=0 && n<MAXENTS && !p.overread())
                 {
                     server_entity se = { getint(p), false, 0 };
                     while(sents.length()<=n) sents.add(se);

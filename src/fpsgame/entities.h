@@ -261,6 +261,7 @@ struct entities : icliententities
     void setspawn(int i, bool on) { if(ents.inrange(i)) ents[i]->spawned = on; }
 
     extentity *newentity() { return new fpsentity(); }
+    void deleteentity(extentity *e) { delete (fpsentity *)e; }
 
     void fixentity(extentity &e)
     {

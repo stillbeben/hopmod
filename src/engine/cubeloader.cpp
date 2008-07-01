@@ -277,7 +277,7 @@ struct cubeloader
             c_persistent_entity e;
             gzread(f, &e, sizeof(c_persistent_entity));
             endianswap(&e, sizeof(short), 4);
-            create_ent(e);
+            if(i < MAXENTS) create_ent(e);
         }
         ssize = 1<<hdr.sfactor;
         world = new c_sqr[ssize*ssize];

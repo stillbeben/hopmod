@@ -256,6 +256,7 @@ struct ctfservmode : ctfstate, servmode
             int team = getint(p);
             vec o;
             loopk(3) o[k] = getint(p)/DMF;
+            if(p.overread()) break;
             if(notgotflags) addflag(i, o, team);
         }
         notgotflags = false;

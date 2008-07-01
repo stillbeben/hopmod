@@ -953,7 +953,7 @@ bool move(physent *d, vec &dir)
     bool collided = false, slidecollide = false;
     vec obstacle;
     d->o.add(dir);
-    if(!collide(d, d->type!=ENT_CAMERA ? dir : vec(0, 0, 0)) || ((d->type==ENT_AI || d->type==ENT_INANIMATE) && !collide(d)))
+    if(!collide(d, d->type!=ENT_CAMERA ? dir : vec(0, 0, 0)) || ((d->type==ENT_AI || d->type==ENT_INANIMATE) && !collide(d, vec(0, 0, 0), 0, false)))
     {
         obstacle = wall;
         /* check to see if there is an obstacle that would prevent this one from being used as a floor (or ceiling bump) */

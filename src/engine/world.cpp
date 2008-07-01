@@ -815,6 +815,7 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
 
 void newentity(int type, int a1, int a2, int a3, int a4)
 {
+    if(et->getents().length() >= MAXENTS) { conoutf("too many entities"); return; }
     extentity *t = newentity(true, player->o, type, a1, a2, a3, a4);
     dropentity(*t);
     et->getents().add(t);
@@ -1071,6 +1072,7 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
 {
     if(et->getents().length()<=i)
     {
+        if(i >= MAXENTS) return;
         while(et->getents().length()<i) et->getents().add(et->newentity())->type = ET_EMPTY;
         extentity *e = newentity(local, o, type, attr1, attr2, attr3, attr4);
         et->getents().add(e);

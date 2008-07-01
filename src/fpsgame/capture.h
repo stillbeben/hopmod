@@ -159,7 +159,23 @@ struct capturestate
 
         if(b.ammogroup) 
         {
-            loopv(bases) if(b.ammogroup==bases[i].ammogroup) b.ammotype = bases[i].ammotype;
+            loopi(bases.length()-1) if(b.ammogroup == bases[i].ammogroup)
+            {
+                b.ammotype = bases[i].ammotype;
+                return;
+            }
+            int uses[5] = { 0, 0, 0, 0, 0 };
+            loopi(bases.length()-1) if(bases[i].ammogroup) 
+            {
+                loopj(i) if(bases[j].ammogroup == bases[i].ammogroup) goto nextbase;
+                uses[bases[i].ammotype-1]++;
+                nextbase:;
+            }
+            int mintype = 0;
+            loopi(5) if(uses[i] < uses[mintype]) mintype = i;
+            int numavail = 0, avail[5];
+            loopi(5) if(uses[i] == uses[mintype]) avail[numavail++] = i+1;
+            b.ammotype = avail[rnd(numavail)];
         }
     }
 
@@ -855,6 +871,7 @@ struct captureservmode : capturestate, servmode
             o.x = getint(p)/DMF;
             o.y = getint(p)/DMF;
             o.z = getint(p)/DMF;
+            if(p.overread()) break;
             if(notgotbases) addbase(ammotype>=GUN_SG && ammotype<=GUN_PISTOL ? ammotype : min(ammotype, 0), o);
         }
         if(notgotbases)
