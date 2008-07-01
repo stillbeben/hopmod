@@ -538,7 +538,7 @@ struct fpsserver : igameserver
     cubescript::function1<int,int>                          func_player_lag;
     cubescript::function1<bool,int>                         func_player_has_flag;
     cubescript::function1<std::string,int>                  func_get_disc_reason;
-    cubescript::function2<void_,int,const std::string &>    func_setpriv;
+    cubescript::function2<void,int,const std::string &>     func_setpriv;
     cubescript::function0<void_>                            func_clearbans;
     cubescript::functionV<void_>                            func_kick;
     cubescript::function1<void_,int>                        func_set_interm;
@@ -673,7 +673,7 @@ struct fpsserver : igameserver
         func_player_lag(boost::bind(&fpsserver::get_player_lag,this,_1)),
         func_player_has_flag(boost::bind(&fpsserver::player_has_flag,this,_1)),
         func_get_disc_reason(boost::bind(&fpsserver::get_disc_reason,this,_1)),
-        func_setpriv(boost::bind(&fpsserver::setpriv,this,_1,_2)),
+        func_setpriv(boost::bind((void (fpsserver::*)(int,const std::string &))&fpsserver::setpriv,this,_1,_2)),
         func_clearbans(boost::bind(&fpsserver::clearbans,this)),
         func_kick(boost::bind(&fpsserver::kickban,this,_1,_2)),
         func_set_interm(boost::bind(&fpsserver::set_interm,this,_1)),
@@ -2623,9 +2623,8 @@ struct fpsserver : igameserver
         if(masterupdate) 
         { 
             clientinfo *m = currentmaster>=0 ? (clientinfo *)getinfo(currentmaster) : NULL;
-            loopv(clients)
-                if(clients[i]->privilege==PRIV_NONE || currentmaster==clients[i]->clientnum)
-                    sendf(clients[i]->clientnum, 1, "ri3", SV_CURRENTMASTER, currentmaster, m ? m->privilege : 0);
+            loopv(clients) if(!clients[i]->hidden_priv)
+                sendf(clients[i]->clientnum, 1, "ri3", SV_CURRENTMASTER, currentmaster, m ? m->privilege : 0);
             masterupdate = false;
         }
         
@@ -2964,39 +2963,42 @@ struct fpsserver : igameserver
         return std::string(disc_reasons[reason]);
     }
     
-    void_ setpriv(int cn,const std::string & level)
+    void setpriv(int cn,const std::string & level)
     {
         int privilege;
-        
         if(level=="master") privilege=PRIV_MASTER;
         else if(level=="admin") privilege=PRIV_ADMIN;
         else if(level=="none") privilege=PRIV_NONE;
-        else return void_();
-        
-        clientinfo * ci=get_ci(cn);
+        else return; //TODO throw error
+        setpriv(get_ci(cn),privilege);
+    }
+    
+    void setpriv(clientinfo * ci,int newpriv)
+    {
+        int cn=ci->clientnum;
         int oldpriv=ci->privilege;
         
-        if(currentmaster!=-1 && currentmaster==cn && privilege==PRIV_NONE) setmaster(ci,false);
-        else if(oldpriv!=PRIV_NONE && privilege==PRIV_NONE)
+        if(currentmaster==cn) setmaster(ci,false);
+        
+        if(ci->hidden_priv && newpriv==PRIV_NONE)
         {
             std::ostringstream nonprivmsg;
             nonprivmsg<<ConColour_Info<<"Your invisible "<<privname(oldpriv)<<" status has been revoked.";
             ci->sendprivmsg(nonprivmsg.str().c_str());
             sendf(cn, 1, "ri3", SV_CURRENTMASTER, cn, 0);
+            ci->hidden_priv=false;
         }
         
-        ci->hidden_priv=true;
-        ci->privilege=privilege;
+        ci->privilege=newpriv;
         
-        if(oldpriv==PRIV_NONE && ci->privilege!=PRIV_NONE)
+        if(oldpriv==PRIV_NONE && ci->privilege > PRIV_NONE)
         {
             std::ostringstream privmsg;
             privmsg<<ConColour_Info<<"You have been given invisible "<<privname(ci->privilege)<<" status.";
             ci->sendprivmsg(privmsg.str().c_str());
             sendf(cn, 1, "ri3", SV_CURRENTMASTER, cn, ci->privilege);
+            ci->hidden_priv=true;
         }
-        
-        return void_();
     }
     
     void_ clearbans()
@@ -3435,22 +3437,11 @@ struct fpsserver : igameserver
         clientinfo * spinfo=get_ci(cn);
         if(spinfo->spy) return;
         
-        if(spinfo->privilege==PRIV_ADMIN && !spinfo->hidden_priv)
-        {
-            s_sprintfd(msg)("%s relinquished admin", colorname(spinfo));
-            sendservmsg(msg);
-        }
+        if(spinfo->privilege > PRIV_NONE && !spinfo->hidden_priv) setmaster(spinfo,false);
         
-        loopv(clients) if(clients[i]->clientnum!=cn)
-        {
-            if(spinfo->privilege > PRIV_NONE)
-            {
-                sendf(clients[i]->clientnum, 1, "ri3", SV_CURRENTMASTER, cn,0);
-                currentmaster = -1;
-                spinfo->hidden_priv=true;
-            }
-            sendf(clients[i]->clientnum, 1, "ri2", SV_CDIS, cn);
-        }
+        loopv(clients) 
+            if(clients[i]->clientnum!=cn)
+                sendf(clients[i]->clientnum, 1, "ri2", SV_CDIS, cn);
         
         sendf(cn, 1, "ri3", SV_SPECTATOR, cn, 1);
         
@@ -3458,7 +3449,8 @@ struct fpsserver : igameserver
         spinfo->state.state = CS_SPECTATOR;
         spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
         spinfo->spy=true;
-        spinfo->privilege=PRIV_ADMIN;
+        
+        setpriv(spinfo,PRIV_ADMIN);
         
         playercount--;
     }
