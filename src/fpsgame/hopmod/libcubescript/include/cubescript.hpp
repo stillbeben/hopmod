@@ -912,7 +912,11 @@ class function0:public functionN
 public:
     template<typename F>
     function0(F func):m_func(func){}
-    std::string apply(std::list<std::string> & args,domain *){return print_type<RetT>(m_func());}
+    std::string apply(std::list<std::string> & args,domain *)
+    {
+        typename call_handler<RetT>::type invoker;
+        return invoker.invoke(m_func);
+    }
 private:
     boost::function0<RetT> m_func;
 };

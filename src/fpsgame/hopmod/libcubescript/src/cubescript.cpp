@@ -1391,6 +1391,7 @@ const char * get_month(time_t local_timestamp)
 
 std::string _try(std::list<std::string> & arglist,domain * aDomain)
 {
+    //try <operation> <argument 1> ... <catch error block>
     std::string op=functionN::pop_arg<std::string>(arglist);
     if(arglist.empty()) throw error_key("runtime.function.try.missing_catch_argument");
     std::string catchcode=arglist.back();
@@ -1665,10 +1666,9 @@ bool setenv(const std::string & name,const std::string & value)
     return ::setenv(name.c_str(),value.c_str(),true)==0;
 }
 
-inline
-bool unsetenv(const std::string & name)
+inline void unsetenv(const std::string & name)
 {
-    return ::unsetenv(name.c_str())==0;
+    ::unsetenv(name.c_str());
 }
 
 std::string system_exec(const std::string & filename)
@@ -1715,7 +1715,7 @@ void register_system_functions(domain * aDomain)
     static function2<bool,const std::string &,const std::string &> func_setenv(&setenv);
     aDomain->register_symbol("setenv",&func_setenv);
     
-    static function1<bool,const std::string &> func_unsetenv(&unsetenv);
+    static function1<void,const std::string &> func_unsetenv(&unsetenv);
     aDomain->register_symbol("unsetenv",&func_unsetenv);
     
     static function1<std::string,const std::string &> func_system(&system_exec);
