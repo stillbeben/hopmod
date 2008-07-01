@@ -2772,15 +2772,14 @@ struct fpsserver : igameserver
     void clientdisconnect(int n)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
-        if(ci->privilege) setmaster(ci, false);
-        if(smode) smode->leavegame(ci, true);
-        ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
-        savescore(ci);
-        
         bool normal=ci->connected && !ci->spy;
         
         if(normal)
         {
+            if(ci->privilege) setmaster(ci, false);
+            if(smode) smode->leavegame(ci, true);
+            ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
+            savescore(ci);
             sendf(-1, 1, "ri2", SV_CDIS, n);
             playercount--;
         }
