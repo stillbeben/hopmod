@@ -567,7 +567,7 @@ private:
     
     construct * m_parsing;
     char m_sub_term;
-    std::istream::streampos m_inputpos;
+    std::streampos m_inputpos;
     
     std::list<construct *> m_ops;
 };

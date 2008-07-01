@@ -42,6 +42,8 @@
 #include <sys/wait.h>
 #include <signal.h>
 
+extern char **environ; //if this causes compile error then just remove it.
+
 class script_pipe
 {
 public:

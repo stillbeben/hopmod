@@ -1630,7 +1630,11 @@ int get_file_modified(const std::string & filename)
 {
     struct stat info;
     if(::stat(filename.c_str(),&info)==-1) throw error_key("runtime.function.file_modified");
+#if __FreeBSD__
+    return info.st_mtime;
+#else
     return info.st_mtim.tv_sec;
+#endif
 }
 
 void include(std::list<std::string> & args,domain * aDomain)
