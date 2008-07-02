@@ -615,7 +615,7 @@ struct fpsserver : igameserver
     event_handler on_disconnect;
     event_handler on_kick;
     event_handler on_mapvote;
-    event_handler on_mapchange;
+    event_handler on_mapchanged;
     event_handler on_setmap;
     event_handler on_rename;
     event_handler on_reteam;
@@ -854,7 +854,7 @@ struct fpsserver : igameserver
         scriptable_events.register_event("ondisconnect",&on_disconnect);
         scriptable_events.register_event("onkick",&on_kick);
         scriptable_events.register_event("onmapvote",&on_mapvote);
-        scriptable_events.register_event("onmapchange",&on_mapchange);
+        scriptable_events.register_event("onmapchanged",&on_mapchanged);
         scriptable_events.register_event("onsetmap",&on_setmap);
         scriptable_events.register_event("onrename",&on_rename);
         scriptable_events.register_event("onreteam",&on_reteam);
@@ -1384,7 +1384,7 @@ struct fpsserver : igameserver
         clear_pgvars();
         
         var_gametime.readonly(true);
-        scriptable_events.dispatch(&on_mapchange,cubescript::args0(),NULL);
+        scriptable_events.dispatch(&on_mapchanged,cubescript::args0(),NULL);
         var_gametime.readonly(false);
     }
 
