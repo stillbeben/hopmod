@@ -31,7 +31,7 @@ if $playercount [
         sleep 10000 [ //start ranked game
             mastermode $MM_LOCKED
             changemap $ranked_mode $ranked_map
-            event_handler $onmapchange [
+            event_handler $onmapchanged [
                 endrankgame
                 cancel_handler
             ]

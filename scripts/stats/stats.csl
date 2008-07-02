@@ -80,7 +80,7 @@ event_handler $onendgame [
     ]
 ]
 
-event_handler $onmapchange [
+event_handler $onmapchanged [
     latestgame = (now)
     
     if (! (symbol? rankgame)) [rankgame = 0]
