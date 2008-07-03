@@ -36,7 +36,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 subdir = .
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/configure TODO depcomp \
+	$(srcdir)/Makefile.in $(top_srcdir)/configure depcomp \
 	install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -178,7 +178,7 @@ sharedstatedir = @sharedstatedir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 lib_LIBRARIES = libcubescript.a
-libcubescript_a_CPPFLAGS = -Iinclude -Iboost_1_34_0 -Wall -Wno-sign-compare -Wnon-virtual-dtor
+libcubescript_a_CPPFLAGS = -Iinclude -Iboost_1_34_0 -Wall -Wno-sign-compare -Wnon-virtual-dtor -pg
 libcubescript_a_SOURCES = src/cubescript.cpp
 @BUILD_TESTS_TRUE@TESTS_DIR = tests
 SUBDIRS = . $(TESTS_DIR)

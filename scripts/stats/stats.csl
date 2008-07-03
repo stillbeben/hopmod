@@ -2,9 +2,10 @@
 latestgame = (now)
 gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
 
+sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
+
 new sqlite3 statsdb
 statsdb open "scripts/stats/data/stats.db"
-statsdb onerror [log_error [Stats SQL Error: @arg1]]
 
 recording_stats = 0
 
@@ -66,8 +67,6 @@ event_handler $onitempickup [
 
 event_handler $onendgame [
     if $recording_stats [
-        log_status "DEBUG stats onendgame event"
-    
         update_player_records
         
         if (capturep) [
@@ -76,6 +75,11 @@ event_handler $onendgame [
                 local score (capture_teamscore $arg1)
                 statsdb eval [update captureteams set score=$score where id=$team_id] []
             ]
+        ]
+        
+        if $upload_player_stats [
+            transferstats //put the unsynced subset of stats into the transfer database.
+            system "bin/uploadstats &"
         ]
     ]
 ]
@@ -434,4 +438,43 @@ log_event = [
     if (! (symbol? match_id)) [throw runtime.script.stats.log_event.missing_match_id]
     local timenow (time (now))
     statsdb eval [insert into logevents (match_id,time,message) values ($match_id,$timenow,$message)] []
+]
+
+transferstats = [
+    new sqlite3 transdb
+    transdb open "scripts/stats/data/transtats.db"
+    transdb eval [attach database "scripts/stats/data/stats.db" as stats] []
+    local sql_unsyncd [select * from stats.matches where stats.matches.syncd=0]
+    local sql_unsyncd_ids [select id from stats.matches where stats.matches.syncd=0]
+    local sql_unsyncd_player_ids [select id from players]
+    transdb eval [insert into matches @sql_unsyncd] []
+    transdb eval [insert into logevents select * from stats.logevents where stats.logevents.match_id in (@sql_unsyncd_ids)] []
+    transdb eval [insert into players select * from stats.players where stats.players.match_id in (@sql_unsyncd_ids)] []
+    transdb eval [insert into itempickups select * from stats.itempickups where stats.itempickups.player_id in (@sql_unsyncd_player_ids)] []
+    transdb eval [insert into gunusage select * from stats.gunusage where stats.gunusage.player_id in (@sql_unsyncd_player_ids)] []
+    transdb eval [insert into ctfplayers select * from stats.ctfplayers where stats.ctfplayers.player_id in (@sql_unsyncd_player_ids)] []
+    transdb eval [insert into captureplayers select * from stats.captureplayers where stats.captureplayers.player_id in (@sql_unsyncd_player_ids)] []
+    transdb eval [insert into ctfteams select * from stats.ctfteams where stats.ctfteams.match_id in (@sql_unsyncd_ids)] []
+    transdb eval [insert into captureteams select * from stats.captureteams where stats.captureteams.match_id in (@sql_unsyncd_ids)] []
+    transdb eval [update stats.matches set syncd=1 where syncd=0] []
+    transdb close
+    delete transdb //just deallocates object, not the db file
+]
+
+delete_transtats = [
+    new sqlite3 transdb
+    transdb open "scripts/stats/data/transtats.db"
+    transdb eval [begin transaction] []
+    transdb eval [delete from matches] []
+    transdb eval [delete from logevents] []
+    transdb eval [delete from players] []
+    transdb eval [delete from itempickups] []
+    transdb eval [delete from gunusage] []
+    transdb eval [delete from ctfplayers] []
+    transdb eval [delete from captureplayers] []
+    transdb eval [delete from ctfteams] []
+    transdb eval [delete from captureteams] []
+    transdb eval [commit transaction] []
+    transdb close
+    delete transdb
 ]

@@ -13,7 +13,7 @@ HOPMOD_OBJS= \
 
 CXXOPTFLAGS= -O3 -fomit-frame-pointer
 INCLUDES= -Ishared -Iengine -Ifpsgame -Irpggame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags`
-CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) -g $(HOPMOD_CXXFLAGS) 
+CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) -g $(HOPMOD_CXXFLAGS)
 
 PLATFORM_PREFIX=native
 

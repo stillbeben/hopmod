@@ -123,7 +123,7 @@ _void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
             case SQLITE_BUSY: throw cubescript::error_key("runtime.function.sqlite3_eval.db_locked");
             case SQLITE_ERROR:
             case SQLITE_MISUSE:
-            default: 
+            default:
                 error_callback();
                 throw cubescript::error_key("runtime.function.sqlite3_eval.eval_error");
         }
