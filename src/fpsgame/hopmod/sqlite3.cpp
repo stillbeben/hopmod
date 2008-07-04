@@ -9,10 +9,11 @@ public:
     sqlite3db();
     sqlite3db(const sqlite3db &);
     cubescript::proto_object * clone()const{return new sqlite3db(*this);}
-    _void open(const std::string &);
-    _void eval(const std::string &,const std::string &);
-    _void close();
-    _void set_onerror_code(const std::string &);
+    void open(const std::string &);
+    void eval(std::list<std::string> &,cubescript::domain *);
+    void eval(const std::string &,const std::string &);
+    void close();
+    void set_onerror_code(const std::string &);
     sqlite_int64 get_last_rowid()const;
 private:
     int get_column_index(const std::string &,sqlite3_stmt *);
@@ -21,17 +22,17 @@ private:
 private:
     sqlite3 * m_db;
     std::string m_onerror;
-    cubescript::function1<_void,const std::string &> m_func_open;
-    cubescript::function2<_void,const std::string &,const std::string &> m_func_eval;
-    cubescript::function0<_void> m_func_close;
-    cubescript::function1<_void,const std::string &> m_func_onerror;
+    cubescript::function1<void,const std::string &> m_func_open;
+    cubescript::functionV<void> m_func_eval;
+    cubescript::function0<void> m_func_close;
+    cubescript::function1<void,const std::string &> m_func_onerror;
     cubescript::function0<sqlite_int64> m_func_last_rowid;
 };
 
 sqlite3db::sqlite3db()
  :m_db(NULL),
   m_func_open(boost::bind(&sqlite3db::open,this,_1)),
-  m_func_eval(boost::bind(&sqlite3db::eval,this,_1,_2)),
+  m_func_eval(boost::bind((void (sqlite3db::*)(std::list<std::string> &,cubescript::domain *))&sqlite3db::eval,this,_1,_2)),
   m_func_close(boost::bind(&sqlite3db::close,this)),
   m_func_onerror(boost::bind(&sqlite3db::set_onerror_code,this,_1)),
   m_func_last_rowid(boost::bind(&sqlite3db::get_last_rowid,this))
@@ -47,7 +48,7 @@ sqlite3db::sqlite3db(const sqlite3db & src)
  :m_db(src.m_db),
   m_onerror(src.m_onerror),
   m_func_open(boost::bind(&sqlite3db::open,this,_1)),
-  m_func_eval(boost::bind(&sqlite3db::eval,this,_1,_2)),
+  m_func_eval(boost::bind((void (sqlite3db::*)(std::list<std::string> &,cubescript::domain *))&sqlite3db::eval,this,_1,_2)),
   m_func_close(boost::bind(&sqlite3db::close,this)),
   m_func_onerror(boost::bind(&sqlite3db::set_onerror_code,this,_1)),
   m_func_last_rowid(boost::bind(&sqlite3db::get_last_rowid,this))
@@ -59,7 +60,7 @@ sqlite3db::sqlite3db(const sqlite3db & src)
     add_member("last_rowid",&m_func_last_rowid);
 }
 
-_void sqlite3db::open(const std::string & filename)
+void sqlite3db::open(const std::string & filename)
 {
     int openerr=sqlite3_open(filename.c_str(),&m_db);
     if(openerr!=SQLITE_OK) switch(openerr)
@@ -69,10 +70,17 @@ _void sqlite3db::open(const std::string & filename)
         case SQLITE_READONLY: throw cubescript::error_key("runtime.function.sqlite3_open.db_readonly");
         default: throw cubescript::error_key("runtime.function.sqlite3_open.failed");
     }
-    return _void();
 }
 
-_void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
+void sqlite3db::eval(std::list<std::string> & arglist,cubescript::domain * aDomain)
+{
+    std::string statement=cubescript::functionN::pop_arg<std::string>(arglist);
+    std::string rowcode("");
+    if(!arglist.empty()) rowcode=cubescript::functionN::pop_arg<std::string>(arglist);
+    eval(statement,rowcode);
+}
+
+void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
 {
     if(!m_db) throw cubescript::error_key("runtime.function.sqlite3_eval.db_closed");
     
@@ -130,24 +138,20 @@ _void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
     }
     
     sqlite3_finalize(sqlstmt);
-    
-    return _void();
 }
 
-_void sqlite3db::close()
+void sqlite3db::close()
 {
     if(m_db)
     {
         sqlite3_close(m_db);
         m_db=NULL;
     }
-    return _void();
 }
 
-_void sqlite3db::set_onerror_code(const std::string & code)
+void sqlite3db::set_onerror_code(const std::string & code)
 {
     m_onerror=code;
-    return _void();
 }
 
 sqlite_int64 sqlite3db::get_last_rowid()const
