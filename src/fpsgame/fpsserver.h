@@ -11,7 +11,8 @@
 #include "hopmod/textformat.hpp"
 #include "hopmod/eventhandler.hpp"
 #include "hopmod/script_pipe.hpp"
-#include "hopmod/sleep.hpp"
+#include "hopmod/schedule.hpp"
+#include "hopmod/schedfunctions.hpp"
 #include "hopmod/module_loader.hpp"
 #include "hopmod/wovar.hpp"
 #include "hopmod/playerid.hpp"
@@ -598,7 +599,8 @@ struct fpsserver : igameserver
     cubescript::constant<int>                               const_mm_private;
     
     script_pipe_service m_script_pipes;
-    sleep_service m_sleep_jobs;
+    schedule_service m_scheduler;
+    //sleep_service m_sleep_jobs;
     //cubescript::module_loader m_modules;
     std::list<FILE *> m_logfiles;
     
@@ -841,7 +843,8 @@ struct fpsserver : igameserver
         cubescript::bind((int)DISC_NUM,"DISC_NUM",&server_domain);
         
         m_script_pipes.register_function(&server_domain);
-        m_sleep_jobs.register_function(&server_domain);
+        
+        cubescript::register_schedule_functions(&m_scheduler,&server_domain);
         cubescript::register_module_loader(&server_domain);
     #ifdef USE_SQLITE3
         cubescript::register_sqlite3(&server_domain);
@@ -2553,7 +2556,7 @@ struct fpsserver : igameserver
         
         try
         {
-            m_sleep_jobs.run();
+            m_scheduler.run_service();
             m_script_pipes.run();
         }
         catch(const cubescript::script_error<cubescript::symbol_error> & e)
