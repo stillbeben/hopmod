@@ -249,9 +249,8 @@ struct fpsserver : igameserver
         int ping;
         int lastupdate;
         int lag;
-        bool ban;
-        int bantime;
         bool spy;
+        int disc_reason_code;
         
         enum var_type
         {
@@ -259,11 +258,9 @@ struct fpsserver : igameserver
             PERM_VAR,     //permanent variable
         };
         typedef std::map<std::string,std::pair<var_type,std::string> > varmap;
-        //varmap m_vars;
-        //varmap::iterator m_find_cache;
         
         clientinfo()
-         :hidden_priv(false),connected(false),disc_reason(0),ban(false)
+         :hidden_priv(false),connected(false),disc_reason_code(0)
         { 
             reset();
         }
@@ -363,8 +360,6 @@ struct fpsserver : igameserver
         int expire;
         uint ip;
     };
-    
-    int pending_bans;
     
     #define MM_MODE 0xF
     #define MM_AUTOAPPROVE 0x1000
@@ -600,8 +595,6 @@ struct fpsserver : igameserver
     
     script_pipe_service m_script_pipes;
     schedule_service m_scheduler;
-    //sleep_service m_sleep_jobs;
-    //cubescript::module_loader m_modules;
     std::list<FILE *> m_logfiles;
     
     stopwatch::milliseconds svtext_min_interval;
@@ -641,7 +634,7 @@ struct fpsserver : igameserver
     event_handler on_lostbase;
     event_handler on_wincapture;
     
-    fpsserver() : pending_bans(0), notgotitems(true), notgotbases(false), gamemode(0), gamecount(0), 
+    fpsserver() : notgotitems(true), notgotbases(false), gamemode(0), gamecount(0), 
         playercount(0), concount(0), interm(0), minremain(0), mapreload(false), lastsend(0), 
         mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), 
         mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), 
@@ -2570,32 +2563,6 @@ struct fpsserver : igameserver
         catch(const cubescript::error_key & e)
             {std::cerr<<"cubescript error: "<<e.what()<<std::endl;}
         
-        if(pending_bans)
-        {
-            loopv(clients)
-            {
-                if(clients[i]->ban)
-                {
-                    clients[i]->disc_reason=DISC_KICK;
-                    
-                    int cn=clients[i]->clientnum;
-                    
-                    ban &b = bannedips.add();
-                    b.time = totalmillis;
-                    b.expire = clients[i]->bantime!=-1 ? totalmillis+(clients[i]->bantime*60000) : 0;
-                    b.ip = getclientip(cn);
-                    allowedips.removeobj(b.ip);
-                    
-                    disconnect_client(cn, DISC_KICK);
-                    
-                    pending_bans--;
-                }
-                
-                if(!pending_bans) break;
-            }
-            pending_bans=0;
-        }
-        
         if(m_demo) readdemo();
         else if(minremain>0)
         {
@@ -2794,7 +2761,7 @@ struct fpsserver : igameserver
         }
         
         cubescript::arguments args;
-        scriptable_events.dispatch(&on_disconnect,args & n & ci->disc_reason,NULL);
+        scriptable_events.dispatch(&on_disconnect,args & n & ci->disc_reason_code,NULL);
         
         clients.removeobj(ci);
 
@@ -2949,19 +2916,29 @@ struct fpsserver : igameserver
     
     void add_pending_ban(int cn,int mins)
     {
+        //TODO remove function0
+        m_scheduler.schedule(boost::function0<void>(boost::bind(&fpsserver::kick_player_now,this,cn,mins)),0);
+    }
+    
+    void kick_player_now(int cn,int mins)
+    {
         clientinfo * ci=get_ci(cn);
         
-        if(!ci->ban)
-        {
-            pending_bans++;
-            ci->ban=true;
-            ci->bantime=mins;
-        }
+        ci->disc_reason_code=DISC_KICK;
+        
+        ban & b = bannedips.add();
+        b.time = totalmillis;
+        b.expire = mins!=-1 ? totalmillis+(mins*60000) : 0;
+        b.ip = getclientip(cn);
+        allowedips.removeobj(b.ip);
+        
+        disconnect_client(cn, DISC_KICK);
     }
     
     std::string get_disc_reason(int reason)
     {
         static const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked and banned", "tag type", "ip is banned", "server is in private mode", "server FULL (maxclients)" };
+        assert(reason>=0 && reason<sizeof(disc_reasons));
         return std::string(disc_reasons[reason]);
     }
     
