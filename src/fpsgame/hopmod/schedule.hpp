@@ -38,19 +38,23 @@ class schedule_service
 {
 public:
     typedef unsigned long milliseconds;
-    typedef boost::function0<void> job_function;
-    
-    void schedule(const job_function &,milliseconds countdown=0);
-    void schedule(const job_function &);
+
+    template<typename UnaryFunction>
+    void schedule(UnaryFunction func,milliseconds countdown=0)
+    {
+        job aJob(get_tickcount()+countdown,func);
+        m_jobs.push(aJob);
+    }
     
     void run_service();
 private:
+    typedef boost::function0<void> function_type;
     struct job
     {
         job(){}
-        job(milliseconds ltime,const job_function & fn):launch_time(ltime),function(fn){}
+        job(milliseconds ltime,const function_type & fn):launch_time(ltime),function(fn){}
         milliseconds launch_time;
-        job_function function;
+        function_type function;
         inline bool operator()(const job & x,const job & y)const{return x.launch_time > y.launch_time;}
     };
     static milliseconds get_tickcount();

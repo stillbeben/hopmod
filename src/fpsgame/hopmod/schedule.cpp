@@ -30,13 +30,7 @@
 #include "schedule.hpp"
 #include "get_ticks.cpp"
 
-inline schedule_service::milliseconds schedule_service::get_tickcount(){return (schedule_service::milliseconds)::get_ticks();}
-
-void schedule_service::schedule(const job_function & fn,milliseconds countdown)
-{
-    job aJob(get_tickcount()+countdown,fn);
-    m_jobs.push(aJob);
-}
+schedule_service::milliseconds schedule_service::get_tickcount(){return (schedule_service::milliseconds)::get_ticks();}
 
 void schedule_service::run_service()
 {

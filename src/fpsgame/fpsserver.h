@@ -2916,8 +2916,7 @@ struct fpsserver : igameserver
     
     void add_pending_ban(int cn,int mins)
     {
-        //TODO remove function0
-        m_scheduler.schedule(boost::function0<void>(boost::bind(&fpsserver::kick_player_now,this,cn,mins)),0);
+        m_scheduler.schedule(boost::bind(&fpsserver::kick_player_now,this,cn,mins),0);
     }
     
     void kick_player_now(int cn,int mins)
@@ -2935,7 +2934,7 @@ struct fpsserver : igameserver
         disconnect_client(cn, DISC_KICK);
     }
     
-    std::string get_disc_reason(int reason)
+    std::string get_disc_reason(unsigned int reason)
     {
         static const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked and banned", "tag type", "ip is banned", "server is in private mode", "server FULL (maxclients)" };
         assert(reason>=0 && reason<sizeof(disc_reasons));
