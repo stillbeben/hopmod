@@ -344,6 +344,11 @@ struct fpsserver : igameserver
         {
             return playerid(std::string(name),getclientip(clientnum));
         }
+        
+        bool is_kickable()const
+        {
+            return !(hidden_priv && privilege > PRIV_NONE);
+        }
     };
 
     struct worldstate
@@ -2058,6 +2063,14 @@ struct fpsserver : igameserver
                 if(ci->privilege && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
                 {
                     bool allow=!ci->check_flooding(ci->svkick_interval,svkick_min_interval,"kicking players");
+                    
+                    if(ci->privilege==PRIV_MASTER && !get_ci(victim)->is_kickable())
+                    {
+                        std::ostringstream block_msg;
+                        block_msg<<ConColour_Error<<"This player cannot be kicked by masters.";
+                        ci->sendprivmsg(block_msg.str().c_str());
+                        break;
+                    }
                     
                     if(allow)
                     {
