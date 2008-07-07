@@ -262,7 +262,7 @@ struct fpsserver : igameserver
         typedef std::map<std::string,std::pair<var_type,std::string> > varmap;
         
         clientinfo()
-         :hidden_priv(false),connected(false),disc_reason_code(0)
+         :hidden_priv(false),connected(false),disc_reason_code(0),connect_time(0)
         { 
             reset();
         }
@@ -894,7 +894,12 @@ struct fpsserver : igameserver
         scriptable_events.register_event("onauth",&on_auth);
     }
     
-    void *newinfo() { return new clientinfo; }
+    void *newinfo()
+    { 
+        clientinfo * newclient=new clientinfo; 
+        newclient->connect_time=totalmillis;
+        return newclient;
+    }
     void deleteinfo(void *ci) { delete (clientinfo *)ci; }
     
     inline clientinfo * get_ci(int cn)
