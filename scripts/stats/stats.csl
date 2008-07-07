@@ -1,4 +1,5 @@
 
+createdb = (! (path? "scripts/stats/data/stats.db") )
 latestgame = (now)
 gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
 
@@ -6,6 +7,12 @@ sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
 
 new sqlite3 statsdb
 statsdb open "scripts/stats/data/stats.db"
+
+if $createdb [
+    statsdb eval [begin transaction]
+    statsdb eval [@(system [cat scripts/stats/stats.db.schema])]
+    statsdb eval [commit transaction]
+]
 
 recording_stats = 0
 
