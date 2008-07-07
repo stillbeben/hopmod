@@ -595,6 +595,7 @@ struct fpsserver : igameserver
     cubescript::variable_ref<size_t>                        var_rx_bytes;
     cubescript::variable_ref<size_t>                        var_tx_packets;
     cubescript::variable_ref<size_t>                        var_rx_packets;
+    cubescript::variable_ref<bool>                          var_use_auth; bool use_auth;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -725,10 +726,13 @@ struct fpsserver : igameserver
         var_allow_mm_locked(allow_mm_locked), allow_mm_locked(true),
         var_allow_mm_private(allow_mm_private), allow_mm_private(true),
         var_autoapprove(autoapprove), autoapprove(false),
+
         var_tx_bytes(total_bsend),
         var_rx_bytes(total_brec),
         var_tx_packets(tx_packets),
         var_rx_packets(rx_packets),
+        
+        var_use_auth(use_auth), use_auth(false),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -829,6 +833,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("rx_bytes",&var_rx_bytes); var_rx_bytes.readonly(true);
         server_domain.register_symbol("tx_packets",&var_tx_packets); var_tx_packets.readonly(true);
         server_domain.register_symbol("rx_packets",&var_rx_packets); var_tx_packets.readonly(true);
+        server_domain.register_symbol("use_auth",&var_use_auth);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);
@@ -2209,8 +2214,18 @@ struct fpsserver : igameserver
 
             case SV_APPROVEMASTER:
             {
-                // compat
-                getint(p);
+                int mn = getint(p);
+                if(mastermask&MM_AUTOAPPROVE || ci->state.state==CS_SPECTATOR) break;
+                clientinfo *candidate = (clientinfo *)getinfo(mn);
+                if(!candidate || !candidate->wantsmaster || mn==sender || getclientip(mn)==getclientip(sender)) break;
+                
+                bool block=false;
+                cubescript::arguments args;
+                scriptable_events.dispatch(&on_approvemaster,args & candidate->clientnum & sender,&block);
+                if(block) break;
+                
+                setmaster(candidate, true, "", true);
+                
                 break;
             }
 
@@ -2683,7 +2698,7 @@ struct fpsserver : igameserver
     {
         update_mastermask();
         
-        if(approved && !val) return;
+        if(approved && (!val || !ci->wantsmaster)) return;
         
         const char *name = "";
         if(val)
@@ -2706,7 +2721,14 @@ struct fpsserver : igameserver
             }
             else if(!approved && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
-                sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
+                if(!use_auth)
+                {
+                    ci->wantsmaster = true;
+                    s_sprintfd(msg)("%s wants master. Type \"/approve %d\" to approve.", colorname(ci), ci->clientnum);
+                    sendservmsg(msg);
+                }
+                else sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
+                
                 return;
             }
             else 
