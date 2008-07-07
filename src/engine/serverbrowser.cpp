@@ -309,7 +309,9 @@ void addserver(char *servername)
     newserver(servername);
 }
 
-VAR(searchlan, 0, 0, 1);
+VARP(searchlan, 0, 0, 1);
+VARP(servpingrate, 0, 5000, 60000);
+VARP(maxservpings, 0, 0, 1000);
 
 void pingservers()
 {
@@ -328,9 +330,13 @@ void pingservers()
     uchar ping[MAXTRANS];
     ucharbuf p(ping, sizeof(ping));
     putint(p, totalmillis);
-    loopv(servers)
+
+    static int lastping = 0;
+    if(lastping >= servers.length()) lastping = 0;
+    loopi(maxservpings ? min(servers.length(), maxservpings) : servers.length())
     {
-        serverinfo &si = *servers[i];
+        serverinfo &si = *servers[lastping];
+        if(++lastping >= servers.length()) lastping = 0;
         if(si.address.host == ENET_HOST_ANY) continue;
         buf.data = ping;
         buf.dataLength = p.length();
@@ -434,7 +440,7 @@ void refreshservers()
 
     checkresolver();
     checkpings();
-    if(totalmillis - lastinfo >= 5000) pingservers();
+    if(totalmillis - lastinfo >= servpingrate/(maxservpings ? (servers.length() + maxservpings - 1) / maxservpings : 1)) pingservers();
     servers.sort(sicompare);
 }
 

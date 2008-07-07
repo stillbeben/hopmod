@@ -11,6 +11,8 @@
 
 #ifndef STANDALONE
 
+#include "crypto.h"
+
 struct fpsclient : igameclient
 {
     // these define classes local to fpsclient
@@ -59,6 +61,10 @@ struct fpsclient : igameclient
     assassinclient asc;
     ctfclient ctf;
 
+    int lastauth;
+    string authname;
+    gfint authkey;
+
     fpsclient()
         : nextmode(0), gamemode(0), intermission(false), lastmillis(0),
           maptime(0), minremain(0), respawnent(-1), 
@@ -68,13 +74,17 @@ struct fpsclient : igameclient
           following(-1), followdir(0), openmainmenu(true),
           player1(spawnstate(new fpsent())),
           ws(*this), ms(*this), mo(*this), sb(*this), fr(*this), et(*this), cc(*this), 
-          cpc(*this), asc(*this), ctf(*this)
+          cpc(*this), asc(*this), ctf(*this),
+          lastauth(0)
     {
+        authname[0] = '\0';
+
         CCOMMAND(mode, "i", (fpsclient *self, int *val), { self->setmode(*val); });
         CCOMMAND(kill, "",  (fpsclient *self), { self->suicide(self->player1); });
         CCOMMAND(taunt, "", (fpsclient *self), { self->taunt(); });
         CCOMMAND(follow, "s", (fpsclient *self, char *s), { self->follow(s); });
         CCOMMAND(nextfollow, "i", (fpsclient *self, int *dir), { self->nextfollow(*dir < 0 ? -1 : 1); });
+        CCOMMAND(authkey, "ss", (fpsclient *self, char *name, char *key), { self->setauthkey(name, key); });
     }
 
     iclientcom      *getcom()  { return &cc; }
@@ -125,6 +135,12 @@ struct fpsclient : igameclient
             }
         }
         stopfollowing();
+    }
+
+    void setauthkey(const char *name, const char *key)
+    {
+        s_strcpy(authname, name);
+        authkey.parse(key);
     }
 
     char *getclientmap() { return clientmap; }

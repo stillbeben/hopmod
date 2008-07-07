@@ -132,6 +132,7 @@ enum
     SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS,
     SV_SAYTEAM,
     SV_CLIENT,
+    SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS
 };
 
 static char msgsizelookup(int msg)
@@ -156,6 +157,7 @@ static char msgsizelookup(int msg)
         SV_DROPFLAG, 6, SV_SCOREFLAG, 5, SV_RETURNFLAG, 3, SV_TAKEFLAG, 2, SV_RESETFLAG, 2, SV_INITFLAGS, 6,   
         SV_SAYTEAM, 0, 
         SV_CLIENT, 0,
+        SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0,
         -1
     };
     for(char *p = msgsizesl; *p>=0; p += 2) if(*p==msg) return p[1];
@@ -164,6 +166,7 @@ static char msgsizelookup(int msg)
 
 #define SAUERBRATEN_SERVER_PORT 28785
 #define SAUERBRATEN_SERVINFO_PORT 28786
+#define SAUERBRATEN_AUTH_PORT 28787
 #define PROTOCOL_VERSION 256            // bump when protocol changes
 #define DEMO_VERSION 1                  // bump when demo format changes
 #define DEMO_MAGIC "SAUERBRATEN_DEMO"

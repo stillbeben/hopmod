@@ -35,7 +35,7 @@ struct clientcom : iclientcom
         CCOMMAND(recorddemo, "i", (clientcom *self, int *val), self->recorddemo(*val));
         CCOMMAND(stopdemo, "", (clientcom *self), self->stopdemo());
         CCOMMAND(cleardemos, "i", (clientcom *self, int *val), self->cleardemos(*val));
-
+        CCOMMAND(auth, "", (clientcom *self), self->tryauth()); 
         CCOMMAND(getmode, "", (clientcom *self), intret(self->cl.gamemode));
         CCOMMAND(getname, "", (clientcom *self), result(self->player1->name));
         CCOMMAND(getteam, "", (clientcom *self), result(self->player1->team));
@@ -208,6 +208,13 @@ struct clientcom : iclientcom
         if(!remote) return;
         int i = parseplayer(who);
         if(i>=0) addmsg(SV_APPROVEMASTER, "ri", i);
+    }
+
+    void tryauth()
+    {
+        if(!remote || !cl.authname[0]) return;
+        cl.lastauth = cl.lastmillis;
+        addmsg(SV_AUTHTRY, "rs", cl.authname);
     }
 
     void togglespectator(int val, const char *who)
@@ -1132,6 +1139,25 @@ struct clientcom : iclientcom
                     int newsize = 0;
                     while(1<<newsize < getworldsize()) newsize++;
                     conoutf(size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", cl.colorname(d), newsize);
+                }
+                break;
+            }
+
+            case SV_AUTHCHAL:
+            {
+                uint id = (uint)getint(p);
+                getstring(text, p);
+                if(cl.lastauth && cl.lastmillis - cl.lastauth < 60*1000 && cl.authname[0])
+                {
+                    ecjacobian answer;
+                    answer.parse(text);
+                    answer.mul(cl.authkey);
+                    answer.normalize();
+                    vector<char> buf;
+                    answer.x.printdigits(buf);
+                    buf.add('\0');
+                    //conoutf(CON_DEBUG, "answering %u, challenge %s with %s", id, text, buf.getbuf());
+                    addmsg(SV_AUTHANS, "ris", id, buf.getbuf());
                 }
                 break;
             }

@@ -2,7 +2,12 @@
 // is largely backwards compatible with the quake console language.
 
 #include "pch.h"
+#ifdef STANDALONE
+#include "cube.h"
+#include "iengine.h"
+#else
 #include "engine.h"
+#endif
 
 char *exchangestr(char *o, const char *n) { delete[] o; return newstring(n); }
 
@@ -400,8 +405,6 @@ VARN(numargs, _numargs, 0, 0, 25);
 
 char *commandret = NULL;
 
-extern const char *addreleaseaction(const char *s);
-
 char *executeret(const char *p)               // all evaluation happens here, recursively
 {
     const int MAXWORDS = 25;                    // limit, remove
@@ -460,7 +463,9 @@ char *executeret(const char *p)               // all evaluation happens here, re
                         case 's':                                 v[n] = w[++wn];     n++; break;
                         case 'i': nstor[n].i = parseint(w[++wn]); v[n] = &nstor[n].i; n++; break;
                         case 'f': nstor[n].f = atof(w[++wn]);     v[n] = &nstor[n].f; n++; break;
+#ifndef STANDALONE
                         case 'D': nstor[n].i = addreleaseaction(id->name) ? 1 : 0; v[n] = &nstor[n].i; n++; break;
+#endif
                         case 'V': v[n++] = w+1; nstor[n].i = numargs-1; v[n] = &nstor[n].i; n++; break;
                         case 'C': if(!cargs) cargs = conc(w+1, numargs-1, true); v[n++] = cargs; break;
                         default: fatal("builtin declared with illegal type");
@@ -587,6 +592,7 @@ void exec(const char *cfgfile)
     if(!execfile(cfgfile)) conoutf(CON_ERROR, "could not read \"%s\"", cfgfile);
 }
 
+#ifndef STANDALONE
 void writecfg()
 {
     FILE *f = openfile(path(cl->savedconfig(), true), "w");
@@ -618,6 +624,7 @@ void writecfg()
 }
 
 COMMAND(writecfg, "");
+#endif
 
 // below the commands that implement a small imperative language. thanks to the semantics of
 // () and [] expressions, any control construct can be defined trivially.
@@ -790,6 +797,7 @@ char *strreplace(const char *s, const char *oldval, const char *newval)
 
 void strreplacea(char *s, char *o, char *n) { commandret = strreplace(s, o, n); } COMMANDN(strreplace, strreplacea, "sss");
 
+#ifndef STANDALONE
 struct sleepcmd
 {
     int millis;
@@ -840,4 +848,5 @@ void clearsleep_(int *clearoverrides)
 }
 
 COMMANDN(clearsleep, clearsleep_, "i");
+#endif
 
