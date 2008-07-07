@@ -642,6 +642,7 @@ struct fpsserver : igameserver
     event_handler on_capturebase;
     event_handler on_lostbase;
     event_handler on_wincapture;
+    event_handler on_auth;
     
     #include "auth.h"
     authserv auth;
@@ -890,6 +891,7 @@ struct fpsserver : igameserver
         scriptable_events.register_event("oncapturebase",&on_capturebase);
         scriptable_events.register_event("onlostbase",&on_lostbase);
         scriptable_events.register_event("onwincapture",&on_wincapture);
+        scriptable_events.register_event("onauth",&on_auth);
     }
     
     void *newinfo() { return new clientinfo; }
