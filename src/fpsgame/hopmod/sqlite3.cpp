@@ -85,13 +85,15 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
     if(!m_db) throw cubescript::error_key("runtime.function.sqlite3_eval.db_closed");
     
     sqlite3_stmt * sqlstmt;
-    const char * unused=NULL;
+    const char * remaining=NULL;
     
-    if(::sqlite3_prepare_v2(m_db,statement.c_str(),statement.length(),&sqlstmt,&unused)!=SQLITE_OK)
+    if(::sqlite3_prepare_v2(m_db,statement.c_str(),statement.length(),&sqlstmt,&remaining)!=SQLITE_OK)
     {
         error_callback();
         throw cubescript::error_key("runtime.function.sqlite3_eval.sql_error");
     }
+    
+    if(!sqlstmt) return;
     
     int paramcount=sqlite3_bind_parameter_count(sqlstmt);
     for(int i=1; i<=paramcount; i++)
@@ -119,7 +121,8 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
     bool done=false;
     while(!done)
     {
-        switch(sqlite3_step(sqlstmt))
+        int i=sqlite3_step(sqlstmt);
+        switch(i)
         {
             case SQLITE_ROW:
                 exec_block(rowcode,&eval_context);
@@ -138,6 +141,8 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
     }
     
     sqlite3_finalize(sqlstmt);
+    
+    if(*remaining) eval(remaining,rowcode);
 }
 
 void sqlite3db::close()
