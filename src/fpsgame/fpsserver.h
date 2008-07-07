@@ -2696,6 +2696,7 @@ struct fpsserver : igameserver
             loopv(clients) if(ci!=clients[i] && clients[i]->privilege && !clients[i]->hidden_priv)
             {
                 if(masterpass[0] && !strcmp(masterpass, pass)) clients[i]->privilege = PRIV_NONE;
+                else if(approved && clients[i]->privilege<=PRIV_MASTER) continue;
                 else return;
             }
             if(masterpass[0] && !strcmp(masterpass, pass))
@@ -2708,7 +2709,14 @@ struct fpsserver : igameserver
                 sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
                 return;
             }
-            else ci->privilege = PRIV_MASTER;
+            else 
+            {
+                if(approved)
+                {
+                    loopv(clients) if(ci!=clients[i] && clients[i]->privilege<=PRIV_MASTER) clients[i]->privilege = PRIV_NONE;
+                }
+                ci->privilege = PRIV_MASTER;
+            }
             name = privname(ci->privilege);
         }
         else
