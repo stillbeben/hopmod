@@ -542,6 +542,9 @@ struct fpsserver : igameserver
     cubescript::function1<int,int>                          func_player_ping;
     cubescript::function1<int,int>                          func_player_lag;
     cubescript::function1<bool,int>                         func_player_has_flag;
+    cubescript::function1<float,int>                        func_player_pos_x;
+    cubescript::function1<float,int>                        func_player_pos_y;
+    cubescript::function1<float,int>                        func_player_pos_z;
     cubescript::function1<std::string,int>                  func_get_disc_reason;
     cubescript::function2<void,int,const std::string &>     func_setpriv;
     cubescript::function0<void_>                            func_clearbans;
@@ -678,6 +681,9 @@ struct fpsserver : igameserver
         func_player_ping(boost::bind(&fpsserver::get_player_ping,this,_1)),
         func_player_lag(boost::bind(&fpsserver::get_player_lag,this,_1)),
         func_player_has_flag(boost::bind(&fpsserver::player_has_flag,this,_1)),
+        func_player_pos_x(boost::bind(&fpsserver::get_player_position,this,_1,0)),
+        func_player_pos_y(boost::bind(&fpsserver::get_player_position,this,_1,1)),
+        func_player_pos_z(boost::bind(&fpsserver::get_player_position,this,_1,2)),
         func_get_disc_reason(boost::bind(&fpsserver::get_disc_reason,this,_1)),
         func_setpriv(boost::bind((void (fpsserver::*)(int,const std::string &))&fpsserver::setpriv,this,_1,_2)),
         func_clearbans(boost::bind(&fpsserver::clearbans,this)),
@@ -778,6 +784,9 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_ping",&func_player_ping);
         server_domain.register_symbol("player_lag",&func_player_lag);
         server_domain.register_symbol("player_has_flag",&func_player_has_flag);
+        server_domain.register_symbol("player_pos_x",&func_player_pos_x);
+        server_domain.register_symbol("player_pos_y",&func_player_pos_y);
+        server_domain.register_symbol("player_pos_z",&func_player_pos_z);
         server_domain.register_symbol("disc_reason",&func_get_disc_reason);
         server_domain.register_symbol("setpriv",&func_setpriv);
         server_domain.register_symbol("clearbans",&func_clearbans);
@@ -894,7 +903,7 @@ struct fpsserver : igameserver
     }
     void deleteinfo(void *ci) { delete (clientinfo *)ci; }
     
-    inline clientinfo * get_ci(int cn)
+    inline clientinfo * get_ci(int cn)const
     {
         clientinfo * ci=(clientinfo *)getinfo(cn);
         if(!ci) throw cubescript::error_key("runtime.function.get_clientinfo.invalid_cn");
@@ -3472,6 +3481,11 @@ struct fpsserver : igameserver
         setpriv(spinfo,PRIV_ADMIN);
         
         playercount--;
+    }
+    
+    float get_player_position(int cn,int vi)const
+    {
+        return get_ci(cn)->state.o.v[vi];
     }
 };
 
