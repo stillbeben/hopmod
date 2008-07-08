@@ -98,7 +98,7 @@ struct authserv
         ci->authreq = 0;
         
         cubescript::arguments args;
-        sv.scriptable_events.dispatch(&sv.on_auth,args & ci->clientnum & false,NULL);
+        sv.scriptable_events.dispatch(&sv.on_auth,args & ci->clientnum & false & std::string(ci->authname),NULL);
     }
 
     void authsucceeded(uint id)
@@ -110,7 +110,7 @@ struct authserv
         sv.setmaster(ci, true, "", ci->authname);
         
         cubescript::arguments args;
-        sv.scriptable_events.dispatch(&sv.on_auth,args & ci->clientnum & true,NULL);
+        sv.scriptable_events.dispatch(&sv.on_auth,args & ci->clientnum & true & std::string(ci->authname),NULL);
     }
 
     void authchallenged(uint id, const char *val)
