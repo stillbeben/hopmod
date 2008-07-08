@@ -551,7 +551,7 @@ struct fpsserver : igameserver
     cubescript::function1<void_,int>                        func_unspec;
     cubescript::function0<std::vector<int> >                func_players;
     cubescript::function0<std::vector<std::string> >        func_teams;
-    cubescript::function2<void_,int,bool>                   func_setmaster;
+    cubescript::function2<void,int,bool>                    func_setmaster;
     cubescript::function2<void_,std::string,std::string>    func_changemap;
     cubescript::function2<void_,bool,std::string>           func_recorddemo;
     cubescript::function0<void_>                            func_stopdemo;
@@ -2737,7 +2737,7 @@ struct fpsserver : igameserver
         cubescript::arguments args;
         scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val,NULL);
     }
-
+    
     void localconnect(int n)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
@@ -3112,10 +3112,28 @@ struct fpsserver : igameserver
         return privname;
     }
     
-    void_ console_setmaster(int cn,bool value)
+    void console_setmaster(int cn,bool set)
     {
-        setmaster(get_ci(cn),value,"","console");
-        return void_();
+        clientinfo * ci=get_ci(cn);
+        if(set)
+        {
+            if(currentmaster==-1)
+            {
+                ci->privilege=PRIV_MASTER;
+                currentmaster=ci->clientnum;
+                masterupdate = true;
+                
+                std::ostringstream infomsg;
+                infomsg<<ConColour_Info<<ci->name<<" was given master by the server console.";
+                sendservmsg(infomsg.str().c_str());
+            }
+            else setpriv(ci,PRIV_MASTER);
+        }
+        else
+        {
+            if(currentmaster==cn) setmaster(ci,false);
+            else setpriv(ci,PRIV_NONE);
+        }
     }
     
     int get_player_frags(int cn){return get_ci(cn)->state.frags;}
