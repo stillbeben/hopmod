@@ -129,7 +129,7 @@ event_handler $onspectator [
 ]
 
 event_handler $onkick [
-    paramaters target master
+    parameters target master
     if $recording_stats [
         log_event (format "%1 was kicked by %2" (player_name $target) (player_name $master))
     ]

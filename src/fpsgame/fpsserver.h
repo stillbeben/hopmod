@@ -238,6 +238,7 @@ struct fpsserver : igameserver
         vector<uchar> position, messages;
         vector<clientinfo *> targets;
         uint authreq;
+        string authname;
 
         stopwatch svtext_interval;
         stopwatch svsetmaster_interval;
@@ -551,7 +552,6 @@ struct fpsserver : igameserver
     cubescript::function0<std::vector<int> >                func_players;
     cubescript::function0<std::vector<std::string> >        func_teams;
     cubescript::function2<void_,int,bool>                   func_setmaster;
-    cubescript::function1<void_,int>                        func_approve;
     cubescript::function2<void_,std::string,std::string>    func_changemap;
     cubescript::function2<void_,bool,std::string>           func_recorddemo;
     cubescript::function0<void_>                            func_stopdemo;
@@ -595,7 +595,6 @@ struct fpsserver : igameserver
     cubescript::variable_ref<size_t>                        var_rx_bytes;
     cubescript::variable_ref<size_t>                        var_tx_packets;
     cubescript::variable_ref<size_t>                        var_rx_packets;
-    cubescript::variable_ref<bool>                          var_use_auth; bool use_auth;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -626,7 +625,6 @@ struct fpsserver : igameserver
     event_handler on_chmm;
     event_handler on_newmap;
     event_handler on_setmaster;
-    event_handler on_approvemaster;
     event_handler on_spectator;
     event_handler on_death;
     event_handler on_timeupdate;
@@ -690,7 +688,6 @@ struct fpsserver : igameserver
         func_players(boost::bind(&fpsserver::players,this)),
         func_teams(boost::bind(&fpsserver::get_team_names,this)),
         func_setmaster(boost::bind(&fpsserver::console_setmaster,this,_1,_2)),
-        func_approve(boost::bind(&fpsserver::approvemaster,this,_1)),
         func_changemap(boost::bind(&fpsserver::changemap_,this,_1,_2)),
         func_recorddemo(boost::bind(&fpsserver::recorddemo,this,_1,_2)),
         func_stopdemo(boost::bind(&fpsserver::stopdemo,this)),
@@ -732,8 +729,6 @@ struct fpsserver : igameserver
         var_rx_bytes(total_brec),
         var_tx_packets(tx_packets),
         var_rx_packets(rx_packets),
-        
-        var_use_auth(use_auth), use_auth(false),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -793,7 +788,6 @@ struct fpsserver : igameserver
         server_domain.register_symbol("players",&func_players);
         server_domain.register_symbol("teams",&func_teams);
         server_domain.register_symbol("setmaster",&func_setmaster);
-        server_domain.register_symbol("approve",&func_approve);
         server_domain.register_symbol("changemap",&func_changemap);
         server_domain.register_symbol("recorddemo",&func_recorddemo);
         server_domain.register_symbol("stopdemo",&func_stopdemo);
@@ -834,7 +828,6 @@ struct fpsserver : igameserver
         server_domain.register_symbol("rx_bytes",&var_rx_bytes); var_rx_bytes.readonly(true);
         server_domain.register_symbol("tx_packets",&var_tx_packets); var_tx_packets.readonly(true);
         server_domain.register_symbol("rx_packets",&var_rx_packets); var_tx_packets.readonly(true);
-        server_domain.register_symbol("use_auth",&var_use_auth);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);
@@ -875,7 +868,6 @@ struct fpsserver : igameserver
         scriptable_events.register_event("onchmm",&on_chmm);
         scriptable_events.register_event("onnewmap",&on_newmap);
         scriptable_events.register_event("onsetmaster",&on_setmaster);
-        scriptable_events.register_event("onapprovemaster",&on_approvemaster);
         scriptable_events.register_event("onspectator",&on_spectator);
         scriptable_events.register_event("ondeath",&on_death);
         scriptable_events.register_event("ontimeupdate",&on_timeupdate);
@@ -2221,21 +2213,10 @@ struct fpsserver : igameserver
 
             case SV_APPROVEMASTER:
             {
-                int mn = getint(p);
-                if(mastermask&MM_AUTOAPPROVE || ci->state.state==CS_SPECTATOR) break;
-                clientinfo *candidate = (clientinfo *)getinfo(mn);
-                if(!candidate || !candidate->wantsmaster || mn==sender || getclientip(mn)==getclientip(sender)) break;
-                
-                bool block=false;
-                cubescript::arguments args;
-                scriptable_events.dispatch(&on_approvemaster,args & candidate->clientnum & sender,&block);
-                if(block) break;
-                
-                setmaster(candidate, true, "", true);
-                
+                getint(p);
                 break;
             }
-
+            
             case SV_AUTHTRY:
             {
                 getstring(text, p);
@@ -2701,11 +2682,11 @@ struct fpsserver : igameserver
         }
     }
 
-    void setmaster(clientinfo *ci, bool val, const char *pass = "", bool approved = false)
+    void setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL)
     {
         update_mastermask();
         
-        if(approved && (!val || !ci->wantsmaster)) return;
+        if(authname && !val) return;
         
         const char *name = "";
         if(val)
@@ -2718,29 +2699,18 @@ struct fpsserver : igameserver
             loopv(clients) if(ci!=clients[i] && clients[i]->privilege && !clients[i]->hidden_priv)
             {
                 if(masterpass[0] && !strcmp(masterpass, pass)) clients[i]->privilege = PRIV_NONE;
-                else if(approved && clients[i]->privilege<=PRIV_MASTER) continue;
+                else if(authname && clients[i]->privilege<=PRIV_MASTER) continue;
                 else return;
             }
-            if(masterpass[0] && !strcmp(masterpass, pass))
+            if(masterpass[0] && !strcmp(masterpass, pass)) ci->privilege = PRIV_ADMIN;
+            else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
-                ci->privilege = PRIV_ADMIN;
-                if(currentmaster>=0) ((clientinfo *)getinfo(currentmaster))->privilege=PRIV_NONE;
-            }
-            else if(!approved && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
-            {
-                if(!use_auth)
-                {
-                    ci->wantsmaster = true;
-                    s_sprintfd(msg)("%s wants master. Type \"/approve %d\" to approve.", colorname(ci), ci->clientnum);
-                    sendservmsg(msg);
-                }
-                else sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
-                
+                sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
                 return;
             }
             else 
             {
-                if(approved)
+                if(authname)
                 {
                     loopv(clients) if(ci!=clients[i] && clients[i]->privilege<=PRIV_MASTER) clients[i]->privilege = PRIV_NONE;
                 }
@@ -2754,16 +2724,15 @@ struct fpsserver : igameserver
             name = privname(ci->privilege);
             ci->privilege = 0;
         }
-
-        if(!ci->hidden_priv)
-        {
-            mastermode = MM_OPEN;
-            allowedips.setsize(0);
-            s_sprintfd(msg)("%s %s %s", colorname(ci), val ? (approved ? "approved for" : "claimed") : "relinquished", name);
-            sendservmsg(msg);
-            currentmaster = val ? ci->clientnum : -1;
-            masterupdate = true;
-        }
+        
+        mastermode = MM_OPEN;
+        allowedips.setsize(0);
+        string msg;
+        if(val && authname) s_sprintf(msg)("%s claimed %s as '\fs\f5%s\fr'", colorname(ci), name, authname);
+        else s_sprintf(msg)("%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
+        sendservmsg(msg);
+        currentmaster = val ? ci->clientnum : -1;
+        masterupdate = true;
         
         cubescript::arguments args;
         scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val,NULL);
@@ -3145,16 +3114,7 @@ struct fpsserver : igameserver
     
     void_ console_setmaster(int cn,bool value)
     {
-        if(value) get_ci(cn)->wantsmaster=true;
-        setmaster(get_ci(cn),value,"",value ? true : false);
-        return void_();
-    }
-    
-    void_ approvemaster(int cn)
-    {
-        setmaster(get_ci(cn), true, "", true);
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_approvemaster,args & cn & -1,NULL);
+        setmaster(get_ci(cn),value,"","console");
         return void_();
     }
     

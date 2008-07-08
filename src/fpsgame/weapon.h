@@ -265,9 +265,12 @@ struct weaponstate
         p.id = cl.lastmillis;
     }
    
+
     void removeprojectiles(fpsent *owner) 
     { 
-        loopv(projs) if(projs[i].owner==owner) projs.remove(i--);
+        // can't use loopv here due to strange GCC optimizer bug
+        int len = projs.length();
+        loopi(len) if(projs[i].owner==owner) { projs.remove(i--); len--; }
     }
 
     IVARP(blood, 0, 1, 1);
