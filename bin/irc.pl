@@ -303,7 +303,7 @@ sub filterlog {
 	{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" }# Highlight game chat green
 	##### MAP CHANGE #####
 	if ($line =~ /new game: (.*), (.*), (.*)/) 
-	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for \x037$2\x03 with \x037$1\x03 " }
+	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for\x037 $2\x03 with\x037 $1\x03 " }
 	##### MASTER #####
 	if ($line =~ /(\S*\([0-9]+\)) claimed master/) 
 	{ $master = $1 ; return "\x034MASTER\x03     \x0312$1\x03 took master." }
@@ -327,10 +327,10 @@ sub filterlog {
 	{ return "\x033SUGGEST\x03    \x0312$1\x03 suggests \x037$2\x03 on \x037$3\x03" }
 	##### SERVER RESTART #####
 	if ($line =~ /server started (.+)/) 
-	{ return "\x034SERVER\x03    Server Restarted at \x037$1\x03" }
+	{ return "\x034SERVER\x03    Server Restarted at\x037 $1\x03" }
 	##### MASTERMODE #####
 	if ($line =~ /mastermode is now ([0-9])/) 
-	{ return "\x034MASTERMODE\x03  Mastermode is now \x0312$1\x03" }
+	{ return "\x034MASTERMODE\x03  Mastermode is now\x0312 $1\x03" }
 	##### WHO #####
 	if ($line =~ /COMMAND WHO/g) {
 		my $temp = "";
@@ -361,7 +361,7 @@ sub filterlog {
 	}
 	##### GETVAR #####
         if ($line =~ /IRC .*-={GETVAR (.*)}=- is (.*)/)
-        { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is \x037$2\03" }
+        { return "\x03\x036IRC\x03         \x034-={GETVAR $1}=-\x03 is\x037 $2\03" }
 	##### MASTER #####
         if ($line =~ /COMMAND CURRENTMASTER (.*)/)
         { return "\x03\x036IRC\x03         \x034-={MASTER}=-\x03 is \x037$1\03" }
@@ -373,7 +373,7 @@ sub filterlog {
 	{ return "\x034SPECTATOR\x03  \x0312$1\x03 $2 spectators" }
 	##### SERVER UPDATE #####
 	if ($line =~  /(Performing server update:.*)/) 
-	{ return "\x034SERVER\x03 \x0312$1\x03" }
+	{ return "\x034SERVER\x03\x0312 $1\x03" }
 	##### SERVER SHUTDOWN #####
 	if ($line =~  /server shutdown (.*)/) 
 	{ return "\x034SERVER\x03 \x0312Server Shutdown at $1\x03" }
@@ -382,7 +382,7 @@ sub filterlog {
 	{ return "\x034SERVER\x03 \x0312IRC Bot Shutdown Initiated\x03" }
 	##### NEW COOP MAP #####
 	if ($line =~  /(\S*\([0-9]+\)) set new map of size ([0-9]*)/) 
-	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size \x037$2\x03" }
+	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size\x037 $2\x03" }
 	##### APPROVE MASTER #####
 	if ($line =~  /(\S*\([0-9]+\)) approved for master by (.+\([0-9]+\))/) 
 	{ return "\x032APPROVE\x03    \x0312$1\x03 was approved for master by \x0312$2\x03" }	
@@ -391,7 +391,7 @@ sub filterlog {
         { return "Apparently no one is connected" }
 	##### STATUS #####
         if ($line =~ /COMMAND STATUS map=(\S*) mode=(.*) time=(\S*) master=(\S*) mm=(\S*) playercount=(\S*)/)
-        {return "\x03\x036IRC\x03         \x034-={STATUS}=-\x03 Map \x037$1\x03 Mode \x037$2\x03 Timeleft \x037$3\x03 Master \x037$4\x03 Mastermode \x037$5\x03 Playercount \x037$6\x03" }
+        {return "\x03\x036IRC\x03         \x034-={STATUS}=-\x03 Map\x037 $1\x03 Mode\x037 $2\x03 Timeleft\x037 $3\x03 Master\x037 $4\x03 Mastermode\x037 $5\x03 Playercount\x037 $6\x03" }
 	##### AUTHENTICATION #####
 	if ($line =~  /(\S*\([0-9]+\)) passed authentication as '(.*)'./) 
 	{ return "\x034AUTH\x03    \x0312$1\x03 passed authentication as \x037$2\x03" }
