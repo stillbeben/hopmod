@@ -175,3 +175,5 @@ erase1st = [
     ]
     result $newlst
 ]
+
+readfile = [system [cat @(shell_quote $arg1)]]
