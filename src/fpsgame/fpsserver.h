@@ -2768,6 +2768,8 @@ struct fpsserver : igameserver
         ci->clientnum = n;
         ci->connect_time=totalmillis;
         ci->connect_id=++concount;
+        ci->state.o.x=-1; ci->state.o.y=-1; ci->state.o.z=-1;
+        
         clients.add(ci);
         loopv(bannedips) if(bannedips[i].ip==ip) return DISC_IPBAN;
         if(mastermode>=MM_PRIVATE) 
