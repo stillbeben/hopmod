@@ -2624,8 +2624,14 @@ struct fpsserver : igameserver
             }
             if(smode) smode->update();
         }
-
+        
         while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000) bannedips.remove(0);
+        
+        //FIXME potential slow down area
+        if(bannedips.length())
+            loopv(bannedips)
+                if(bannedips[i].expire!=-1 && totalmillis > bannedips[i].expire)
+                    bannedips.remove(i);
         
         if(masterupdate) 
         { 
