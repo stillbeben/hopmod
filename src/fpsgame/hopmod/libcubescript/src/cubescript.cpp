@@ -1696,6 +1696,22 @@ std::string system_exec(const std::string & filename)
     return result.str();
 }
 
+void breakpoint()
+{
+#ifndef NDEBUG
+    asm("int $3");
+#else
+    throw error_key("runtime.function.breakpoint.ndebug_build");
+#endif
+}
+
+std::string getsymboladdr(std::list<std::string> & arglist,domain * aDomain)
+{
+    std::ostringstream out;
+    out<<(void *)aDomain->lookup_symbol(functionN::pop_arg<std::string>(arglist));
+    return out.str();
+}
+
 void register_system_functions(domain * aDomain)
 {
     static functionV<void> func_exec(&exec);
@@ -1734,6 +1750,12 @@ void register_system_functions(domain * aDomain)
     static constant<const char *> const_os_platform(os_platform);
     
     aDomain->register_symbol("OS_PLATFORM",&const_os_platform);
+    
+    static function0<void> func_breakpoint(&breakpoint);
+    aDomain->register_symbol("breakpoint",&func_breakpoint);
+    
+    static functionV<std::string> func_symboladdr(&getsymboladdr);
+    aDomain->register_symbol("symbol&",&func_symboladdr);
 }
 
 } //namespace runtime

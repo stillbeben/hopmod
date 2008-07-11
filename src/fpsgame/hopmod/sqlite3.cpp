@@ -11,7 +11,7 @@ public:
     cubescript::proto_object * clone()const{return new sqlite3db(*this);}
     void open(const std::string &);
     void eval(std::list<std::string> &,cubescript::domain *);
-    void eval(const std::string &,const std::string &);
+    void eval(const std::string &,const std::string &,cubescript::domain *);
     void close();
     void set_onerror_code(const std::string &);
     sqlite_int64 get_last_rowid()const;
@@ -45,7 +45,8 @@ sqlite3db::sqlite3db()
 }
 
 sqlite3db::sqlite3db(const sqlite3db & src)
- :m_db(src.m_db),
+ :proto_object(src),
+  m_db(src.m_db),
   m_onerror(src.m_onerror),
   m_func_open(boost::bind(&sqlite3db::open,this,_1)),
   m_func_eval(boost::bind((void (sqlite3db::*)(std::list<std::string> &,cubescript::domain *))&sqlite3db::eval,this,_1,_2)),
@@ -77,10 +78,10 @@ void sqlite3db::eval(std::list<std::string> & arglist,cubescript::domain * aDoma
     std::string statement=cubescript::functionN::pop_arg<std::string>(arglist);
     std::string rowcode("");
     if(!arglist.empty()) rowcode=cubescript::functionN::pop_arg<std::string>(arglist);
-    eval(statement,rowcode);
+    eval(statement,rowcode,aDomain);
 }
 
-void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
+void sqlite3db::eval(const std::string & statement,const std::string & rowcode,cubescript::domain * aDomain)
 {
     if(!m_db) throw cubescript::error_key("runtime.function.sqlite3_eval.db_closed");
     
@@ -103,15 +104,13 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
         {
             char prefix=name[0];
             if(prefix=='?')
-                sqlite3_bind_int(sqlstmt,i,cubescript::parse_type<int>(get_parent_domain()->require_symbol(&name[1])->value()));
+                sqlite3_bind_int(sqlstmt,i,cubescript::parse_type<int>(aDomain->require_symbol(&name[1])->value()));
             else
-            {
-                sqlite3_bind_text(sqlstmt,i,get_parent_domain()->require_symbol(&name[1])->value().c_str(),-1,SQLITE_TRANSIENT);
-            }
+                sqlite3_bind_text(sqlstmt,i,aDomain->require_symbol(&name[1])->value().c_str(),-1,SQLITE_TRANSIENT);
         }
     }
     
-    cubescript::domain eval_context(get_parent_domain(),cubescript::domain::TEMPORARY_DOMAIN);
+    cubescript::domain eval_context(aDomain,cubescript::domain::TEMPORARY_DOMAIN);
     cubescript::function1<std::string,const std::string &> func_column(boost::bind(&sqlite3db::get_column_text,this,_1,sqlstmt));
     cubescript::variable<bool> var_cancel;
     eval_context.register_symbol("column",&func_column);
@@ -142,7 +141,7 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode)
     
     sqlite3_finalize(sqlstmt);
     
-    if(*remaining) eval(remaining,rowcode);
+    if(*remaining) eval(remaining,rowcode,aDomain);
 }
 
 void sqlite3db::close()
