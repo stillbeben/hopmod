@@ -43,7 +43,10 @@ extern size_t total_bsend;
 extern size_t total_brec;
 extern size_t tx_packets;
 extern size_t rx_packets;
+extern int nonlocalclients;
 void cleanupserver();
+void addspy(int);
+void removespy(int);
 
 static void shutdown_from_signal(int);
 
@@ -2802,6 +2805,7 @@ struct fpsserver : igameserver
             sendf(-1, 1, "ri2", SV_CDIS, n);
             playercount--;
         }
+        else if(ci->spy) removespy(n);
         
         if(playercount==0)
         {
@@ -3489,6 +3493,8 @@ struct fpsserver : igameserver
         setpriv(spinfo,PRIV_ADMIN);
         
         playercount--;
+        
+        addspy(cn);
     }
     
     float get_player_position(int cn,int vi)const

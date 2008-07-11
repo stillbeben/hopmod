@@ -360,7 +360,7 @@ client &addclient()
     return *c;
 }
 
-int localclients = 0, nonlocalclients = 0;
+int localclients = 0, nonlocalclients = 0, spies = 0;
 
 bool hasnonlocalclients() { return nonlocalclients!=0; }
 bool haslocalclients() { return localclients!=0; }
@@ -547,7 +547,9 @@ void serverslice(uint timeout)   // main server update, called from main loop in
         case ST_LOCAL: localclients++; break;
         case ST_TCPIP: nonlocalclients++; break;
     }
-
+    
+    nonlocalclients -= spies;
+    
     if(!serverhost) 
     {
         sv->serverupdate(lastmillis, totalmillis);
@@ -718,6 +720,9 @@ bool serveroption(char *opt)
         default: return false;
     }
 }
+
+void addspy(int n){spies++;}
+void removespy(int n){spies--;}
 
 #ifdef STANDALONE
 int g_argc;
