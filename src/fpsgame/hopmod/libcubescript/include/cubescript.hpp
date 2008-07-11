@@ -1133,7 +1133,7 @@ public:
     std::string apply(std::list<std::string> & args,domain *)
     {
         if(m_ro) throw error_key("runtime.variable.read_only");
-        std::string newstr=parse_type<std::string>(args.front()); args.pop_front();
+        std::string newstr=functionN::pop_arg<std::string>(args);
         if(newstr.length() > m_maxlen-1) throw error_key("runtime.string.too_long");
         strcpy(m_str,newstr.c_str());
         return "";
