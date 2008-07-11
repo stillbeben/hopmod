@@ -1,0 +1,19 @@
+#!/bin/sh
+
+case "$1" in
+  'start')
+    ulimit -c unlimited
+    
+    nohup bin/sauer_server -mlocalhost 1>/dev/null 2>logs/error.log &
+    
+    echo "Started Sauerbraten game server."
+    echo "  Version: CTF Edition (June 2008)"
+    echo "  Modification: Hopmod 3.0"
+    sleep 1 #wait for server startup
+    echo printsvinfo [`tty`] > serverexec
+    sleep 1 #let svr info be printed before returning to prompt
+  ;;
+  'stop')
+    echo "shutdown" > serverexec
+    killall sauer_server
+esac
