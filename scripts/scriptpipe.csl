@@ -1,0 +1,17 @@
+
+scriptpipe_filename = serverexec
+
+open_scriptpipe = [
+    if (path? $scriptpipe_filename) [
+        log_error "Script pipe file 'serverexec' already exists! Attempting to delete this file..."
+        system [rm -f @scriptpipe_filename]
+    ]
+    script_pipe "bin/mkfifochan" [@scriptpipe_filename 777] []
+]
+
+check_scriptpipe = [
+    if (! (path? $scriptpipe_filename)) [
+        log_error "Script pipe file 'serverexec' has gone missing! Re-opening..."
+        open_scriptpipe
+    ]
+]
