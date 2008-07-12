@@ -1,7 +1,8 @@
+-- WARNING: Any file changes however minor are likely to be detected as a schema change.
 
 CREATE TABLE matches (
     id                  INTEGER PRIMARY KEY,
-    gameid              TEXT UNIQUE, 
+    gameid              TEXT UNIQUE,
     datetime            TEXT,
     gamemode            TEXT,
     mapname             TEXT,

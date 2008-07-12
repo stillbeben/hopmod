@@ -179,3 +179,5 @@ erase1st = [
 readfile = [system [cat @(shell_quote $arg1)]]
 
 yesno = [if $arg1 [result yes] [result no]]
+
+exec "scripts/sqlite3ext.csl"
