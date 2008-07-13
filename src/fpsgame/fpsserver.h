@@ -586,6 +586,7 @@ struct fpsserver : igameserver
     cubescript::function1<void,int>                         func_spy;
     cubescript::function0<const char *>                     func_worstteam;
     cubescript::function1<int,int>                          func_teamplayerrank;
+    cubescript::function1<int,const char *>                 func_teamsize;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -727,6 +728,7 @@ struct fpsserver : igameserver
         func_spy(boost::bind(&fpsserver::enter_spymode,this,_1)),
         func_worstteam(boost::bind(&fpsserver::chooseworstteam,this,(const char *)NULL,(clientinfo *)NULL)),
         func_teamplayerrank(boost::bind(&fpsserver::get_teamplayerrank,this,_1)),
+        func_teamsize(boost::bind(&fpsserver::get_teamsize,this,_1)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -835,6 +837,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("spy",&func_spy);
         server_domain.register_symbol("worstteam",&func_worstteam);
         server_domain.register_symbol("teamplayerrank",&func_teamplayerrank);
+        server_domain.register_symbol("teamsize",&func_teamsize);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3536,6 +3539,14 @@ struct fpsserver : igameserver
                 !strcmp(clients[i]->team,ci->team) && 
                 get_player_rating(clients[i]->clientnum) > rating ) beaten++;
         return beaten+1;
+    }
+    
+    int get_teamsize(const char * name)const
+    {
+        int count=0;
+        loopv(clients)
+            if(clients[i]->state.state!=CS_SPECTATOR && !strcmp(clients[i]->team,name)) count++;
+        return count;
     }
 };
 
