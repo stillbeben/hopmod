@@ -43,8 +43,7 @@ print_total_stats = [
         max_frags = (column max_frags)
         local hits (column total_hits)
         local misses (column total_misses)
-        if (= (+ $hits $misses) 0) [hits = 0; misses = 1]
-        accuracy = (concatword (round (fmul (fdiv $hits (+ $hits $misses)) 100)) %)
+        accuracy = (concatword (round (fmul (fdiv $hits (max (+ $hits $misses) 1)) 100)) %)
         gamecount = (column gamecount)
         kpd = (fdiv $frags $deaths)
     ]
