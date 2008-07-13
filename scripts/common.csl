@@ -1,6 +1,9 @@
 // Common library code
 
-//beep = [system [/home/graham/scripts/beep.sh]]
+newstatsp = [&& $playercount (! (strcmp $gamemode "coopedit"))]
+mongunsp = [! (match insta $gamemode)]
+ctfp = [match ctf $gamemode]
+capturep = [match capture $gamemode]
 
 mins = [* $arg1 60000]
 secs = [* $arg1 1000]

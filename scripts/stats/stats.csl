@@ -20,11 +20,6 @@ if $createdb [
 
 recording_stats = 0
 
-newstatsp = [&& $playercount (! (strcmp $gamemode "coopedit"))]
-mongunsp = [! (match insta $gamemode)]
-ctfp = [match ctf $gamemode]
-capturep = [match capture $gamemode]
-
 event_handler $onconnect [
     parameters cn
     if $recording_stats [
