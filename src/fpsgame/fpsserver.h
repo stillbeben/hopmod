@@ -587,6 +587,7 @@ struct fpsserver : igameserver
     cubescript::function0<const char *>                     func_worstteam;
     cubescript::function1<int,int>                          func_teamplayerrank;
     cubescript::function1<int,const char *>                 func_teamsize;
+    cubescript::function1<int,const char *>                 func_teamscore;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -729,6 +730,7 @@ struct fpsserver : igameserver
         func_worstteam(boost::bind(&fpsserver::chooseworstteam,this,(const char *)NULL,(clientinfo *)NULL)),
         func_teamplayerrank(boost::bind(&fpsserver::get_teamplayerrank,this,_1)),
         func_teamsize(boost::bind(&fpsserver::get_teamsize,this,_1)),
+        func_teamscore(boost::bind(&fpsserver::get_teamscore,this,_1)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -838,6 +840,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("worstteam",&func_worstteam);
         server_domain.register_symbol("teamplayerrank",&func_teamplayerrank);
         server_domain.register_symbol("teamsize",&func_teamsize);
+        server_domain.register_symbol("teamscore",&func_teamscore);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3547,6 +3550,19 @@ struct fpsserver : igameserver
         loopv(clients)
             if(clients[i]->state.state!=CS_SPECTATOR && !strcmp(clients[i]->team,name)) count++;
         return count;
+    }
+    
+    int get_teamscore(const char * name)
+    {
+        if(!m_teammode) throw cubescript::error_key("runtime.function.teamscore.singles_mode");
+        if(m_capture) return capturemode.findscore(name).total;
+        else if(m_ctf) return ctfmode.totalscore(ctfteamflag(name));
+        else
+        {
+            int score=0;
+            loopv(clients) if(clients[i]->state.state!=CS_SPECTATOR && !strcmp(clients[i]->team,name)) score+=clients[i]->state.frags;
+            return score;
+        }
     }
 };
 

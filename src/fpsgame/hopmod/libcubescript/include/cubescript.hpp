@@ -1407,18 +1407,15 @@ void consume_terminator(std::istream &);
     aSymbolPtr->apply(args & 1234 & std::string("some text"),aDomainPtr);
     @endcode
 */
-class arguments
+class arguments:public std::list<std::string>
 {
 public:
     template<typename T>
     arguments & operator&(const T & val)
     {
-        m_args.push_back(print_type<T>(val));
+        push_back(print_type<T>(val));
         return *this;
     }
-    operator std::list<std::string>&(){return m_args;}
-private:
-    std::list<std::string> m_args;
 };
 
 } //namespace cubescript
