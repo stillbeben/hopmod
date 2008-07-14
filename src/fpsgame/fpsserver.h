@@ -35,7 +35,7 @@
 #include <errno.h>
 #include <signal.h>
 
-//defined in engine/server.cpp
+//stuff defined in engine/server.cpp
 extern int g_argc;
 extern char * const * g_argv;
 extern igameserver * sv;
@@ -44,6 +44,7 @@ extern size_t total_brec;
 extern size_t tx_packets;
 extern size_t rx_packets;
 extern int nonlocalclients;
+extern string masterbase;
 void cleanupserver();
 void addspy(int);
 void removespy(int);
@@ -880,6 +881,8 @@ struct fpsserver : igameserver
         cubescript::bind((int)DISC_PRIVATE,"DISC_PRIVATE",&server_domain);
         cubescript::bind((int)DISC_MAXCLIENTS,"DISC_MAXCLIENTS",&server_domain);
         cubescript::bind((int)DISC_NUM,"DISC_NUM",&server_domain);
+        
+        cubescript::bind((const char *)masterbase,"MASTERSERVER",&server_domain);
         
         m_script_pipes.register_function(&server_domain);
         
