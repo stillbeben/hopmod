@@ -608,6 +608,7 @@ struct fpsserver : igameserver
     cubescript::variable_ref<size_t>                        var_rx_bytes;
     cubescript::variable_ref<size_t>                        var_tx_packets;
     cubescript::variable_ref<size_t>                        var_rx_packets;
+    cubescript::variable_ref<bool>                          var_reassignteams; bool reassignteams;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -747,11 +748,11 @@ struct fpsserver : igameserver
         var_allow_mm_locked(allow_mm_locked), allow_mm_locked(true),
         var_allow_mm_private(allow_mm_private), allow_mm_private(true),
         var_autoapprove(autoapprove), autoapprove(false),
-
         var_tx_bytes(total_bsend),
         var_rx_bytes(total_brec),
         var_tx_packets(tx_packets),
         var_rx_packets(rx_packets),
+        var_reassignteams(reassignteams), reassignteams(true),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -861,6 +862,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("rx_bytes",&var_rx_bytes); var_rx_bytes.readonly(true);
         server_domain.register_symbol("tx_packets",&var_tx_packets); var_tx_packets.readonly(true);
         server_domain.register_symbol("rx_packets",&var_rx_packets); var_tx_packets.readonly(true);
+        server_domain.register_symbol("reassignteams",&var_reassignteams);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);
@@ -1401,7 +1403,7 @@ struct fpsserver : igameserver
             clientinfo *ci = clients[i];
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
         }
-        if(m_teammode) autoteam();
+        if(m_teammode && reassignteams) autoteam();
 
         if(m_arena) smode = &arenamode;
         else if(m_capture) smode = &capturemode;
