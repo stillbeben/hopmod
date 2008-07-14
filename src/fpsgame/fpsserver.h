@@ -589,6 +589,7 @@ struct fpsserver : igameserver
     cubescript::function1<int,int>                          func_teamplayerrank;
     cubescript::function1<int,const char *>                 func_teamsize;
     cubescript::function1<int,const char *>                 func_teamscore;
+    cubescript::function2<void,int,const char *>            func_setteam;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -733,6 +734,7 @@ struct fpsserver : igameserver
         func_teamplayerrank(boost::bind(&fpsserver::get_teamplayerrank,this,_1)),
         func_teamsize(boost::bind(&fpsserver::get_teamsize,this,_1)),
         func_teamscore(boost::bind(&fpsserver::get_teamscore,this,_1)),
+        func_setteam(boost::bind(&fpsserver::setteam,this,_1,_2)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -843,6 +845,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("teamplayerrank",&func_teamplayerrank);
         server_domain.register_symbol("teamsize",&func_teamsize);
         server_domain.register_symbol("teamscore",&func_teamscore);
+        server_domain.register_symbol("setteam",&func_setteam);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -2150,6 +2153,9 @@ struct fpsserver : igameserver
                 clientinfo *wi = (clientinfo *)getinfo(who);
                 if(!wi) break;
                 
+                setteam(who,text);
+                
+            #if 0
                 cubescript::arguments args;
                 scriptable_events.dispatch(&on_reteam,args & who & std::string(wi->team) & std::string(text),NULL);                
                 
@@ -2163,6 +2169,7 @@ struct fpsserver : igameserver
                 QUEUE_INT(SV_SETTEAM);
                 QUEUE_INT(who);
                 QUEUE_STR(wi->team);
+            #endif
                 break;
             } 
 
@@ -3568,6 +3575,27 @@ struct fpsserver : igameserver
             loopv(clients) if(clients[i]->state.state!=CS_SPECTATOR && !strcmp(clients[i]->team,name)) score+=clients[i]->state.frags;
             return score;
         }
+    }
+    
+    void setteam(int cn,const char * teamname)
+    {
+        clientinfo * ci=get_ci(cn);
+        
+        cubescript::arguments args;
+        scriptable_events.dispatch(&on_reteam,args & cn & std::string(ci->team) & std::string(teamname),NULL);                
+        
+        if(!smode || smode->canchangeteam(ci, ci->team, teamname))
+        {
+            if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, teamname)) 
+                smode->changeteam(ci, ci->team, teamname);
+            s_strncpy(ci->team, teamname, MAXTEAMLEN+1);
+        }
+        
+        sendf(-1, 1, "riis", SV_SETTEAM, cn, ci->team);
+        
+        //QUEUE_INT(SV_SETTEAM);
+        //QUEUE_INT(who);
+        //QUEUE_STR(wi->team);
     }
 };
 

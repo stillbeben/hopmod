@@ -185,3 +185,12 @@ yesno = [if $arg1 [result yes] [result no]]
 
 exec "scripts/sqlite3ext.csl"
 exec "scripts/commands.csl"
+
+teamplayers = [
+    parameters teamname
+    local playerlist ""
+    foreach (players) [
+        if (strcmp (player_team $arg1) $teamname) [playerlist = (concat $playerlist $arg1)]
+    ]
+    result $playerlist
+]
