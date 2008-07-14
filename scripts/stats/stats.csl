@@ -13,7 +13,7 @@ if $createdb [
     statsdb eval [@(system [cat scripts/stats/stats.db.schema])]
     statsdb eval [commit transaction]
 ] [
-    if (statsdb compare_schema "scripts/stats/stats.db.schema") [
+    if (! (statsdb compare_schema "scripts/stats/stats.db.schema")) [
         log_error "WARNING Detected schema change in the stats database!"
     ]
 ]
