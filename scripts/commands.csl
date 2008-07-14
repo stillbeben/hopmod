@@ -1,0 +1,16 @@
+
+playercmd_specall = [
+    if (strcmp (player_priv $cn) "admin") [
+        foreach (players) [spec $arg1]
+    ] [privmsg $cn (err "Permission Denied")]
+]
+
+playercmd_unspecall = [
+    if (strcmp (player_priv $cn) "admin") [
+        foreach (players) [unspec $arg1]
+    ] [privmsg $cn (err "Permission Denied")]
+]
+
+playercmd_unspecme = [
+    if (strcmp (player_priv $cn) "admin") [unspec $cn] [privmsg $cn (err "Permission Denied")]
+]
