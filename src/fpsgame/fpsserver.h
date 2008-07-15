@@ -367,11 +367,12 @@ struct fpsserver : igameserver
 
     struct ban
     {
-        ban():time(0),expire(0),ip(0){}
-        ban(int t,int e,uint i):time(t),expire(e),ip(i){}
+        ban():time(0),expire(0),ip(0),std(false){}
+        ban(int t,int e,uint i,bool s):time(t),expire(e),ip(i),std(s){}
         int time;
         int expire;
         uint ip;
+        bool std;
     };
     
     #define MM_MODE 0xF
@@ -2661,13 +2662,13 @@ struct fpsserver : igameserver
             if(smode) smode->update();
         }
         
-        while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000) bannedips.remove(0);
+        //while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000) bannedips.remove(0);
         
-        //FIXME potential slow down area
         if(bannedips.length())
             loopv(bannedips)
-                if(bannedips[i].expire>0 && totalmillis > bannedips[i].expire)
-                    bannedips.remove(i);
+                if( (bannedips[i].expire>0 && totalmillis > bannedips[i].expire) || 
+                    (bannedips[i].std && bannedips[0].time-totalmillis>4*60*60000) )
+                    bannedips.remove(i--);
         
         if(masterupdate) 
         { 
@@ -2853,7 +2854,8 @@ struct fpsserver : igameserver
 
         if(clients.empty())
         {
-            bannedips.setsize(0); // bans clear when server empties
+            //bannedips.setsize(0); // bans clear when server empties
+            clear_stdbans();
             var_mapname.readonly(true);
             var_gamemode.readonly(true);
             sync_game_settings();
@@ -3012,8 +3014,16 @@ struct fpsserver : igameserver
         ci->disc_reason_code=DISC_KICK;
         
         ban & b = bannedips.add();
+        
+        //use standard kick behaviour: 4 hour ban limit and ban lifted when server empties.
+        if(mins==-1)
+        {
+            mins=4*60;
+            b.std=true;
+        }
+        
         b.time = totalmillis;
-        b.expire = mins!=-1 ? totalmillis+(mins*60000) : 0;
+        b.expire = totalmillis+(mins*60000);
         b.ip = getclientip(cn);
         allowedips.removeobj(b.ip);
         
@@ -3596,6 +3606,11 @@ struct fpsserver : igameserver
         //QUEUE_INT(SV_SETTEAM);
         //QUEUE_INT(who);
         //QUEUE_STR(wi->team);
+    }
+    
+    void clear_stdbans()
+    {
+        loopv(bannedips) if(bannedips[i].std) bannedips.remove(i--);
     }
 };
 
