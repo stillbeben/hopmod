@@ -1,0 +1,28 @@
+
+otherteam = [
+    parameters teamname
+    if (strcmp $teamname "good") [result evil] [result good]
+]
+
+teams_unbalanced? = [&& (!= (teamscore good) (teamscore evil)) [> (abs (- (teamsize good) (teamsize evil))) 1]]
+
+teams_autobalance = [
+    local wteam (worstteam)
+    local bteam (otherteam $wteam)
+    local movecount (div (abs (- (teamsize good) (teamsize evil))) 2)
+    local highestrank (- (teamsize $bteam) $movecount)
+    
+    foreach (teamplayers $bteam) [
+        if (> (teamconnrank $arg1) $highestrank) [
+            msg (info (format "Moving %1 to the other team for balance." (player_name $arg1)))
+            setteam $arg1 $wteam
+        ]
+    ]
+]
+
+teams_checkbalance = [if (&& ctfp teams_unbalanced?) teams_autobalance]
+
+event_handler $onscoreflag [
+    parameters cn
+    teams_checkbalance
+]
