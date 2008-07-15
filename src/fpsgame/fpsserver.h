@@ -2666,7 +2666,7 @@ struct fpsserver : igameserver
         //FIXME potential slow down area
         if(bannedips.length())
             loopv(bannedips)
-                if(bannedips[i].expire!=-1 && totalmillis > bannedips[i].expire)
+                if(bannedips[i].expire>0 && totalmillis > bannedips[i].expire)
                     bannedips.remove(i);
         
         if(masterupdate) 
