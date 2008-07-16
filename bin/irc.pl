@@ -170,15 +170,15 @@ sub process_command {
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEMASTER}=-\x03 $nick took master from $1"); &toserverpipe("setmaster $1 0"); 
 		&toirccommandlog("$nick TAKEMASTER $1"); return }
 		##### MASTER #####
-		if ( $command =~ /$config->{irc_botcommandname}.* master/i )
+		if ( $command =~ /$config->{irc_botcommandname}.* master$/i )
 		{ &toserverpipe("masterwho") ;
 		&toirccommandlog("$nick MASTERWHO $1"); return }
 		##### GIVEINVMASTER #####
-		if ( $command =~ /$config->{irc_botcommandname}.* givemaster.*\s([0-9]+)/i )
+		if ( $command =~ /$config->{irc_botcommandname}.* giveinvmaster.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={GIVEINVMASTER}=-\x03 $nick gave invisible master to $1"); &toserverpipe("setpriv $1 master");
 		&toirccommandlog("$nick GIVEINVMASTER $1"); return }
 		##### TAKEINVMASTER #####
-		if ( $command =~ /$config->{irc_botcommandname}.* takemaster.*\s([0-9]+)/i )
+		if ( $command =~ /$config->{irc_botcommandname}.* takeinvmaster.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={TAKEINVMASTER}=-\x03 $nick took invisible master from $1"); &toserverpipe("setpriv $1 none"); 
 		&toirccommandlog("$nick TAKEINVMASTER $1"); return }
 		##### MASTERMODE #####
