@@ -14,3 +14,15 @@ playercmd_unspecall = [
 playercmd_unspecme = [
     if (strcmp (player_priv $cn) "admin") [unspec $cn] [privmsg $cn (err "Permission Denied")]
 ]
+
+playercmd_names = [
+    parameters target
+    if (strcmp (player_priv $cn) "none") [throw runtime.playercmd.names.permission_denied]
+    if (! $recording_stats) [throw runtime.playercmd.names.no_data]
+    local ipaddr (player_ip $target)
+    local namelist ""
+    statsdb eval [select distinct name from players where ipaddr=$ipaddr] [
+        namelist = (concat $namelist (column name))
+    ]
+    privmsg $cn (info $namelist)
+]
