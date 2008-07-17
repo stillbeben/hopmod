@@ -556,7 +556,7 @@ struct fpsserver : igameserver
     cubescript::function1<std::string,int>                  func_get_disc_reason;
     cubescript::function2<void,int,const std::string &>     func_setpriv;
     cubescript::function0<void_>                            func_clearbans;
-    cubescript::functionV<void_>                            func_kick;
+    cubescript::functionV<void>                             func_kick;
     cubescript::function1<void_,int>                        func_set_interm;
     cubescript::function1<void_,int>                        func_spec;
     cubescript::function1<void_,int>                        func_unspec;
@@ -2131,13 +2131,7 @@ struct fpsserver : igameserver
                         break;
                     }
                     
-                    if(allow)
-                    {
-                        bool blocked=false;
-                        cubescript::arguments args;
-                        scriptable_events.dispatch(&on_kick,args & victim & ci->clientnum,&blocked);
-                        if(!blocked) add_pending_ban(victim,-1);
-                    }
+                    if(allow) kickban(victim,sender,-1);
                 }
                 break;
             }
@@ -2999,13 +2993,20 @@ struct fpsserver : igameserver
         return get_ci(cn)->team;
     }
     
-    void_ kickban(std::list<std::string> & arglist,cubescript::domain *)
+    void kickban(std::list<std::string> & arglist,cubescript::domain *)
     {
         int cn=cubescript::functionN::pop_arg<int>(arglist);
         int mins=-1;
         if(arglist.size()) mins=cubescript::functionN::pop_arg<int>(arglist);
-        add_pending_ban(cn,mins);
-        return void_();
+        kickban(cn,-1,mins);
+    }
+    
+    void kickban(int victim,int actor,int mins)
+    {
+        bool blocked=false;
+        cubescript::arguments args;
+        scriptable_events.dispatch(&on_kick,args & victim & actor & mins,&blocked);
+        if(!blocked) add_pending_ban(victim,mins);
     }
     
     void add_pending_ban(int cn,int mins)
