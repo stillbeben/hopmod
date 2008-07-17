@@ -558,8 +558,8 @@ struct fpsserver : igameserver
     cubescript::function0<void_>                            func_clearbans;
     cubescript::functionV<void>                             func_kick;
     cubescript::function1<void_,int>                        func_set_interm;
-    cubescript::function1<void_,int>                        func_spec;
-    cubescript::function1<void_,int>                        func_unspec;
+    cubescript::function1<void,int>                         func_spec;
+    cubescript::function1<void,int>                         func_unspec;
     cubescript::function0<std::vector<int> >                func_players;
     cubescript::function0<std::vector<std::string> >        func_teams;
     cubescript::function2<void,int,bool>                    func_setmaster;
@@ -3109,10 +3109,18 @@ struct fpsserver : igameserver
         minremain=gamelimit/60000;
     }
     
-    void_ set_spectator(int cn,bool val)
+    void set_spectator(int cn,bool val)
     {
         clientinfo *spinfo = (clientinfo *)getinfo(cn);
-        if(!spinfo) return void_();
+        if(!spinfo) return;
+        
+        if(spinfo->spy) return;
+        
+        bool block=false;
+        cubescript::arguments args;
+        scriptable_events.dispatch(&on_spectator,args & cn & val,&block);
+        
+        if(block) return;
         
         sendf(-1, 1, "ri3", SV_SPECTATOR, cn, val);
         
@@ -3130,10 +3138,6 @@ struct fpsserver : igameserver
             spinfo->state.lasttimeplayed = lastmillis;
         }
         
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_spectator,args & cn & val,NULL);
-        
-        return void_();
     }
     
     std::string get_player_status(int cn)const
