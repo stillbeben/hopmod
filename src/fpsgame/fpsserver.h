@@ -591,6 +591,8 @@ struct fpsserver : igameserver
     cubescript::function1<int,const char *>                 func_teamsize;
     cubescript::function1<int,const char *>                 func_teamscore;
     cubescript::function2<void,int,const char *>            func_setteam;
+    cubescript::function0< std::list<std::string> >         func_banlist_ips;
+    cubescript::function0< std::list<int> >                 func_banlist_timeleft;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -736,6 +738,8 @@ struct fpsserver : igameserver
         func_teamsize(boost::bind(&fpsserver::get_teamsize,this,_1)),
         func_teamscore(boost::bind(&fpsserver::get_teamscore,this,_1)),
         func_setteam(boost::bind(&fpsserver::setteam,this,_1,_2)),
+        func_banlist_ips(boost::bind(&fpsserver::get_banlist_ips,this)),
+        func_banlist_timeleft(boost::bind(&fpsserver::get_banlist_timeleft,this)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -847,6 +851,8 @@ struct fpsserver : igameserver
         server_domain.register_symbol("teamsize",&func_teamsize);
         server_domain.register_symbol("teamscore",&func_teamscore);
         server_domain.register_symbol("setteam",&func_setteam);
+        server_domain.register_symbol("banlist_ips",&func_banlist_ips);
+        server_domain.register_symbol("banlist_timeleft",&func_banlist_timeleft);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -2972,7 +2978,7 @@ struct fpsserver : igameserver
         return get_ci(cn)->name;
     }
     
-    std::string ip_ntoa(uint ip)
+    std::string ip_ntoa(uint ip)const
     {
         std::ostringstream ipstr;
         ipstr<<((ip>>0) & 0xff)<<"."
@@ -3611,6 +3617,21 @@ struct fpsserver : igameserver
     void clear_stdbans()
     {
         loopv(bannedips) if(bannedips[i].std) bannedips.remove(i--);
+    }
+    
+    std::list<std::string> get_banlist_ips()const
+    {
+        std::list<std::string> result;
+        loopv(bannedips) result.push_back(ip_ntoa(bannedips[i].ip));
+        return result;
+    }
+    
+    std::list<int> get_banlist_timeleft()const
+    {
+        std::list<int> result;
+        loopv(bannedips) if(bannedips[i].std) result.push_back(-1);
+        else result.push_back((bannedips[i].expire-totalmillis)/60000);
+        return result;
     }
 };
 
