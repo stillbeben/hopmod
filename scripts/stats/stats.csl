@@ -484,3 +484,15 @@ delete_transtats = [
     transdb close
     delete transdb
 ]
+
+showaliases = [
+    parameters target
+    local exclude (player_name $target)
+    if (! $recording_stats) [throw runtime.function.showaliases.no_data]
+    local ipaddr (player_ip $target)
+    local namelist ""
+    statsdb eval [select distinct name from players where ipaddr=$ipaddr and name<>$exclude] [
+        namelist = (concatword $namelist [@(column name), ])
+    ]
+    result $namelist
+]

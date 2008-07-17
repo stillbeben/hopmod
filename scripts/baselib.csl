@@ -205,3 +205,11 @@ teamconnrank = [
     ]
     result $rank
 ]
+
+privplayers = [
+    local thelist ""
+    foreach (players) [
+        if (! (strcmp (player_priv $arg1) none)) [thelist = (concat $thelist $arg1)]
+    ]
+    result $thelist
+]
