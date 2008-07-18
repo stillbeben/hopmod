@@ -369,9 +369,9 @@ sub filterlog {
         if ($line =~ /COMMAND CURRENTMASTER (.*)/)
         { return "\x03\x036IRC\x03         \x034-={MASTER}=-\x03 is \x037$1\03" }
 	##### SHOWALAIS #####
-	if ($line =~ /COMMAND SHOWALIAS (.*)/) 
-	{ &showalias("$1") ; return}
-	##### SPECTATOR #####
+	if ($line =~ /COMMAND SHOWALIAS N=(.*)A=(.*)/) 
+	{ @split = split (/ /, $2); &splittoirc("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03") ; return}
+	##### SPECTATOR ###
 	if ($line =~ /(\S*\([0-9]+\)) (.*) spectators/) 
 	{ return "\x034SPECTATOR\x03  \x0312$1\x03 $2 spectators" }
 	##### SERVER UPDATE #####
@@ -427,32 +427,6 @@ sub splittoirc {
 sub sauerping {
 	my $sauerping = `netcat -u -v -z localhost 28785-28786 2>/tmp/.sauerping ; cat /tmp/.sauerping`;
 	&sendtoirc ("$sauerping");
-}
-
-sub showalias {
-	my $IP = shift;
-        my @array1;
-        my @array2;
-        my @ITEM ;
-        my %hash;
-        my $hash;
-	my $alias;
-	my $counter = 0;
-	chomp ($IP);
-	if ( ! $IP ) { &sendtoirc ("Connection Number Not Found") ; return }
-        open (FILE, '+<', $config->{irc_serverlogfile} ) or die $!;
-        my @FILE = <FILE>;
-        close (FILE);
-        foreach (@FILE) {
-                if ( $_ =~ /([\S]*)\Q(\E([0-9]+)\Q)\E.([0-9]+.[0-9]+.[0-9]+.[0-9]+). connected/i ) {
-                        if ( "$IP" eq "$3" ) { push (@array1, $1) }
-                }
-        }
-        foreach (@array1) { $hash{$_}++ };
-        foreach (sort keys %hash) { push @array2, $_ };
-	foreach (@array2) { $alias = $alias . " $_" }
-	@split = @array2;
-	&splittoirc ("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03");
 }
 
 sub update {

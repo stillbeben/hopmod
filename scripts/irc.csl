@@ -58,9 +58,9 @@ getvar = [
 ]
 
 showalias = [
-	output = (player_ip $arg1)
-	line = (format "COMMAND SHOWALIAS %1" $output  )
-	log $line
+        line = (format "COMMAND SHOWALIAS N=%1A=%2" (player_name $arg1) (showaliases $arg1) )
+	if (! (strcmp (showaliases $arg1) "")) [ log $line ]
+	if (strcmp (showaliases $arg1) "") [ log "COMMAND SHOWALIAS N=NULLA=NULL" ]
 ]
 
 restart_ircbot = [
