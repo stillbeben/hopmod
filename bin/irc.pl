@@ -5,7 +5,7 @@ use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Switch;
 use Config::Auto;
-use vars qw($topriv $master $config $version $zippy @zippy $hopvar @irc @split);
+use vars qw($topriv $master $config $version $zippy @zippy $hopvar $rev @irc @split);
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 
 
@@ -13,7 +13,7 @@ $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 eval { require REST::Google::Translate } ;
 
 
-$version = "1.14"; #<----Do NOT change this or I will kill you
+$version = "1.15"; #<----Do NOT change this or I will kill you
 
 #Config File Overrides
 if ( defined $config->{irc_serverlogfile} ) {  }
@@ -114,12 +114,12 @@ sub process_command {
 	my $channel = $config->{irc_channel};
 	my $nick = ( split /!/, $who )[0];
     	my $poco_object = $sender->get_heap();
-	if ( $command =~ /$config->{irc_botcommandname}/i  )                            {
+	if ( $command =~ /^$config->{irc_botcommandname}/i  )                            {
 		if ( ! $poco_object->is_channel_operator( $channel, $nick )) { &sendtoirc("Sorry you must be an operator to issues commands"); return }
 		##### COMMAND PROCESSING #####
 		
 		##### SAY #####
-		if ( $command =~ /$config->{irc_botcommandname}.* say (.*)/i )
+		if ( $command =~ /$config->{irc_botcommandname} say (.*)/i )
                 { &sendtoirc("\x03\x036IRC\x03         \x034-={SAY}=-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console [$nick] [$1]");
 		&toirccommandlog("Console($nick): $1"); print "Console($nick): $1"; return }
 		##### TRSAY #####
@@ -202,7 +202,10 @@ sub process_command {
 		&toirccommandlog("$nick RESTART_IRCBOT"); return }
 		##### VERSION #####
 		if ( $command =~ /$config->{irc_botcommandname}.*version/i )
-                { &sendtoirc("\x03\x036IRC\x03         \x034-={VERSION}=-\x03 HopBot V$version by -=PunDit=- #hopmod"); return}
+                { 
+		my @info = `svn info`;
+		foreach (@info) { if ( $_ =~ /Revision: (.*)/ ) { $rev = $1 }}
+		&sendtoirc("\x03\x036IRC\x03         \x034-={VERSION}=-\x03 HopBot\x034V $version\x03 HopMod Rev:\x034 $rev\x03"); return}
 		##### SAUERPING
 		if ( $command =~ /$config->{irc_botcommandname}.*sauerping/i )
 		{ &sauerping ; return }
