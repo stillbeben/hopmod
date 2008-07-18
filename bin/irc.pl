@@ -264,7 +264,7 @@ sub process_command {
 sub filterlog {
 	my $line = shift;
 	##### CONNECT #####
-	if ($line =~ /(\S*\([0-9]+\))(\(.+\))(\(.*\)) connected/)
+	if ($line =~ /(\S*\([0-9]+\))(\(.+\)) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 \x037$3\x03" }
 	##### DISCONNECT #####
 	if ($line =~ /(\S*\([0-9]+\)) disconnected, (.+)/)
@@ -355,8 +355,9 @@ sub filterlog {
 	if ($line =~  /server shutdown (.*)/) 
 	{ return "\x034SERVER\x03 \x0312Server Shutdown at $1\x03" }
 	##### IRC BOT SHUTDOWN #####
-	if ($line =~  /Terminating irc bot/) 
+	if ($line =~  /Terminating the IRC bot/) 
 	{ return "\x034SERVER\x03 \x0312IRC Bot Shutdown Initiated\x03" }
+	
 	##### NEW COOP MAP #####
 	if ($line =~  /(\S*\([0-9]+\)) set new map of size ([0-9]*)/) 
 	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size\x037 $2\x03" }
