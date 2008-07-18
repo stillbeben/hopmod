@@ -264,7 +264,7 @@ sub process_command {
 sub filterlog {
 	my $line = shift;
 	##### CONNECT #####
-	if ($line =~ /(\S*\([0-9]+\))(\(.+\))(.*) connected/)
+	if ($line =~ /(\S*\([0-9]+\))(\(.+\))\((.*)\) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 \x037$3\x03" }
 	##### DISCONNECT #####
 	if ($line =~ /(\S*\([0-9]+\)) disconnected, (.+)/)
