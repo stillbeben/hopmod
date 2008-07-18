@@ -496,3 +496,12 @@ showaliases = [
     ]
     result $namelist
 ]
+
+showaliasesbyip = [
+    parameters ip
+    local namelist ""
+    statsdb eval [select distinct name from players where ipaddr=$ip] [
+        namelist = (concatword $namelist [@(column name), ])
+    ]
+    result $namelist
+]
