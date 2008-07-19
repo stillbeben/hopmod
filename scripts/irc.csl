@@ -73,6 +73,19 @@ status = [
 	if ( != $currentmaster -1 ) [
 		$mastername = (player_name $currentmaster)
 	]
-	game_status = ( format "COMMAND STATUS map=%1 mode=%2 time=%3 master=%4 mm=%5 playercount=%6" $currentmap $gamemode $timeleft $mastername $mastermode $playercount)
+	game_status = ( format "COMMAND STATUS map=%1 mode=%2 time=%3 master=%4 mm=%5 playercount=%6 avgping=%7" $currentmap $gamemode $timeleft $mastername $mastermode $playercount (avgpings))
 	log $game_status
+]
+
+avgpings = [
+    local pingtotal 1 
+    foreach (players) [
+	parameters cn
+        pingtotal = (+ $pingtotal (player_ping $cn))
+    ]
+	if ( != $playercount 0 ) [
+		result (div $pingtotal $playercount)
+	] [
+		result NULL
+	]
 ]

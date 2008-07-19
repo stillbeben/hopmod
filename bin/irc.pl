@@ -368,8 +368,8 @@ sub filterlog {
 	if ($line =~  /Apparently no one is connected/)
         { return "Apparently no one is connected" }
 	##### STATUS #####
-        if ($line =~ /COMMAND STATUS map=(\S*) mode=(.*) time=(\S*) master=(\S*) mm=(\S*) playercount=(\S*)/)
-        {return "\x03\x036IRC\x03         \x034-={STATUS}=-\x03 Map\x037 $1\x03 Mode\x037 $2\x03 Timeleft\x037 $3\x03 Master\x037 $4\x03 Mastermode\x037 $5\x03 Playercount\x037 $6\x03" }
+        if ($line =~ /COMMAND STATUS map=(\S*) mode=(.*) time=(\S*) master=(\S*) mm=(\S*) playercount=(\S*) avgping=(\S*)/)
+        {return "\x03\x036IRC\x03         \x034-={STATUS}=-\x03 Map\x037 $1\x03 Mode\x037 $2\x03 Timeleft\x037 $3\x03 Master\x037 $4\x03 Mastermode\x037 $5\x03 Playercount\x037 $6\x03 Avgping\x037 $7\x03" }
 	##### AUTHENTICATION #####
 	if ($line =~  /(\S*\([0-9]+\)) passed authentication as '(.*)'./) 
 	{ return "\x034AUTH\x03    \x0312$1\x03 passed authentication as \x037$2\x03" }
