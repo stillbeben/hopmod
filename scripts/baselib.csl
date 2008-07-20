@@ -131,7 +131,7 @@ gameinfo = [
 
 console = [
     parameters operator message
-    msg (concatword "Server console" (magenta (concatword "(" $operator ")")) ": " (green $message) )
+    msg (concatword "Remote Admin" (magenta (concatword "(" $operator ")")) ": " (green $message) )
 ]
 
 privconsole = [
