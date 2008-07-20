@@ -593,6 +593,7 @@ struct fpsserver : igameserver
     cubescript::function2<void,int,const char *>            func_setteam;
     cubescript::function0< std::list<std::string> >         func_banlist_ips;
     cubescript::function0< std::list<int> >                 func_banlist_timeleft;
+    cubescript::function2<void,const char *,int>            func_addban;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -740,6 +741,7 @@ struct fpsserver : igameserver
         func_setteam(boost::bind(&fpsserver::setteam,this,_1,_2)),
         func_banlist_ips(boost::bind(&fpsserver::get_banlist_ips,this)),
         func_banlist_timeleft(boost::bind(&fpsserver::get_banlist_timeleft,this)),
+        func_addban(boost::bind(&fpsserver::addban,this,_1,_2)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -853,6 +855,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("setteam",&func_setteam);
         server_domain.register_symbol("banlist_ips",&func_banlist_ips);
         server_domain.register_symbol("banlist_timeleft",&func_banlist_timeleft);
+        server_domain.register_symbol("addban",&func_addban);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3637,6 +3640,15 @@ struct fpsserver : igameserver
         loopv(bannedips) if(bannedips[i].std) result.push_back(-1);
         else result.push_back((bannedips[i].expire-totalmillis)/60000);
         return result;
+    }
+    
+    void addban(const char * ip,int mins)
+    {
+        ban & b = bannedips.add();
+        b.time=totalmillis;
+        b.expire=totalmillis+(mins*60000);
+        b.ip=inet_addr(ip);
+        b.std=false;
     }
 };
 
