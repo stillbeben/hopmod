@@ -564,8 +564,8 @@ struct fpsserver : igameserver
     cubescript::function0<std::vector<std::string> >        func_teams;
     cubescript::function2<void,int,bool>                    func_setmaster;
     cubescript::function2<void_,std::string,std::string>    func_changemap;
-    cubescript::function2<void_,bool,std::string>           func_recorddemo;
-    cubescript::function0<void_>                            func_stopdemo;
+    cubescript::function2<void,bool,std::string>            func_recorddemo;
+    cubescript::function0<void>                             func_stopdemo;
     cubescript::function1<void_,const std::string &>        func_allowhost;
     cubescript::function1<void_,const std::string &>        func_denyhost;
     cubescript::function1<int,const std::string &>          func_capture_score;
@@ -1196,9 +1196,11 @@ struct fpsserver : igameserver
         time_t t = time(NULL);
         char *timestr = ctime(&t), *trim = timestr + strlen(timestr);
         while(trim>timestr && isspace(*--trim)) *trim = '\0';
+        
         s_sprintf(d.info)("%s: %s, %s, %.2f%s", timestr, modestr(gamemode), smapname, len > 1024*1024 ? len/(1024*1024.f) : len/1024.0f, len > 1024*1024 ? "MB" : "kB");
         s_sprintfd(msg)("demo \"%s\" recorded", d.info);
-        sendservmsg(msg);
+        loopv(clients) if(clients[i]->privilege) clients[i]->sendprivmsg(msg);
+        
         d.data = new uchar[len];
         d.len = len;
         fread(d.data, 1, len, demotmp);
@@ -1227,8 +1229,8 @@ struct fpsserver : igameserver
         }
 #endif
 
-        sendservmsg("recording demo");
-
+        loopv(clients) if(clients[i]->privilege) clients[i]->sendprivmsg("recording demo");
+        
         demorecord = f;
 
         demoheader hdr;
@@ -2186,6 +2188,8 @@ struct fpsserver : igameserver
                 int val = getint(p);
                 if(ci->privilege<PRIV_ADMIN) break;
                 recorddemo(val);
+                s_sprintfd(msg)("demo recording is %s for next match", demonextmatch ? "enabled" : "disabled"); 
+                sendservmsg(msg);
                 break;
             }
 
@@ -3265,21 +3269,17 @@ struct fpsserver : igameserver
         return void_();
     }
     
-    void_ recorddemo(bool val){recorddemo(val,""); return void_();}
-    void_ recorddemo(bool val,const std::string & filename)
+    void recorddemo(bool val){recorddemo(val,"");}
+    void recorddemo(bool val,const std::string & filename)
     {
         demonextmatch = val!=0;
         demofilename=filename;
-        s_sprintfd(msg)("demo recording is %s for next match", demonextmatch ? "enabled" : "disabled"); 
-        sendservmsg(msg);
-        return void_();
     }
     
-    void_ stopdemo()
+    void stopdemo()
     {
         if(m_demo) enddemoplayback();
         else enddemorecord();
-        return void_();
     }
     
     void_ add_allowhost(const std::string & hostname)
