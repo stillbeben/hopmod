@@ -14,7 +14,7 @@ teams_autobalance = [
     
     foreach (teamplayers $bteam) [
         if (> (teamconnrank $arg1) $highestrank) [
-            msg (info (format "Moving %1 to the other team for balance." (player_name $arg1)))
+            msg (info (format "Moving %1 to the other team for balance." (green (player_name $arg1))))
             setteam $arg1 $wteam
         ]
     ]

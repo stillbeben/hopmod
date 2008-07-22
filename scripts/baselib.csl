@@ -185,13 +185,13 @@ yesno = [if $arg1 [result yes] [result no]]
 
 exec "scripts/sqlite3ext.csl"
 
-nspecp = [! (player_status $arg1 "spectator")]
+nspecp = [! (strcmp (player_status $arg1) "spectator")]
 
 teamplayers = [
     parameters teamname
     local playerlist ""
     foreach (players) [
-        if (&& (strcmp (player_team $arg1) $teamname) nspecp) [playerlist = (concat $playerlist $arg1)]
+        if (&& (strcmp (player_team $arg1) $teamname) (nspecp $arg1)) [playerlist = (concat $playerlist $arg1)]
     ]
     result $playerlist
 ]
