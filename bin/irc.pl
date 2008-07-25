@@ -1,28 +1,41 @@
 #!/usr/bin/perl
 
+
+
 use warnings;
 use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Config::Auto;
-use vars qw($topriv $master $config $version $zippy @zippy $hopvar $rev @split);
+use vars qw($rrd $topriv $master $config $version $hopvar $rev @split);
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
 
-
+$version = "1.16"; #<----Do NOT change this or I will kill you
+print "<Starting HopBot V$version by -={PunDit}=- #hopmod\@irc.gamesurge.net> \n";
 #Module Processing
-eval { require REST::Google::Translate } ;
 
+if ( $config->{trending_enabled} eq "1" ) { 
+	if ( eval { require RRD::Simple } && eval { require RRDs } ) {
+		$rrd = RRD::Simple->new( file => "logs/game_server.rrd" );
+		print "INFO	: Trending module is	ENABLED\n";
+	} else {
+		print "ERROR	: You have trending_enabled = 1 but RRD::Simple does not appear to be installed\n";
+		print "ERROR	: Trending module is	DISABLED\n\n";
+		undef $config->{trending_enabled};
+	}
+}
 
-$version = "1.15"; #<----Do NOT change this or I will kill you
+if ( $config->{irc_trmodule} eq "1" ) {
+	if ( eval { require REST::Google::Translate } ) {
+		print "INFO	: Translation module is	ENABLED\n";
+	} else {
+		print "ERROR	: You have irc_trmodule = 1 but REST::Google::Translate does not appear to be installed\n";
+		print "ERROR	: Translation module is	DISABLED\n\n";
+		undef $config->{irc_trmodule};
+	}
+}
 
-#Config File Overrides
-if ( defined $config->{irc_serverlogfile} ) {  }
-if ( defined $config->{irc_commandlog} ) { }
-if ( defined $config->{irc_serverpipe} ) {  }
-
-print "Starting HopBot V$version by -={Pundit}=- #hopmod\@irc.gamesurge.net \n";
 
 &toserverpipe("irc_pid = $$"); #Send the server my pid for restarting purposes.
-
 my ($irc) = POE::Component::IRC::State->spawn();
 POE::Session->create(
 	inline_states => {
@@ -70,8 +83,8 @@ sub lag_o_meter {
 sub on_connect {
 	my ( $kernel, $sender, $message, $message2 ) = @_[ KERNEL, SENDER, ARG0, ARG1 ];
 	my $ts = scalar localtime;
-	print " [$ts] Connected to $message\n";
-	print " [$ts] $message2";
+	print "CONNECT	: [$ts] Connected to $message\n";
+	print "WELCOME	: [$ts] $message2\n";
 	$irc->yield( join => $config->{irc_channel} );
 }
 sub on_public {
@@ -79,7 +92,7 @@ sub on_public {
 	my $nick = ( split /!/, $who )[0];
 	my $channel = $where->[0];
 	my $ts = scalar localtime;
-	print " [$ts] <$nick:$channel> $msg\n";
+	if ( $config->{irc_channel} eq "1" ) { print "[$ts] <$nick:$channel> $msg\n"; }
 	&process_command($sender, $who, $msg);
 }
 sub on_private {
@@ -87,24 +100,25 @@ sub on_private {
 	my $nick = ( split /!/, $who )[0];
 	my $channel = $where->[0];
 	my $ts = scalar localtime;
-	print " [$ts] <$nick:$channel> $msg\n";
+	print "INFO	: [$ts] <$nick:$channel> $msg\n";
 	&process_command($sender, $nick, $msg);
 }
 sub on_error {
 	my ( $kernel, $sender, $error ) = @_[ KERNEL, SENDER, ARG0 ];
 	my $ts = scalar localtime;
-	print " [$ts] ERROR $error\n";
+	print "ERROR	: [$ts] ERROR $error\n";
 
 }
 sub on_disconnect {
         my ( $kernel, $sender, $error ) = @_[ KERNEL, SENDER, ARG0 ];
         my $ts = scalar localtime;
-        print " [$ts] ERROR $error\n";
+        print "DISCONNECT	: [$ts] ERROR $error\n";
 
 }
 sub on_tail_input {
 	my ($kernel, $sender, $filename, $input) = @_[KERNEL, SENDER, ARG0, ARG1];
         $irc->yield( privmsg => $config->{irc_channel} => &filterlog($_[ARG1]) );
+	&toserverpipe("irc_pid = $$"); # Regular refresh for safetys sake
 }
 sub process_command {
 	my $sender = shift;
@@ -133,6 +147,10 @@ sub process_command {
 		if ( $command =~ / kick ([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={KICK}=-\x03 $nick kicked $1"); &toserverpipe("kick $1"); 
 		&toirccommandlog("$nick KICKED $1"); return }
+		##### BAN #####
+                if ( $command =~ / ban ([0-9]+)/i )
+                { &sendtoirc("\x03\x036IRC\x03         \x034-={BAN}=-\x03 $nick banned $1 until server reboot"); &toserverpipe("kick $1 44640");
+                &toirccommandlog("$nick BANNED $1"); return }
 		##### CLEARBANS #####
 		if ( $command =~ / clearbans/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034CLEARBANS\x03 $nick has cleared bans"); &toserverpipe("clearbans"); 
@@ -141,12 +159,6 @@ sub process_command {
 		if ( $command =~ / spec.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={SPEC}=-\x03 $nick has spec'd $1"); &toserverpipe("spec $1"); 
 		&toirccommandlog("$nick has SPECTATED $1"); return }
-		##### TICKLE ######
-		if ( $command =~ /tickle.* $config->{irc_botcommandname}.*/i )
-		{ &sendtoirc("\x03\x036IRC\x03         \x034-={WISDOM}=-\x03 $zippy[ rand scalar @zippy ]"); return }
-		##### HI ######
-		if ( $command =~ /hi.* $config->{irc_botcommandname}.*/i )
-		{ &sendtoirc("hey $nick hows it going?");return }
 		##### UNSPECTATOR ######
 		if ( $command =~ / unspec.*\s([0-9]+)/i )
 		{ &sendtoirc("\x03\x036IRC\x03         \x034-={UNSPEC}=-\x03 $nick has unspec'd $1"); &toserverpipe("unspec $1"); 
@@ -373,7 +385,64 @@ sub filterlog {
 	##### AUTHENTICATION #####
 	if ($line =~  /(\S*\([0-9]+\)) passed authentication as '(.*)'./) 
 	{ return "\x034AUTH\x03    \x0312$1\x03 passed authentication as \x037$2\x03" }
+	##### TRENDING #####
+	if ($line =~  /COMMAND TREND P=(.*)T=(.*)R=(.*)AP=(.*)/ && $config->{trending_enabled} eq "1" ) 
+	{  &trending($3,$2,$1,$4) ; return }
+	
 	return $line;
+}
+
+sub trending {
+	my $in = shift;
+	my $out = shift;
+	my $players = shift;
+	my $avgping = shift;
+	if ( ! -e "logs/game_server.rrd" ) {
+		print "WARNING Trending database does not exists generating a new one\n";
+		$rrd->create(
+			bytesIn => "COUNTER",
+			bytesOut => "COUNTER",
+			avgping => "GAUGE",
+			playercount => "GAUGE"
+			);
+	}
+	$rrd->update( bytesIn => $in, bytesOut => $out, avgping => $avgping, playercount => $players );
+	$rrd->graph(destination => "logs/www",
+         periods => [ qw(day week month year) ],
+         basename => "game_server_throughput",
+         title => "Game Server Throughput",
+         timestamp => "both",
+         sources => [ qw(bytesIn bytesOut) ],
+         source_colors => [ qw(00CF00 002A97) ],
+         source_labels => [ ("Bytes In", "Bytes Out") ],
+         source_drawtypes => [ qw(AREA LINE1) ],
+         line_thickness => 2,
+         extended_legend => 1
+         );
+	$rrd->graph(destination => "logs/www",
+         periods => [ qw(day week month year) ], 
+         basename => "game_server_players",
+         title => "Game Server Playercount",
+         timestamp => "both",
+         sources => [ qw(playercount) ],
+         source_colors => [ qw(00CF00) ],
+         source_labels => [ ("Players") ],
+         source_drawtypes => [ qw(AREA) ],
+         line_thickness => 2,
+         extended_legend => 1
+	 );
+	 $rrd->graph(destination => "logs/www",
+         periods => [ qw(day week month year) ], 
+         basename => "game_server_avgping",
+         title => "Game Server Average Player Ping",
+         timestamp => "both",
+         sources => [ qw(avgping) ],
+         source_colors => [ qw(00CF00) ],
+         source_labels => [ ("Avg Player Ping") ],
+         source_drawtypes => [ qw(AREA) ],
+         line_thickness => 2,
+         extended_legend => 1
+	 );
 }
 sub toprivateirc {
 	my $send = shift; 
@@ -432,74 +501,6 @@ sub translate {
 
 	return $translated;
 }
-@zippy = (
-	"Save the whales. Collect the whole set ",
-	"A day without sunshine is like, night. ",
-	"On the other hand, you have different fingers. ",
-	"I just got lost in thought. It was unfamiliar territory. ",
-	"42.7 percent of all statistics are made up on the spot. ",
-	"99 percent of lawyers give the rest a bad name. ",
-	"I feel like I.m diagonally parked in a parallel universe. ",
-	"You have the right to remain silent. Anything you say will be misquoted, then used against you. ",
-	"I wonder how much deeper the ocean would be without sponges ",
-	"Honk if you love peace and quiet. ",
-	"Remember half the people you know are below average. ",
-	"Despite the cost of living, have you noticed how popular it remains? ",
-	"Nothing is fool-proof to a talented fool. ",
-	"He who laughs last thinks slowest. ",
-	"Depression is merely anger without enthusiasm. ",
-	"Eagles may soar, but weasels don.t get sucked into jet engines. ",
-	"The early bird may get the worm, but the second mouse gets the cheese. ",
-	"I drive way too fast to worry about cholesterol. ",
-	"I intend to live forever - so far so good. ",
-	"Borrow money from a pessimist - they don.t expect it back. ",
-	"If Barbie is so popular, why do you have to buy her friends? ",
-	"Quantum mechanics: The dreams stuff is made of. ",
-	"The only substitute for good manners is fast reflexes. ",
-	"Support bacteria - they.re the only culture some people have. ",
-	"When everything is coming your way, you.re in the wrong lane and going the wrong way. ",
-	"If at first you don.t succeed, destroy all evidence that you tried. ",
-	"A conclusion is the place where you got tired of thinking. ",
-	"Experience is something you don.t get until just after you need it. ",
-	"For every action there is an equal and opposite criticism. ",
-	"Bills travel through the mail at twice the speed of checks. ",
-	"Never do card tricks for the group you play poker with. ",
-	"No one is listening until you make a mistake. ",
-	"Success always occurs in private and failure in full view. ",
-	"The colder the x-ray table the more of your body is required on it. ",
-	"The hardness of butter is directly proportional to the softness of the bread. ",
-	"The severity of the itch is inversely proportional to the ability to reach it. ",
-	"To steal ideas from one person is plagiarism; to steal from many is research. ",
-	"To succeed in politics, it is often necessary to rise above your principles. ",
-	"Monday is an awful way to spend 1/7th of your life. ",
-	"Two wrongs are only the beginning. ",
-	"The problem with the gene pool is that there is no lifeguard. ",
-	"The sooner you fall behind the more time you.ll have to catch up. ",
-	"A clear conscience is usually the sign of a bad memory. ",
-	"Change is inevitable except from vending machines. ",
-	"Plan to be spontaneous - tomorrow. ",
-	"Always try to be modest and be proud of it! ",
-	"If you think nobody cares, try missing a couple of payments. ",
-	"How many of you believe in telekinesis? Raise my hand... ",
-	"Love may be blind but marriage is a real eye-opener. ",
-	"If at first you don.t succeed, then skydiving isn.t for you. ",
-	"I am a traffic light, and Alan Ginsberg kidnapped my laundry in 1927!",
-	"I'm a GENIUS!  I want to dispute sentence structure with SUSAN SONTAG!!",
-	"Now I'm telling MISS PIGGY about MONEY MARKET FUNDS!",
-	"I have a VISION!  It's a RANCID double-FISHWICH on an ENRICHED BUN!!",
-	"My pants just went on a wild rampage through a Long Island Bowling Alley!!",
-	"I always liked FLAG DAY!!",
-	"I will establish the first SHOPPING MALL in NUTLEY, New Jersey...",
-	"I used to be STUPID, too..before I started watching UHF-TV!!",
-	"I smell like a wet reducing clinic on Columbus Day!",
-	"Just walk along and try NOT to think about your INTESTINES being almost FORTY YARDS LONG!!",
-	"It's the RINSE CYCLE!!  They've ALL IGNORED the RINSE CYCLE!!",
-	"Yow!  It's some people inside the wall!  This is better than mopping!",
-	"Is the EIGHTIES when they had ART DECO and GERALD McBOING-BOING lunch boxes??",
-	"This PIZZA symbolizes my COMPLETE EMOTIONAL RECOVERY!!",
-	"I call it a \"SARDINE ON WHEAT\"!",
-	"Is it FUN to be a MIDGET?",
-	"Someone in DAYTON, Ohio is selling USED CARPETS to a SERBO-CROATIAN!!",
-	);
+
 $poe_kernel->run();
 exit 0;

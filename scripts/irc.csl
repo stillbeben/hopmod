@@ -46,7 +46,7 @@ masterwho = [
 
 getvar = [
 	if (symbol? $arg1) [ output = $$arg1 	
-		output = $$arg1
+		local output $$arg1
 		if $output  [
 			line = (format "IRC         -\={GETVAR %2}\=- is %1" $output $arg1 )
 		]
@@ -86,6 +86,6 @@ avgpings = [
 	if ( != $playercount 0 ) [
 		result (div $pingtotal $playercount)
 	] [
-		result NULL
+		result 0 
 	]
 ]
