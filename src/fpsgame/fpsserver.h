@@ -661,6 +661,7 @@ struct fpsserver : igameserver
     event_handler on_lostbase;
     event_handler on_wincapture;
     event_handler on_auth;
+    event_handler on_respawn;
     
     #include "auth.h"
     authserv auth;
@@ -935,6 +936,7 @@ struct fpsserver : igameserver
         scriptable_events.register_event("onlostbase",&on_lostbase);
         scriptable_events.register_event("onwincapture",&on_wincapture);
         scriptable_events.register_event("onauth",&on_auth);
+        scriptable_events.register_event("onrespawn",&on_respawn);   
     }
     
     void *newinfo()
@@ -1774,11 +1776,17 @@ struct fpsserver : igameserver
             }
 
             case SV_TRYSPAWN:
+            {
                 if(ci->state.state!=CS_DEAD || ci->state.lastspawn>=0 || (smode && !smode->canspawn(ci))) break;
                 if(ci->state.lastdeath) ci->state.respawn();
+                
+                cubescript::arguments args;
+                scriptable_events.dispatch(&on_respawn,args & ci->clientnum,NULL);
+                
                 sendspawn(ci);
                 break;
-
+            }
+            
             case SV_GUNSELECT:
             {
                 int gunselect = getint(p);
