@@ -555,7 +555,7 @@ struct fpsserver : igameserver
     cubescript::function1<float,int>                        func_player_rating;
     cubescript::function1<std::string,int>                  func_get_disc_reason;
     cubescript::function2<void,int,const std::string &>     func_setpriv;
-    cubescript::function0<void_>                            func_clearbans;
+    cubescript::function0<void>                             func_clearbans;
     cubescript::functionV<void>                             func_kick;
     cubescript::function1<void_,int>                        func_set_interm;
     cubescript::function1<void,int>                         func_spec;
@@ -2121,11 +2121,7 @@ struct fpsserver : igameserver
            
             case SV_CLEARBANS:
             {
-                if(ci->privilege)
-                {
-                    bannedips.setsize(0);
-                    sendservmsg("cleared all bans");
-                }
+                if(ci->privilege) clearbans();
                 break;
             }
 
@@ -3097,11 +3093,10 @@ struct fpsserver : igameserver
         }
     }
     
-    void_ clearbans()
+    void clearbans()
     {
-        bannedips.setsize(0);
+        clear_stdbans();
         sendservmsg("cleared all bans");
-        return void_();
     }
     
     void_ set_interm(int milli)
