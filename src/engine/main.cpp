@@ -121,7 +121,7 @@ void screenshot(char *filename)
     if(!filename[0])
     {
         static string buf;
-        s_sprintf(buf)("screenshot_%d.bmp", lastmillis);
+        s_sprintf(buf)("screenshot_%d.bmp", totalmillis);
         filename = buf;
     }
     else path(filename);
@@ -922,7 +922,7 @@ int main(int argc, char **argv)
         frames++;
 
         // miscellaneous general game effects
-        findorientation();
+        recomputecamera();
         entity_particles();
         updatevol();
         checkmapsounds();

@@ -50,7 +50,7 @@ void setnames(const char *fname, const char *cname = 0)
 
     s_sprintf(ogzname)("packages/%s.ogz", mapname);
     if(savebak==1) s_sprintf(bakname)("packages/%s.BAK", mapname);
-    else s_sprintf(bakname)("packages/%s_%d.BAK", mapname, lastmillis);
+    else s_sprintf(bakname)("packages/%s_%d.BAK", mapname, totalmillis);
     s_sprintf(pcfname)("packages/%s/package.cfg", pakname);
     s_sprintf(mcfname)("packages/%s/%s.cfg", pakname, cfgname);
     s_sprintf(picname)("packages/%s.jpg", mapname);
@@ -574,6 +574,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
 
     cl->preload();
 
+    entitiesinoctanodes();
     initlights();
     allchanged(true);
 

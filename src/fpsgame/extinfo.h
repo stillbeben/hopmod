@@ -76,7 +76,7 @@
             loopv(clients) if(clients[i]->team[0] && !clients[i]->spy) //check all teams available, since capturemode.scores contains only teams with scores
             {
                 teamscore *ts = NULL;
-                loopvj(scores) if(!strcmp(scores[j].name, clients[i]->team)) { ts = &scores[i]; break; }
+                loopvj(scores) if(!strcmp(scores[j].name, clients[i]->team)) { ts = &scores[j]; break; }
                 if(!ts) scores.add(teamscore(clients[i]->team, 0));
             }
         }
@@ -87,7 +87,7 @@
                 const char *team = ctfflagteam(ctfmode.flags[i].team);
                 if(!team) continue;
                 teamscore *ts = NULL;
-                loopvj(scores) if(!strcmp(scores[j].name, team)) { ts = &scores[i]; break; }
+                loopvj(scores) if(!strcmp(scores[j].name, team)) { ts = &scores[j]; break; }
                 if(!ts) scores.add(teamscore(team, ctfmode.flags[i].score));
                 else ts->score += ctfmode.flags[i].score;
             }
@@ -98,7 +98,7 @@
             {
                 clientinfo *ci = clients[i];
                 teamscore *ts = NULL;
-                loopvj(scores) if(!strcmp(scores[j].name, ci->team)) { ts = &scores[i]; break; }
+                loopvj(scores) if(!strcmp(scores[j].name, ci->team)) { ts = &scores[j]; break; }
                 if(!ts) scores.add(teamscore(ci->team, ci->state.frags));
                 else ts->score += ci->state.frags;
             }

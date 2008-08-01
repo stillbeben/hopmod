@@ -242,6 +242,27 @@ struct fpsclient : igameclient
     IVARP(smoothmove, 0, 75, 100);
     IVARP(smoothdist, 0, 32, 64);
 
+    void predictplayer(fpsent *d, bool move)
+    {
+        d->o = d->newpos;
+        d->yaw = d->newyaw;
+        d->pitch = d->newpitch;
+        if(move)
+        {
+            moveplayer(d, 1, false);
+            d->newpos = d->o;
+        }
+        float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
+        if(k>0)
+        {
+            d->o.add(vec(d->deltapos).mul(k));
+            d->yaw += d->deltayaw*k;
+            if(d->yaw<0) d->yaw += 360;
+            else if(d->yaw>=360) d->yaw -= 360;
+            d->pitch += d->deltapitch*k;
+        }
+    }
+         
     void otherplayers(int curtime)
     {
         loopv(players) if(players[i])
@@ -263,23 +284,7 @@ struct fpsclient : igameclient
             }
             if(d->state==CS_ALIVE || d->state==CS_EDITING)
             {
-                if(smoothmove() && d->smoothmillis>0)
-                {
-                    d->o = d->newpos;
-                    d->yaw = d->newyaw;
-                    d->pitch = d->newpitch;
-                    moveplayer(d, 1, false);
-                    d->newpos = d->o;
-                    float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove();
-                    if(k>0)
-                    {
-                        d->o.add(vec(d->deltapos).mul(k));
-                        d->yaw += d->deltayaw*k;
-                        if(d->yaw<0) d->yaw += 360;
-                        else if(d->yaw>=360) d->yaw -= 360;
-                        d->pitch += d->deltapitch*k;
-                    }
-                }
+                if(smoothmove() && d->smoothmillis>0) predictplayer(d, true);
                 else moveplayer(d, 1, false);
             }
             else if(d->state==CS_DEAD && lastmillis-d->lastpain<2000) moveplayer(d, 1, true);

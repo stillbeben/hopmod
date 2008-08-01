@@ -38,6 +38,7 @@ enum
     PT_LERP  = 1<<10, // use very sparingly - order of blending issues
     PT_TRACK = 1<<11,
     PT_GLARE = 1<<12,
+    PT_SOFT  = 1<<13
 };
 
 const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", "metervs", "fireball", "lightning", "flare" };
@@ -87,6 +88,7 @@ struct partrenderer
     virtual void reset() = NULL;
     virtual void resettracked(physent *owner) { }   
     virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size) = NULL;    
+    virtual int adddepthfx(vec &bbmin, vec &bbmax) { return 0; }
     virtual void update() { }
     virtual void render() = NULL;
     virtual bool haswork() = NULL;
@@ -607,9 +609,39 @@ typedef varenderer<PT_PART> quadrenderer;
 typedef varenderer<PT_TAPE> taperenderer;
 typedef varenderer<PT_TRAIL> trailrenderer;
 
+#include "depthfx.h"
 #include "explosion.h"
 #include "lensflare.h"
 #include "lightning.h"
+
+struct softquadrenderer : quadrenderer
+{
+    softquadrenderer(const char *texname, int type, int grav, int collide)
+        : quadrenderer(texname, type|PT_SOFT, grav, collide)
+    {
+    }
+
+    int adddepthfx(vec &bbmin, vec &bbmax)
+    {
+        if(!depthfxtex.highprecision() && !depthfxtex.emulatehighprecision()) return 0;
+        int numsoft = 0;
+        loopi(numparts)
+        {
+            particle &p = parts[i];
+            float radius = p.size*SQRT2;
+            if(depthfxscissor==2 ? depthfxtex.addscissorbox(p.o, radius) : isvisiblesphere(radius, p.o) < VFC_FOGGED) 
+            {
+                numsoft++;
+                loopk(3)
+                {
+                    bbmin[k] = min(bbmin[k], p.o[k] - radius);
+                    bbmax[k] = max(bbmax[k], p.o[k] + radius);
+                }
+            }
+        }
+        return numsoft;
+    }
+};
 
 static partrenderer *parts[] = 
 {
@@ -635,6 +667,35 @@ static partrenderer *parts[] =
     &flares // must be done last
 };
 
+void finddepthfxranges()
+{
+    depthfxmin = vec(1e16f, 1e16f, 1e16f);
+    depthfxmax = vec(0, 0, 0);
+    numdepthfxranges = fireballs.finddepthfxranges(depthfxowners, depthfxranges, MAXDFXRANGES, depthfxmin, depthfxmax);
+    loopk(3)
+    {
+        depthfxmin[k] -= depthfxmargin;
+        depthfxmax[k] += depthfxmargin;
+    }
+    if(depthfxparts)
+    {
+        loopi(sizeof(parts)/sizeof(parts[0]))
+        {
+            partrenderer *p = parts[i];
+            if(p->type&PT_SOFT && p->adddepthfx(depthfxmin, depthfxmax))
+            {
+                if(!numdepthfxranges)
+                {
+                    numdepthfxranges = 1;
+                    depthfxowners[0] = NULL;
+                    depthfxranges[0] = 0;
+                }
+            }
+        }
+    }              
+    if(depthfxscissor<2 && numdepthfxranges>0) depthfxtex.addscissorbox(depthfxmin, depthfxmax);
+}
+ 
 VARFP(maxparticles, 10, 4000, 40000, particleinit());
 
 void particleinit() 
@@ -712,8 +773,10 @@ void render_particles(int time)
     static float zerofog[4] = { 0, 0, 0, 1 };
     float oldfogc[4];
     bool rendered = false;
-    uint lastflags = PT_LERP;
-    
+    uint lastflags = PT_LERP, flagmask = PT_LERP|PT_MOD;
+   
+    if(binddepthfxtex()) flagmask |= PT_SOFT;
+
     loopi(sizeof(parts)/sizeof(parts[0]))
     {
         partrenderer *p = parts[i];
@@ -734,7 +797,7 @@ void render_particles(int time)
             glGetFloatv(GL_FOG_COLOR, oldfogc);
         }
         
-        uint flags = p->type & (PT_LERP|PT_MOD);
+        uint flags = p->type & flagmask;
         if(p->usesvertexarray()) flags |= 0x01; //0x01 = VA marker
         uint changedbits = (flags ^ lastflags);
         if(changedbits != 0x0000)
@@ -760,6 +823,25 @@ void render_particles(int time)
                 if(flags&PT_LERP) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                 else if(flags&PT_MOD) glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
                 else glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            }
+            if(changedbits&PT_SOFT)
+            {
+                if(flags&PT_SOFT)
+                {
+                    if(depthfxtex.target==GL_TEXTURE_RECTANGLE_ARB)
+                    {
+                        if(!depthfxtex.highprecision()) SETSHADER(particlesoft8rect);
+                        else SETSHADER(particlesoftrect);
+                    }
+                    else
+                    {
+                        if(!depthfxtex.highprecision()) SETSHADER(particlesoft8);
+                        else SETSHADER(particlesoft);
+                    }
+
+                    binddepthfxparams(depthfxpartblend);
+                }
+                else particleshader->set();
             }
             lastflags = flags;        
         }

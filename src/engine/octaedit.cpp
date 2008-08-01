@@ -1660,7 +1660,7 @@ struct texturegui : g3d_callback
                             if(slot.texmask&(1<<TEX_GLOW)) { loopv(slot.sts) if(slot.sts[i].type==TEX_GLOW) { glowtex = slot.sts[i].t; break; } }
                         }
                         else if(slot.thumbnail) tex = slot.thumbnail;
-                        else if(lastmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = lastmillis; }
+                        else if(totalmillis-lastthumbnail>=thumbtime) { tex = loadthumbnail(slot); lastthumbnail = totalmillis; }
                         if(g.texture(tex, 1.0, slot.rotation, slot.xoffset, slot.yoffset, glowtex, slot.glowcolor)&G3D_UP && (slot.loaded || tex!=notexture)) 
                             edittex(ti);
                     }

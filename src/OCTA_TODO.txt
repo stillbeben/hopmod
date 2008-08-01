@@ -1,5 +1,3 @@
-- check if ATI fixed fglrx/OQ bug in next version
-
 - make people that do teamkills/damage wait longer?
 
 - fog entities (R, G, B, radius, fog dist),
@@ -13,14 +11,10 @@
 
 - audio effect for chat messages | audio for gui events
 
-- social cheating solution
-
 - before a release: update static wiki
 
 - improve smoothness of going up steps ?
 - remove delay before doors start opening ?
-- make nearby closed doors render early so that they can contribute to OC?
-- water physics close to surface
 - add entity looping command?
 
 - LOD: improved lod-remip?
@@ -35,20 +29,16 @@
 
 - maybe add a way to purge infrequent / not recently used textures? esp now with mapshots.
 
-- reduce maps
-- memory leaks?
 - Mix_LoadMUS() crashes after being called many times?
 
 - death needs to be more obvious (better sound/centerprint) 
-- sparklies very bad on ATI, particularly deathtek / diff skybox
-- crashes when people join?
 - 2 levels of lightlod for huge maps
 - shallow water splashing sound?
 
 - use setbb also for monsters
 - experiment with averaging lightvector based on intensity^N, such that dominant light becomes more dominant without losing smooth transitions | store intensity multiplier in alpha?
 
-- the eyecandy priority list: better bloom, motion blur, volumetric fog (see fog entities idea above), character bumpmaps (likely need skeletal animation to make this memory efficient)...
+- the eyecandy priority list: motion blur, volumetric fog (see fog entities idea above)...
 - bots (level design placed waypoints?)
 - destructable geom
 
@@ -57,34 +47,19 @@
 - $ vs @? var stacks? [] for trees/arrays? other improvements? | do "." for concatword so you could do easy (associative) arrays and tree structures?
 - start moving some stuff in their own headers
 - new BAS sounds? | player spawn | sp respawn | menu clicks | specific door sound? | end of level | push button/trigger
-- improve bloom? optimize it.
 - report to ATI: float vs short issue
 - more cube map ports?
-- integrate fmodex (to get both panning and stereo ogg on windows?)
 - 3d sprites?
 - monster spawner ammo - add egg model
 - iconic stats
-- profile for memory usage (devpartner?) | if md2 buffers are a lot, can remove it
-- glowmaps in the texture browser -> messy
 
-- make start of flares etc spawn out further from the player
-- improve on cma render then add to sauer
 - new sounds: impact (diff materials + flesh) | flyby, both instant & projectile 
 
-- all cfg stuff in menu
 - draw not-spawned items in wireframe?
 
-- make wether you are hitting other player clearer - blip sounds like q3?
-- LOD: visibleface(lodcube==true) must not go across VA boundaries... otherwise minor HOM bewteen LOD/non-LOD rendering boundaries
-- LOD: materials & sky currently always rendered at lod0 only, is that ever a problem visually/performance?
-- LOD: make loddistance fov dependent (for models too)
 - a multiplayer player still shows SG rays go thru target | hard to fix, is it really a problem?
 - sound samples for N kills in a row
-- sword?
 - think about doing other permanent powerups besides +10h
-- slowmo as gameplay feature?
 - calclight while playing?
-- use of glBufferData() makes ATI driver crash on SDL_Exit()
-- fix variance in framerate?
 - render entities at distance as sprites
 - blend screen when inside a cube
