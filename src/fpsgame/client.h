@@ -930,6 +930,7 @@ struct clientcom : iclientcom
                 {
                     spectator = val!=0;
                     s = player1;
+                    if(spectator && !player1->privilege) senditemstoserver = false;
                 }
                 else s = cl.newclient(sn);
                 if(!s) return;

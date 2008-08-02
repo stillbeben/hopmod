@@ -861,7 +861,7 @@ struct captureservmode : capturestate, servmode
         enterbases(newteam, ci->state.o);
     }
 
-    void parsebases(ucharbuf &p)
+    void parsebases(ucharbuf &p, bool commit)
     {
         int numbases = getint(p);
         loopi(numbases)
@@ -872,9 +872,9 @@ struct captureservmode : capturestate, servmode
             o.y = getint(p)/DMF;
             o.z = getint(p)/DMF;
             if(p.overread()) break;
-            if(notgotbases) addbase(ammotype>=GUN_SG && ammotype<=GUN_PISTOL ? ammotype : min(ammotype, 0), o);
+            if(commit && notgotbases) addbase(ammotype>=GUN_SG && ammotype<=GUN_PISTOL ? ammotype : min(ammotype, 0), o);
         }
-        if(notgotbases)
+        if(commit && notgotbases)
         {
             notgotbases = false;
             sendbases();

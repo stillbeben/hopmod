@@ -248,7 +248,7 @@ struct ctfservmode : ctfstate, servmode
         }
     }
 
-    void parseflags(ucharbuf &p)
+    void parseflags(ucharbuf &p, bool commit)
     {
         int numflags = getint(p);
         loopi(numflags)
@@ -257,9 +257,9 @@ struct ctfservmode : ctfstate, servmode
             vec o;
             loopk(3) o[k] = getint(p)/DMF;
             if(p.overread()) break;
-            if(notgotflags) addflag(i, o, team);
+            if(commit && notgotflags) addflag(i, o, team);
         }
-        notgotflags = false;
+        if(commit) notgotflags = false;
     }
 };
 #else
