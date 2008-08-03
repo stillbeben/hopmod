@@ -1221,7 +1221,7 @@ struct fpsserver : igameserver
         gzFile f = gzopen("demorecord", "wb9");
         if(!f) return;
 #else
-        demotmp = demofilename.length() ? fopen(demofilename.c_str(),"w") : tmpfile();
+        demotmp = demofilename.length() ? fopen(demofilename.c_str(),"wb9") : tmpfile();
         if(!demotmp) return;
         setvbuf(demotmp, NULL, _IONBF, 0);
 
@@ -3600,21 +3600,20 @@ struct fpsserver : igameserver
     {
         clientinfo * ci=get_ci(cn);
         
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_reteam,args & cn & std::string(ci->team) & std::string(teamname),NULL);                
+        if(!strcmp(ci->team, teamname)) return;
         
-        if(!smode || smode->canchangeteam(ci, ci->team, teamname))
+        if(smode && smode->canchangeteam(ci, ci->team, teamname))
         {
-            if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, teamname)) 
-                smode->changeteam(ci, ci->team, teamname);
+            if(ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, teamname);
+            
+            cubescript::arguments args;
+            scriptable_events.dispatch(&on_reteam,args & cn & std::string(ci->team) & std::string(teamname),NULL);  
+            
             s_strncpy(ci->team, teamname, MAXTEAMLEN+1);
-        }
+            
+        }else return;
         
         sendf(-1, 1, "riis", SV_SETTEAM, cn, ci->team);
-        
-        //QUEUE_INT(SV_SETTEAM);
-        //QUEUE_INT(who);
-        //QUEUE_STR(wi->team);
     }
     
     void clear_stdbans()
