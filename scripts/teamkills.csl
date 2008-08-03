@@ -1,0 +1,31 @@
+
+teamkill_update = [
+    parameters offender victim
+    local suicide (= $offender $victim)
+    
+    if (&& $teamkill_limit_enabled (&& (! $suicide) (&& (teamgame) (strcmp (player_team $offender) (player_team $victim))))) [
+        local count (player_var $offender teamkills (+ 1 (player_var $offender teamkills)))
+        local times (player_var $offender teamkill_times (concat $uptime (player_var $offender teamkill_times)))
+        
+        if (!= (player_var $offender teamkill_warned) 1) [
+            privconsole $offender script [Teamkill restrictions per game: maxcount=@teamkill_limit maxrate=@teamkill_maxrate per min.]
+            player_var $offender teamkill_warned 1
+        ]
+        
+        if (> $count 1) [
+            msg (gameplay (format "%1 has fragged team mates %2 times." (print_name $offender) $count (player_gun $offender)))
+        ]
+
+        if (> (player_var $offender teamkills) $teamkill_limit) [
+            kick $offender 30
+            console script [@(player_name $offender) was kicked for exceeding teamkill limit.]
+            log (format "%1 was kicked for team killing." (player_name $offender))
+        ] [
+            if (&& (> (listlen $times) $teamkill_maxrate) [< (add_intervals $times $teamkill_maxrate) 60000]) [
+                kick $offender 30
+                console script [@(player_name $offender) was kicked for exceeding maximum teamkill rate.]
+                log (format "%1 was kicked for team killing." (player_name $offender))
+            ]
+        ]
+    ]
+]
