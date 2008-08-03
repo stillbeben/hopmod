@@ -5,6 +5,11 @@ playercmd_eval = [
     if (strcmp (player_priv $cn) "admin") [do [@arg1]] [privmsg $cn (err "Permission Denied")]
 ]
 
+playercmd_script = [
+    local filename (format "scripts/%1.csl" $arg1)
+    playercmd_eval [exec "@filename"]
+]
+
 playercmd_specall = [
     if (strcmp (player_priv $cn) "admin") [
         foreach (players) [spec $arg1]
