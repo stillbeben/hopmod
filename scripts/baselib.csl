@@ -214,5 +214,24 @@ privplayers = [
     result $thelist
 ]
 
+specplayers = [
+    local thelist ""
+    foreach (players) [
+        if (strcmp (player_status $arg1) "spectator") [thelist = (concat $thelist $arg1)]
+    ]
+    result $thelist
+]
+
 // Run a piece of code on next server update iteration
 sched = [sleep 1 $arg1]
+
+redirect_textmsg = [
+    parameters cn text dstlist
+    local cninfo ""
+    if (dupname $cn) [cninfo = (magenta (concatword "(" $cn ")"))]
+    foreach (dstlist) [
+        if (!= $arg1 $cn) [
+            privmsg $arg1 (format "%1 %2: %3" (player_name $cn) $cninfo (green $text))
+        ]
+    ]
+]
