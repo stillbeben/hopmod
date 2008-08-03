@@ -3200,6 +3200,9 @@ struct fpsserver : igameserver
                 std::ostringstream infomsg;
                 infomsg<<ConColour_Info<<ci->name<<" was given master by the server console.";
                 sendservmsg(infomsg.str().c_str());
+                
+                cubescript::arguments args;
+                scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & set & std::string(""),NULL);
             }
             else setpriv(ci,PRIV_MASTER);
         }
