@@ -223,6 +223,10 @@ sub process_command {
                 if ( $command =~ / showalias ([0-9]+.*)/i )
                 { &toserverpipe("showalias $1"); $topriv = $nick;
 		&toirccommandlog("$nick SHOWALIAS $1"); return }
+		 ##### SHOWALIASBYIP #####
+                if ( $command =~ / showaliasbyip ([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/i )
+                { &toserverpipe("showaliasbyip $1"); $topriv = $nick;
+                &toirccommandlog("$nick SHOWALIASBYIP $1"); return }
 		##### SCORE #####
 		if ( $command =~ / score/i )
 		{ $topriv = $nick ; &toserverpipe("score");
@@ -356,7 +360,7 @@ sub filterlog {
         { return "\x03\x036IRC\x03         \x034-={MASTER}=-\x03 is \x037$1\03" }
 	##### SHOWALAIS #####
 	if ($line =~ /COMMAND SHOWALIAS N=(.*)A=(.*)/) 
-	{ @split = split (/ /, $2); &splittoirc("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03") ; return}
+	{ @split = split (/ /, $2); &splittoirc("\x036IRC\x03         \x034-={SHOWALIAS}=-\x03 \x037$1\x03 @") ; return}
 	##### SPECTATOR ###
 	if ($line =~ /(\S*\([0-9]+\)) (.*) spectators/) 
 	{ return "\x034SPECTATOR\x03  \x0312$1\x03 $2 spectators" }
@@ -405,6 +409,7 @@ sub trending {
 			avgping => "GAUGE",
 			playercount => "GAUGE"
 			);
+		RRDs::tune("logs/game_server.rrd", "-a", "bytesIn:500000", "-a", "bytesOut:500000"  );
 	}
 	$rrd->update( bytesIn => $in, bytesOut => $out, avgping => $avgping, playercount => $players );
 	$rrd->graph(destination => "logs/www",

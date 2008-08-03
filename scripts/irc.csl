@@ -1,4 +1,3 @@
-
 who = [
 	if (! (symbol? arg1)) [  
 		scores = ""
@@ -61,6 +60,12 @@ showalias = [
         line = (format "COMMAND SHOWALIAS N=%1A=%2" (player_name $arg1) (showaliases $arg1) )
 	if (! (strcmp (showaliases $arg1) "")) [ log $line ]
 	if (strcmp (showaliases $arg1) "") [ log "COMMAND SHOWALIAS N=NULLA=NULL" ]
+]
+
+showaliasbyip = [
+        line = (format "COMMAND SHOWALIAS N=%1A=%2" $arg1 (showaliasesbyip $arg1) )
+        if (! (strcmp (showaliasesbyip $arg1) "")) [ log $line ]
+        if (strcmp (showaliasesbyip $arg1) "") [ log "COMMAND SHOWALIAS N=NULLA=NULL" ]
 ]
 
 restart_ircbot = [
