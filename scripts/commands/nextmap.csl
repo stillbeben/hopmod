@@ -1,9 +1,10 @@
 
 if $custom_maprotation_enabled [
-    if $custom_maprotation_balance [privmsg $cn (err "Next map is undetermined.")] [
+    if $custom_maprotation_balance [privmsg $cn (err "Next mode and map is unknown to the server.")] [
             local ms (mapsetname)
             if (symbol? $ms) [
-                privmsg $cn (info (format "Next map is %1." (nextmap (value $ms))))
+                local nextmode $gamemode
+                privmsg $cn (info (format "Next map is %1 playing %2." (nextmap (value $ms)) $nextmode))
             ] [privmsg $cn (err "Map rotation is client controlled - for this game mode.")]
         ]
 ] [privmsg $cn (err "Map rotation is client controlled.")]
