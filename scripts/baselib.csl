@@ -213,3 +213,6 @@ privplayers = [
     ]
     result $thelist
 ]
+
+// Run a piece of code on next server update iteration
+sched = [sleep 1 $arg1]
