@@ -2168,21 +2168,6 @@ struct fpsserver : igameserver
                 
                 setteam(who,text);
                 
-            #if 0
-                cubescript::arguments args;
-                scriptable_events.dispatch(&on_reteam,args & who & std::string(wi->team) & std::string(text),NULL);                
-                
-                if(!smode || smode->canchangeteam(wi, wi->team, text))
-                {
-                    if(smode && wi->state.state==CS_ALIVE && strcmp(wi->team, text)) 
-                        smode->changeteam(wi, wi->team, text);
-                    s_strncpy(wi->team, text, MAXTEAMLEN+1);
-                }
-                sendf(sender, 1, "riis", SV_SETTEAM, who, wi->team);
-                QUEUE_INT(SV_SETTEAM);
-                QUEUE_INT(who);
-                QUEUE_STR(wi->team);
-            #endif
                 break;
             } 
 
@@ -2630,7 +2615,7 @@ struct fpsserver : igameserver
             }
         }
     }
-                         
+    
     void serverupdate(int _lastmillis, int _totalmillis)
     {
         curtime = _lastmillis - lastmillis;
@@ -2678,8 +2663,6 @@ struct fpsserver : igameserver
             }
             if(smode) smode->update();
         }
-        
-        //while(bannedips.length() && bannedips[0].time-totalmillis>4*60*60000) bannedips.remove(0);
         
         if(bannedips.length())
             loopv(bannedips)
@@ -2804,7 +2787,7 @@ struct fpsserver : igameserver
         masterupdate = true;
         
         cubescript::arguments args;
-        scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val,NULL);
+        scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val & pass,NULL);
     }
     
     void localconnect(int n)
