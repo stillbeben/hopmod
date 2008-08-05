@@ -1180,7 +1180,8 @@ struct fpsserver : igameserver
     void enddemorecord()
     {
         if(!demorecord) return;
-
+        demofilename.clear();
+        
         gzclose(demorecord);
         demorecord = NULL;
 
