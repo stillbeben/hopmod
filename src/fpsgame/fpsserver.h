@@ -1221,7 +1221,7 @@ struct fpsserver : igameserver
         gzFile f = gzopen("demorecord", "wb9");
         if(!f) return;
 #else
-        demotmp = demofilename.length() ? fopen(demofilename.c_str(),"wb9") : tmpfile();
+        demotmp = demofilename.length() ? fopen(demofilename.c_str(),"w+b") : tmpfile();
         if(!demotmp) return;
         setvbuf(demotmp, NULL, _IONBF, 0);
 
