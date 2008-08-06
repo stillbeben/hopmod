@@ -259,6 +259,8 @@ struct fpsserver : igameserver
         bool spy;
         int disc_reason_code;
         
+        vec respawnpos;
+        
         enum var_type
         {
             GAME_VAR=0,    //exists for duration of current game only
@@ -551,6 +553,9 @@ struct fpsserver : igameserver
     cubescript::function1<float,int>                        func_player_pos_x;
     cubescript::function1<float,int>                        func_player_pos_y;
     cubescript::function1<float,int>                        func_player_pos_z;
+    cubescript::function1<float,int>                        func_player_respawn_x;
+    cubescript::function1<float,int>                        func_player_respawn_y;
+    cubescript::function1<float,int>                        func_player_respawn_z;
     cubescript::function1<float,int>                        func_player_effectiveness;
     cubescript::function1<int,int>                          func_player_timeplayed;
     cubescript::function1<float,int>                        func_player_rating;
@@ -704,6 +709,9 @@ struct fpsserver : igameserver
         func_player_pos_x(boost::bind(&fpsserver::get_player_position,this,_1,0)),
         func_player_pos_y(boost::bind(&fpsserver::get_player_position,this,_1,1)),
         func_player_pos_z(boost::bind(&fpsserver::get_player_position,this,_1,2)),
+        func_player_respawn_x(boost::bind(&fpsserver::get_player_respawn_position,this,_1,0)),
+        func_player_respawn_y(boost::bind(&fpsserver::get_player_respawn_position,this,_1,1)),
+        func_player_respawn_z(boost::bind(&fpsserver::get_player_respawn_position,this,_1,2)),
         func_player_effectiveness(boost::bind(&fpsserver::get_player_effectiveness,this,_1)),
         func_player_timeplayed(boost::bind(&fpsserver::get_player_timeplayed,this,_1)),
         func_player_rating(boost::bind(&fpsserver::get_player_rating,this,_1)),
@@ -819,6 +827,9 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_pos_x",&func_player_pos_x);
         server_domain.register_symbol("player_pos_y",&func_player_pos_y);
         server_domain.register_symbol("player_pos_z",&func_player_pos_z);
+        server_domain.register_symbol("player_respawn_x",&func_player_respawn_x);
+        server_domain.register_symbol("player_respawn_y",&func_player_respawn_y);
+        server_domain.register_symbol("player_respawn_z",&func_player_respawn_z);
         server_domain.register_symbol("player_effectiveness",&func_player_effectiveness);
         server_domain.register_symbol("player_timeplayed",&func_player_timeplayed);
         server_domain.register_symbol("player_rating",&func_player_rating);
@@ -1751,9 +1762,10 @@ struct fpsserver : igameserver
                     ci->lag=(ci->lag/2)+(max(0,30-(totalmillis-ci->lastupdate))/2);
                     ci->lastupdate=totalmillis;
                 }
+                if(ci->respawnpos.iszero()) ci->respawnpos=ci->state.o;
                 break;
             }
-
+            
             case SV_EDITMODE:
             {
                 int val = getint(p);
@@ -2489,6 +2501,10 @@ struct fpsserver : igameserver
             scriptable_events.dispatch(&on_death,args & actor->clientnum & target->clientnum,NULL);
             // don't issue respawn yet until DEATHMILLIS has elapsed
             // ts.respawn();
+            
+            target->respawnpos.x=0;
+            target->respawnpos.y=0;
+            target->respawnpos.z=0;
         }
     }
 
@@ -3556,6 +3572,11 @@ struct fpsserver : igameserver
     float get_player_position(int cn,int vi)const
     {
         return get_ci(cn)->state.o.v[vi];
+    }
+    
+    float get_player_respawn_position(int cn,int i)const
+    {
+        return get_ci(cn)->respawnpos.v[i];
     }
     
     float get_player_rating(int cn)const
