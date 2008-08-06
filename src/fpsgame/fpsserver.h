@@ -402,6 +402,7 @@ struct fpsserver : igameserver
 
     vector<uint> allowedips;
     vector<ban> bannedips;
+    std::set<uint> bannedipset;
     vector<clientinfo *> clients;
     vector<worldstate *> worldstates;
     bool reliablemessages;
@@ -3639,11 +3640,17 @@ struct fpsserver : igameserver
     
     void addban(const char * ip,int mins)
     {
-        ban & b = bannedips.add();
-        b.time=totalmillis;
-        b.expire=totalmillis+(mins*60000);
-        b.ip=inet_addr(ip);
-        b.std=false;
+        uint ipnum=inet_addr(ip);
+        if(bannedipset.find(ipnum)==bannedipset.end())
+        {
+            bannedipset.insert(ipnum);
+            
+            ban & b = bannedips.add();
+            b.time=totalmillis;
+            b.expire=totalmillis+(mins*60000);
+            b.ip=ipnum;
+            b.std=false;
+        }
     }
     
     void changetime(int ms)
