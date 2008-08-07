@@ -1,0 +1,36 @@
+#!/bin/bash
+# Written by obi_de
+
+DOWNLOAD_DIR=http://is-powning.de/banlist
+DOWNLOAD_FILE=banlist.txt
+LOCAL_NAME=banlist.conf
+
+while :;do
+
+# Attempt to download the file. --progress=dot:mega is used to prevent
+# WGET_OUTPUT from getting too long.
+WGET_OUTPUT=$(2>&1 wget --timestamping --progress=dot:mega \
+              "$DOWNLOAD_DIR/$DOWNLOAD_FILE")
+
+
+# Make sure the download went okay.
+if [ $? -ne 0 ]
+then
+        # wget had problems.
+        echo 1>&2 $0: "$WGET_OUTPUT"  Exiting.
+        exit 1
+fi
+
+
+# Copy the file to the new name if necessary.
+if echo "$WGET_OUTPUT" | fgrep 'OK' &> /dev/null
+then
+        mv -f "$DOWNLOAD_FILE" "conf/$LOCAL_NAME"
+        echo "Banlist were updated."
+        echo "update_banlist" > serverexec
+else
+        echo "Error Banlist haven't been updated"
+
+fi
+sleep 300
+done
