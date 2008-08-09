@@ -600,6 +600,7 @@ struct fpsserver : igameserver
     cubescript::function0< std::list<std::string> >         func_banlist_ips;
     cubescript::function0< std::list<int> >                 func_banlist_timeleft;
     cubescript::function2<void,const char *,int>            func_addban;
+    cubescript::function0<void>                             func_clearbanlist;
     cubescript::function1<void,int>                         func_changetime;
     
     cubescript::variable_ref<int>                           var_maxclients;
@@ -753,6 +754,7 @@ struct fpsserver : igameserver
         func_banlist_ips(boost::bind(&fpsserver::get_banlist_ips,this)),
         func_banlist_timeleft(boost::bind(&fpsserver::get_banlist_timeleft,this)),
         func_addban(boost::bind(&fpsserver::addban,this,_1,_2)),
+        func_clearbanlist(boost::bind(&fpsserver::clearbanlist,this)),
         func_changetime(boost::bind(&fpsserver::changetime,this,_1)),
         
         var_maxclients(maxclients),
@@ -871,6 +873,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("banlist_ips",&func_banlist_ips);
         server_domain.register_symbol("banlist_timeleft",&func_banlist_timeleft);
         server_domain.register_symbol("addban",&func_addban);
+        server_domain.register_symbol("clearbanlist",&func_clearbanlist);
         server_domain.register_symbol("changetime",&func_changetime);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
@@ -3672,6 +3675,16 @@ struct fpsserver : igameserver
             b.ip=ipnum;
             b.std=false;
         }
+    }
+    
+    void clearbanlist()
+    {
+        loopv(bannedips)
+            if(!bannedips[i].std && bannedipset.find(bannedips[i].ip)!=bannedipset.end())
+            {
+                bannedipset.erase(bannedips[i].ip);
+                bannedips.remove(i--);
+            }
     }
     
     void changetime(int ms)
