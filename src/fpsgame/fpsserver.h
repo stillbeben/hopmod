@@ -602,6 +602,7 @@ struct fpsserver : igameserver
     cubescript::function2<void,const char *,int>            func_addban;
     cubescript::function0<void>                             func_clearbanlist;
     cubescript::function1<void,int>                         func_changetime;
+    cubescript::function1<bool,const char *>                func_adminpass;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -756,6 +757,7 @@ struct fpsserver : igameserver
         func_addban(boost::bind(&fpsserver::addban,this,_1,_2)),
         func_clearbanlist(boost::bind(&fpsserver::clearbanlist,this)),
         func_changetime(boost::bind(&fpsserver::changetime,this,_1)),
+        func_adminpass(boost::bind(&fpsserver::cmp_adminpass,this,_1)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -875,6 +877,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("addban",&func_addban);
         server_domain.register_symbol("clearbanlist",&func_clearbanlist);
         server_domain.register_symbol("changetime",&func_changetime);
+        server_domain.register_symbol("adminpass",&func_adminpass);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3691,6 +3694,12 @@ struct fpsserver : igameserver
     {
         gamelimit=ms;
         checkintermission();
+    }
+    
+    bool cmp_adminpass(const char * src)const
+    {
+        if(!masterpass[0]) return false;
+        return strcmp(masterpass,src)==0;
     }
 };
 
