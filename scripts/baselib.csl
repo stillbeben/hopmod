@@ -180,6 +180,9 @@ erase1st = [
 ]
 
 readfile = [system [cat @(shell_quote $arg1)]]
+mvfile = [system [mv --force @arg1 @arg2]]
+rmfile = [system [rm --force @arg1]]
+clearfile = [system [echo "" > @arg1]]
 
 yesno = [if $arg1 [result yes] [result no]]
 
