@@ -6,7 +6,8 @@ HOPMOD_OBJS= \
     fpsgame/hopmod/stopwatch.o \
     fpsgame/hopmod/eventhandler.o \
     fpsgame/hopmod/script_pipe.o \
-    fpsgame/hopmod/sleep.o \
+    fpsgame/hopmod/schedule.o \
+    fpsgame/hopmod/schedfunctions.o \
     fpsgame/hopmod/module.o \
     fpsgame/hopmod/module_loader.o
 
