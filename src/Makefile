@@ -23,7 +23,7 @@ SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl -
 SERVER_OBJS= \
 	shared/tools-standalone.o \
 	engine/server-standalone.o \
-	fpsgame/fps-standalone.o \
+	fpsgame/fpsserver-standalone.o \
     $(HOPMOD_OBJS)
 
 default: all
