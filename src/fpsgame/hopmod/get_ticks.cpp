@@ -4,8 +4,8 @@
 #endif
 
 #include <sys/time.h>
-static 
-time_t get_ticks()
+
+static time_t get_ticks()
 {
     static bool set = false;
     static timeval started;

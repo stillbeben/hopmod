@@ -16,6 +16,7 @@ namespace cubescript
 class module
 {
 public:
+    virtual ~module(){}
     class domain_accessor;
     template<typename> class symbol_delegate;
     typedef void (* throw_exception_function)(const error_key &);

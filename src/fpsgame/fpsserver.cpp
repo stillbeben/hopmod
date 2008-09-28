@@ -24,7 +24,6 @@
 #include "hopmod/wovar.hpp"
 #include "hopmod/playerid.hpp"
 #include "hopmod/sqlite3.hpp"
-#include "hopmod/get_ticks.cpp"
 
 #include <boost/bind.hpp>
 #include <sstream>
@@ -276,7 +275,7 @@ struct fpsserver : igameserver
         typedef std::map<std::string,std::pair<var_type,std::string> > varmap;
         
         clientinfo()
-         :hidden_priv(false),connected(false),disc_reason_code(0),connect_time(0)
+         :hidden_priv(false),connected(false),connect_time(0),disc_reason_code(0)
         { 
             reset();
         }

@@ -47,7 +47,10 @@ extern char **environ; //if this causes compile error then just remove it.
 class script_pipe
 {
 public:
-    script_pipe(const std::string & filename,const std::vector<std::string> & args,const std::string &,cubescript::domain *);
+    script_pipe(const std::string & filename,
+        const std::vector<std::string> & args,
+        const std::string &,
+        cubescript::domain *);
     ~script_pipe();
     void run();
     bool has_closed()const;
@@ -81,8 +84,18 @@ public:
     inside_pipe_error(const char * key):cubescript::error_key(key){}
 };
 
-script_pipe::script_pipe(const std::string & filename,const std::vector<std::string> & argsv,const std::string & onfinish,cubescript::domain * aDomain)
- :m_filename(filename),m_onfinish(onfinish),m_in(-1),m_out(-1),m_err(-1),m_expn(NULL),m_domain(aDomain)
+script_pipe::script_pipe(const std::string & filename,
+    const std::vector<std::string> & argsv,
+    const std::string & onfinish,
+    cubescript::domain * aDomain)
+
+ :  m_filename(filename),
+    m_in(-1),
+    m_out(-1),
+    m_err(-1),
+    m_domain(aDomain),
+    m_expn(NULL),
+    m_onfinish(onfinish)
 {
     // read/write descriptors from the child's perspective
     int script_read[2];
@@ -90,7 +103,7 @@ script_pipe::script_pipe(const std::string & filename,const std::vector<std::str
     int error_pipe[2];
     
     m_fullname=filename;
-    for(int i=0; i<argsv.size(); i++) m_fullname+=" " + argsv[i];
+    for(unsigned int i=0; i<argsv.size(); i++) m_fullname+=" " + argsv[i];
     
     if( pipe(script_read)==-1 || pipe(script_write)==-1 || pipe(error_pipe)==-1) throw cubescript::error_key("runtime.function.script_pipe.pipe_failed");
     
@@ -119,7 +132,7 @@ script_pipe::script_pipe(const std::string & filename,const std::vector<std::str
         char ** args=new char *[argsv.size()+2];
         args[0]=new char[filename.length()+1];
         strcpy(args[0],filename.c_str());
-        for(int i=0; i<argsv.size(); i++)
+        for(unsigned int i=0; i<argsv.size(); i++)
         {
             const char * arg=argsv[i].c_str();
             args[i+1]=new char[argsv[i].length()+1];
@@ -404,4 +417,6 @@ cubescript::void_t script_pipe_service::create_pipe(const std::string & filename
         fflush(stderr);
         exit(1);
     }
+    
+    return cubescript::void_t();
 }
