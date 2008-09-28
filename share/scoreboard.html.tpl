@@ -15,7 +15,7 @@ table
 {
     border-collapse:collapse;
 }
-table td,table th, table{border:solid 1px  #304860;}
+table td,table th{border:solid 1px  #304860;}
 table th{background-color:#183048;}
 table th{padding:20px;}
 table td{padding:5px; color:#ffffff;}

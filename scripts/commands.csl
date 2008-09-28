@@ -6,7 +6,7 @@ playercmd_eval = [
 ]
 
 playercmd_script = [
-    local filename (format "scripts/%1.csl" $arg1)
+    local filename (format "scripts/%1" $arg1)
     playercmd_eval [exec "@filename"]
 ]
 

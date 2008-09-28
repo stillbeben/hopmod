@@ -186,7 +186,7 @@ clearfile = [system [echo "" > @arg1]]
 
 yesno = [if $arg1 [result yes] [result no]]
 
-exec "scripts/sqlite3ext.csl"
+//exec "scripts/sqlite3ext.csl"
 
 nspecp = [! (strcmp (player_status $arg1) "spectator")]
 
