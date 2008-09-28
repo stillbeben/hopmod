@@ -12,9 +12,9 @@ HOPMOD_OBJS= \
     fpsgame/hopmod/module_loader.o \
     fpsgame/hopmod/sqlite3.o
 
-CXXOPTFLAGS= -O3 -fomit-frame-pointer
-INCLUDES= -Ishared -Iengine -Ifpsgame -Irpggame -Ienet/include -I/usr/X11R6/include `sdl-config --cflags`
-CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) -g $(HOPMOD_CXXFLAGS)
+CXXOPTFLAGS= -g
+INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include
+CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) $(HOPMOD_CXXFLAGS)
 
 PLATFORM_PREFIX=native
 
