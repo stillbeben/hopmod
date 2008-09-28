@@ -586,7 +586,7 @@ void freeblock(block3 *b, bool alloced = true)
 
 void selgridmap(selinfo &sel, int *g)                           // generates a map of the cube sizes at each grid point
 {
-    loopxyz(sel, -sel.grid, (*g++ = lusize, c));
+    loopxyz(sel, -sel.grid, (*g++ = lusize, (void)c));
 }
 
 void freeundo(undoblock *u)
@@ -1683,7 +1683,8 @@ struct texturegui : g3d_callback
     {   
         if(!menuon) return;
         filltexlist();
-        if(!editmode || camera1->o.dist(menupos) > menuautoclose) menuon = false;
+        extern int usegui2d;
+        if(!editmode || ((!texgui2d || !usegui2d) && camera1->o.dist(menupos) > menuautoclose)) menuon = false;
         else g3d_addgui(this, menupos, texgui2d ? GUI_2D : 0);
     }
 } gui;

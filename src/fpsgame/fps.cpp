@@ -126,7 +126,7 @@ struct fpsclient : igameclient
         loopv(players) 
         {
             cur = (cur + dir + players.length()) % players.length();
-            if(players[cur])
+            if(players[cur] && players[cur]->state!=CS_SPECTATOR)
             {
                 if(following<0) conoutf("follow on");
                 following = cur;

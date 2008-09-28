@@ -75,9 +75,9 @@ struct animmodel : model
         Texture *tex, *masks, *envmap, *unlittex, *normalmap;
         Shader *shader;
         float spec, ambient, glow, specglare, glowglare, fullbright, envmapmin, envmapmax, translucency, scrollu, scrollv, alphatest;
-        bool alphablend;
+        bool alphablend, cullface;
 
-        skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), specglare(1), glowglare(1), fullbright(0), envmapmin(0), envmapmax(0), translucency(0.5f), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true) {}
+        skin() : owner(0), tex(notexture), masks(notexture), envmap(NULL), unlittex(NULL), normalmap(NULL), shader(NULL), spec(1.0f), ambient(0.3f), glow(3.0f), specglare(1), glowglare(1), fullbright(0), envmapmin(0), envmapmax(0), translucency(0.5f), scrollu(0), scrollv(0), alphatest(0.9f), alphablend(true), cullface(true) {}
 
         bool multitextured() { return enableglow; }
         bool envmapped() { return hasCM && envmapmax>0 && envmapmodels && (renderpath!=R_FIXEDFUNCTION || maxtmus >= (fogging ? 4 : 3)); }
@@ -253,6 +253,9 @@ struct animmodel : model
 
         void bind(mesh *b, const animstate *as)
         {
+            if(!cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
+            else if(cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
+
             if(as->anim&ANIM_NOSKIN)
             {
                 if(enablealphatest) { glDisable(GL_ALPHA_TEST); enablealphatest = false; }
@@ -487,7 +490,7 @@ struct animmodel : model
     {
         part *p;
         int tag, anim, basetime;
-        GLfloat matrix[16];
+        glmatrixf matrix;
 
         linkedpart() : p(NULL), tag(-1), anim(-1), basetime(0) {}
     };
@@ -679,46 +682,6 @@ struct animmodel : model
             return true;
         }
 
-        void calcnormal(GLfloat *m, vec &dir)
-        {
-            vec n(dir);
-            dir.x = n.x*m[0] + n.y*m[1] + n.z*m[2];
-            dir.y = n.x*m[4] + n.y*m[5] + n.z*m[6];
-            dir.z = n.x*m[8] + n.y*m[9] + n.z*m[10];
-        }
-
-        void calcplane(GLfloat *m, plane &p)
-        {
-            p.offset += p.x*m[12] + p.y*m[13] + p.z*m[14];
-            calcnormal(m, p);
-        }
-
-        void calcvertex(GLfloat *m, vec &pos)
-        {
-            vec p(pos);
-
-            p.x -= m[12];
-            p.y -= m[13];
-            p.z -= m[14];
-
-#if 0
-            // This is probably overkill, since just about any transformations this encounters will be orthogonal matrices 
-            // where their inverse is simply the transpose.
-            int a = fabs(m[0])>fabs(m[1]) && fabs(m[0])>fabs(m[2]) ? 0 : (fabs(m[1])>fabs(m[2]) ? 1 : 2), b = (a+1)%3, c = (a+2)%3;
-            float a1 = m[a], a2 = m[a+4], a3 = m[a+8],
-                  b1 = m[b], b2 = m[b+4], b3 = m[b+8],
-                  c1 = m[c], c2 = m[c+4], c3 = m[c+8];
-
-            pos.z = (p[c] - c1*p[a]/a1 - (c2 - c1*a2/a1)*(p[b] - b1*p[a]/a1)/(b2 - b1*a2/a1)) / (c3 - c1*a3/a1 - (c2 - c1*a2/a1)*(b3 - b1*a3/a1)/(b2 - b1*a2/a1));
-            pos.y = (p[b] - b1*p[a]/a1 - (b3 - b1*a3/a1)*pos.z)/(b2 - b1*a2/a1);
-            pos.x = (p[a] - a2*pos.y - a3*pos.z)/a1;
-#else
-            pos.x = p.x*m[0] + p.y*m[1] + p.z*m[2];
-            pos.y = p.x*m[4] + p.y*m[5] + p.z*m[6];
-            pos.z = p.x*m[8] + p.y*m[9] + p.z*m[10];
-#endif
-        }
-
         float calcpitchaxis(int anim, float pitch, vec &axis, vec &dir, vec &campos, plane &fogplane)
         {
             float angle = pitchscale*pitch + pitchoffset;
@@ -766,9 +729,6 @@ struct animmodel : model
                     }
                 }
             }
-
-            if(!model->cullface && enablecullface) { glDisable(GL_CULL_FACE); enablecullface = false; }
-            else if(model->cullface && !enablecullface) { glEnable(GL_CULL_FACE); enablecullface = true; }
 
             vec raxis(axis), rdir(dir), rcampos(campos);
             plane rfogplane(fogplane);
@@ -819,21 +779,21 @@ struct animmodel : model
 
                     vec naxis(raxis), ndir(rdir), ncampos(rcampos);
                     plane nfogplane(rfogplane);
-                    calcnormal(link.matrix, naxis);
+                    link.matrix.invertnormal(naxis);
                     if(!(anim&ANIM_NOSKIN))
                     {
-                        calcnormal(link.matrix, ndir);
-                        calcvertex(link.matrix, ncampos);
-                        calcplane(link.matrix, nfogplane);
+                        link.matrix.invertnormal(ndir);
+                        link.matrix.invertvertex(ncampos);
+                        link.matrix.invertplane(nfogplane);
                     }
 
                     glPushMatrix();
-                    glMultMatrixf(link.matrix);
+                    glMultMatrixf(link.matrix.v);
                     if(renderpath!=R_FIXEDFUNCTION && anim&ANIM_ENVMAP)
                     {
                         glMatrixMode(GL_TEXTURE);
                         glPushMatrix();
-                        glMultMatrixf(link.matrix);
+                        glMultMatrixf(link.matrix.v);
                         glMatrixMode(GL_MODELVIEW);
                     }
                     int nanim = anim, nbasetime = basetime;
@@ -992,17 +952,10 @@ struct animmodel : model
             {
                 setuptmu(envmaptmu, "T , P @ Pa", anim&ANIM_TRANSLUCENT ? "= Ka" : NULL);
 
-                GLfloat mm[16], mmtrans[16];
-                glGetFloatv(GL_MODELVIEW_MATRIX, mm);
-                loopi(4) // transpose modelview (mmtrans[4*i+j] = mm[4*j+i])
-                {
-                    GLfloat x = mm[i], y = mm[4+i], z = mm[8+i], w = mm[12+i];
-                    mmtrans[4*i] = x;
-                    mmtrans[4*i+1] = y;
-                    mmtrans[4*i+2] = z;
-                    mmtrans[4*i+3] = w;
-                }
-                glLoadMatrixf(mmtrans);
+                glmatrixf mmtrans = mvmatrix;
+                if(reflecting) mmtrans.reflectz(reflectz);
+                mmtrans.transpose();
+                glLoadMatrixf(mmtrans.v);
             }
             else
             {
@@ -1077,18 +1030,9 @@ struct animmodel : model
 
     void initmatrix(matrix3x4 &m)
     {
-        if(offsetyaw)
-        {
-            m.rotate(offsetyaw*RAD, vec(0, 0, 1));
-            if(offsetpitch)
-            {
-                matrix3x4 n;
-                n.rotate(offsetpitch*RAD, vec(0, -1, 0));
-                m.mul(n);
-            }
-        }
-        else if(offsetpitch) m.rotate(offsetpitch*RAD, vec(0, -1, 0));
-        else m.identity();
+        m.identity();
+        if(offsetyaw) m.rotate_around_z(offsetyaw*RAD);
+        if(offsetpitch) m.rotate_around_y(-offsetpitch*RAD);
     }
 
     void gentris(int frame, vector<BIH::tri> *tris)
@@ -1203,6 +1147,12 @@ struct animmodel : model
     {
         if(parts.empty()) loaddefaultparts();
         loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].fullbright = fullbright;
+    }
+
+    void setcullface(bool cullface)
+    {
+        if(parts.empty()) loaddefaultparts();
+        loopv(parts) loopvj(parts[i]->skins) parts[i]->skins[j].cullface = cullface;
     }
 
     void calcbb(int frame, vec &center, vec &radius)

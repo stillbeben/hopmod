@@ -374,24 +374,42 @@ static Texture *newtexture(Texture *t, const char *rname, SDL_Surface *s, int cl
 }
 
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-#define RMASK 0xff000000
-#define GMASK 0x00ff0000
-#define BMASK 0x0000ff00
-#define AMASK 0x000000ff
+#define RGBAMASKS 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+#define RGBMASKS  0xff0000, 0x00ff00, 0x0000ff, 0
 #else
-#define RMASK 0x000000ff
-#define GMASK 0x0000ff00
-#define BMASK 0x00ff0000
-#define AMASK 0xff000000
+#define RGBAMASKS 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+#define RGBMASKS  0x0000ff, 0x00ff00, 0xff0000, 0
 #endif
 
 SDL_Surface *creatergbasurface(SDL_Surface *os)
 {
-    SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RMASK, GMASK, BMASK, AMASK);
+    SDL_Surface *ns = SDL_CreateRGBSurface(SDL_SWSURFACE, os->w, os->h, 32, RGBAMASKS);
     if(!ns) fatal("creatergbsurface");
     SDL_BlitSurface(os, NULL, ns, NULL);
     SDL_FreeSurface(os);
     return ns;
+}
+
+SDL_Surface *texnormal(SDL_Surface *s, int emphasis)    
+{
+    SDL_Surface *d = SDL_CreateRGBSurface(SDL_SWSURFACE, s->w, s->h, 24, RGBMASKS);
+    if(!d) fatal("create surface"); 
+    uchar *src = (uchar *)s->pixels;
+    uchar *dst = (uchar *)d->pixels;
+    loop(y, s->h) loop(x, s->w)
+    {
+        vec normal(0.0f, 0.0f, 255.0f/emphasis);
+        normal.x += src[(y*s->w+((x+s->w-1)%s->w))*s->format->BytesPerPixel];
+        normal.x -= src[(y*s->w+((x+1)%s->w))*s->format->BytesPerPixel];
+        normal.y += src[(((y+s->h-1)%s->h)*s->w+x)*s->format->BytesPerPixel];
+        normal.y -= src[(((y+1)%s->h)*s->w+x)*s->format->BytesPerPixel];
+        normal.normalize();
+        *dst++ = uchar(127.5f + normal.x*127.5f);
+        *dst++ = uchar(127.5f + normal.y*127.5f);
+        *dst++ = uchar(127.5f + normal.z*127.5f);
+    }
+    SDL_FreeSurface(s);
+    return d;
 }
 
 SDL_Surface *scalesurface(SDL_Surface *os, int w, int h)
@@ -480,6 +498,11 @@ static SDL_Surface *texturedata(const char *tname, Slot::Tex *tex = NULL, bool m
             s = texffmask(s, atoi(arg[0]));
             if(s == &stubsurface) return s;
         }
+        else if(!strncmp(cmd, "normal", len)) 
+        {
+            int emphasis = atoi(arg[0]);
+            s = texnormal(s, (emphasis>0)?emphasis:3);
+        }
         else if(!strncmp(cmd, "dup", len)) texdup(s, atoi(arg[0]), atoi(arg[1]));
         else if(!strncmp(cmd, "decal", len)) s = texdecal(s);
         else if(!strncmp(cmd, "offset", len)) s = texoffset(s, atoi(arg[0]), atoi(arg[1]));
@@ -533,7 +556,7 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
     return s ? newtexture(NULL, tname, s, clamp, mipit, false, false, compress) : notexture;
 }
 
-void settexture(const char *name, bool clamp)
+void settexture(const char *name, int clamp)
 {
     glBindTexture(GL_TEXTURE_2D, textureload(name, clamp, true, false)->id);
 }
@@ -693,10 +716,20 @@ static void blenddecal(SDL_Surface *c, SDL_Surface *d)
 
 static void mergespec(SDL_Surface *c, SDL_Surface *s)
 {
-    writetex(c,
-        sourcetex(s);
-        dst[3] = (int(src[0]) + int(src[1]) + int(src[2]))/3;
-    );
+    if(s->format->BitsPerPixel < 24)
+    {
+        writetex(c,
+            sourcetex(s);
+            dst[3] = src[0];
+        );
+    }
+    else
+    {
+        writetex(c,
+            sourcetex(s);
+            dst[3] = (int(src[0]) + int(src[1]) + int(src[2]))/3;
+        );
+    }
 }
 
 static void mergedepth(SDL_Surface *c, SDL_Surface *z)

@@ -19,7 +19,7 @@ struct authserv
         lastconnect = sv.totalmillis;
 
         puts("connecting to authentication server...");
-        socket = enet_socket_create(ENET_SOCKET_TYPE_STREAM, NULL);
+        socket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
         if(socket != ENET_SOCKET_NULL)
         {
             extern ENetAddress masterserver;

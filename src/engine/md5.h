@@ -450,7 +450,7 @@ struct md5 : skelmodel
         do --fname; while(fname >= loadname && *fname!='/' && *fname!='\\');
         fname++;
         s_sprintfd(meshname)("packages/models/%s/%s.md5mesh", loadname, fname);
-        mdl.meshes = sharemeshes(path(meshname));
+        mdl.meshes = sharemeshes(path(meshname), NULL);
         if(!mdl.meshes) return false;
         mdl.initanimparts();
         mdl.initskins();
@@ -631,6 +631,11 @@ void md5alphablend(char *meshname, int *blend)
     loopmd5skins(meshname, s, s.alphablend = *blend!=0);
 }
 
+void md5cullface(char *meshname, int *cullface)
+{
+    loopmd5skins(meshname, s, s.cullface = *cullface!=0);
+}
+
 void md5envmap(char *meshname, char *envmap)
 {
     Texture *tex = cubemapload(envmap);
@@ -674,8 +679,9 @@ void md5anim(char *anim, char *animfile, float *speed, int *priority)
     if(anims.empty()) conoutf("could not find animation %s", anim);
     else 
     {
-        s_sprintfd(filename)("%s/%s", md5dir, animfile);
         md5::part *p = loadingmd5->parts.last();
+        if(!p->meshes) return;
+        s_sprintfd(filename)("%s/%s", md5dir, animfile);
         md5::skelanimspec *sa = ((md5::md5meshgroup *)p->meshes)->loadmd5anim(path(filename));
         if(!sa) conoutf("could not load md5anim file %s", filename);
         else loopv(anims)
@@ -730,6 +736,7 @@ COMMAND(md5glow, "si");
 COMMAND(md5glare, "sff");
 COMMAND(md5alphatest, "sf");
 COMMAND(md5alphablend, "si");
+COMMAND(md5cullface, "si");
 COMMAND(md5envmap, "ss");
 COMMAND(md5bumpmap, "sss");
 COMMAND(md5translucent, "sf");

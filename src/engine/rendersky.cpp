@@ -178,6 +178,21 @@ void drawskyoutline()
 
 VAR(clampsky, 0, 1, 1);
 
+static int yawskyfaces(int faces, int yaw, float spin = 0)
+{
+    if(spin || yaw%90) return faces&0x0F ? faces | 0x0F : faces;
+    static const int faceidxs[3][4] =
+    {
+        { 3, 2, 0, 1 },
+        { 1, 0, 3, 2 },
+        { 2, 3, 1, 0 }
+    };
+    yaw /= 90;
+    if(yaw < 1 || yaw > 3) return faces;
+    const int *idxs = faceidxs[yaw - 1];
+    return (faces & ~0x0F) | (((faces>>idxs[0])&1)<<0) | (((faces>>idxs[1])&1)<<1) | (((faces>>idxs[2])&1)<<2) | (((faces>>idxs[3])&1)<<3);
+}
+
 void drawskybox(int farplane, bool limited)
 {
     extern int renderedskyfaces, renderedskyclip; // , renderedsky, renderedexplicitsky;
@@ -245,13 +260,11 @@ void drawskybox(int farplane, bool limited)
     glRotatef(camera1->yaw+spinsky*lastmillis/1000.0f+yawsky, 0, 1, 0);
     glRotatef(90, 1, 0, 0);
     if(reflecting) glScalef(1, 1, -1);
-    draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : 0, renderedskyfaces | ((spinsky || yawsky) && renderedskyfaces&0x0F ? 0x0F : 0), sky);
+    draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : 0, yawskyfaces(renderedskyfaces, yawsky, spinsky), sky);
     glPopMatrix();
 
     if(!glaring && cloudbox[0])
     {
-        if((spinclouds || yawclouds) && renderedskyfaces&0x0F) renderedskyfaces |= 0x0F;
-
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
 
         glEnable(GL_BLEND);
@@ -264,7 +277,7 @@ void drawskybox(int farplane, bool limited)
         glRotatef(camera1->yaw+spinclouds*lastmillis/1000.0f+yawclouds, 0, 1, 0);
         glRotatef(90, 1, 0, 0);
         if(reflecting) glScalef(1, 1, -1);
-        draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : cloudclip, renderedskyfaces | ((spinclouds || yawclouds) && renderedskyfaces&0x0F ? 0x0F : 0), clouds);
+        draw_envbox(farplane/2, skyclip ? 0.5f + 0.5f*(skyclip-camera1->o.z)/float(hdr.worldsize) : cloudclip, yawskyfaces(renderedskyfaces, yawclouds, spinclouds), clouds);
         glPopMatrix();
 
         glDisable(GL_BLEND);

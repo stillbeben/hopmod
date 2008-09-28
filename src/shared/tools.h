@@ -440,6 +440,7 @@ template <class K, class T> struct hashtable
     ~hashtable()
     {
         DELETEA(table);
+        deletechunks();
     }
 
     chain *insert(const K &key, uint h)
@@ -462,29 +463,30 @@ template <class K, class T> struct hashtable
         return c;
     }
 
-    chain *find(const K &key, bool doinsert)
+    #define HTFIND(success, fail) \
+        uint h = hthash(key)&(size-1); \
+        for(chain *c = table[h]; c; c = c->next) \
+        { \
+            if(htcmp(key, c->key)) return (success); \
+        } \
+        return (fail);
+
+    T *access(const K &key)
     {
-        uint h = hthash(key)&(size-1);
-        for(chain *c = table[h]; c; c = c->next)
-        {
-            if(htcmp(key, c->key)) return c;
-        }
-        if(doinsert) return insert(key, h);
-        return NULL;
+        HTFIND(&c->data, NULL);
     }
 
-    T *access(const K &key, const T *data = NULL)
+    T &access(const K &key, const T &data)
     {
-        chain *c = find(key, data != NULL);
-        if(data) c->data = *data;
-        if(c) return &c->data;
-        return NULL;
+        HTFIND(c->data, insert(key, h)->data = data);
     }
 
     T &operator[](const K &key)
     {
-        return find(key, true)->data;
+        HTFIND(c->data, insert(key, h)->data);
     }
+
+    #undef HTFIND
    
     bool remove(const K &key)
     {
@@ -507,17 +509,22 @@ template <class K, class T> struct hashtable
         return false;
     }
 
+    void deletechunks()
+    {
+        for(chainchunk *nextchunk; chunks; chunks = nextchunk)
+        {
+            nextchunk = chunks->next;
+            delete chunks;
+        }
+    }
+
     void clear()
     {
         if(!numelems) return;
         loopi(size) table[i] = NULL;
         numelems = 0;
         unused = NULL;
-        for(chainchunk *nextchunk; chunks; chunks = nextchunk)
-        {
-            nextchunk = chunks->next;
-            delete chunks;
-        }
+        deletechunks();
     }
 };
 

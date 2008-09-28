@@ -127,7 +127,7 @@ extern Slot    &lookuptexture(int tex, bool load = true);
 extern void loadshaders();
 extern Shader  *lookupshader(int slot);
 extern void createtexture(int tnum, int w, int h, void *pixels, int clamp, bool mipit, GLenum component = GL_RGB, GLenum target = GL_TEXTURE_2D, bool compress = false, bool filter = true);
-extern void renderfullscreenshader(int w, int h);
+extern void renderpostfx();
 extern void initenvmaps();
 extern void genenvmaps();
 extern ushort closestenvmap(const vec &o);
@@ -171,7 +171,7 @@ static inline bool pvsoccluded(const ivec &bborigin, int size)
 extern bool hasVBO, hasDRE, hasOQ, hasTR, hasFBO, hasDS, hasTF, hasBE, hasCM, hasNP2, hasTC, hasTE, hasMT, hasD3, hasstencil, hasAF, hasVP2, hasVP3, hasPP, hasMDA, hasTE3, hasTE4, hasVP, hasFP, hasGLSL, hasGM, hasNVFB;
 
 extern bool envmapping, renderedgame;
-extern GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
+extern glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix;
 
 extern void gl_checkextensions();
 extern void gl_init(int w, int h, int bpp, int depth, int fsaa);

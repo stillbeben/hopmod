@@ -19,7 +19,7 @@ model *loadingmodel = NULL;
 void mdlcullface(int *cullface)
 {
     checkmdl;
-    loadingmodel->cullface = *cullface!=0;
+    loadingmodel->setcullface(*cullface!=0);
 }
 
 COMMAND(mdlcullface, "i");
@@ -283,7 +283,7 @@ model *loadmodel(const char *name, int i, bool msg)
             }
         }
         loadingmodel = NULL;
-        mdllookup.access(m->name(), &m);
+        mdllookup.access(m->name(), m);
     }
     if(mapmodels.inrange(i) && !mapmodels[i].m) mapmodels[i].m = m;
     return m;

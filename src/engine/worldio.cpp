@@ -379,7 +379,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     gzFile f = opengzfile(ogzname, "rb9");
     if(!f) { conoutf(CON_ERROR, "could not read map %s", ogzname); return false; }
     header newhdr;
-    gzread(f, &newhdr, sizeof(header));
+    if(gzread(f, &newhdr, sizeof(header))!=sizeof(header)) { conoutf(CON_ERROR, "map %s has malformatted header", ogzname); gzclose(f); return false; }
     endianswap(&newhdr.version, sizeof(int), 9);
     if(strncmp(newhdr.head, "OCTA", 4)!=0) { conoutf(CON_ERROR, "map %s has malformatted header", ogzname); gzclose(f); return false; }
     if(newhdr.version>MAPVERSION) { conoutf(CON_ERROR, "map %s requires a newer version of cube 2", ogzname); gzclose(f); return false; }

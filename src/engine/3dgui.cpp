@@ -497,7 +497,7 @@ struct gui : g3d_gui
         if(tiled) defaultshader->set();
         if(overlaid) 
         {
-            if(!overlaytex) overlaytex = textureload("data/guioverlay.png");
+            if(!overlaytex) overlaytex = textureload("data/guioverlay.png", 3);
             glColor3fv(light.v);
             glBindTexture(GL_TEXTURE_2D, overlaytex->id);
             glBegin(GL_QUADS);
@@ -510,7 +510,7 @@ struct gui : g3d_gui
     {		
         if(visible())
         {
-            if(!slidertex) slidertex = textureload("data/guislider.png");
+            if(!slidertex) slidertex = textureload("data/guislider.png", 3);
             glEnable(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, slidertex->id);
             glBegin(GL_QUADS);
@@ -550,7 +550,7 @@ struct gui : g3d_gui
             if(icon)
             {
                 s_sprintfd(tname)("packages/icons/%s.jpg", icon);
-                icon_(textureload(tname), false, false, x, cury, ICON_SIZE, clickable && hit);
+                icon_(textureload(tname, 3), false, false, x, cury, ICON_SIZE, clickable && hit);
                 x += ICON_SIZE;
             }
             if(icon && text) x += padding;
@@ -565,7 +565,7 @@ struct gui : g3d_gui
 
     void skin_(int x, int y, int gapw, int gaph, int start, int n)//int vleft, int vright, int vtop, int vbottom, int start, int n) 
     {
-        if(!skintex) skintex = textureload("data/guiskin.png");
+        if(!skintex) skintex = textureload("data/guiskin.png", 3);
         glBindTexture(GL_TEXTURE_2D, skintex->id);
         int gapx1 = INT_MAX, gapy1 = INT_MAX, gapx2 = INT_MAX, gapy2 = INT_MAX;
         float wscale = 1.0f/(SKIN_W*SKIN_SCALE), hscale = 1.0f/(SKIN_H*SKIN_SCALE);
@@ -940,8 +940,11 @@ bool g3d_windowhit(bool on, bool act)
     extern int cleargui(int n);
     if(act) 
     {
-        if(on) { firstx = gui::hitx; firsty = gui::hity; }
-        mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
+        if(actionon || windowhit)
+        {
+            if(on) { firstx = gui::hitx; firsty = gui::hity; }
+            mousebuttons |= (actionon=on) ? G3D_DOWN : G3D_UP;
+        }
     } else if(!on && windowhit) cleargui(1);
     return (guis2d.length() && hascursor) || (windowhit && !windowhit->gui2d);
 }

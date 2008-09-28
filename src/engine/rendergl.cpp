@@ -353,7 +353,7 @@ void gl_checkextensions()
         else if(strstr(vendor, "Tungsten")) mesa_program_bug = 1;
 
 #ifdef __APPLE__
-        if(osversion>=0x1050)
+        if(osversion>=0x1050 && osversion<0x1055) // a temporary leopard driver bug
         {
             apple_ff_bug = 1;
             conoutf(CON_WARN, "WARNING: Using Leopard ARB_position_invariant bug workaround. (use \"/apple_ff_bug 0\" to disable if unnecessary)");
@@ -656,31 +656,30 @@ void project(float fovy, float aspect, int farplane, bool flipx = false, bool fl
 
 VAR(reflectclip, 0, 6, 64);
 
-GLfloat clipmatrix[16];
+glmatrixf clipmatrix;
 
-void genclipmatrix(float a, float b, float c, float d, GLfloat matrix[16])
+void genclipmatrix(float a, float b, float c, float d)
 {
     // transform the clip plane into camera space
     float clip[4];
     loopi(4) clip[i] = a*invmvmatrix[i*4 + 0] + b*invmvmatrix[i*4 + 1] + c*invmvmatrix[i*4 + 2] + d*invmvmatrix[i*4 + 3];
 
-    memcpy(matrix, projmatrix, 16*sizeof(GLfloat));
-
-    float x = ((clip[0]<0 ? -1 : (clip[0]>0 ? 1 : 0)) + matrix[8]) / matrix[0],
-          y = ((clip[1]<0 ? -1 : (clip[1]>0 ? 1 : 0)) + matrix[9]) / matrix[5],
-          w = (1 + matrix[10]) / matrix[14], 
+    float x = ((clip[0]<0 ? -1 : (clip[0]>0 ? 1 : 0)) + projmatrix[8]) / projmatrix[0],
+          y = ((clip[1]<0 ? -1 : (clip[1]>0 ? 1 : 0)) + projmatrix[9]) / projmatrix[5],
+          w = (1 + projmatrix[10]) / projmatrix[14], 
           scale = 2 / (x*clip[0] + y*clip[1] - clip[2] + w*clip[3]);
-    matrix[2] = clip[0]*scale;
-    matrix[6] = clip[1]*scale; 
-    matrix[10] = clip[2]*scale + 1.0f;
-    matrix[14] = clip[3]*scale;
+    clipmatrix = projmatrix;
+    clipmatrix[2] = clip[0]*scale;
+    clipmatrix[6] = clip[1]*scale; 
+    clipmatrix[10] = clip[2]*scale + 1.0f;
+    clipmatrix[14] = clip[3]*scale;
 }
 
-void setclipmatrix(GLfloat matrix[16])
+void setclipmatrix()
 {
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glLoadMatrixf(matrix);
+    glLoadMatrixf(clipmatrix.v);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -706,13 +705,12 @@ void enablepolygonoffset(GLenum type)
     
     bool clipped = reflectz < 1e15f && reflectclip;
 
-    GLfloat offsetmatrix[16];
-    memcpy(offsetmatrix, clipped ? clipmatrix : projmatrix, 16*sizeof(GLfloat));
+    glmatrixf offsetmatrix = clipped ? clipmatrix : projmatrix;
     offsetmatrix[14] += depthoffset * projmatrix[10];
 
     glMatrixMode(GL_PROJECTION);
     if(!clipped) glPushMatrix();
-    glLoadMatrixf(offsetmatrix);
+    glLoadMatrixf(offsetmatrix.v);
     glMatrixMode(GL_MODELVIEW);
 }
 
@@ -727,7 +725,7 @@ void disablepolygonoffset(GLenum type)
     bool clipped = reflectz < 1e15f && reflectclip;
 
     glMatrixMode(GL_PROJECTION);
-    if(clipped) glLoadMatrixf(clipmatrix);
+    if(clipped) glLoadMatrixf(clipmatrix.v);
     else glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 }
@@ -983,8 +981,8 @@ void drawreflection(float z, bool refract, bool clear)
             if(camera1->o.z>=zclip && camera1->o.z<=z+4.0f) zclip = z;
             if(reflecting) zclip = 2*z - zclip;
         }
-        genclipmatrix(0, 0, refracting>0 ? 1 : -1, refracting>0 ? -zclip : zclip, clipmatrix);
-        setclipmatrix(clipmatrix);
+        genclipmatrix(0, 0, refracting>0 ? 1 : -1, refracting>0 ? -zclip : zclip);
+        setclipmatrix();
     }
 
 
@@ -995,7 +993,7 @@ void drawreflection(float z, bool refract, bool clear)
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
         if(reflectclip && z>=0) undoclipmatrix();
         drawskybox(farplane, false);
-        if(reflectclip && z>=0) setclipmatrix(clipmatrix);
+        if(reflectclip && z>=0) setclipmatrix();
         if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
     }
     else if(fading) glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_FALSE);
@@ -1103,32 +1101,15 @@ void invalidatepostfx()
     dopostfx = false;
 }
 
-GLfloat mvmatrix[16], projmatrix[16], mvpmatrix[16], invmvmatrix[16];
+glmatrixf mvmatrix, projmatrix, mvpmatrix, invmvmatrix;
 
 void readmatrices()
 {
-    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix);
-    glGetFloatv(GL_PROJECTION_MATRIX, projmatrix);
-
-    loopi(4) loopj(4)
-    {
-        float c = 0;
-        loopk(4) c += projmatrix[k*4 + j] * mvmatrix[i*4 + k];
-        mvpmatrix[i*4 + j] = c;
-    }
-
-    loopi(3)
-    {
-        loopj(3) invmvmatrix[i*4 + j] = mvmatrix[i + j*4];
-        invmvmatrix[i*4 + 3] = 0;
-    }
-    loopi(3)
-    {
-        float c = 0;
-        loopj(3) c -= mvmatrix[i*4 + j] * mvmatrix[12 + j];
-        invmvmatrix[12 + i] = c;
-    }
-    invmvmatrix[15] = 1;
+    glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix.v);
+    glGetFloatv(GL_PROJECTION_MATRIX, projmatrix.v);
+    
+    mvpmatrix.mul(projmatrix, mvmatrix);
+    invmvmatrix.invert(mvmatrix);
 }
 
 void gl_drawhud(int w, int h, int fogmat, float fogblend, int abovemat);
@@ -1233,7 +1214,7 @@ void gl_drawframe(int w, int h)
     glDisable(GL_CULL_FACE);
 
     addglare();
-    renderfullscreenshader(w, h);
+    renderpostfx();
 
     defaultshader->set();
     g3d_render();

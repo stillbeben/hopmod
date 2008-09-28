@@ -395,6 +395,7 @@ struct fpsent : dynent, fpsstate
     {
         float damroll = 2.0f*damage;
         roll += roll>0 ? damroll : (roll<0 ? -damroll : (rnd(2) ? damroll : -damroll)); // give player a kick
+        clamproll(this);
     }
 
     void hitpush(int damage, const vec &dir, fpsent *actor, int gun)

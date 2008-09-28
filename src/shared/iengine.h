@@ -39,7 +39,7 @@ extern bool  raycubelos(const vec &o, const vec &dest, vec &hitpos);
 
 extern bool isthirdperson();
 
-extern void settexture(const char *name, bool clamp = false);
+extern void settexture(const char *name, int clamp = 0);
 
 // octaedit
 
@@ -202,6 +202,7 @@ extern void avoidcollision(physent *d, const vec &dir, physent *obstacle, float 
 extern void physicsframe();
 extern void dropenttofloor(entity *e);
 extern bool droptofloor(vec &o, float radius, float height);
+extern void clamproll(physent *d);
 
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
 extern void vectoyawpitch(const vec &v, float &yaw, float &pitch);
