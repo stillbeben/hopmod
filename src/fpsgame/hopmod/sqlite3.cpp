@@ -88,7 +88,7 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
     sqlite3_stmt * sqlstmt;
     const char * remaining=NULL;
     
-    if(::sqlite3_prepare_v2(m_db,statement.c_str(),statement.length(),&sqlstmt,&remaining)!=SQLITE_OK)
+    if(::sqlite3_prepare(m_db,statement.c_str(),statement.length(),&sqlstmt,&remaining)!=SQLITE_OK)
     {
         error_callback();
         throw cubescript::error_key("runtime.function.sqlite3_eval.sql_error");
