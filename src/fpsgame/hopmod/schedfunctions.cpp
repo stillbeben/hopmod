@@ -2,7 +2,6 @@
 #include "schedfunctions.hpp"
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/lambda/lambda.hpp>
 
 namespace cubescript
 {
@@ -14,11 +13,11 @@ void schedule_interval_function(schedule_service *,domain *,int,const std::strin
 
 void interval_job_runner(const std::string & code,domain * aDomain,schedule_service * scheduler,int countdown)
 {
-    bool stop=false;
     domain local(aDomain,domain::TEMPORARY_DOMAIN);
-    local.register_symbol("stop",new function0<void>((boost::bind<void>((*boost::lambda::_1 = true),&stop))),domain::ADOPT_SYMBOL);
+    cubescript::nullary_setter stop;
+    local.register_symbol("stop",&stop);
     exec_block(code,&local);
-    if(!stop) schedule_interval_function(scheduler,aDomain,countdown,code);
+    if(!stop.is_set()) schedule_interval_function(scheduler,aDomain,countdown,code);
 }
 
 inline void schedule_interval_function(schedule_service * scheduler,domain * aDomain,int countdown,const std::string & code)
