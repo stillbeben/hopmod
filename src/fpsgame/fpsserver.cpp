@@ -679,6 +679,8 @@ struct fpsserver : igameserver
     event_handler on_auth;
     event_handler on_respawn;
     
+    const char * m_conf_filename;
+    
     #include "auth.h"
     authserv auth;
     
@@ -800,6 +802,7 @@ struct fpsserver : igameserver
         svmapvote_min_interval(0),
         
         scriptable_events(&server_domain),
+        m_conf_filename("conf/server.conf"),
         auth(*this)
     {
         serverdesc[0] = '\0';
@@ -2732,6 +2735,7 @@ struct fpsserver : igameserver
             case 'n': s_strcpy(serverdesc, &arg[2]); return true;
             case 'p': s_strcpy(masterpass, &arg[2]); return true;
             case 'o': if(atoi(&arg[2])) mastermask = (1<<MM_OPEN) | (1<<MM_VETO); return true;
+            case 'f': m_conf_filename=&arg[2]; return true;
         }
         return false;
     }
@@ -2741,7 +2745,8 @@ struct fpsserver : igameserver
         smapname[0] = '\0';
         resetitems();
         
-        on_startup.push_handler_code("exec [conf/server.conf]");
+        s_sprintfd(startup_code)("exec [%s]",m_conf_filename);
+        on_startup.push_handler_code(startup_code);
         
         var_mapname.readonly(false);
         var_gamemode.readonly(false);
