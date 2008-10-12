@@ -1006,6 +1006,23 @@ private:
     boost::function2<RetT,std::list<std::string> &,domain *> m_func;
 };
 
+inline void nullary(){}
+
+class nullary_setter:public function0<void>
+{
+public:
+    nullary_setter():function0<void>(nullary),m_called(false){}
+    bool is_set()const{return m_called;}
+    std::string apply(std::list<std::string> & args,domain *)
+    {
+        if(!args.empty()) throw error_key("syntax.too_many_arguments");
+        m_called=true;
+        return "";
+    }
+private:
+    bool m_called;
+};
+
 /*!
     @brief The base class for variable symbol types.
     

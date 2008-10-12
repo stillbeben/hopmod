@@ -596,7 +596,7 @@ struct fpsserver : igameserver
                                 const std::vector<std::string> &,
                                 const std::string &,
                                 const std::string & >       func_daemon;
-    cubescript::function1<void_,pid_t>                      func_kill; //TODO move to libcubescript system runtime
+    cubescript::function1<void_,pid_t>                      func_kill;
     cubescript::function1<void_,int>                        func_server_sleep;
     cubescript::function1<void,int>                         func_spy;
     cubescript::function0<const char *>                     func_worstteam;

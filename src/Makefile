@@ -1,5 +1,5 @@
 HOPMOD_CXXFLAGS= \
-    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript` -DUSE_SQLITE3 -DUSE_GEOIP
+    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript` -DSTANDALONE -DUSE_SQLITE3 -DUSE_GEOIP
 
 HOPMOD_OBJS= \
     fpsgame/hopmod/textformat.o \
@@ -24,7 +24,7 @@ SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl -
 SERVER_OBJS= \
 	shared/tools-standalone.o \
 	engine/server-standalone.o \
-	fpsgame/fpsserver-standalone.o \
+	fpsgame/fpsserver.o \
     $(HOPMOD_OBJS)
 
 default: all
