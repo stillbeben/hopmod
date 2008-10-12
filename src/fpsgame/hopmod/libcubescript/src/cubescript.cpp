@@ -1331,8 +1331,9 @@ std::string format_date(time_t local_timestamp)
     tm * fields=localtime(&local_timestamp);
     std::ostringstream result;
     result<<1900+fields->tm_year<<"-";
+    fields->tm_mon++;
     if(fields->tm_mon < 10) result<<"0";
-    result<<1+fields->tm_mon<<"-";
+    result<<fields->tm_mon<<"-";
     if(fields->tm_mday < 10) result<<"0";
     result<<fields->tm_mday;
     return result.str();
