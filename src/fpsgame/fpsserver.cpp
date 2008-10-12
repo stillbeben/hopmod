@@ -24,6 +24,7 @@
 #include "hopmod/wovar.hpp"
 #include "hopmod/playerid.hpp"
 #include "hopmod/sqlite3.hpp"
+#include "hopmod/geoip.hpp"
 
 #include <boost/bind.hpp>
 #include <sstream>
@@ -931,6 +932,10 @@ struct fpsserver : igameserver
         cubescript::register_module_loader(&server_domain);
     #ifdef USE_SQLITE3
         cubescript::register_sqlite3(&server_domain);
+    #endif
+    
+    #ifdef USE_GEOIP
+        register_geoip_functions(&server_domain);
     #endif
         
         scriptable_events.register_event("onstartup",&on_startup);

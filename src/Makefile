@@ -1,5 +1,5 @@
 HOPMOD_CXXFLAGS= \
-    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript` -DUSE_SQLITE3
+    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript` -DUSE_SQLITE3 -DUSE_GEOIP
 
 HOPMOD_OBJS= \
     fpsgame/hopmod/textformat.o \
@@ -10,7 +10,8 @@ HOPMOD_OBJS= \
     fpsgame/hopmod/schedfunctions.o \
     fpsgame/hopmod/module.o \
     fpsgame/hopmod/module_loader.o \
-    fpsgame/hopmod/sqlite3.o
+    fpsgame/hopmod/sqlite3.o \
+    fpsgame/hopmod/geoip.o
 
 CXXOPTFLAGS= -g
 INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include
@@ -18,7 +19,7 @@ CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) $(HOPMOD_CXXFLAGS)
 
 PLATFORM_PREFIX=native
 
-SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl -lsqlite3
+SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl -lsqlite3 -lGeoIP
 
 SERVER_OBJS= \
 	shared/tools-standalone.o \
@@ -43,7 +44,7 @@ libcubescript: fpsgame/hopmod/libcubescript/Makefile
 	$(MAKE) -C fpsgame/hopmod/libcubescript/ all
 
 clean: enet/Makefile
-	-$(RM) $(SERVER_OBJS) $(CLIENT_OBJS) ../bin/sauer_server ../bin/mkfifochan ../lib/geoip.csm
+	-$(RM) $(SERVER_OBJS) $(CLIENT_OBJS) ../bin/sauer_server ../bin/mkfifochan
 	$(MAKE)	-C enet/ clean
 	$(MAKE) -C fpsgame/hopmod/libcubescript/ clean
     
@@ -54,7 +55,6 @@ mkfifochan:
 	$(CC) fpsgame/hopmod/mkfifochan.c -o../bin/mkfifochan
 
 plugins:
-	$(CXX) fpsgame/hopmod/modules/geoip.cpp fpsgame/hopmod/module_loader.cpp fpsgame/hopmod/libcubescript/libcubescript.a -DCUBESCRIPT_MODULE $(HOPMOD_CXXFLAGS) -lGeoIP -shared -fPIC -o../lib/geoip.csm
 
 server:	libenet libcubescript $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) -o ../bin/sauer_server $(SERVER_OBJS) $(SERVER_LIBS)  
