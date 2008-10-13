@@ -933,6 +933,7 @@ struct fpsserver : igameserver
         
         cubescript::register_schedule_functions(&m_scheduler,&server_domain);
         cubescript::register_module_loader(&server_domain);
+        
     #ifdef USE_SQLITE3
         cubescript::register_sqlite3(&server_domain);
     #endif

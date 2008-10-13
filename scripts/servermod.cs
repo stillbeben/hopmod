@@ -25,7 +25,7 @@ event_handler $onconnect [
         msg (format "%1 is connected from %2" (grey (player_name $cn)) (grey $location))
     ]
     
-    sleep 2000 [
+    sleep (secs 2) [
         local cn @cn
         local connection_id @(player_conid $cn)
         if (= $connection_id (try player_conid $cn [-1])) [
