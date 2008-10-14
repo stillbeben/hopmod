@@ -1,7 +1,7 @@
 
 lib_LIBRARIES = libcubescript.a
 
-libcubescript_a_CPPFLAGS = -Iinclude -Iboost_1_34_0 -Wall -Wno-sign-compare -Wnon-virtual-dtor -pg
+libcubescript_a_CPPFLAGS = -Iinclude -Wall -Wno-sign-compare -Wnon-virtual-dtor -pg
 libcubescript_a_SOURCES = src/cubescript.cpp
 
 if BUILD_TESTS
