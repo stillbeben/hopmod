@@ -8,8 +8,6 @@ HOPMOD_OBJS= \
     fpsgame/hopmod/script_pipe.o \
     fpsgame/hopmod/schedule.o \
     fpsgame/hopmod/schedfunctions.o \
-    fpsgame/hopmod/module.o \
-    fpsgame/hopmod/module_loader.o \
     fpsgame/hopmod/sqlite3.o \
     fpsgame/hopmod/geoip.o
 

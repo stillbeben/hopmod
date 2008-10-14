@@ -21,7 +21,7 @@ statsdb eval [select name,
                     sum(deaths) as TotalDeaths,
                     round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
                     round((0.0+sum(frags))/sum(deaths),2) as Kpd
-                from players inner join matches on players.match_id=matches.id where matches.datetime > date("now","start of month") group by name order by MostFrags desc limit 100] [
+                from players inner join matches on players.match_id=matches.id where matches.datetime > date("now","start of year") group by name order by MostFrags desc limit 100] [
 
     local td [ 
         parameters colname
@@ -33,7 +33,7 @@ statsdb eval [select name,
 ]
 
 try do [
-    scoreboardgen_output = [@@(readfile share/scoreboard.html.tpl)]
+    scoreboardgen_output = [@@(readfile share/test.tpl)]
 ] [
     log_error ['@FILENAME' script failed because the scoreboard template contains errors.]
     throw runtime.script_failure

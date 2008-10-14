@@ -20,7 +20,6 @@
 #include "hopmod/script_pipe.hpp"
 #include "hopmod/schedule.hpp"
 #include "hopmod/schedfunctions.hpp"
-#include "hopmod/module_loader.hpp"
 #include "hopmod/wovar.hpp"
 #include "hopmod/playerid.hpp"
 #include "hopmod/sqlite3.hpp"
@@ -932,7 +931,6 @@ struct fpsserver : igameserver
         m_script_pipes.register_function(&server_domain);
         
         cubescript::register_schedule_functions(&m_scheduler,&server_domain);
-        cubescript::register_module_loader(&server_domain);
         
     #ifdef USE_SQLITE3
         cubescript::register_sqlite3(&server_domain);
