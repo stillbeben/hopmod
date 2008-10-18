@@ -51,6 +51,11 @@ void event_handler::run(std::list<std::string> & args,cubescript::domain * paren
     }
 }
 
+void event_handler::clear_handlers()
+{
+    m_handlers.clear();
+}
+
 cubescript::void_t event_handler::cancel_handler()
 {
     m_cancel_handler=true;
@@ -76,10 +81,8 @@ void event_handler_service::register_event(const char * name,event_handler * han
 {
     int id=0;
     for(;id<MaxEventSlots && m_handler[id]; id++);
-    assert(id < MaxEventSlots); //fix failure by extending MaxEventSlots
-    
+    assert(id < MaxEventSlots);
     m_handler[id]=handler;
-    
     cubescript::symbol * idsym=new cubescript::constant<int>(id);
     //this will cause trouble if symbol is used after this object has been destroyed
     m_domain->register_symbol(name,idsym,cubescript::domain::ADOPT_SYMBOL);
@@ -110,6 +113,12 @@ void event_handler_service::dispatch(event_handler * handler,std::list<std::stri
         {std::cerr<<"cubescript error: "<<e.what()<<": "<<e.get_id()<<std::endl;}
     catch(const cubescript::error_key & e)
         {std::cerr<<"cubescript error: "<<e.what()<<std::endl;}
+}
+
+void event_handler_service::clear_all_handlers()
+{
+    for(int i=0; i < MaxEventSlots; ++i)
+        if(m_handler[i]) m_handler[i]->clear_handlers();
 }
 
 _void event_handler_service::push_handler_code(int id,const std::string & code)

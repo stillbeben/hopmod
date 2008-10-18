@@ -14,6 +14,7 @@ public:
     void push_handler_code(const std::string &,const std::string &);
     void cancel_handler(const std::string &);
     void run(std::list<std::string> &,cubescript::domain *);
+    void clear_handlers();
 private:
     cubescript::void_t cancel_handler(); 
     bool m_cancel_handler;
@@ -30,6 +31,7 @@ public:
     event_handler_service(cubescript::domain *);
     void register_event(const char *,event_handler *);
     void dispatch(event_handler *,std::list<std::string> &,bool *);
+    void clear_all_handlers();
 private:
     _void push_handler_code(int,const std::string &);
     _void push_handler_code(int,const std::string &,const std::string &);

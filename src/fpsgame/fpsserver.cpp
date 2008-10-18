@@ -509,7 +509,14 @@ struct fpsserver : igameserver
             arenaround = sv.gamemillis+5000;
         }
     };
-
+    
+    struct logfile
+    {
+        std::string filename;
+        std::string funcname;
+        FILE * filestream;
+    };
+    
     #define CAPTURESERV 1
     #include "capture.h"
     #undef CAPTURESERV
@@ -609,6 +616,8 @@ struct fpsserver : igameserver
     cubescript::function0<void>                             func_clearbanlist;
     cubescript::function1<void,int>                         func_changetime;
     cubescript::function1<bool,const char *>                func_adminpass;
+    cubescript::function0<void>                             func_clearconfig;
+    cubescript::function0<void>                             func_reloadconfig;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -638,7 +647,7 @@ struct fpsserver : igameserver
     
     script_pipe_service m_script_pipes;
     schedule_service m_scheduler;
-    std::list<FILE *> m_logfiles;
+    std::list<logfile> m_logfiles;
     
     stopwatch::milliseconds svtext_min_interval;
     stopwatch::milliseconds svsetmaster_min_interval;
@@ -766,6 +775,8 @@ struct fpsserver : igameserver
         func_clearbanlist(boost::bind(&fpsserver::clearbanlist,this)),
         func_changetime(boost::bind(&fpsserver::changetime,this,_1)),
         func_adminpass(boost::bind(&fpsserver::cmp_adminpass,this,_1)),
+        func_clearconfig(boost::bind(&fpsserver::clearconfig,this,false,false)),
+        func_reloadconfig(boost::bind(&fpsserver::clearconfig,this,false,true)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -887,6 +898,8 @@ struct fpsserver : igameserver
         server_domain.register_symbol("clearbanlist",&func_clearbanlist);
         server_domain.register_symbol("changetime",&func_changetime);
         server_domain.register_symbol("adminpass",&func_adminpass);
+        server_domain.register_symbol("clearconfig",&func_clearconfig);
+        server_domain.register_symbol("reloadconfig",&func_reloadconfig);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -2744,6 +2757,19 @@ struct fpsserver : igameserver
         smapname[0] = '\0';
         resetitems();
         
+        invoke_startup_handler();
+        
+        struct sigaction terminate_action;
+        sigemptyset(&terminate_action.sa_mask);
+        terminate_action.sa_handler=shutdown_from_signal;
+        terminate_action.sa_flags=0;
+        
+        sigaction(SIGINT,&terminate_action,NULL);
+        sigaction(SIGTERM,&terminate_action,NULL);
+    }
+    
+    void invoke_startup_handler()
+    {
         s_sprintfd(startup_code)("exec [%s]",m_conf_filename);
         on_startup.push_handler_code(startup_code);
         
@@ -2753,14 +2779,6 @@ struct fpsserver : igameserver
         var_mapname.readonly(true);
         var_gamemode.readonly(true);
         sync_game_settings();
-        
-        struct sigaction terminate_action;
-        sigemptyset(&terminate_action.sa_mask);
-        terminate_action.sa_handler=shutdown_from_signal;
-        terminate_action.sa_flags=0;
-        
-        sigaction(SIGINT,&terminate_action,NULL);
-        sigaction(SIGTERM,&terminate_action,NULL);
     }
     
     const char *privname(int type)
@@ -3412,7 +3430,7 @@ struct fpsserver : igameserver
         scriptable_events.dispatch(&on_shutdown,cubescript::args0(),NULL);
         cleanupserver();
         m_script_pipes.shutdown();
-        for(std::list<FILE *>::iterator it=m_logfiles.begin(); it!=m_logfiles.end(); ++it) fclose(*it);
+        close_log_files();
         exit(0);
     }
     
@@ -3442,21 +3460,40 @@ struct fpsserver : igameserver
     
     void_ create_logfile_function(std::string filename,std::string funcname)
     {
-        FILE * file=fopen(filename.c_str(),"a"); //fclose called in fpsserver::shutdown()
-        if(!file) switch(errno)
+        FILE * file=fopen(filename.c_str(),"a");
+        if(!file) 
+         switch(errno)
         {
-            case EACCES: throw cubescript::error_key("runtime.function.logfile.write_permission_denied");
-            default: throw cubescript::error_key("runtime.function.logfile.fopen_failed");
+            case EACCES: 
+                throw cubescript::error_key("runtime.function.logfile.write_permission_denied");
+            default: 
+                throw cubescript::error_key("runtime.function.logfile.fopen_failed");
         }
         
-        m_logfiles.push_back(file);
+        logfile log;
+        log.filename=filename;
+        log.funcname=funcname;
+        log.filestream=file;
+        m_logfiles.push_back(log);
         
-        if(server_domain.lookup_symbol(funcname)) throw cubescript::error_key("runtime.function.logfile.function_name_in_use");
+        if(server_domain.lookup_symbol(funcname)) 
+            throw cubescript::error_key("runtime.function.logfile.function_name_in_use");
         
-        cubescript::symbol * newfunc=new cubescript::function1<void_,const std::string &>(boost::bind(&fpsserver::write_to_logfile,this,_1,file));
+        cubescript::symbol * newfunc=new cubescript::function1<void_,const std::string &>(
+            boost::bind(&fpsserver::write_to_logfile,this,_1,file));
         server_domain.register_symbol(funcname,newfunc,cubescript::domain::ADOPT_SYMBOL);
         
         return void_();
+    }
+    
+    void close_log_files()
+    {
+        for(std::list<logfile>::iterator it=m_logfiles.begin(); it!=m_logfiles.end(); ++it)
+        {
+            fclose(it->filestream);
+            server_domain.register_symbol(it->funcname,NULL);
+        }
+        m_logfiles.clear();
     }
     
     inline void log_daemon_error(const std::string & msg)
@@ -3715,6 +3752,31 @@ struct fpsserver : igameserver
     {
         if(!masterpass[0]) return false;
         return strcmp(masterpass,src)==0;
+    }
+    
+    void reset_floodprotection_values()
+    {
+        svtext_min_interval=0;
+        svsetmaster_min_interval=0;
+        svkick_min_interval=0;
+        svmapvote_min_interval=0;
+    }
+    
+    void clearconfig(bool ready,bool reload)
+    {
+        if(!ready)
+        {
+            m_scheduler.schedule(boost::bind(&fpsserver::clearconfig,this,true,reload),0);
+            return;
+        }
+        
+        log_status("clearconfig executed.");
+        scriptable_events.clear_all_handlers();
+        m_script_pipes.shutdown();
+        close_log_files();
+        reset_floodprotection_values();
+        
+        if(reload) invoke_startup_handler();
     }
 };
 
