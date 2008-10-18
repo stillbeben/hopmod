@@ -371,7 +371,9 @@ script_pipe_service::~script_pipe_service()
 
 void script_pipe_service::register_function(cubescript::domain * aDomain)
 {
-    cubescript::symbol * create_pipe_function=new cubescript::function3<cubescript::void_t,const std::string &,const std::vector<std::string> &,const std::string &>(boost::bind(&script_pipe_service::create_pipe,this,_1,_2,_3,aDomain));
+    cubescript::symbol * create_pipe_function=
+        new cubescript::function3<void,const std::string &,const std::vector<std::string> &,const std::string &>(
+            boost::bind(&script_pipe_service::create_pipe,this,_1,_2,_3,aDomain));
     aDomain->register_symbol("script_pipe",create_pipe_function,cubescript::domain::ADOPT_SYMBOL);
 }
 
@@ -404,7 +406,7 @@ void script_pipe_service::shutdown()
     m_pipes.clear();
 }
 
-cubescript::void_t script_pipe_service::create_pipe(const std::string & filename,const std::vector<std::string> & args,const std::string & onfinish,cubescript::domain * aDomain)
+void script_pipe_service::create_pipe(const std::string & filename,const std::vector<std::string> & args,const std::string & onfinish,cubescript::domain * aDomain)
 {
     try
     {
@@ -417,6 +419,4 @@ cubescript::void_t script_pipe_service::create_pipe(const std::string & filename
         fflush(stderr);
         exit(1);
     }
-    
-    return cubescript::void_t();
 }

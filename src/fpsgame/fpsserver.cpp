@@ -537,11 +537,11 @@ struct fpsserver : igameserver
 
     cubescript::domain server_domain;
     
-    cubescript::function2<void_,const std::string &,int>    func_flood_protection;
-    cubescript::function1<void_,const std::string &>        func_log_status;
-    cubescript::function1<void_,const std::string &>        func_log_error;
-    cubescript::function1<void_,const std::string &>        func_msg;
-    cubescript::function2<void_,int,const std::string &>    func_privmsg;
+    cubescript::function2<void,const std::string &,int>    func_flood_protection;
+    cubescript::function1<void,const std::string &>        func_log_status;
+    cubescript::function1<void,const std::string &>        func_log_error;
+    cubescript::function1<void,const std::string &>        func_msg;
+    cubescript::function2<void,int,const std::string &>    func_privmsg;
     cubescript::function1<std::string,int>                  func_player_name;
     cubescript::function1<std::string,int>                  func_player_ip;
     cubescript::function1<std::string,int>                  func_player_team;
@@ -576,17 +576,17 @@ struct fpsserver : igameserver
     cubescript::function2<void,int,const std::string &>     func_setpriv;
     cubescript::function0<void>                             func_clearbans;
     cubescript::functionV<void>                             func_kick;
-    cubescript::function1<void_,int>                        func_set_interm;
+    cubescript::function1<void,int>                        func_set_interm;
     cubescript::function1<void,int>                         func_spec;
     cubescript::function1<void,int>                         func_unspec;
     cubescript::function0<std::vector<int> >                func_players;
     cubescript::function0<std::vector<std::string> >        func_teams;
     cubescript::function2<void,int,bool>                    func_setmaster;
-    cubescript::function2<void_,std::string,std::string>    func_changemap;
+    cubescript::function2<void,std::string,std::string>    func_changemap;
     cubescript::function2<void,bool,std::string>            func_recorddemo;
     cubescript::function0<void>                             func_stopdemo;
-    cubescript::function1<void_,const std::string &>        func_allowhost;
-    cubescript::function1<void_,const std::string &>        func_denyhost;
+    cubescript::function1<void,const std::string &>        func_allowhost;
+    cubescript::function1<void,const std::string &>        func_denyhost;
     cubescript::function1<int,const std::string &>          func_capture_score;
     cubescript::function1<std::string,const std::string &>  func_shell_quote;
     cubescript::function0<bool>                             func_teamgame;
@@ -595,15 +595,15 @@ struct fpsserver : igameserver
     cubescript::function0<bool>                             func_ctfgame;
     cubescript::function1<std::string,const std::string &>  func_nsresolve;
     cubescript::function1<bool,int>                         func_dupname;
-    cubescript::function0<void_>                            func_shutdown;
-    cubescript::function0<void_>                            func_restarter;
-    cubescript::function2<void_,std::string,std::string>    func_logfile;
+    cubescript::function0<void>                            func_shutdown;
+    cubescript::function0<void>                            func_restarter;
+    cubescript::function2<void,std::string,std::string>    func_logfile;
     cubescript::function4<pid_t,const std::string &,
                                 const std::vector<std::string> &,
                                 const std::string &,
                                 const std::string & >       func_daemon;
-    cubescript::function1<void_,pid_t>                      func_kill;
-    cubescript::function1<void_,int>                        func_server_sleep;
+    cubescript::function1<void,pid_t>                      func_kill;
+    cubescript::function1<void,int>                        func_server_sleep;
     cubescript::function1<void,int>                         func_spy;
     cubescript::function0<const char *>                     func_worstteam;
     cubescript::function1<int,int>                          func_teamplayerrank;
@@ -2986,7 +2986,7 @@ struct fpsserver : igameserver
         return cname;
     }
     
-    void_ set_flood_protection(const std::string & ptype,int value)
+    void set_flood_protection(const std::string & ptype,int value)
     {
         stopwatch::milliseconds * var=NULL;
         
@@ -2996,32 +2996,26 @@ struct fpsserver : igameserver
         else if(ptype=="SV_KICK")                       var=&svkick_min_interval;
         
         *var=(stopwatch::milliseconds)value;
-        
-        return void_();
     }
     
-    void_ log_status(const std::string & msg)
+    void log_status(const std::string & msg)
     {
         std::cout<<msg<<std::endl;
-        return void_();
     }
     
-    void_ log_error(const std::string & msg)
+    void log_error(const std::string & msg)
     {
         std::cerr<<msg<<std::endl;
-        return void_();
     }
     
-    void_ send_msg(const std::string & msg)
+    void send_msg(const std::string & msg)
     {
         sendservmsg(msg.c_str());
-        return void_();
     }
     
-    void_ send_privmsg(int cn,const std::string & msg)
+    void send_privmsg(int cn,const std::string & msg)
     {
         get_ci(cn)->sendprivmsg(msg.c_str());
-        return void_();
     }
     
     std::string get_player_name(int cn)const
@@ -3145,7 +3139,7 @@ struct fpsserver : igameserver
         sendservmsg("cleared all bans");
     }
     
-    void_ set_interm(int milli)
+    void set_interm(int milli)
     {
         if(minremain>0)
         {
@@ -3155,7 +3149,6 @@ struct fpsserver : igameserver
             if(smode) smode->intermission();
         }
         interm=gamemillis+milli;
-        return void_();
     }
     
     void sync_game_settings()
@@ -3312,13 +3305,12 @@ struct fpsserver : igameserver
         return playerIt->second.find(name)!=playerIt->second.end();
     }
     
-    void_ changemap_(std::string modename,std::string mapname)
+    void changemap_(std::string modename,std::string mapname)
     {
         int gmode=modecode(modename.c_str());
         if(gmode==-1) throw cubescript::error_key("runtime.function.changemap.invalid_gamemode");
         sendf(-1, 1, "risii", SV_MAPCHANGE, mapname.c_str(), gmode, 1);
         changemap(mapname.c_str(),gmode);
-        return void_();
     }
     
     void recorddemo(bool val){recorddemo(val,"");}
@@ -3334,17 +3326,16 @@ struct fpsserver : igameserver
         else enddemorecord();
     }
     
-    void_ add_allowhost(const std::string & hostname)
+    void add_allowhost(const std::string & hostname)
     {
         hostent * result=gethostbyname(hostname.c_str());
         if( result && 
             result->h_addrtype==AF_INET && 
             result->h_length==4 && 
             result->h_addr_list[0] ) allowedips.add(*((in_addr_t *)result->h_addr_list[0]));
-        return void_();
     }
     
-    void_ add_denyhost(const std::string & hostname)
+    void add_denyhost(const std::string & hostname)
     {
         hostent * result=gethostbyname(hostname.c_str());
         if( result && 
@@ -3358,7 +3349,6 @@ struct fpsserver : igameserver
             b.ip = ip;
             allowedips.removeobj(b.ip);
         }
-        return void_();
     }
     
     int get_player_ping(int cn)const{return get_ci(cn)->ping;}
@@ -3425,7 +3415,7 @@ struct fpsserver : igameserver
         else return "0.0.0.0";
     }
     
-    void_ shutdown()
+    void shutdown()
     {
         scriptable_events.dispatch(&on_shutdown,cubescript::args0(),NULL);
         cleanupserver();
@@ -3434,7 +3424,7 @@ struct fpsserver : igameserver
         exit(0);
     }
     
-    void_ create_restarter()
+    void create_restarter()
     {
         pid_t child=fork();
         if(child!=0)
@@ -3447,18 +3437,16 @@ struct fpsserver : igameserver
             //TODO log returned status (if error) of parent process
             execv(g_argv[0],g_argv);
         }
-        return void_();
     }
     
-    void_ write_to_logfile(const std::string & msg,FILE * file)
+    void write_to_logfile(const std::string & msg,FILE * file)
     {
         fputs(msg.c_str(),file);
         fputs("\n",file);
         fflush(file);
-        return void_();
     }
     
-    void_ create_logfile_function(std::string filename,std::string funcname)
+    void create_logfile_function(std::string filename,std::string funcname)
     {
         FILE * file=fopen(filename.c_str(),"a");
         if(!file) 
@@ -3479,11 +3467,9 @@ struct fpsserver : igameserver
         if(server_domain.lookup_symbol(funcname)) 
             throw cubescript::error_key("runtime.function.logfile.function_name_in_use");
         
-        cubescript::symbol * newfunc=new cubescript::function1<void_,const std::string &>(
+        cubescript::symbol * newfunc=new cubescript::function1<void,const std::string &>(
             boost::bind(&fpsserver::write_to_logfile,this,_1,file));
         server_domain.register_symbol(funcname,newfunc,cubescript::domain::ADOPT_SYMBOL);
-        
-        return void_();
     }
     
     void close_log_files()
@@ -3559,7 +3545,7 @@ struct fpsserver : igameserver
         return pid;
     }
     
-    void_ kill_process(pid_t pid)
+    void kill_process(pid_t pid)
     {
         if(::kill(pid,SIGTERM)==-1)
         {
@@ -3570,16 +3556,14 @@ struct fpsserver : igameserver
                 default: throw cubescript::error_key("runtime.function.kill.kill_failed");
             }
         }
-        return void_();
     }
     
-    void_ server_sleep(int ms)
+    void server_sleep(int ms)
     {
         timespec sleeptime;
         sleeptime.tv_sec=ms/1000;
         sleeptime.tv_nsec=(ms-sleeptime.tv_sec*1000)*1000000;
         if(nanosleep(&sleeptime,&sleeptime)==-1) throw cubescript::error_key("runtime.function.server_sleep.returned_early");
-        return void_();
     }
     
     void update_mastermask()

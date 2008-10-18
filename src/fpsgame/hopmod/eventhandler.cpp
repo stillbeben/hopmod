@@ -29,7 +29,7 @@ void event_handler::run(std::list<std::string> & args,cubescript::domain * paren
 {
     cubescript::domain local(parent_domain);
     
-    cubescript::function0<cubescript::void_t> func_cancel_handler(boost::bind(&event_handler::cancel_handler,this));
+    cubescript::function0<void> func_cancel_handler(boost::bind(&event_handler::cancel_handler,this));
     local.register_symbol("cancel_handler",&func_cancel_handler);
     
     int max=m_handlers.size();
@@ -56,10 +56,9 @@ void event_handler::clear_handlers()
     m_handlers.clear();
 }
 
-cubescript::void_t event_handler::cancel_handler()
+void event_handler::cancel_handler()
 {
     m_cancel_handler=true;
-    return cubescript::void_t();
 }
 
 event_handler_service::event_handler_service(cubescript::domain * aDomain)
@@ -67,13 +66,13 @@ event_handler_service::event_handler_service(cubescript::domain * aDomain)
 {
     std::for_each(m_handler,m_handler+MaxEventSlots,assign<event_handler *>(NULL));
     
-    cubescript::symbol * func_event_handler=new cubescript::function2<_void,int,const std::string &>(boost::bind(&event_handler_service::push_handler_code,this,_1,_2));
+    cubescript::symbol * func_event_handler=new cubescript::function2<void,int,const std::string &>(boost::bind(&event_handler_service::push_handler_code,this,_1,_2));
     m_domain->register_symbol("event_handler",func_event_handler,cubescript::domain::ADOPT_SYMBOL);
     
-    cubescript::symbol * func_named_event_handler=new cubescript::function3<_void,int,const std::string &,const std::string &>(boost::bind(&event_handler_service::push_handler_code,this,_1,_2,_3));
+    cubescript::symbol * func_named_event_handler=new cubescript::function3<void,int,const std::string &,const std::string &>(boost::bind(&event_handler_service::push_handler_code,this,_1,_2,_3));
     m_domain->register_symbol("named_event_handler",func_named_event_handler,cubescript::domain::ADOPT_SYMBOL);
 
-    cubescript::symbol * func_cancel_named_handler=new cubescript::function2<_void,int,const std::string &>(boost::bind(&event_handler_service::cancel_named_handler,this,_1,_2));
+    cubescript::symbol * func_cancel_named_handler=new cubescript::function2<void,int,const std::string &>(boost::bind(&event_handler_service::cancel_named_handler,this,_1,_2));
     m_domain->register_symbol("cancel_named_handler",func_cancel_named_handler,cubescript::domain::ADOPT_SYMBOL);
 }
 
@@ -121,26 +120,23 @@ void event_handler_service::clear_all_handlers()
         if(m_handler[i]) m_handler[i]->clear_handlers();
 }
 
-_void event_handler_service::push_handler_code(int id,const std::string & code)
+void event_handler_service::push_handler_code(int id,const std::string & code)
 {
     event_handler * handler=m_handler[id];
     if(!handler) throw cubescript::error_key("runtime.function.event_handler.bad_event_id");
     handler->push_handler_code(code);
-    return _void();
 }
 
-_void event_handler_service::push_handler_code(int id,const std::string & code,const std::string & name)
+void event_handler_service::push_handler_code(int id,const std::string & code,const std::string & name)
 {
     event_handler * handler=m_handler[id];
     if(!handler) throw cubescript::error_key("runtime.function.event_handler.bad_event_id");
     handler->push_handler_code(code,name);
-    return _void();
 }
 
-_void event_handler_service::cancel_named_handler(int id,const std::string & name)
+void event_handler_service::cancel_named_handler(int id,const std::string & name)
 {
     event_handler * handler=m_handler[id];
     if(!handler) throw cubescript::error_key("runtime.function.event_handler.bad_event_id");
     handler->cancel_handler(name);
-    return _void();
 }

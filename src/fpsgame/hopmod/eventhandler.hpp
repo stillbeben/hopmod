@@ -16,7 +16,7 @@ public:
     void run(std::list<std::string> &,cubescript::domain *);
     void clear_handlers();
 private:
-    cubescript::void_t cancel_handler(); 
+    void cancel_handler(); 
     bool m_cancel_handler;
     typedef std::list<cubescript::alias> handler_list;
     handler_list m_handlers;
@@ -33,9 +33,9 @@ public:
     void dispatch(event_handler *,std::list<std::string> &,bool *);
     void clear_all_handlers();
 private:
-    _void push_handler_code(int,const std::string &);
-    _void push_handler_code(int,const std::string &,const std::string &);
-    _void cancel_named_handler(int,const std::string &);
+    void push_handler_code(int,const std::string &);
+    void push_handler_code(int,const std::string &,const std::string &);
+    void cancel_named_handler(int,const std::string &);
     cubescript::domain * m_domain;
     event_handler * m_handler[MaxEventSlots];
 };

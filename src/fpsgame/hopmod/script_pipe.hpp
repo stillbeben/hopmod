@@ -45,7 +45,7 @@ public:
     void run();
     void shutdown();
 private:
-    cubescript::void_t create_pipe(const std::string &,const std::vector<std::string> &,const std::string &,cubescript::domain *);
+    void create_pipe(const std::string &,const std::vector<std::string> &,const std::string &,cubescript::domain *);
     std::list<script_pipe *> m_pipes;
     std::ostream & m_error_output;
 };
