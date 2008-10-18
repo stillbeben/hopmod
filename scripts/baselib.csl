@@ -238,3 +238,5 @@ redirect_textmsg = [
         ]
     ]
 ]
+
+is_startup = [< $uptime 5]

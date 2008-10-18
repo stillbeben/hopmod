@@ -216,7 +216,7 @@ event_handler $ondeath [
 
 event_handler $onshutdown [
     
-    log [server shutdown @(datetime (now))]
+    log [Server shutdown @(datetime (now))]
     
     if $irc_enabled [
         log "Terminating the IRC bot"
@@ -257,10 +257,6 @@ flood_protection SV_SETMASTER   (secs 10)
 flood_protection SV_KICK        (secs 30)
 flood_protection SV_MAPVOTE     (secs 5)
 
-currentmaster = -1
-allow_talk = 1
-disallow_talk_reason = ""
-
 open_scriptpipe
 
 try load_geoip_data "share/GeoIP.dat" [log_error "Expect 'country' function to fail because the GeoIP database was not loaded."]
@@ -288,7 +284,15 @@ update_banlist = [
 sched update_banlist
 if $run_banlist_updater [daemon "bin/updatebanlist" "/dev/null" "/dev/null" "logs/updatebanlist.log"]
 
-defaultgame
-
 log_status "*** Running Hopmod 3.0 for Sauerbraten CTF Edition ***"
-log [Server started @(datetime (now))]
+
+if (is_startup) [
+    log [Server started @(datetime (now))]
+    
+    defaultgame
+    currentmaster = -1
+    allow_talk = 1
+    disallow_talk_reason = ""
+] [
+    log [Reloaded server startup scripts @(datetime (now))]
+]
