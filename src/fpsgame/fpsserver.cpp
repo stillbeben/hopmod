@@ -692,12 +692,14 @@ struct fpsserver : igameserver
     #include "auth.h"
     authserv auth;
     
-    fpsserver() : notgotitems(true), notgotbases(false), gamemode(0), gamecount(0), 
-        playercount(0), concount(0), interm(0), minremain(0), mapreload(false), lastsend(0), 
-        mastermode(MM_OPEN), mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), 
-        mapdata(NULL), reliablemessages(false), demonextmatch(false), demotmp(NULL), 
-        demorecord(NULL), demoplayback(NULL), nextplayback(0), arenamode(*this), capturemode(*this), 
-        assassinmode(*this), ctfmode(*this), smode(NULL),
+    fpsserver() : notgotitems(true), notgotbases(false), gamemode(0),
+        gamecount(0),playercount(0), concount(0), totalmillis(0),interm(0), 
+        minremain(0), mapreload(false), lastsend(0),mastermode(MM_OPEN), 
+        mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), 
+        mapdata(NULL), reliablemessages(false), demonextmatch(false),
+        demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
+        arenamode(*this), capturemode(*this),assassinmode(*this), 
+        ctfmode(*this), smode(NULL),
         
         func_flood_protection(boost::bind(&fpsserver::set_flood_protection,this,_1,_2)),
         func_log_status(boost::bind(&fpsserver::log_status,this,_1)),
