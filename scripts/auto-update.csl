@@ -11,11 +11,24 @@ track_file_for_update = [
 
 server_update = [
     foreach $track_file_updates [
-       if (> (file_modified $arg1) $last_update) [
-            log (format "Performing server update because %1 file has been modified." $arg1)
-            log_status "Restarting server..."
-            restarter
-            shutdown
+        reference filename arg1
+        if (> (file_modified $filename) $last_update) [
+            if (is_script_file $filename) [
+                log (format "Reloading server scripts because %1 file has recently changed." $filename)
+                reloadconfig
+            ] [
+                log (format "Restarting server because %1 file has recently changed." $filename)
+                log_status "Restarting server..."
+                restarter
+                shutdown
+            ]
         ]
     ]
+]
+
+has_filename_extension = [match [\.@(value arg1)$] $arg2]
+
+is_script_file = [
+    parameters filename
+    || (|| (has_filename_extension conf $filename) (has_filename_extension cs $filename)) (has_filename_extension csl $filename)
 ]

@@ -235,6 +235,9 @@ if $auto_update [
     track_file_for_update conf/server.conf
     track_file_for_update conf/vars.conf
     track_file_for_update conf/maps.conf
+    track_file_for_update scripts/servermod.cs
+    track_file_for_update scripts/stats/stats.csl
+    track_file_for_update scripts/commands.csl
 ]
 if $record_player_stats [exec scripts/stats/stats.csl]
 if $autoteambalance [exec scripts/teambalance.csl]
