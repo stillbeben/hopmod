@@ -6,6 +6,7 @@ HOPMOD_OBJS= \
     fpsgame/hopmod/stopwatch.o \
     fpsgame/hopmod/eventhandler.o \
     fpsgame/hopmod/script_pipe.o \
+    fpsgame/hopmod/script_socket.o \
     fpsgame/hopmod/schedule.o \
     fpsgame/hopmod/schedfunctions.o \
     fpsgame/hopmod/sqlite3.o \
@@ -17,7 +18,7 @@ CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) $(HOPMOD_CXXFLAGS)
 
 PLATFORM_PREFIX=native
 
-SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl -lsqlite3 -lGeoIP
+SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl -lsqlite3 -lGeoIP -lmicrohttpd
 
 SERVER_OBJS= \
 	shared/tools-standalone.o \

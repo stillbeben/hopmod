@@ -18,6 +18,7 @@
 #include "hopmod/textformat.hpp"
 #include "hopmod/eventhandler.hpp"
 #include "hopmod/script_pipe.hpp"
+#include "hopmod/script_socket.hpp"
 #include "hopmod/schedule.hpp"
 #include "hopmod/schedfunctions.hpp"
 #include "hopmod/wovar.hpp"
@@ -646,6 +647,7 @@ struct fpsserver : igameserver
     cubescript::constant<int>                               const_mm_private;
     
     script_pipe_service m_script_pipes;
+    script_socket_service m_script_sockets;
     schedule_service m_scheduler;
     std::list<logfile> m_logfiles;
     
@@ -944,6 +946,7 @@ struct fpsserver : igameserver
         cubescript::bind((const char *)masterbase,"MASTERSERVER",&server_domain);
         
         m_script_pipes.register_function(&server_domain);
+        m_script_sockets.register_function(&server_domain);
         
         cubescript::register_schedule_functions(&m_scheduler,&server_domain);
         
@@ -2679,6 +2682,7 @@ struct fpsserver : igameserver
         {
             m_scheduler.run_service();
             m_script_pipes.run();
+            m_script_sockets.run();
         }
         catch(const cubescript::script_error<cubescript::symbol_error> & e)
             {std::cerr<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<": "<<e.get_id()<<std::endl;}
@@ -3422,6 +3426,7 @@ struct fpsserver : igameserver
         scriptable_events.dispatch(&on_shutdown,cubescript::args0(),NULL);
         cleanupserver();
         m_script_pipes.shutdown();
+        m_script_sockets.shutdown();
         close_log_files();
         exit(0);
     }
@@ -3759,6 +3764,7 @@ struct fpsserver : igameserver
         log_status("clearconfig executed.");
         scriptable_events.clear_all_handlers();
         m_script_pipes.shutdown();
+        m_script_sockets.shutdown();
         close_log_files();
         reset_floodprotection_values();
         
