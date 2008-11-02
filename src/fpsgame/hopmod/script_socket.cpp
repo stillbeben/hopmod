@@ -102,25 +102,28 @@ private:
             else return MHD_NO;
         }
         
-        if(*upload_data_size)
+        if(upload_data)
         {
-            code_buffer->append(upload_data,*upload_data_size);
-        }
-        else
-        {
-            script_socket_server * server = (script_socket_server *)cls;
+            if(*upload_data_size)
+            {
+                code_buffer->append(upload_data,*upload_data_size);
+            }
+            else if(code_buffer->length() >= atoi(clen))
+            {
+                script_socket_server * server = (script_socket_server *)cls;
+                
+                std::string responseBody;
+                int status = server->execute_request(*code_buffer,responseBody);
+                
+                MHD_Response * response = MHD_create_response_from_data(
+                    responseBody.length(),(void *)responseBody.c_str(),
+                    MHD_NO,MHD_YES);
+                MHD_queue_response(connection,status,response);
+                MHD_destroy_response(response);
+            }
             
-            std::string responseBody;
-            int status = server->execute_request(*code_buffer,responseBody);
-            
-            MHD_Response * response = MHD_create_response_from_data(
-                responseBody.length(),(void *)responseBody.c_str(),
-                MHD_NO,MHD_YES);
-            MHD_queue_response(connection,status,response);
-            MHD_destroy_response(response);
+            *upload_data_size=0;
         }
-        
-        *upload_data_size=0;
         
         return MHD_YES;
     }
