@@ -2,24 +2,29 @@
 <head>
 <title>@title scoreboard</title>
 <style type="text/css">
+body,table
+{
+    font-family: Verdana,Helvetica,Arial,sans-serif;
+    font-size:84%;
+}
 body
 {
-    background-color: #000000;
-    color: #f0f0f0;
+    background-color: #302c28;
+    color: #EEEEEE;
     text-align:center;
-    font-family: arial;
 }
-a{color:#FF9900;}
-a:visited{font-style:italic;}
+a{color:#FFBB00;}
+a:hover{color: #FF9900;}
+a:visited{color:#e51d14;}
 table
 {
     border-collapse:collapse;
 }
-table td,table th{border:solid 1px  #304860;}
-table th{background-color:#183048;}
+table td,table th{border:solid 1px  #555555;}
+table th{background-color:#3f3934;}
 table th{padding:20px;}
 table td{padding:5px; color:#ffffff;}
-.highlight td{background-color: #302c28;}
+.highlight td{color: #ffba00}
 .footer
 {
     margin-top:20px;
