@@ -3767,6 +3767,7 @@ struct fpsserver : igameserver
         m_script_sockets.shutdown();
         close_log_files();
         reset_floodprotection_values();
+        m_scheduler.clear();
         
         if(reload) invoke_startup_handler();
     }

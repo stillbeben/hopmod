@@ -47,6 +47,7 @@ public:
     }
     
     void run_service();
+    void clear();
 private:
     typedef boost::function0<void> function_type;
     struct job

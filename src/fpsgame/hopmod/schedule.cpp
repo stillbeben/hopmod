@@ -30,14 +30,27 @@
 #include "schedule.hpp"
 #include "get_ticks.cpp"
 
+static void clear_scheduler_marker(){}
+
 schedule_service::milliseconds schedule_service::get_tickcount(){return (schedule_service::milliseconds)::get_ticks();}
 
 void schedule_service::run_service()
 {
     while(!m_jobs.empty() && get_tickcount() >= m_jobs.top().launch_time)
     {
+        if(m_jobs.top().function == clear_scheduler_marker)
+        {
+            while(!m_jobs.empty()) m_jobs.pop();
+            return;
+        }
+        
         try{m_jobs.top().function();}
         catch(...){m_jobs.pop(); throw;}
         m_jobs.pop();
     }
+}
+
+void schedule_service::clear()
+{
+    schedule(clear_scheduler_marker,0);
 }
