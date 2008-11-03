@@ -261,6 +261,7 @@ flood_protection SV_KICK        (secs 30)
 flood_protection SV_MAPVOTE     (secs 5)
 
 open_scriptpipe
+script_socket_server $script_socket_server_port
 
 try load_geoip_data "share/GeoIP.dat" [log_error "Expect 'country' function to fail because the GeoIP database was not loaded."]
 
