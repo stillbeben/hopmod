@@ -1,12 +1,14 @@
 
-createdb = (! (path? "scripts/stats/data/stats.db") )
+stats_db_filename = "scripts/stats/data/stats.db"
+
+createdb = (! (path? $stats_db_filename) )
 latestgame = (now)
 gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
 
 sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
 
 new sqlite3 statsdb
-statsdb open "scripts/stats/data/stats.db"
+statsdb open $stats_db_filename
 
 if $createdb [
     statsdb eval [begin transaction]
@@ -449,7 +451,7 @@ log_event = [
 transferstats = [
     new sqlite3 transdb
     transdb open "scripts/stats/data/transtats.db"
-    transdb eval [attach database "scripts/stats/data/stats.db" as stats] []
+    transdb eval [attach database @stats_db_filename as stats] []
     local sql_unsyncd [select * from stats.matches where stats.matches.syncd=0]
     local sql_unsyncd_ids [select id from stats.matches where stats.matches.syncd=0]
     local sql_unsyncd_player_ids [select id from players]
