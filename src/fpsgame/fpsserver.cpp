@@ -599,6 +599,7 @@ struct fpsserver : igameserver
     cubescript::function0<void>                            func_shutdown;
     cubescript::function0<void>                            func_restarter;
     cubescript::function2<void,std::string,std::string>    func_logfile;
+    cubescript::function1<void,const std::string &>        func_close_logfile;
     cubescript::function4<pid_t,const std::string &,
                                 const std::vector<std::string> &,
                                 const std::string &,
@@ -764,6 +765,7 @@ struct fpsserver : igameserver
         func_shutdown(boost::bind(&fpsserver::shutdown,this)),
         func_restarter(boost::bind(&fpsserver::create_restarter,this)),
         func_logfile(boost::bind(&fpsserver::create_logfile_function,this,_1,_2)),
+        func_close_logfile(boost::bind(&fpsserver::close_logfile,this,_1)),
         func_daemon(boost::bind(&fpsserver::spawn_daemon,this,_1,_2,_3,_4)),
         func_kill(boost::bind(&fpsserver::kill_process,this,_1)),
         func_server_sleep(boost::bind(&fpsserver::server_sleep,this,_1)),
@@ -887,6 +889,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("shutdown",&func_shutdown);
         server_domain.register_symbol("restarter",&func_restarter);
         server_domain.register_symbol("logfile",&func_logfile);
+        server_domain.register_symbol("close_logfile",&func_close_logfile);
         server_domain.register_symbol("daemon",&func_daemon);
         server_domain.register_symbol("kill",&func_kill);
         server_domain.register_symbol("server_sleep",&func_server_sleep);
@@ -3477,6 +3480,19 @@ struct fpsserver : igameserver
         cubescript::symbol * newfunc=new cubescript::function1<void,const std::string &>(
             boost::bind(&fpsserver::write_to_logfile,this,_1,file));
         server_domain.register_symbol(funcname,newfunc,cubescript::domain::ADOPT_SYMBOL);
+    }
+    
+    bool close_logfile(const std::string & logname)
+    {
+        for(std::list<logfile>::iterator it=m_logfiles.begin(); it!=m_logfiles.end(); ++it)
+            if(it->funcname == logname)
+            {
+                fclose(it->filestream);
+                server_domain.register_symbol(it->funcname,NULL);
+                m_logfiles.erase(it);
+                return true;
+            }
+        return false;
     }
     
     void close_log_files()

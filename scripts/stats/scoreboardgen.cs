@@ -36,7 +36,7 @@ statsdb eval [select name,
                 from players 
     inner join matches on players.match_id=matches.id
     inner join ctfplayers on players.id=ctfplayers.player_id
-    where matches.datetime > date("now","start of year") group by name order by TotalScored desc limit 100] [
+    where matches.datetime > date("now","start of month") group by name order by TotalScored desc limit 100] [
 
     local td [ 
         parameters colname
@@ -65,3 +65,4 @@ try do [
 ]
 
 scoreboardgen_writer $scoreboardgen_output
+close_logfile scoreboardgen_writer
