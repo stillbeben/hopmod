@@ -292,10 +292,11 @@ log_status "*** Running Hopmod 3.0 for Sauerbraten CTF Edition ***"
 if (is_startup) [
     log [Server started @(datetime (now))]
     
-    defaultgame
     currentmaster = -1
     allow_talk = 1
     disallow_talk_reason = ""
+
+    defaultgame
 ] [
     log [Reloaded server startup scripts @(datetime (now))]
 ]
