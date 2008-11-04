@@ -20,7 +20,7 @@ $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Co
 <title><?php print $server_title; ?> scoreboard</title>
 <script type="text/javascript" src="js/overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
 <script type="text/javascript" src="js/jquery-latest.js"></script>
-<script type="text/javascript" src="js/query.tablesorter.js"></script>
+<script type="text/javascript" src="js/jquery.tablesorter.js"></script>
 
 <script type="text/javascript" id="js">
 
