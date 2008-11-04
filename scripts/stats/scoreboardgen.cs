@@ -1,5 +1,5 @@
 
-scoreboardgen_output_file = logs/scoreboard.html
+scoreboardgen_output_file = [www/@(month (now))-scoreboard.html]
 
 if (! (symbol? statsdb)) [
     log_error ['@FILENAME' script failed because stats are disabled.]
