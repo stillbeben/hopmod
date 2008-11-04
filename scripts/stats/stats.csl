@@ -1,6 +1,6 @@
 
 stats_db_filename = "scripts/stats/data/stats.db"
-absolute_stats_db_filename = [@(getenv PWD)/@stats_db_filename]
+absolute_stats_db_filename = (concatword $PWD [/] $stats_db_filename)
 
 createdb = (! (path? $stats_db_filename) )
 latestgame = (now)
