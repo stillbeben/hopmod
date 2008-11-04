@@ -74,17 +74,19 @@ $sql = "select name,
 
 foreach ($dbh->query($sql) as $row)
 {
-        print "
-        	<tr onmouseover=\"this.className=\'highlight\'\" onmouseout=\"this.className=\'\'\">
-			<td>$row[name]</td>
-			<td>$row[TotalScored]</td>
-			<td>$row[TotalDefended]</td>
-			<td>$row[MostFrags]</td>
-			<td>$row[TotalFrags]</td>
-			<td>$row[TotalDeaths]</td>
-			<td>$row[Accuracy]</td>
-			<td>$row[Kpd]</td>
-        	</tr>";
+	if ( $row[TotalFrags] > 50 ) {
+        	print "
+        		<tr onmouseover=\"this.className=\'highlight\'\" onmouseout=\"this.className=\'\'\">
+				<td>$row[name]</td>
+				<td>$row[TotalScored]</td>
+				<td>$row[TotalDefended]</td>
+				<td>$row[MostFrags]</td>
+				<td>$row[TotalFrags]</td>
+				<td>$row[TotalDeaths]</td>
+				<td>$row[Accuracy]</td>
+				<td>$row[Kpd]</td>
+        		</tr>";
+	}
 }
 ?>
 
