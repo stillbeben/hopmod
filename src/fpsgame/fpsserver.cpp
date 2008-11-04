@@ -255,6 +255,7 @@ struct fpsserver : igameserver
         stopwatch svsetmaster_interval;
         stopwatch svkick_interval;
         stopwatch svmapvote_interval;
+        stopwatch svc2sinit_interval;
         
         bool connected;
         int disc_reason;
@@ -656,6 +657,7 @@ struct fpsserver : igameserver
     stopwatch::milliseconds svsetmaster_min_interval;
     stopwatch::milliseconds svkick_min_interval;
     stopwatch::milliseconds svmapvote_min_interval;
+    stopwatch::milliseconds svc2sinit_min_interval;
     
     event_handler_service scriptable_events;
     event_handler on_startup;
@@ -1994,6 +1996,8 @@ struct fpsserver : igameserver
                     break;
                 }
                 
+                bool flooding = ci->check_flooding(ci->svc2sinit_interval,svc2sinit_min_interval,"renaming");
+                
                 QUEUE_MSG;
                 string oldname; oldname[0]='\0'; if(ci->name[0]) s_strcpy(oldname,ci->name);
                 string oldteam; oldteam[0]='\0'; if(ci->team[0]) s_strcpy(oldteam,ci->team);
@@ -2035,6 +2039,8 @@ struct fpsserver : igameserver
                 if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, text)) smode->changeteam(ci, ci->team, text);
                 s_strncpy(ci->team, text, MAXTEAMLEN+1);
                 QUEUE_MSG;
+                
+                if(flooding) break;
                 
                 if(connected)
                 {
@@ -3007,6 +3013,7 @@ struct fpsserver : igameserver
         else if(ptype=="SV_SETMASTER")                  var=&svsetmaster_min_interval;
         else if(ptype=="SV_MAPVOTE")                    var=&svmapvote_min_interval;
         else if(ptype=="SV_KICK")                       var=&svkick_min_interval;
+        else if(ptype=="SV_C2SINIT")                    var=&svc2sinit_min_interval;
         
         *var=(stopwatch::milliseconds)value;
     }
@@ -3771,6 +3778,7 @@ struct fpsserver : igameserver
         svsetmaster_min_interval=0;
         svkick_min_interval=0;
         svmapvote_min_interval=0;
+        svc2sinit_min_interval=0;
     }
     
     void clearconfig(bool ready,bool reload)

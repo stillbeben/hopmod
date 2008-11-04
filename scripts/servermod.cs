@@ -259,6 +259,7 @@ flood_protection SV_TEXT        (secs 1)
 flood_protection SV_SETMASTER   (secs 10)
 flood_protection SV_KICK        (secs 30)
 flood_protection SV_MAPVOTE     (secs 5)
+flood_protection SV_C2SINIT     (secs 1)
 
 open_scriptpipe
 script_socket_server $script_socket_server_port
