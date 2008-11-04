@@ -19,40 +19,14 @@ $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Co
 <head>
 <title><?php print $server_title; ?> scoreboard</title>
 <script type="text/javascript" src="overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
-<style type="text/css">
-body
-{
-	background-color: #000000;
-	color: #f0f0f0;
-	text-align:center;
-	font-family: arial;
-}
-a{color:#FF9900;}
-a:visited{font-style:italic;}
-table
-{
-	border-collapse:collapse;
-}
-table td,table th{border:solid 1px  #304860;}
-table th{background-color:#183048;}
-table th{padding:20px;}
-table td{padding:5px; color:#ffffff;}
-.highlight td{background-color: #302c28;}
-.footer
-{
-	margin-top:20px;
-	color: #a0a0a0;
-	font-size:small;
-}
-</style>
-
+<link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
 <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000;"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
 <table align="center" cellpadding="0" cellspacing="0">
 	<th><a href="javascript:void(0);" onmouseover="return overlib('Player Name');" onmouseout="return nd();">Name</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Average Scores per Game');" onmouseout="return nd();">ASpG</a></th>
+	<th><img src="images/white-dn-arrow.gif" /> <a href="javascript:void(0);" onmouseover="return overlib('Average Scores per Game');" onmouseout="return nd();">ASpG</a></th>
 	<th><a href="javascript:void(0);" onmouseover="return overlib('Average Defends per Game');" onmouseout="return nd();">ADpG</a></th>
 	<th><a href="javascript:void(0);" onmouseover="return overlib('Flages Defended');" onmouseout="return nd();">Flags Defended</a></th>
 	<th><a href="javascript:void(0);" onmouseover="return overlib('Highest Frags Recorded for 1 game');" onmouseout="return nd();">Frags Record</a></th>
@@ -81,13 +55,13 @@ $sql = "select name,
 	from players
 		inner join matches on players.match_id=matches.id
 		inner join ctfplayers on players.id=ctfplayers.player_id
-	where matches.datetime > date(\"now\",\"start of year\") group by name order by ASpG desc limit 300";
+	where matches.datetime > date(\"now\",\"start of month\") group by name order by ASpG desc limit 300";
 
 foreach ($dbh->query($sql) as $row)
 {
 	if ( $row[TotalFrags] > 50 & $row[name] != "unnamed") {
         	print "
-        		<tr onmouseover=\"this.className=\'highlight\'\" onmouseout=\"this.className=\'\'\">
+        		<tr onmouseover=\"this.className='highlight'\" onmouseout=\"this.className=''\">
 				<td>$row[name]</td>
 				<td>$row[ASpG]</td>
 				<td>$row[ADpG]</td>
