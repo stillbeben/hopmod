@@ -18,25 +18,41 @@ $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Co
 <html>
 <head>
 <title><?php print $server_title; ?> scoreboard</title>
-<script type="text/javascript" src="overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
+<script type="text/javascript" src="js/overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
+<script type="text/javascript" src="js/jquery-latest.js"></script>
+<script type="text/javascript" src="js/query.tablesorter.js"></script>
+
+<script type="text/javascript" id="js">
+
+$(document).ready(function()
+       { 
+                $("#hopstats").tablesorter( {sortList: [[0,0]]} ); 
+        } 
+);
+</script>
+
 <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
 <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000;"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
-<table align="center" cellpadding="0" cellspacing="0">
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Player Name');" onmouseout="return nd();">Name</a></th>
-	<th><img src="images/white-dn-arrow.gif" /> <a href="javascript:void(0);" onmouseover="return overlib('Average Scores per Game');" onmouseout="return nd();">ASpG</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Average Defends per Game');" onmouseout="return nd();">ADpG</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Flages Defended');" onmouseout="return nd();">Flags Defended</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Highest Frags Recorded for 1 game');" onmouseout="return nd();">Frags Record</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Total Frags Ever Recorded');" onmouseout="return nd();">Total Frags</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Total Deaths');" onmouseout="return nd();">Total Deaths</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Accuracy %');" onmouseout="return nd();">Accuracy (%)</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Kills Per Death');" onmouseout="return nd();">Kpd</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Team Kills');" onmouseout="return nd();">TK</a></th>
-	<th><a href="javascript:void(0);" onmouseover="return overlib('Total Number of Games Played');" onmouseout="return nd();">Games</a></th>
-
+<table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
+	<thead>
+	<tr>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Player Name');" onmouseout="return nd();">Name</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Average Scores per Game + Average flag Pickups');" onmouseout="return nd();">Agressor Rating</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Average Defends(kill flag carrier) per Game + Average flag returns');" onmouseout="return nd();">Defender Rating</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Flages Defended');" onmouseout="return nd();">Flags Defended</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Highest Frags Recorded for 1 game');" onmouseout="return nd();">Frags Record</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Frags Ever Recorded');" onmouseout="return nd();">Total Frags</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Deaths');" onmouseout="return nd();">Total Deaths</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Accuracy %');" onmouseout="return nd();">Accuracy (%)</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Kills Per Death');" onmouseout="return nd();">Kpd</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Team Kills');" onmouseout="return nd();">TK</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Number of Games Played');" onmouseout="return nd();">Games</a></th>
+	</tr>
+	</thead>
+	<tbody>
 <?php
 $sql = "select name,
 		sum(pickups) as TotalPickups,
@@ -77,7 +93,7 @@ foreach ($dbh->query($sql) as $row)
 	}
 }
 ?>
-
+</tbody>
 </table>
 
 
