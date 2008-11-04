@@ -1,5 +1,4 @@
 <?php
-
 $stats_db_filename = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Content-type: text/cubescript\" --post-data=\"value absolute_stats_db_filename\" http://127.0.0.1:7894/serverexec", $return);
 if ( $return = 0  ) { echo "<font color=red>Error connecting to server for value absolute_stats_db_filename. Is the server running? Contact the administrator</font>"; }
 try {
@@ -11,19 +10,14 @@ catch(PDOException $e)
 }
 $month = date("F");
 $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Content-type: text/cubescript\" --post-data=\"value title\" http://127.0.0.1:7894/serverexec");
-
-
 ?>
-
 <html>
 <head>
 <title><?php print $server_title; ?> scoreboard</title>
 <script type="text/javascript" src="js/overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
 <script type="text/javascript" src="js/jquery-latest.js"></script>
 <script type="text/javascript" src="js/jquery.tablesorter.js"></script>
-
 <script type="text/javascript" id="js">
-
 $(document).ready(function()
        { 
                 $("#hopstats").tablesorter( {sortList: [[0,0]]} ); 
@@ -34,7 +28,8 @@ $(document).ready(function()
 <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
-<div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000;"></div>
+<noscript><div class="error">This page uses JavaScript for table colum sorting and producing an enhanced tooltip display.</div></noscript>
+<div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
 	<thead>
@@ -96,13 +91,9 @@ foreach ($dbh->query($sql) as $row)
 </tbody>
 </table>
 
-
-
-
 <div class="footer">
 <span id="cdate">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
 </div>
-
 
 </body>
 </html>
