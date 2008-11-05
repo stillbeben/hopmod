@@ -127,7 +127,7 @@ foreach ($dbh->query($sql) as $row)
 				<td>$row[name]</td>
 				";
 				?>
-				<td align=left>
+				<td>
 				<a href="javascript:void(0);" onmouseover="return overlib('<?php print $country ?>');" onmouseout="return nd();"><?php print $flag ?></a></td>
 				<?php
 
