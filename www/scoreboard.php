@@ -10,34 +10,65 @@ catch(PDOException $e)
 }
 $month = date("F");
 $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Content-type: text/cubescript\" --post-data=\"value title\" http://127.0.0.1:7894/serverexec");
-
-
 ?>
-
 <html>
 <head>
 <title><?php print $server_title; ?> scoreboard</title>
+<script type="text/javascript" src="js/overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
+<script type="text/javascript" src="js/jquery-latest.js"></script>
+<script type="text/javascript" src="js/jquery.tablesorter.js"></script>
+<script type="text/javascript" id="js">
+$(document).ready(function()
+       { 
+       $("#hopstats").tablesorter({
+			headers:
+       			{  
+         			0 : { sorter: "text" },
+         			1 : { sorter: "digit" },
+				2 : { sorter: "digit" },
+                                3 : { sorter: "digit" },
+				4 : { sorter: "digit" },
+                                5 : { sorter: "digit" },
+                                6 : { sorter: "digit" },
+                                7 : { sorter: "digit" },
+				8 : { sorter: "digit" },
+                                9 : { sorter: "digit" },
+                                10 : { sorter: "digit" }
+ 			},
+
+		}); 
+        });
+</script>
+
 <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
+<noscript><div class="error">This page uses JavaScript for table colum sorting and producing an enhanced tooltip display.</div></noscript>
+<div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
-<table align="center" cellpadding="0" cellspacing="0">
-	<th>Name</th>
-	<th>Flags Scored</th>
-	<th>Flags Defended</th>
-	<th>Frags Record</th>
-	<th>Total Frags</th>
-	<th>Total Deaths</th>
-	<th>Accuracy (%)</th>
-	<th><img src="images/white-dn-arrow.gif" /> Kpd</th>
-
+<table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
+	<thead>
+	<tr>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Player Name');" onmouseout="return nd();">Name</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Flages Defended');" onmouseout="return nd();">Flags Defended</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Highest Frags Recorded for 1 game');" onmouseout="return nd();">Frags Record</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Frags Ever Recorded');" onmouseout="return nd();">Total Frags</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Deaths');" onmouseout="return nd();">Total Deaths</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Accuracy %');" onmouseout="return nd();">Accuracy (%)</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Kills Per Death');" onmouseout="return nd();">Kpd</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Team Kills');" onmouseout="return nd();">TK</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Number of Games Played');" onmouseout="return nd();">Games</a></th>
+	</tr>
+	</thead>
+	<tbody>
 <?php
 $sql = "select name,
-		sum(scored) as TotalScored,
+		sum(teamkills) as TotalTeamkills,
 		sum(defended) as TotalDefended,
 		max(frags) as MostFrags,
 		sum(frags) as TotalFrags,
 		sum(deaths) as TotalDeaths,
+		count(name) as TotalMatches,
 		round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
 		round((0.0+sum(frags))/sum(deaths),2) as Kpd
 	from players
@@ -47,25 +78,27 @@ $sql = "select name,
 
 foreach ($dbh->query($sql) as $row)
 {
-	if ( $row[TotalFrags] > 50 ) {
+	if ( $row[TotalFrags] > 50 & $row[name] != "unnamed") {
         	print "
         		<tr onmouseover=\"this.className='highlight'\" onmouseout=\"this.className=''\">
 				<td>$row[name]</td>
-				<td>$row[TotalScored]</td>
 				<td>$row[TotalDefended]</td>
 				<td>$row[MostFrags]</td>
 				<td>$row[TotalFrags]</td>
 				<td>$row[TotalDeaths]</td>
 				<td>$row[Accuracy]</td>
 				<td>$row[Kpd]</td>
+				<td>$row[TotalTeamkills]</td>
+				<td>$row[TotalMatches]</td>
         		</tr>";
 	}
 }
 ?>
-
+</tbody>
 </table>
 <div class="footer">
 <span id="cdate">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
 </div>
+
 </body>
 </html>
