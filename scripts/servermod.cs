@@ -289,6 +289,11 @@ update_banlist = [
 sched update_banlist
 if $run_banlist_updater [daemon "bin/updatebanlist" "/dev/null" "/dev/null" "logs/updatebanlist.log"]
 
+if (= $UID 0) [
+    log_error "Running the server as root user is a serious security risk!"
+    shutdown
+]
+
 log_status "*** Running Hopmod 3.0 for Sauerbraten CTF Edition ***"
 
 if (is_startup) [

@@ -942,6 +942,8 @@ struct fpsserver : igameserver
         if(getcwd(cwd,sizeof(cwd)))
             cubescript::bind((const char *)cwd,"PWD",&server_domain);
         
+        cubescript::bind(getuid(),"UID",&server_domain);
+        
         cubescript::bind((int)DISC_NONE,"DISC_NONE",&server_domain);
         cubescript::bind((int)DISC_EOP,"DISC_EOP",&server_domain);
         cubescript::bind((int)DISC_CN,"DISC_CN",&server_domain);
