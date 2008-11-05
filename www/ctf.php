@@ -116,10 +116,22 @@ foreach ($dbh->query($sql) as $row)
 {
 	if ( $row[TotalFrags] > 50 & $row[name] != "unnamed") {
 		$country = geoip_country_name_by_addr($gi, $row[ipaddr]);
+		$code = geoip_country_code_by_addr($gi, $row[ipaddr]);
+		if ($code) {
+			$code = strtolower($code) . ".png";
+			$flag = "<img src=images/flags/$code />";
+		}
+		
         	print "
         		<tr onmouseover=\"this.className='highlight'\" onmouseout=\"this.className=''\">
 				<td>$row[name]</td>
-				<td>$country</td>
+				";
+				?>
+				<td align=left>
+				<a href="javascript:void(0);" onmouseover="return overlib('<?php print $country ?>');" onmouseout="return nd();"><?php print $flag ?></a></td>
+				<?php
+
+		print "
 				<td>$row[ASpG]</td>
 				<td>$row[ADpG]</td>
 				<td>$row[TotalDefended]</td>
@@ -132,6 +144,7 @@ foreach ($dbh->query($sql) as $row)
 				<td>$row[TotalMatches]</td>
         		</tr>";
 	}
+	$flag ="";
 }
 ?>
 </tbody>
