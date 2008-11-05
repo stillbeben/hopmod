@@ -30,7 +30,7 @@ $(document).ready(function()
 			headers:
        			{  
          			0 : { sorter: "text" },
-         			1 : { sorter: "digit" },
+         			1 : { sorter: "text" },
 				2 : { sorter: "digit" },
                                 3 : { sorter: "digit" },
 				4 : { sorter: "digit" },
@@ -39,7 +39,8 @@ $(document).ready(function()
                                 7 : { sorter: "digit" },
 				8 : { sorter: "digit" },
                                 9 : { sorter: "digit" },
-                                10 : { sorter: "digit" }
+                                10 : { sorter: "digit" },
+				11 : { sorter: "digit" }
  			},
 
 	}); 
