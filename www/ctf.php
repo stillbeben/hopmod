@@ -4,12 +4,14 @@ if ( $return = 0  ) { echo "<font color=red>Error connecting to server for value
 try {
 	$dbh = new PDO("sqlite:$stats_db_filename");
 }
+
 catch(PDOException $e)
 {
 	echo $e->getMessage();
 }
 $month = date("F");
 $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Content-type: text/cubescript\" --post-data=\"value title\" http://127.0.0.1:7894/serverexec");
+
 ?>
 <html>
 <head>
@@ -17,10 +19,11 @@ $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Co
 <script type="text/javascript" src="js/overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
 <script type="text/javascript" src="js/jquery-latest.js"></script>
 <script type="text/javascript" src="js/jquery.tablesorter.js"></script>
+<script type="text/javascript" src="js/jquery.uitablefilter.js"></script>
 <script type="text/javascript" id="js">
 $(document).ready(function()
-       { 
-       $("#hopstats").tablesorter({
+{ 
+	$("#hopstats").tablesorter({
 			headers:
        			{  
          			0 : { sorter: "text" },
@@ -36,8 +39,26 @@ $(document).ready(function()
                                 10 : { sorter: "digit" }
  			},
 
-		}); 
-        });
+	}); 
+});
+</script>
+<script type="text/javascript" id="js">
+$(function() { 
+  var theTable = $('table.tablesorter')
+
+  theTable.find("tbody > tr").find("td:eq(1)").mousedown(function(){
+    $(this).prev().find(":checkbox").click()
+  });
+
+  $("#filter").keyup(function() {
+    $.uiTableFilter( theTable, this.value );
+  })
+
+  $('#filter-form').submit(function(){
+    theTable.find("tbody > tr:visible > td:eq(1)").mousedown();
+    return false;
+  }).focus(); 
+});  
 </script>
 
 <link rel="stylesheet" type="text/css" href="style.css" />
@@ -46,6 +67,8 @@ $(document).ready(function()
 <noscript><div class="error">This page uses JavaScript for table colum sorting and producing an enhanced tooltip display.</div></noscript>
 <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
+
+<form id="filter-form">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form><br>
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
 	<thead>
 	<tr>
@@ -105,7 +128,6 @@ foreach ($dbh->query($sql) as $row)
 ?>
 </tbody>
 </table>
-
 <div class="footer">
 <span id="cdate">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
 </div>
