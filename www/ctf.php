@@ -20,9 +20,24 @@ $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Co
 <script type="text/javascript" id="js">
 $(document).ready(function()
        { 
-                $("#hopstats").tablesorter( {sortList: [[0,0]]} ); 
-        } 
-);
+       $("#hopstats").tablesorter({
+			headers:
+       			{  
+         			0 : { sorter: "text" },
+         			1 : { sorter: "digit" },
+				2 : { sorter: "digit" },
+                                3 : { sorter: "digit" },
+				4 : { sorter: "digit" },
+                                5 : { sorter: "digit" },
+                                6 : { sorter: "digit" },
+                                7 : { sorter: "digit" },
+				8 : { sorter: "digit" },
+                                9 : { sorter: "digit" },
+                                10 : { sorter: "digit" }
+ 			},
+
+		}); 
+        });
 </script>
 
 <link rel="stylesheet" type="text/css" href="style.css" />
