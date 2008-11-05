@@ -1,4 +1,7 @@
 <?php
+
+include("includes/geoip.inc");
+$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 $stats_db_filename = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Content-type: text/cubescript\" --post-data=\"value absolute_stats_db_filename\" http://127.0.0.1:7894/serverexec", $return);
 if ( $return = 0  ) { echo "<font color=red>Error connecting to server for value absolute_stats_db_filename. Is the server running? Contact the administrator</font>"; }
 try {
@@ -73,6 +76,7 @@ $(function() {
 	<thead>
 	<tr>
 		<th><a href="javascript:void(0);" onmouseover="return overlib('Player Name');" onmouseout="return nd();">Name</a></th>
+		<th><a href="javascript:void(0);" onmouseover="return overlib('Country');" onmouseout="return nd();">Country</a></th>
 		<th><a href="javascript:void(0);" onmouseover="return overlib('Average Scores per Game + Average flag Pickups');" onmouseout="return nd();">Agressor Rating</a></th>
 		<th><a href="javascript:void(0);" onmouseover="return overlib('Average Defends(kill flag carrier) per Game + Average flag returns');" onmouseout="return nd();">Defender Rating</a></th>
 		<th><a href="javascript:void(0);" onmouseover="return overlib('Flages Defended');" onmouseout="return nd();">Flags Defended</a></th>
@@ -88,6 +92,7 @@ $(function() {
 	<tbody>
 <?php
 $sql = "select name,
+		ipaddr,
 		sum(pickups) as TotalPickups,
 		sum(drops) as TotalDrops,
 		sum(scored) as TotalScored,
@@ -109,9 +114,11 @@ $sql = "select name,
 foreach ($dbh->query($sql) as $row)
 {
 	if ( $row[TotalFrags] > 50 & $row[name] != "unnamed") {
+		$country = geoip_country_name_by_addr($gi, $row[ipaddr]);
         	print "
         		<tr onmouseover=\"this.className='highlight'\" onmouseout=\"this.className=''\">
 				<td>$row[name]</td>
+				<td>$country</td>
 				<td>$row[ASpG]</td>
 				<td>$row[ADpG]</td>
 				<td>$row[TotalDefended]</td>
