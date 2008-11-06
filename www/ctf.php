@@ -15,6 +15,16 @@ catch(PDOException $e)
 $month = date("F");
 $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Content-type: text/cubescript\" --post-data=\"value title\" http://127.0.0.1:7894/serverexec");
 
+
+function overlib($overtext) {
+	print "<a href=\"javascript:void(0);\" onmouseover=\"return overlib('$overtext');\" onmouseout=\"return nd();\">" ;
+}
+
+
+
+
+
+
 ?>
 <html>
 <head>
@@ -23,47 +33,7 @@ $server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Co
 <script type="text/javascript" src="js/jquery-latest.js"></script>
 <script type="text/javascript" src="js/jquery.tablesorter.js"></script>
 <script type="text/javascript" src="js/jquery.uitablefilter.js"></script>
-<script type="text/javascript" id="js">
-$(document).ready(function()
-{ 
-	$("#hopstats").tablesorter({
-			headers:
-       			{  
-         			0 : { sorter: "text" },
-         			1 : { sorter: "text" },
-				2 : { sorter: "digit" },
-                                3 : { sorter: "digit" },
-				4 : { sorter: "digit" },
-                                5 : { sorter: "digit" },
-                                6 : { sorter: "digit" },
-                                7 : { sorter: "digit" },
-				8 : { sorter: "digit" },
-                                9 : { sorter: "digit" },
-                                10 : { sorter: "digit" },
-				11 : { sorter: "digit" }
- 			},
-
-	}); 
-});
-</script>
-<script type="text/javascript" id="js">
-$(function() { 
-  var theTable = $('table.tablesorter')
-
-  theTable.find("tbody > tr").find("td:eq(1)").mousedown(function(){
-    $(this).prev().find(":checkbox").click()
-  });
-
-  $("#filter").keyup(function() {
-    $.uiTableFilter( theTable, this.value );
-  })
-
-  $('#filter-form').submit(function(){
-    theTable.find("tbody > tr:visible > td:eq(1)").mousedown();
-    return false;
-  }).focus(); 
-});  
-</script>
+<script type="text/javascript" src="js/hopstats.js"></script>
 
 <link rel="stylesheet" type="text/css" href="style.css" />
 </head>
@@ -76,18 +46,18 @@ $(function() {
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
 	<thead>
 	<tr>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Player Name');" onmouseout="return nd();">Name</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Country');" onmouseout="return nd();">Country</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Average Scores per Game + Average flag Pickups');" onmouseout="return nd();">Agressor Rating</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Average Defends(kill flag carrier) per Game + Average flag returns');" onmouseout="return nd();">Defender Rating</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Flages Defended');" onmouseout="return nd();">Flags Defended</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Highest Frags Recorded for 1 game');" onmouseout="return nd();">Frags Record</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Frags Ever Recorded');" onmouseout="return nd();">Total Frags</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Deaths');" onmouseout="return nd();">Total Deaths</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Accuracy %');" onmouseout="return nd();">Accuracy (%)</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Kills Per Death');" onmouseout="return nd();">Kpd</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Team Kills');" onmouseout="return nd();">TK</a></th>
-		<th><a href="javascript:void(0);" onmouseover="return overlib('Total Number of Games Played');" onmouseout="return nd();">Games</a></th>
+		<th><?php overlib("Player Name") ?>Name</a></th>
+		<th><?php overlib("Players Country") ?>Country</a></th>
+		<th><?php overlib("Average Scores per Game + Average flag Pickups") ?>Agressor Rating</a></th>
+		<th><?php overlib("Average Defends(kill flag carrier) per Game + Average flag returns") ?>Defender Rating</a></th>
+		<th><?php overlib("Flages Defended") ?>Flags Defended</a></th>
+		<th><?php overlib("Highest Frags Recorded for 1 game") ?>Frags Record</a></th>
+		<th><?php overlib("Total Frags Ever Recorded") ?>Total Frags</a></th>
+		<th><?php overlib("Total Deaths") ?>Total Deaths</a></th>
+		<th><?php overlib("Accuracy %") ?>Accuracy (%)</a></th>
+		<th><?php overlib("Kills Per Death") ?>Kpd</a></th>
+		<th><?php overlib("Team Kills") ?>TK</a></th>
+		<th><?php overlib("Total Number of Games Played") ?>Games</a></th>
 	</tr>
 	</thead>
 	<tbody>
@@ -119,7 +89,7 @@ foreach ($dbh->query($sql) as $row)
 		$code = geoip_country_code_by_addr($gi, $row[ipaddr]);
 		if ($code) {
 			$code = strtolower($code) . ".png";
-			$flag = "<img src=images/flags/$code />";
+			$flag_image = "<img src=images/flags/$code />";
 		}
 		
         	print "
@@ -127,8 +97,7 @@ foreach ($dbh->query($sql) as $row)
 				<td>$row[name]</td>
 				";
 				?>
-				<td>
-				<a href="javascript:void(0);" onmouseover="return overlib('<?php print $country ?>');" onmouseout="return nd();"><?php print $flag ?></a></td>
+				<td><?php overlib($country); print $flag_image ?></a></td>
 				<?php
 
 		print "
@@ -144,7 +113,7 @@ foreach ($dbh->query($sql) as $row)
 				<td>$row[TotalMatches]</td>
         		</tr>";
 	}
-	$flag ="";
+	$flag_image ="";
 }
 ?>
 </tbody>
