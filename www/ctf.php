@@ -13,20 +13,42 @@ $server_title = GetHop("value title");
 // Setup statsdb and assign it to an object.
 $dbh = setup_pdo_statsdb($stats_db_filename);
 
+// Setup main sqlite query.
+$sql = "select name,
+                ipaddr,
+                sum(pickups) as TotalPickups,
+                sum(drops) as TotalDrops,
+                sum(scored) as TotalScored,
+                sum(teamkills) as TotalTeamkills,
+                sum(defended) as TotalDefended,
+                max(frags) as MostFrags,
+                sum(frags) as TotalFrags,
+                sum(deaths) as TotalDeaths,
+                count(name) as TotalMatches,
+                round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
+                round((0.0+sum(frags))/sum(deaths),2) as Kpd,
+                round((0.0+(sum(scored)+sum(pickups)))/count(name),2) as ASpG,
+                round((0.0+(sum(defended)+sum(returns)))/count(name),2) as ADpG
+        from players
+                inner join matches on players.match_id=matches.id
+                inner join ctfplayers on players.id=ctfplayers.player_id
+        where matches.datetime > date(\"now\",\"start of month\") group by name order by ASpG desc limit 300";
+
+
+
 ?>
 <html>
 <head>
-<title><?php print $server_title; ?> scoreboard</title>
-<script type="text/javascript" src="js/overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
-<script type="text/javascript" src="js/jquery-latest.js"></script>
-<script type="text/javascript" src="js/jquery.tablesorter.js"></script>
-<script type="text/javascript" src="js/jquery.uitablefilter.js"></script>
-<script type="text/javascript" src="js/hopstats.js"></script>
-
-<link rel="stylesheet" type="text/css" href="style.css" />
+	<title><?php print $server_title; ?> scoreboard</title>
+	<script type="text/javascript" src="js/overlib.js"><!-- overLIB (c) Erik Bosrup --></script>
+	<script type="text/javascript" src="js/jquery-latest.js"></script>
+	<script type="text/javascript" src="js/jquery.tablesorter.js"></script>
+	<script type="text/javascript" src="js/jquery.uitablefilter.js"></script>
+	<script type="text/javascript" src="js/hopstats.js"></script>
+	<link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
-<noscript><div class="error">This page uses JavaScript for table colum sorting and producing an enhanced tooltip display.</div></noscript>
+<noscript><div class="error">This page uses JavaScript for table column sorting and producing an enhanced tooltip display.</div></noscript>
 <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
 
@@ -50,26 +72,7 @@ $dbh = setup_pdo_statsdb($stats_db_filename);
 	</thead>
 	<tbody>
 <?php
-$sql = "select name,
-		ipaddr,
-		sum(pickups) as TotalPickups,
-		sum(drops) as TotalDrops,
-		sum(scored) as TotalScored,
-		sum(teamkills) as TotalTeamkills,
-		sum(defended) as TotalDefended,
-		max(frags) as MostFrags,
-		sum(frags) as TotalFrags,
-		sum(deaths) as TotalDeaths,
-		count(name) as TotalMatches,
-		round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
-		round((0.0+sum(frags))/sum(deaths),2) as Kpd,
-		round((0.0+(sum(scored)+sum(pickups)))/count(name),2) as ASpG,
-		round((0.0+(sum(defended)+sum(returns)))/count(name),2) as ADpG
-	from players
-		inner join matches on players.match_id=matches.id
-		inner join ctfplayers on players.id=ctfplayers.player_id
-	where matches.datetime > date(\"now\",\"start of month\") group by name order by ASpG desc limit 300";
-
+//Build table data
 foreach ($dbh->query($sql) as $row)
 {
 	if ( $row[TotalFrags] > 50 & $row[name] != "unnamed") {
