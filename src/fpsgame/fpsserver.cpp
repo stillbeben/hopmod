@@ -340,9 +340,9 @@ struct fpsserver : igameserver
         
         bool check_flooding(stopwatch & sw,stopwatch::milliseconds min_interval,const char * what)
         {
-            if(privilege==PRIV_ADMIN) return false;
+            if(privilege == PRIV_ADMIN) return false;
             
-            bool flooding=false;
+            bool flooding = false;
             
             if( sw.running() && sw.stop().get_elapsed() < min_interval )
             {
@@ -1998,17 +1998,19 @@ struct fpsserver : igameserver
                     break;
                 }
                 
-                bool flooding = ci->check_flooding(ci->svc2sinit_interval,svc2sinit_min_interval,"renaming");
-                
-                QUEUE_MSG;
                 string oldname; oldname[0]='\0'; if(ci->name[0]) s_strcpy(oldname,ci->name);
                 string oldteam; oldteam[0]='\0'; if(ci->team[0]) s_strcpy(oldteam,ci->team);
+                
                 bool connected = !ci->name[0];
-                getstring(text, p);
-                filtertext(text, text, false, MAXNAMELEN);
-                if(!text[0]) s_strcpy(text, "unnamed");
-                QUEUE_STR(text);
-                s_strncpy(ci->name, text, MAXNAMELEN+1);
+                
+                char sent_name[MAXNAMELEN+1]; sent_name[0]='\0';
+                char sent_team[MAXTEAMLEN+1]; sent_team[0]='\0';
+                
+                getstring(sent_name, p);
+                filtertext(sent_name, sent_name, false, MAXNAMELEN);
+                if(!sent_name[0]) s_strcpy(sent_name, "unnamed");
+                s_strncpy(ci->name, sent_name, MAXNAMELEN+1);
+                
                 if(!ci->local && connected)
                 {
                     savedscore &sc = findscore(ci, false);
@@ -2024,25 +2026,37 @@ struct fpsserver : igameserver
                             gs.gunselect, GUN_PISTOL-GUN_SG+1, &gs.ammo[GUN_SG], -1);
                     }
                 }
-                getstring(text, p);
-                filtertext(text, text, false, MAXTEAMLEN);
-                if(!ci->local && (smode && !smode->canchangeteam(ci, ci->team, text)) && m_teammode)
+                
+                getstring(sent_team, p);
+                filtertext(sent_team, sent_team, false, MAXTEAMLEN);
+                
+                if(!ci->local && m_teammode && (smode && !smode->canchangeteam(ci, ci->team, sent_team)) )
                 {
-                    const char *worst = chooseworstteam(text, ci);
+                    const char *worst = chooseworstteam(sent_team, ci);
                     if(worst)
                     {
-                        s_strcpy(text, worst);
+                        s_strncpy(sent_team, worst,MAXTEAMLEN+1);
                         sendf(sender, 1, "riis", SV_SETTEAM, sender, worst);
-                        QUEUE_STR(worst);
                     }
-                    else QUEUE_STR(text);
                 }
-                else QUEUE_STR(text);
-                if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, text)) smode->changeteam(ci, ci->team, text);
-                s_strncpy(ci->team, text, MAXTEAMLEN+1);
-                QUEUE_MSG;
                 
-                if(flooding) break;
+                if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, sent_team)) 
+                    smode->changeteam(ci, ci->team, sent_team);
+                
+                s_strncpy(ci->team, sent_team, MAXTEAMLEN+1);
+                
+                bool renamed = oldname[0] && strcmp(oldname,ci->name);
+                bool reteamed = oldteam[0] && strcmp(oldteam,ci->team);
+                
+                curmsg = p.length();
+                
+                if(!connected && 
+                    (renamed || reteamed) && 
+                    ci->check_flooding(ci->svc2sinit_interval,svc2sinit_min_interval,"renaming or reteaming")) break;
+                
+                QUEUE_INT(SV_INITC2S);
+                QUEUE_STR(sent_name);
+                QUEUE_STR(sent_team);
                 
                 if(connected)
                 {
@@ -2051,21 +2065,23 @@ struct fpsserver : igameserver
                     cubescript::arguments args;
                     scriptable_events.dispatch(&on_connect,args & ci->clientnum,NULL);
                 }
-                
-                if(oldname[0] && strcmp(oldname,ci->name))
+                else
                 {
-                    clientinfo::varmap cvars=vars[playerid(oldname,getclientip(ci->clientnum))];
-                    vars[ci->id()]=cvars;
+                    if(renamed)
+                    {
+                        clientinfo::varmap cvars=vars[playerid(oldname,getclientip(ci->clientnum))];
+                        vars[ci->id()]=cvars;
+                        
+                        cubescript::arguments args;
+                        scriptable_events.dispatch(&on_rename,args & ci->clientnum & std::string(oldname) & std::string(ci->name),NULL);
+                    }
                     
-                    cubescript::arguments args;
-                    scriptable_events.dispatch(&on_rename,args & ci->clientnum & std::string(oldname) & std::string(ci->name),NULL);
-                }
-                
-                if(oldteam[0] && strcmp(oldteam,ci->team))
-                {
-                    //TODO bool revert=false;
-                    cubescript::arguments args;
-                    scriptable_events.dispatch(&on_reteam,args & ci->clientnum & std::string(oldteam) & std::string(ci->team),NULL);
+                    if(reteamed)
+                    {
+                        //TODO bool revert=false;
+                        cubescript::arguments args;
+                        scriptable_events.dispatch(&on_reteam,args & ci->clientnum & std::string(oldteam) & std::string(ci->team),NULL);
+                    }
                 }
                 
                 break;
