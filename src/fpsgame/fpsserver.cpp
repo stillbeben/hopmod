@@ -957,10 +957,13 @@ struct fpsserver : igameserver
         cubescript::bind((const char *)masterbase,"MASTERSERVER",&server_domain);
         
         m_script_pipes.register_function(&server_domain);
-        m_script_sockets.register_function(&server_domain);
         
         cubescript::register_schedule_functions(&m_scheduler,&server_domain);
         
+    #ifdef USE_SCRIPT_SOCKET
+        m_script_sockets.register_function(&server_domain);
+    #endif
+    
     #ifdef USE_SQLITE3
         cubescript::register_sqlite3(&server_domain);
     #endif
@@ -2713,7 +2716,9 @@ struct fpsserver : igameserver
         {
             m_scheduler.run_service();
             m_script_pipes.run();
+        #ifdef USE_SCRIPT_SOCKET
             m_script_sockets.run();
+        #endif
         }
         catch(const cubescript::script_error<cubescript::symbol_error> & e)
             {std::cerr<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<": "<<e.get_id()<<std::endl;}
@@ -3462,9 +3467,7 @@ struct fpsserver : igameserver
     {
         scriptable_events.dispatch(&on_shutdown,cubescript::args0(),NULL);
         cleanupserver();
-        m_script_pipes.shutdown();
-        m_script_sockets.shutdown();
-        close_log_files();
+        clearconfig(true,false);
         exit(0);
     }
     
@@ -3812,10 +3815,11 @@ struct fpsserver : igameserver
             return;
         }
         
-        log_status("clearconfig executed.");
         scriptable_events.clear_all_handlers();
         m_script_pipes.shutdown();
+    #ifdef USE_SCRIPT_SOCKET
         m_script_sockets.shutdown();
+    #endif
         close_log_files();
         reset_floodprotection_values();
         m_scheduler.clear();

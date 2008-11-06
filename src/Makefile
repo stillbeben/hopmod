@@ -1,5 +1,5 @@
 HOPMOD_CXXFLAGS= \
-    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript` -DSTANDALONE -DUSE_SQLITE3 -DUSE_GEOIP
+    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript` -DSTANDALONE -DUSE_SQLITE3 -DUSE_GEOIP -DUSE_SCRIPT_SOCKET
 
 HOPMOD_OBJS= \
     fpsgame/hopmod/textformat.o \
