@@ -3410,7 +3410,12 @@ struct fpsserver : igameserver
     {
         for(player_map<clientinfo::varmap>::iterator player=vars.begin(); player!=vars.end(); ++player)
             for(clientinfo::varmap::iterator var=player->second.begin(); var!=player->second.end(); ++var)
-                if(var->second.first==clientinfo::GAME_VAR) player->second.erase(var);
+                if(var->second.first==clientinfo::GAME_VAR)
+                {
+                    clientinfo::varmap::iterator tmp = var;
+                    ++var;
+                    player->second.erase(tmp);
+                }
     }
     
     bool is_shell_syntax(char c)
