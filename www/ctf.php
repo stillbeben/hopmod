@@ -1,29 +1,17 @@
 <?php
 
 include("includes/geoip.inc");
+include("includes/hopmod.php");
+
+// Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
-$stats_db_filename = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Content-type: text/cubescript\" --post-data=\"value absolute_stats_db_filename\" http://127.0.0.1:7894/serverexec", $return);
-if ( $return = 0  ) { echo "<font color=red>Error connecting to server for value absolute_stats_db_filename. Is the server running? Contact the administrator</font>"; }
-try {
-	$dbh = new PDO("sqlite:$stats_db_filename");
-}
 
-catch(PDOException $e)
-{
-	echo $e->getMessage();
-}
-$month = date("F");
-$server_title = exec("wget -o /dev/null -O /dev/stdout --timeout=5 --header \"Content-type: text/cubescript\" --post-data=\"value title\" http://127.0.0.1:7894/serverexec");
+// Pull Variables from Running Hopmod Server
+$stats_db_filename = GetHop("value absolute_stats_db_filename");
+$server_title = GetHop("value title");
 
-
-function overlib($overtext) {
-	print "<a href=\"javascript:void(0);\" onmouseover=\"return overlib('$overtext');\" onmouseout=\"return nd();\">" ;
-}
-
-
-
-
-
+// Setup statsdb and assign it to an object.
+$dbh = setup_pdo_statsdb($stats_db_filename);
 
 ?>
 <html>
