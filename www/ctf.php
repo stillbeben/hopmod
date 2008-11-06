@@ -1,7 +1,11 @@
 <?php
-
+session_start();
 include("includes/geoip.inc");
 include("includes/hopmod.php");
+
+if ( $_GET['querydate'] ) {
+	if ($_GET['querydate'] != "day" | "week" | "month" | "year") { $querydate = "month";} else { $querydate = $_GET['querydate']; }
+}
 
 // Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
@@ -32,7 +36,7 @@ $sql = "select name,
         from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"start of month\") group by name order by ASpG desc limit 300";
+        where matches.datetime > date(\"now\",\"start of $querydate\") group by name order by ASpG desc limit 300";
 
 
 
@@ -53,6 +57,7 @@ $sql = "select name,
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
 
 <form id="filter-form">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form><br>
+<div class="filter-form" align=left>Limit to this [ <a href="ctf.php?querydate=day">DAY</a> | <a href="ctf.php?querydate=week">WEEK</a> | <a href="ctf.php?querydate=month">MONTH</a> | <a href="ctf.php?querydate=year">YEAR</a> ]</div>
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
 	<thead>
 	<tr>
@@ -75,14 +80,13 @@ $sql = "select name,
 //Build table data
 foreach ($dbh->query($sql) as $row)
 {
-	if ( $row[TotalFrags] > 50 & $row[name] != "unnamed") {
-		$country = geoip_country_name_by_addr($gi, $row[ipaddr]);
-		$code = geoip_country_code_by_addr($gi, $row[ipaddr]);
+	if ( $row['TotalFrags'] > 50 & $row['name'] != "unnamed") {
+		$country = geoip_country_name_by_addr($gi, $row['ipaddr']);
+		$code = geoip_country_code_by_addr($gi, $row['ipaddr']);
 		if ($code) {
 			$code = strtolower($code) . ".png";
 			$flag_image = "<img src=images/flags/$code />";
 		}
-		
         	print "
         		<tr onmouseover=\"this.className='highlight'\" onmouseout=\"this.className=''\">
 				<td>$row[name]</td>
