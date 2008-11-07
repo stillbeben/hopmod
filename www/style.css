@@ -85,6 +85,12 @@ background-color: #FFFFFF;}
 	padding:1em;
 	line-height:3em;
 }
+#filter-panel .selected
+{
+        background-color:#3A3A3A;
+        color: #ffffff;
+        font-weight:bold;
+}
 
 #filter-panel form
 {

@@ -4,9 +4,16 @@ session_start();
 include("includes/geoip.inc");
 include("includes/hopmod.php");
 if ( $_GET['querydate'] ) {
-	if (! preg_match('(day|week|month|year)', $_GET['querydate']) ) { $_SESSION['querydate'] = "month"; } else { $_SESSION['querydate'] = $_GET['querydate']; }
-}
-if (! $_SESSION['querydate']) { $_SESSION['querydate'] = "month"; }
+	if (! preg_match('(day|month|year|week)', $_GET['querydate']) ) { 
+		$_SESSION['querydate'] = "start of month";
+	} else {
+		if ( $_GET['querydate'] == "week" ) {
+			$_SESSION['querydate'] = "-7 days";
+		} else {
+			$_SESSION['querydate'] = "start of ".$_GET['querydate'];
+		}
+	}
+} else { if (! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month";} }
 $querydate = $_SESSION['querydate'];
 
 
@@ -20,6 +27,7 @@ $orderby = "ASpG";
 
 // Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
+
 // Pull Variables from Running Hopmod Server
 $stats_db_filename = GetHop("value absolute_stats_db_filename");
 $server_title = GetHop("value title");
@@ -46,13 +54,13 @@ $sql = "select name,
         from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"start of $querydate\") group by name order by $orderby desc limit $paging,100";
+        where matches.datetime > date(\"now\",\"$querydate\") group by name order by $orderby desc limit $paging,100";
 
 $count = $dbh->query("select COUNT(*) from (SELECT name
 from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"start of $querydate\") group by name
+        where matches.datetime > date(\"now\",\"$querydate\") group by name
 )");
 $rows = $count->fetchColumn();
 
@@ -73,7 +81,14 @@ $rows = $count->fetchColumn();
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
 
 <div id="filter-panel">
-<span class="filter-form">Limit to this [ <a href="ctf.php?querydate=day">DAY</a> | <a href="ctf.php?querydate=week">WEEK</a> | <a href="ctf.php?querydate=month">MONTH</a> | <a href="ctf.php?querydate=year">YEAR</a> ]</span>
+<span class="filter-form">
+
+Limit to this [ <a href="ctf.php?querydate=day" <?php if ( $_SESSION['querydate'] == "start of day" ) { print "class=selected"; } ?>>DAY</a> | 
+<a href="ctf.php?querydate=week" <?php if ( $_SESSION['querydate'] == "-7 days" ) { print "class=selected"; } ?>>WEEK</a> | 
+<a href="ctf.php?querydate=month" <?php if ( $_SESSION['querydate'] == "start of month" ) { print "class=selected"; } ?> >MONTH</a> | 
+<a href="ctf.php?querydate=year" <?php if ( $_SESSION['querydate'] == "start of year" ) { print "class=selected"; } ?>>YEAR</a> ]</span>
+
+
 <span class="filter-form"><form id="filter-form">Name Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form></span>
 </div>
 
