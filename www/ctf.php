@@ -1,12 +1,15 @@
 <?php
+
 session_start();
 include("includes/geoip.inc");
 include("includes/hopmod.php");
-
+$querydate = "month";
 if ( $_GET['querydate'] ) {
 	if ($_GET['querydate'] != "day" | "week" | "month" | "year") { $querydate = "month";} else { $querydate = $_GET['querydate']; }
 }
+if ( $_GET['showprofile'] ) {
 
+}
 // Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 
