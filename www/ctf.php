@@ -5,7 +5,7 @@ include("includes/geoip.inc");
 include("includes/hopmod.php");
 $querydate = "month";
 if ( $_GET['querydate'] ) {
-	if ($_GET['querydate'] != "day" | "week" | "month" | "year") { $querydate = "month";} else { $querydate = $_GET['querydate']; }
+	if (! preg_match('(day|week|month|year)', $_GET['querydate']) ) { $querydate = "month";} else { $querydate = $_GET['querydate']; }
 }
 if ( $_GET['showprofile'] ) {
 
@@ -21,6 +21,7 @@ $server_title = GetHop("value title");
 $dbh = setup_pdo_statsdb($stats_db_filename);
 
 // Setup main sqlite query.
+echo "-------------------------- $querydate";
 $sql = "select name,
                 ipaddr,
                 sum(pickups) as TotalPickups,
