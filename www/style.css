@@ -13,7 +13,7 @@ h1,.footer{text-align:center;}
 
 a{color:#FFBB00;}
 a:hover{color: #FF9900;}
-a:visited{color:#e51d14;}
+a:visited{color: #FFBB00;}
 img{border:0;}
 table
 {
@@ -90,3 +90,27 @@ background-color: #FFFFFF;}
 {
 	display:inline;
 }
+#pagebar a
+{
+	border:1px solid #BBBBBB;
+	/*background-color:#E5E5E5;*/
+	padding:0.25em;
+	margin-right:0.25em;
+	line-height:2.5em;
+	font-weight:bold;
+	text-decoration:none;
+}
+
+#pagebar a:hover
+{
+	background-color:#E5E5E5;
+}
+
+#pagebar .selected
+{
+	background-color:#3A3A3A;
+	color: #ffffff;
+	font-weight:bold;
+}
+
+

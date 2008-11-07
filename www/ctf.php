@@ -3,17 +3,17 @@
 session_start();
 include("includes/geoip.inc");
 include("includes/hopmod.php");
-$querydate = "month";
 if ( $_GET['querydate'] ) {
-	if (! preg_match('(day|week|month|year)', $_GET['querydate']) ) { $querydate = "month";} else { $querydate = $_GET['querydate']; }
+	if (! preg_match('(day|week|month|year)', $_GET['querydate']) ) { $_SESSION['querydate'] = "month"; } else { $_SESSION['querydate'] = $_GET['querydate']; }
 }
-if ( $_GET['showprofile'] ) {
-
+$querydate = $_SESSION['querydate'];
+if ( $_GET['page'] ) {
+	$paging = ( $_GET['page'] * 100 );
 }
-
+if ( ! $paging ) { $paging = 100; }
 // Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
-
+print "------------------------------$querydate---------";
 // Pull Variables from Running Hopmod Server
 $stats_db_filename = GetHop("value absolute_stats_db_filename");
 $server_title = GetHop("value title");
@@ -40,7 +40,7 @@ $sql = "select name,
         from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"start of $querydate\") group by name order by ASpG desc limit 300";
+        where matches.datetime > date(\"now\",\"start of $querydate\") group by name order by ASpG desc limit $paging,100";
 
 
 
@@ -63,6 +63,34 @@ $sql = "select name,
 <div id="filter-panel">
 <span class="filter-form">Limit to this [ <a href="ctf.php?querydate=day">DAY</a> | <a href="ctf.php?querydate=week">WEEK</a> | <a href="ctf.php?querydate=month">MONTH</a> | <a href="ctf.php?querydate=year">YEAR</a> ]</span>
 <span class="filter-form"><form id="filter-form">Name Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form></span>
+</div>
+
+<div id="pagebar" >
+<?php
+if ( ! $_GET['page'] ) { $_GET['page'] = 1; }
+if ( $_GET['page'] <= "1" or $_GET['page'] > "10" ) {
+        print "<a>Prev &#187;</a>";
+	$_GET['page'] == "1";
+} else {
+        $nextpage = ($_GET['page'] - 1);
+        print "<a href=\"?page=$nextpage\" >Prev &#171;</a>";
+}
+
+for ( $counter = 1; $counter <= 10; $counter++) {
+	?>
+
+	<a href="?page=<?php print $counter ?>" <?php if ($counter == $_GET['page']) { print " class=selected";} ?> ><?php print $counter ?></a>
+
+	<?php
+}
+if ( $_GET['page'] >= "10" or $_GET['page'] < "1" ) { 
+	print "<a>Next &#187;</a>";
+	$_GET['page'] == "10";
+} else {
+	$nextpage = ($_GET['page'] + 1);
+	print "<a href=\"?page=$nextpage\" >Next &#187;</a>";
+}
+?>
 </div>
 
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
