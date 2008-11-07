@@ -6,7 +6,7 @@ include("includes/hopmod.php");
 if ( $_GET['querydate'] ) {
 	if (! preg_match('(day|week|month|year)', $_GET['querydate']) ) { $_SESSION['querydate'] = "month"; } else { $_SESSION['querydate'] = $_GET['querydate']; }
 }
-
+if (! $_SESSION['querydate']) { $_SESSION['querydate'] = "month"; }
 $querydate = $_SESSION['querydate'];
 if ( $_GET['page'] > 1 ) {
 	$paging = ( $_GET['page'] * 100 );
@@ -147,6 +147,7 @@ foreach ($dbh->query($sql) as $row)
 	}
 	$flag_image ="";
 }
+sqlite_close($dbh);
 ?>
 </tbody>
 </table>
