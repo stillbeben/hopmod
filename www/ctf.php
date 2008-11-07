@@ -13,7 +13,6 @@ if ( $_GET['page'] ) {
 if ( ! $paging ) { $paging = 100; }
 // Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
-print "------------------------------$querydate---------";
 // Pull Variables from Running Hopmod Server
 $stats_db_filename = GetHop("value absolute_stats_db_filename");
 $server_title = GetHop("value title");
