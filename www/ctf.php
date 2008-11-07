@@ -8,9 +8,13 @@ if ( $_GET['querydate'] ) {
 }
 if (! $_SESSION['querydate']) { $_SESSION['querydate'] = "month"; }
 $querydate = $_SESSION['querydate'];
-if ( $_GET['page'] > 1 ) {
-	$paging = ( $_GET['page'] * 100 );
+
+
+if ( $_GET['page'] >= 2 ) {
+	$paging = ( ($_GET['page'] * 100) - 100 +1 );
 } else { $paging = 1; }
+
+
 
 $orderby = "ASpG";
 
@@ -44,7 +48,13 @@ $sql = "select name,
                 inner join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > date(\"now\",\"start of $querydate\") group by name order by $orderby desc limit $paging,100";
 
-
+$count = $dbh->query("select COUNT(*) from (SELECT name
+from players
+                inner join matches on players.match_id=matches.id
+                inner join ctfplayers on players.id=ctfplayers.player_id
+        where matches.datetime > date(\"now\",\"start of $querydate\") group by name
+)");
+$rows = $count->fetchColumn();
 
 ?>
 <html>
@@ -69,8 +79,10 @@ $sql = "select name,
 
 <div id="pagebar" >
 <?php
+
+$pages = ( round($rows / 100 + 1) );
 if ( ! $_GET['page'] ) { $_GET['page'] = 1; }
-if ( $_GET['page'] <= "1" or $_GET['page'] > "10" ) {
+if ( $_GET['page'] <= "1" or $_GET['page'] > $pages ) {
         print "<a>Prev &#187;</a>";
 	$_GET['page'] == "1";
 } else {
@@ -78,16 +90,16 @@ if ( $_GET['page'] <= "1" or $_GET['page'] > "10" ) {
         print "<a href=\"?page=$nextpage\" >Prev &#171;</a>";
 }
 
-for ( $counter = 1; $counter <= 10; $counter++) {
+for ( $counter = 1; $counter <= $pages; $counter++) {
 	?>
 
 	<a href="?page=<?php print $counter ?>" <?php if ($counter == $_GET['page']) { print " class=selected";} ?> ><?php print $counter ?></a>
 
 	<?php
 }
-if ( $_GET['page'] >= "10" or $_GET['page'] < "1" ) { 
+if ( $_GET['page'] >= $pages or $_GET['page'] < "1" ) { 
 	print "<a>Next &#187;</a>";
-	$_GET['page'] == "10";
+	$_GET['page'] == $pages;
 } else {
 	$nextpage = ($_GET['page'] + 1);
 	print "<a href=\"?page=$nextpage\" >Next &#187;</a>";
@@ -115,9 +127,13 @@ if ( $_GET['page'] >= "10" or $_GET['page'] < "1" ) {
 	<tbody>
 <?php
 //Build table data
-foreach ($dbh->query($sql) as $row)
+
+$result = $dbh->query($sql); 
+#echo "-------Offset $paging----Page".$_GET['page']." ---Pages $pages----Rows $rows ------- Querydate $querydate ------$orderby";
+
+
+foreach ($result as $row)
 {
-	if ( $row['TotalFrags'] > 50 & $row['name'] != "unnamed") {
 		$country = geoip_country_name_by_addr($gi, $row['ipaddr']);
 		$code = geoip_country_code_by_addr($gi, $row['ipaddr']);
 		if ($code) {
@@ -144,7 +160,6 @@ foreach ($dbh->query($sql) as $row)
 				<td>$row[TotalTeamkills]</td>
 				<td>$row[TotalMatches]</td>
         		</tr>";
-	}
 	$flag_image ="";
 }
 sqlite_close($dbh);
