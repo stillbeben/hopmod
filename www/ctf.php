@@ -6,11 +6,14 @@ include("includes/hopmod.php");
 if ( $_GET['querydate'] ) {
 	if (! preg_match('(day|week|month|year)', $_GET['querydate']) ) { $_SESSION['querydate'] = "month"; } else { $_SESSION['querydate'] = $_GET['querydate']; }
 }
+
 $querydate = $_SESSION['querydate'];
-if ( $_GET['page'] ) {
+if ( $_GET['page'] > 1 ) {
 	$paging = ( $_GET['page'] * 100 );
-}
-if ( ! $paging ) { $paging = 100; }
+} else { $paging = 1; }
+
+$orderby = "ASpG";
+
 // Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 // Pull Variables from Running Hopmod Server
@@ -39,7 +42,7 @@ $sql = "select name,
         from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"start of $querydate\") group by name order by ASpG desc limit $paging,100";
+        where matches.datetime > date(\"now\",\"start of $querydate\") group by name order by $orderby desc limit $paging,100";
 
 
 
