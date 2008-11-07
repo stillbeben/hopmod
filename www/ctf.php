@@ -21,7 +21,6 @@ $server_title = GetHop("value title");
 $dbh = setup_pdo_statsdb($stats_db_filename);
 
 // Setup main sqlite query.
-echo "-------------------------- $querydate";
 $sql = "select name,
                 ipaddr,
                 sum(pickups) as TotalPickups,
