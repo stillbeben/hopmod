@@ -177,7 +177,7 @@ foreach ($result as $row)
         		</tr>";
 	$flag_image ="";
 }
-sqlite_close($dbh);
+$dbh = null;
 ?>
 </tbody>
 </table>
