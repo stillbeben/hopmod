@@ -10,6 +10,7 @@ if ( $_GET['querydate'] ) {
 if ( $_GET['showprofile'] ) {
 
 }
+
 // Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 
@@ -59,8 +60,11 @@ $sql = "select name,
 <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
 
-<form id="filter-form">Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form><br>
-<div class="filter-form" align=left>Limit to this [ <a href="ctf.php?querydate=day">DAY</a> | <a href="ctf.php?querydate=week">WEEK</a> | <a href="ctf.php?querydate=month">MONTH</a> | <a href="ctf.php?querydate=year">YEAR</a> ]</div>
+<div id="filter-panel">
+<span class="filter-form">Limit to this [ <a href="ctf.php?querydate=day">DAY</a> | <a href="ctf.php?querydate=week">WEEK</a> | <a href="ctf.php?querydate=month">MONTH</a> | <a href="ctf.php?querydate=year">YEAR</a> ]</span>
+<span class="filter-form"><form id="filter-form">Name Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form></span>
+</div>
+
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
 	<thead>
 	<tr>
