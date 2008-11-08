@@ -4,7 +4,8 @@ session_start();
 include("includes/geoip.inc");
 include("includes/hopmod.php");
 if ( $_GET['querydate'] ) {
-	if (! preg_match('(day|month|year|week)', $_GET['querydate']) ) { 
+	// Input Validation
+	if (! preg_match("(day|month|year|week)", $_GET['querydate']) ) { 
 		$_SESSION['querydate'] = "start of month";
 	} else {
 		if ( $_GET['querydate'] == "week" ) {
@@ -21,9 +22,15 @@ if ( $_GET['page'] >= 2 ) {
 	$paging = ( ($_GET['page'] * 100) - 100 +1 );
 } else { $paging = 1; }
 
+if ( $_GET['orderby'] ) {
+	// Input Validation
+	if (! preg_match("(AgressorRating|DefenderRating|Kpd|Accuracy|TotalGames)/i", $_GET['orderby']) ) {
+		$_SESSION['orderby'] = $_GET['orderby']; 
+	} else {
+		$_SESSION['orderby'] = "AgressorRating";	
+	}
+} else { if (! $_SESSION['orderby'] ) { $_SESSION['orderby'] = "AgressorRating";} }
 
-
-$orderby = "ASpG";
 
 // Setup Geoip for location information.
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
@@ -46,15 +53,15 @@ $sql = "select name,
                 max(frags) as MostFrags,
                 sum(frags) as TotalFrags,
                 sum(deaths) as TotalDeaths,
-                count(name) as TotalMatches,
+                count(name) as TotalGames,
                 round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
                 round((0.0+sum(frags))/sum(deaths),2) as Kpd,
-                round((0.0+(sum(scored)+sum(pickups)))/count(name),2) as ASpG,
-                round((0.0+(sum(defended)+sum(returns)))/count(name),2) as ADpG
+                round((0.0+(sum(scored)+sum(pickups)))/count(name),2) as AgressorRating,
+                round((0.0+(sum(defended)+sum(returns)))/count(name),2) as DefenderRating 
         from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"$querydate\") group by name order by $orderby desc limit $paging,100";
+        where matches.datetime > date(\"now\",\"$querydate\") group by name order by ". $_SESSION['orderby']." desc limit $paging,100";
 
 $count = $dbh->query("select COUNT(*) from (SELECT name
 from players
@@ -76,6 +83,22 @@ $rows = $count->fetchColumn();
 	<link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
+
+<ul align=right id="sddm">
+    <li><a href="#" 
+        onmouseover="mopen('m1')" 
+        onmouseout="mclosetime()">Ordered by <?php print "<font color='white'>". $_SESSION['orderby'] ."</font>";?> </a>
+        <div id="m1" 
+            onmouseover="mcancelclosetime()" 
+            onmouseout="mclosetime()">
+        <a href="?orderby=Kpd">Kpd</a>
+        <a href="?orderby=AgressorRating">Agressor Rating</a>
+        <a href="?orderby=DefenderRating">Defender Rating</a>
+        <a href="?orderby=Accuracy">Accuracy</a>
+        <a href="?orderby=TotalGames">Total Games</a>
+        </div>
+    </li>
+</ul>
 <noscript><div class="error">This page uses JavaScript for table column sorting and producing an enhanced tooltip display.</div></noscript>
 <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
@@ -164,8 +187,8 @@ foreach ($result as $row)
 				<?php
 
 		print "
-				<td>$row[ASpG]</td>
-				<td>$row[ADpG]</td>
+				<td>$row[AgressorRating]</td>
+				<td>$row[DefenderRating]</td>
 				<td>$row[TotalDefended]</td>
 				<td>$row[MostFrags]</td>
 				<td>$row[TotalFrags]</td>
@@ -173,7 +196,7 @@ foreach ($result as $row)
 				<td>$row[Accuracy]</td>
 				<td>$row[Kpd]</td>
 				<td>$row[TotalTeamkills]</td>
-				<td>$row[TotalMatches]</td>
+				<td>$row[TotalGames]</td>
         		</tr>";
 	$flag_image ="";
 }

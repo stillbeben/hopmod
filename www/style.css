@@ -120,3 +120,52 @@ background-color: #FFFFFF;}
 }
 
 
+#sddm
+{       margin: 0;
+        padding: 0;
+        z-index: 30
+	color: FFF;
+}
+
+
+#sddm li
+{       margin: 0;
+        padding: 0;
+        list-style: none;
+        float: right;
+        font: bold 8px arial}
+
+#sddm li a
+{       display: block;
+        margin: 0 1px 0 0;
+        padding: 4px 10px;
+        width: 60px;
+        background: #3F3934;
+        text-align: center;
+        text-decoration: none}
+
+#sddm li a:hover
+{       background: #E5E5E5}
+
+#sddm div
+{       position: absolute;
+        visibility: hidden;
+        margin: 0;
+        padding: 0;
+        background: #FFF;
+        border: 1px }
+
+        #sddm div a
+        {       position: relative;
+                display: block;
+                margin: 0;
+                padding: 5px 10px;
+                width: auto;
+                white-space: nowrap;
+                text-align: left;
+                text-decoration: none;
+                font: 8px arial}
+
+        #sddm div a:hover
+	{
+                color: #FF9900}
