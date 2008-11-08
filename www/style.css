@@ -139,7 +139,7 @@ background-color: #FFFFFF;}
 {       display: block;
         margin: 0 1px 0 0;
         padding: 4px 10px;
-        width: 60px;
+        width: 105px;
         background: #3F3934;
         text-align: center;
         text-decoration: none}
@@ -160,7 +160,7 @@ background-color: #FFFFFF;}
                 display: block;
                 margin: 0;
                 padding: 5px 10px;
-                width: auto;
+                width: 105px;
                 white-space: nowrap;
                 text-align: left;
                 text-decoration: none;
