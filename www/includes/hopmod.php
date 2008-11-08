@@ -15,7 +15,7 @@ function GetHop($cubescript) {
         return $ret;
 }
 function overlib($overtext) {
-        print "<a href=\"javascript:void(0);\" onmouseover=\"return overlib('$overtext');\" onmouseout=\"return nd();\">" ;
+        print "<a  href=\"javascript:void(0);\" onmouseover=\"return overlib('$overtext');\" onmouseout=\"return nd();\">" ;
 }
 function setup_pdo_statsdb($stats_db_filename) {
 	try {
