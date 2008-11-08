@@ -130,7 +130,7 @@ background-color: #FFFFFF;}
 
 #sddm li
 {       margin: 0;
-        padding: 0;
+        padding-right: 50;
         list-style: none;
         float: right;
         font: bold 8px arial}
