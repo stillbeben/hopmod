@@ -20,7 +20,7 @@ $querydate = $_SESSION['querydate'];
 
 if ( $_GET['page'] >= 2 ) {
 	$paging = ( ($_GET['page'] * 100) - 100 +1 );
-} else { $paging = 1; }
+} else { $paging = 0; }
 
 if ( $_GET['orderby'] ) {
 	// Input Validation
@@ -62,7 +62,6 @@ $sql = "select name,
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > date(\"now\",\"$querydate\") group by name order by ". $_SESSION['orderby']." desc limit $paging,100";
-
 $count = $dbh->query("select COUNT(*) from (SELECT name
 from players
                 inner join matches on players.match_id=matches.id
