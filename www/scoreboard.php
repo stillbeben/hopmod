@@ -89,7 +89,7 @@ from
         from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"$querydate\") group by name order by ". $_SESSION['orderby']." desc)
+        where matches.datetime > date(\"now\",\"$querydate\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
 where TotalGames > $MinimumGames limit $paging,100 ;
 
 ";
@@ -97,11 +97,12 @@ $count = $dbh->query("
 select COUNT(*) 
 from
  	(select name,
+		frags,
 		count(name) as TotalGames
 	from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > (date(\"now\",\"$querydate\")) group by name)
+        where matches.datetime > (date(\"now\",\"$querydate\"))  and frags > 0 group by name)
 where TotalGames > $MinimumGames;
 
 ");
