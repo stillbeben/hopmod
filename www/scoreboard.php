@@ -181,7 +181,7 @@ if ( $_GET['page'] >= $pages or $_GET['page'] < "1" ) {
 	$nextpage = ($_GET['page'] + 1);
 	print "<a href=\"?page=$nextpage\" >Next &#187;</a>";
 }
-
+print "<a>$rows results</a>";
 ?>
 </div>
 
