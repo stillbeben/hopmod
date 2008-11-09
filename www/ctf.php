@@ -211,8 +211,6 @@ $dbh = null;
 </table>
 <div class="footer">
 <span id="cdate">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
-</div>
-
 <?php 
 //Page Benchmark End
 $mtime = microtime(); 
@@ -220,8 +218,9 @@ $mtime = explode(" ", $mtime);
 $mtime = $mtime[1] + $mtime[0]; 
 $endtime = $mtime; 
 $totaltime = ($endtime - $starttime); 
-echo 'This page was created in ' .$totaltime. ' seconds using 2 querys.'; 
+echo '<p>This page was created in ' .round($totaltime,2). ' seconds using 2 querys.</p>'; 
 ?>
+</div>
 
 </body>
 </html>
