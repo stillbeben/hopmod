@@ -29,7 +29,7 @@ if ( $_GET['page'] >= 2 ) {
 
 if ( $_GET['orderby'] ) {
 	// Input Validation
-	if (! preg_match("(AgressorRating|DefenderRating|Kpd|Accuracy|TotalGames)/i", $_GET['orderby']) ) {
+	if (preg_match("/(AgressorRating|DefenderRating|Kpd|Accuracy|TotalGames)/i", $_GET['orderby']) ) {
 		$_SESSION['orderby'] = $_GET['orderby']; 
 	} else {
 		$_SESSION['orderby'] = "AgressorRating";	
