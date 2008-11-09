@@ -11,7 +11,7 @@ include("includes/hopmod.php");
 if ( $_GET['querydate'] ) {
 	// Input Validation
 	if (! preg_match("(day|month|year|week)", $_GET['querydate']) ) { 
-		$_SESSION['querydate'] = "start of month";
+		$_SESSION['querydate'] = "start of month"; 
 	} else {
 		if ( $_GET['querydate'] == "week" ) {
 			$_SESSION['querydate'] = "-7 days";
@@ -19,8 +19,24 @@ if ( $_GET['querydate'] ) {
 			$_SESSION['querydate'] = "start of ".$_GET['querydate'];
 		}
 	}
-} else { if (! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month";} }
+} else { if (! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month"; } }
 $querydate = $_SESSION['querydate'];
+
+switch ($querydate) {
+case "start of day":
+    $MinimumGames = "0";
+    break;
+case "-7 days":
+    $MinimumGames = "1";
+    break;
+case "start of month":
+    $MinimumGames = "4";
+    break;
+case "start of year":
+    $MinimumGames = "9";
+    break;
+}
+
 
 
 if ( $_GET['page'] >= 2 ) {
@@ -74,7 +90,7 @@ from
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > date(\"now\",\"$querydate\") group by name order by ". $_SESSION['orderby']." desc limit $paging,100)
-where TotalGames > 4;
+where TotalGames > $MinimumGames;
 
 ";
 $count = $dbh->query("
@@ -86,7 +102,7 @@ from
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > (date(\"now\",\"$querydate\")) group by name)
-where TotalGames > 4;
+where TotalGames > $MinimumGames;
 
 ");
 $result = $dbh->query($sql);
