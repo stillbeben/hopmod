@@ -52,7 +52,10 @@ $dbh = setup_pdo_statsdb($stats_db_filename);
 
 
 // Setup main sqlite query.
-$sql = "select name,
+$sql = "
+select * 
+from 
+	(select name,
                 ipaddr,
                 sum(pickups) as TotalPickups,
                 sum(drops) as TotalDrops,
@@ -70,13 +73,22 @@ $sql = "select name,
         from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"$querydate\") group by name order by ". $_SESSION['orderby']." desc limit $paging,100";
-$count = $dbh->query("select COUNT(*) from (SELECT name
-from players
+        where matches.datetime > date(\"now\",\"$querydate\") group by name order by ". $_SESSION['orderby']." desc limit $paging,100)
+where TotalGames > 4;
+
+";
+$count = $dbh->query("
+select COUNT(*) 
+from
+ 	(select name,
+		count(name) as TotalGames
+	from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"$querydate\") group by name
-)");
+        where matches.datetime > (date(\"now\",\"$querydate\")) group by name)
+where TotalGames > 4;
+
+");
 $result = $dbh->query($sql);
 $rows = $count->fetchColumn();
 
