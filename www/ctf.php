@@ -1,4 +1,9 @@
 <?php
+//Page Benchmark Start
+$mtime = microtime(); 
+$mtime = explode(' ', $mtime); 
+$mtime = $mtime[1] + $mtime[0]; 
+$starttime = $mtime; 
 
 session_start();
 include("includes/geoip.inc");
@@ -42,6 +47,7 @@ $server_title = GetHop("value title");
 // Setup statsdb and assign it to an object.
 $dbh = setup_pdo_statsdb($stats_db_filename);
 
+
 // Setup main sqlite query.
 $sql = "select name,
                 ipaddr,
@@ -68,6 +74,7 @@ from players
                 inner join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > date(\"now\",\"$querydate\") group by name
 )");
+$result = $dbh->query($sql);
 $rows = $count->fetchColumn();
 
 ?>
@@ -165,7 +172,6 @@ if ( $_GET['page'] >= $pages or $_GET['page'] < "1" ) {
 <?php
 //Build table data
 
-$result = $dbh->query($sql); 
 #echo "-------Offset $paging----Page".$_GET['page']." ---Pages $pages----Rows $rows ------- Querydate $querydate ------$orderby";
 
 
@@ -206,6 +212,16 @@ $dbh = null;
 <div class="footer">
 <span id="cdate">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
 </div>
+
+<?php 
+//Page Benchmark End
+$mtime = microtime(); 
+$mtime = explode(" ", $mtime); 
+$mtime = $mtime[1] + $mtime[0]; 
+$endtime = $mtime; 
+$totaltime = ($endtime - $starttime); 
+echo 'This page was created in ' .$totaltime. ' seconds using 2 querys.'; 
+?>
 
 </body>
 </html>
