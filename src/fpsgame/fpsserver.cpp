@@ -3418,7 +3418,7 @@ struct fpsserver : igameserver
                 if(var->second.first==clientinfo::GAME_VAR)
                 {
                     clientinfo::varmap::iterator tmp = var;
-                    ++var;
+                    ++var; if(var==player->second.end()) break;
                     player->second.erase(tmp);
                 }
     }
