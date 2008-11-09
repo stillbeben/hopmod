@@ -156,7 +156,9 @@ Limit to this [ <a href="?querydate=day" <?php if ( $_SESSION['querydate'] == "s
 <div id="pagebar" >
 <?php
 
-$pages = ( round($rows / 100 + 1) );
+//Generate Pager Bar
+$pages = ( round($rows / 100) ); 
+if ($rows > ($pages * 100) ) { $pages++; };
 if ( ! $_GET['page'] ) { $_GET['page'] = 1; }
 if ( $_GET['page'] <= "1" or $_GET['page'] > $pages ) {
         print "<a>Prev &#187;</a>";
@@ -180,6 +182,7 @@ if ( $_GET['page'] >= $pages or $_GET['page'] < "1" ) {
 	$nextpage = ($_GET['page'] + 1);
 	print "<a href=\"?page=$nextpage\" >Next &#187;</a>";
 }
+
 ?>
 </div>
 
