@@ -1,60 +1,15 @@
 <?php
-//Page Benchmark Start
-$mtime = microtime(); 
-$mtime = explode(' ', $mtime); 
-$mtime = $mtime[1] + $mtime[0]; 
-$starttime = $mtime; 
-
-session_start();
 include("includes/geoip.inc");
 include("includes/hopmod.php");
-if ( $_GET['querydate'] ) {
-	// Input Validation
-	if (! preg_match("(day|month|year|week)", $_GET['querydate']) ) { 
-		$_SESSION['querydate'] = "start of month"; 
-	} else {
-		if ( $_GET['querydate'] == "week" ) {
-			$_SESSION['querydate'] = "-7 days";
-		} else {
-			$_SESSION['querydate'] = "start of ".$_GET['querydate'];
-		}
-	}
-} else { if (! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month"; } }
-$querydate = $_SESSION['querydate'];
 
-switch ($querydate) {
-case "start of day":
-    $MinimumGames = "0";
-    break;
-case "-7 days":
-    $MinimumGames = "1";
-    break;
-case "start of month":
-    $MinimumGames = "4";
-    break;
-case "start of year":
-    $MinimumGames = "9";
-    break;
-}
+// Start session for session vars
+session_start();
 
+// Start page benchmark
+startbench();
 
-
-if ( $_GET['page'] >= 2 ) {
-	$paging = ( ($_GET['page'] * 100) - 100 +1 );
-} else { $paging = 0; }
-
-if ( $_GET['orderby'] ) {
-	// Input Validation
-	if (preg_match("/(AgressorRating|DefenderRating|Kpd|Accuracy|TotalGames)/i", $_GET['orderby']) ) {
-		$_SESSION['orderby'] = $_GET['orderby']; 
-	} else {
-		$_SESSION['orderby'] = "AgressorRating";	
-	}
-} else { if (! $_SESSION['orderby'] ) { $_SESSION['orderby'] = "AgressorRating";} }
-
-
-// Setup Geoip for location information.
-$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
+// Check for any http GET activity
+check_get();
 
 // Pull Variables from Running Hopmod Server
 $stats_db_filename = GetHop("value absolute_stats_db_filename");
@@ -62,54 +17,11 @@ if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.
 $server_title = GetHop("value title");
 if ( ! $server_title ) { $server_title = "HOPMOD Server";} //Set it to something
 
-
 // Setup statsdb and assign it to an object.
 $dbh = setup_pdo_statsdb($stats_db_filename);
 
-
-// Setup main sqlite query.
-$sql = "
-select * 
-from 
-	(select name,
-                ipaddr,
-                sum(pickups) as TotalPickups,
-                sum(drops) as TotalDrops,
-                sum(scored) as TotalScored,
-                sum(teamkills) as TotalTeamkills,
-                sum(defended) as TotalDefended,
-                max(frags) as MostFrags,
-                sum(frags) as TotalFrags,
-                sum(deaths) as TotalDeaths,
-                count(name) as TotalGames,
-                round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
-                round((0.0+sum(frags))/sum(deaths),2) as Kpd,
-                round((0.0+(sum(scored)+sum(pickups)))/count(name),2) as AgressorRating,
-                round((0.0+(sum(defended)+sum(returns)))/count(name),2) as DefenderRating 
-        from players
-                inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"$querydate\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
-where TotalGames > $MinimumGames limit $paging,100 ;
-
-";
-$count = $dbh->query("
-select COUNT(*) 
-from
- 	(select name,
-		frags,
-		count(name) as TotalGames
-	from players
-                inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > (date(\"now\",\"$querydate\"))  and frags > 0 group by name)
-where TotalGames > $MinimumGames;
-
-");
-$result = $dbh->query($sql);
-$rows = $count->fetchColumn();
-
 ?>
+
 <html>
 <head>
 	<title><?php print $server_title; ?> scoreboard</title>
@@ -154,107 +66,33 @@ Limit to this [ <a href="?querydate=day" <?php if ( $_SESSION['querydate'] == "s
 </div>
 
 <div id="pagebar" >
-<?php
-
-//Generate Pager Bar
-$pages = ( ceil($rows / 100) ); 
-if ( ! $_GET['page'] ) { $_GET['page'] = 1; }
-if ( $_GET['page'] <= "1" or $_GET['page'] > $pages ) {
-        print "<a>Prev &#187;</a>";
-	$_GET['page'] == "1";
-} else {
-        $nextpage = ($_GET['page'] - 1);
-        print "<a href=\"?page=$nextpage\" >Prev &#171;</a>";
-}
-
-for ( $counter = 1; $counter <= $pages; $counter++) {
-	?>
-
-	<a href="?page=<?php print $counter ?>" <?php if ($counter == $_GET['page']) { print " class=selected";} ?> ><?php print $counter ?></a>
-
-	<?php
-}
-if ( $_GET['page'] >= $pages or $_GET['page'] < "1" ) { 
-	print "<a>Next &#187;</a>";
-	$_GET['page'] == $pages;
-} else {
-	$nextpage = ($_GET['page'] + 1);
-	print "<a href=\"?page=$nextpage\" >Next &#187;</a>";
-}
-print overlib("Filtering in affect<br />Filter MinimumGames <font color=white>$MinimumGames</font><br /> Filter NoFrags")."$rows results</a>";
-?>
+<?php build_pager($_GET['page']); //Generate Pager Bar ?>
 </div>
 
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
 	<thead>
 	<tr>
-		<th><?php overlib("Player Name") ?>Name</a></th>
-		<th><?php overlib("Players Country") ?>Country</a></th>
-		<th><?php overlib("Average Scores per Game + Average flag Pickups") ?>Agressor Rating</a></th>
-		<th><?php overlib("Average Defends(kill flag carrier) per Game + Average flag returns") ?>Defender Rating</a></th>
-		<th><?php overlib("Flages Defended") ?>Flags Defended</a></th>
-		<th><?php overlib("Highest Frags Recorded for 1 game") ?>Frags Record</a></th>
-		<th><?php overlib("Total Frags Ever Recorded") ?>Total Frags</a></th>
-		<th><?php overlib("Total Deaths") ?>Total Deaths</a></th>
-		<th><?php overlib("Accuracy %") ?>Accuracy (%)</a></th>
-		<th><?php overlib("Kills Per Death") ?>Kpd</a></th>
-		<th><?php overlib("Team Kills") ?>TK</a></th>
-		<th><?php overlib("Total Number of Games Played") ?>Games</a></th>
+		<th><?php overlib("Player Name","Name")?></th>
+		<th><?php overlib("Players Country","Country")?></th>
+		<th><?php overlib("Average Scores per Game + Average flag Pickups","Agressor Rating")?></th>
+		<th><?php overlib("Average Defends(kill flag carrier) per Game + Average flag returns")?></th>
+		<th><?php overlib("Flages Defended","Flags Defended")?></th>
+		<th><?php overlib("Highest Frags Recorded for 1 game","Frags Record")?></th>
+		<th><?php overlib("Total Frags Ever Recorded","Total Frags")?></th>
+		<th><?php overlib("Total Deaths","Total Deaths")?></th>
+		<th><?php overlib("Accuracy %","Accuracy (%)")?></th>
+		<th><?php overlib("Kills Per Death","Kpd")?></th>
+		<th><?php overlib("Team Kills","TK")?></th>
+		<th><?php overlib("Total Number of Games Played","Games")?></th>
 	</tr>
 	</thead>
 	<tbody>
-<?php
-//Build table data
-
-#echo "-------Offset $paging----Page".$_GET['page']." ---Pages $pages----Rows $rows ------- Querydate $querydate ------$orderby";
-
-
-foreach ($result as $row)
-{
-		$country = geoip_country_name_by_addr($gi, $row['ipaddr']);
-		$code = geoip_country_code_by_addr($gi, $row['ipaddr']);
-		if ($code) {
-			$code = strtolower($code) . ".png";
-			$flag_image = "<img src=images/flags/$code />";
-		}
-        	print "
-        		<tr onmouseover=\"this.className='highlight'\" onmouseout=\"this.className=''\">
-				<td>$row[name]</td>
-				";
-				?>
-				<td><?php overlib($country); print $flag_image ?></a></td>
-				<?php
-
-		print "
-				<td>$row[AgressorRating]</td>
-				<td>$row[DefenderRating]</td>
-				<td>$row[TotalDefended]</td>
-				<td>$row[MostFrags]</td>
-				<td>$row[TotalFrags]</td>
-				<td>$row[TotalDeaths]</td>
-				<td>$row[Accuracy]</td>
-				<td>$row[Kpd]</td>
-				<td>$row[TotalTeamkills]</td>
-				<td>$row[TotalGames]</td>
-        		</tr>";
-	$flag_image ="";
-}
-$dbh = null;
-?>
+<?php stats_table(); //Build stats table data ?> 
 </tbody>
 </table>
 <div class="footer">
 <span id="cdate">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
-<?php 
-//Page Benchmark End
-$mtime = microtime(); 
-$mtime = explode(" ", $mtime); 
-$mtime = $mtime[1] + $mtime[0]; 
-$endtime = $mtime; 
-$totaltime = ($endtime - $starttime); 
-echo '<p>This page was created in ' .round($totaltime,2). ' seconds using 2 querys.</p>'; 
-?>
+<?php stopbench(); //Stop and display benchmark.?>
 </div>
-
 </body>
 </html>
