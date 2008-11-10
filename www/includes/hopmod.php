@@ -104,7 +104,8 @@ function check_get () {
 	                $_SESSION['MinimumGames'] = "9";
 	        break;
 	default:
-	        if ( ! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month";  $_SESSION['MinimumGames'] = "4"; }
+	        if ( ! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month"; }
+		if ( ! $_SESSION['MinimumGames'] ) { $_SESSION['MinimumGames'] = 4; }
 	}
 	
 	if ( $_GET['page'] >= 2 ) {
