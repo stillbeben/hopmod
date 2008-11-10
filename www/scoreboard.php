@@ -75,7 +75,7 @@ Limit to this [ <a href="?querydate=day" <?php if ( $_SESSION['querydate'] == "s
 		<th><?php overlib("Player Name","Name")?></th>
 		<th><?php overlib("Players Country","Country")?></th>
 		<th><?php overlib("Average Scores per Game + Average flag Pickups","Agressor Rating")?></th>
-		<th><?php overlib("Average Defends(kill flag carrier) per Game + Average flag returns")?></th>
+		<th><?php overlib("Average Defends(kill flag carrier) per Game + Average flag returns","Defender Rating")?></th>
 		<th><?php overlib("Flages Defended","Flags Defended")?></th>
 		<th><?php overlib("Highest Frags Recorded for 1 game","Frags Record")?></th>
 		<th><?php overlib("Total Frags Ever Recorded","Total Frags")?></th>
