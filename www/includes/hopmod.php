@@ -55,7 +55,7 @@ function build_pager ($page) {
 	                inner join matches on players.match_id=matches.id
 	                inner join ctfplayers on players.id=ctfplayers.player_id
 	        where matches.datetime > (date(\"now\",\"".$_SESSION['querydate']."\"))  and frags > 0 group by name)
-	where TotalGames > ". $_SESSION['MinimumGames']."
+	where TotalGames >= ". $_SESSION['MinimumGames']."
 	");
 	$rows = $count->fetchColumn();
 	$pages = ( ceil($rows / 100) );
@@ -89,11 +89,11 @@ function check_get () {
 	switch ($_GET['querydate']) {
 	        case "day":
 	                $_SESSION['querydate'] = "start of day";
-	                $_SESSION['MinimumGames'] = "0";
+	                $_SESSION['MinimumGames'] = "1";
 	        break;
 	        case "week":
 	                $_SESSION['querydate'] = "-7 days";
-	                $_SESSION['MinimumGames'] = "1";
+	                $_SESSION['MinimumGames'] = "2";
 	        break;
 	        case "month":
 	                $_SESSION['querydate'] = "start of month";
@@ -145,7 +145,7 @@ from
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > date(\"now\",\"".$_SESSION['querydate']."\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
-where TotalGames > ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",100 ;
+where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",100 ;
 
 ";
 	$result = $dbh->query($sql);
