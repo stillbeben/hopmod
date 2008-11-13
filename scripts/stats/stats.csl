@@ -78,6 +78,9 @@ event_handler $onendgame [
     if $recording_stats [
         update_player_records
         
+        local duration (- (div $gametime 1000) (secsleft))
+        statsdb eval [update matches set duration = $duration where id = $match_id] []
+        
         if (capturep) [
             foreach (teams) [
                 local team_id (get_captureteam_id $arg1)
@@ -195,7 +198,7 @@ create_match_record = [
     
     local input_datetime (datetime (now))
     local input_gameid (gameid)
-    
+
     if $recording_stats [
         statsdb eval [insert into matches (gameid,datetime,gamemode,mapname) values 
             ($input_gameid, $input_datetime, $gamemode, $mapname)] []
