@@ -202,8 +202,8 @@ create_match_record = [
     local input_gameid (gameid)
 
     if $recording_stats [
-        statsdb eval [insert into matches (gameid,datetime,gamemode,mapname) values 
-            ($input_gameid, $input_datetime, $gamemode, $mapname)] []
+        statsdb eval [insert into matches (gameid,datetime,gamemode,mapname,demofile) values 
+            ($input_gameid, $input_datetime, $gamemode, $mapname,$demofile)] []
         match_id = (statsdb last_rowid)
         if (ctfp) create_ctfteam_records
         if (capturep) create_captureteam_records
