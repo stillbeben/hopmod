@@ -22,6 +22,7 @@ print_current_stats = [
 print_total_stats = [
     parameters cn
     local name (player_name $cn)
+    
     local frags 0
     local deaths 0
     local suicides 0
@@ -53,15 +54,15 @@ print_total_stats = [
     privmsg $cn (info (format "Max Frags: %1" $max_frags))
 ]
 
-print_global_stats = [
-    parameters cn
-    privmsg $cn (err "Global player statistics logging is not available yet.")
-]
+stats_cmd_total_hook = []
+stats_cmd_game_hook = []
 
-if $record_player_stats [
-    if (= (listlen $arguments) 1) [print_current_stats $cn] [
-        local command (at $arguments 1)
-        if (strcmp $command "total") [print_total_stats $cn] []
-        if (strcmp $command "global") [print_global_stats $cn] []
-    ]
-] [privmsg $cn (err "Player statistics logging is disabled on this server.")]
+playercmd_stats = [
+    local argc $numargs //FIXME - numargs not visible inside if
+    if $record_player_stats [
+        if (= $argc 0) [print_current_stats $cn; stats_cmd_game_hook $cn] [
+            local command $arg1
+            if (strcmp $command "total") [print_total_stats $cn; stats_cmd_total_hook $cn] []
+        ]
+    ] [privmsg $cn (err "Player statistics logging is disabled on this server.")]
+]

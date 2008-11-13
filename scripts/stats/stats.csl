@@ -193,8 +193,10 @@ event_handler $onshutdown [
     statsdb close
 ]
 
+stats_new_match_hook = 1
+
 create_match_record = [
-    recording_stats = (newstatsp)
+    recording_stats = (&& (newstatsp) [stats_new_match_hook])
     
     local input_datetime (datetime (now))
     local input_gameid (gameid)
@@ -212,9 +214,11 @@ create_match_record = [
     ] [match_id = -1]
 ]
 
+stats_new_player_hook = 1
+
 create_player_record = [
     parameters cn
-    if $recording_stats [
+    if (&& $recording_stats [stats_new_player_hook $cn]) [
         local name (player_name $cn)
         local team (player_team $cn)
         local ipaddr (player_ip $cn)
@@ -511,3 +515,5 @@ showaliasesbyip = [
     ]
     result $namelist
 ]
+
+exec "scripts/stats/statscmd.cs"
