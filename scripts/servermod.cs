@@ -169,8 +169,10 @@ event_handler $onmapchanged [
     ]
     
     if (> $gamecount 1) check_scriptpipe
-]
     
+    if (match ctf $gamemode) "exec scripts/countdown.cs"
+]
+
 event_handler $onnewmap [
     parameters cn size
     

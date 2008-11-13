@@ -621,6 +621,7 @@ struct fpsserver : igameserver
     cubescript::function1<bool,const char *>                func_adminpass;
     cubescript::function0<void>                             func_clearconfig;
     cubescript::function0<void>                             func_reloadconfig;
+    cubescript::function0<int>                              func_secsleft;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -785,6 +786,7 @@ struct fpsserver : igameserver
         func_adminpass(boost::bind(&fpsserver::cmp_adminpass,this,_1)),
         func_clearconfig(boost::bind(&fpsserver::clearconfig,this,false,false)),
         func_reloadconfig(boost::bind(&fpsserver::clearconfig,this,false,true)),
+        func_secsleft(boost::bind(&fpsserver::get_secsleft,this)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -909,6 +911,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("adminpass",&func_adminpass);
         server_domain.register_symbol("clearconfig",&func_clearconfig);
         server_domain.register_symbol("reloadconfig",&func_reloadconfig);
+        server_domain.register_symbol("secsleft",&func_secsleft);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3825,6 +3828,11 @@ struct fpsserver : igameserver
         m_scheduler.clear();
         
         if(reload) invoke_startup_handler();
+    }
+    
+    int get_secsleft()const
+    {
+        return gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis)/1000;
     }
 };
 
