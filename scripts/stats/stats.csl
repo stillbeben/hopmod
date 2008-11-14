@@ -8,7 +8,6 @@ gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
 
 sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
 
-new sqlite3 statsdb
 statsdb open $stats_db_filename
 
 if $createdb [
@@ -80,6 +79,10 @@ event_handler $onendgame [
         
         local duration (- (div $gametime 1000) (secsleft))
         statsdb eval [update matches set duration = $duration where id = $match_id] []
+        
+        local playerscount 0
+        statsdb eval [select count(*) as playerscount from players where match_id = $match_id] [playerscount = (column playerscount)]
+        statsdb eval [update matches set players = $playerscount where id = $match_id] []
         
         if (capturep) [
             foreach (teams) [
@@ -517,3 +520,6 @@ showaliasesbyip = [
 ]
 
 exec "scripts/stats/statscmd.cs"
+
+exec "scripts/stats/playerscolpatch.cs"
+

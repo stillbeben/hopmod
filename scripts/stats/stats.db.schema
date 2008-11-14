@@ -9,7 +9,8 @@ CREATE TABLE matches (
     ranked              INTEGER DEFAULT 0,
     duration            INTEGER,
     demofile            TEXT,
-    syncd               INTEGER DEFAULT 0
+    syncd               INTEGER DEFAULT 0,
+    players             INTEGER
 );
 CREATE TABLE logevents (
     id                  INTEGER PRIMARY KEY,
