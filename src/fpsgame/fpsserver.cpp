@@ -2860,6 +2860,9 @@ struct fpsserver : igameserver
             else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege)
             {
                 sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
+                
+                cubescript::arguments args;
+                scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val & pass & false,NULL);
                 return;
             }
             else 
@@ -2889,7 +2892,7 @@ struct fpsserver : igameserver
         masterupdate = true;
         
         cubescript::arguments args;
-        scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val & pass,NULL);
+        scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val & pass & true,NULL);
     }
     
     void localconnect(int n)

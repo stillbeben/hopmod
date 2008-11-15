@@ -8,6 +8,8 @@ gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
 
 sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
 
+new sqlite3 statsdb
+
 statsdb open $stats_db_filename
 
 if $createdb [
