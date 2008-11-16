@@ -19,9 +19,9 @@ check_get();
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 
 // Pull Variables from Running Hopmod Server
-#$stats_db_filename = GetHop("value absolute_stats_db_filename");
+$stats_db_filename = GetHop("value absolute_stats_db_filename");
 $server_title = GetHop("value title");
-if ( ! $stats_db_filename ) { $stats_db_filename = "../../scripts/stats/data/stats.db"; }
+if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.db"; }
 if ( ! $server_title ) { $server_title = "HOPMOD Server";}
 // Setup statsdb and assign it to an object.
 $dbh = setup_pdo_statsdb($stats_db_filename);
