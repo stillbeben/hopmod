@@ -67,7 +67,7 @@ name)
 <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
 
-<div id="filter-panel" style="float: left">
+<div id="filter-panel">
 <span class="filter-form">
 Limit to this [ <a href="?querydate=day" <?php if ( $_SESSION['querydate'] == "start of day" ) { print "class=selected"; } ?>>DAY</a> | 
 <a href="?querydate=week" <?php if ( $_SESSION['querydate'] == "-7 days" ) { print "class=selected"; } ?>>WEEK</a> | 
@@ -75,9 +75,10 @@ Limit to this [ <a href="?querydate=day" <?php if ( $_SESSION['querydate'] == "s
 <a href="?querydate=year" <?php if ( $_SESSION['querydate'] == "start of year" ) { print "class=selected"; } ?>>YEAR</a> ]</span>
 
 <span class="filter-form"><form id="filter-form">Name Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form></span>
-</div>
-<div style="float: right; line-height: 4.5" id="pagebar">
+
+<div style="float: right " id="pagebar">
 <?php build_pager($_GET['page'],$pager_query,100); //Generate Pager Bar ?>
+</div>
 </div>
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
 	<thead>
