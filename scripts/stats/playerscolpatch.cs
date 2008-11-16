@@ -1,4 +1,5 @@
 
+
 try statsdb eval [select players from matches where 0 = 1] [] [
     log_status "Applying stats db update patch..."
     statsdb eval [alter table matches add players integer;] []

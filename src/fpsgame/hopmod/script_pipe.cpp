@@ -269,13 +269,20 @@ void script_pipe::run_code(bool allow_write)
     {
         if( m_expn->parse(m_code) )
         {
-            cubescript::consume_terminator(m_code);
+            char c=m_code.get();
+            if(c=='\r') m_code.get();
+            
             result=m_expn->eval();
             
             del_expn=true;
         }
     }
-    catch(cubescript::symbol_error & e)
+    catch(cubescript::error_context * error)
+    {
+        m_local_errors += m_fullname + cubescript::format_error_report(error) + "\r\n";
+        delete error;
+    }
+    /*catch(cubescript::symbol_error & e)
     {   
         m_local_errors+=m_fullname + " [cubescript error]: " + e.what() + " \"" + e.get_id() + ".\r\n";
         del_expn=true;
@@ -289,7 +296,7 @@ void script_pipe::run_code(bool allow_write)
     {
         m_local_errors+=m_fullname + " [cubescript error]: " + e.what() + " @ \"" + m_expn->formed() + "\"\r\n";
         del_expn=true;
-    }
+    }*/
     
     result+="\n\n";
     if(allow_write) write(m_out,result.c_str(),result.length());
@@ -415,7 +422,7 @@ void script_pipe_service::create_pipe(const std::string & filename,const std::ve
     }
     catch(const inside_pipe_error & e)
     {
-        fputs(e.what(),stderr);
+        fputs(e.get_key(),stderr);
         fflush(stderr);
         exit(1);
     }

@@ -1,5 +1,3 @@
-HOPMOD_CXXFLAGS= \
-    `fpsgame/hopmod/libcubescript/cppflags.sh fpsgame/hopmod/libcubescript` -DSTANDALONE -DUSE_SQLITE3 -DUSE_GEOIP -DUSE_SCRIPT_SOCKET
 
 HOPMOD_OBJS= \
     fpsgame/hopmod/textformat.o \
@@ -12,23 +10,37 @@ HOPMOD_OBJS= \
     fpsgame/hopmod/sqlite3.o \
     fpsgame/hopmod/geoip.o
 
+LIBCUBESCRIPT_OBJS= \
+    fpsgame/hopmod/libcubescript/src/error.o \
+    fpsgame/hopmod/libcubescript/src/alias.o \
+    fpsgame/hopmod/libcubescript/src/symbol.o \
+    fpsgame/hopmod/libcubescript/src/domain.o \
+    fpsgame/hopmod/libcubescript/src/construct.o \
+    fpsgame/hopmod/libcubescript/src/constructs.o \
+    fpsgame/hopmod/libcubescript/src/expression.o \
+    fpsgame/hopmod/libcubescript/src/reference.o \
+    fpsgame/hopmod/libcubescript/src/object.o \
+    fpsgame/hopmod/libcubescript/src/exec_helpers.o \
+    fpsgame/hopmod/libcubescript/src/runtime.o \
+
 CXXOPTFLAGS= -g
-INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include
-CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) $(HOPMOD_CXXFLAGS)
+INCLUDES= -Ishared -Iengine -Ifpsgame -Ienet/include -Ifpsgame/hopmod/libcubescript/include
+CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) -DSTANDALONE -DUSE_SQLITE3 -DUSE_GEOIP -DUSE_SCRIPT_SOCKET
 
 PLATFORM_PREFIX=native
 
-SERVER_LIBS=-Lenet -lenet -lz -Lfpsgame/hopmod/libcubescript -lcubescript -ldl -lsqlite3 -lGeoIP -lmicrohttpd
+SERVER_LIBS=-Lenet -lenet -lz -ldl -lsqlite3 -lGeoIP -lmicrohttpd
 
 SERVER_OBJS= \
 	shared/tools-standalone.o \
 	engine/server-standalone.o \
 	fpsgame/fpsserver.o \
+    $(LIBCUBESCRIPT_OBJS) \
     $(HOPMOD_OBJS)
 
 default: all
 
-all: server mkfifochan plugins
+all: server mkfifochan
 
 enet/Makefile:
 	cd enet; ./configure
@@ -36,16 +48,9 @@ enet/Makefile:
 libenet: enet/Makefile
 	$(MAKE)	-C enet/ all
 
-fpsgame/hopmod/libcubescript/Makefile:
-	cd fpsgame/hopmod/libcubescript; ./configure
-
-libcubescript: fpsgame/hopmod/libcubescript/Makefile
-	$(MAKE) -C fpsgame/hopmod/libcubescript/ all
-
 clean: enet/Makefile
 	-$(RM) $(SERVER_OBJS) $(CLIENT_OBJS) ../bin/sauer_server ../bin/mkfifochan
 	$(MAKE)	-C enet/ clean
-	$(MAKE) -C fpsgame/hopmod/libcubescript/ clean
     
 %-standalone.o:
 	$(CXX) $(CXXFLAGS) -DSTANDALONE -c -o $@ $(subst -standalone.o,.cpp,$@)
@@ -53,9 +58,7 @@ clean: enet/Makefile
 mkfifochan:
 	$(CC) fpsgame/hopmod/mkfifochan.c -o../bin/mkfifochan
 
-plugins:
-
-server:	libenet libcubescript $(SERVER_OBJS)
+server:	libenet $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) -o ../bin/sauer_server $(SERVER_OBJS) $(SERVER_LIBS)  
 
 install: all

@@ -102,7 +102,12 @@ void event_handler_service::dispatch(event_handler * handler,std::list<std::stri
     {
         handler->run(args,&local);
     }
-    catch(const cubescript::script_error<cubescript::symbol_error> & e)
+    catch(cubescript::error_context * error)
+    {
+        std::cerr<<cubescript::format_error_report(error)<<std::endl;
+        delete error;
+    }
+    /*catch(const cubescript::script_error<cubescript::symbol_error> & e)
         {std::cerr<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<": "<<e.get_id()<<std::endl;}
     catch(const cubescript::script_error<cubescript::error_key> & e)
         {std::cerr<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<" in expression \""<<e.get_expr()<<"\""<<std::endl;}
@@ -111,7 +116,7 @@ void event_handler_service::dispatch(event_handler * handler,std::list<std::stri
     catch(const cubescript::symbol_error & e)
         {std::cerr<<"cubescript error: "<<e.what()<<": "<<e.get_id()<<std::endl;}
     catch(const cubescript::error_key & e)
-        {std::cerr<<"cubescript error: "<<e.what()<<std::endl;}
+        {std::cerr<<"cubescript error: "<<e.what()<<std::endl;}*/
 }
 
 void event_handler_service::clear_all_handlers()

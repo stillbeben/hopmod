@@ -103,6 +103,7 @@ event_handler $ontext [
     if (match "^#.*$" $text) [
         veto 1
         arguments = (split $text " ")
+        
         cmdname = (at (split (at $arguments 0) #) 0)
         filename = (format "./scripts/commands/%1.csl" $cmdname)
         if (path? $filename) [exec $filename] [
@@ -110,7 +111,7 @@ event_handler $ontext [
             if (symbol? $dynamic_command) [
                 arguments = (erase1st $arguments)
                 try do [@dynamic_command @arguments] [
-                    log_status [@dynamic_command function failed with error @arg1]
+                    log_error [@dynamic_command function failed with error @arg1]
                     privmsg $cn (err "Command failed. Check your arguments and your privilege level.")
                 ]
             ] [privmsg $cn (err "Command not found.")]
