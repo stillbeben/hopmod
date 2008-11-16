@@ -4,20 +4,35 @@ include("includes/hopmod.php");
 
 // Start session for session vars
 session_start();
+// Check for any http GET activity
+check_get();
 
 // Start page benchmark
 startbench();
 
-// Check for any http GET activity
-check_get();
 // Pull Variables from Running Hopmod Server
 $stats_db_filename = GetHop("value absolute_stats_db_filename");
-if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
+if ( ! $stats_db_filename ) { $stats_db_filename = "../../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
 $server_title = GetHop("value title");
 if ( ! $server_title ) { $server_title = "HOPMOD Server";} //Set it to something
 
 // Setup statsdb and assign it to an object.
 $dbh = setup_pdo_statsdb($stats_db_filename);
+
+$rows_per_page = 100;
+$pager_query = "
+        select COUNT(*)
+        from
+                (select name,
+                        frags,
+                        count(name) as TotalGames
+                from players
+                        inner join matches on players.match_id=matches.id
+                        inner join ctfplayers on players.id=ctfplayers.player_id
+                where matches.datetime > (date(\"now\",\"".$_SESSION['querydate']."\"))  and frags > 0 group by
+name)
+        where TotalGames >= ". $_SESSION['MinimumGames']."
+";
 
 ?>
 
@@ -29,10 +44,10 @@ $dbh = setup_pdo_statsdb($stats_db_filename);
 	<script type="text/javascript" src="js/jquery.tablesorter.js"></script>
 	<script type="text/javascript" src="js/jquery.uitablefilter.js"></script>
 	<script type="text/javascript" src="js/hopstats.js"></script>
-	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="stylesheet" type="text/css" href="css/style.css" />
 </head>
 <body>
-
+<div style="float: left"> <img src="images/hopmod.png" /> </div><br /><br /><br /><br />
 <ul align=right id="sddm">
     <li><a href="#" 
         onmouseover="mopen('m1')" 
@@ -52,22 +67,18 @@ $dbh = setup_pdo_statsdb($stats_db_filename);
 <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000"></div>
 <h1><?php print "$server_title "; print "$month"; ?> Scoreboard</h1>
 
-<div id="filter-panel">
+<div id="filter-panel" style="float: left">
 <span class="filter-form">
-
 Limit to this [ <a href="?querydate=day" <?php if ( $_SESSION['querydate'] == "start of day" ) { print "class=selected"; } ?>>DAY</a> | 
 <a href="?querydate=week" <?php if ( $_SESSION['querydate'] == "-7 days" ) { print "class=selected"; } ?>>WEEK</a> | 
 <a href="?querydate=month" <?php if ( $_SESSION['querydate'] == "start of month" ) { print "class=selected"; } ?> >MONTH</a> | 
 <a href="?querydate=year" <?php if ( $_SESSION['querydate'] == "start of year" ) { print "class=selected"; } ?>>YEAR</a> ]</span>
 
-
 <span class="filter-form"><form id="filter-form">Name Filter: <input name="filter" id="filter" value="" maxlength="30" size="30" type="text"></form></span>
 </div>
-
-<div id="pagebar" >
-<?php build_pager($_GET['page']); //Generate Pager Bar ?>
+<div style="float: right; line-height: 4.5" id="pagebar">
+<?php build_pager($_GET['page'],$pager_query,100); //Generate Pager Bar ?>
 </div>
-
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
 	<thead>
 	<tr>
@@ -89,9 +100,6 @@ Limit to this [ <a href="?querydate=day" <?php if ( $_SESSION['querydate'] == "s
 <?php stats_table(); //Build stats table data ?> 
 </tbody>
 </table>
-<div class="footer">
-<span id="cdate">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
 <?php stopbench(); //Stop and display benchmark.?>
-</div>
 </body>
 </html>
