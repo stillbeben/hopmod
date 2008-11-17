@@ -237,7 +237,7 @@ $dbh = null;
 
 <div align="left" id="content"><h1>Match details</h1>
 <div style="width:600px">
-<div style="float:right"><img src='images/maps/<?php print $row['matches.mapname']?>.jpg' /></div>
+<div style="float:right; border:4px ridge grey; "><img src='images/maps/<?php print $row['matches.mapname']?>.jpg' /></div>
 <h2></h2>
 <div class="box">
 <table cellpadding="0" cellspacing="1">
