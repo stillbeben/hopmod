@@ -5,6 +5,7 @@ absolute_stats_db_filename = (concatword $PWD [/] $stats_db_filename)
 createdb = (! (path? $stats_db_filename) )
 latestgame = (now)
 gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
+upload_player_stats = 0
 
 sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
 
