@@ -30,7 +30,6 @@
  */
 
 #include <iostream>
-#include <string.h>
 #include "cubescript/domain.hpp"
 #include "cubescript/symbol.hpp"
 #include "cubescript/error.hpp"

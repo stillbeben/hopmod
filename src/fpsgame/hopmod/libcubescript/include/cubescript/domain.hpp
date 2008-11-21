@@ -32,6 +32,7 @@
 #define LIBCUBESCRIPT_DOMAIN_HPP
 
 #include <map>
+#include <string.h>
 #include <boost/shared_ptr.hpp>
 #include "predefs.hpp"
 #include "error.hpp"
