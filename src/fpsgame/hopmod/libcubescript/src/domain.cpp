@@ -30,6 +30,7 @@
  */
 
 #include <iostream>
+#include <string.h>
 #include "cubescript/domain.hpp"
 #include "cubescript/symbol.hpp"
 #include "cubescript/error.hpp"
@@ -124,11 +125,6 @@ void domain::register_symbol(const char * id,symbol_node & node,int flags)
     }
     
     registree->m_symbols[id] = node;
-}
-
-inline symbol * domain::lookup_symbol(const std::string & id,int search)const
-{
-    return lookup_symbol(id,search,0);
 }
 
 symbol * domain::lookup_symbol(const std::string & id,int search,int steps)const

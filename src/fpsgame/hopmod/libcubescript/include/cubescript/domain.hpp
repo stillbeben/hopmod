@@ -96,7 +96,11 @@ public:
         @param search_parents search ancestor domains.
         @return pointer to a symbol object, if symbol not found the return alue is NULL.
     */
-    symbol * lookup_symbol(const std::string & id,int search=SEARCH_PARENTS)const;
+    inline
+     symbol * lookup_symbol(const std::string & id,int search=SEARCH_PARENTS)const
+    {
+        return lookup_symbol(id,search,0);
+    }
     
     /*!
         @brief Same as lookup symbol method except if symbol not found
