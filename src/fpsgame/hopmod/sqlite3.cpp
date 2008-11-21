@@ -2,6 +2,9 @@
 #include <cubescript.hpp>
 #include <boost/bind.hpp>
 #include <string>
+#include "get_ticks.cpp"
+
+const time_t sqlite_query_retries_timeout = 100;
 
 class sqlite3db:public cubescript::proto_object
 {
@@ -117,6 +120,7 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
     eval_context.register_symbol("cancel",&var_cancel);
     var_cancel=false;
     
+    time_t start_of_busy = 0;
     bool done=false;
     while(!done)
     {
@@ -124,15 +128,21 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
         switch(i)
         {
             case SQLITE_ROW:
+                start_of_busy = 0;
                 exec_block(rowcode,&eval_context);
                 done=var_cancel;
                 break;
             case SQLITE_DONE:
+                start_of_busy = 0;
                 done=true;
                 break;
             case SQLITE_BUSY:
-                sqlite3_finalize(sqlstmt);
-                throw cubescript::error_key("runtime.function.sqlite3_eval.db_locked");
+                if(start_of_busy == 0) start_of_busy = get_ticks();
+                else if(get_ticks() - start_of_busy >= sqlite_query_retries_timeout)
+                {
+                    sqlite3_finalize(sqlstmt);
+                    throw cubescript::error_key("runtime.function.sqlite3_eval.db_locked");
+                }
             case SQLITE_ERROR:
             case SQLITE_MISUSE:
             default:
