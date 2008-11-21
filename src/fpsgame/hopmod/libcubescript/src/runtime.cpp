@@ -262,12 +262,13 @@ bool match(const std::string & pattern,const std::string & str)
     int compret=regcomp(&compiled,pattern.c_str(),0);
     if(compret!=0) throw error_key("runtime.function.match.regcomp_failed");
     int execret=regexec(&compiled,str.c_str(),0,NULL,0);
-    if(execret==0) return true;
-    else
-    {
-        if(execret==REG_ESPACE) throw error_key("runtime.function.match.nomem");
-        return false;
-    }
+    regfree(&compiled);
+    
+    bool matched = false;
+    if(execret==0) matched = true;
+    else if(execret==REG_ESPACE)
+        throw error_key("runtime.function.match.nomem");
+    return matched;
 }
 
 void foreach(const std::list<std::string> & list,alias_function & code)
