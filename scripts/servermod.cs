@@ -187,14 +187,16 @@ event_handler $onnewmap [
 ]
 
 event_handler $onsetmaster [
-    parameters cn set password
+    parameters cn set password success
     
-    if (strcmp (player_priv $cn) "none") [
-        log (format "%1(%2) relinquished privileged status." (player_name $cn) $cn)
-        currentmaster = -1
-    ] [
-        log (format "%1(%2) gained %3" (player_name $cn) $cn (player_priv $cn))
-        currentmaster = $cn
+    if $success [
+        if (strcmp (player_priv $cn) "none") [
+            log (format "%1(%2) relinquished privileged status." (player_name $cn) $cn)
+            currentmaster = -1
+        ] [
+            log (format "%1(%2) gained %3" (player_name $cn) $cn (player_priv $cn))
+            currentmaster = $cn
+        ]
     ]
 ]
     
