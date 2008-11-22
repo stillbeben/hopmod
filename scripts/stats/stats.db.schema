@@ -1,15 +1,10 @@
--- WARNING: Any file changes however minor are likely to be detected as a schema change.
 
 CREATE TABLE matches (
     id                  INTEGER PRIMARY KEY,
-    gameid              TEXT UNIQUE,
     datetime            TEXT,
     gamemode            TEXT,
     mapname             TEXT,
-    ranked              INTEGER DEFAULT 0,
     duration            INTEGER,
-    demofile            TEXT,
-    syncd               INTEGER DEFAULT 0,
     players             INTEGER
 );
 CREATE TABLE logevents (

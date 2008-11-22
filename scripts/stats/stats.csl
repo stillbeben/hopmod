@@ -1,29 +1,24 @@
 
 stats_db_filename = "scripts/stats/data/stats.db"
 absolute_stats_db_filename = (concatword $PWD [/] $stats_db_filename)
-
 createdb = (! (path? $stats_db_filename) )
 latestgame = (now)
-gameid = [result (format "game-%1-%2" (time $latestgame) $latestgame)]
 upload_player_stats = 0
-
-sqlite3 onerror [log_error [Stats SQL Error: @arg1]]
+recording_stats = 0
 
 new sqlite3 statsdb
-
+statsdb onerror [log_error [SQL error in statsdb eval: @arg1]]
 statsdb open $stats_db_filename
 
 if $createdb [
     statsdb eval [begin transaction]
-    statsdb eval [@(system [cat scripts/stats/stats.db.schema])]
+    statsdb eval (readfile scripts/stats/stats.db.schema)
     statsdb eval [commit transaction]
 ] [
     if (! (statsdb compare_schema "scripts/stats/stats.db.schema")) [
         log_error "WARNING Detected schema change in the stats database!"
     ]
 ]
-
-recording_stats = 0
 
 event_handler $onconnect [
     parameters cn
@@ -205,11 +200,10 @@ create_match_record = [
     recording_stats = (&& (newstatsp) [stats_new_match_hook])
     
     local input_datetime (now)
-    local input_gameid (gameid)
-
+    
     if $recording_stats [
-        statsdb eval [insert into matches (datetime,gamemode,mapname,demofile) values 
-            ($input_datetime, $gamemode, $mapname,$demofile)] []
+        statsdb eval [insert into matches (datetime,gamemode,mapname) values 
+            ($input_datetime, $gamemode, $mapname)] []
         match_id = (statsdb last_rowid)
         if (ctfp) create_ctfteam_records
         if (capturep) create_captureteam_records
