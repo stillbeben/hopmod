@@ -25,12 +25,6 @@ table th{padding:15px;}
 table td{padding:5px; color:#EEEEEE;}
 table img{border: solid 1px #000000;}
 .highlight td{color: #ffba00}
-.footer
-{
-    margin-top:20px;
-    color: #a0a0a0;
-    font-size:small;
-}
 
 
 table.tablesorter {
@@ -204,4 +198,30 @@ list-style-type:none;
 }
 .entrylist a {
 color: #FFF;
+}
+
+div#rightColumn {
+	width: 900px;
+	height: 600px;
+	overflow: auto;
+        position: relative;
+	float: left;
+}
+div#leftcolumn {
+        width: 300px;
+	height: 600px;
+	position: relative;
+	float: left;
+	overflow: auto;
+}
+.footer
+{
+    color: #a0a0a0;
+    font-size:small;
+    position: relative;
+}
+div#container {
+	width: 1200;
+	height: 700px;
+        position: relative;
 }

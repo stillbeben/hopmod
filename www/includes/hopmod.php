@@ -1,4 +1,11 @@
 <?php
+
+function count_rows($query) {
+	global $dbh;
+	$count = $dbh->query($query);
+	return $count->fetchColumn();
+	
+}
 function startbench() {
 	global $starttime;
 	$mtime = microtime();
@@ -16,7 +23,7 @@ function stopbench() {
 	$totaltime = ($endtime - $starttime);
 ?>
 <div class="footer">
-<span id="cdate">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
+<span id="date">This page was last updated <?php print date("F j, Y, g:i a"); ?> .</span> | <a href="http://www.sauerbraten.org">Sauerbraten.org</a> | <a href="http://hopmod.e-topic.info">Hopmod</a>
 <?php echo '<p>This page was created in ' .round($totaltime,2). ' seconds using 2 querys.</p>'; ?>
 </div>
 <?php
@@ -122,7 +129,7 @@ function check_get () {
 	} else { if (! $_SESSION['orderby'] ) { $_SESSION['orderby'] = "AgressorRating";} }
 	if ( $_GET['name'] ) { $_SESSION['name'] = $_GET['name']; }
 }
-function stats_table () {
+function stats_table ($query) {
 	global $dbh;
 	$sql = "
 select *
@@ -145,10 +152,11 @@ from
         from players
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"".$_SESSION['querydate']."\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
+        where matches.datetime > strftime(\"%s\",\"now\",\"".$_SESSION['querydate']."\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
 where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",100 ;
 
 ";
+	if ($query) { $sql = $query; }
 	$result = $dbh->query($sql);
 	$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 	foreach ($result as $row)
@@ -202,7 +210,7 @@ select name,
 	round((0.0+frags/deaths),2) as Kpd
 from players 
 	inner join matches on players.match_id=matches.id
-	outer join ctfplayers on players.id=ctfplayers.player_id
+	outer left join ctfplayers on players.id=ctfplayers.player_id
 where match_id = '$match' group by name order by frags desc
 ;
 
@@ -226,8 +234,8 @@ $result = $dbh->query($sql);
                                         <td>$country</td>
                                         <td>$row[frags]</td>
                                         <td>$row[deaths]</td>
-                                        <td>$row[Accuracy]%</td>
-                                        <td>$row[Kpd]</td>
+                                        <td>".($row[Accuracy]+0)."%</td>
+                                        <td>".($row[Kpd]+0.0)."</td>
                                 </tr>";
                 $flag_image ="";
         }
@@ -247,7 +255,7 @@ $dbh = null;
 </tr>
 <tr>
         <td style="width:100px;" class="headcol">Date/Time</td>
-        <td><?php $datetime = new DateTime($row['datetime']); $date = $datetime->format(' g:i A | jS M Y'); print $date; ?></td>
+        <td><?php print date(" g:i A | jS M Y",$row['matches.datetime']); ?></td>
 </tr>
 <tr>
         <td class="headcol">Duration</td>

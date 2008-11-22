@@ -12,7 +12,7 @@ startbench();
 
 // Pull Variables from Running Hopmod Server
 $stats_db_filename = GetHop("value absolute_stats_db_filename");
-if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
+if ( ! $stats_db_filename ) { $stats_db_filename = "stats.db"; } //Attempt a reasonable guess
 $server_title = GetHop("value title");
 if ( ! $server_title ) { $server_title = "HOPMOD Server";} //Set it to something
 
@@ -29,13 +29,10 @@ $pager_query = "
                 from players
                         inner join matches on players.match_id=matches.id
                         inner join ctfplayers on players.id=ctfplayers.player_id
-                where matches.datetime > (date(\"now\",\"".$_SESSION['querydate']."\"))  and frags > 0 group by
-name)
+                where matches.datetime > (strftime(\"%s\",\"now\",\"".$_SESSION['querydate']."\"))  and frags > 0 group by name)
         where TotalGames >= ". $_SESSION['MinimumGames']."
 ";
-
 ?>
-
 <html>
 <head>
 	<title><?php print $server_title; ?> scoreboard</title>

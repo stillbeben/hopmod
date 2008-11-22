@@ -21,10 +21,14 @@ $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 // Pull Variables from Running Hopmod Server
 $stats_db_filename = GetHop("value absolute_stats_db_filename");
 $server_title = GetHop("value title");
-if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.db"; }
+if ( ! $stats_db_filename ) { $stats_db_filename = "stats.db"; }
 if ( ! $server_title ) { $server_title = "HOPMOD Server";}
 // Setup statsdb and assign it to an object.
 $dbh = setup_pdo_statsdb($stats_db_filename);
+
+$start_date = date("Y");
+$start_date = strtotime("1 January $start_date");
+
 
 // Setup main sqlite query.
 $sql = "select name,
@@ -45,14 +49,14 @@ $sql = "select name,
         from players
                 inner join matches on players.match_id=matches.id
                 outer join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > date(\"now\",\"start of year\") and name = '".$_SESSION['name']."' group by name";
+        where matches.datetime > $start_date and name = '".$_SESSION['name']."' group by name";
 
 $last_10 = "
 select matches.id as id,datetime,gamemode,mapname,duration,players
         from matches
                 inner join players on players.match_id=matches.id
 
-        where matches.datetime > date(\"now\",\"start of year\") and name = '".$_SESSION['name']."' order by datetime desc limit ".$_SESSION['paging'].",".$rows_per_page." 
+        where matches.datetime > $start_date and name = '".$_SESSION['name']."' order by datetime desc limit ".$_SESSION['paging'].",".$rows_per_page." 
 ";
 $pager_query = "
 select count(*) from 
@@ -60,9 +64,8 @@ select count(*) from
         from matches
                 inner join players on players.match_id=matches.id
 
-        where matches.datetime > date(\"now\",\"start of year\") and name = '".$_SESSION['name']."')
+        where matches.datetime > $start_date and name = '".$_SESSION['name']."')
 ";
-
 ?>
 <html>
 <head>
@@ -174,8 +177,8 @@ foreach ($dbh->query($sql) as $row)
 
 
 foreach ($dbh->query($last_10) as $row){
-$datetime = new DateTime($row['datetime']);
-$date = $datetime->format(' g:i A | jS M Y , ');
+$date = date(" g:i A | jS M Y , ",$row['datetime']);
+
 
 ?>
 
