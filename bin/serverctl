@@ -1,10 +1,12 @@
 #!/bin/sh
 
+status_file=$2
+
 case "$1" in
   'start')
     ulimit -c unlimited
     
-    nohup bin/sauer_server 1>/dev/null 2>logs/error.log &
+    nohup bin/sauer_server 1>$status_file 2>logs/error.log &
     
     echo "Started Sauerbraten game server."
     echo "  Version: CTF Edition (June 2008)"
