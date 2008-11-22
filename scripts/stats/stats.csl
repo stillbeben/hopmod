@@ -94,6 +94,22 @@ event_handler $onendgame [
             transferstats //put the unsynced subset of stats into the transfer database.
             system "bin/uploadstats &"
         ]
+        
+        if (> $stats_filter_policy_min_frags 0) [
+            local sumfrags 0
+            statsdb eval [select sum(frags) from players where match_id = $match_id] [sumfrags = (column "sum(frags)")]
+            if (< $sumfrags $stats_filter_policy_min_frags) [
+                delete_match_stats $match_id
+                match_id = -1
+                log_status [Discarding stats for last match for not meeting minimum frags requirement of @stats_filter_policy_min_frags frags.]
+            ]
+        ]
+        
+        if (&& (< $duration $stats_filter_policy_min_duration) (!= $match_id -1)) [
+            delete_match_stats $match_id
+            match_id = -1
+            log_status [Discarding stats for last match for not meeting minimum duration requirement of @stats_filter_policy_min_duration seconds.]
+        ]
     ]
 ]
 
@@ -493,6 +509,26 @@ delete_transtats = [
     transdb eval [commit transaction] []
     transdb close
     delete transdb
+]
+
+delete_match_stats = [
+    parameters mid
+    
+    statsdb eval [delete from matches where id = $mid] []
+    statsdb eval [delete from logevents where match_id = $mid] []
+    statsdb eval [delete from ctfteams where match_id = $mid] []
+    statsdb eval [delete from captureteams where match_id = $mid] []
+
+    statsdb eval [select * from players where match_id = $mid] [
+        local pid (column id)
+        
+        eval [delete from itempickups where player_id = $pid] []
+        eval [delete from gunusage where player_id = $pid] []
+        eval [delete from ctfplayers where player_id = $pid] []
+        eval [delete from captureplayers where player_id = $pid] []
+    ]
+    
+    statsdb eval [delete from players where match_id = $mid] []
 ]
 
 showaliases = [
