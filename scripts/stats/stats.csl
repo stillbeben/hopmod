@@ -8,6 +8,13 @@ recording_stats = 0
 
 new sqlite3 statsdb
 statsdb onerror [log_error [SQL error in statsdb eval: @arg1]]
+
+statsdb onbusy [
+    parameters sql
+    //TODO exec sql on a new temporary database
+]
+statsdb busy_timeout 50
+
 statsdb open $stats_db_filename
 
 if $createdb [

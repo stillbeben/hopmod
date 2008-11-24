@@ -4,8 +4,6 @@
 #include <string>
 #include "get_ticks.cpp"
 
-const time_t sqlite_query_retries_timeout = 100;
-
 class sqlite3db:public cubescript::proto_object
 {
 public:
@@ -18,18 +16,24 @@ public:
     void close();
     void set_onerror_code(const std::string &);
     sqlite_int64 get_last_rowid()const;
+    void set_busy_timeout(int);
+    void set_onbusy_code(const std::string &);
 private:
     int get_column_index(const std::string &,sqlite3_stmt *);
     std::string get_column_text(const std::string &,sqlite3_stmt *);
     void error_callback();
+    void busy_callback(const std::string &);
 private:
     sqlite3 * m_db;
     std::string m_onerror;
+    std::string m_onbusy;
     cubescript::function1<void,const std::string &> m_func_open;
     cubescript::functionV<void> m_func_eval;
     cubescript::function0<void> m_func_close;
     cubescript::function1<void,const std::string &> m_func_onerror;
     cubescript::function0<sqlite_int64> m_func_last_rowid;
+    cubescript::function1<void,int> m_func_busy_timeout;
+    cubescript::function1<void,const std::string &> m_func_onbusy;
 };
 
 sqlite3db::sqlite3db()
@@ -38,30 +42,39 @@ sqlite3db::sqlite3db()
   m_func_eval(boost::bind((void (sqlite3db::*)(std::list<std::string> &,cubescript::domain *))&sqlite3db::eval,this,_1,_2)),
   m_func_close(boost::bind(&sqlite3db::close,this)),
   m_func_onerror(boost::bind(&sqlite3db::set_onerror_code,this,_1)),
-  m_func_last_rowid(boost::bind(&sqlite3db::get_last_rowid,this))
+  m_func_last_rowid(boost::bind(&sqlite3db::get_last_rowid,this)),
+  m_func_busy_timeout(boost::bind(&sqlite3db::set_busy_timeout,this,_1)),
+  m_func_onbusy(boost::bind(&sqlite3db::set_onbusy_code,this,_1))
 {
     add_member("open",&m_func_open);
     add_member("eval",&m_func_eval);
     add_member("close",&m_func_close);
     add_member("onerror",&m_func_onerror);
     add_member("last_rowid",&m_func_last_rowid);
+    add_member("busy_timeout",&m_func_busy_timeout);
+    add_member("onbusy",&m_func_onbusy);
 }
 
 sqlite3db::sqlite3db(const sqlite3db & src)
  :proto_object(src),
   m_db(src.m_db),
   m_onerror(src.m_onerror),
+  m_onbusy(src.m_onbusy),
   m_func_open(boost::bind(&sqlite3db::open,this,_1)),
   m_func_eval(boost::bind((void (sqlite3db::*)(std::list<std::string> &,cubescript::domain *))&sqlite3db::eval,this,_1,_2)),
   m_func_close(boost::bind(&sqlite3db::close,this)),
   m_func_onerror(boost::bind(&sqlite3db::set_onerror_code,this,_1)),
-  m_func_last_rowid(boost::bind(&sqlite3db::get_last_rowid,this))
+  m_func_last_rowid(boost::bind(&sqlite3db::get_last_rowid,this)),
+  m_func_busy_timeout(boost::bind(&sqlite3db::set_busy_timeout,this,_1)),
+  m_func_onbusy(boost::bind(&sqlite3db::set_onbusy_code,this,_1))
 {
     add_member("open",&m_func_open);
     add_member("eval",&m_func_eval);
     add_member("close",&m_func_close);
     add_member("onerror",&m_func_onerror);
     add_member("last_rowid",&m_func_last_rowid);
+    add_member("busy_timeout",&m_func_busy_timeout);
+    add_member("onbusy",&m_func_onbusy);
 }
 
 void sqlite3db::open(const std::string & filename)
@@ -93,6 +106,12 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
     
     if(::sqlite3_prepare(m_db,statement.c_str(),statement.length(),&sqlstmt,&remaining)!=SQLITE_OK)
     {
+        if(sqlite3_errcode(m_db) == SQLITE_BUSY)
+        {
+            busy_callback(statement);
+            throw cubescript::error_key("runtime.function.sqlite3_eval.db_locked");
+        }
+        
         error_callback();
         throw cubescript::error_key("runtime.function.sqlite3_eval.sql_error");
     }
@@ -120,7 +139,6 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
     eval_context.register_symbol("cancel",&var_cancel);
     var_cancel=false;
     
-    time_t start_of_busy = 0;
     bool done=false;
     while(!done)
     {
@@ -128,21 +146,16 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
         switch(i)
         {
             case SQLITE_ROW:
-                start_of_busy = 0;
                 exec_block(rowcode,&eval_context);
                 done=var_cancel;
                 break;
             case SQLITE_DONE:
-                start_of_busy = 0;
                 done=true;
                 break;
             case SQLITE_BUSY:
-                if(start_of_busy == 0) start_of_busy = get_ticks();
-                else if(get_ticks() - start_of_busy >= sqlite_query_retries_timeout)
-                {
                     sqlite3_finalize(sqlstmt);
+                    busy_callback(statement);
                     throw cubescript::error_key("runtime.function.sqlite3_eval.db_locked");
-                }
             case SQLITE_ERROR:
             case SQLITE_MISUSE:
             default:
@@ -203,6 +216,29 @@ void sqlite3db::error_callback()
             func.run(args & std::string((const char *)sqlite3_errmsg(m_db)));
         }catch(cubescript::error_key &){}
     }
+}
+
+void sqlite3db::busy_callback(const std::string & sql)
+{
+    if(m_onbusy.length() && m_db)
+    {
+        cubescript::alias_function func(m_onbusy,get_parent_domain());
+        cubescript::arguments args;
+        try
+        {
+            func.run(args & sql);
+        }catch(cubescript::error_key &){}
+    }
+}
+
+void sqlite3db::set_busy_timeout(int ms)
+{
+    sqlite3_busy_timeout(m_db,ms);
+}
+
+void sqlite3db::set_onbusy_code(const std::string & code)
+{
+    m_onbusy = code;
 }
 
 namespace cubescript{
