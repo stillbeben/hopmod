@@ -2128,12 +2128,35 @@ struct fpsserver : igameserver
                 int n;
                 while((n = getint(p))>=0 && n<MAXENTS && !p.overread())
                 {
-                    server_entity se = { getint(p), false, 0 };
+                    server_entity se = { NOTUSED, 0, false };
                     while(sents.length()<=n) sents.add(se);
+                    sents[n].type = getint(p);
                     if(gamemode>=0 && (sents[n].type==I_QUAD || sents[n].type==I_BOOST)) sents[n].spawntime = spawntime(sents[n].type);
                     else sents[n].spawned = true;
                 }
                 notgotitems = false;
+                break;
+            }
+
+            case SV_EDITENT:
+            {
+                int i = getint(p);
+                loopk(3) getint(p);
+                int type = getint(p);
+                loopk(4) getint(p);
+                QUEUE_MSG;
+                bool canspawn = !m_noitems && (type>=I_SHELLS && type<=I_QUAD && (!m_capture || type<I_SHELLS || type>I_CARTRIDGES));
+                if(i<MAXENTS && (sents.inrange(i) || canspawn))
+                {
+                    server_entity se = { NOTUSED, 0, false };
+                    while(sents.length()<=i) sents.add(se);
+                    sents[i].type = type;
+                    if(canspawn ? !sents[i].spawned : sents[i].spawned)
+                    {
+                        sents[i].spawntime = canspawn ? 1 : 0;
+                        sents[i].spawned = false;
+                    }
+                }
                 break;
             }
 
@@ -2431,6 +2454,7 @@ struct fpsserver : igameserver
                 putint(p, SV_SETTEAM);
                 putint(p, ci->clientnum);
                 sendstring(worst, p);
+                s_strncpy(ci->team, worst, MAXTEAMLEN+1);
             }
         }
         if(ci && (m_demo || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)

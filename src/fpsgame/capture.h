@@ -6,6 +6,7 @@ struct capturestate
     static const int CAPTUREHEIGHT = 24;
     static const int OCCUPYPOINTS = 15;
     static const int OCCUPYLIMIT = 100;
+    static const int STEALSCORE = 2;
     static const int CAPTURESCORE = 1;
     static const int SCORESECS = 10;
     static const int AMMOSECS = 15;
@@ -135,6 +136,16 @@ struct capturestate
         bases.setsize(0);
         scores.setsize(0);
         captures = 0;
+    }
+
+    int getscoretotal(const char *team)
+    {
+        loopv(scores)
+        {
+            score &cs = scores[i];
+            if(!strcmp(cs.team, team)) return cs.total;
+        }
+        return 0;
     }
 
     score &findscore(const char *team)
@@ -510,12 +521,20 @@ struct captureclient : capturestate
             { 
                 conoutf(CON_GAMEINFO, "\f2%s captured %s", owner, b.name); 
                 if(!strcmp(owner, cl.player1->team)) playsound(S_V_BASECAP); 
+                s_sprintfd(msg)("@%d (+%d)", getscoretotal(owner), CAPTURESCORE);
+                vec above(b.ammopos);
+                above.z += FIREBALLRADIUS+1.0f;
+                particle_text(above, msg, strcmp(owner, cl.player1->team) ? 8 : 34);
             }
         }
         else if(b.owner[0]) 
         { 
             conoutf(CON_GAMEINFO, "\f2%s lost %s", b.owner, b.name); 
             if(!strcmp(b.owner, cl.player1->team)) playsound(S_V_BASELOST); 
+            s_sprintfd(msg)("@%d (+%d)", getscoretotal(enemy), STEALSCORE);
+            vec above(b.ammopos);
+            above.z += FIREBALLRADIUS+1.0f;
+            particle_text(above, msg, strcmp(enemy, cl.player1->team) ? 8 : 34);
         }
         if(strcmp(b.owner, owner)) particle_splash(0, 200, 250, b.ammopos);
         s_strcpy(b.owner, owner);
@@ -710,30 +729,40 @@ struct captureservmode : capturestate, servmode
             baseinfo &b = bases[i];
             if(b.enemy[0])
             {
-                if((!b.owners || !b.enemies))
+                if(!b.owners || !b.enemies)
                 {
                     string lastowner;
                     s_strcpy(lastowner,b.owner);
-                    int action=b.occupy(b.enemy, (m_noitemsrail ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t);
-                    if(action==1)
+                    
+                    switch(b.occupy(b.enemy, (m_noitemsrail ? OCCUPYPOINTS*2 : OCCUPYPOINTS)*(b.enemies ? b.enemies : -(1+b.owners))*t))
                     {
-                        addscore(b.owner, CAPTURESCORE);
-                        cubescript::arguments args;
-                        sv.scriptable_events.dispatch(&sv.on_capturebase,args & std::string(b.owner),NULL);
-                    }
-                    else if(action==0)
-                    {
-                        cubescript::arguments args;
-                        sv.scriptable_events.dispatch(&sv.on_lostbase,args & std::string(lastowner),NULL);
+                        case 0:
+                        {
+                            addscore(b.enemy, STEALSCORE); 
+                            cubescript::arguments args;
+                            sv.scriptable_events.dispatch(&sv.on_lostbase,args & std::string(lastowner),NULL);
+                            break;
+                        }
+                        case 1:
+                        {
+                            addscore(b.owner, CAPTURESCORE);
+                            cubescript::arguments args;
+                            sv.scriptable_events.dispatch(&sv.on_capturebase,args & std::string(b.owner),NULL);
+                            break;
+                        }
                     }
                 }
+                
                 sendbaseinfo(i);
             }
             else if(b.owner[0])
             {
                 b.capturetime += t;
-                int score = b.capturetime/SCORESECS - (b.capturetime-t)/SCORESECS;
-                if(score) addscore(b.owner, score);
+                if(!m_regencapture)
+                {
+                    int score = b.capturetime/SCORESECS - (b.capturetime-t)/SCORESECS;
+                    if(score) addscore(b.owner, score);
+                }
                 if(m_noitems)
                 {
                     if(!m_noitemsrail)
