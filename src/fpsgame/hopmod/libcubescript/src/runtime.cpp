@@ -353,6 +353,22 @@ const char * get_month(time_t local_timestamp)
     return *(months+fields->tm_mon);
 }
 
+static std::string exec_catch_code(const char * key,const std::string & code,domain * aDomain)
+{
+    nullary_setter rethrow;
+    domain catch_context(aDomain,domain::TEMPORARY_DOMAIN);
+    catch_context.register_symbol("rethrow",&rethrow);
+    
+    alias runcatch;
+    runcatch.push(code);
+    
+    arguments args;
+    std::string result = runcatch.apply(args & std::string(key),&catch_context);
+    
+    if(rethrow.is_set()) throw;
+    return result;
+}
+
 std::string _try(std::list<std::string> & arglist,domain * aDomain)
 {
     //try <operation> <argument 1> ... <catch error block>
@@ -360,13 +376,16 @@ std::string _try(std::list<std::string> & arglist,domain * aDomain)
     if(arglist.empty()) throw error_key("runtime.function.try.missing_catch_argument");
     std::string catchcode=arglist.back();
     arglist.pop_back();
+    
+    std::string result;
+    
     try
     {
-        return aDomain->require_symbol(op)->apply(arglist,aDomain);
+        result = aDomain->require_symbol(op)->apply(arglist,aDomain);
     }
     catch(const error_key & e)
     {
-        nullary_setter rethrow;
+        /*nullary_setter rethrow;
         domain catch_context(aDomain,domain::TEMPORARY_DOMAIN);
         catch_context.register_symbol("rethrow",&rethrow);
         
@@ -378,8 +397,16 @@ std::string _try(std::list<std::string> & arglist,domain * aDomain)
         std::string result=runcatch.apply(args & e.get_key(),&catch_context);
         
         if(rethrow.is_set()) throw;
-        return result;
+        return result;*/
+        result = exec_catch_code(e.get_key(),catchcode,aDomain);
     }
+    catch(error_context * e)
+    {
+        result = exec_catch_code(e->get_key(),catchcode,aDomain);
+    }
+    
+    arglist.clear();
+    return result;
 }
 
 std::string dump(std::list<std::string> & arglist,domain * aDomain)
