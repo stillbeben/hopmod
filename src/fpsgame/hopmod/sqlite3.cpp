@@ -3,6 +3,7 @@
 #include <boost/bind.hpp>
 #include <string>
 #include "get_ticks.cpp"
+#include <iostream>
 
 class sqlite3db:public cubescript::proto_object
 {
@@ -23,10 +24,12 @@ private:
     std::string get_column_text(const std::string &,sqlite3_stmt *);
     void error_callback();
     void busy_callback(const std::string &);
+    cubescript::domain * get_current_domain();
 private:
     sqlite3 * m_db;
     std::string m_onerror;
     std::string m_onbusy;
+    cubescript::domain * m_clsr;
     cubescript::function1<void,const std::string &> m_func_open;
     cubescript::functionV<void> m_func_eval;
     cubescript::function0<void> m_func_close;
@@ -37,7 +40,7 @@ private:
 };
 
 sqlite3db::sqlite3db()
- :m_db(NULL),
+ :m_db(NULL),m_clsr(NULL),
   m_func_open(boost::bind(&sqlite3db::open,this,_1)),
   m_func_eval(boost::bind((void (sqlite3db::*)(std::list<std::string> &,cubescript::domain *))&sqlite3db::eval,this,_1,_2)),
   m_func_close(boost::bind(&sqlite3db::close,this)),
@@ -60,6 +63,7 @@ sqlite3db::sqlite3db(const sqlite3db & src)
   m_db(src.m_db),
   m_onerror(src.m_onerror),
   m_onbusy(src.m_onbusy),
+  m_clsr(NULL),
   m_func_open(boost::bind(&sqlite3db::open,this,_1)),
   m_func_eval(boost::bind((void (sqlite3db::*)(std::list<std::string> &,cubescript::domain *))&sqlite3db::eval,this,_1,_2)),
   m_func_close(boost::bind(&sqlite3db::close,this)),
@@ -104,39 +108,49 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
     sqlite3_stmt * sqlstmt;
     const char * remaining=NULL;
     
-    if(::sqlite3_prepare(m_db,statement.c_str(),statement.length(),&sqlstmt,&remaining)!=SQLITE_OK)
+    if(::sqlite3_prepare_v2(m_db,statement.c_str(),statement.length(),&sqlstmt,&remaining)!=SQLITE_OK)
     {
-        if(sqlite3_errcode(m_db) == SQLITE_BUSY)
+        // delay handling of busy error until after bindings to retrieve the resolved sql
+        if(sqlite3_errcode(m_db) != SQLITE_BUSY) 
         {
-            busy_callback(statement);
-            throw cubescript::error_key("runtime.function.sqlite3_eval.db_locked");
+            error_callback();
+            throw cubescript::error_key("runtime.function.sqlite3_eval.sql_error");
         }
-        
-        error_callback();
-        throw cubescript::error_key("runtime.function.sqlite3_eval.sql_error");
     }
     
     if(!sqlstmt) return;
     
     int paramcount=sqlite3_bind_parameter_count(sqlstmt);
+    std::vector<std::string> bindings;
+    bindings.reserve(paramcount);
     for(int i=1; i<=paramcount; i++)
     {
         const char * name=sqlite3_bind_parameter_name(sqlstmt,i);
         if(name)
         {
+            std::string value = aDomain->require_symbol(&name[1])->value();
+            
+            std::string binding_entry = name + std::string("=") + value;
+            bindings.push_back(binding_entry);
+            
             char prefix=name[0];
             if(prefix=='?')
-                sqlite3_bind_int(sqlstmt,i,cubescript::parse_type<int>(aDomain->require_symbol(&name[1])->value()));
+                sqlite3_bind_int(sqlstmt,i,cubescript::parse_type<int>(value));
             else
-                sqlite3_bind_text(sqlstmt,i,aDomain->require_symbol(&name[1])->value().c_str(),-1,SQLITE_TRANSIENT);
+                sqlite3_bind_text(sqlstmt,i,value.c_str(),-1,SQLITE_TRANSIENT);
         }
     }
     
     cubescript::domain eval_context(aDomain,cubescript::domain::TEMPORARY_DOMAIN);
+    m_clsr = &eval_context;
+    
     cubescript::function1<std::string,const std::string &> func_column(boost::bind(&sqlite3db::get_column_text,this,_1,sqlstmt));
     cubescript::variable<bool> var_cancel;
+    cubescript::variable<std::vector<std::string> > var_bindings;
+    var_bindings.readonly(true);
     eval_context.register_symbol("column",&func_column);
     eval_context.register_symbol("cancel",&var_cancel);
+    eval_context.register_symbol("bindings",&var_bindings);
     var_cancel=false;
     
     bool done=false;
@@ -153,19 +167,25 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
                 done=true;
                 break;
             case SQLITE_BUSY:
-                    sqlite3_finalize(sqlstmt);
-                    busy_callback(statement);
-                    throw cubescript::error_key("runtime.function.sqlite3_eval.db_locked");
+            {
+                busy_callback(sqlite3_sql(sqlstmt));
+                
+                sqlite3_finalize(sqlstmt);
+                m_clsr = NULL;
+                throw cubescript::error_key("runtime.function.sqlite3_eval.db_locked");
+            }
             case SQLITE_ERROR:
             case SQLITE_MISUSE:
             default:
-                sqlite3_finalize(sqlstmt);
                 error_callback();
+                sqlite3_finalize(sqlstmt);
+                m_clsr = NULL;
                 throw cubescript::error_key("runtime.function.sqlite3_eval.eval_error");
         }
     }
     
     sqlite3_finalize(sqlstmt);
+    m_clsr = NULL;
     
     if(*remaining) eval(remaining,rowcode,aDomain);
 }
@@ -209,7 +229,7 @@ void sqlite3db::error_callback()
 {
     if(m_onerror.length() && m_db)
     {
-        cubescript::alias_function func(m_onerror,get_parent_domain());
+        cubescript::alias_function func(m_onerror,get_current_domain());
         cubescript::arguments args;
         try
         {
@@ -222,13 +242,18 @@ void sqlite3db::busy_callback(const std::string & sql)
 {
     if(m_onbusy.length() && m_db)
     {
-        cubescript::alias_function func(m_onbusy,get_parent_domain());
+        cubescript::alias_function func(m_onbusy,get_current_domain());
         cubescript::arguments args;
         try
         {
             func.run(args & sql);
         }catch(cubescript::error_key &){}
     }
+}
+
+cubescript::domain * sqlite3db::get_current_domain()
+{
+    return m_clsr ? m_clsr : get_parent_domain();
 }
 
 void sqlite3db::set_busy_timeout(int ms)

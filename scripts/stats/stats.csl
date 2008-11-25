@@ -1,5 +1,7 @@
-
+stats_db_schema_filename = "scripts/stats/stats.db.schema"
 stats_db_filename = "scripts/stats/data/stats.db"
+pending_sql_filename = "scripts/stats/data/pending_sql"
+
 absolute_stats_db_filename = (concatword $PWD [/] $stats_db_filename)
 createdb = (! (path? $stats_db_filename) )
 latestgame = (now)
@@ -11,18 +13,21 @@ statsdb onerror [log_error [SQL error in statsdb eval: @arg1]]
 
 statsdb onbusy [
     parameters sql
-    //TODO exec sql on a new temporary database
+    logfile $pending_sql_filename pending_sql
+    pending_sql $sql
+    pending_sql $bindings
+    close_logfile pending_sql
 ]
-statsdb busy_timeout 50
 
 statsdb open $stats_db_filename
+statsdb busy_timeout 50
 
 if $createdb [
     statsdb eval [begin transaction]
-    statsdb eval (readfile scripts/stats/stats.db.schema)
+    statsdb eval (readfile $stats_db_schema_filename)
     statsdb eval [commit transaction]
 ] [
-    if (! (statsdb compare_schema "scripts/stats/stats.db.schema")) [
+    if (! (statsdb compare_schema $stats_db_schema_filename)) [
         log_error "WARNING Detected schema change in the stats database!"
     ]
 ]
@@ -221,6 +226,7 @@ stats_new_match_hook = 1
 
 create_match_record = [
     recording_stats = (&& (newstatsp) [stats_new_match_hook])
+    recording_stats = 1
     
     local input_datetime (now)
     
