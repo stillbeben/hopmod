@@ -149,7 +149,23 @@ std::string alias::eval_block(domain * parent_domain)
             throw error_key("syntax.expected_terminator.expression");
         }
         
-        if(!statement.is_empty()) result=statement.eval();
+        if(!statement.is_empty())
+        {
+            try
+            {
+                result = statement.eval();
+            }
+            catch(error_key)
+            {
+                depth = 0;
+                throw;
+            }
+            catch(error_context *)
+            {
+                depth = 0;
+                throw;
+            }
+        }
         
         char lastchar;
         code.get(lastchar);
