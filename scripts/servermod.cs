@@ -204,6 +204,7 @@ event_handler $onauth [
     parameters cn success authname
     if $success [
         log (format "%1(%2) passed authentication as '%3'." (player_name $cn) $cn $authname)
+        currentmaster = $cn
     ] [log (format "%1(%2) failed authentication as '%3'." (player_name $cn) $cn $authname)]
 ]
 
