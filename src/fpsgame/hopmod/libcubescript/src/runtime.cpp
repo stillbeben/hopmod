@@ -85,6 +85,8 @@ inline float math_fdiv(float a,float b){return a/b;}
 inline float math_round(float a){return roundf(a);}
 inline float math_ceil(float a){return ceilf(a);}
 inline float math_floor(float a){return floorf(a);}
+inline int math_abs(int a){return abs(a);}
+inline float math_fabs(float a){return fabs(a);}
 
 inline bool comp_equal(int a,int b){return a == b;}
 inline bool comp_nequal(int a,int b){return a != b;}
@@ -497,6 +499,8 @@ void register_core_functions(domain * aDomain)
     static function1<float,float> func_math_round(&math_round);
     static function1<float,float> func_math_ceil(&math_ceil);
     static function1<float,float> func_math_floor(&math_floor);
+    static function1<int,int> func_math_abs(&math_abs);
+    static function1<float,float> func_math_fabs(&math_fabs);
     
     aDomain->register_symbol("+",&func_math_add);
     aDomain->register_symbol("-",&func_math_sub);
@@ -512,7 +516,9 @@ void register_core_functions(domain * aDomain)
     aDomain->register_symbol("round",&func_math_round);
     aDomain->register_symbol("ceil",&func_math_ceil);
     aDomain->register_symbol("floor",&func_math_floor);
-    
+    aDomain->register_symbol("abs",&func_math_abs);
+    aDomain->register_symbol("fabs",&func_math_fabs);
+
     static function2<bool,int,int> func_comp_equal(&comp_equal);
     static function2<bool,int,int> func_comp_nequal(&comp_nequal);
     static function2<bool,int,int> func_comp_gt(&comp_gt);
