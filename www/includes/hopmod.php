@@ -111,8 +111,8 @@ function check_get () {
 	                $_SESSION['MinimumGames'] = "9";
 	        break;
 	default:
-	        if ( ! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month"; }
-		if ( ! $_SESSION['MinimumGames'] ) { $_SESSION['MinimumGames'] = 4; }
+	        if ( ! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of day"; }
+		if ( ! $_SESSION['MinimumGames'] ) { $_SESSION['MinimumGames'] = 1; }
 	}
 	
 	if ( $_GET['page'] >= 2 ) {
@@ -151,7 +151,7 @@ from
                 round((0.0+(sum(defended)+sum(returns)))/count(name),2) as DefenderRating
         from players
                 inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
+                outer left join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > strftime(\"%s\",\"now\",\"".$_SESSION['querydate']."\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
 where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",100 ;
 
