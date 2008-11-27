@@ -11,8 +11,8 @@ check_get();
 startbench();
 
 // Pull Variables from Running Hopmod Server
-//$stats_db_filename = GetHop("value absolute_stats_db_filename");
-if ( ! $stats_db_filename ) { $stats_db_filename = "meister.db"; } //Attempt a reasonable guess
+$stats_db_filename = GetHop("value absolute_stats_db_filename");
+if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
 $server_title = GetHop("value title");
 if ( ! $server_title ) { $server_title = "HOPMOD Server";} //Set it to something
 
