@@ -1,18 +1,17 @@
 who = [
-	if (! (symbol? arg1)) [  
-		scores = ""
-		foreach (players) [
-			parameters cn
-			line = (format "N=%1C=%2P=%3 " (player_name $cn)($cn)(player_ping $cn))
-			scores = (concat $scores $line)
-		]
-		if (! (strcmp $scores "")) [
-		log (concat "COMMAND WHO " $scores)
-		]
-		if (strcmp $scores "" ) [
-			log "Apparently no one is connected"
-		]
+	scores = ""
+	foreach (players) [
+		parameters cn
+		line = (format "N=%1C=%2P=%3 " (player_name $cn)($cn)(player_ping $cn))
+		scores = (concat $scores $line)
 	]
+	if (! (strcmp $scores "")) [
+	line = (concat "COMMAND WHO " $scores)
+	]
+	if (strcmp $scores "" ) [
+		line = "0"
+	]
+value line
 ]
 
 score = [
@@ -23,49 +22,25 @@ score = [
 		scores = (concat $scores $line)
 	]
 	if (! (strcmp $scores "")) [
-		log (concat "COMMAND SCORE " $scores)
+		line = (concat "COMMAND SCORE " $scores)
 	]
 	if (strcmp $scores "" ) [
-		log "Apparently no one is connected"
+		line = "Apparently no one is connected"
 	]
-]
-
-masterwho = [
-	cm = ""
-	if ( != $currentmaster -1) [
-		cm = (format "COMMAND CURRENTMASTER %1(%2)" (player_name $currentmaster)($currentmaster))
-	]
-	if (! (strcmp $cm "")) [
-		log $cm
-	]
-	if (strcmp $cm "") [
-		log "COMMAND CURRENTMASTER NULL"
-	]
+value line
 ]
 
 getvar = [
 	if (symbol? $arg1) [ output = $$arg1 	
 		local output $$arg1
 		if $output  [
-			line = (format "IRC         -\={GETVAR %2}\=- is %1" $output $arg1 )
+			line = $output
 		]
 	]
 	if (! (symbol? $arg1)) [
-		line = (format "IRC         -\={GETVAR %1}\=- is INVALID or NULL VAR" $arg1 )
+		line = "INVALID or NULL VAR"
 	]
-	log $line
-]
-
-showalias = [
-        line = (format "COMMAND SHOWALIAS N=%1A=%2" (player_name $arg1) (showaliases $arg1) )
-	if (! (strcmp (showaliases $arg1) "")) [ log $line ]
-	if (strcmp (showaliases $arg1) "") [ log "COMMAND SHOWALIAS N=NULLA=NULL" ]
-]
-
-showaliasbyip = [
-        line = (format "COMMAND SHOWALIAS N=%1A=%2" $arg1 (showaliasesbyip $arg1) )
-        if (! (strcmp (showaliasesbyip $arg1) "")) [ log $line ]
-        if (strcmp (showaliasesbyip $arg1) "") [ log "COMMAND SHOWALIAS N=NULLA=NULL" ]
+	value line
 ]
 
 restart_ircbot = [
@@ -79,7 +54,7 @@ status = [
 		$mastername = (player_name $currentmaster)
 	]
 	game_status = ( format "COMMAND STATUS map=%1 mode=%2 time=%3 master=%4 mm=%5 playercount=%6 avgping=%7" $currentmap $gamemode $timeleft $mastername $mastermode $playercount (avgpings))
-	log $game_status
+	value game_status
 ]
 
 avgpings = [
