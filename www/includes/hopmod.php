@@ -129,7 +129,7 @@ function check_get () {
 	} else { if (! $_SESSION['orderby'] ) { $_SESSION['orderby'] = "AgressorRating";} }
 	if ( $_GET['name'] ) { $_SESSION['name'] = $_GET['name']; }
 }
-function stats_table ($query) {
+function stats_table ($query = "null") {
 	global $dbh;
 	$sql = "
 select *
@@ -156,7 +156,7 @@ from
 where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",100 ;
 
 ";
-	if ($query) { $sql = $query; }
+	if (! $query = "null") { $sql = $query; }
 	$result = $dbh->query($sql);
 	$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 	foreach ($result as $row)
