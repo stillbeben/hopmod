@@ -84,7 +84,7 @@ template<> inline
 float parse_type<float>(const std::string & str)
 {
     if(!str.length()) return 0.0;
-    int val; 
+    float val;
     parse_type(str,val);
     return val;
 }
