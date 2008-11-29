@@ -277,26 +277,15 @@ void script_pipe::run_code(bool allow_write)
             del_expn=true;
         }
     }
+    catch(cubescript::error_key key)
+    {
+        m_local_errors += m_fullname + key.get_key() + "\r\n";
+    }
     catch(cubescript::error_context * error)
     {
         m_local_errors += m_fullname + cubescript::format_error_report(error) + "\r\n";
         delete error;
     }
-    /*catch(cubescript::symbol_error & e)
-    {   
-        m_local_errors+=m_fullname + " [cubescript error]: " + e.what() + " \"" + e.get_id() + ".\r\n";
-        del_expn=true;
-    }
-    catch(cubescript::expr_error<cubescript::error_key> & e)
-    {
-        m_local_errors+=m_fullname + " [cubescript error]: " + e.what() + " @ \"" + m_expn->formed() + "\" in expression \"" + e.get_expr() + "\".\r\n";
-        del_expn=true;
-    }
-    catch(cubescript::error_key & e)
-    {
-        m_local_errors+=m_fullname + " [cubescript error]: " + e.what() + " @ \"" + m_expn->formed() + "\"\r\n";
-        del_expn=true;
-    }*/
     
     result+="\n\n";
     if(allow_write) write(m_out,result.c_str(),result.length());

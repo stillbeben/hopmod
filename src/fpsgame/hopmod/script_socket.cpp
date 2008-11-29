@@ -146,21 +146,15 @@ private:
             output << cubescript::exec_block(code,m_script_domain);
             status = 200;
         }
+        catch(cubescript::error_key key)
+        {
+            output<<"Script error: "<<key.get_key()<<std::endl;
+        }
         catch(cubescript::error_context * error)
         {
             output<<cubescript::format_error_report(error)<<std::endl;
             delete error;
         }
-        /*catch(const cubescript::script_error<cubescript::symbol_error> & e)
-            {output<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<": "<<e.get_id()<<std::endl;}
-        catch(const cubescript::script_error<cubescript::error_key> & e)
-            {output<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<" in expression \""<<e.get_expr()<<"\""<<std::endl;}
-        catch(const cubescript::expr_error<cubescript::error_key> & e)
-            {output<<"cubescript error: "<<e.what()<<" in expression \""<<e.get_expr()<<"\"."<<std::endl;}
-        catch(const cubescript::symbol_error & e)
-            {output<<"cubescript error: "<<e.what()<<": "<<e.get_id()<<std::endl;}
-        catch(const cubescript::error_key & e)
-            {output<<"cubescript error: "<<e.what()<<std::endl;}*/
         
         response = output.str();
         return !response.length() && status == 200 ? 204 : status;

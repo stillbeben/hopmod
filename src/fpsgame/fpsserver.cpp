@@ -2747,22 +2747,16 @@ struct fpsserver : igameserver
             m_script_sockets.run();
         #endif
         }
+        catch(cubescript::error_key key)
+        {
+            //TODO get the error's origin!
+            std::cerr<<"Script error: "<<key.get_key()<<std::endl;
+        }
         catch(cubescript::error_context * error)
         {
             std::cerr<<cubescript::format_error_report(error)<<std::endl;
             delete error;
         }
-        /*catch(const cubescript::script_error<cubescript::symbol_error> & e)
-            {std::cerr<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<": "<<e.get_id()<<std::endl;}
-        catch(const cubescript::script_error<cubescript::error_key> & e)
-            {std::cerr<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<" in expression \""<<e.get_expr()<<"\""<<std::endl;}
-        catch(const cubescript::expr_error<cubescript::error_key> & e)
-            {std::cerr<<"cubescript error: "<<e.what()<<" in expression \""<<e.get_expr()<<"\"."<<std::endl;}
-        catch(const cubescript::symbol_error & e)
-            {std::cerr<<"cubescript error: "<<e.what()<<": "<<e.get_id()<<std::endl;}
-        catch(const cubescript::error_key & e)
-            {std::cerr<<"cubescript error: "<<e.what()<<std::endl;}*/
-        
         
         if(m_demo) readdemo();
         else if(minremain>0)
