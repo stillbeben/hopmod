@@ -28,6 +28,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include "script_pipe.hpp"
+#include "get_ticks.cpp"
 #include <string>
 #include <sstream>
 #include <vector>
@@ -70,7 +71,9 @@ private:
     pid_t m_child_pid;
     cubescript::domain * m_domain;
     std::stringstream m_code;
+    
     cubescript::cons::expression * m_expn;
+    time_t m_expn_ctime;
     
     std::string m_stderr_errors;
     std::string m_local_errors;
@@ -180,6 +183,15 @@ script_pipe::~script_pipe()
 
 void script_pipe::run()
 {
+    if(m_expn && 
+        script_pipe_service::get_exec_timeout() != -1 &&
+        get_ticks() - m_expn_ctime >= script_pipe_service::get_exec_timeout())
+    {
+        m_local_errors += "Parsing expression on script pipe timed out.\r\n";
+        delete m_expn;
+        m_expn = NULL;
+    }
+    
     pollfd files[2];
     
     files[0].fd=m_in;
@@ -255,27 +267,28 @@ void script_pipe::read_error_pipe()
 
 void script_pipe::run_code(bool allow_write)
 {
-    bool del_expn=false;
+    bool del_expn = false;
+    bool new_expn = m_expn == NULL;
     
     if(!m_expn)
     {
-        m_expn=new cubescript::cons::expression;
+        m_expn = new cubescript::cons::expression;
         m_expn->set_domain(m_domain);
+        m_expn_ctime = get_ticks();
     }
     
     std::string result;
     
     try
     {
-        if( m_expn->parse(m_code) )
+        if(m_expn->parse(m_code))
         {
-            char c=m_code.get();
+            char c = m_code.get();
             if(c=='\r') m_code.get();
-            
-            result=m_expn->eval();
-            
-            del_expn=true;
+            result = m_expn->eval();
+            del_expn = true;
         }
+        if(!m_expn->is_parsing()) del_expn = true;
     }
     catch(cubescript::error_key key)
     {
@@ -293,7 +306,7 @@ void script_pipe::run_code(bool allow_write)
     if(del_expn)
     {
         delete m_expn;
-        m_expn=NULL;
+        m_expn = NULL;
     }
 }
 
@@ -355,6 +368,8 @@ void script_pipe::offload_errors(std::ostream & output)
     }
 }
 
+time_t script_pipe_service::sm_expr_timeout = -1;
+
 script_pipe_service::script_pipe_service(std::ostream & output):m_error_output(output)
 {
     
@@ -371,6 +386,9 @@ void script_pipe_service::register_function(cubescript::domain * aDomain)
         new cubescript::function3<void,const std::string &,const std::vector<std::string> &,const std::string &>(
             boost::bind(&script_pipe_service::create_pipe,this,_1,_2,_3,aDomain));
     aDomain->register_symbol("script_pipe",create_pipe_function,cubescript::domain::ADOPT_SYMBOL);
+    
+    static cubescript::variable_ref<time_t> var_expr_timeout(sm_expr_timeout);
+    aDomain->register_symbol("script_pipe_parse_timeout",&var_expr_timeout);
 }
 
 void script_pipe_service::run()
@@ -400,6 +418,11 @@ void script_pipe_service::shutdown()
         delete *pipeIt;
     }
     m_pipes.clear();
+}
+
+time_t script_pipe_service::get_exec_timeout()
+{
+    return sm_expr_timeout;
 }
 
 void script_pipe_service::create_pipe(const std::string & filename,const std::vector<std::string> & args,const std::string & onfinish,cubescript::domain * aDomain)

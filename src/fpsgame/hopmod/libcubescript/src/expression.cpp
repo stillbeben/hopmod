@@ -185,6 +185,11 @@ bool expression::is_empty()const
     return m_ops.empty() || !eval_type(*m_ops.begin());
 }
 
+bool expression::is_parsing()const
+{
+    return m_parsing;
+}
+
 std::string expression::get_operation_id()const throw()
 {
     assert(!m_ops.empty());

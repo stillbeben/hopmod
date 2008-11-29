@@ -67,6 +67,7 @@ public:
     std::string eval();
     std::string formed()const;
     bool is_empty()const;
+    bool is_parsing()const;
     std::string get_operation_id()const throw();
 private:
     bool parse_sub_construct(std::istream &);

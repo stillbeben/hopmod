@@ -32,6 +32,7 @@
 
 #include <ostream>
 #include <list>
+#include <time.h>
 #include "cubescript.hpp"
 
 class script_pipe;
@@ -44,10 +45,12 @@ public:
     void register_function(cubescript::domain *);
     void run();
     void shutdown();
+    static time_t get_exec_timeout();
 private:
     void create_pipe(const std::string &,const std::vector<std::string> &,const std::string &,cubescript::domain *);
     std::list<script_pipe *> m_pipes;
     std::ostream & m_error_output;
+    static time_t sm_expr_timeout;
 };
 
 #endif
