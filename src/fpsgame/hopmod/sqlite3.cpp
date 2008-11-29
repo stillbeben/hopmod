@@ -146,7 +146,7 @@ void sqlite3db::eval(const std::string & statement,const std::string & rowcode,c
     
     cubescript::function1<std::string,const std::string &> func_column(boost::bind(&sqlite3db::get_column_text,this,_1,sqlstmt));
     cubescript::variable<bool> var_cancel;
-    cubescript::variable<std::vector<std::string> > var_bindings;
+    cubescript::variable_ref<std::vector<std::string> > var_bindings(bindings);
     var_bindings.readonly(true);
     eval_context.register_symbol("column",&func_column);
     eval_context.register_symbol("cancel",&var_cancel);

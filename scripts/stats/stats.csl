@@ -226,7 +226,6 @@ stats_new_match_hook = 1
 
 create_match_record = [
     recording_stats = (&& (newstatsp) [stats_new_match_hook])
-    recording_stats = 1
     
     local input_datetime (now)
     
