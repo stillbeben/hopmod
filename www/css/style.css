@@ -37,10 +37,9 @@ table.tablesorter {
 }
 table.tablesorter thead tr th, table.tablesorter tfoot tr th {
         border: 1px solid #FFF;
-        padding: 4px;
 }
 table.tablesorter thead tr .header {
-		padding:10px;
+		padding:5px;
 		padding-right:25px;
         background-image: url(../images/tablesorter/bg.gif);
         background-repeat: no-repeat;
@@ -199,20 +198,19 @@ list-style-type:none;
 .entrylist a {
 color: #FFF;
 }
-
 div#rightColumn {
-	width: 900px;
-	height: 600px;
-	overflow: auto;
+        width: 900px;
+        height: 800px;
+        overflow: auto;
         position: relative;
-	float: left;
+        float: left;
 }
 div#leftcolumn {
         width: 300px;
-	height: 600px;
-	position: relative;
-	float: left;
-	overflow: auto;
+        height: 800px;
+        position: relative;
+        float: left;
+        overflow: auto;
 }
 .footer
 {
@@ -221,7 +219,7 @@ div#leftcolumn {
     position: relative;
 }
 div#container {
-	width: 1200;
-	height: 700px;
-        position: relative;
+        width: 1200;
+        height: 800px;
 }
+

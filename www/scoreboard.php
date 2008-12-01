@@ -2,6 +2,7 @@
 include("includes/geoip.inc");
 include("includes/hopmod.php");
 
+
 // Start session for session vars
 session_start();
 // Check for any http GET activity
@@ -11,15 +12,11 @@ check_get();
 startbench();
 
 // Pull Variables from Running Hopmod Server
-$stats_db_filename = GetHop("value absolute_stats_db_filename");
-if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
-$server_title = GetHop("value title");
-if ( ! $server_title ) { $server_title = "HOPMOD Server";} //Set it to something
-
+serverDetails();
 // Setup statsdb and assign it to an object.
 $dbh = setup_pdo_statsdb($stats_db_filename);
 
-$rows_per_page = 100;
+$rows_per_page = 50;
 $pager_query = "
         select COUNT(*)
         from
@@ -77,24 +74,6 @@ Limit to this [ <a href="?querydate=day" <?php if ( $_SESSION['querydate'] == "s
 <?php build_pager($_GET['page'],$pager_query,100); //Generate Pager Bar ?>
 </div>
 </div>
-<table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
-	<thead>
-	<tr>
-		<th><?php overlib("Player Name","Name")?></th>
-		<th><?php overlib("Players Country","Country")?></th>
-		<th><?php overlib("Average Scores per Game + Average flag Pickups","Agressor Rating")?></th>
-		<th><?php overlib("Average Defends(kill flag carrier) per Game + Average flag returns","Defender Rating")?></th>
-		<th><?php overlib("Flages Defended","Flags Defended")?></th>
-		<th><?php overlib("Highest Frags Recorded for 1 game","Frags Record")?></th>
-		<th><?php overlib("Total Frags Ever Recorded","Total Frags")?></th>
-		<th><?php overlib("Total Deaths","Total Deaths")?></th>
-		<th><?php overlib("Accuracy %","Accuracy (%)")?></th>
-		<th><?php overlib("Kills Per Death","Kpd")?></th>
-		<th><?php overlib("Team Kills","TK")?></th>
-		<th><?php overlib("Total Number of Games Played","Games")?></th>
-	</tr>
-	</thead>
-	<tbody>
 <?php stats_table(); //Build stats table data ?> 
 </tbody>
 </table>

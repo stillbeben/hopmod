@@ -1,5 +1,5 @@
 <?php
-
+///////////////////////Player Details Page
 session_start();
 include("includes/geoip.inc");
 include("includes/hopmod.php");
@@ -19,10 +19,7 @@ check_get();
 $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 
 // Pull Variables from Running Hopmod Server
-$stats_db_filename = GetHop("value absolute_stats_db_filename");
-$server_title = GetHop("value title");
-if ( ! $stats_db_filename ) { $stats_db_filename = "scripts/stats/data/stats.db"; }
-if ( ! $server_title ) { $server_title = "HOPMOD Server";}
+serverDetails();
 // Setup statsdb and assign it to an object.
 $dbh = setup_pdo_statsdb($stats_db_filename);
 
@@ -48,7 +45,7 @@ $sql = "select name,
                 round((0.0+(sum(defended)+sum(returns)))/count(ctfplayers.player_id),2) as ADpG
         from players
                 inner join matches on players.match_id=matches.id
-                outer join ctfplayers on players.id=ctfplayers.player_id
+                inner join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > $start_date and name = '".$_SESSION['name']."' group by name";
 
 $last_10 = "

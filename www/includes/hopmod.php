@@ -1,4 +1,28 @@
 <?php
+function select_columns($var)
+{
+	global $column_list;
+        if (!preg_match("/($column_list)/", $var['name']) ) { return ($var & 1); }
+}
+function column_wrapper($array, $filter) {  // Wrapper for select_columns
+	if (! $filter ) { return $array; }
+	global $column_list;
+	$column_list = $filter;
+	$filtered_array = array_filter($array, "select_columns");
+	$column_list = "";
+	return $filtered_array;
+}
+function serverDetails() {
+
+// Pull Variables from Running Hopmod Server
+	global $stats_db_filename;
+	global $server_title;
+	$stats_db_filename = GetHop("value absolute_stats_db_filename");
+	if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
+	$server_title = GetHop("value title");
+	if ( ! $server_title ) { $server_title = "HOPMOD Server";} //Set it to something
+
+}
 
 function count_rows($query) {
 	global $dbh;
@@ -66,6 +90,7 @@ function build_pager ($page, $query) {
 	$count = $dbh->query($query);
 	$rows = $count->fetchColumn();
 	$pages = ( ceil($rows / $rows_per_page) );
+	print "<div style=\"float: right \" id=\"pagebar\">";
 	if ( ! $page ) { $page = 1; }
 	if ( $page <= "1" or $page > $pages ) {
 	        print "<a>Prev &#187;</a>";
@@ -90,6 +115,7 @@ function build_pager ($page, $query) {
 	        print "<a href=\"?page=$nextpage\" >Next &#187;</a>";
 	}
 	print overlib("Filtering in affect<br />Filter MinimumGames <font color=white>".$_SESSION['MinimumGames']."</font>Filter NoFrags","$rows results");
+	print "</div>";
 }
 function check_get () {
 	global $rows_per_page;
@@ -111,8 +137,8 @@ function check_get () {
 	                $_SESSION['MinimumGames'] = "9";
 	        break;
 	default:
-	        if ( ! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of day"; }
-		if ( ! $_SESSION['MinimumGames'] ) { $_SESSION['MinimumGames'] = 1; }
+	        if ( ! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month"; }
+		if ( ! $_SESSION['MinimumGames'] ) { $_SESSION['MinimumGames'] = 4; }
 	}
 	
 	if ( $_GET['page'] >= 2 ) {
@@ -129,8 +155,28 @@ function check_get () {
 	} else { if (! $_SESSION['orderby'] ) { $_SESSION['orderby'] = "AgressorRating";} }
 	if ( $_GET['name'] ) { $_SESSION['name'] = $_GET['name']; }
 }
-function stats_table ($query = "null") {
+function stats_table ($query,$exclude_columns){
 	global $dbh;
+	global $column_list; 
+	global $rows_per_page;
+	if (! $exclude_columns ) { $exclude_columns = "NULL"; }
+
+
+//Table options
+$stats_table = array (
+    array("name" => "Name", "description" => "Players Nick Name", "column" => "name"),
+    array("name" => "Country", "description" => "Players Country", "column" => "ipaddr"),
+    array("name" => "Agressor Rating", "description" => "Average Scores per Game + Average flag Pickups", "column" => "AgressorRating"),
+    array("name" => "Defender Rating", "description" => "Average Defends(kill flag carrier) per Game + Average flag returns", "column" => "DefenderRating"),
+    array("name" => "FlagsDefended", "description" => "How many times you killed a flag carrier", "column" => "TotalDefended"),
+    array("name" => "Frags Record", "description" => "The most frags ever acheived in one game", "column" => "MostFrags"),
+    array("name" => "Total Frags", "description" => "The total number of frags for all games", "column" => "TotalFrags"),
+    array("name" => "Total Deaths", "description" => "The total number of deaths for all games", "column" => "TotalDeaths"),
+    array("name" => "Accuracy", "description" => "The percentage of shots fired that resulted in a frag", "column" => "Accuracy"),
+    array("name" => "KpD", "description" => "The number of frags made before being killed", "column" => "Kpd"),
+    array("name" => "TK", "description" => "The number of times a team member was fragged", "column" => "TotalTeamkills"),
+    array("name" => "Games", "description" => "The total number of games played", "column" => "TotalGames"),
+);
 	$sql = "
 select *
 from
@@ -153,12 +199,19 @@ from
                 inner join matches on players.match_id=matches.id
                 inner join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > strftime(\"%s\",\"now\",\"".$_SESSION['querydate']."\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
-where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",100 ;
+where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",$rows_per_page ;
 
 ";
-	if (! $query = "null") { $sql = $query; }
+	if ($query) { $sql = $query; }
 	$result = $dbh->query($sql);
 	$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
+?>
+<table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
+        <thead>
+        <tr>
+<?php
+	foreach (column_wrapper($stats_table, $exclude_columns) as $column) { print "<th>";overlib($column['description'], $column['name']); print "</th>"; }
+	print "<tr></thead><tbody>";
 	foreach ($result as $row)
 	{
 	                $country = geoip_country_name_by_addr($gi, $row['ipaddr']);
@@ -174,80 +227,45 @@ where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].
 	                                ?>
 	                                <td><?php overlib($country,$flag_image);?></td>
 	                                <?php
+					foreach (column_wrapper($stats_table, "Name|Country|$exclude_columns") as $column) {
+						print "<td>".$row[$column['column']]."</td>";
+					}
 	                print "
-	                                <td>$row[AgressorRating]</td>
-	                                <td>$row[DefenderRating]</td>
-	                                <td>$row[TotalDefended]</td>
-	                                <td>$row[MostFrags]</td>
-	                                <td>$row[TotalFrags]</td>
-	                                <td>$row[TotalDeaths]</td>
-	                                <td>$row[Accuracy]</td>
-	                                <td>$row[Kpd]</td>
-	                                <td>$row[TotalTeamkills]</td>
-	                                <td>$row[TotalGames]</td>
 	                        </tr>";
 	        $flag_image ="";
 	}
 // Close db handle
-$dbh = null;
+print "</table>";
 }
 
 function match_table ($match) {
         global $dbh;
-        $sql = "
-select name,
-	matches.datetime,
-	matches.duration,
-	matches.mapname,
-	matches.gamemode,
-	matches.demofile,
-	matches.players,
-	ipaddr,
-	sum(frags) as frags,
-	sum(deaths) as deaths,
-	name,
-	round((0.0+hits) / (hits+misses)*100) as Accuracy,
-	round((0.0+frags/deaths),2) as Kpd
-from players 
-	inner join matches on players.match_id=matches.id
-	outer left join ctfplayers on players.id=ctfplayers.player_id
-where match_id = '$match' group by name order by frags desc
-;
+        $sql3 = "
+select 
+	datetime,
+	duration,
+	mapname,
+	gamemode,
+	demofile,
+	players
+from matches 
+where id = '$match' 
 
 ";
-$result = $dbh->query($sql);
+$result = $dbh->query($sql3);
 
 
         $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
         foreach ($result as $row)
         {
-                        $country = geoip_country_name_by_addr($gi, $row['ipaddr']);
-                        $code = geoip_country_code_by_addr($gi, $row['ipaddr']);
-                        if ($code) {
-                                $code = strtolower($code) . ".png";
-                                $flag_image = "<img src=images/flags/$code />";
-                        }
-			$country = overlib2($country,$flag_image);
-                        $table .= "
-                                <tr onmouseover=\"this.className='highlight'\" onmouseout=\"this.className=''\">
-                                        <td><a href=\"player.php?name=$row[name]\">$row[name]</a></td>
-                                        <td>$country</td>
-                                        <td>$row[frags]</td>
-                                        <td>$row[deaths]</td>
-                                        <td>".($row[Accuracy]+0)."%</td>
-                                        <td>".($row[Kpd]+0.0)."</td>
-                                </tr>";
-                $flag_image ="";
         }
 // Close db handle
-$dbh = null;
 ?>
 
 <div align="left" id="content"><h1>Match details</h1>
 <div style="width:600px">
-<div style="float:right; border:4px ridge grey; "><img src='images/maps/<?php print $row['matches.mapname']?>.jpg' /></div>
+<div style="float:right; border:4px ridge grey; "><img src='images/maps/<?php print $row['mapname']?>.jpg' /></div>
 <h2></h2>
-<div class="box">
 <table cellpadding="0" cellspacing="1">
 <tr>
         <td class="headcol">Server</td>
@@ -255,46 +273,35 @@ $dbh = null;
 </tr>
 <tr>
         <td style="width:100px;" class="headcol">Date/Time</td>
-        <td><?php print date(" g:i A | jS M Y",$row['matches.datetime']); ?></td>
+        <td><?php print date(" g:i A | jS M Y",$row['datetime']); ?></td>
 </tr>
 <tr>
         <td class="headcol">Duration</td>
-        <td><?php print $row['matches.duration'] ?></td>
+        <td><?php print $row['duration'] ?></td>
 </tr>
 <tr>
         <td class="headcol">Map</td>
-        <td><?php print $row['matches.mapname'] ?></td>
+        <td><?php print $row['mapname'] ?></td>
 </tr>
 <tr>
         <td class="headcol">Mode</td>
-        <td><?php print $row['matches.gamemode'] ?></td></tr>
+        <td><?php print $row['gamemode'] ?></td></tr>
 
 </div>
 <tr>
         <td class="headcol">Players</td>
-        <td><?php print $row['matches.players'] ?></td></tr>
+        <td><?php print $row['players'] ?></td></tr>
 
 </div>
 <tr>
         <td class="headcol">Demo</td>
-        <td><?php print $row['matches.demofile'] ?></td></tr>
+        <td><?php print $row['demofile'] ?></td></tr>
 
 </div>
 </table>
+</div></div>
 <h2>Players</h2>
-<table class="tablesorter" id="hopstats" cellpadding="0" cellspacing="1" style="width:200%">
-<thead>
-        <tr>
-                <th>Name</th>
-                <th>Country</th>
-                <th>Frags</th>
-                <th>Deaths</th>
-                <th>Accuracy</th>
-                <th>kpd</th>
-        </tr>
-</thead>
 <?php
-print $table;
-print "</table></div></div>";
 }
+
 ?>
