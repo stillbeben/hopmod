@@ -6,13 +6,13 @@ include("includes/hopmod.php");
 startbench();
 $rows_per_page = "15";
 $querydate = "month";
-if ( $_GET['querydate'] ) {
+if ( isset($_GET['querydate']) ) {
 	if ($_GET['querydate'] != "day" | "week" | "month" | "year") { $querydate = "month";} else { $querydate = $_GET['querydate']; }
 }
-if ( $_GET['showprofile'] ) {
+if ( isset($_GET['showprofile']) ) {
 	$profile_name = "and name='".sqlite_escape_string($_GET['showprofile'])."' ";
 }
-if ( $_GET['name'] ) {
+if ( isset($_GET['name']) ) {
 }
 check_get();
 // Setup Geoip for location information.
@@ -91,7 +91,7 @@ foreach ($dbh->query($sql) as $row)
 {
 		$country = geoip_country_name_by_addr($gi, $row['ipaddr']);
 		$code = geoip_country_code_by_addr($gi, $row['ipaddr']);
-		if ($code) {
+		if (isset($code)) {
 			$code = strtolower($code) . ".png";
 			$flag_image = "<img src=images/flags/$code />";
 		}

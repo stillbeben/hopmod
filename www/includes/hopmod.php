@@ -18,9 +18,9 @@ function serverDetails() {
 	global $stats_db_filename;
 	global $server_title;
 	$stats_db_filename = GetHop("value absolute_stats_db_filename");
-	if ( ! $stats_db_filename ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
+	if ( ! isset($stats_db_filename) ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
 	$server_title = GetHop("value title");
-	if ( ! $server_title ) { $server_title = "HOPMOD Server";} //Set it to something
+	if ( ! isset($server_title) ) { $server_title = "HOPMOD Server";} //Set it to something
 
 }
 
@@ -91,7 +91,7 @@ function build_pager ($page, $query) {
 	$rows = $count->fetchColumn();
 	$pages = ( ceil($rows / $rows_per_page) );
 	print "<div style=\"float: right \" id=\"pagebar\">";
-	if ( ! $page ) { $page = 1; }
+	if ( ! isset($page) ) { $page = 1; }
 	if ( $page <= "1" or $page > $pages ) {
 	        print "<a>Prev &#187;</a>";
 	        $page == "1";
@@ -137,29 +137,29 @@ function check_get () {
 	                $_SESSION['MinimumGames'] = "9";
 	        break;
 	default:
-	        if ( ! $_SESSION['querydate'] ) { $_SESSION['querydate'] = "start of month"; }
-		if ( ! $_SESSION['MinimumGames'] ) { $_SESSION['MinimumGames'] = 4; }
+	        if ( ! isset($_SESSION['querydate']) ) { $_SESSION['querydate'] = "start of month"; }
+		if ( ! isset($_SESSION['MinimumGames']) ) { $_SESSION['MinimumGames'] = 4; }
 	}
 	
 	if ( $_GET['page'] >= 2 ) {
 	        $_SESSION['paging'] = ( ($_GET['page'] * $rows_per_page) - $rows_per_page +1 );
 	} else { $_SESSION['paging'] = 0; }
 	
-	if ( $_GET['orderby'] ) {
+	if ( isset($_GET['orderby']) ) {
 	        // Input Validation
 	        if (preg_match("/(AgressorRating|DefenderRating|Kpd|Accuracy|TotalGames)/i", $_GET['orderby']) ) {
 	                $_SESSION['orderby'] = $_GET['orderby'];
 	        } else {
 	                $_SESSION['orderby'] = "AgressorRating";
 	        }
-	} else { if (! $_SESSION['orderby'] ) { $_SESSION['orderby'] = "AgressorRating";} }
-	if ( $_GET['name'] ) { $_SESSION['name'] = $_GET['name']; }
+	} else { if (! isset($_SESSION['orderby']) ) { $_SESSION['orderby'] = "AgressorRating";} }
+	if ( isset($_GET['name']) ) { $_SESSION['name'] = $_GET['name']; }
 }
 function stats_table ($query,$exclude_columns){
 	global $dbh;
 	global $column_list; 
 	global $rows_per_page;
-	if (! $exclude_columns ) { $exclude_columns = "NULL"; }
+	if (! isset($exclude_columns) ) { $exclude_columns = "NULL"; }
 
 
 //Table options
@@ -202,7 +202,7 @@ from
 where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",$rows_per_page ;
 
 ";
-	if ($query) { $sql = $query; }
+	if (isset($query)) { $sql = $query; }
 	$result = $dbh->query($sql);
 	$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 ?>
@@ -216,7 +216,7 @@ where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].
 	{
 	                $country = geoip_country_name_by_addr($gi, $row['ipaddr']);
 	                $code = geoip_country_code_by_addr($gi, $row['ipaddr']);
-	                if ($code) {
+	                if (isset($code)) {
 	                        $code = strtolower($code) . ".png";
 	                        $flag_image = "<img src=images/flags/$code />";
 	                }

@@ -10,7 +10,7 @@ startbench();
 
 // Check for any http GET activity
 check_get();
-if (!$_SESSION['days']) { $_SESSION['days'] = 0;}
+if (! isset($_SESSION['days'])) { $_SESSION['days'] = 0;}
 if ($_GET['select_day'] == "next") { $_SESSION['days'] = ($_SESSION['days'] + 1);header("location: activity.php");}
 if ($_GET['select_day'] == "previous") { $_SESSION['days'] = ($_SESSION['days'] - 1);header("location: activity.php");}
 
