@@ -46,3 +46,10 @@ playercmd_group = [
         ]
     ] [privmsg $cn (err "Missing argument. Allows team grouping of players by tag. Syntax #group <tag> <team>.")]
 ]
+playercmd_setmotd = [
+    if (>= (listlen $arguments) 1) [
+	motd = $arg1
+	privmsg $cn (format "MOTD Changed to %1" (magenta $motd) )
+    ]
+]
+
