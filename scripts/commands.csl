@@ -37,3 +37,12 @@ playercmd_invadmin = [
     parameters pass
     if (adminpass $pass) [setpriv $cn admin] [privmsg $cn (err "Command Failed")]
 ]
+playercmd_group = [
+    if (>= (listlen $arguments) 2) [
+	reference tag arg1
+        reference t_team arg2
+        foreach (players) [
+                if ((match $tag (player_name $arg1))) [ msg (err (format "Moving %2 to %1 for team grouping" $t_team (player_name $arg1)) ) ; setteam $arg1 $t_team ]
+        ]
+    ] [privmsg $cn (err "Missing argument. Allows team grouping of players by tag. Syntax #group <tag> <team>.")]
+]
