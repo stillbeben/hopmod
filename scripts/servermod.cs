@@ -78,13 +78,12 @@ event_handler $onchmm [
 ]
 
 event_handler $onkick [
-    parameters target master mins
+    parameters target master
     target_id = (format "%1(%2)" (player_name $target) $target)
     if (= $master -1) [master_id = "a server admin"] [master_id = (format "%1(%2)" (player_name $master) $master)]
-    if (= $mins -1) [bantime = ""] [bantime = (format "and banned for %1 minutes" $mins)]
-    log (format "%1 was kicked by %2 %3" $target_id $master_id $bantime)
+    log (format "%1 was kicked and banned by %2" $target_id $master_id)
 ]
-    
+
 event_handler $ontext [
     parameters cn text
     
@@ -231,7 +230,7 @@ event_handler $onshutdown [
         kill $irc_pid
     ]
     
-    if $run_banlist_updater [system "killall updatebanlist"]
+    //if $run_banlist_updater [system "killall updatebanlist"]
 ]
 
 // Start of auto update
@@ -288,12 +287,15 @@ printsvstatus = [
     system [echo "@output" >> @filename]
 ]
 
-update_banlist = [
-    clearbanlist
-    exec "conf/banlist.conf"
-]
-sched update_banlist
-if $run_banlist_updater [daemon "bin/updatebanlist" "/dev/null" "/dev/null" "logs/updatebanlist.log"]
+//update_banlist = [
+    //clearbanlist
+//    exec "conf/banlist.conf"
+//]
+//sched update_banlist
+//if $run_banlist_updater [daemon "bin/updatebanlist" "/dev/null" "/dev/null" "logs/updatebanlist.log"]
+
+system [touch conf/bans]
+loadbans conf/bans
 
 if (= $UID 0) [
     log_error "Running the server as root user is a serious security risk!"

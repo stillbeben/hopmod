@@ -25,6 +25,7 @@
 #include "hopmod/playerid.hpp"
 #include "hopmod/sqlite3.hpp"
 #include "hopmod/geoip.hpp"
+#include "hopmod/banned_networks_db.hpp"
 
 #include <boost/bind.hpp>
 #include <sstream>
@@ -411,8 +412,22 @@ struct fpsserver : igameserver
     FILE *mapdata;
 
     vector<uint> allowedips;
-    vector<ban> bannedips;
-    std::set<uint> bannedipset;
+    //vector<ban> bannedips;
+    banned_networks_db banned_networks;
+    
+    struct ban_entry
+    {
+        int expire;
+        netmask ip;
+        ban_entry(int e,netmask n):expire(e),ip(n){}
+        bool operator<(const ban_entry & x)const
+        {
+            return expire < x.expire;
+        }
+    };
+    std::queue<ban_entry> m_tmpbans;
+    int m_tmpban_time;
+    
     vector<clientinfo *> clients;
     vector<worldstate *> worldstates;
     bool reliablemessages;
@@ -539,11 +554,11 @@ struct fpsserver : igameserver
 
     cubescript::domain server_domain;
     
-    cubescript::function2<void,const std::string &,int>    func_flood_protection;
-    cubescript::function1<void,const std::string &>        func_log_status;
-    cubescript::function1<void,const std::string &>        func_log_error;
-    cubescript::function1<void,const std::string &>        func_msg;
-    cubescript::function2<void,int,const std::string &>    func_privmsg;
+    cubescript::function2<void,const std::string &,int>     func_flood_protection;
+    cubescript::function1<void,const std::string &>         func_log_status;
+    cubescript::function1<void,const std::string &>         func_log_error;
+    cubescript::function1<void,const std::string &>         func_msg;
+    cubescript::function2<void,int,const std::string &>     func_privmsg;
     cubescript::function1<std::string,int>                  func_player_name;
     cubescript::function1<std::string,int>                  func_player_ip;
     cubescript::function1<std::string,int>                  func_player_team;
@@ -576,19 +591,18 @@ struct fpsserver : igameserver
     cubescript::function1<float,int>                        func_player_rating;
     cubescript::function1<std::string,int>                  func_get_disc_reason;
     cubescript::function2<void,int,const std::string &>     func_setpriv;
-    cubescript::function0<void>                             func_clearbans;
-    cubescript::functionV<void>                             func_kick;
-    cubescript::function1<void,int>                        func_set_interm;
+    cubescript::function1<void,int>                         func_kick;
+    cubescript::function1<void,int>                         func_set_interm;
     cubescript::function1<void,int>                         func_spec;
     cubescript::function1<void,int>                         func_unspec;
     cubescript::function0<std::vector<int> >                func_players;
     cubescript::function0<std::vector<std::string> >        func_teams;
     cubescript::function2<void,int,bool>                    func_setmaster;
-    cubescript::function2<void,std::string,std::string>    func_changemap;
+    cubescript::function2<void,std::string,std::string>     func_changemap;
     cubescript::function2<void,bool,std::string>            func_recorddemo;
     cubescript::function0<void>                             func_stopdemo;
-    cubescript::function1<void,const std::string &>        func_allowhost;
-    cubescript::function1<void,const std::string &>        func_denyhost;
+    cubescript::function1<void,const std::string &>         func_allowhost;
+    cubescript::function1<void,const std::string &>         func_denyhost;
     cubescript::function1<int,const std::string &>          func_capture_score;
     cubescript::function1<std::string,const std::string &>  func_shell_quote;
     cubescript::function0<bool>                             func_teamgame;
@@ -597,26 +611,22 @@ struct fpsserver : igameserver
     cubescript::function0<bool>                             func_ctfgame;
     cubescript::function1<std::string,const std::string &>  func_nsresolve;
     cubescript::function1<bool,int>                         func_dupname;
-    cubescript::function0<void>                            func_shutdown;
-    cubescript::function0<void>                            func_restarter;
-    cubescript::function2<void,std::string,std::string>    func_logfile;
-    cubescript::function1<void,const std::string &>        func_close_logfile;
+    cubescript::function0<void>                             func_shutdown;
+    cubescript::function0<void>                             func_restarter;
+    cubescript::function2<void,std::string,std::string>     func_logfile;
+    cubescript::function1<void,const std::string &>         func_close_logfile;
     cubescript::function4<pid_t,const std::string &,
                                 const std::vector<std::string> &,
                                 const std::string &,
                                 const std::string & >       func_daemon;
-    cubescript::function1<void,pid_t>                      func_kill;
-    cubescript::function1<void,int>                        func_server_sleep;
+    cubescript::function1<void,pid_t>                       func_kill;
+    cubescript::function1<void,int>                         func_server_sleep;
     cubescript::function1<void,int>                         func_spy;
     cubescript::function0<const char *>                     func_worstteam;
     cubescript::function1<int,int>                          func_teamplayerrank;
     cubescript::function1<int,const char *>                 func_teamsize;
     cubescript::function1<int,const char *>                 func_teamscore;
     cubescript::function2<void,int,const char *>            func_setteam;
-    cubescript::function0< std::list<std::string> >         func_banlist_ips;
-    cubescript::function0< std::list<int> >                 func_banlist_timeleft;
-    cubescript::function2<void,const char *,int>            func_addban;
-    cubescript::function0<void>                             func_clearbanlist;
     cubescript::function1<void,int>                         func_changetime;
     cubescript::function1<bool,const char *>                func_adminpass;
     cubescript::function0<void>                             func_clearconfig;
@@ -643,6 +653,7 @@ struct fpsserver : igameserver
     cubescript::variable_ref<size_t>                        var_tx_packets;
     cubescript::variable_ref<size_t>                        var_rx_packets;
     cubescript::variable_ref<bool>                          var_reassignteams; bool reassignteams;
+    cubescript::variable_ref<int>                           var_kickbantime;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -702,10 +713,11 @@ struct fpsserver : igameserver
         gamecount(0),playercount(0), concount(0), totalmillis(0),interm(0), 
         minremain(0), mapreload(false), lastsend(0),mastermode(MM_OPEN), 
         mastermask(MM_DEFAULT), currentmaster(-1), masterupdate(false), 
-        mapdata(NULL), reliablemessages(false), demonextmatch(false),
-        demotmp(NULL), demorecord(NULL), demoplayback(NULL), nextplayback(0),
-        arenamode(*this), capturemode(*this),assassinmode(*this), 
-        ctfmode(*this), smode(NULL),
+        mapdata(NULL), m_tmpban_time(4*60*60000),reliablemessages(false), 
+        demonextmatch(false), demotmp(NULL), demorecord(NULL), 
+        demoplayback(NULL), nextplayback(0), arenamode(*this), 
+        capturemode(*this),assassinmode(*this), ctfmode(*this), 
+        smode(NULL),
         
         func_flood_protection(boost::bind(&fpsserver::set_flood_protection,this,_1,_2)),
         func_log_status(boost::bind(&fpsserver::log_status,this,_1)),
@@ -744,8 +756,7 @@ struct fpsserver : igameserver
         func_player_rating(boost::bind(&fpsserver::get_player_rating,this,_1)),
         func_get_disc_reason(boost::bind(&fpsserver::get_disc_reason,this,_1)),
         func_setpriv(boost::bind((void (fpsserver::*)(int,const std::string &))&fpsserver::setpriv,this,_1,_2)),
-        func_clearbans(boost::bind(&fpsserver::clearbans,this)),
-        func_kick(boost::bind(&fpsserver::kickban,this,_1,_2)),
+        func_kick(boost::bind(&fpsserver::kickban,this,_1,-1)),
         func_set_interm(boost::bind(&fpsserver::set_interm,this,_1)),
         func_spec(boost::bind(&fpsserver::set_spectator,this,_1,true)),
         func_unspec(boost::bind(&fpsserver::set_spectator,this,_1,false)),
@@ -778,10 +789,6 @@ struct fpsserver : igameserver
         func_teamsize(boost::bind(&fpsserver::get_teamsize,this,_1)),
         func_teamscore(boost::bind(&fpsserver::get_teamscore,this,_1)),
         func_setteam(boost::bind(&fpsserver::setteam,this,_1,_2)),
-        func_banlist_ips(boost::bind(&fpsserver::get_banlist_ips,this)),
-        func_banlist_timeleft(boost::bind(&fpsserver::get_banlist_timeleft,this)),
-        func_addban(boost::bind(&fpsserver::addban,this,_1,_2)),
-        func_clearbanlist(boost::bind(&fpsserver::clearbanlist,this)),
         func_changetime(boost::bind(&fpsserver::changetime,this,_1)),
         func_adminpass(boost::bind(&fpsserver::cmp_adminpass,this,_1)),
         func_clearconfig(boost::bind(&fpsserver::clearconfig,this,false,false)),
@@ -808,6 +815,7 @@ struct fpsserver : igameserver
         var_tx_packets(tx_packets),
         var_rx_packets(rx_packets),
         var_reassignteams(reassignteams), reassignteams(true),
+        var_kickbantime(m_tmpban_time),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -869,8 +877,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_rating",&func_player_rating);
         server_domain.register_symbol("disc_reason",&func_get_disc_reason);
         server_domain.register_symbol("setpriv",&func_setpriv);
-        server_domain.register_symbol("clearbans",&func_clearbans);
-        server_domain.register_symbol("kick",&func_kick);
+        server_domain.register_symbol("kick",&func_kickfunc_kick);
         server_domain.register_symbol("intermission",&func_set_interm);
         server_domain.register_symbol("spec",&func_spec);
         server_domain.register_symbol("unspec",&func_unspec);
@@ -903,10 +910,6 @@ struct fpsserver : igameserver
         server_domain.register_symbol("teamsize",&func_teamsize);
         server_domain.register_symbol("teamscore",&func_teamscore);
         server_domain.register_symbol("setteam",&func_setteam);
-        server_domain.register_symbol("banlist_ips",&func_banlist_ips);
-        server_domain.register_symbol("banlist_timeleft",&func_banlist_timeleft);
-        server_domain.register_symbol("addban",&func_addban);
-        server_domain.register_symbol("clearbanlist",&func_clearbanlist);
         server_domain.register_symbol("changetime",&func_changetime);
         server_domain.register_symbol("adminpass",&func_adminpass);
         server_domain.register_symbol("clearconfig",&func_clearconfig);
@@ -933,6 +936,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("tx_packets",&var_tx_packets); var_tx_packets.readonly(true);
         server_domain.register_symbol("rx_packets",&var_rx_packets); var_tx_packets.readonly(true);
         server_domain.register_symbol("reassignteams",&var_reassignteams);
+        server_domain.register_symbol("kickbantime",&var_kickbantime);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);
@@ -974,6 +978,8 @@ struct fpsserver : igameserver
     #ifdef USE_GEOIP
         register_geoip_functions(&server_domain);
     #endif
+        
+        banned_networks.register_script_functions(&server_domain);
         
         scriptable_events.register_event("onstartup",&on_startup);
         scriptable_events.register_event("onshutdown",&on_shutdown);
@@ -2235,10 +2241,14 @@ struct fpsserver : igameserver
            
             case SV_CLEARBANS:
             {
-                if(ci->privilege) clearbans();
+                if(ci->privilege)
+                {
+                    clearbans();
+                    sendservmsg("cleared all bans");
+                }
                 break;
             }
-
+            
             case SV_KICK:
             {
                 int victim = getint(p);
@@ -2254,7 +2264,7 @@ struct fpsserver : igameserver
                         break;
                     }
                     
-                    if(allow) kickban(victim,sender,-1);
+                    if(allow) kickban(victim,sender);
                 }
                 break;
             }
@@ -2783,12 +2793,6 @@ struct fpsserver : igameserver
             if(smode) smode->update();
         }
         
-        if(bannedips.length())
-            loopv(bannedips)
-                if( (bannedips[i].expire>0 && totalmillis > bannedips[i].expire) || 
-                    (bannedips[i].std && bannedips[0].time-totalmillis>4*60*60000) )
-                    bannedips.remove(i--);
-        
         if(masterupdate) 
         { 
             clientinfo *m = currentmaster>=0 ? (clientinfo *)getinfo(currentmaster) : NULL;
@@ -2807,6 +2811,15 @@ struct fpsserver : igameserver
             checkvotes(true);
         }
         
+        if(m_tmpbans.size())
+        {
+            ban_entry oldest_ban = m_tmpbans.front();
+            if(oldest_ban.expire <= totalmillis)
+            {
+                banned_networks.remove_ban(oldest_ban.ip);
+                m_tmpbans.pop();
+            }
+        }
     }
 
     bool serveroption(char *arg)
@@ -2943,7 +2956,9 @@ struct fpsserver : igameserver
         ci->state.o.x=-1; ci->state.o.y=-1; ci->state.o.z=-1;
         
         clients.add(ci);
-        loopv(bannedips) if(bannedips[i].ip==ip) return DISC_IPBAN;
+        
+        if(banned_networks.is_banned(netmask(ip)) && !allow_host(ip)) return DISC_IPBAN;
+        
         if(mastermode>=MM_PRIVATE) 
         {
             if(allowedips.find(ip)<0) return DISC_PRIVATE;
@@ -2983,8 +2998,8 @@ struct fpsserver : igameserver
 
         if(clients.empty())
         {
-            //bannedips.setsize(0); // bans clear when server empties
-            clear_stdbans();
+            clearbans();
+            
             var_mapname.readonly(true);
             var_gamemode.readonly(true);
             sync_game_settings();
@@ -3117,53 +3132,39 @@ struct fpsserver : igameserver
         return get_ci(cn)->team;
     }
     
-    void kickban(std::list<std::string> & arglist,cubescript::domain *)
-    {
-        int cn=cubescript::functionN::pop_arg<int>(arglist);
-        int mins=-1;
-        if(arglist.size()) mins=cubescript::functionN::pop_arg<int>(arglist);
-        kickban(cn,-1,mins);
-    }
-    
-    void kickban(int victim,int actor,int mins)
+    void kickban(int victim,int actor)
     {
         bool blocked=false;
         cubescript::arguments args;
-        scriptable_events.dispatch(&on_kick,args & victim & actor & mins,&blocked);
-        if(!blocked) add_pending_ban(victim,mins);
-    }
-    
-    void add_pending_ban(int cn,int mins)
-    {
-        m_scheduler.schedule(boost::bind(&fpsserver::kick_player_now,this,cn,mins),0);
-    }
-    
-    void kick_player_now(int cn,int mins)
-    {
-        clientinfo * ci=get_ci(cn);
-        
-        ci->disc_reason_code=DISC_KICK;
-        
-        ban & b = bannedips.add();
-        
-        //use standard kick behaviour: 4 hour ban limit and ban lifted when server empties.
-        if(mins==-1)
+        scriptable_events.dispatch(&on_kick,args & victim & actor,&blocked);
+        if(!blocked)
         {
-            mins=4*60;
-            b.std=true;
+            /*
+                Kicking a player from the server causes their clientinfo object to
+                be deleted which is not safe to do from all places. Schedule the 
+                task, to be invoked on next serverupdate().
+            */
+            m_scheduler.schedule(boost::bind(&fpsserver::kickban_now,this,victim),0);
         }
+    }
+    
+    void kickban_now(int cn)
+    {
+        clientinfo * ci = get_ci(cn);
+        ci->disc_reason_code = DISC_KICK;
         
-        b.time = totalmillis;
-        b.expire = totalmillis+(mins*60000);
-        b.ip = getclientip(cn);
-        allowedips.removeobj(b.ip);
+        uint ip = getclientip(ci->clientnum);
+        m_tmpbans.push(ban_entry(totalmillis+m_tmpban_time,ip));
+        banned_networks.add_ban(ip,false);
         
         disconnect_client(cn, DISC_KICK);
     }
     
     std::string get_disc_reason(unsigned int reason)
     {
-        static const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked and banned", "tag type", "ip is banned", "server is in private mode", "server FULL (maxclients)" };
+        static const char *disc_reasons[] = { "normal", "end of packet", 
+            "client num", "kicked and banned", "tag type", "ip is banned", 
+            "server is in private mode", "server FULL (maxclients)" };
         assert(reason>=0 && reason<sizeof(disc_reasons));
         return std::string(disc_reasons[reason]);
     }
@@ -3208,8 +3209,7 @@ struct fpsserver : igameserver
     
     void clearbans()
     {
-        clear_stdbans();
-        sendservmsg("cleared all bans");
+        banned_networks.remove_clearable_bans();
     }
     
     void set_interm(int milli)
@@ -3401,26 +3401,27 @@ struct fpsserver : igameserver
     
     void add_allowhost(const std::string & hostname)
     {
-        hostent * result=gethostbyname(hostname.c_str());
+        hostent * result = gethostbyname(hostname.c_str());
         if( result && 
             result->h_addrtype==AF_INET && 
             result->h_length==4 && 
             result->h_addr_list[0] ) allowedips.add(*((in_addr_t *)result->h_addr_list[0]));
     }
     
+    /*
+        Remove host address from allowed hosts list.
+        TODO: rename function
+    */
     void add_denyhost(const std::string & hostname)
     {
-        hostent * result=gethostbyname(hostname.c_str());
+        hostent * result = gethostbyname(hostname.c_str());
         if( result && 
             result->h_addrtype==AF_INET && 
             result->h_length==4 && 
             result->h_addr_list[0] )
         {
             in_addr_t ip=*((in_addr_t *)result->h_addr_list[0]);
-            ban &b = bannedips.add();
-            b.time = totalmillis;
-            b.ip = ip;
-            allowedips.removeobj(b.ip);
+            allowedips.removeobj(ip);
         }
     }
     
@@ -3771,51 +3772,6 @@ struct fpsserver : igameserver
         sendf(-1, 1, "riis", SV_SETTEAM, cn, ci->team);
     }
     
-    void clear_stdbans()
-    {
-        loopv(bannedips) if(bannedips[i].std) bannedips.remove(i--);
-    }
-    
-    std::list<std::string> get_banlist_ips()const
-    {
-        std::list<std::string> result;
-        loopv(bannedips) result.push_back(ip_ntoa(bannedips[i].ip));
-        return result;
-    }
-    
-    std::list<int> get_banlist_timeleft()const
-    {
-        std::list<int> result;
-        loopv(bannedips) if(bannedips[i].std) result.push_back(-1);
-        else result.push_back((bannedips[i].expire-totalmillis)/60000);
-        return result;
-    }
-    
-    void addban(const char * ip,int mins)
-    {
-        uint ipnum=inet_addr(ip);
-        if(bannedipset.find(ipnum)==bannedipset.end())
-        {
-            bannedipset.insert(ipnum);
-            
-            ban & b = bannedips.add();
-            b.time=totalmillis;
-            b.expire=totalmillis+(mins*60000);
-            b.ip=ipnum;
-            b.std=false;
-        }
-    }
-    
-    void clearbanlist()
-    {
-        loopv(bannedips)
-            if(!bannedips[i].std && bannedipset.find(bannedips[i].ip)!=bannedipset.end())
-            {
-                bannedipset.erase(bannedips[i].ip);
-                bannedips.remove(i--);
-            }
-    }
-    
     void changetime(int ms)
     {
         gamelimit=ms;
@@ -3860,6 +3816,11 @@ struct fpsserver : igameserver
     int get_secsleft()const
     {
         return gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis)/1000;
+    }
+    
+    bool allow_host(uint ip)/*const*/
+    {
+        return allowedips.find(ip) != -1;
     }
 };
 

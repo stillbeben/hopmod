@@ -240,3 +240,6 @@ redirect_textmsg = [
 ]
 
 is_startup = [< $uptime 5]
+
+permban = [ban $arg1 1]
+

@@ -50,7 +50,8 @@ void parse_type(const std::string & str,T & v)
     std::stringstream reader(str);
     reader.exceptions(std::ios_base::failbit | std::ios_base::badbit);
     try{reader>>v;}
-    catch(std::ios_base::failure){throw error_key("runtime.type_mismatch");}
+    catch(std::ios_base::failure){throw error_key("runtime.bad_cast");}
+    catch(std::bad_cast){throw error_key("runtime.bad_cast");}
 }
 
 template<typename T> inline
