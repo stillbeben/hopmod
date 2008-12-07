@@ -8,6 +8,7 @@ teamkill_update = [
         local times (player_var $offender teamkill_times (concat $uptime (player_var $offender teamkill_times)))
         
         if (!= (player_var $offender teamkill_warned) 1) [
+            privconsole $offender script [@(player_name $offender) you just killed a team mate, you should be shooting red players.]
             privconsole $offender script [Teamkill restrictions per game: maxcount=@teamkill_limit maxrate=@teamkill_maxrate per min.]
             player_var $offender teamkill_warned 1
         ]
@@ -17,12 +18,14 @@ teamkill_update = [
         ]
 
         if (> (player_var $offender teamkills) $teamkill_limit) [
-            kick $offender 0
+            kick $offender
+            sleep (mins 30) [removeban (player_ip $offender)]
             console script [@(player_name $offender) was kicked for exceeding teamkill limit.]
             log (format "%1 was kicked for team killing." (player_name $offender))
         ] [
             if (&& (> (listlen $times) $teamkill_maxrate) [< (add_intervals $times $teamkill_maxrate) 60000]) [
-                kick $offender 0
+                kick $offender
+                sleep (mins 30) [removeban (player_ip $offender)]
                 console script [@(player_name $offender) was kicked for exceeding maximum teamkill rate.]
                 log (format "%1 was kicked for team killing." (player_name $offender))
             ]

@@ -877,7 +877,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_rating",&func_player_rating);
         server_domain.register_symbol("disc_reason",&func_get_disc_reason);
         server_domain.register_symbol("setpriv",&func_setpriv);
-        server_domain.register_symbol("kick",&func_kickfunc_kick);
+        server_domain.register_symbol("kick",&func_kick);
         server_domain.register_symbol("intermission",&func_set_interm);
         server_domain.register_symbol("spec",&func_spec);
         server_domain.register_symbol("unspec",&func_unspec);
