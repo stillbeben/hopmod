@@ -39,6 +39,10 @@ event_handler $onconnect [
             privmsg $arg1 (info (format "Alt names used by %1: %2" (player_name $cn) (showaliases $cn)))
         ]
     ]
+    
+    if (strcmp $gamemode "coopedit") [
+        privconsole $cn script "Warning: running /newmap command as an unprivileged player will result in you being kicked and banned."
+    ]
 ]
 
 event_handler $ondisconnect [
@@ -158,14 +162,15 @@ event_handler $onmapchanged [
     currentmap = $mapname
     
     if (strcmp $gamemode "coopedit") [
-        event_handler $onmapchange [ //cleanup on next map change
-            mastermode @mastermode
+        console script "Warning: running /newmap command as an unprivileged player will get you kicked and banned."
+        event_handler $onmapchanged [ //cleanup on next map change
             cancel_handler
+            mastermode @mastermode
+            if (!= $currentmaster -1) [setmaster $currentmaster 0]
         ]
         if $allow_mm_locked [
             mastermode $MM_LOCKED
-            console script [Server is locked for coopedit mode.]
-        ] [msg (info "Warning! This server doesn't allow locked mastermode.")]
+        ]
     ]
     
     if (> $gamecount 1) check_scriptpipe
@@ -175,8 +180,12 @@ event_handler $onmapchanged [
 
 event_handler $onnewmap [
     parameters cn size
-    
-    log (format "%1(%2) set new map of size %3" (player_name $cn) $cn $size)
+    if (unprivileged $cn) [
+        kick $cn
+        veto
+    ] [
+        log (format "%1(%2) set new map of size %3" (player_name $cn) $cn $size)
+    ]
 ]
 
 event_handler $onnewmap [
@@ -195,6 +204,10 @@ event_handler $onsetmaster [
         ] [
             log (format "%1(%2) gained %3" (player_name $cn) $cn (player_priv $cn))
             currentmaster = $cn
+        ]
+    ] [
+        if (&& (&& (= $currentmaster -1) $set) (strcmp $gamemode "coopedit")) [
+            setmaster $cn 1
         ]
     ]
 ]

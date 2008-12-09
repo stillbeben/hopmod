@@ -243,3 +243,6 @@ is_startup = [< $uptime 5]
 
 permban = [ban $arg1 1]
 
+unprivileged = [strcmp (player_priv $arg1) "none"]
+privileged = [! (strcmp (player_priv $arg1) "none")]
+

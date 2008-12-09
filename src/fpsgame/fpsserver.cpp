@@ -3325,7 +3325,7 @@ struct fpsserver : igameserver
                 sendservmsg(infomsg.str().c_str());
                 
                 cubescript::arguments args;
-                scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & set & std::string(""),NULL);
+                scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & set & std::string("") & true,NULL);
             }
             else setpriv(ci,PRIV_MASTER);
         }

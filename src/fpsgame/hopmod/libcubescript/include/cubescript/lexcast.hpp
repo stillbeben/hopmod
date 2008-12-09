@@ -35,6 +35,7 @@
 #include <sstream>
 #include <vector>
 #include <list>
+#include <typeinfo>
 #include "error.hpp"
 #include "constructs/string.hpp"
 #include "constructs/word.hpp"
