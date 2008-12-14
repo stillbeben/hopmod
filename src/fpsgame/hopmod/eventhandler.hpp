@@ -31,6 +31,7 @@ public:
     event_handler_service(cubescript::domain *);
     void register_event(const char *,event_handler *);
     void dispatch(event_handler *,std::list<std::string> &,bool *);
+    void dispatch(event_handler *,const std::list<std::string> &,bool *);
     void clear_all_handlers();
 private:
     void push_handler_code(int,const std::string &);

@@ -1112,8 +1112,7 @@ struct fpsserver : igameserver
         sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);
         ci->state.pickup(sents[i].type);
         
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_itempickup,args & sender & itemname(sents[i].type),NULL);
+        scriptable_events.dispatch(&on_itempickup,cubescript::arguments(sender,itemname(sents[i].type)),NULL);
         return true;
     }
     
@@ -1476,7 +1475,7 @@ struct fpsserver : igameserver
  
     void changemap(const char *s, int mode,int gametime=600000)
     {
-        scriptable_events.dispatch(&on_endgame,cubescript::args0(),NULL);
+        scriptable_events.dispatch(&on_endgame,cubescript::arguments(),NULL);
         
         if(m_demo) enddemoplayback();
         else enddemorecord();
@@ -1527,7 +1526,7 @@ struct fpsserver : igameserver
         clear_pgvars();
         
         var_gametime.readonly(true);
-        scriptable_events.dispatch(&on_mapchanged,cubescript::args0(),NULL);
+        scriptable_events.dispatch(&on_mapchanged,cubescript::arguments(),NULL);
         var_gametime.readonly(false);
     }
 
@@ -1614,7 +1613,7 @@ struct fpsserver : igameserver
                 smapname[0]='\0';
                 var_mapname.readonly(false);
                 var_gamemode.readonly(false);
-                scriptable_events.dispatch(&on_setmap,cubescript::args0(),NULL);
+                scriptable_events.dispatch(&on_setmap,cubescript::arguments(),NULL);
                 var_mapname.readonly(true);
                 var_gamemode.readonly(true);
                 sync_game_settings();
@@ -1857,8 +1856,7 @@ struct fpsserver : igameserver
                 if(ci->state.state!=CS_DEAD || ci->state.lastspawn>=0 || (smode && !smode->canspawn(ci))) break;
                 if(ci->state.lastdeath) ci->state.respawn();
                 
-                cubescript::arguments args;
-                scriptable_events.dispatch(&on_respawn,args & ci->clientnum,NULL);
+                scriptable_events.dispatch(&on_respawn,cubescript::arguments(ci->clientnum),NULL);
                 
                 sendspawn(ci);
                 break;
@@ -1966,12 +1964,8 @@ struct fpsserver : igameserver
                 filtertext(text, text);
                 
                 if(!allow) break;
-                
                 bool block=false;
-                
-                cubescript::arguments a;
-                scriptable_events.dispatch(&on_text,a & ci->clientnum & std::string(text),&block);
-                
+                scriptable_events.dispatch(&on_text,cubescript::arguments(ci->clientnum,text),&block);
                 if(!block)
                 {
                     QUEUE_INT(SV_TEXT);
@@ -1994,9 +1988,8 @@ struct fpsserver : igameserver
                     if(t==ci || t->state.state==CS_SPECTATOR || strcmp(ci->team, t->team)) continue;
                     sendf(t->clientnum, 1, "riis", SV_SAYTEAM, ci->clientnum, text);
                 }
-                
-                cubescript::arguments args;
-                scriptable_events.dispatch(&on_sayteam,args & ci->clientnum & std::string(text),NULL);
+
+                scriptable_events.dispatch(&on_sayteam,cubescript::arguments(ci->clientnum,text),NULL);
                 
                 break;
             }
@@ -2007,6 +2000,7 @@ struct fpsserver : igameserver
                 {
                     getstring(text,p); //name
                     getstring(text,p); //team
+                    curmsg = p.length();
                     break;
                 }
                 
@@ -2060,8 +2054,6 @@ struct fpsserver : igameserver
                 bool renamed = oldname[0] && strcmp(oldname,ci->name);
                 bool reteamed = oldteam[0] && strcmp(oldteam,ci->team);
                 
-                curmsg = p.length();
-                
                 if(!connected && 
                     (renamed || reteamed) && 
                     ci->check_flooding(ci->svc2sinit_interval,svc2sinit_min_interval,"renaming or reteaming")) break;
@@ -2074,8 +2066,7 @@ struct fpsserver : igameserver
                 {
                     playercount++;
                     ci->connected=true;
-                    cubescript::arguments args;
-                    scriptable_events.dispatch(&on_connect,args & ci->clientnum,NULL);
+                    scriptable_events.dispatch(&on_connect,cubescript::arguments(ci->clientnum),NULL);
                 }
                 else
                 {
@@ -2084,15 +2075,13 @@ struct fpsserver : igameserver
                         clientinfo::varmap cvars=vars[playerid(oldname,getclientip(ci->clientnum))];
                         vars[ci->id()]=cvars;
                         
-                        cubescript::arguments args;
-                        scriptable_events.dispatch(&on_rename,args & ci->clientnum & std::string(oldname) & std::string(ci->name),NULL);
+                        scriptable_events.dispatch(&on_rename,cubescript::arguments(ci->clientnum, oldname, ci->name),NULL);
                     }
                     
                     if(reteamed)
                     {
                         //TODO bool revert=false;
-                        cubescript::arguments args;
-                        scriptable_events.dispatch(&on_reteam,args & ci->clientnum & std::string(oldteam) & std::string(ci->team),NULL);
+                        scriptable_events.dispatch(&on_reteam,cubescript::arguments(ci->clientnum, oldteam, ci->team),NULL);
                     }
                 }
                 
@@ -2107,10 +2096,9 @@ struct fpsserver : igameserver
                 if(!ci->local && !m_mp(reqmode)) reqmode = 0;
                 bool allow=!ci->check_flooding(ci->svmapvote_interval,svmapvote_min_interval,"map voting");
                 
-                cubescript::arguments args;
                 bool event_block=false;
                 scriptable_events.dispatch(&on_mapvote,
-                    args & ci->clientnum & std::string(modestr(reqmode)) & std::string(text),
+                    cubescript::arguments(ci->clientnum, modestr(reqmode), text),
                     &event_block);
                 
                 if(allow && !event_block) vote(text,reqmode,sender);
@@ -2217,8 +2205,7 @@ struct fpsserver : igameserver
                     if(ci->privilege>=PRIV_ADMIN || (mastermask&(1<<mm)))
                     {
                         bool block=false;
-                        cubescript::arguments args;
-                        scriptable_events.dispatch(&on_chmm,args & ci->clientnum & mm,&block);
+                        scriptable_events.dispatch(&on_chmm,cubescript::arguments(ci->clientnum, mm),&block);
                         if(block) break;
                         
                         mastermode = mm;
@@ -2350,8 +2337,7 @@ struct fpsserver : igameserver
                 if(!ci->privilege && ci->state.state==CS_SPECTATOR) break;
                 
                 bool block=false;
-                cubescript::arguments args;
-                scriptable_events.dispatch(&on_newmap,args & ci->clientnum & size,&block);
+                scriptable_events.dispatch(&on_newmap,cubescript::arguments(ci->clientnum, size),&block);
                 if(block) break;
                 
                 if(size>=0)
@@ -2530,9 +2516,8 @@ struct fpsserver : igameserver
             minremain = gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
             sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
             if(!minremain && smode) smode->intermission();
-            
-            cubescript::arguments args;
-            scriptable_events.dispatch(&on_timeupdate,args & minremain,NULL);
+
+            scriptable_events.dispatch(&on_timeupdate,cubescript::arguments(minremain),NULL);
         }
         
         if(!interm && minremain<=0)
@@ -2600,13 +2585,10 @@ struct fpsserver : igameserver
             ts.state = CS_DEAD;
             ts.lastdeath = gamemillis;
             
-            {
-                cubescript::arguments args;
-                scriptable_events.dispatch(&on_damage,args & actor->clientnum & target->clientnum & damage & std::string(guns[gun].name),NULL);
-            }
-
-            cubescript::arguments args;
-            scriptable_events.dispatch(&on_death,args & actor->clientnum & target->clientnum,NULL);
+            scriptable_events.dispatch(&on_damage,cubescript::arguments(actor->clientnum, target->clientnum, damage, guns[gun].name),NULL);
+            
+            scriptable_events.dispatch(&on_death,cubescript::arguments(actor->clientnum, target->clientnum),NULL);
+            
             // don't issue respawn yet until DEATHMILLIS has elapsed
             // ts.respawn();
             
@@ -2627,9 +2609,8 @@ struct fpsserver : igameserver
         if(smode) smode->died(ci, NULL);
         gs.state = CS_DEAD;
         gs.respawn();
-        
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_death,args & ci->clientnum & ci->clientnum,NULL);
+
+        scriptable_events.dispatch(&on_death,cubescript::arguments(ci->clientnum, ci->clientnum),NULL);
     }
 
     void processevent(clientinfo *ci, explodeevent &e)
@@ -2857,7 +2838,7 @@ struct fpsserver : igameserver
         
         var_mapname.readonly(false);
         var_gamemode.readonly(false);
-        scriptable_events.dispatch(&on_startup,cubescript::args0(),NULL);
+        scriptable_events.dispatch(&on_startup,cubescript::arguments(),NULL);
         var_mapname.readonly(true);
         var_gamemode.readonly(true);
         sync_game_settings();
@@ -2898,8 +2879,7 @@ struct fpsserver : igameserver
             {
                 sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
                 
-                cubescript::arguments args;
-                scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val & pass & false,NULL);
+                scriptable_events.dispatch(&on_setmaster,cubescript::arguments(ci->clientnum,val,pass,false),NULL);
                 return;
             }
             else 
@@ -2928,8 +2908,7 @@ struct fpsserver : igameserver
         currentmaster = val ? ci->clientnum : -1;
         masterupdate = true;
         
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & val & pass & true,NULL);
+        scriptable_events.dispatch(&on_setmaster,cubescript::arguments(ci->clientnum,val,pass,true),NULL);
     }
     
     void localconnect(int n)
@@ -2991,8 +2970,7 @@ struct fpsserver : igameserver
             var_gamemode.readonly(false);
         }
         
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_disconnect,args & n & ci->disc_reason_code,NULL);
+        scriptable_events.dispatch(&on_disconnect,cubescript::arguments(n,ci->disc_reason_code),NULL);
         
         clients.removeobj(ci);
 
@@ -3135,8 +3113,7 @@ struct fpsserver : igameserver
     void kickban(int victim,int actor)
     {
         bool blocked=false;
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_kick,args & victim & actor,&blocked);
+        scriptable_events.dispatch(&on_kick,cubescript::arguments(victim, actor),&blocked);
         if(!blocked)
         {
             /*
@@ -3239,8 +3216,7 @@ struct fpsserver : igameserver
         if(spinfo->spy) return;
         
         bool block=false;
-        cubescript::arguments args;
-        scriptable_events.dispatch(&on_spectator,args & cn & val,&block);
+        scriptable_events.dispatch(&on_spectator,cubescript::arguments(cn, val),&block);
         
         if(block) return;
         
@@ -3324,8 +3300,7 @@ struct fpsserver : igameserver
                 infomsg<<ConColour_Info<<ci->name<<" was given master by the server console.";
                 sendservmsg(infomsg.str().c_str());
                 
-                cubescript::arguments args;
-                scriptable_events.dispatch(&on_setmaster,args & ci->clientnum & set & std::string("") & true,NULL);
+                scriptable_events.dispatch(&on_setmaster,cubescript::arguments(ci->clientnum,set,"",true),NULL);
             }
             else setpriv(ci,PRIV_MASTER);
         }
@@ -3496,7 +3471,7 @@ struct fpsserver : igameserver
     
     void shutdown()
     {
-        scriptable_events.dispatch(&on_shutdown,cubescript::args0(),NULL);
+        scriptable_events.dispatch(&on_shutdown,cubescript::arguments(),NULL);
         cleanupserver();
         clearconfig(true,false);
         exit(0);
@@ -3762,8 +3737,7 @@ struct fpsserver : igameserver
         {
             if(ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, teamname);
             
-            cubescript::arguments args;
-            scriptable_events.dispatch(&on_reteam,args & cn & std::string(ci->team) & std::string(teamname),NULL);  
+            scriptable_events.dispatch(&on_reteam,cubescript::arguments(cn, ci->team, teamname),NULL);  
             
             s_strncpy(ci->team, teamname, MAXTEAMLEN+1);
             

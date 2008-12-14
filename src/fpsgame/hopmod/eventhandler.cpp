@@ -107,16 +107,12 @@ void event_handler_service::dispatch(event_handler * handler,std::list<std::stri
         std::cerr<<cubescript::format_error_report(error)<<std::endl;
         delete error;
     }
-    /*catch(const cubescript::script_error<cubescript::symbol_error> & e)
-        {std::cerr<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<": "<<e.get_id()<<std::endl;}
-    catch(const cubescript::script_error<cubescript::error_key> & e)
-        {std::cerr<<"error in script file "<<e.get_filename()<<":"<<e.get_linenumber()<<": "<<e.what()<<" in expression \""<<e.get_expr()<<"\""<<std::endl;}
-    catch(const cubescript::expr_error<cubescript::error_key> & e)
-        {std::cerr<<"cubescript error: "<<e.what()<<" in expression \""<<e.get_expr()<<"\"."<<std::endl;}
-    catch(const cubescript::symbol_error & e)
-        {std::cerr<<"cubescript error: "<<e.what()<<": "<<e.get_id()<<std::endl;}
-    catch(const cubescript::error_key & e)
-        {std::cerr<<"cubescript error: "<<e.what()<<std::endl;}*/
+}
+
+void event_handler_service::dispatch(event_handler * handler,const std::list<std::string> & args,bool * veto)
+{
+    std::list<std::string> args_copy(args);
+    dispatch(handler, args_copy, veto);
 }
 
 void event_handler_service::clear_all_handlers()

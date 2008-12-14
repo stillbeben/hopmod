@@ -98,6 +98,16 @@ public:
         push_back(print_type<T>(val));
         return *this;
     }
+    inline arguments & operator,(const char * & val)
+    {
+        push_back(val);
+        return *this;
+    }
+    inline arguments & operator,(const char val[5000])
+    {
+        push_back(val);
+        return *this;
+    }
     template<typename T> inline arguments & operator&(const T & val){return ((*this),val);} //deprecated
 };
 
