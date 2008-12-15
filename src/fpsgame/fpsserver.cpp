@@ -559,19 +559,19 @@ struct fpsserver : igameserver
     cubescript::function1<void,const std::string &>         func_log_error;
     cubescript::function1<void,const std::string &>         func_msg;
     cubescript::function2<void,int,const std::string &>     func_privmsg;
-    cubescript::function1<std::string,int>                  func_player_name;
+    cubescript::function1<const char *,int>                 func_player_name;
     cubescript::function1<std::string,int>                  func_player_ip;
-    cubescript::function1<std::string,int>                  func_player_team;
-    cubescript::function1<std::string,int>                  func_player_status;
+    cubescript::function1<const char *,int>                 func_player_team;
+    cubescript::function1<const char *,int>                 func_player_status;
     cubescript::function1<int,int>                          func_player_contime;
     cubescript::function1<int,int>                          func_player_conid;
-    cubescript::function1<std::string,int>                  func_player_priv;
+    cubescript::function1<const char *,int>                 func_player_priv;
     cubescript::function1<int,int>                          func_player_frags;
     cubescript::function1<int,int>                          func_player_deaths;
     cubescript::function1<int,int>                          func_player_hits;
     cubescript::function1<int,int>                          func_player_misses;
     cubescript::function1<std::string,int>                  func_player_accuracy;
-    cubescript::function1<std::string,int>                  func_player_gun;
+    cubescript::function1<const char *,int>                 func_player_gun;
     cubescript::function1<int,int>                          func_player_health;
     cubescript::function1<int,int>                          func_player_maxhealth;
     cubescript::functionV<std::string>                      func_player_var;
@@ -589,7 +589,7 @@ struct fpsserver : igameserver
     cubescript::function1<float,int>                        func_player_effectiveness;
     cubescript::function1<int,int>                          func_player_timeplayed;
     cubescript::function1<float,int>                        func_player_rating;
-    cubescript::function1<std::string,int>                  func_get_disc_reason;
+    cubescript::function1<const char *,int>                 func_get_disc_reason;
     cubescript::function2<void,int,const std::string &>     func_setpriv;
     cubescript::function1<void,int>                         func_kick;
     cubescript::function1<void,int>                         func_set_interm;
@@ -3084,7 +3084,7 @@ struct fpsserver : igameserver
         get_ci(cn)->sendprivmsg(msg.c_str());
     }
     
-    std::string get_player_name(int cn)const
+    const char * get_player_name(int cn)const
     {
         return get_ci(cn)->name;
     }
@@ -3105,7 +3105,7 @@ struct fpsserver : igameserver
         return ip_ntoa(getclientip(cn));
     }
     
-    std::string get_player_team(int cn)
+    const char * get_player_team(int cn)
     {
         return get_ci(cn)->team;
     }
@@ -3137,21 +3137,21 @@ struct fpsserver : igameserver
         disconnect_client(cn, DISC_KICK);
     }
     
-    std::string get_disc_reason(unsigned int reason)
+    const char * get_disc_reason(unsigned int reason)
     {
         static const char *disc_reasons[] = { "normal", "end of packet", 
             "client num", "kicked and banned", "tag type", "ip is banned", 
             "server is in private mode", "server FULL (maxclients)" };
         assert(reason>=0 && reason<sizeof(disc_reasons));
-        return std::string(disc_reasons[reason]);
+        return disc_reasons[reason];
     }
     
     void setpriv(int cn,const std::string & level)
     {
         int privilege;
-        if(level=="master") privilege=PRIV_MASTER;
-        else if(level=="admin") privilege=PRIV_ADMIN;
-        else if(level=="none") privilege=PRIV_NONE;
+        if(level=="master") privilege = PRIV_MASTER;
+        else if(level=="admin") privilege = PRIV_ADMIN;
+        else if(level=="none") privilege = PRIV_NONE;
         else return; //TODO throw error
         setpriv(get_ci(cn),privilege);
     }
@@ -3238,20 +3238,33 @@ struct fpsserver : igameserver
         
     }
     
-    std::string get_player_status(int cn)const
+    const char * get_player_status(int cn)const
     {
-        std::string status;
+        const char * status;
         switch(get_ci(cn)->state.state)
         {
-            case CS_ALIVE: status="alive"; break;
-            case CS_DEAD: status="dead"; break;
-            case CS_SPAWNING: status="spawning"; break;
-            case CS_LAGGED: status="lagged"; break;
-            case CS_SPECTATOR: status="spectator"; break;
-            case CS_EDITING: status="editing"; break;
-            default: status=""; break;
+            case CS_ALIVE: 
+                status = "alive";
+                break;
+            case CS_DEAD: 
+                status = "dead"; 
+                break;
+            case CS_SPAWNING: 
+                status = "spawning"; 
+                break;
+            case CS_LAGGED: 
+                status = "lagged"; 
+                break;
+            case CS_SPECTATOR: 
+                status = "spectator"; 
+                break;
+            case CS_EDITING: 
+                status = "editing"; 
+                break;
+            default: 
+                status = ""; 
         }
-        if(get_ci(cn)->spy) status="spying";
+        if(get_ci(cn)->spy) status = "spying";
         return status;
     }
     
@@ -3272,15 +3285,23 @@ struct fpsserver : igameserver
         return get_ci(cn)->connect_id;
     }
     
-    std::string get_player_priv(int cn)
+    const char * get_player_priv(int cn)
     {
         int priv=get_ci(cn)->privilege;
-        std::string privname;
+        const char * privname;
         switch(priv)
         {
-            case PRIV_NONE: privname="none"; break;
-            case PRIV_MASTER: privname="master"; break;
-            case PRIV_ADMIN: privname="admin"; break;
+            case PRIV_NONE: 
+                privname = "none"; 
+                break;
+            case PRIV_MASTER: 
+                privname = "master";
+                break;
+            case PRIV_ADMIN: 
+                privname = "admin"; 
+                break;
+            default:
+                privname = "";
         }
         return privname;
     }
@@ -3324,7 +3345,7 @@ struct fpsserver : igameserver
         else out<<"0%";
         return out.str();
     }
-    std::string get_player_gun(int cn)const{return guns[get_ci(cn)->state.gunselect].name;}
+    const char * get_player_gun(int cn)const{return guns[get_ci(cn)->state.gunselect].name;}
     int get_player_health(int cn)const{return get_ci(cn)->state.health;}
     int get_player_maxhealth(int cn)const{return get_ci(cn)->state.maxhealth;}
     float get_player_effectiveness(int cn)const{return get_ci(cn)->state.effectiveness;}

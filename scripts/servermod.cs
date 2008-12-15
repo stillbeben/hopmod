@@ -41,7 +41,7 @@ event_handler $onconnect [
     ]
     
     if (strcmp $gamemode "coopedit") [
-        privconsole $cn script "Warning: running /newmap command as an unprivileged player will result in you being kicked and banned."
+        privconsole $cn script "Warning: running /newmap command as an unprivileged player will get you kicked and banned."
     ]
 ]
 
