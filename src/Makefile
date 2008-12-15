@@ -1,5 +1,6 @@
 
 HOPMOD_OBJS= \
+    fpsgame/hopmod/tools.o \
     fpsgame/hopmod/textformat.o \
     fpsgame/hopmod/stopwatch.o \
     fpsgame/hopmod/eventhandler.o \

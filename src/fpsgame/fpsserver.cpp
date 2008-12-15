@@ -26,6 +26,7 @@
 #include "hopmod/sqlite3.hpp"
 #include "hopmod/geoip.hpp"
 #include "hopmod/banned_networks_db.hpp"
+#include "hopmod/tools.hpp"
 
 #include <boost/bind.hpp>
 #include <sstream>
@@ -34,14 +35,16 @@
 #include <map>
 #include <set>
 
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/wait.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <signal.h>
 
 //stuff defined in engine/server.cpp
 extern int g_argc;
@@ -604,12 +607,12 @@ struct fpsserver : igameserver
     cubescript::function1<void,const std::string &>         func_allowhost;
     cubescript::function1<void,const std::string &>         func_denyhost;
     cubescript::function1<int,const std::string &>          func_capture_score;
-    cubescript::function1<std::string,const std::string &>  func_shell_quote;
+    cubescript::function1<std::string,const char *>         func_shell_quote;
     cubescript::function0<bool>                             func_teamgame;
     cubescript::function0<bool>                             func_itemsgame;
     cubescript::function0<bool>                             func_capturegame;
     cubescript::function0<bool>                             func_ctfgame;
-    cubescript::function1<std::string,const std::string &>  func_nsresolve;
+    cubescript::function1<std::string,const char *>         func_resolve_hostname;
     cubescript::function1<bool,int>                         func_dupname;
     cubescript::function0<void>                             func_shutdown;
     cubescript::function0<void>                             func_restarter;
@@ -769,20 +772,20 @@ struct fpsserver : igameserver
         func_allowhost(boost::bind(&fpsserver::add_allowhost,this,_1)),
         func_denyhost(boost::bind(&fpsserver::add_denyhost,this,_1)),
         func_capture_score(boost::bind(&fpsserver::get_capture_score,this,_1)),
-        func_shell_quote(boost::bind(&fpsserver::shell_quote,this,_1)),
+        func_shell_quote(shell_quote),
         func_teamgame(boost::bind(&fpsserver::is_teamgame,this)),
         func_itemsgame(boost::bind(&fpsserver::is_itemsgame,this)),
         func_capturegame(boost::bind(&fpsserver::is_capturegame,this)),
         func_ctfgame(boost::bind(&fpsserver::is_ctfgame,this)),
-        func_nsresolve(boost::bind(&fpsserver::nsresolve,this,_1)),
+        func_resolve_hostname(resolve_hostname),
         func_dupname(boost::bind(&fpsserver::duplicatename,this,_1)),
         func_shutdown(boost::bind(&fpsserver::shutdown,this)),
         func_restarter(boost::bind(&fpsserver::create_restarter,this)),
         func_logfile(boost::bind(&fpsserver::create_logfile_function,this,_1,_2)),
         func_close_logfile(boost::bind(&fpsserver::close_logfile,this,_1)),
-        func_daemon(boost::bind(&fpsserver::spawn_daemon,this,_1,_2,_3,_4)),
-        func_kill(boost::bind(&fpsserver::kill_process,this,_1)),
-        func_server_sleep(boost::bind(&fpsserver::server_sleep,this,_1)),
+        func_daemon(spawn_daemon),
+        func_kill(kill_process),
+        func_server_sleep(sleepms),
         func_spy(boost::bind(&fpsserver::enter_spymode,this,_1)),
         func_worstteam(boost::bind(&fpsserver::chooseworstteam,this,(const char *)NULL,(clientinfo *)NULL)),
         func_teamplayerrank(boost::bind(&fpsserver::get_teamplayerrank,this,_1)),
@@ -895,7 +898,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("itemsgame",&func_itemsgame);
         server_domain.register_symbol("capturegame",&func_capturegame);
         server_domain.register_symbol("ctfgame",&func_ctfgame);
-        server_domain.register_symbol("resolve",&func_nsresolve);
+        server_domain.register_symbol("resolve",&func_resolve_hostname);
         server_domain.register_symbol("dupname",&func_dupname);
         server_domain.register_symbol("shutdown",&func_shutdown);
         server_domain.register_symbol("restarter",&func_restarter);
@@ -3450,45 +3453,10 @@ struct fpsserver : igameserver
                 }
     }
     
-    bool is_shell_syntax(char c)
-    {
-        switch(c)
-        {
-            case '\\':case '\"':case '\'':case '$':case '&':case '>':case '<':case '*':
-            case '?':case '[':case ']':case '(':case ')':case '|':case '`':case ';':
-            case '#':case '^':case '!':case '~':case '\r':case '\n':case ' ':case '\t':
-            case '\0': return true;
-            default: return false;
-        }
-        return false;
-    }
-
-    std::string shell_quote(const std::string & str)
-    {
-        std::string result;
-        for(unsigned int i=0; i<str.length(); i++)
-        {
-            if(is_shell_syntax(str[i])) result+='\\';
-            result+=str[i];
-        }
-        return result;
-    }
-    
     inline bool is_teamgame(){return m_teammode;}
     inline bool is_itemsgame(){return !m_noitems;}
     inline bool is_capturegame(){return m_capture;}
     inline bool is_ctfgame(){return m_ctf;}
-    
-    std::string nsresolve(const std::string & hostname)
-    {
-        hostent * result=gethostbyname(hostname.c_str());
-        if( result && 
-            result->h_addrtype==AF_INET && 
-            result->h_length==4 && 
-            result->h_addr_list[0] )
-          return ip_ntoa(*((in_addr_t *)result->h_addr_list[0]));
-        else return "0.0.0.0";
-    }
     
     void shutdown()
     {
@@ -3567,90 +3535,6 @@ struct fpsserver : igameserver
             server_domain.register_symbol(it->funcname,NULL);
         }
         m_logfiles.clear();
-    }
-    
-    inline void log_daemon_error(const std::string & msg)
-    {
-        FILE * file=fopen("logs/daemon.log","a");
-        if(!file) return;
-        fputs(msg.c_str(),file);
-        fputs("\n",file);
-        fclose(file);
-    }
-    
-    pid_t spawn_daemon(const std::string & filename,const std::vector<std::string> & args,const std::string & stdoutfile,const std::string & stderrfile)
-    {
-        pid_t pid=fork();
-        
-        if(pid==0)
-        {
-            int maxfd=getdtablesize();
-            for(int i=0; i<maxfd; i++) ::close(i);
-            umask(0);
-            setsid();
-            
-            if(open("/dev/null",O_RDONLY)==-1)
-            {
-                log_daemon_error("cannot open /dev/null");
-                exit(1);
-            }
-            
-            if(open(stdoutfile.c_str(),O_WRONLY | O_APPEND | O_CREAT,420)==-1)
-            {
-                log_daemon_error("cannot open stdout file");
-                exit(1);
-            }
-            
-            if(open(stderrfile.c_str(),O_WRONLY | O_APPEND | O_CREAT,420)==-1)
-            {
-                log_daemon_error("cannot open stderr file");
-                exit(1);
-            }
-            
-            char ** argv=new char * [args.size()+1];
-            for(unsigned int i=0; i<args.size(); i++) argv[i]=newstring(args[i].c_str());
-            argv[args.size()]=NULL;
-            
-            if(fork()==0)
-            {
-                execv(filename.c_str(),argv);
-                
-                std::ostringstream execfail;
-                execfail<<filename<<" not executed."<<std::endl;
-                log_daemon_error(execfail.str());
-            }
-            
-            exit(1);
-        }
-        else
-        {
-            int status=0;
-            waitpid(pid,&status,0);
-            if(pid==-1) throw cubescript::error_key("runtime.function.daemon.fork_failed");
-        }
-        
-        return pid;
-    }
-    
-    void kill_process(pid_t pid)
-    {
-        if(::kill(pid,SIGTERM)==-1)
-        {
-            switch(errno)
-            {
-                case EPERM: throw cubescript::error_key("runtime.function.kill.permission_denied");
-                case ESRCH: throw cubescript::error_key("runtime.function.kill.pid_not_found");
-                default: throw cubescript::error_key("runtime.function.kill.kill_failed");
-            }
-        }
-    }
-    
-    void server_sleep(int ms)
-    {
-        timespec sleeptime;
-        sleeptime.tv_sec=ms/1000;
-        sleeptime.tv_nsec=(ms-sleeptime.tv_sec*1000)*1000000;
-        if(nanosleep(&sleeptime,&sleeptime)==-1) throw cubescript::error_key("runtime.function.server_sleep.returned_early");
     }
     
     void update_mastermask()
