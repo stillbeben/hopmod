@@ -49,7 +49,7 @@ event_handler $ondisconnect [
     parameters cn reason
     
     discmsg = "disconnected"
-    if (! (= $reason 0)) [discmsg = (format "disconnected (%1)" (disc_reason $reason))]
+    if (! (= $reason 0)) [discmsg = (format "disconnected (%1)(%2)" (disc_reason $reason) (player_ip $cn))]
     
     log (format "%1(%2) %3, connection time: %4" (player_name $cn) $cn $discmsg (duration (player_contime $cn)))
     
