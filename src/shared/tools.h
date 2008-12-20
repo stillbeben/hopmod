@@ -3,6 +3,9 @@
 #ifndef _TOOLS_H
 #define _TOOLS_H
 
+#include <stdlib.h>
+#include <string.h>
+
 #ifdef NULL
 #undef NULL
 #endif
