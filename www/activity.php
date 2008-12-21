@@ -41,11 +41,11 @@ from
                 count(name) as TotalGames,
                 round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
                 round((0.0+sum(frags))/sum(deaths),2) as Kpd,
-                round((0.0+(sum(scored)+sum(pickups)))/count(name),2) as AgressorRating,
-                round((0.0+(sum(defended)+sum(returns)))/count(name),2) as DefenderRating
+                round((0.0+(sum(scored)+sum(pickups)))/count(ctfplayers.player_id),2) as AgressorRating,
+                round((0.0+(sum(defended)+sum(returns)))/count(ctfplayers.player_id),2) as DefenderRating
         from players
                 inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
+                outer left join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime between $start_date and $end_date and mapname != '' group by name order by Kpd desc)
 	limit ".$_SESSION['paging'].",$rows_per_page ;
 
@@ -56,7 +56,7 @@ from
         (select name
         from players
                 inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
+                outer left join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime between $start_date and $end_date and matches.mapname != '' group by name)
 
 ";
@@ -76,7 +76,7 @@ from
         (select name
         from players
                 inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
+                outer left join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime between $start_date and $end_date and mapname != '' group by name )
 
 ");
@@ -110,6 +110,7 @@ from
 		    <span><?php print $date ?></span>
 		    <span><?php print $row['mapname'] ?></span>
 		    <span><?php print $row['players'] ?></span>
+		    <span><?php print $row['gamemode'] ?></span>
 		</a>
 		</li>
 	<?php } ?>

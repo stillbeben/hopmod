@@ -121,23 +121,23 @@ function check_get () {
 	global $rows_per_page;
 	switch ($_GET['querydate']) {
 	        case "day":
-	                $_SESSION['querydate'] = "start of day";
+	                $_SESSION['querydate'] = "day";
 	                $_SESSION['MinimumGames'] = "1";
 	        break;
 	        case "week":
-	                $_SESSION['querydate'] = "-7 days";
+	                $_SESSION['querydate'] = "week";
 	                $_SESSION['MinimumGames'] = "2";
 	        break;
 	        case "month":
-	                $_SESSION['querydate'] = "start of month";
-	                $_SESSION['MinimumGames']  = "4";
+	                $_SESSION['querydate'] = "month";
+	                $_SESSION['MinimumGames']  = "2";
 	        break;
 	        case "year":
-	                $_SESSION['querydate'] = "start of year";
-	                $_SESSION['MinimumGames'] = "9";
+	                $_SESSION['querydate'] = "year";
+	                $_SESSION['MinimumGames'] = "3";
 	        break;
 	default:
-	        if ( ! isset($_SESSION['querydate']) ) { $_SESSION['querydate'] = "start of month"; }
+	        if ( ! isset($_SESSION['querydate']) ) { $_SESSION['querydate'] = "month"; }
 		if ( ! isset($_SESSION['MinimumGames']) ) { $_SESSION['MinimumGames'] = 4; }
 	}
 	
@@ -155,7 +155,7 @@ function check_get () {
 	} else { if (! isset($_SESSION['orderby']) ) { $_SESSION['orderby'] = "AgressorRating";} }
 	if ( isset($_GET['name']) ) { $_SESSION['name'] = $_GET['name']; }
 }
-function stats_table ($query = "null" ,$exclude_columns = "NULL"){
+function stats_table ($query ,$exclude_columns = "NULL"){
 	global $dbh;
 	global $column_list; 
 	global $rows_per_page;
@@ -165,8 +165,8 @@ function stats_table ($query = "null" ,$exclude_columns = "NULL"){
 $stats_table = array (
     array("name" => "Name", "description" => "Players Nick Name", "column" => "name"),
     array("name" => "Country", "description" => "Players Country", "column" => "ipaddr"),
-    array("name" => "Agressor Rating", "description" => "Average Scores per Game + Average flag Pickups", "column" => "AgressorRating"),
-    array("name" => "Defender Rating", "description" => "Average Defends(kill flag carrier) per Game + Average flag returns", "column" => "DefenderRating"),
+    array("name" => "CTF Agressor Rating", "description" => "Average Scores per Game + Average flag Pickups", "column" => "AgressorRating"),
+    array("name" => "CTF Defender Rating", "description" => "Average Defends(kill flag carrier) per Game + Average flag returns", "column" => "DefenderRating"),
     array("name" => "FlagsDefended", "description" => "How many times you killed a flag carrier", "column" => "TotalDefended"),
     array("name" => "Frags Record", "description" => "The most frags ever acheived in one game", "column" => "MostFrags"),
     array("name" => "Total Frags", "description" => "The total number of frags for all games", "column" => "TotalFrags"),
@@ -192,16 +192,17 @@ from
                 count(name) as TotalGames,
                 round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
                 round((0.0+sum(frags))/sum(deaths),2) as Kpd,
-                round((0.0+(sum(scored)+sum(pickups)))/count(name),2) as AgressorRating,
-                round((0.0+(sum(defended)+sum(returns)))/count(name),2) as DefenderRating
+                round((0.0+(sum(scored)+sum(pickups)))/count(ctfplayers.player_id),2) as AgressorRating,
+                round((0.0+(sum(defended)+sum(returns)))/count(ctfplayers.player_id),2) as DefenderRating
         from players
                 inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > strftime(\"%s\",\"now\",\"".$_SESSION['querydate']."\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
+                outer left join ctfplayers on players.id=ctfplayers.player_id
+
+        where matches.datetime between ".$_SESSION['start_date']." and ".$_SESSION['end_date']." and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
 where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",$rows_per_page ;
 
 ";
-	if (! $query == "null" ) { $sql = $query; }
+	if ( $query ) { $sql = $query; }
 	$result = $dbh->query($sql);
 	$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 ?>

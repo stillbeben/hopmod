@@ -45,7 +45,7 @@ $sql = "select name,
                 round((0.0+(sum(defended)+sum(returns)))/count(ctfplayers.player_id),2) as ADpG
         from players
                 inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
+                outer left join ctfplayers on players.id=ctfplayers.player_id
         where matches.datetime > $start_date and name = '".$_SESSION['name']."' group by name";
 
 $last_10 = "

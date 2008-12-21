@@ -1,6 +1,20 @@
 <?php
 include("includes/geoip.inc");
 include("includes/hopmod.php");
+
+$day_end = strtotime("today +1 day");
+$week_end = strtotime("this week today +1 week");
+$month_end = strtotime("this month today +1 month");
+$year_end = strtotime("today");
+
+$day_start = strtotime("today");
+$week_start = strtotime("this week today");
+$month_start = strtotime("this month today");
+$year_start = strtotime("-365 days");
+
+$_SESSION['start_date'] = ${$_SESSION['querydate']."_start"};
+$_SESSION['end_date'] = ${$_SESSION['querydate']."_end"};
+
 // Start session for session vars
 session_start();
         $sql = "
