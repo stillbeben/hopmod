@@ -2244,7 +2244,9 @@ struct fpsserver : igameserver
                 int victim = getint(p);
                 if(ci->privilege && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getinfo(victim))
                 {
-                    bool allow=!ci->check_flooding(ci->svkick_interval,svkick_min_interval,"kicking players");
+                    //disable flood protection if the server is using auth'd masters
+                    bool allow=!(mastermask&MM_AUTOAPPROVE) ||
+                        !ci->check_flooding(ci->svkick_interval,svkick_min_interval,"kicking players");
                     
                     if(ci->privilege==PRIV_MASTER && !get_ci(victim)->is_kickable())
                     {
