@@ -3638,14 +3638,14 @@ struct fpsserver : igameserver
         
         if(!strcmp(ci->team, teamname)) return;
         
-        if(smode && smode->canchangeteam(ci, ci->team, teamname))
+        bool allow_change = m_teammode && 
+            (!smode || smode && smode->canchangeteam(ci, ci->team, teamname));
+        
+        if(allow_change)
         {
-            if(ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, teamname);
-            
+            if(ci->state.state==CS_ALIVE && smode) smode->changeteam(ci, ci->team, teamname);
             scriptable_events.dispatch(&on_reteam,cubescript::arguments(cn, ci->team, teamname),NULL);  
-            
             s_strncpy(ci->team, teamname, MAXTEAMLEN+1);
-            
         }else return;
         
         sendf(-1, 1, "riis", SV_SETTEAM, cn, ci->team);
