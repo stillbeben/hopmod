@@ -3,13 +3,13 @@ if (strcmp (player_priv $cn) "admin") [
     if (>= (listlen $arguments) 2) [
 	if ( = $arg1 1 ) [
 		reassignteams 0
-		autoteambalance 0
+		autoteambalance = 0
 		msg "Persistent teams enabled auto team balance disabled"
 			
 	]
 	if ( = $arg1 0 ) [
 		reassignteams 1 
-                autoteambalance 1 
+                autoteambalance = 1 
 		msg "Persistent teams disabled auto team balance enabled"
         ]
     ] [privmsg $cn (err "Missing argument 1=on / 0=off . This command is used to enable persistent teams for team games.")]
