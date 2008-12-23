@@ -103,7 +103,7 @@ from
 		<a href="activity.php?select_day=next">Next day &#187;</a>
 	</div>
 	<div id="leftColumn">
-	<?php foreach ($dbh->query($day_matches) as $row){?>
+	<?php foreach ($dbh->query($day_matches) as $row or die(print_r($dbh->errorInfo())) ){?>
 		<li class="entrylist">
 		<a href="match.php?id=<?php print $row['id'] ?>">
 		    <span><?php print date(" g:i A | jS M Y ,",$row['datetime'])  ?></span>

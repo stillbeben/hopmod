@@ -26,7 +26,7 @@ function serverDetails() {
 
 function count_rows($query) {
 	global $dbh;
-	$count = $dbh->query($query);
+	$count = $dbh->query($query) or die(print_r($dbh->errorInfo()));
 	return $count->fetchColumn();
 	
 }
@@ -87,7 +87,7 @@ function build_pager ($page, $query) {
 	// current_page query link enable filtering display
 	global $dbh;
 	global $rows_per_page;
-	$count = $dbh->query($query);
+	$count = $dbh->query($query) or die(print_r($dbh->errorInfo()));
 	$rows = $count->fetchColumn();
 	$pages = ( ceil($rows / $rows_per_page) );
 	print "<div style=\"float: right \" id=\"pagebar\">";
@@ -203,7 +203,7 @@ where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].
 
 ";
 	if ( $query !="NULL") { $sql = $query; }
-	$result = $dbh->query($sql);
+	$result = $dbh->query($sql) or die(print_r($dbh->errorInfo()));
 	$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 ?>
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
@@ -252,7 +252,7 @@ from matches
 where id = '$match' 
 
 ";
-$result = $dbh->query($sql3);
+$result = $dbh->query($sql3) or die(print_r($dbh->errorInfo()));
 
 
         $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);

@@ -87,7 +87,7 @@ select count(*) from
 <table class="navbar" cellpadding="0" cellspacing="1">
 <?php
 //Build table data
-foreach ($dbh->query($sql) as $row)
+foreach ($dbh->query($sql) as $row )
 {
 		$country = geoip_country_name_by_addr($gi, $row['ipaddr']);
 		$code = geoip_country_code_by_addr($gi, $row['ipaddr']);
@@ -173,7 +173,7 @@ foreach ($dbh->query($sql) as $row)
 
 
 
-foreach ($dbh->query($last_10) as $row){
+foreach ($dbh->query($last_10) as $row ){
 $date = date(" g:i A | jS M Y , ",$row['datetime']);
 
 
