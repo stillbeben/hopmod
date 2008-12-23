@@ -66,10 +66,10 @@ function GetHop($cubescript) {
         fclose($fp);
         return $ret;
 }
-function overlib($overtext,$heading) {
+function overlib($overtext,$heading = "") {
         print "<a  href=\"javascript:void(0);\" onmouseover=\"return overlib('$overtext');\" onmouseout=\"return nd();\">$heading</a>" ;
 }
-function overlib2($overtext,$heading) {
+function overlib2($overtext,$heading = "") {
         return "<a  href=\"javascript:void(0);\" onmouseover=\"return overlib('$overtext');\" onmouseout=\"return nd();\">$heading</a>"
 ;
 }
