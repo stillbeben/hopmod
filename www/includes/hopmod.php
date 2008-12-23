@@ -246,7 +246,6 @@ select
 	duration,
 	mapname,
 	gamemode,
-	demofile,
 	players
 from matches 
 where id = '$match' 
@@ -289,11 +288,6 @@ $result = $dbh->query($sql3) or die(print_r($dbh->errorInfo()));
 <tr>
         <td class="headcol">Players</td>
         <td><?php print $row->players ?></td></tr>
-
-</div>
-<tr>
-        <td class="headcol">Demo</td>
-        <td><?php print $row->demofile ?></td></tr>
 
 </div>
 </table>
