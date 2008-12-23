@@ -256,15 +256,13 @@ $result = $dbh->query($sql3);
 
 
         $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
-        foreach ($result as $row)
-        {
-        }
+	$row = $result->fetch(PDO::FETCH_OBJ)
 // Close db handle
 ?>
 
 <div align="left" id="content"><h1>Match details</h1>
 <div style="width:600px">
-<div style="float:right; border:4px ridge grey; "><img src='images/maps/<?php print $row['mapname']?>.jpg' /></div>
+<div style="float:right; border:4px ridge grey; "><img src='images/maps/<?php print $row->mapname; ?>.jpg' /></div>
 <h2></h2>
 <table cellpadding="0" cellspacing="1">
 <tr>
@@ -273,29 +271,29 @@ $result = $dbh->query($sql3);
 </tr>
 <tr>
         <td style="width:100px;" class="headcol">Date/Time</td>
-        <td><?php print date(" g:i A | jS M Y",$row['datetime']); ?></td>
+        <td><?php print date(" g:i A | jS M Y",$row->datetime); ?></td>
 </tr>
 <tr>
         <td class="headcol">Duration</td>
-        <td><?php print $row['duration'] ?></td>
+        <td><?php print $row->duration ?></td>
 </tr>
 <tr>
         <td class="headcol">Map</td>
-        <td><?php print $row['mapname'] ?></td>
+        <td><?php print $row->mapname ?></td>
 </tr>
 <tr>
         <td class="headcol">Mode</td>
-        <td><?php print $row['gamemode'] ?></td></tr>
+        <td><?php print $row->gamemode ?></td></tr>
 
 </div>
 <tr>
         <td class="headcol">Players</td>
-        <td><?php print $row['players'] ?></td></tr>
+        <td><?php print $row->players ?></td></tr>
 
 </div>
 <tr>
         <td class="headcol">Demo</td>
-        <td><?php print $row['demofile'] ?></td></tr>
+        <td><?php print $row->demofile ?></td></tr>
 
 </div>
 </table>
