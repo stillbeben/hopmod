@@ -55,3 +55,9 @@ playercmd_setmotd = [
     ]
 ]
 
+playercmd_slap = [
+    parameters target
+    if (strcmp (player_priv $cn) "admin") [
+        msg (grey [*@(concol 7 (player_name $target)) got slapped by @(orange (player_name $cn))*])
+    ] [privmsg $cn (err "Permission Denied")]
+]
