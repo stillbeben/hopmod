@@ -67,6 +67,8 @@ grey = [concol 4 $arg1]
 magenta = [concol 5 $arg1]
 orange = [concol 6 $arg1]
 gameplay = [concol 2 $arg1]
+red = [concol 3 $arg1]
+blue = [concol 1 $arg1]
 
 msgteam = [
     parameters team text
