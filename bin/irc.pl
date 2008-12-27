@@ -74,6 +74,7 @@ sub on_connect {
 	print "CONNECT	: [$ts] Connected to $message\n";
 	print "WELCOME	: [$ts] $message2\n";
 	$irc->yield( join => $config->{irc_channel} );
+	$irc->yield( join => $config->{irc_monitor_channel} );
 }
 sub on_public {
 	my ( $kernel, $sender, $who, $where, $msg ) = @_[ KERNEL, SENDER, ARG0, ARG1, ARG2 ];
@@ -125,7 +126,8 @@ sub process_command {
                 ; return }
 		##### SAY #####
 		if ( $command =~ / say (.*)/i )
-                { &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/SAY/-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console [$nick] [$1]");
+                { 
+			&sendtoirc($channel,"\x03\x036IRC\x03         \x034-/SAY/-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console [$nick] [$1]");
 		&toirccommandlog("Console($nick): $1"); print "Console($nick): $1"; return }
 		##### KICK #####
 		if ( $command =~ / kick ([0-9]+)/i )
@@ -279,6 +281,9 @@ sub process_command {
 
 sub filterlog {
 	my $line = shift;
+	##### ANNOUNCE #####
+        if ($line =~ / ANNOUNCE (\S*) #announce (.*)/)
+        { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
 	##### CONNECT #####
 	if ($line =~ /(\S*\([0-9]+\))(\(.+\))\((.*)\) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 \x037$3\x03" }
@@ -289,8 +294,10 @@ sub filterlog {
 	if ($line =~ /(\S*\([0-9]+\)) renamed to (.+)/) 
 	{ return  "\x032RENAME\x03     \x0312$1\x03 has renamed to \x037$2\x03"}
 	##### CHAT #####
-	if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.*)/) 
-	{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" }# Highlight game chat green
+	if (  $line !~ /#announce/ ) {
+		if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.*)/) 
+		{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" } 
+	} return; 
 	##### MAP CHANGE #####
 	if ($line =~ /new game: (.*), (.*), (.*)/) 
 	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for\x037 $2\x03 with\x037 $1\x03 " }
