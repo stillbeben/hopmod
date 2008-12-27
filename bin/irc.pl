@@ -282,7 +282,7 @@ sub process_command {
 sub filterlog {
 	my $line = shift;
 	##### ANNOUNCE #####
-        if ($line =~ / ANNOUNCE (\S*) #announce (.*)/)
+        if ($line =~ /ANNOUNCE (\S*) #announce (.*)/)
         { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
 	##### CONNECT #####
 	if ($line =~ /(\S*\([0-9]+\))(\(.+\))\((.*)\) connected/)
