@@ -360,12 +360,12 @@ sub filterlog {
 }
 sub toprivateirc {
 	my $send = shift; 
-	$irc->yield( privmsg => $topriv => "\x034$send\x03" );
+	$irc->yield( privmsg => $topriv => "$send" );
 }
 sub sendtoirc {
 	my $channel = shift;
 	my $send = shift; 
-	$irc->yield( privmsg => $channel => "\x034$send\x03" );
+	$irc->yield( privmsg => $channel => "$send" );
 }
 sub splittoirc {
 	my $channel = shift;
