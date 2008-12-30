@@ -183,9 +183,11 @@ event_handler $onmapchanged [
     if (strcmp $gamemode "coopedit") [
         console script "Warning: running /newmap command as an unprivileged player will get you kicked and banned."
         event_handler $onmapchanged [ //cleanup on next map change
-            cancel_handler
-            mastermode @mastermode
-            if (!= $currentmaster -1) [setmaster $currentmaster 0]
+            if (! (strcmp $gamemode coopedit)) [
+                cancel_handler
+                mastermode @mastermode
+                if (!= $currentmaster -1) [setmaster $currentmaster 0]
+            ]
         ]
         if $allow_mm_locked [
             mastermode $MM_LOCKED
@@ -227,6 +229,7 @@ event_handler $onsetmaster [
     ] [
         if (&& (&& (= $currentmaster -1) $set) (strcmp $gamemode "coopedit")) [
             setmaster $cn 1
+            privconsole $cn script "You will lose master privilege when the server leaves coopedit mode."
         ]
     ]
 ]
