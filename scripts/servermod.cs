@@ -5,6 +5,24 @@ exec "scripts/teamkills.csl"
 exec "scripts/commands.csl"
 exec "scripts/maps.csl"
 
+year_2009 = 1230768000
+new_year_msg = [
+    parameters cn
+    local lmsg (if (= $cn -1) [result [msg $arg1]] [result [privmsg $cn $arg1]])
+    if (< (now) $year_2009) [
+        lmsg (info [@(fduration (- $year_2009 (now))) until New Year (UTC time)!])
+    ] [
+        lmsg (info "Happy New Year!")
+    ]
+]
+queue_new_year_msg = [
+    sleep (* (- 3600 (mod (now) 3600)) 1000) [
+        new_year_msg -1
+        queue_new_year_msg
+    ]
+]
+queue_new_year_msg
+
 logfile "logs/server.log" server_log
 log = [
     reference text arg1
@@ -32,6 +50,7 @@ event_handler $onconnect [
             privmsg $cn (orange [@title server])
             privmsg $cn $motd
         ]
+        new_year_msg $cn
     ]
     
     if (&& (symbol? showaliases) $enable_showaliases) [
