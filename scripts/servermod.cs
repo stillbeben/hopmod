@@ -306,10 +306,12 @@ printsvstatus = [
 ]
 
 who = [
-    local list [CN PING IP NAME TIME STATE"\\n"]
+    local list [CN PING IP COUNTRY NAME TIME STATE"\\n"]
     foreach (players) [
         parameters cn
-        row = (shell_quote [@cn @(player_ping $cn) @(player_ip $cn) @(player_name $cn) @(duration (player_contime $cn)) @(player_status $cn)])
+        cty = "unknown"
+        try [cty = (countrycode (player_ip $cn))] []
+        row = (shell_quote [@cn @(player_ping $cn) @(player_ip $cn) @cty @(player_name $cn) @(duration (player_contime $cn)) @(player_status $cn)])
         list = (concatword $list [@row "\\n"])
     ]
     result (system [echo -e @(value list) | column -t])
