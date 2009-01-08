@@ -2,7 +2,7 @@
 exec "scripts/scriptpipe.csl"
 exec "scripts/irc.csl"
 exec "scripts/teamkills.csl"
-exec "scripts/commands.csl"
+exec "scripts/playercommands.cs"
 exec "scripts/maps.csl"
 
 logfile "logs/server.log" server_log
