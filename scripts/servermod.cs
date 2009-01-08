@@ -32,7 +32,6 @@ event_handler $onconnect [
             privmsg $cn (orange [@title server])
             privmsg $cn $motd
         ]
-        new_year_msg $cn
     ]
     
     if (&& (symbol? showaliases) $enable_showaliases) [
@@ -91,6 +90,7 @@ event_handler $onkick [
 
 event_handler $ontext [
     parameters cn text
+    mutetag = ""
     
     if (! $allow_talk) [
         privmsg $cn (err (concat "Talking is banned at this time because:" $disallow_talk_reason))
@@ -98,6 +98,7 @@ event_handler $ontext [
     ]
     
     if (player_var $cn mute) [
+        mutetag = "(muted)"
         privmsg $cn (err "Your voice privilege has been revoked.")
         veto 1
     ]
@@ -128,7 +129,7 @@ event_handler $ontext [
         console (player_name $cn) $text
     ]
     
-    log (format "%1(%2): %3" (player_name $cn) $cn $text)
+    log (format "%1(%2)%3: %4" (player_name $cn) $cn $mutetag $text)
 ]
 
 event_handler $onsayteam [
