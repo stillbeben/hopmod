@@ -33,6 +33,11 @@ playercmd_names = [
     privmsg $cn (showaliases $target)
 ]
 
+playercmd_who = [
+    if (strcmp (player_priv $cn) "none") [throw runtime.playercmd.names.permission_denied]
+    privmsg $cn (who)
+]
+
 playercmd_invadmin = [
     parameters pass
     if (adminpass $pass) [setpriv $cn admin] [privmsg $cn (err "Command Failed")]
