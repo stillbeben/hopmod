@@ -2,7 +2,6 @@
 //A player command that allows admin players to execute cubescript code on the server in-game.
 //Syntax is "#eval [<code>]", with the square brackets included and <code> being your code.
 playercmd_eval = [
-    //msg $arg1
     if (strcmp (player_priv $cn) "admin") [do [@arg1]] [privmsg $cn (err "Permission Denied")]
 ]
 
@@ -21,10 +20,6 @@ playercmd_unspecall = [
     if (strcmp (player_priv $cn) "admin") [
         foreach (players) [unspec $arg1]
     ] [privmsg $cn (err "Permission Denied")]
-]
-
-playercmd_unspecme = [
-    if (strcmp (player_priv $cn) "admin") [unspec $cn] [privmsg $cn (err "Permission Denied")]
 ]
 
 playercmd_names = [

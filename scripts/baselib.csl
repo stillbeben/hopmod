@@ -248,3 +248,8 @@ permban = [ban $arg1 1]
 unprivileged = [strcmp (player_priv $arg1) "none"]
 privileged = [! (strcmp (player_priv $arg1) "none")]
 
+admin_cmd = [
+    parameters name code
+    do [playercmd_@name = [if (! (strcmp (player_priv $cn) "admin")) [throw runtime.playercmd.@@@name.permission_denied]; @code]]
+]
+

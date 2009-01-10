@@ -706,6 +706,7 @@ struct fpsserver : igameserver
     event_handler on_wincapture;
     event_handler on_auth;
     event_handler on_respawn;
+    event_handler on_intermission;
     
     const char * m_conf_filename;
     
@@ -1014,7 +1015,8 @@ struct fpsserver : igameserver
         scriptable_events.register_event("onlostbase",&on_lostbase);
         scriptable_events.register_event("onwincapture",&on_wincapture);
         scriptable_events.register_event("onauth",&on_auth);
-        scriptable_events.register_event("onrespawn",&on_respawn);   
+        scriptable_events.register_event("onrespawn",&on_respawn);
+        scriptable_events.register_event("onintermission",&on_intermission);
     }
     
     void *newinfo()
@@ -2528,6 +2530,7 @@ struct fpsserver : igameserver
         if(!interm && minremain<=0)
         {
             interm = gamemillis+10000;
+            scriptable_events.dispatch(&on_intermission,cubescript::arguments(10),NULL);
         }
     }
 
@@ -3204,6 +3207,7 @@ struct fpsserver : igameserver
             if(smode) smode->intermission();
         }
         interm=gamemillis+milli;
+        scriptable_events.dispatch(&on_intermission,cubescript::arguments(milli/1000),NULL);
     }
     
     void sync_game_settings()
