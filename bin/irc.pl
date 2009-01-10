@@ -186,7 +186,7 @@ sub process_command {
 		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/HELP/-\x03 help can be found here http://hopmod.e-topic.info/index.php5?title=IRC_Bot"); return}
 		##### WHO #####
 		if ( $command =~ / who/i )
-		{ $topriv = $nick ; my $line = &toserverpipe("who");
+		{ $topriv = $nick ; my $line = &toserverpipe("player_list");
                 my $temp = "";
                 my @temp = split (/ /, $line);
                 foreach (@temp) {
