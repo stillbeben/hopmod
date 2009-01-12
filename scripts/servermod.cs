@@ -305,7 +305,7 @@ check_scriptpipe = [
 // ============== End of script pipe functions ==============
 
 open_scriptpipe
-script_socket_server $script_socket_server_port
+if $script_socket_server_enabled [script_socket_server $script_socket_server_port]
 
 try load_geoip_data "share/GeoIP.dat" [log_error "Expect 'country' function to fail because the GeoIP database was not loaded."]
 
