@@ -1,9 +1,6 @@
 
-exec "scripts/scriptpipe.csl"
 exec "scripts/irc.csl"
-exec "scripts/teamkills.csl"
 exec "scripts/playercommands.cs"
-exec "scripts/maps.csl"
 
 logfile "logs/server.log" server_log
 log = [
@@ -29,7 +26,7 @@ event_handler $onconnect [
         local cn @cn
         local connection_id @(player_conid $cn)
         if (= $connection_id (try player_conid $cn [-1])) [
-            privmsg $cn (orange [@title server])
+            privmsg $cn (orange [@servername server])
             privmsg $cn $motd
         ]
     ]
@@ -179,7 +176,7 @@ event_handler $onmapchanged [
     
     if (> $gamecount 1) check_scriptpipe
     
-    if (match ctf $gamemode) "exec scripts/countdown.cs"
+    if (match ctf $gamemode) ctfsecscountdown
 ]
 
 event_handler $onnewmap [
@@ -284,6 +281,29 @@ flood_protection SV_KICK        (secs 30)
 flood_protection SV_MAPVOTE     (secs 5)
 flood_protection SV_C2SINIT     (secs 1)
 
+
+// ============== Start of script pipe functions ==============
+
+scriptpipe_filename = serverexec
+
+open_scriptpipe = [
+    if (path? $scriptpipe_filename) [
+        log_error [Cannot create script pipe: "@scriptpipe_filename" filename already exists. Attempting to delete the existing file...]
+        system [rm -f @scriptpipe_filename]
+    ]
+    script_pipe "bin/mkfifochan" [@scriptpipe_filename 777] []
+    script_pipe_parse_timeout (secs 5)
+]
+
+check_scriptpipe = [
+    if (! (path? $scriptpipe_filename)) [
+        log_error ["@scriptpipe_filename" file has gone missing! Re-creating file...]
+        open_scriptpipe
+    ]
+]
+
+// ============== End of script pipe functions ==============
+
 open_scriptpipe
 script_socket_server $script_socket_server_port
 
@@ -291,7 +311,7 @@ try load_geoip_data "share/GeoIP.dat" [log_error "Expect 'country' function to f
 
 printsvinfo = [
     parameters filename
-    local output [  Server Title: @title
+    local output [  Server Title: @servername
   Max Players: @maxclients
   Running auto-update: @(yesno $auto_update)
   Running IRC bot: @(yesno $irc_enabled)
@@ -317,16 +337,86 @@ who = [
     result (system [echo -e @(value list) | column -t])
 ]
 
-
-//update_banlist = [
-    //clearbanlist
-//    exec "conf/banlist.conf"
-//]
-//sched update_banlist
-//if $run_banlist_updater [daemon "bin/updatebanlist" "/dev/null" "/dev/null" "logs/updatebanlist.log"]
-
 system [touch conf/bans]
 loadbans conf/bans
+
+// ============== Start of map rotation functions ==============
+
+nextmap = [
+    parameters maplist
+    local listsize (listlen $maplist)
+    map = (at $maplist (mod $gamecount $listsize))
+    if (strcmp $map $currentmap) [map = (at $maplist (mod (+ $gamecount 1) $listsize))]
+    result $map
+]
+
+gamesize = [
+    local count (- $playercount (countspecs))
+    if(< $count 5) [result small] [
+        if (< $count 8) [result medium] [result large]
+    ]
+]
+
+mapsetname = [
+    concatword (if $custom_maprotation_balance [result (concatword (gamesize) _)] [result ""]) $gamemode _maps
+]
+
+setnextmap = [
+    local mapset (mapsetname)
+    if (symbol? $mapset) [mapname (nextmap (value $mapset))] [log_error (concatword $mapset " not found, letting clients decide next map.")]
+]
+
+// ============== End of map rotation functions ==============
+
+teamkill_update = [
+    parameters offender victim
+    local suicide (= $offender $victim)
+    
+    if (&& $teamkill_limit_enabled (&& (! $suicide) (&& (teamgame) (strcmp (player_team $offender) (player_team $victim))))) [
+        local count (player_var $offender teamkills (+ 1 (player_var $offender teamkills)))
+        local times (player_var $offender teamkill_times (concat $uptime (player_var $offender teamkill_times)))
+        
+        if (!= (player_var $offender teamkill_warned) 1) [
+            privconsole $offender script [@(player_name $offender) you just killed a team mate, you should be shooting red players.]
+            privconsole $offender script [Teamkill restrictions per game: maxcount=@teamkill_limit maxrate=@teamkill_maxrate per min.]
+            player_var $offender teamkill_warned 1
+        ]
+        
+        if (> $count 1) [
+            msg (gameplay (format "%1 has fragged team mates %2 times." (print_name $offender) $count (player_gun $offender)))
+        ]
+
+        if (> (player_var $offender teamkills) $teamkill_limit) [
+            kick $offender
+            sleep (mins 30) [removeban (player_ip $offender)]
+            console script [@(player_name $offender) was kicked for exceeding teamkill limit.]
+            log (format "%1 was kicked for team killing." (player_name $offender))
+        ] [
+            if (&& (> (listlen $times) $teamkill_maxrate) [< (add_intervals $times $teamkill_maxrate) 60000]) [
+                kick $offender
+                sleep (mins 30) [removeban (player_ip $offender)]
+                console script [@(player_name $offender) was kicked for exceeding maximum teamkill rate.]
+                log (format "%1 was kicked for team killing." (player_name $offender))
+            ]
+        ]
+    ]
+]
+
+ctfsecscountdown = [
+    event_handler $ontimeupdate [
+        parameters minsleft
+        if (= $minsleft 1) [
+            interval (secs 1) [
+                local countdown (secsleft)
+                if (= $countdown 30) [msg (gameplay "time remaining: 30 seconds")]
+                if (= $countdown 15) [msg (gameplay "time remaining: 15 seconds")]
+                if (= $countdown 10) [msg (gameplay "time remaining: 10 seconds")]
+                if (= $countdown 0) stop
+            ]
+            cancel_handler
+        ]
+    ]
+]
 
 if (= $UID 0) [
     log_error "Running the server as root user is a serious security risk!"
