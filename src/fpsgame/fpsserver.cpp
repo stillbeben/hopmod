@@ -640,7 +640,7 @@ struct fpsserver : igameserver
     cubescript::variable_ref<int>                           var_mastermode;
     cubescript::variable_ref<int>                           var_gametime;
     cubescript::cstr_variable                               var_mapname;
-    cubescript::cstr_variable                               var_title;
+    cubescript::cstr_variable                               var_servername;
     cubescript::wo_cstr_variable                            var_password;
     cubescript::cstr_variable                               var_gamemode;
     cubescript::variable_ref<int>                           var_gamecount;
@@ -803,7 +803,7 @@ struct fpsserver : igameserver
         var_mastermode(mastermode),
         var_gametime(gamelimit),
         var_mapname(smapname,sizeof(smapname)),
-        var_title(serverdesc,sizeof(serverdesc)),
+        var_servername(serverdesc,sizeof(serverdesc)),
         var_password(masterpass,sizeof(masterpass)),
         var_gamemode(sgamemode,sizeof(sgamemode)),
         var_gamecount(gamecount),
@@ -924,7 +924,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("mastermode",&var_mastermode);
         server_domain.register_symbol("gametime",&var_gametime);
         server_domain.register_symbol("mapname",&var_mapname); var_mapname.readonly(true);
-        server_domain.register_symbol("title",&var_title);
+        server_domain.register_symbol("servername",&var_servername);
         server_domain.register_symbol("password",&var_password);
         server_domain.register_symbol("gamemode",&var_gamemode); var_gamemode.readonly(true);
         server_domain.register_symbol("gamecount",&var_gamecount);
