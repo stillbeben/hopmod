@@ -102,6 +102,7 @@ playercmd_1on1 = [
 
         if (= (player_frags $player1) (player_frags $player2)) [
         msg (format "%1 %2 %3 %4" (blue [Oh NO winner:]) (orange(player_frags $player1)) (blue [-]) (orange(player_frags $player2)) )
+        log (format "%1 %2 %3 %4 %5 %6 %7" [MATCH:] [Game has end! A draw!] (player_name $player2) [versus] (player_name $player1) [on] $gamemap )
         ] [
                 if (> (player_frags $player1) (player_frags $player2)) [
                 winner = $player1
@@ -110,7 +111,7 @@ playercmd_1on1 = [
                 winner = $player2
                 loser = $player1
                 ]
-
+                log (format "%1 %2 %3 %4 %5 %6 %7 %8 %9 %10" [MATCH: Game has end!] (player_name $winner) [wins, with] (player_frags $winner) [Frags!] (player_name $loser) [lose, with] (player_frags $loser) [Frags! On Map:] $gamemap )
                 msg (format "%1 %2 %3 %4 %5" (blue [The Winner is:]) (orange (player_name $winner)) (blue [with]) (orange (player_frags $winner)) (orange [FRAGS!]) )
                 msg (format "%1 %2 %3 %4 %5" (blue [Sorry]) (orange (player_name $loser)) (blue [you have only]) (orange (player_frags $loser)) (orange [FRAGS!]) )
         ]
