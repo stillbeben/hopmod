@@ -340,7 +340,7 @@ if (= $check_pings 1) [
                 if (= (player_var $playercn warnings) 1) [
                 privmsg $playercn (format "%1 " (red [WARNING: You will get kicked after 3 warnings!]) ) ]
 
-                privmsg $playercn (format "%1 %2 %3" (red [WARNING:(])  (blue (player_var $playercn warnings)) (red [) Your PING is to high!]) )
+                msg (format "%1 %2 %3 %4 %5" (red [WARNING:]) (red (player_name $playercn))  [(]  (blue (player_var $playercn warnings)) (red [) Your PING is to high!]) )
                 ]]
         ]
 ]
