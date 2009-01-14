@@ -281,7 +281,7 @@ sub filterlog {
 	my $line = shift;
         ##### 1on1 #####
         if ($line =~ /#1on1 (.*)/)
-        { return "\x039MATCH\x03       \x0312The match starts now...\x03"}
+        { return "\x039MATCH\x03       \x0312 The match starts now...\x03"}
         if ($line =~ /MATCH: (.*) versus (.*) on (.*)/)
         { return "\x039MATCH\x03       \x034 $1 \x03 versus \x0312 $2 \x03 on \x037 $3 \x03"}
         if ($line =~ /MATCH: Game has end! (.*) wins, with (.*) - (.*) Poor (.*)/)
