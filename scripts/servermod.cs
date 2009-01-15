@@ -436,3 +436,20 @@ if (is_startup) [
 ] [
     log [Reloaded server startup scripts @(datetime (now))]
 ]
+
+if (= $check_pings 1) [
+        interval (secs $check_pings_rate) [
+                foreach (players) [if (> (player_ping $arg1) $maxping ) [
+                playercn = $arg1
+                player_var $playercn warnings (+ (player_var $playercn warnings) 1)
+                if (> (player_var $playercn warnings) 3) [
+                        kick $playercn ]
+
+                if (= (player_var $playercn warnings) 1) [
+                privmsg $playercn (format "%1 " (red [WARNING: You will get kicked after 3 warnings!]) ) ]
+
+                msg (format "%1 %2 %3 %4 %5" (red [WARNING:]) (red (player_name $playercn))  [(]  (blue (player_var $playercn warnings)) (red [) Your PING is to high!]) )
+                ]]
+        ]
+]
+

@@ -281,9 +281,17 @@ sub process_command {
 
 sub filterlog {
 	my $line = shift;
-	##### ANNOUNCE #####
-        if ($line =~ /ANNOUNCE (\S*) #announce (.*)/)
-        { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
+    
+    ##### 1on1 #####
+    if ($line =~ /#1on1 (.*)/)
+    { return "\x039MATCH\x03       \x0312 The match starts now...\x03"}
+    if ($line =~ /MATCH: (.*) versus (.*) on (.*)/)
+    { return "\x039MATCH\x03       \x034 $1 \x03 versus \x0312 $2 \x03 on \x037 $3 \x03"}
+    if ($line =~ /MATCH: Game has end! (.*) wins, with (.*) - (.*) Poor (.*)/)
+    { return "\x039MATCH\x03       \x034 Game has end! $1 \x03 wins, with $2 - $3 Poor $4 \x03"}
+    ##### ANNOUNCE #####
+    if ($line =~ /ANNOUNCE (\S*) #announce (.*)/)
+    { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
 	##### CONNECT #####
 	if ($line =~ /(\S*\([0-9]+\))(\(.+\))\((.*)\) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 \x037$3\x03" }

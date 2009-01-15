@@ -61,3 +61,75 @@ playercmd_slap = [
         msg (grey [*@(concol 7 (player_name $target)) got slapped by @(orange (player_name $cn))*])
     ] [privmsg $cn (err "Permission Denied")]
 ]
+    
+playercmd_1on1 = [
+        parameters target
+        if (strcmp (player_priv $cn) "admin") [
+
+        player1 = $arg1
+        player2 = $arg2
+        game_mo = $arg3
+        gamemap = $arg4
+
+        if (strcmp $game_mo "insta") [game_mo = instagib]
+        if (strcmp $game_mo "instateam") [game_mo = [instagib team]
+                setteam $player1 linux
+                setteam $player2 windows
+        ]
+        if (strcmp $game_mo "ffa") [game_mo = ffa/default]
+        if (strcmp $game_mo "eff") [game_mo = efficiency]
+        if (strcmp $game_mo "ictf") [game_mo = [insta ctf] ]
+        if (strcmp $game_mo "icapture" ) [game_mo = [insta capture] ]
+
+
+        player1con = (player_conid $player1)
+        player2con = (player_conid $player2)
+        log (format "%1 %2 %3 %4 %5 %6" [MATCH:] (player_name $player2) [versus] (player_name $player1) [on] $gamemap )
+        mastermode 2
+        foreach (players) [spec $arg1]
+        msg (format "%1 %2 %3 %4 %5 %6 %7" (orange (player_name $player1)) (grey [versus]) (orange (player_name $player2)) (grey [on]) (grey $game_mo) (orange $gamemap) (grey [in 10 secs]) )
+        sleep (secs 5) [ msg (format "%1" (red [Game will start in 5 secs...]) )
+        sleep (secs 1) [ msg (format "%1" (red [Game will start in 4 secs...]) )
+        sleep (secs 1) [ msg (format "%1" (red [Game will start in 3 secs...]) )
+        sleep (secs 1) [ msg (format "%1" (red [Game will start in 2 secs...]) )
+        sleep (secs 1) [ msg (format "%1" (red [Game will start in 1 secs...]) )
+        msg (format "%1 %2" (red [Map will change now to:]) (orange $gamemap) )
+        sleep (secs 2) [
+        changemap $game_mo $gamemap
+        if (strcmp $game_mo "[instagib team]") [
+                setteam $player1 linux
+                setteam $player2 windows
+        ]
+        unspec $player1
+        unspec $player2
+        msg (format "%1" (blue [Start the fight now!!!]) )
+
+        event_handler $onintermission [
+        msg (format "%1" (orange [Good Game]) )
+
+        if (&& (= $player1con (player_conid $player1)) (= $player2con (player_conid $player2)) ) [
+
+        if (= (player_frags $player1) (player_frags $player2)) [
+        msg (format "%1 %2 %3 %4" (blue [Oh NO winner:]) (orange(player_frags $player1)) (blue [-]) (orange(player_frags $player2)) )
+        log (format "%1 %2 %3 %4 %5" [MATCH:] [Game has end! A draw!] (player_name $player2) [versus] (player_name $player1) )
+        ] [
+                if (> (player_frags $player1) (player_frags $player2)) [
+                winner = $player1
+                loser = $player2
+                ] [
+                winner = $player2
+                loser = $player1
+                ]
+                log (format "%1 %2 %3 %4 %5 %6 %7 %8" [MATCH: Game has end!] (player_name $winner) [wins, with] (player_frags $winner) [-] (player_frags $loser) [Poor] (player_name $loser) )
+                msg (format "%1 %2 %3 %4 %5" (blue [The Winner is:]) (orange (player_name $winner)) (blue [with]) (orange (player_frags $winner)) (orange [FRAGS!]) )
+                msg (format "%1 %2 %3 %4 %5" (blue [Sorry]) (orange (player_name $loser)) (blue [you have only]) (orange (player_frags $loser)) (orange [FRAGS!]) )
+        ]
+        ] [ msg (format "%1" (red [Can't display the score. Maybe one of the players has been disconnected during the game!]) )
+            msg (format "%1" (red [But you can take a look at the scoreboard!]) ) ]
+
+        cancel_handler]
+
+        ]]]]]]
+
+        ] [privmsg $cn (err "You need admin to do that!")]
+]
