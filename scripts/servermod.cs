@@ -453,3 +453,23 @@ if (= $check_pings 1) [
         ]
 ]
 
+if (= $check_unnameds 1) [
+        interval (secs 10) [
+                foreach (players) [if (strcmp (player_name $arg1) "unnamed") [
+                        playeruncn = $arg1
+
+                        if (<= (player_var $playeruncn warningsun) 3) [
+                        player_var $playeruncn warningsun (+ (player_var $playeruncn warningsun) 1)
+                        privmsg $playeruncn (format "%1 %2 %3 %4 %5" (red [WARNING:]) [(] (blue (player_var $playeruncn warningsun)) [)] (red [You will get speced after 4 warnings, if you dont change your name now!]) )
+                        ]
+
+                        if (> (player_var $playeruncn warningsun) 3) [
+                        spec $playeruncn
+                        privmsg $playeruncn (format "%1 %2 %3" (red [WARNING:]) (blue [Unnameds]) (red [are not allowed to play here!
+         Please type /name yourname and reconnect to the server!]) )
+                                ]
+                        ]
+                ]
+        ]
+]
+
