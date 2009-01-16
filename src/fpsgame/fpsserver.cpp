@@ -635,6 +635,7 @@ struct fpsserver : igameserver
     cubescript::function0<void>                             func_clearconfig;
     cubescript::function0<void>                             func_reloadconfig;
     cubescript::function0<int>                              func_secsleft;
+    cubescript::function1<void,int>                         func_slay;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -798,6 +799,7 @@ struct fpsserver : igameserver
         func_clearconfig(boost::bind(&fpsserver::clearconfig,this,false,false)),
         func_reloadconfig(boost::bind(&fpsserver::clearconfig,this,false,true)),
         func_secsleft(boost::bind(&fpsserver::get_secsleft,this)),
+        func_slay(boost::bind(&fpsserver::slay_player,this,_1)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -919,6 +921,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("clearconfig",&func_clearconfig);
         server_domain.register_symbol("reloadconfig",&func_reloadconfig);
         server_domain.register_symbol("secsleft",&func_secsleft);
+        server_domain.register_symbol("slay",&func_slay);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3706,6 +3709,13 @@ struct fpsserver : igameserver
     bool allow_host(uint ip)/*const*/
     {
         return allowedips.find(ip) != -1;
+    }
+    
+    void slay_player(int cn)
+    {
+        clientinfo * ci = get_ci(cn);
+        ci->state.state = CS_DEAD;
+        sendf(-1, 1, "ri2", SV_FORCEDEATH, cn);
     }
 };
 
