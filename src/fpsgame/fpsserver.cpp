@@ -1875,11 +1875,12 @@ struct fpsserver : igameserver
             {
                 if(ci->state.state!=CS_DEAD || ci->state.lastspawn>=0 || (smode && !smode->canspawn(ci)) ||
                     respawn_locked) break;
-                if(ci->state.lastdeath) ci->state.respawn();
                 
                 bool block = false;
                 scriptable_events.dispatch(&on_respawn,cubescript::arguments(ci->clientnum),&block);
                 if(block) break;
+                
+                if(ci->state.lastdeath) ci->state.respawn();
                 
                 sendspawn(ci);
                 break;
