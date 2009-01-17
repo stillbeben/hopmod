@@ -555,6 +555,8 @@ struct fpsserver : igameserver
     ctfservmode ctfmode;
     servmode *smode;
 
+    bool respawn_locked;
+    
     cubescript::domain server_domain;
     
     cubescript::function2<void,const std::string &,int>     func_flood_protection;
@@ -658,6 +660,7 @@ struct fpsserver : igameserver
     cubescript::variable_ref<size_t>                        var_rx_packets;
     cubescript::variable_ref<bool>                          var_reassignteams; bool reassignteams;
     cubescript::variable_ref<int>                           var_kickbantime;
+    cubescript::variable_ref<bool>                          var_respawn_locked;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -722,7 +725,7 @@ struct fpsserver : igameserver
         demonextmatch(false), demotmp(NULL), demorecord(NULL), 
         demoplayback(NULL), nextplayback(0), arenamode(*this), 
         capturemode(*this),assassinmode(*this), ctfmode(*this), 
-        smode(NULL),
+        smode(NULL),respawn_locked(false),
         
         func_flood_protection(boost::bind(&fpsserver::set_flood_protection,this,_1,_2)),
         func_log_status(boost::bind(&fpsserver::log_status,this,_1)),
@@ -822,6 +825,7 @@ struct fpsserver : igameserver
         var_rx_packets(rx_packets),
         var_reassignteams(reassignteams), reassignteams(true),
         var_kickbantime(m_tmpban_time),
+        var_respawn_locked(respawn_locked),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -944,6 +948,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("rx_packets",&var_rx_packets); var_tx_packets.readonly(true);
         server_domain.register_symbol("reassignteams",&var_reassignteams);
         server_domain.register_symbol("kickbantime",&var_kickbantime);
+        server_domain.register_symbol("respawn_locked",&var_respawn_locked);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);
@@ -1861,7 +1866,8 @@ struct fpsserver : igameserver
 
             case SV_TRYSPAWN:
             {
-                if(ci->state.state!=CS_DEAD || ci->state.lastspawn>=0 || (smode && !smode->canspawn(ci))) break;
+                if(ci->state.state!=CS_DEAD || ci->state.lastspawn>=0 || (smode && !smode->canspawn(ci)) ||
+                    respawn_locked) break;
                 if(ci->state.lastdeath) ci->state.respawn();
                 
                 scriptable_events.dispatch(&on_respawn,cubescript::arguments(ci->clientnum),NULL);
