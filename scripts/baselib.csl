@@ -253,3 +253,14 @@ admin_cmd = [
     do [playercmd_@name = [if (! (strcmp (player_priv $cn) "admin")) [throw runtime.playercmd.@@@name.permission_denied]; @code]]
 ]
 
+pausegame = [
+    rungameclock 0
+    respawn_locked 1
+    foreach (players) [slay $arg1]
+]
+
+resumegame = [
+    rungameclock 1
+    respawn_locked 0
+    foreach (players) [spawn $arg1]
+]
