@@ -1877,7 +1877,9 @@ struct fpsserver : igameserver
                     respawn_locked) break;
                 if(ci->state.lastdeath) ci->state.respawn();
                 
-                scriptable_events.dispatch(&on_respawn,cubescript::arguments(ci->clientnum),NULL);
+                bool block = false;
+                scriptable_events.dispatch(&on_respawn,cubescript::arguments(ci->clientnum),&block);
+                if(block) break;
                 
                 sendspawn(ci);
                 break;
