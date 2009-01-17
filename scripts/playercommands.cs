@@ -133,3 +133,15 @@ playercmd_1on1 = [
 
         ] [privmsg $cn (err "You need admin to do that!")]
 ]
+
+playercmd_pause = [
+    if (strcmp (player_priv $cn) "admin") [
+        pausegame
+    ] [privmsg $cn (err "Permission Denied")]
+]
+
+playercmd_resume = [
+    if (strcmp (player_priv $cn) "admin") [
+        resumegame
+    ] [privmsg $cn (err "Permission Denied")]
+]
