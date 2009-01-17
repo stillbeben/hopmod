@@ -152,5 +152,6 @@ playercmd_msg = [
         playermsg = $arg2
         privmsg $playercnm (format "%1 %2 %3" (blue (player_name $yourcn)) [:] (red $playermsg) )
         privmsg $yourcn (format "%1 %2 %3" (blue $playermsg) (red [was send to:]) (red (player_name $playercnm)) )
+	
 ]
 
