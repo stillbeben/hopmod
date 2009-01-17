@@ -556,6 +556,7 @@ struct fpsserver : igameserver
     servmode *smode;
 
     bool respawn_locked;
+    int gametimefreeze;
     
     cubescript::domain server_domain;
     
@@ -639,6 +640,7 @@ struct fpsserver : igameserver
     cubescript::function0<int>                              func_secsleft;
     cubescript::function1<void,int>                         func_slay;
     cubescript::function1<void,int>                         func_spawn;
+    cubescript::function1<bool,bool>                        func_gameclock;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -726,7 +728,7 @@ struct fpsserver : igameserver
         demonextmatch(false), demotmp(NULL), demorecord(NULL), 
         demoplayback(NULL), nextplayback(0), arenamode(*this), 
         capturemode(*this),assassinmode(*this), ctfmode(*this), 
-        smode(NULL),respawn_locked(false),
+        smode(NULL),respawn_locked(false),gametimefreeze(0),
         
         func_flood_protection(boost::bind(&fpsserver::set_flood_protection,this,_1,_2)),
         func_log_status(boost::bind(&fpsserver::log_status,this,_1)),
@@ -805,6 +807,7 @@ struct fpsserver : igameserver
         func_secsleft(boost::bind(&fpsserver::get_secsleft,this)),
         func_slay(boost::bind(&fpsserver::slay_player,this,_1)),
         func_spawn(boost::bind(&fpsserver::spawn_player,this,_1)),
+        func_gameclock(boost::bind(&fpsserver::set_rungameclock,this,_1)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -929,6 +932,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("secsleft",&func_secsleft);
         server_domain.register_symbol("slay",&func_slay);
         server_domain.register_symbol("spawn",&func_spawn);
+        server_domain.register_symbol("rungameclock",&func_gameclock);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -2530,12 +2534,12 @@ struct fpsserver : igameserver
 
     void checkintermission()
     {
-        if(minremain>0)
+        if(minremain>0 && !gametimefreeze)
         {
             minremain = gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
             sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
             if(!minremain && smode) smode->intermission();
-
+            
             scriptable_events.dispatch(&on_timeupdate,cubescript::arguments(minremain),NULL);
         }
         
@@ -3712,7 +3716,8 @@ struct fpsserver : igameserver
     
     int get_secsleft()const
     {
-        return gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis)/1000;
+        int gametime = gametimefreeze ? gametimefreeze : gamemillis;
+        return gametime >= gamelimit ? 0 : (gamelimit - gametime)/1000;
     }
     
     bool allow_host(uint ip)/*const*/
@@ -3732,6 +3737,25 @@ struct fpsserver : igameserver
         clientinfo * ci = get_ci(cn);
         if(ci->state.state != CS_DEAD) return;
         sendspawn(ci);
+    }
+    
+    bool set_rungameclock(bool runclock)
+    {
+        if(runclock)
+        {
+            if(gametimefreeze)
+            {
+                gamelimit += gamemillis - gametimefreeze;
+                gametimefreeze = 0;
+            }
+        }
+        else
+        {
+            if(!gametimefreeze)
+               gametimefreeze = gamemillis; 
+        }
+        
+        return !gametimefreeze;
     }
 };
 
