@@ -3728,6 +3728,7 @@ struct fpsserver : igameserver
     void slay_player(int cn)
     {
         clientinfo * ci = get_ci(cn);
+        if(ci->state.state != CS_ALIVE) return;
         ci->state.state = CS_DEAD;
         sendf(-1, 1, "ri2", SV_FORCEDEATH, cn);
     }
