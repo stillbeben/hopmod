@@ -477,12 +477,7 @@ update_captureplayer_record = [
     statsdb eval [update captureplayers set teamkills=$teamkills] []
 ]
 
-log_event = [
-    parameters message
-    if (! (symbol? match_id)) [throw runtime.script.stats.log_event.missing_match_id]
-    local timenow (time (now))
-    statsdb eval [insert into logevents (match_id,time,message) values ($match_id,$timenow,$message)] []
-]
+log_event = []
 
 transferstats = [
     new sqlite3 transdb
@@ -492,7 +487,6 @@ transferstats = [
     local sql_unsyncd_ids [select id from stats.matches where stats.matches.syncd=0]
     local sql_unsyncd_player_ids [select id from players]
     transdb eval [insert into matches @sql_unsyncd] []
-    transdb eval [insert into logevents select * from stats.logevents where stats.logevents.match_id in (@sql_unsyncd_ids)] []
     transdb eval [insert into players select * from stats.players where stats.players.match_id in (@sql_unsyncd_ids)] []
     transdb eval [insert into itempickups select * from stats.itempickups where stats.itempickups.player_id in (@sql_unsyncd_player_ids)] []
     transdb eval [insert into gunusage select * from stats.gunusage where stats.gunusage.player_id in (@sql_unsyncd_player_ids)] []
@@ -510,7 +504,6 @@ delete_transtats = [
     transdb open "scripts/stats/data/transtats.db"
     transdb eval [begin transaction] []
     transdb eval [delete from matches] []
-    transdb eval [delete from logevents] []
     transdb eval [delete from players] []
     transdb eval [delete from itempickups] []
     transdb eval [delete from gunusage] []
@@ -527,7 +520,6 @@ delete_match_stats = [
     parameters mid
     
     statsdb eval [delete from matches where id = $mid] []
-    statsdb eval [delete from logevents where match_id = $mid] []
     statsdb eval [delete from ctfteams where match_id = $mid] []
     statsdb eval [delete from captureteams where match_id = $mid] []
 

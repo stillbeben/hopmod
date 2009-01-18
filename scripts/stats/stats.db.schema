@@ -7,12 +7,6 @@ CREATE TABLE matches (
     duration            INTEGER,
     players             INTEGER
 );
-CREATE TABLE logevents (
-    id                  INTEGER PRIMARY KEY,
-    match_id            INTEGER REFERENCES matches(id),
-    time                TEXT,
-    message             TEXT
-);
 CREATE TABLE players (
     id                  INTEGER PRIMARY KEY,
     match_id            INTEGER REFERENCES matches(id),

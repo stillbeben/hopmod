@@ -99,23 +99,12 @@ countspecs = [
     result $n
 ]
 
-announce = [
-
-    foreach (players) [
-        reference cn arg1
-        player_var $cn last_status (player_status $cn)
-        spec $cn
-    ]
-    
+announcement = [
+    pausegame
     notalk 7000 [server announcement is being read.]
-    
     sleep 2000 [
         msg (concat "Server announcement:" (green [@@arg1]) )
-        sleep 5000 [
-            foreach (players) [
-                if (! (strcmp (player_var $arg1 last_status) "spectator")) [unspec $arg1]
-            ]
-        ]
+        sleep 5000 resumegame
     ]
 ]
 
