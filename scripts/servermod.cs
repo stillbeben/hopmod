@@ -423,20 +423,6 @@ if (= $UID 0) [
     shutdown
 ]
 
-log_status "*** Running Hopmod 3.0 for Sauerbraten CTF Edition ***"
-
-if (is_startup) [
-    log [Server started @(datetime (now))]
-    
-    currentmaster = -1
-    allow_talk = 1
-    disallow_talk_reason = ""
-
-    defaultgame
-] [
-    log [Reloaded server startup scripts @(datetime (now))]
-]
-
 if (= $check_pings 1) [
         interval (secs $check_pings_rate) [
                 foreach (players) [if (> (player_ping $arg1) $maxping ) [
@@ -475,3 +461,16 @@ if (= $check_unnameds 1) [
         ]
 ]
 
+if (is_startup) [
+    log [Server started @(datetime (now))]
+    
+    currentmaster = -1
+    allow_talk = 1
+    disallow_talk_reason = ""
+
+    defaultgame
+] [
+    log [Reloaded server startup scripts @(datetime (now))]
+]
+
+log_status "*** Running Hopmod 3.0 for Sauerbraten CTF Edition ***"
