@@ -83,7 +83,11 @@ event_handler $onitempickup [
     player_var $cn $type (+ 1 (player_var $cn $type))
 ]
 
-event_handler $onendgame [
+
+event_handler $onendgame stats_endgame
+event_handler $onintermission stats_endgame
+
+stats_endgame = [
     if $recording_stats [
         update_player_records
         
@@ -118,6 +122,8 @@ event_handler $onendgame [
             log_status [Discarding stats for last match for not meeting minimum duration requirement of @stats_filter_policy_min_duration seconds.]
         ]
     ]
+    
+    recording_stats = 0
 ]
 
 event_handler $onmapchanged [
