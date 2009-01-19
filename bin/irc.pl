@@ -294,6 +294,9 @@ sub filterlog {
     ##### WARNING #####
     if ($line =~ /#warning (.*) (.*)/)
     { return "" }
+    ##### PING #####
+    if ($line =~ /PING: (.*) get kicked!/)
+    { return "\x039PING\x03    \x0312$1\x03 \x037get kicked, because of his high ping!\x03" }
     ##### ANNOUNCE #####
     if ($line =~ /ANNOUNCE (\S*) #announce (.*)/)
     { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
