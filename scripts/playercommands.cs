@@ -155,3 +155,21 @@ playercmd_msg = [
 	
 ]
 
+playercmd_warning = [
+        if (strcmp (player_priv $cn) "admin") [
+        playercnwa = $arg1
+        warning_r = $arg2
+
+        if (strcmp $warning_r "tk") [ warning_r = "Teamkilling is bad! Only shoot RED!" ]
+        if (strcmp $warning_r "namefaker") [ warning_r = "Don't use this name, because it is not your name!" ]
+        if (strcmp $warning_r "bad") [ warning_r = "Please be nice here!" ]
+        if (strcmp $warning_r "fair") [ warning_r = "Please play fair!" ]
+        if (strcmp $warning_r "cheat") [ warning_r = "Don't use cheats here. You destroy the game, when you cheat!" ]
+
+        player_var $playercnwa warningsm (+ (player_var $playercnwa warningsm) 1)
+        privmsg $playercnwa (format "%1 %2 %3 %4 %5 %6 %7 %8" (red [WARNING:]) [(] (blue (player_var $playercnwa warningsm)) [)] (red [reason:]) (blue $warning_r) (red (+ (- 3 (player_var $playercnwa warningsm)) 1)) (red [warnings more and you will be kicked!]) )
+        if (>(player_var $playercnwa warningsm) 3) [
+        kick $playercnwa ]
+        ] [privmsg $cn (err "Permission Denied")]
+]
+
