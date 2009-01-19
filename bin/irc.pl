@@ -280,6 +280,9 @@ sub process_command {
 
 sub filterlog {
 	my $line = shift;
+    ##### Invisible Master ##### 
+    if ($line =~ /(\S*\([0-9]+\))(\(*.*\)*): #invadmin/)
+    { return "\x039MASTER\x03       \x0312$1\x03 attempted to take invisible master."}
     
     ##### 1on1 #####
     if ($line =~ /#1on1 (.*)/)
