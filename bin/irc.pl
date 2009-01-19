@@ -291,6 +291,9 @@ sub filterlog {
     ##### MSG ###
     if ($line =~ /#msg (.*)/)
     { return "" }
+    ##### WARNING #####
+    if ($line =~ /#warning (.*) (.*)/)
+    { return "" }
     ##### ANNOUNCE #####
     if ($line =~ /ANNOUNCE (\S*) #announce (.*)/)
     { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
