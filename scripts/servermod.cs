@@ -430,6 +430,7 @@ if (= $check_pings 1) [
                 player_var $playercn warnings (+ (player_var $playercn warnings) 1)
                 if (> (player_var $playercn warnings) 3) [
                         msg (format "%1 %2" (blue (player_name $playercn)) (red [has a too high ping and will be kicked!]) )
+                        log (format "%1 %2 %3" [PING:] (player_name $playercn) [get kicked!] )
                         kick $playercn
                         ]
 
