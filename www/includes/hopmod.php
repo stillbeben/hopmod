@@ -19,7 +19,7 @@ function serverDetails() {
 	global $server_title;
 	$stats_db_filename = GetHop("value absolute_stats_db_filename");
 	if ( ! isset($stats_db_filename) ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
-	$server_title = GetHop("value title");
+	$server_title = GetHop("value servername");
 	if ( ! isset($server_title) ) { $server_title = "HOPMOD Server";} //Set it to something
 
 }
