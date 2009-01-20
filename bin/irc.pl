@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+
 use LWP::UserAgent;
 use HTTP::Request;
 use warnings;
@@ -271,6 +272,10 @@ sub process_command {
 		##### CUBESCRIPT ##### 
 		if ( $command =~ / cubescript (.*) $config->{irc_adminpw}/i )
                 { my $output = &toserverpipe($1); &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/CUBESCRIPT/-\x03 $nick executed \x037$1\x03:$output"); 
+		##### Show IP #####
+                &toirccommandlog("$nick CUBESCRIPT $1"); return }
+		                if ( $command =~ / showip (.*) $config->{irc_adminpw}/i )
+                { my $output = &toserverpipe($1); &sendtoirc($channel,"\x03\x036IP\x03         \x034-/CUBESCRIPT/-\x03 $nick executed \x037$1\x03:$output");
                 &toirccommandlog("$nick CUBESCRIPT $1"); return }
 		#######Catchall
 		if ( $command =~ /^$config->{irc_botcommandname} (.*)/i )
