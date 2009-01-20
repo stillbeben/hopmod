@@ -3769,5 +3769,3 @@ static void shutdown_from_signal(int i)
     if(svobj) svobj->shutdown();
     exit(1);
 }
-
-REGISTERGAME(fpsgame, "fps", NULL, new fpsserver());
