@@ -83,7 +83,11 @@ event_handler $onitempickup [
     player_var $cn $type (+ 1 (player_var $cn $type))
 ]
 
-event_handler $onendgame [
+
+event_handler $onendgame stats_endgame
+event_handler $onintermission stats_endgame
+
+stats_endgame = [
     if $recording_stats [
         update_player_records
         
@@ -102,11 +106,6 @@ event_handler $onendgame [
             ]
         ]
         
-        if $upload_player_stats [
-            transferstats //put the unsynced subset of stats into the transfer database.
-            system "bin/uploadstats &"
-        ]
-        
         if (> $stats_filter_policy_min_frags 0) [
             local sumfrags 0
             statsdb eval [select sum(frags) from players where match_id = $match_id] [sumfrags = (column "sum(frags)")]
@@ -123,6 +122,8 @@ event_handler $onendgame [
             log_status [Discarding stats for last match for not meeting minimum duration requirement of @stats_filter_policy_min_duration seconds.]
         ]
     ]
+    
+    recording_stats = 0
 ]
 
 event_handler $onmapchanged [
@@ -477,57 +478,12 @@ update_captureplayer_record = [
     statsdb eval [update captureplayers set teamkills=$teamkills] []
 ]
 
-log_event = [
-    parameters message
-    if (! (symbol? match_id)) [throw runtime.script.stats.log_event.missing_match_id]
-    local timenow (time (now))
-    statsdb eval [insert into logevents (match_id,time,message) values ($match_id,$timenow,$message)] []
-]
-
-transferstats = [
-    new sqlite3 transdb
-    transdb open "scripts/stats/data/transtats.db"
-    transdb eval [attach database @stats_db_filename as stats] []
-    local sql_unsyncd [select * from stats.matches where stats.matches.syncd=0]
-    local sql_unsyncd_ids [select id from stats.matches where stats.matches.syncd=0]
-    local sql_unsyncd_player_ids [select id from players]
-    transdb eval [insert into matches @sql_unsyncd] []
-    transdb eval [insert into logevents select * from stats.logevents where stats.logevents.match_id in (@sql_unsyncd_ids)] []
-    transdb eval [insert into players select * from stats.players where stats.players.match_id in (@sql_unsyncd_ids)] []
-    transdb eval [insert into itempickups select * from stats.itempickups where stats.itempickups.player_id in (@sql_unsyncd_player_ids)] []
-    transdb eval [insert into gunusage select * from stats.gunusage where stats.gunusage.player_id in (@sql_unsyncd_player_ids)] []
-    transdb eval [insert into ctfplayers select * from stats.ctfplayers where stats.ctfplayers.player_id in (@sql_unsyncd_player_ids)] []
-    transdb eval [insert into captureplayers select * from stats.captureplayers where stats.captureplayers.player_id in (@sql_unsyncd_player_ids)] []
-    transdb eval [insert into ctfteams select * from stats.ctfteams where stats.ctfteams.match_id in (@sql_unsyncd_ids)] []
-    transdb eval [insert into captureteams select * from stats.captureteams where stats.captureteams.match_id in (@sql_unsyncd_ids)] []
-    transdb eval [update stats.matches set syncd=1 where syncd=0] []
-    transdb close
-    delete transdb //just deallocates object, not the db file
-]
-
-delete_transtats = [
-    new sqlite3 transdb
-    transdb open "scripts/stats/data/transtats.db"
-    transdb eval [begin transaction] []
-    transdb eval [delete from matches] []
-    transdb eval [delete from logevents] []
-    transdb eval [delete from players] []
-    transdb eval [delete from itempickups] []
-    transdb eval [delete from gunusage] []
-    transdb eval [delete from ctfplayers] []
-    transdb eval [delete from captureplayers] []
-    transdb eval [delete from ctfteams] []
-    transdb eval [delete from captureteams] []
-    transdb eval [commit transaction] []
-    transdb close
-    delete transdb
-]
+log_event = []
 
 delete_match_stats = [
     parameters mid
     
     statsdb eval [delete from matches where id = $mid] []
-    statsdb eval [delete from logevents where match_id = $mid] []
     statsdb eval [delete from ctfteams where match_id = $mid] []
     statsdb eval [delete from captureteams where match_id = $mid] []
 

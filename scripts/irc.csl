@@ -1,4 +1,4 @@
-who = [
+player_list = [
 	scores = ""
 	foreach (players) [
 		parameters cn

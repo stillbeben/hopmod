@@ -1,3 +1,3 @@
 
 privmsg $cn (info (format [%1 uptime %2
-See list of server commands at http://hopmod.e-topic.info/] $title (fduration (div $uptime 1000))))
+See list of server commands at http://hopmod.e-topic.info/] $servername (fduration (div $uptime 1000))))

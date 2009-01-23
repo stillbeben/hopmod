@@ -1,9 +1,6 @@
 
-exec "scripts/scriptpipe.csl"
 exec "scripts/irc.csl"
-exec "scripts/teamkills.csl"
-exec "scripts/commands.csl"
-exec "scripts/maps.csl"
+exec "scripts/playercommands.cs"
 
 logfile "logs/server.log" server_log
 log = [
@@ -29,7 +26,7 @@ event_handler $onconnect [
         local cn @cn
         local connection_id @(player_conid $cn)
         if (= $connection_id (try player_conid $cn [-1])) [
-            privmsg $cn (orange [@title server])
+            privmsg $cn (orange [@servername server])
             privmsg $cn $motd
         ]
     ]
@@ -90,6 +87,7 @@ event_handler $onkick [
 
 event_handler $ontext [
     parameters cn text
+    mutetag = ""
     
     if (! $allow_talk) [
         privmsg $cn (err (concat "Talking is banned at this time because:" $disallow_talk_reason))
@@ -97,6 +95,7 @@ event_handler $ontext [
     ]
     
     if (player_var $cn mute) [
+        mutetag = "(muted)"
         privmsg $cn (err "Your voice privilege has been revoked.")
         veto 1
     ]
@@ -127,7 +126,7 @@ event_handler $ontext [
         console (player_name $cn) $text
     ]
     
-    log (format "%1(%2): %3" (player_name $cn) $cn $text)
+    log (format "%1(%2)%3: %4" (player_name $cn) $cn $mutetag $text)
 ]
 
 event_handler $onsayteam [
@@ -164,9 +163,11 @@ event_handler $onmapchanged [
     if (strcmp $gamemode "coopedit") [
         console script "Warning: running /newmap command as an unprivileged player will get you kicked and banned."
         event_handler $onmapchanged [ //cleanup on next map change
-            cancel_handler
-            mastermode @mastermode
-            if (!= $currentmaster -1) [setmaster $currentmaster 0]
+            if (! (strcmp $gamemode coopedit)) [
+                cancel_handler
+                mastermode @mastermode
+                if (!= $currentmaster -1) [setmaster $currentmaster 0]
+            ]
         ]
         if $allow_mm_locked [
             mastermode $MM_LOCKED
@@ -175,7 +176,7 @@ event_handler $onmapchanged [
     
     if (> $gamecount 1) check_scriptpipe
     
-    if (match ctf $gamemode) "exec scripts/countdown.cs"
+    if (match ctf $gamemode) ctfsecscountdown
 ]
 
 event_handler $onnewmap [
@@ -208,6 +209,7 @@ event_handler $onsetmaster [
     ] [
         if (&& (&& (= $currentmaster -1) $set) (strcmp $gamemode "coopedit")) [
             setmaster $cn 1
+            privconsole $cn script "You will lose master privilege when the server leaves coopedit mode."
         ]
     ]
 ]
@@ -279,14 +281,37 @@ flood_protection SV_KICK        (secs 30)
 flood_protection SV_MAPVOTE     (secs 5)
 flood_protection SV_C2SINIT     (secs 1)
 
+
+// ============== Start of script pipe functions ==============
+
+scriptpipe_filename = serverexec
+
+open_scriptpipe = [
+    if (path? $scriptpipe_filename) [
+        log_error [Cannot create script pipe: "@scriptpipe_filename" filename already exists. Attempting to delete the existing file...]
+        system [rm -f @scriptpipe_filename]
+    ]
+    script_pipe "bin/mkfifochan" [@scriptpipe_filename 777] []
+    script_pipe_parse_timeout (secs 5)
+]
+
+check_scriptpipe = [
+    if (! (path? $scriptpipe_filename)) [
+        log_error ["@scriptpipe_filename" file has gone missing! Re-creating file...]
+        open_scriptpipe
+    ]
+]
+
+// ============== End of script pipe functions ==============
+
 open_scriptpipe
-script_socket_server $script_socket_server_port
+if $script_socket_server_enabled [script_socket_server $script_socket_server_port]
 
 try load_geoip_data "share/GeoIP.dat" [log_error "Expect 'country' function to fail because the GeoIP database was not loaded."]
 
 printsvinfo = [
     parameters filename
-    local output [  Server Title: @title
+    local output [  Server Title: @servername
   Max Players: @maxclients
   Running auto-update: @(yesno $auto_update)
   Running IRC bot: @(yesno $irc_enabled)
@@ -300,33 +325,121 @@ printsvstatus = [
     system [echo "@output" >> @filename]
 ]
 
-//update_banlist = [
-    //clearbanlist
-//    exec "conf/banlist.conf"
-//]
-//sched update_banlist
-//if $run_banlist_updater [daemon "bin/updatebanlist" "/dev/null" "/dev/null" "logs/updatebanlist.log"]
+who = [
+    local list [CN LAG PING IP COUNTRY NAME TIME STATE"\\n"]
+    foreach (players) [
+        parameters cn
+        cty = "unknown"
+        try [cty = (countrycode (player_ip $cn))] []
+        row = (shell_quote [@cn @(player_lag $cn) @(player_ping $cn) @(player_ip $cn) @cty @(player_name $cn) @(duration (player_contime $cn)) @(player_status $cn)])
+        list = (concatword $list [@row "\\n"])
+    ]
+    result (system [echo -e @(value list) | column -t])
+]
 
 system [touch conf/bans]
 loadbans conf/bans
+
+// ============== Start of map rotation functions ==============
+
+nextmap = [
+    parameters maplist
+    local listsize (listlen $maplist)
+    map = (at $maplist (mod $gamecount $listsize))
+    if (strcmp $map $currentmap) [map = (at $maplist (mod (+ $gamecount 1) $listsize))]
+    result $map
+]
+
+gamesize = [
+    local count (- $playercount (countspecs))
+    if(< $count 5) [result small] [
+        if (< $count 8) [result medium] [result large]
+    ]
+]
+
+mapsetname = [
+    concatword (if $custom_maprotation_balance [result (concatword (gamesize) _)] [result ""]) $gamemode _maps
+]
+
+setnextmap = [
+    local mapset (mapsetname)
+    if (symbol? $mapset) [mapname (nextmap (value $mapset))] [log_error (concatword $mapset " not found, letting clients decide next map.")]
+]
+
+// ============== End of map rotation functions ==============
+
+teamkill_update = [
+    parameters offender victim
+    local suicide (= $offender $victim)
+    
+    if (&& $teamkill_limit_enabled (&& (! $suicide) (&& (teamgame) (strcmp (player_team $offender) (player_team $victim))))) [
+        local count (player_var $offender teamkills (+ 1 (player_var $offender teamkills)))
+        local times (player_var $offender teamkill_times (concat $uptime (player_var $offender teamkill_times)))
+        
+        if (!= (player_var $offender teamkill_warned) 1) [
+            privconsole $offender script [@(player_name $offender) you just killed a team mate, you should be shooting red players.]
+            privconsole $offender script [Teamkill restrictions per game: maxcount=@teamkill_limit maxrate=@teamkill_maxrate per min.]
+            player_var $offender teamkill_warned 1
+        ]
+        
+        if (> $count 1) [
+            msg (gameplay (format "%1 has fragged team mates %2 times." (print_name $offender) $count (player_gun $offender)))
+        ]
+
+        if (> (player_var $offender teamkills) $teamkill_limit) [
+            kick $offender
+            sleep (mins 30) [removeban (player_ip $offender)]
+            console script [@(player_name $offender) was kicked for exceeding teamkill limit.]
+            log (format "%1 was kicked for team killing." (player_name $offender))
+        ] [
+            if (&& (> (listlen $times) $teamkill_maxrate) [< (add_intervals $times $teamkill_maxrate) 60000]) [
+                kick $offender
+                sleep (mins 30) [removeban (player_ip $offender)]
+                console script [@(player_name $offender) was kicked for exceeding maximum teamkill rate.]
+                log (format "%1 was kicked for team killing." (player_name $offender))
+            ]
+        ]
+    ]
+]
+
+ctfsecscountdown = [
+    event_handler $ontimeupdate [
+        parameters minsleft
+        if (= $minsleft 1) [
+            interval (secs 1) [
+                local countdown (secsleft)
+                if (= $countdown 30) [msg (gameplay "time remaining: 30 seconds")]
+                if (= $countdown 15) [msg (gameplay "time remaining: 15 seconds")]
+                if (= $countdown 10) [msg (gameplay "time remaining: 10 seconds")]
+                if (= $countdown 0) stop
+            ]
+            cancel_handler
+        ]
+    ]
+]
 
 if (= $UID 0) [
     log_error "Running the server as root user is a serious security risk!"
     shutdown
 ]
 
-log_status "*** Running Hopmod 3.0 for Sauerbraten CTF Edition ***"
+if (= $check_pings 1) [
+        interval (secs $check_pings_rate) [
+                foreach (players) [if (> (player_ping $arg1) $maxping ) [
+                playercn = $arg1
+                player_var $playercn warnings (+ (player_var $playercn warnings) 1)
+                if (> (player_var $playercn warnings) 3) [
+                        msg (format "%1 %2" (blue (player_name $playercn)) (red [has a too high ping and will be kicked!]) )
+                        log (format "%1 %2 %3" [PING:] (player_name $playercn) [get kicked!] )
+                        kick $playercn
+                        ]
 
-if (is_startup) [
-    log [Server started @(datetime (now))]
-    
-    currentmaster = -1
-    allow_talk = 1
-    disallow_talk_reason = ""
+                if (= (player_var $playercn warnings) 1) [
+                privmsg $playercn (format "%1 " (red [WARNING: You will get kicked after 4 warnings!]) ) ]
 
-    defaultgame
-] [
-    log [Reloaded server startup scripts @(datetime (now))]
+                msg (format "%1 %2 %3 %4 %5 %6" (red [WARNING:]) (red [(]) (blue (player_var $playercn warnings)) (red[)]) (blue (player_name $playercn)) (red [Your PING is too high!]) )
+                ]]
+        ]
 ]
 
 if (= $check_pings 1) [
@@ -345,3 +458,36 @@ if (= $check_pings 1) [
         ]
 ]
 
+if (= $check_unnameds 1) [
+        interval (secs 10) [
+                foreach (players) [if (strcmp (player_name $arg1) "unnamed") [
+                        playeruncn = $arg1
+
+                        if (<= (player_var $playeruncn warningsun) 3) [
+                        player_var $playeruncn warningsun (+ (player_var $playeruncn warningsun) 1)
+                        privmsg $playeruncn (format "%1 %2 %3 %4 %5" (red [WARNING:]) [(] (blue (player_var $playeruncn warningsun)) [)] (red [You will get speced after 4 warnings, if you dont change your name now!]) )
+                        ]
+
+                        if (> (player_var $playeruncn warningsun) 3) [
+                        spec $playeruncn
+                        privmsg $playeruncn (format "%1 %2 %3" (red [WARNING:]) (blue [Unnameds]) (red [are not allowed to play here!
+         Please type /name yourname and reconnect to the server!]) )
+                                ]
+                        ]
+                ]
+        ]
+]
+
+if (is_startup) [
+    log [Server started @(datetime (now))]
+    
+    currentmaster = -1
+    allow_talk = 1
+    disallow_talk_reason = ""
+
+    defaultgame
+] [
+    log [Reloaded server startup scripts @(datetime (now))]
+]
+
+log_status "*** Running Hopmod 3.0 for Sauerbraten CTF Edition ***"

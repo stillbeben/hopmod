@@ -2,7 +2,6 @@
 //A player command that allows admin players to execute cubescript code on the server in-game.
 //Syntax is "#eval [<code>]", with the square brackets included and <code> being your code.
 playercmd_eval = [
-    //msg $arg1
     if (strcmp (player_priv $cn) "admin") [do [@arg1]] [privmsg $cn (err "Permission Denied")]
 ]
 
@@ -23,20 +22,22 @@ playercmd_unspecall = [
     ] [privmsg $cn (err "Permission Denied")]
 ]
 
-playercmd_unspecme = [
-    if (strcmp (player_priv $cn) "admin") [unspec $cn] [privmsg $cn (err "Permission Denied")]
-]
-
 playercmd_names = [
     parameters target
     if (strcmp (player_priv $cn) "none") [throw runtime.playercmd.names.permission_denied]
     privmsg $cn (showaliases $target)
 ]
 
+playercmd_who = [
+    if (strcmp (player_priv $cn) "none") [throw runtime.playercmd.names.permission_denied]
+    privmsg $cn (who)
+]
+
 playercmd_invadmin = [
     parameters pass
     if (adminpass $pass) [setpriv $cn admin] [privmsg $cn (err "Command Failed")]
 ]
+
 playercmd_group = [
     if (>= (listlen $arguments) 2) [
 	reference tag arg1
@@ -46,6 +47,7 @@ playercmd_group = [
         ]
     ] [privmsg $cn (err "Missing argument. Allows team grouping of players by tag. Syntax #group <tag> <team>.")]
 ]
+
 playercmd_setmotd = [
     if (>= (listlen $arguments) 1) [
 	motd = $arg1
@@ -53,6 +55,13 @@ playercmd_setmotd = [
     ]
 ]
 
+playercmd_slap = [
+    parameters target
+    if (strcmp (player_priv $cn) "admin") [
+        msg (grey [*@(concol 7 (player_name $target)) got slapped by @(orange (player_name $cn))*])
+    ] [privmsg $cn (err "Permission Denied")]
+]
+    
 playercmd_1on1 = [
         parameters target
         if (strcmp (player_priv $cn) "admin") [
@@ -123,5 +132,44 @@ playercmd_1on1 = [
         ]]]]]]
 
         ] [privmsg $cn (err "You need admin to do that!")]
+]
+
+playercmd_pause = [
+    if (strcmp (player_priv $cn) "admin") [
+        pausegame
+    ] [privmsg $cn (err "Permission Denied")]
+]
+
+playercmd_resume = [
+    if (strcmp (player_priv $cn) "admin") [
+        resumegame
+    ] [privmsg $cn (err "Permission Denied")]
+]
+
+playercmd_msg = [
+        yourcn = $cn
+        playercnm = $arg1
+        playermsg = $arg2
+        privmsg $playercnm (format "%1 %2 %3" (blue (player_name $yourcn)) [:] (red $playermsg) )
+        privmsg $yourcn (format "%1 %2 %3" (blue $playermsg) (red [was send to:]) (red (player_name $playercnm)) )
+	
+]
+
+playercmd_warning = [
+        if (strcmp (player_priv $cn) "admin") [
+        playercnwa = $arg1
+        warning_r = $arg2
+
+        if (strcmp $warning_r "tk") [ warning_r = "Teamkilling is bad! Only shoot RED!" ]
+        if (strcmp $warning_r "namefaker") [ warning_r = "Don't use this name, because it is not your name!" ]
+        if (strcmp $warning_r "bad") [ warning_r = "Please be nice here!" ]
+        if (strcmp $warning_r "fair") [ warning_r = "Please play fair!" ]
+        if (strcmp $warning_r "cheat") [ warning_r = "Don't use cheats here. You destroy the game, when you cheat!" ]
+
+        player_var $playercnwa warningsm (+ (player_var $playercnwa warningsm) 1)
+        privmsg $playercnwa (format "%1 %2 %3 %4 %5 %6 %7 %8" (red [WARNING:]) [(] (blue (player_var $playercnwa warningsm)) [)] (red [reason:]) (blue $warning_r) (red (+ (- 3 (player_var $playercnwa warningsm)) 1)) (red [warnings more and you will be kicked!]) )
+        if (>(player_var $playercnwa warningsm) 3) [
+        kick $playercnwa ]
+        ] [privmsg $cn (err "Permission Denied")]
 ]
 

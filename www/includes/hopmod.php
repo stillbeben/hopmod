@@ -19,14 +19,14 @@ function serverDetails() {
 	global $server_title;
 	$stats_db_filename = GetHop("value absolute_stats_db_filename");
 	if ( ! isset($stats_db_filename) ) { $stats_db_filename = "../scripts/stats/data/stats.db"; } //Attempt a reasonable guess
-	$server_title = GetHop("value title");
+	$server_title = GetHop("value servername");
 	if ( ! isset($server_title) ) { $server_title = "HOPMOD Server";} //Set it to something
 
 }
 
 function count_rows($query) {
 	global $dbh;
-	$count = $dbh->query($query);
+	$count = $dbh->query($query) or die(print_r($dbh->errorInfo()));
 	return $count->fetchColumn();
 	
 }
@@ -66,10 +66,10 @@ function GetHop($cubescript) {
         fclose($fp);
         return $ret;
 }
-function overlib($overtext,$heading) {
+function overlib($overtext,$heading = "") {
         print "<a  href=\"javascript:void(0);\" onmouseover=\"return overlib('$overtext');\" onmouseout=\"return nd();\">$heading</a>" ;
 }
-function overlib2($overtext,$heading) {
+function overlib2($overtext,$heading = "") {
         return "<a  href=\"javascript:void(0);\" onmouseover=\"return overlib('$overtext');\" onmouseout=\"return nd();\">$heading</a>"
 ;
 }
@@ -87,7 +87,7 @@ function build_pager ($page, $query) {
 	// current_page query link enable filtering display
 	global $dbh;
 	global $rows_per_page;
-	$count = $dbh->query($query);
+	$count = $dbh->query($query) or die(print_r($dbh->errorInfo()));
 	$rows = $count->fetchColumn();
 	$pages = ( ceil($rows / $rows_per_page) );
 	print "<div style=\"float: right \" id=\"pagebar\">";
@@ -121,23 +121,23 @@ function check_get () {
 	global $rows_per_page;
 	switch ($_GET['querydate']) {
 	        case "day":
-	                $_SESSION['querydate'] = "start of day";
+	                $_SESSION['querydate'] = "day";
 	                $_SESSION['MinimumGames'] = "1";
 	        break;
 	        case "week":
-	                $_SESSION['querydate'] = "-7 days";
+	                $_SESSION['querydate'] = "week";
 	                $_SESSION['MinimumGames'] = "2";
 	        break;
 	        case "month":
-	                $_SESSION['querydate'] = "start of month";
-	                $_SESSION['MinimumGames']  = "4";
+	                $_SESSION['querydate'] = "month";
+	                $_SESSION['MinimumGames']  = "2";
 	        break;
 	        case "year":
-	                $_SESSION['querydate'] = "start of year";
-	                $_SESSION['MinimumGames'] = "9";
+	                $_SESSION['querydate'] = "year";
+	                $_SESSION['MinimumGames'] = "3";
 	        break;
 	default:
-	        if ( ! isset($_SESSION['querydate']) ) { $_SESSION['querydate'] = "start of month"; }
+	        if ( ! isset($_SESSION['querydate']) ) { $_SESSION['querydate'] = "month"; }
 		if ( ! isset($_SESSION['MinimumGames']) ) { $_SESSION['MinimumGames'] = 4; }
 	}
 	
@@ -155,7 +155,7 @@ function check_get () {
 	} else { if (! isset($_SESSION['orderby']) ) { $_SESSION['orderby'] = "AgressorRating";} }
 	if ( isset($_GET['name']) ) { $_SESSION['name'] = $_GET['name']; }
 }
-function stats_table ($query = "null" ,$exclude_columns = "NULL"){
+function stats_table ($query = "NULL" ,$exclude_columns = "NULL"){
 	global $dbh;
 	global $column_list; 
 	global $rows_per_page;
@@ -165,8 +165,8 @@ function stats_table ($query = "null" ,$exclude_columns = "NULL"){
 $stats_table = array (
     array("name" => "Name", "description" => "Players Nick Name", "column" => "name"),
     array("name" => "Country", "description" => "Players Country", "column" => "ipaddr"),
-    array("name" => "Agressor Rating", "description" => "Average Scores per Game + Average flag Pickups", "column" => "AgressorRating"),
-    array("name" => "Defender Rating", "description" => "Average Defends(kill flag carrier) per Game + Average flag returns", "column" => "DefenderRating"),
+    array("name" => "CTF Agressor Rating", "description" => "Average Scores per Game + Average flag Pickups", "column" => "AgressorRating"),
+    array("name" => "CTF Defender Rating", "description" => "Average Defends(kill flag carrier) per Game + Average flag returns", "column" => "DefenderRating"),
     array("name" => "FlagsDefended", "description" => "How many times you killed a flag carrier", "column" => "TotalDefended"),
     array("name" => "Frags Record", "description" => "The most frags ever acheived in one game", "column" => "MostFrags"),
     array("name" => "Total Frags", "description" => "The total number of frags for all games", "column" => "TotalFrags"),
@@ -192,17 +192,18 @@ from
                 count(name) as TotalGames,
                 round((0.0+sum(hits))/(sum(hits)+sum(misses))*100) as Accuracy,
                 round((0.0+sum(frags))/sum(deaths),2) as Kpd,
-                round((0.0+(sum(scored)+sum(pickups)))/count(name),2) as AgressorRating,
-                round((0.0+(sum(defended)+sum(returns)))/count(name),2) as DefenderRating
+                round((0.0+(sum(scored)+sum(pickups)))/count(ctfplayers.player_id),2) as AgressorRating,
+                round((0.0+(sum(defended)+sum(returns)))/count(ctfplayers.player_id),2) as DefenderRating
         from players
                 inner join matches on players.match_id=matches.id
-                inner join ctfplayers on players.id=ctfplayers.player_id
-        where matches.datetime > strftime(\"%s\",\"now\",\"".$_SESSION['querydate']."\") and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
+                outer left join ctfplayers on players.id=ctfplayers.player_id
+
+        where matches.datetime between ".$_SESSION['start_date']." and ".$_SESSION['end_date']." and frags > 0 group by name order by ". $_SESSION['orderby']." desc)
 where TotalGames >= ". $_SESSION['MinimumGames'] ." limit ".$_SESSION['paging'].",$rows_per_page ;
 
 ";
-	if (! $query == "null" ) { $sql = $query; }
-	$result = $dbh->query($sql);
+	if ( $query !="NULL") { $sql = $query; }
+	$result = $dbh->query($sql) or die(print_r($dbh->errorInfo()));
 	$gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
 ?>
 <table align="center" cellpadding="0" cellspacing="0" id="hopstats" class="tablesorter">
@@ -245,25 +246,22 @@ select
 	duration,
 	mapname,
 	gamemode,
-	demofile,
 	players
 from matches 
 where id = '$match' 
 
 ";
-$result = $dbh->query($sql3);
+$result = $dbh->query($sql3) or die(print_r($dbh->errorInfo()));
 
 
         $gi = geoip_open("/usr/local/share/GeoIP/GeoIP.dat",GEOIP_STANDARD);
-        foreach ($result as $row)
-        {
-        }
+	$row = $result->fetch(PDO::FETCH_OBJ)
 // Close db handle
 ?>
 
 <div align="left" id="content"><h1>Match details</h1>
 <div style="width:600px">
-<div style="float:right; border:4px ridge grey; "><img src='images/maps/<?php print $row['mapname']?>.jpg' /></div>
+<div style="float:right; border:4px ridge grey; "><img src='images/maps/<?php print $row->mapname; ?>.jpg' /></div>
 <h2></h2>
 <table cellpadding="0" cellspacing="1">
 <tr>
@@ -272,29 +270,24 @@ $result = $dbh->query($sql3);
 </tr>
 <tr>
         <td style="width:100px;" class="headcol">Date/Time</td>
-        <td><?php print date(" g:i A | jS M Y",$row['datetime']); ?></td>
+        <td><?php print date(" g:i A | jS M Y",$row->datetime); ?></td>
 </tr>
 <tr>
         <td class="headcol">Duration</td>
-        <td><?php print $row['duration'] ?></td>
+        <td><?php print $row->duration ?></td>
 </tr>
 <tr>
         <td class="headcol">Map</td>
-        <td><?php print $row['mapname'] ?></td>
+        <td><?php print $row->mapname ?></td>
 </tr>
 <tr>
         <td class="headcol">Mode</td>
-        <td><?php print $row['gamemode'] ?></td></tr>
+        <td><?php print $row->gamemode ?></td></tr>
 
 </div>
 <tr>
         <td class="headcol">Players</td>
-        <td><?php print $row['players'] ?></td></tr>
-
-</div>
-<tr>
-        <td class="headcol">Demo</td>
-        <td><?php print $row['demofile'] ?></td></tr>
+        <td><?php print $row->players ?></td></tr>
 
 </div>
 </table>

@@ -7,12 +7,6 @@ CREATE TABLE matches (
     duration            INTEGER,
     players             INTEGER
 );
-CREATE TABLE logevents (
-    id                  INTEGER PRIMARY KEY,
-    match_id            INTEGER REFERENCES matches(id),
-    time                TEXT,
-    message             TEXT
-);
 CREATE TABLE players (
     id                  INTEGER PRIMARY KEY,
     match_id            INTEGER REFERENCES matches(id),
@@ -88,3 +82,4 @@ CREATE TABLE captureplayers (
     team_id             INTEGER REFERENCES captureteams(id),
     teamkills           INTEGER DEFAULT 0
 );
+CREATE INDEX "player_id" on ctfplayers (player_id ASC);
