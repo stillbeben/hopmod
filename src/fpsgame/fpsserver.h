@@ -243,6 +243,7 @@ struct fpsserver : igameserver
     {
         int clientnum, connectmillis, sessionid;
         string name, team, mapvote;
+        int playermodel;
         int modevote;
 
         int privilege; bool hidden_priv;
@@ -305,6 +306,7 @@ struct fpsserver : igameserver
         void reset()
         {
             name[0] = team[0] = 0;
+            playermodel = 0;
             privilege = PRIV_NONE;
             connected = spectator = local = false;
             authreq = 0;
@@ -1287,6 +1289,7 @@ struct fpsserver : igameserver
             putint(q, SV_INITC2S);
             sendstring(ci->name, q);
             sendstring(ci->team, q);
+            putint(q, ci->playermodel);
 
             ucharbuf h(header, sizeof(header));
             putint(h, SV_CLIENT);
@@ -1709,7 +1712,7 @@ struct fpsserver : igameserver
 
     bool sendpackets()
     {
-        if(clients.empty()) return false;
+        if(clients.empty() || (!hasnonlocalclients() && !demorecord)) return false;
         enet_uint32 curtime = enet_time_get()-lastsend;
         if(curtime<33) return false;
         bool flush = buildworldstate();
@@ -2014,7 +2017,9 @@ struct fpsserver : igameserver
                 
                 getstring(sent_team, p);
                 filtertext(sent_team, sent_team, false, MAXTEAMLEN);
-
+                
+                ci->playermodel = getint(p);
+                
                 if(!ci->local && (smode && !smode->canchangeteam(ci, ci->team, sent_team)) && m_teammode)
                 {
                     const char *worst = chooseworstteam(sent_team, ci);
@@ -2256,7 +2261,7 @@ struct fpsserver : igameserver
             } 
 
             case SV_FORCEINTERMISSION:
-                if(m_sp) startintermission();
+                if(ci->local && !hasnonlocalclients()) startintermission();
                 break;
 
             case SV_RECORDDEMO:
@@ -2506,6 +2511,7 @@ struct fpsserver : igameserver
         putint(p, SV_INITC2S);
         sendstring(ci->name, p);
         sendstring(ci->team, p);
+        putint(p, ci->playermodel);
 
         putint(h, SV_CLIENT);
         putint(h, ci->clientnum);
