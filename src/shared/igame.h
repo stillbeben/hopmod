@@ -19,6 +19,7 @@ struct icliententities
     virtual bool attachent(extentity &e, extentity &a) { return false; }
     virtual extentity *newentity() = 0;
     virtual void deleteentity(extentity *e) = 0;
+    virtual void clearents() = 0;
     virtual vector<extentity *> &getents() = 0;
 };
 
@@ -29,6 +30,8 @@ struct iclientcom
     virtual void gamedisconnect() = 0;
     virtual void parsepacketclient(int chan, ucharbuf &p) = 0;
     virtual int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d) = 0;
+    virtual void connectattempt(const char *name, const char *password, const ENetAddress &address) = 0;
+    virtual void connectfail() = 0;
     virtual void gameconnect(bool _remote) = 0;
     virtual bool allowedittoggle() = 0;
     virtual void edittoggled(bool on) {}
@@ -53,7 +56,7 @@ struct igameclient
     virtual iclientcom *getcom() = 0;
 
     virtual bool clientoption(char *arg) { return false; }
-    virtual void updateworld(vec &pos, int curtime, int lm) = 0;
+    virtual void updateworld() = 0;
     virtual void initclient() = 0;
     virtual void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel, int material = 0) = 0;
     virtual void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0) = 0;
@@ -95,15 +98,16 @@ struct igameserver
     virtual void *newinfo() = 0;
     virtual void deleteinfo(void *ci) = 0;
     virtual void serverinit() = 0;
+    virtual int reserveclients() = 0;
     virtual void clientdisconnect(int n) = 0;
     virtual int clientconnect(int n, uint ip) = 0;
     virtual void localdisconnect(int n) = 0;
     virtual void localconnect(int n) = 0;
+    virtual bool allowbroadcast(int n) = 0;
     virtual const char *servername() = 0;
     virtual void recordpacket(int chan, void *data, int len) {}
     virtual void parsepacket(int sender, int chan, bool reliable, ucharbuf &p) = 0;
     virtual bool sendpackets() = 0;
-    virtual int welcomepacket(ucharbuf &p, int n, ENetPacket *packet) = 0;
     virtual void serverinforeply(ucharbuf &req, ucharbuf &p) = 0;
     virtual void serverupdate(int lastmillis, int totalmillis) = 0;
     virtual bool servercompatible(char *name, char *sdec, char *map, int ping, const vector<int> &attr, int np) = 0;

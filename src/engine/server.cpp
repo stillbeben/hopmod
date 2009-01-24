@@ -180,55 +180,6 @@ void cleanupserver()
     }
 }
 
-void sendfile(int cn, int chan, FILE *file, const char *format, ...)
-{
-#ifndef STANDALONE
-    extern ENetHost *clienthost;
-#endif
-    if(cn < 0)
-    {
-#ifndef STANDALONE
-        if(!clienthost || clienthost->peers[0].state != ENET_PEER_STATE_CONNECTED) 
-#endif
-            return;
-    }
-    else if(cn >= clients.length() || clients[cn]->type != ST_TCPIP) return;
-
-    fseek(file, 0, SEEK_END);
-    int len = ftell(file);
-    bool reliable = false;
-    if(*format=='r') { reliable = true; ++format; }
-    ENetPacket *packet = enet_packet_create(NULL, MAXTRANS+len, ENET_PACKET_FLAG_RELIABLE);
-    rewind(file);
-
-    ucharbuf p(packet->data, packet->dataLength);
-    va_list args;
-    va_start(args, format);
-    while(*format) switch(*format++)
-    {
-        case 'i':
-        {
-            int n = isdigit(*format) ? *format++-'0' : 1;
-            loopi(n) putint(p, va_arg(args, int));
-            break;
-        }
-        case 's': sendstring(va_arg(args, const char *), p); break;
-        case 'l': putint(p, len); break;
-    }
-    va_end(args);
-    enet_packet_resize(packet, p.length()+len);
-
-    fread(&packet->data[p.length()], 1, len, file);
-    enet_packet_resize(packet, p.length()+len);
-
-    if(cn >= 0) enet_peer_send(clients[cn]->peer, chan, packet);
-#ifndef STANDALONE
-    else enet_peer_send(&clienthost->peers[0], chan, packet);
-#endif
-
-    if(!packet->referenceCount) enet_packet_destroy(packet);
-}
-
 void process(ENetPacket *packet, int sender, int chan);
 //void disconnect_client(int n, int reason);
 
@@ -241,7 +192,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
     if(n<0)
     {
         sv->recordpacket(chan, packet->data, packet->dataLength);
-        loopv(clients) if(i!=exclude) sendpacket(i, chan, packet);
+        loopv(clients) if(i!=exclude && sv->allowbroadcast(i)) sendpacket(i, chan, packet);
         return;
     }
     switch(clients[n]->type)
@@ -307,20 +258,72 @@ void sendf(int cn, int chan, const char *format, ...)
     if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
-const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked and banned", "tag type", "ip is banned", "server is in private mode", "server FULL (maxclients)" };
+void sendfile(int cn, int chan, FILE *file, const char *format, ...)
+{
+    if(cn < 0)
+    {
+#ifdef STANDALONE
+        return;
+#endif
+    }
+    else if(!clients.inrange(cn)) return;
+
+    fseek(file, 0, SEEK_END);
+    int len = ftell(file);
+    bool reliable = false;
+    if(*format=='r') { reliable = true; ++format; }
+    ENetPacket *packet = enet_packet_create(NULL, MAXTRANS+len, ENET_PACKET_FLAG_RELIABLE);
+    rewind(file);
+
+    ucharbuf p(packet->data, packet->dataLength);
+    va_list args;
+    va_start(args, format);
+    while(*format) switch(*format++)
+    {
+        case 'i':
+        {
+            int n = isdigit(*format) ? *format++-'0' : 1;
+            loopi(n) putint(p, va_arg(args, int));
+            break;
+        }
+        case 's': sendstring(va_arg(args, const char *), p); break;
+        case 'l': putint(p, len); break;
+    }
+    va_end(args);
+    enet_packet_resize(packet, p.length()+len);
+
+    fread(&packet->data[p.length()], 1, len, file);
+    enet_packet_resize(packet, p.length()+len);
+
+    if(cn >= 0)
+    {
+        sendpacket(cn, chan, packet, -1);
+        if(!packet->referenceCount) enet_packet_destroy(packet);
+    }
+#ifndef STANDALONE
+    else sendpackettoserv(packet, chan);
+#endif
+}
+
+const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server FULL (maxclients)", "connection timed out" };
 
 void disconnect_client(int n, int reason)
 {
     if(clients[n]->type!=ST_TCPIP) return;
-    s_sprintfd(s)("client (%s) disconnected because: %s\n", clients[n]->hostname, disc_reasons[reason]);
-    puts(s);
     enet_peer_disconnect(clients[n]->peer, reason);
     sv->clientdisconnect(n);
     clients[n]->type = ST_EMPTY;
     clients[n]->peer->data = NULL;
     sv->deleteinfo(clients[n]->info);
     clients[n]->info = NULL;
+    s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
+    puts(s);
     sv->sendservmsg(s);
+}
+
+void kicknonlocalclients(int reason)
+{
+    loopv(clients) if(clients[i]->type==ST_TCPIP) disconnect_client(i, reason);
 }
 
 void process(ENetPacket *packet, int sender, int chan)   // sender may be -1
@@ -330,20 +333,9 @@ void process(ENetPacket *packet, int sender, int chan)   // sender may be -1
     if(p.overread()) { disconnect_client(sender, DISC_EOP); return; }
 }
 
-void send_welcome(int n)
-{
-    ENetPacket *packet = enet_packet_create (NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-    ucharbuf p(packet->data, packet->dataLength);
-    int chan = sv->welcomepacket(p, n, packet);
-    enet_packet_resize(packet, p.length());
-    sendpacket(n, chan, packet);
-    if(packet->referenceCount==0) enet_packet_destroy(packet);
-}
-
 void localclienttoserver(int chan, ENetPacket *packet)
 {
     process(packet, 0, chan);
-    if(packet->referenceCount==0) enet_packet_destroy(packet);
 }
 
 client &addclient()
@@ -459,55 +451,64 @@ bool httpgetreceive(ENetSocket sock, ENetBuffer &buf, int timeout = 0)
     return true;
 }  
 
-uchar *stripheader(uchar *b)
+char *stripheader(char *b)
 {
-    char *s = strstr((char *)b, "\n\r\n");
-    if(!s) s = strstr((char *)b, "\n\n");
-    return s ? (uchar *)s : b;
+    char *s = strstr(b, "\n\r\n");
+    if(!s) s = strstr(b, "\n\n");
+    if(s) b = s;
+    while(isspace(*s)) ++s;
+    return s;
 }
 
-ENetSocket mssock = ENET_SOCKET_NULL;
-ENetAddress msaddress = { ENET_HOST_ANY, ENET_PORT_ANY };
-ENetAddress masterserver = { ENET_HOST_ANY, 80 };
+ENetSocket mastersock = ENET_SOCKET_NULL;
+ENetAddress serveraddress = { ENET_HOST_ANY, ENET_PORT_ANY };
+ENetAddress masteraddress = { ENET_HOST_ANY, 80 };
+bool allowupdatemaster = true;
 int lastupdatemaster = 0;
 string masterbase;
 string masterpath;
-uchar masterrep[MAXTRANS];
-ENetBuffer masterb;
+char masterreply[MAXTRANS];
+ENetBuffer masterreplybuf;
 
 void updatemasterserver()
 {
+    if(!allowupdatemaster) return;
+
     s_sprintfd(path)("%sregister.do?action=add", masterpath);
-    if(mssock!=ENET_SOCKET_NULL) enet_socket_destroy(mssock);
-    mssock = httpgetsend(masterserver, masterbase, path, sv->servername(), sv->servername(), &msaddress);
-    masterrep[0] = 0;
-    masterb.data = masterrep;
-    masterb.dataLength = MAXTRANS-1;
+    if(mastersock!=ENET_SOCKET_NULL) enet_socket_destroy(mastersock);
+    mastersock = httpgetsend(masteraddress, masterbase, path, sv->servername(), sv->servername(), &serveraddress);
+    masterreply[0] = '\0';
+    masterreplybuf.data = masterreply;
+    masterreplybuf.dataLength = sizeof(masterreply)-1;
 } 
 
-void checkmasterreply()
+void checkmasterreply(bool dedicated)
 {
-    if(mssock!=ENET_SOCKET_NULL && !httpgetreceive(mssock, masterb))
+    if(mastersock!=ENET_SOCKET_NULL && !httpgetreceive(mastersock, masterreplybuf))
     {
-        mssock = ENET_SOCKET_NULL;
-        printf("masterserver reply: %s\n", stripheader(masterrep));
+        mastersock = ENET_SOCKET_NULL;
+#ifndef STANDALONE
+        if(!dedicated) conoutf("master server reply: %s", stripheader(masterreply));
+        else
+#endif
+            printf("master server reply:\n%s\n", stripheader(masterreply));
     }
-} 
+}
 
 #ifndef STANDALONE
 
 #define RETRIEVELIMIT 20000
 
-uchar *retrieveservers(uchar *buf, int buflen)
+char *retrieveservers(char *buf, int buflen)
 {
     buf[0] = '\0';
 
     s_sprintfd(path)("%sretrieve.do?item=list", masterpath);
-    ENetAddress address = masterserver;
+    ENetAddress address = masteraddress;
     ENetSocket sock = httpgetsend(address, masterbase, path, sv->servername(), sv->servername());
     if(sock==ENET_SOCKET_NULL) return buf;
     /* only cache this if connection succeeds */
-    masterserver = address;
+    masteraddress = address;
 
     s_sprintfd(text)("retrieving servers from %s... (esc to abort)", masterbase);
     show_out_of_renderloop_progress(0, text);
@@ -544,7 +545,7 @@ const char *game = "fps";
 int lastmillis = 0, totalmillis = 0;
 #endif
 
-void serverslice(uint timeout)   // main server update, called from main loop in sp, or from below in dedicated server
+void serverslice(bool dedicated, uint timeout)   // main server update, called from main loop in sp, or from below in dedicated server
 {
     localclients = nonlocalclients = 0;
     loopv(clients) switch(clients[i]->type)
@@ -568,7 +569,7 @@ void serverslice(uint timeout)   // main server update, called from main loop in
 
     sendpongs();
     
-    if(*masterpath) checkmasterreply();
+    if(*masterpath) checkmasterreply(dedicated);
 
     if(totalmillis-lastupdatemaster>60*60*1000 && *masterpath)       // send alive signal to masterserver every hour of uptime
     {
@@ -603,12 +604,8 @@ void serverslice(uint timeout)   // main server update, called from main loop in
                 char hn[1024];
                 s_strcpy(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
                 printf("client connected (%s)\n", c.hostname);
-                int reason = DISC_MAXCLIENTS;
-                if(nonlocalclients<maxclients && !(reason = sv->clientconnect(c.num, c.peer->address.host))) 
-                {
-                    nonlocalclients++;
-                    send_welcome(c.num);
-                }
+                int reason = sv->clientconnect(c.num, c.peer->address.host);
+                if(!reason) nonlocalclients++;
                 else disconnect_client(c.num, reason);
                 break;
             }
@@ -661,54 +658,86 @@ void localconnect()
     s_strcpy(c.hostname, "local");
     localclients++;
     sv->localconnect(c.num);
-    send_welcome(c.num); 
 }
 
-void initserver(bool dedicated)
+void rundedicatedserver()
 {
-    initgame(game);
+    #ifdef WIN32
+    SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+    #endif
+    printf("dedicated server started, waiting for clients...\nCtrl-C to exit\n\n");
+    for(;;) serverslice(true, 5);
+}
 
+bool servererror(bool dedicated, const char *desc)
+{
+#ifndef STANDALONE
+    if(!dedicated)
+    {
+        conoutf(CON_ERROR, desc);
+        cleanupserver();
+    }
+    else
+#endif
+        fatal(desc);
+    return false;
+}
+
+bool setuplistenserver(bool dedicated)
+{
+    ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
+    if(*ip)
+    {
+        if(enet_address_set_host(&address, ip)<0) printf("WARNING: server ip not resolved");
+        else serveraddress.host = address.host;
+    }
+    serverhost = enet_host_create(&address, maxclients + sv->reserveclients(), 0, uprate);
+    if(!serverhost) return servererror(dedicated, "could not create server host");
+    loopi(maxclients) serverhost->peers[i].data = NULL;
+    address.port = sv->serverinfoport();
+    pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
+    if(pongsock != ENET_SOCKET_NULL && enet_socket_bind(pongsock, &address) < 0)
+    {
+        enet_socket_destroy(pongsock);
+        pongsock = ENET_SOCKET_NULL;
+    }
+    if(pongsock == ENET_SOCKET_NULL) return servererror(dedicated, "could not create server info socket");
+    else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
+
+    return true;
+}
+
+void setmasterpath()
+{
     if(!master) master = sv->getdefaultmaster();
     const char *mid = strstr(master, "/");
     if(!mid) mid = master;
     s_strcpy(masterpath, mid);
     s_strncpy(masterbase, master, mid-master+1);
+}
 
-    if(dedicated)
-    {
-        ENetAddress address = { ENET_HOST_ANY, sv->serverport() };
-        if(*ip)
-        {
-            if(enet_address_set_host(&address, ip)<0) printf("WARNING: server ip not resolved");
-            else msaddress.host = address.host;
-        }
-        serverhost = enet_host_create(&address, maxclients+1, 0, uprate);
-        if(!serverhost) fatal("could not create server host");
-        loopi(maxclients) serverhost->peers[i].data = NULL;
-        address.port = sv->serverinfoport();
-        pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
-        if(pongsock != ENET_SOCKET_NULL && enet_socket_bind(pongsock, &address) < 0)
-        {
-            enet_socket_destroy(pongsock);
-            pongsock = ENET_SOCKET_NULL;
-        }
-        if(pongsock == ENET_SOCKET_NULL) fatal("could not create server info socket");
-        else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
-    }
+void initserver(bool listen, bool dedicated)
+{
+    if(enet_initialize()<0) fatal("Unable to initialise network module");
+    atexit(enet_deinitialize);
+    enet_time_set(0);
+
+    initgame(game);
+
+    setmasterpath();
+
+    if(listen) setuplistenserver(dedicated);
 
     sv->serverinit();
 
-    if(dedicated)       // do not return, this becomes main loop
+    if(listen)
     {
-        #ifdef WIN32
-        SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-        #endif
-        printf("dedicated server started, waiting for clients...\nCtrl-C to exit\n\n");
-        atexit(enet_deinitialize);
-        atexit(cleanupserver);
-        enet_time_set(0);
         if(*masterpath) updatemasterserver();
-        for(;;) serverslice(5);
+
+        if(dedicated) rundedicatedserver();
+#ifndef STANDALONE
+        else conoutf("listen server started");
+#endif
     }
 }
 
@@ -725,7 +754,7 @@ bool serveroption(char *opt)
             return true;
         }
         case 'i': ip = opt+2; return true;
-        case 'm': master = opt+2; return true;
+        case 'm': master = opt+2; allowupdatemaster = master[0]!='\0'; return true;
         case 'g': game = opt+2; return true;
         default: return false;
     }
@@ -740,12 +769,11 @@ char * const * g_argv;
 
 int main(int argc, char *const argv[])
 {   
-    g_argc=argc;
-    g_argv=argv;
+    g_argc = argc;
+    g_argv = argv;
     
     for(int i = 1; i<argc; i++) if(argv[i][0]!='-' || !serveroption(argv[i])) gameargs.add(argv[i]);
-    if(enet_initialize()<0) fatal("Unable to initialise network module");
-    initserver(true);
+    initserver(true, true);
     return 0;
 }
 #endif

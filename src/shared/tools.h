@@ -3,8 +3,30 @@
 #ifndef _TOOLS_H
 #define _TOOLS_H
 
-#include <stdlib.h>
+#include <math.h>
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <stdarg.h>
+#include <limits.h>
+#include <assert.h>
+#ifdef __GNUC__
+    #include <new>
+#else
+    #include <new.h>
+#endif
+#include <time.h>
+
+#ifdef WIN32
+  #define _WINDOWS
+  #ifndef __GNUC__
+    #define ZLIB_DLL
+    #include <eh.h>
+    #include <dbghelp.h>
+  #endif
+#endif
+#include <zlib.h>
 
 #ifdef NULL
 #undef NULL
@@ -280,6 +302,7 @@ template <class T> struct vector
     
     T *getbuf() { return buf; }
     const T *getbuf() const { return buf; }
+    bool inbuf(const T *e) const { return e >= buf && e < &buf[ulen]; }
 
     template<class ST>
     void sort(int (__cdecl *cf)(ST *, ST *), int i = 0, int n = -1) 
@@ -636,7 +659,7 @@ inline void __cdecl operator delete(void *p, const char *fn, int l) { ::operator
 #endif 
 #endif
 
-extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL);
+extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL, const char *cmd = NULL);
 extern char *path(char *s);
 extern char *path(const char *s, bool copy);
 extern const char *parentdir(const char *directory);
