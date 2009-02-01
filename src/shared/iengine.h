@@ -1,9 +1,5 @@
 // the interface the game uses to access the engine
 
-extern int curtime;                     // current frame time
-extern int lastmillis;                  // last time
-extern int totalmillis;                 // total elapsed time
-
 enum
 {
     MATF_VOLUME_SHIFT = 0,
@@ -82,7 +78,7 @@ extern void mpremip(bool local);
 
 // command
 extern int variable(const char *name, int min, int cur, int max, int *storage, void (*fun)(), int flags);
-extern float fvariable(const char *name, float min, float cur, float max, float *storage, void (*fun)(), int flags);
+extern float fvariable(const char *name, float cur, float *storage, void (*fun)(), int flags);
 extern char *svariable(const char *name, const char *cur, char **storage, void (*fun)(), int flags);
 extern void setvar(const char *name, int i, bool dofunc = false);
 extern void setfvar(const char *name, float f, bool dofunc = false);
@@ -127,10 +123,10 @@ extern void newgui(char *name, char *contents, char *header = NULL);
 extern void showgui(const char *name);
 
 // world
-extern bool emptymap(int factor, bool force, const char *mname = "", bool usecfg = true);
+extern bool emptymap(int factor, bool force, const char *mname = "");
 extern bool enlargemap(bool force);
 extern int findentity(int type, int index = 0, int attr1 = -1, int attr2 = -1);
-extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool local);
+extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, bool local);
 extern int getworldsize();
 extern int getmapversion();
 extern void resettriggers();
@@ -172,28 +168,14 @@ extern void damageblend(int n);
 extern void damagecompass(int n, const vec &loc);
 
 // renderparticles
-enum
-{
-    PART_BLOOD = 0,
-    PART_WATER,
-    PART_SMOKE_RISE_SLOW, PART_SMOKE_RISE_FAST, PART_SMOKE_SINK,
-    PART_FIREBALL1, PART_FIREBALL2, PART_FIREBALL3,
-    PART_STREAK, PART_LIGHTNING,
-    PART_EXPLOSION, PART_EXPLOSION_NO_GLARE,
-    PART_SPARK, PART_EDIT,
-    PART_TEXT, PART_TEXT_RISE,
-    PART_METER, PART_METER_VS,
-    PART_LENS_FLARE
-};
-
 extern void render_particles(int time);
-extern void regular_particle_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 1.0f, int radius = 150, int delay = 0);
-extern void particle_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 1.0f, int radius = 150);
-extern void particle_trail(int type, int fade, const vec &from, const vec &to, int color = 0xFFFFFF, float size = 1.0f);
-extern void particle_text(const vec &s, const char *t, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f);
-extern void particle_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, int color2 = 0xFFFFF, float size = 2.0f);
-extern void particle_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 0.28f, physent *owner = NULL);
-extern void particle_fireball(const vec &dest, float max, int type, int fade = -1, int color = 0xFFFFFF, float size = 4.0f);
+extern void regular_particle_splash(int type, int num, int fade, const vec &p, int delay = 0);
+extern void particle_splash(int type, int num, int fade, const vec &p);
+extern void particle_trail(int type, int fade, const vec &from, const vec &to);
+extern void particle_text(const vec &s, const char *t, int type, int fade = 2000);
+extern void particle_meter(const vec &s, float val, int type, int fade = 1);
+extern void particle_flare(const vec &p, const vec &dest, int fade, int type = 10, physent *owner = NULL);
+extern void particle_fireball(const vec &dest, float max, int type, int fade = -1);
 extern void removetrackedparticles(physent *owner = NULL);
 
 // decal
@@ -224,7 +206,7 @@ extern void clamproll(physent *d);
 
 extern void vecfromyawpitch(float yaw, float pitch, int move, int strafe, vec &m);
 extern void vectoyawpitch(const vec &v, float &yaw, float &pitch);
-extern bool intersect(physent *d, const vec &from, const vec &to);
+extern bool intersect(physent *d, vec &from, vec &to);
 extern bool moveplatform(physent *p, const vec &dir);
 extern void updatephysstate(physent *d);
 extern void cleardynentcache();
@@ -254,16 +236,11 @@ extern void endmodelbatches();
 extern void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw = 0, float pitch = 0, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED | MDL_LIGHT, dynent *d = NULL, modelattach *a = NULL, int basetime = 0, float speed = 0);
 extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
-extern void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, bool ragdoll = false);
+extern void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int attack, int attackdelay, int lastaction, int lastpain, float sink = 0);
 extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
 extern void setbbfrommodel(dynent *d, const char *mdl);
 extern const char *mapmodelname(int i);
 extern model *loadmodel(const char *name, int i = -1, bool msg = false);
-
-// ragdoll
-
-extern void moveragdoll(dynent *d);
-extern void cleanragdoll(dynent *d);
 
 // server
 #define MAXCLIENTS 256                  // in a multiplayer game, can be arbitrarily changed
@@ -271,7 +248,7 @@ extern void cleanragdoll(dynent *d);
 
 extern int maxclients;
 
-enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_NUM };
+enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_NUM };
 
 extern void *getinfo(int i);
 extern void sendf(int cn, int chan, const char *format, ...);
@@ -287,7 +264,6 @@ extern void sendstring(const char *t, ucharbuf &p);
 extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
 extern void disconnect_client(int n, int reason);
-extern void kicknonlocalclients(int reason = DISC_NONE);
 extern bool hasnonlocalclients();
 extern bool haslocalclients();
 extern void sendserverinforeply(ucharbuf &p);
@@ -337,13 +313,12 @@ struct g3d_gui
 	virtual void tab(const char *name = NULL, int color = 0) = 0;
     virtual int title(const char *text, int color, const char *icon = NULL) = 0;
     virtual int image(Texture *t, float scale, bool overlaid = false) = 0;
-    virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1), Texture *layertex = NULL) = 0;
+    virtual int texture(Texture *t, float scale, int rotate = 0, int xoff = 0, int yoff = 0, Texture *glowtex = NULL, const vec &glowcolor = vec(1, 1, 1)) = 0;
     virtual void slider(int &val, int vmin, int vmax, int color, char *label = NULL) = 0;
     virtual void separator() = 0;
 	virtual void progress(float percent) = 0;
 	virtual void strut(int size) = 0;
     virtual void space(int size) = 0;
-    virtual char *keyfield(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED) = 0;
     virtual char *field(const char *name, int color, int length, int height = 0, const char *initval = NULL, int initmode = EDITORFOCUSED) = 0;
     virtual void mergehits(bool on) = 0;
 };
@@ -352,7 +327,7 @@ struct g3d_callback
 {
     virtual ~g3d_callback() {}
 
-    int starttime() { return totalmillis; }
+    int starttime() { extern int totalmillis; return totalmillis; }
 
     virtual void gui(g3d_gui &g, bool firstpass) = 0;
 };

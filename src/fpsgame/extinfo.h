@@ -52,6 +52,14 @@
         sendserverinforeply(q);
     }
 
+    struct teamscore
+    {
+        const char *name;
+        int score;
+
+        teamscore(const char *name, int score) : name(name), score(score) {}
+    };
+
     void extinfoteams(ucharbuf &p)
     {
         putint(p, m_teammode ? 0 : 1);
@@ -62,24 +70,35 @@
         vector<teamscore> scores;
 
         //most taken from scoreboard.h
-        if(smode && smode->hidefrags()) 
+        if(m_capture)
         {
-            smode->getteamscores(scores);
-            loopv(clients) if(clients[i]->team[0] && !clients[i]->spy)
+            loopv(capturemode.scores) scores.add(teamscore(capturemode.scores[i].team, capturemode.scores[i].total));
+            loopv(clients) if(clients[i]->team[0] && !clients[i]->spy) //check all teams available, since capturemode.scores contains only teams with scores
             {
-                clientinfo *ci = clients[i];
                 teamscore *ts = NULL;
-                loopvj(scores) if(!strcmp(scores[j].team, ci->team)) { ts = &scores[j]; break; }
-                if(!ts) scores.add(teamscore(ci->team, 0));
+                loopvj(scores) if(!strcmp(scores[j].name, clients[i]->team)) { ts = &scores[j]; break; }
+                if(!ts) scores.add(teamscore(clients[i]->team, 0));
+            }
+        }
+        else if(m_ctf)
+        {
+            loopv(ctfmode.flags)
+            {
+                const char *team = ctfflagteam(ctfmode.flags[i].team);
+                if(!team) continue;
+                teamscore *ts = NULL;
+                loopvj(scores) if(!strcmp(scores[j].name, team)) { ts = &scores[j]; break; }
+                if(!ts) scores.add(teamscore(team, ctfmode.flags[i].score));
+                else ts->score += ctfmode.flags[i].score;
             }
         }
         else
         {
-            loopv(clients) if(clients[i]->team[0] && !clients[i]->spy)
+            loopv(clients) if(clients[i]->team[0])
             {
                 clientinfo *ci = clients[i];
                 teamscore *ts = NULL;
-                loopvj(scores) if(!strcmp(scores[j].team, ci->team)) { ts = &scores[j]; break; }
+                loopvj(scores) if(!strcmp(scores[j].name, ci->team)) { ts = &scores[j]; break; }
                 if(!ts) scores.add(teamscore(ci->team, ci->state.frags));
                 else ts->score += ci->state.frags;
             }
@@ -87,11 +106,17 @@
 
         loopv(scores)
         {
-            sendstring(scores[i].team, p);
+            sendstring(scores[i].name, p);
             putint(p, scores[i].score);
 
-            if(!smode || !smode->extinfoteam(scores[i].team, p))
-                putint(p,-1); //no bases follow
+            if(m_capture)
+            {
+                int bases = 0;
+                loopvj(capturemode.bases) if(!strcmp(capturemode.bases[j].owner, scores[i].name)) bases++;
+                putint(p, bases);
+                loopvj(capturemode.bases) if(!strcmp(capturemode.bases[j].owner, scores[i].name)) putint(p, j);
+            }
+            else putint(p,-1); //no bases follow
         }
     }
 
@@ -134,7 +159,7 @@
                 if(ci) putint(q, ci->clientnum);
                 else loopv(clients) if(!clients[i]->spy) putint(q, clients[i]->clientnum);
                 sendserverinforeply(q);
-            
+                
                 if(ci) extinfoplayer(p, ci);
                 else loopv(clients) extinfoplayer(p, clients[i]);
                 return;

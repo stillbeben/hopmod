@@ -22,8 +22,8 @@ struct authserv
         socket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
         if(socket != ENET_SOCKET_NULL)
         {
-            extern ENetAddress masteraddress;
-            ENetAddress authserver = masteraddress;
+            extern ENetAddress masterserver;
+            ENetAddress authserver = masterserver;
             authserver.port = SAUERBRATEN_AUTH_PORT;
             int result = enet_socket_connect(socket, &authserver);
             if(result < 0)
@@ -108,7 +108,7 @@ struct authserv
         ci->authreq = 0;
 
         sv.setmaster(ci, true, "", ci->authname);
-
+        
         cubescript::arguments args;
         sv.scriptable_events.dispatch(&sv.on_auth,args & ci->clientnum & true & std::string(ci->authname),NULL);
         sv.scriptable_events.dispatch(&sv.on_setmaster, args & ci->clientnum & true & std::string(""),NULL);
