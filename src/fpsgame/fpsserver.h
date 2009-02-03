@@ -1458,7 +1458,7 @@ struct fpsserver : igameserver
         
         if(m_teammode && reassignteams) autoteam();
 
-        else if(m_capture) smode = &capturemode;
+        if(m_capture) smode = &capturemode;
         else if(m_ctf) smode = &ctfmode;
         else smode = NULL;
         if(smode) smode->reset(false);
@@ -2044,6 +2044,7 @@ struct fpsserver : igameserver
                 QUEUE_INT(SV_INITC2S);
                 QUEUE_STR(sent_name);
                 QUEUE_STR(sent_team);
+                QUEUE_INT(ci->playermodel);
                 
                 if(renamed)
                 {
@@ -2965,7 +2966,7 @@ struct fpsserver : igameserver
         ci->connect_id=++concount;
         ci->state.o.x=-1; ci->state.o.y=-1; ci->state.o.z=-1;
         
-        clients.add(ci);
+        connects.add(ci);
         
         if(banned_networks.is_banned(netmask(ip)) && !allow_host(ip)) return DISC_IPBAN;
         

@@ -474,4 +474,4 @@ if (is_startup) [
     log [Reloaded server startup scripts @(datetime (now))]
 ]
 
-log_status "*** Running Hopmod 3.0 for Sauerbraten CTF Edition ***"
+log_status "*** Running Hopmod 3.0 for Sauerbraten Development Version ***"
