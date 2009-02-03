@@ -17,6 +17,7 @@ struct ctfclientmode : clientmode
         int team, score, droptime;
 #ifdef CTFSERV
         int owner;
+        int last_owner;
 #else
         bool pickup;
         fpsent *owner;
@@ -37,6 +38,7 @@ struct ctfclientmode : clientmode
             droploc = spawnloc = vec(0, 0, 0);
 #ifdef CTFSERV
             owner = -1;
+            last_owner = -1;
 #else
             pickup = false;
             owner = NULL;
@@ -85,6 +87,7 @@ struct ctfclientmode : clientmode
         f.droploc = o;
         f.droptime = droptime;
 #ifdef CTFSERV
+        f.last_owner = f.owner;
         f.owner = -1;
 #else
         f.pickup = false;
@@ -97,6 +100,7 @@ struct ctfclientmode : clientmode
         flag &f = flags[i];
         f.droptime = 0;
 #ifdef CTFSERV
+        f.last_owner = -1;
         f.owner = -1;
 #else
         f.pickup = false;
@@ -152,6 +156,8 @@ struct ctfclientmode : clientmode
             ivec o(vec(ci->state.o).mul(DMF));
             sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, o.x, o.y, o.z); 
             dropflag(i, o.tovec().div(DMF), sv.lastmillis);
+            
+            sv.scriptable_events.dispatch(&sv.on_dropflag,cubescript::arguments(ci->clientnum),NULL);
         }
     } 
 
@@ -192,6 +198,9 @@ struct ctfclientmode : clientmode
                 returnflag(relay);
                 goal.score++;
                 sendf(-1, 1, "ri5", SV_SCOREFLAG, ci->clientnum, relay, i, goal.score);
+                
+                sv.scriptable_events.dispatch(&sv.on_scoreflag,cubescript::arguments(ci->clientnum),NULL);
+                
                 if(totalscore(goal.team) >= FLAGLIMIT) sv.startintermission();
             }
         }
@@ -207,6 +216,8 @@ struct ctfclientmode : clientmode
             if(!f.droptime || f.owner>=0) return;
             returnflag(i);
             sendf(-1, 1, "ri3", SV_RETURNFLAG, ci->clientnum, i);
+            
+            sv.scriptable_events.dispatch(&sv.on_returnflag,cubescript::arguments(ci->clientnum),NULL);
         }
         else
         {
@@ -214,6 +225,8 @@ struct ctfclientmode : clientmode
             loopv(flags) if(flags[i].owner==ci->clientnum) return;
             ownflag(i, ci->clientnum);
             sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
+            
+            sv.scriptable_events.dispatch(&sv.on_takeflag,cubescript::arguments(ci->clientnum),NULL);
         }
     }
 
@@ -227,6 +240,8 @@ struct ctfclientmode : clientmode
             {
                 returnflag(i);
                 sendf(-1, 1, "ri2", SV_RESETFLAG, i);
+                
+                sv.scriptable_events.dispatch(&sv.on_resetflag,cubescript::arguments(f.last_owner),NULL);
             }
         }
     }

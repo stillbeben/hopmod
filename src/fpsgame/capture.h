@@ -94,7 +94,7 @@ struct captureclientmode : clientmode
             return !enemies;
         }
 
-        int occupy(const char *team, int units)
+        int occupy(const char *team, int units,fpsserver * server)
         {
             if(strcmp(enemy, team)) return -1;
             converted += units;
@@ -104,8 +104,27 @@ struct captureclientmode : clientmode
                 return -1;
             }
             else if(converted<(owner[0] ? 2 : 1)*OCCUPYLIMIT) return -1;
-            if(owner[0]) { owner[0] = '\0'; converted = 0; s_strcpy(enemy, team); return 0; }
-            else { s_strcpy(owner, team); ammo = 0; capturetime = 0; owners = enemies; noenemy(); return 1; }
+            if(owner[0]) 
+            {
+                server->scriptable_events.dispatch(&server->on_lostbase,cubescript::arguments(owner),NULL);
+                
+                owner[0] = '\0';
+                converted = 0;
+                s_strcpy(enemy, team);
+                return 0;
+            }
+            else
+            {
+                s_strcpy(owner, team);
+                ammo = 0;
+                capturetime = 0;
+                owners = enemies;
+                noenemy();
+                
+                server->scriptable_events.dispatch(&server->on_capturebase,cubescript::arguments(owner),NULL);
+                
+                return 1; 
+            }
         }
 
         bool addammo(int i)
@@ -734,7 +753,7 @@ struct captureclientmode : clientmode
             baseinfo &b = bases[i];
             if(b.enemy[0])
             {
-                if(!b.owners || !b.enemies) b.occupy(b.enemy, OCCUPYPOINTS*(b.enemies ? b.enemies : -(1+b.owners))*t);
+                if(!b.owners || !b.enemies) b.occupy(b.enemy, OCCUPYPOINTS*(b.enemies ? b.enemies : -(1+b.owners))*t, &sv);
                 sendbaseinfo(i);
             }
             else if(b.owner[0])
