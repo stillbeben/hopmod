@@ -253,3 +253,4 @@ resumegame = [
     respawn_locked 0
     foreach (players) [spawn $arg1]
 ]
+
