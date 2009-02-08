@@ -1,20 +1,21 @@
 #!/bin/sh
 
-status_file=$2
+#TODO 
+# * Print server configuration on startup
+# * Confirm shutdown if players are connected
 
 case "$1" in
   'start')
+    
+    # enable core dump
     ulimit -c unlimited
     
-    nohup bin/sauer_server 1>$status_file 2>logs/error.log &
+    # start game server as background process
+    nohup bin/sauer_server 2>logs/error.log >/dev/null </dev/null &
     
-    echo "Started Sauerbraten game server."
-    echo "  Version: CTF Edition (June 2008)"
-    echo "  Modification: Hopmod 3.0"
-    sleep 1 #wait for server startup
-    echo printsvinfo [`tty`] > serverexec
-    sleep 1 #let svr info be printed before returning to prompt
-  ;;
+    echo "*** Started Hopmod Sauerbraten game server ***"
+    echo "Version: Development 2009"
+;;
   'stop')
     echo "shutdown" > serverexec
     killall sauer_server
