@@ -288,6 +288,9 @@ sub filterlog {
     ##### Invisible Master ##### 
     if ($line =~ /(\S*\([0-9]+\))(\(*.*\)*): #invadmin/)
     { return "\x039MASTER\x03       \x0312$1\x03 attempted to take invisible master."}
+    ##### Cheater #####
+    if ($line =~ /CHEATER: (.*) (.*)/)
+    { &sendtoirc($config->{irc_monitor_channel},"$1 reports: $2 is a Cheater please ADMINS check this!"); return }
     ##### 1on1 #####
     if ($line =~ /#1on1 (.*)/)
     { return "\x039MATCH\x03       \x0312 The match starts now...\x03"}

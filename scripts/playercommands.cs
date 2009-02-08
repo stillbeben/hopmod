@@ -173,3 +173,19 @@ playercmd_warning = [
         ] [privmsg $cn (err "Permission Denied")]
 ]
 
+if (= $cheater_cmd 1) [
+interval (mins 3) [
+msg (format "%1 %2" (orange [If you detect a cheater type:]) (grey [#cheater cn]) )]
+playercmd_cheater = [
+
+        playercnch = $cn
+        playercncheater = $arg1
+        if (>= (player_var $playercnch cheatreq) 4) [
+        privmsg $playercnch (format "%1" (red [Don't Spam!!!!]) )
+        ][
+                log (format "CHEATER: %1 %2" (player_name $cn) (player_name $playercncheater) )
+                player_var $playercnch cheatreq (+ (player_var $playercnch cheatreq) 1)
+        ]
+]
+]
+
