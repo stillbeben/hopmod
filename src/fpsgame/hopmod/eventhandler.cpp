@@ -25,7 +25,7 @@ void event_handler::cancel_handler(const std::string & name)
     m_names.erase(it);
 }
 
-void event_handler::run(std::list<std::string> & args,cubescript::domain * parent_domain)
+void event_handler::run(std::list<std::string> & args,cubescript::domain * parent_domain,bool * stop)
 {
     cubescript::domain local(parent_domain);
     
@@ -35,7 +35,8 @@ void event_handler::run(std::list<std::string> & args,cubescript::domain * paren
     int max=m_handlers.size();
     int count=0;
     
-    for(std::list<cubescript::alias>::iterator it=m_handlers.begin(); count<max && it!=m_handlers.end(); ++it,++count)
+    for(std::list<cubescript::alias>::iterator it=m_handlers.begin(); 
+        !*stop && count < max && it!=m_handlers.end(); ++it,++count)
     {
         m_cancel_handler=false;
         
@@ -91,16 +92,16 @@ void event_handler_service::dispatch(event_handler * handler,std::list<std::stri
 {
     cubescript::domain local(m_domain,cubescript::domain::TEMPORARY_DOMAIN);
     
-    bool tmp;
-    bool * veto_ptr=veto;
-    if(!veto_ptr) veto_ptr=&tmp;
+    bool tmp = false;
+    if(!veto) veto = &tmp;
+    else if(*veto) *veto = false;
     
-    cubescript::variable_ref<bool> var_veto(*veto_ptr);
+    cubescript::variable_ref<bool> var_veto(*veto);
     local.register_symbol("veto",&var_veto);
     
     try
     {
-        handler->run(args,&local);
+        handler->run(args,&local,veto);
     }
     catch(cubescript::error_context * error)
     {
