@@ -13,7 +13,7 @@ public:
     void push_handler_code(const std::string &);
     void push_handler_code(const std::string &,const std::string &);
     void cancel_handler(const std::string &);
-    void run(std::list<std::string> &,cubescript::domain *);
+    void run(std::list<std::string> &,cubescript::domain *,bool *);
     void clear_handlers();
 private:
     void cancel_handler(); 
