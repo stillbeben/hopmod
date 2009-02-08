@@ -444,19 +444,31 @@ if (= $check_pings 1) [
 
 if (= $check_pings 1) [
         interval (secs $check_pings_rate) [
+
+                checkpingsactivate = 1
+
+                if (= $lessthen3 1) [
+                        if (>= $playercount 3) [
+                        checkpingsactivate = 1
+                        ] [checkpingsactivate = 0]
+                ]
+                if (= $checkpingsactivate 1) [
                 foreach (players) [if (> (player_ping $arg1) $maxping ) [
                 playercn = $arg1
                 player_var $playercn warnings (+ (player_var $playercn warnings) 1)
                 if (> (player_var $playercn warnings) 3) [
-                        kick $playercn ]
+                        msg (format "%1 %2" (blue (player_name $playercn)) (red [has a too high ping and will be kicked!]) )
+                        log (format "%1 %2 %3" [PING:] (player_name $playercn) [get kicked!] )
+                        kick $playercn
+                        ]
 
                 if (= (player_var $playercn warnings) 1) [
-                privmsg $playercn (format "%1 " (red [WARNING: You will get kicked after 3 warnings!]) ) ]
+                privmsg $playercn (format "%1 " (red [WARNING: You will get kicked after 4 warnings!]) ) ]
 
-                msg (format "%1 %2 %3 %4 %5" (red [WARNING:]) (red (player_name $playercn))  [(]  (blue (player_var $playercn warnings)) (red [) Your PING is to high!]) )
+                msg (format "%1 %2 %3 %4 %5 %6" (red [WARNING:]) (red [(]) (blue (player_var $playercn warnings)) (red[)]) (blue (player_name $playercn)) (red [Your PING is too high!]) )
                 log (format "%1 %2 %3 %4 %5 %6 %7 " [PING:] (player_name $playercn) [get a warning! His Ping is:] (player_ping $playercn) [he has:] (player_var $playercn warnings) [Warnings now!] )
                 ]]
-        ]
+        ]]
 ]
 
 if (= $check_unnameds 1) [
