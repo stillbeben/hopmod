@@ -2926,6 +2926,10 @@ struct fpsserver : igameserver
             ci->privilege = 0;
         }
         
+        bool block = false;
+        scriptable_events.dispatch(&on_setmaster,cubescript::arguments(ci->clientnum,val,pass,true),&block);
+        if(block) return;
+        
         mastermode = MM_OPEN;
         allowedips.setsize(0);
         string msg;
@@ -2934,8 +2938,6 @@ struct fpsserver : igameserver
         sendservmsg(msg);
         currentmaster = val ? ci->clientnum : -1;
         masterupdate = true;
-        
-        scriptable_events.dispatch(&on_setmaster,cubescript::arguments(ci->clientnum,val,pass,true),NULL);
     }
     
     void localconnect(int n)
