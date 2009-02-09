@@ -180,12 +180,20 @@ playercmd_cheater = [
 
         playercnch = $cn
         playercncheater = $arg1
+
+	player_var $playercnch cheatreq (+ (player_var $playercnch cheatreq) 1)
+	
+	if (>= (player_var $playercnch cheatreq) 8) [
+		privmsg $playercnch (format "%1" (red [You will get kicked and banned now!]) )
+		kick $playercnch
+		]
+	 
         if (>= (player_var $playercnch cheatreq) 4) [
-        privmsg $playercnch (format "%1" (red [Don't Spam!!!!]) )
-        ][
-                log (format "CHEATER: %1 %2" (player_name $cn) (player_name $playercncheater) )
-                player_var $playercnch cheatreq (+ (player_var $playercnch cheatreq) 1)
-        ]
+	        privmsg $playercnch (format "%1" (red [Don't Spam or you will get kicked!!!]) )
+        	][
+			log (format "CHEATER: %1 %2" (player_name $cn) (player_name $playercncheater) )
+			privmsg $playercnch (format "%1" (red [Thank you for your report. The admins will check this!]) )
+        	]
 ]
 ]
 
