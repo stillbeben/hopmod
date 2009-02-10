@@ -249,16 +249,16 @@ event_handler $onshutdown [
 ]
 
 // Start of auto update
-if $auto_update [
-    exec scripts/auto-update.csl
-    track_file_for_update $SERVER_FILENAME
-    track_file_for_update conf/server.conf
-    track_file_for_update conf/vars.conf
-    track_file_for_update conf/maps.conf
-    track_file_for_update scripts/servermod.cs
-    track_file_for_update scripts/stats/stats.csl
-    track_file_for_update scripts/commands.csl
-]
+//if $auto_update [
+//    exec scripts/auto-update.csl
+//    track_file_for_update $SERVER_FILENAME
+//    track_file_for_update conf/server.conf
+//    track_file_for_update conf/vars.conf
+//    track_file_for_update conf/maps.conf
+//    track_file_for_update scripts/servermod.cs
+//    track_file_for_update scripts/stats/stats.csl
+//    track_file_for_update scripts/commands.csl
+//]
 if $record_player_stats [exec scripts/stats/stats.csl]
 if $autoteambalance [exec scripts/teambalance.csl]
 
