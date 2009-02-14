@@ -616,6 +616,7 @@ struct fpsserver : igameserver
     cubescript::variable_ref<bool>                          var_reassignteams; bool reassignteams;
     cubescript::variable_ref<int>                           var_kickbantime;
     cubescript::variable_ref<bool>                          var_respawn_locked;
+    cubescript::cstr_variable                               var_serverpass;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -783,6 +784,7 @@ struct fpsserver : igameserver
         var_reassignteams(reassignteams), reassignteams(true),
         var_kickbantime(m_tmpban_time),
         var_respawn_locked(respawn_locked),
+        var_serverpass(serverpass,sizeof(serverpass)),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -908,11 +910,13 @@ struct fpsserver : igameserver
         server_domain.register_symbol("reassignteams",&var_reassignteams);
         server_domain.register_symbol("kickbantime",&var_kickbantime);
         server_domain.register_symbol("respawn_locked",&var_respawn_locked);
+        server_domain.register_symbol("serverpass",&var_serverpass);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);
         server_domain.register_symbol("MM_LOCKED",&const_mm_locked);
         server_domain.register_symbol("MM_PRIVATE",&const_mm_private);
+        cubescript::bind((int)MM_PASSWORD,"MM_PASSWORD",&server_domain);
         
         cubescript::bind(g_argv[0],"SERVER_FILENAME",&server_domain);
         
