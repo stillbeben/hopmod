@@ -394,7 +394,7 @@ struct fpsserver : igameserver
     #define MM_AUTOAPPROVE 0x1000
     #define MM_DEFAULT (MM_MODE | MM_AUTOAPPROVE)
     
-    enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE };
+    enum { MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE, MM_PASSWORD };
  
     bool notgotitems, notgotbases;        // true when map has changed and waiting for clients to send item
     int gamemode; string sgamemode;
@@ -1006,7 +1006,7 @@ struct fpsserver : igameserver
     {
         static const char *mastermodenames[] =
         {
-            "open", "veto", "locked", "private"
+            "open", "veto", "locked", "private", "password"
         };
         return (n>=0 && size_t(n)<sizeof(mastermodenames)/sizeof(mastermodenames[0])) ? mastermodenames[n] : unknown;
     }
@@ -1274,32 +1274,11 @@ struct fpsserver : igameserver
         endianswap(&hdr.protocol, sizeof(int), 1);
         gzwrite(demorecord, &hdr, sizeof(demoheader));
 
-        ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, 0);
+        ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
         ucharbuf p(packet->data, packet->dataLength);
         welcomepacket(p, NULL, packet);
         writedemo(1, p.buf, p.len);
         enet_packet_destroy(packet);
-
-        uchar buf[MAXTRANS];
-        loopv(clients)
-        {
-            clientinfo *ci = clients[i];
-            uchar header[16];
-            ucharbuf q(&buf[sizeof(header)], sizeof(buf)-sizeof(header));
-            putint(q, SV_INITC2S);
-            sendstring(ci->name, q);
-            sendstring(ci->team, q);
-            putint(q, ci->playermodel);
-
-            ucharbuf h(header, sizeof(header));
-            putint(h, SV_CLIENT);
-            putint(h, ci->clientnum);
-            putuint(h, q.len);
-
-            memcpy(&buf[sizeof(header)-h.len], header, h.len);
-
-            writedemo(1, &buf[sizeof(header)-h.len], h.len+q.len);
-        }
     }
 
     void listdemos(int cn)
@@ -1746,7 +1725,9 @@ struct fpsserver : igameserver
                     disconnect_client(sender, disc);
                     return;
                 }
-                
+               
+                ci->playermodel = getint(p);
+
                 connects.removeobj(ci);
                 clients.add(ci);
                 
@@ -1856,7 +1837,12 @@ struct fpsserver : igameserver
                 scriptable_events.dispatch(&on_respawn,cubescript::arguments(ci->clientnum),&block);
                 if(block) break;
                 
-                if(ci->state.lastdeath) ci->state.respawn();
+                if(ci->state.lastdeath) 
+                {
+                    flushevents(ci, ci->state.lastdeath + DEATHMILLIS);
+                    ci->state.respawn();
+                }
+                cleartimedevents(ci);
                 
                 sendspawn(ci);
                 break;
@@ -2241,8 +2227,7 @@ struct fpsserver : igameserver
             case SV_SPECTATOR:
             {
                 int spectator = getint(p), val = getint(p);
-                if(!ci->privilege && (ci->state.state==CS_SPECTATOR || spectator!=sender)) break;
-                
+                if(!ci->privilege && (spectator!=sender || ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED)) break;
                 set_spectator(spectator,val);
                 break;
             }
@@ -2391,6 +2376,37 @@ struct fpsserver : igameserver
         if(!packet->referenceCount) enet_packet_destroy(packet);
     }
 
+    void welcomeinitc2s(ucharbuf &p, ENetPacket *packet, int exclude = -1)
+    {
+        uchar header[16], buf[MAXTRANS];
+        loopv(clients)
+        {
+            clientinfo *ci = clients[i];
+            if(!ci->connected || ci->clientnum == exclude) continue;
+
+            ucharbuf q(buf, sizeof(buf));
+            putint(q, SV_INITC2S);
+            sendstring(ci->name, q);
+            sendstring(ci->team, q);
+            putint(q, ci->playermodel);
+
+            ucharbuf h(header, sizeof(header));
+            putint(h, SV_CLIENT);
+            putint(h, ci->clientnum);
+            putuint(h, q.len);
+
+            if(p.remaining() < h.len + q.len)
+            {
+                enet_packet_resize(packet, packet->dataLength + max(h.len + q.len, MAXTRANS));
+                p.buf = packet->data;
+                p.maxlen = packet->dataLength;
+            }
+
+            p.put(h.buf, h.len);
+            p.put(q.buf, q.len);
+        }
+    }
+
     int welcomepacket(ucharbuf &p, clientinfo *ci, ENetPacket *packet)
     {
         int hasmap = (m_edit && clients.length()>1) || (smapname[0] && (minremain>0 || (ci && ci->state.state==CS_SPECTATOR) || nonspectators(ci ? ci->clientnum : -1)));
@@ -2475,6 +2491,7 @@ struct fpsserver : igameserver
                 sendstate(oi->state, p);
             }
             putint(p, -1);
+            welcomeinitc2s(p, packet, ci ? ci->clientnum : -1); 
         }
         if(smode) 
         {
@@ -2505,7 +2522,7 @@ struct fpsserver : igameserver
 
     void sendinitc2s(clientinfo *ci)
     {
-        ENetPacket *packet = enet_packet_create (NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+        ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
 
         ucharbuf h(packet->data, 16), p(&h.buf[h.maxlen], packet->dataLength-h.maxlen);
 
@@ -2545,11 +2562,11 @@ struct fpsserver : igameserver
 
     void startintermission() { gamelimit = min(gamelimit, gamemillis); checkintermission(); }
 
-    void clearevent(clientinfo *ci)
+    void clearevent(clientinfo *ci, int offset = 0)
     {
         int n = 1;
-        while(n<ci->events.length() && ci->events[n].type==GE_HIT) n++;
-        ci->events.remove(0, n);
+        while(ci->events.inrange(offset+n) && ci->events[offset+n].type==GE_HIT) n++;
+        ci->events.remove(offset, n);
     }
 
     void spawnstate(clientinfo *ci)
@@ -2614,8 +2631,8 @@ struct fpsserver : igameserver
             target->respawnpos.z=0;
         }
     }
-
-    void processevent(clientinfo *ci, suicideevent &e)
+    
+    void suicide(clientinfo *ci)
     {
         gamestate &gs = ci->state;
         if(gs.state!=CS_ALIVE) return;
@@ -2628,6 +2645,11 @@ struct fpsserver : igameserver
         gs.respawn();
 
         scriptable_events.dispatch(&on_death,cubescript::arguments(ci->clientnum, ci->clientnum),NULL);
+    }
+
+    void processevent(clientinfo *ci, suicideevent &e)
+    {
+        suicide(ci);
     }
 
     void processevent(clientinfo *ci, explodeevent &e)
@@ -2712,34 +2734,55 @@ struct fpsserver : igameserver
         pickup(e.ent, ci->clientnum);
     }
 
+    void flushevents(clientinfo *ci, int millis)
+    {
+        while(ci->events.length())
+        {
+            gameevent &e = ci->events[0];
+            if(e.type < GE_SUICIDE)
+            {
+                if(e.shot.millis > millis) return;
+                if(e.shot.millis < ci->lastevent) { clearevent(ci); continue; }
+                ci->lastevent = e.shot.millis;
+            }
+            switch(e.type)
+            {
+                case GE_SHOT: processevent(ci, e.shot); break;
+                case GE_EXPLODE: processevent(ci, e.explode); break;
+                // untimed events
+                case GE_SUICIDE: processevent(ci, e.suicide); break;
+                case GE_PICKUP: processevent(ci, e.pickup); break;
+            }
+            clearevent(ci);
+        }
+    }
+            
     void processevents()
     {
         loopv(clients)
         {
             clientinfo *ci = clients[i];
             if(curtime>0 && ci->state.quadmillis) ci->state.quadmillis = max(ci->state.quadmillis-curtime, 0);
-            while(ci->events.length())
-            {
-                gameevent &e = ci->events[0];
-                if(e.type<GE_SUICIDE)
-                {
-                    if(e.shot.millis>gamemillis) break;
-                    if(e.shot.millis<ci->lastevent) { clearevent(ci); continue; }
-                    ci->lastevent = e.shot.millis;
-                }
-                switch(e.type)
-                {
-                    case GE_SHOT: processevent(ci, e.shot); break;
-                    case GE_EXPLODE: processevent(ci, e.explode); break;
-                    // untimed events
-                    case GE_SUICIDE: processevent(ci, e.suicide); break;
-                    case GE_PICKUP: processevent(ci, e.pickup); break;
-                }
-                clearevent(ci);
-            }
+            flushevents(ci, gamemillis);
         }
     }
-    
+       
+    void cleartimedevents(clientinfo *ci)
+    {
+        int keep = 0;
+        loopv(ci->events)
+        {
+            switch(ci->events[i].type)
+            {
+                case GE_EXPLODE: 
+                    if(keep < i) { ci->events.remove(keep, i - keep); i = keep; }
+                    keep = i+1;
+                    continue;
+            }
+        }
+        ci->events.setsize(keep);
+    }
+
     void serverupdate(int _lastmillis, int _totalmillis)
     {
         curtime = _lastmillis - lastmillis;
@@ -3086,7 +3129,7 @@ struct fpsserver : igameserver
         putint(p, gamemode);            // b
         putint(p, minremain);           // c
         putint(p, maxclients);
-        putint(p, serverpass[0] || !m_mp(gamemode) ? MM_PRIVATE : mastermode);
+        putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : mastermode));
         sendstring(smapname, p);
         sendstring(serverdesc, p);
         sendserverinforeply(p);
@@ -3293,9 +3336,9 @@ struct fpsserver : igameserver
     void set_spectator(int cn,bool val)
     {
         clientinfo *spinfo = (clientinfo *)getinfo(cn);
-        if(!spinfo) return;
+        if(!spinfo || spinfo->spy) return;
         
-        if(spinfo->spy) return;
+        if(spinfo->state.state==CS_ALIVE && val) suicide(spinfo);
         
         bool block=false;
         scriptable_events.dispatch(&on_spectator,cubescript::arguments(cn, val),&block);
@@ -3314,7 +3357,6 @@ struct fpsserver : igameserver
         {
             spinfo->state.state = CS_DEAD;
             spinfo->state.respawn();
-            if(!smode || smode->canspawn(spinfo)) sendspawn(spinfo);
             spinfo->state.lasttimeplayed = lastmillis;
         }
         

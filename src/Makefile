@@ -63,3 +63,14 @@ server:	libenet $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o ../bin/sauer_server $(SERVER_OBJS) $(SERVER_LIBS)  
 
 install: all
+
+depend:
+	makedepend -a -o-standalone.o -Y -Ishared -Iengine -Ifpsgame $(subst -standalone.o,.cpp,$(SERVER_OBJS))
+
+# DO NOT DELETE
+
+shared/tools.o: shared/pch.h shared/tools.h
+shared/tools-standalone.o: shared/pch.h shared/tools.h
+engine/server-standalone.o: shared/pch.h shared/cube.h
+engine/server-standalone.o: shared/tools.h shared/geom.h shared/ents.h
+engine/server-standalone.o: shared/igame.h
