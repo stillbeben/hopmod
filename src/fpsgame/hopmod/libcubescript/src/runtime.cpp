@@ -291,27 +291,22 @@ time_t get_time_now()
 
 std::string format_date(time_t local_timestamp)
 {
-    tm * fields=localtime(&local_timestamp);
+    const tm * fields = localtime(&local_timestamp);
     std::ostringstream result;
-    result<<1900+fields->tm_year<<"-";
-    fields->tm_mon++;
-    if(fields->tm_mon < 10) result<<"0";
-    result<<1+fields->tm_mon<<"-";
-    if(fields->tm_mday < 10) result<<"0";
-    result<<fields->tm_mday;
+    result<<1900 + fields->tm_year<<"-";
+    result<<(fields->tm_mon+1 < 10 ? "0":"")<<fields->tm_mon+1<<"-";
+    result<<(fields->tm_mday < 10 ? "0":"")<<fields->tm_mday;
     return result.str();
 }
 
 std::string format_time(time_t local_timestamp)
 {
-    tm * fields=localtime(&local_timestamp);
+    const tm * fields=localtime(&local_timestamp);
     std::ostringstream result;
-    if(fields->tm_hour < 10) result<<"0";
-    result<<fields->tm_hour<<":";
-    if(fields->tm_min < 10) result<<"0";
-    result<<fields->tm_min<<":";
-    if(fields->tm_sec < 10) result<<"0";
-    result<<fields->tm_sec;
+    
+    result<<(fields->tm_hour < 10 ? "0":"")<<fields->tm_hour<<":";
+    result<<(fields->tm_min < 10 ? "0":"")<<fields->tm_min<<":";
+    result<<(fields->tm_sec < 10 ? "0":"")<<fields->tm_sec;
     
     int tz_off=fields->tm_gmtoff;
     
@@ -325,11 +320,8 @@ std::string format_time(time_t local_timestamp)
     int tz_hours=tz_off/3600;
     int tz_mins=(tz_off-(tz_hours*3600))/60;
     
-    if(tz_hours < 10) result<<"0";
-    result<<tz_hours<<":";
-    
-    if(tz_mins < 10) result<<"0";
-    result<<tz_mins;
+    result<<(tz_hours < 10 ? "0":"")<<tz_hours<<":";
+    result<<(tz_mins < 10 ? "0":"")<<tz_mins;
     
     return result.str();
 }
