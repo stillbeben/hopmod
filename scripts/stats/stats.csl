@@ -495,7 +495,3 @@ showaliasesbyip = [
 ]
 
 exec "scripts/stats/statscmd.cs"
-
-exec "scripts/stats/playerscolpatch.cs"
-log_error (system "php -f bin/patcher.php")
-
