@@ -7,15 +7,15 @@ print_current_stats = [
     local damage (player_var $cn damage)
     local acc (player_accuracy $cn)
     local suicides_msg ""
-    if (> $suicides 0) [suicides_msg = [(@suicides suicides)]]
-    privmsg $cn (info (format "Frags: %1 Deaths: %2 %3 Accuracy: %4" $frags $deaths $suicides_msg $acc))
+    if (> $suicides 0) [suicides_msg = [(@suicides suicides) ]]
+    privmsg $cn (info (format "Frags: %1 Deaths: %2 %3Accuracy: %4" (green $frags) (red $deaths) (red $suicides_msg) (yellow $acc)))
     if (ctfp) [
         local scored (player_var $cn ctf_scored)
         local pickups (player_var $cn ctf_pickups)
         local drops (player_var $cn ctf_drops)
         local returns (player_var $cn ctf_returns)
         local defended (player_var $cn ctf_defended)
-        privmsg $cn (info (format "Scored: %1 Pickups: %2 Drops: %3 Returns: %4 Defended: %5" $scored $pickups $drops $returns $defended))
+        privmsg $cn (info (format "Scored: %1 Pickups: %2 Drops: %3 Returns: %4 Defended: %5" (green $scored) (yellow $pickups) (red $drops) (green $returns) (green $defended)))
     ]
 ]
 
@@ -49,17 +49,20 @@ print_total_stats = [
         kpd = (fdiv $frags $deaths)
     ]
     local suicides_msg ""
-    if (> $suicides 0) [suicides_msg = [(@suicides suicides)]]
-    privmsg $cn (info (format "Games: %1 Frags: %2 Deaths: %3 %4 Accuracy: %5 KPD: %6" $gamecount $frags $deaths $suicides_msg $accuracy $kpd))
-    privmsg $cn (info (format "Max Frags: %1" $max_frags))
+    if (> $suicides 0) [suicides_msg = [(@suicides suicides) ]]
+    privmsg $cn (info (format "Games: %1 Frags: %2 Deaths: %3 %4 Accuracy: %5 KPD: %6" (yellow $gamecount) (green $frags) (red $deaths) (red $suicides_msg) (yellow $accuracy) (yellow $kpd)))
+    privmsg $cn (info (format "Max Frags: %1" (green $max_frags)))
 ]
+
+stats_cmd_total_hook = []
+stats_cmd_game_hook = []
 
 playercmd_stats = [
     local argc $numargs //FIXME - numargs not visible inside if
     if $record_player_stats [
-        if (= $argc 0) [print_current_stats $cn] [
+        if (= $argc 0) [print_current_stats $cn; stats_cmd_game_hook $cn] [
             local command $arg1
-            if (strcmp $command "total") [print_total_stats $cn] []
+            if (strcmp $command "total") [print_total_stats $cn; stats_cmd_total_hook $cn] []
         ]
     ] [privmsg $cn (err "Player statistics logging is disabled on this server.")]
 ]
