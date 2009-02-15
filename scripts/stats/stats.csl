@@ -227,6 +227,31 @@ clearplayerstatvars = [
     player_var $arg1 frags 0
     player_var $arg1 deaths 0
     player_var $arg1 suicides 0
+    
+    player_var $arg1 ctf_pickups 0
+    player_var $arg1 ctf_drops 0
+    player_var $arg1 ctf_scored 0
+    player_var $arg1 ctf_defended 0
+    player_var $arg1 ctf_returns 0
+    
+    player_var $arg1 pistol 0
+    player_var $arg1 rifle 0
+    player_var $arg1 shotgun 0
+    player_var $arg1 chaingun 0
+    player_var $arg1 rocketlauncher 0
+    player_var $arg1 grenadelauncher 0
+    
+    player_var $arg1 boost 0
+    player_var $arg1 health 0
+    player_var $arg1 shells 0
+    player_var $arg1 bullets 0
+    player_var $arg1 rockets 0
+    player_var $arg1 rounds 0
+    player_var $arg1 grenades 0
+    player_var $arg1 cartridges 0
+    player_var $arg1 greenarmor 0
+    player_var $arg1 yellowarmor 0
+    player_var $arg1 quad 0
 ]
 
 create_player_record = [
@@ -253,39 +278,16 @@ create_player_record = [
 
 create_items_record = [
     parameters cn
-    
     local player_id (player_var $cn stats_id)
-    
     statsdb eval [insert into itempickups (player_id) values ($player_id)] []
-    
     player_var $cn items_id (statsdb last_rowid)
-    player_var $cn boost 0
-    player_var $cn health 0
-    player_var $cn shells 0
-    player_var $cn bullets 0
-    player_var $cn rockets 0
-    player_var $cn rounds 0
-    player_var $cn grenades 0
-    player_var $cn cartridges 0
-    player_var $cn greenarmor 0
-    player_var $cn yellowarmor 0
-    player_var $cn quad 0
 ]
 
 create_gunusage_record = [
     parameters cn
-    
     local player_id (player_var $cn stats_id)
-    
     statsdb eval [insert into gunusage (player_id) values ($player_id)] []
-    
     player_var $cn gunusage_id (statsdb last_rowid)
-    player_var $cn pistol 0
-    player_var $cn rifle 0
-    player_var $cn shotgun 0
-    player_var $cn chaingun 0
-    player_var $cn rocketlauncher 0
-    player_var $cn grenadelauncher 0
 ]
 
 update_player_record = [
@@ -389,11 +391,6 @@ create_ctfplayer_record = [
     
     player_var $cn ctf_id (statsdb last_rowid)
     player_var $cn ctf_team_id $team_id
-    player_var $cn ctf_pickups 0
-    player_var $cn ctf_drops 0
-    player_var $cn ctf_scored 0
-    player_var $cn ctf_defended 0
-    player_var $cn ctf_returns 0
 ]
 
 update_ctfplayer_record = [
