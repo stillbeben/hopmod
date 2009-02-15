@@ -217,11 +217,23 @@ create_match_record = [
         if (capturep) create_captureteam_records
         foreach (players) [create_player_record $arg1]
         statsdb eval [commit transaction] []
-    ] [match_id = -1]
+    ] [
+        match_id = -1
+        foreach (players) [clearplayerstatvars $arg1]
+    ]
+]
+
+clearplayerstatvars = [
+    player_var $arg1 frags 0
+    player_var $arg1 deaths 0
+    player_var $arg1 suicides 0
 ]
 
 create_player_record = [
     parameters cn
+    
+    clearplayerstatvars $cn
+    
     if $recording_stats [
         local name (player_name $cn)
         local team (player_team $cn)
@@ -231,9 +243,6 @@ create_player_record = [
             ($match_id, $name, $team, $ipaddr)] []
         
         player_var $cn stats_id (statsdb last_rowid)
-        player_var $cn frags 0
-        player_var $cn deaths 0
-        player_var $cn suicides 0
         
         if (itemsgame) [create_items_record $cn]
         if (mongunsp) [create_gunusage_record $cn]
