@@ -36,7 +36,9 @@ event_handler $onconnect [
     parameters cn
     if $recording_stats [
         if (! (player_has_var $cn stats_id)) [
+            statsdb eval [begin transaction] []
             create_player_record $cn
+            statsdb eval [commit transaction] []
         ]
     ] [create_match_record]
 ]
@@ -44,7 +46,9 @@ event_handler $onconnect [
 event_handler $ondisconnect [
     parameters cn reason
     if $recording_stats [
+        statsdb eval [begin transaction] []
         update_player_record $cn
+        statsdb eval [commit transaction] []
         
         discmsg = "disconnected"
         if (! (= $reason $DISC_NONE)) [discmsg = (format "disconnected (%1)" (disc_reason $reason))]
@@ -199,31 +203,26 @@ event_handler $onshutdown [
     statsdb close
 ]
 
-stats_new_match_hook = 1
-
 create_match_record = [
-    recording_stats = (&& (newstatsp) [stats_new_match_hook])
+    recording_stats = (newstatsp)
     
     local input_datetime (now)
     
     if $recording_stats [
+        statsdb eval [begin transaction] []
         statsdb eval [insert into matches (datetime,gamemode,mapname) values 
             ($input_datetime, $gamemode, $mapname)] []
         match_id = (statsdb last_rowid)
         if (ctfp) create_ctfteam_records
         if (capturep) create_captureteam_records
-        foreach (players) [
-            reference cn arg1
-            create_player_record $cn
-        ]
+        foreach (players) [create_player_record $arg1]
+        statsdb eval [commit transaction] []
     ] [match_id = -1]
 ]
 
-stats_new_player_hook = 1
-
 create_player_record = [
     parameters cn
-    if (&& $recording_stats [stats_new_player_hook $cn]) [
+    if $recording_stats [
         local name (player_name $cn)
         local team (player_team $cn)
         local ipaddr (player_ip $cn)
@@ -345,18 +344,13 @@ update_gunusage_record = [
 
 update_player_records = [
     statsdb eval [begin transaction] []
-    foreach (players) [
-        update_player_record $arg1
-    ]
+    foreach (players) [update_player_record $arg1]
     statsdb eval [commit transaction] []
 ]
 
 create_ctfteam_records = [
     statsdb eval [begin transaction] []
-    foreach (teams) [
-        reference teamname arg1
-        create_ctfteam_record $teamname
-    ]
+    foreach (teams) [create_ctfteam_record $arg1]
     statsdb eval [commit transaction] []
 ]
 

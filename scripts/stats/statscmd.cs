@@ -54,15 +54,12 @@ print_total_stats = [
     privmsg $cn (info (format "Max Frags: %1" $max_frags))
 ]
 
-stats_cmd_total_hook = []
-stats_cmd_game_hook = []
-
 playercmd_stats = [
     local argc $numargs //FIXME - numargs not visible inside if
     if $record_player_stats [
-        if (= $argc 0) [print_current_stats $cn; stats_cmd_game_hook $cn] [
+        if (= $argc 0) [print_current_stats $cn] [
             local command $arg1
-            if (strcmp $command "total") [print_total_stats $cn; stats_cmd_total_hook $cn] []
+            if (strcmp $command "total") [print_total_stats $cn] []
         ]
     ] [privmsg $cn (err "Player statistics logging is disabled on this server.")]
 ]
