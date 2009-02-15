@@ -16,10 +16,11 @@ event_handler $onconnect [
     
     log (format "%1(%2)(%3)%4 connected" (player_name $cn) $cn (player_ip $cn) $country_log)
     
-    if (&& (! (strcmp (player_name $cn) "unnamed")) (symbol? country)) [
+    if (symbol? country) [
         local location (country (player_ip $cn))
-        if (strcmp $location "unknown") [location = "unknown location"]
-        msg (format "%1 is connected from %2" (grey (player_name $cn)) (grey $location))
+        if (strcmp $location "unknown") [] [
+            msg (format "%1 is connected from %2" (green (player_name $cn)) (green $location))
+        ]
     ]
     
     sleep (secs 2) [
@@ -31,9 +32,10 @@ event_handler $onconnect [
         ]
     ]
     
-    if (&& (symbol? showaliases) $enable_showaliases) [
+    if (&& (&& (symbol? showaliases) $enable_showaliases) (listlen (privplayers))) [
+        local altnames (try showaliases $cn [""])
         foreach (privplayers) [
-            privmsg $arg1 (info (format "Alt names used by %1: %2" (player_name $cn) (showaliases $cn)))
+            privmsg $arg1 (format "Past names used by %1: %2" (green (player_name $cn)) (green $altnames))
         ]
     ]
     
