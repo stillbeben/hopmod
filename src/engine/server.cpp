@@ -469,9 +469,12 @@ string masterbase;
 string masterpath;
 char masterreply[MAXTRANS];
 ENetBuffer masterreplybuf;
+bool registered = false;
 
 void updatemasterserver()
 {
+    registered = false;
+    
     if(!allowupdatemaster) return;
 
     s_sprintfd(path)("%sregister.do?action=add", masterpath);
@@ -480,18 +483,17 @@ void updatemasterserver()
     masterreply[0] = '\0';
     masterreplybuf.data = masterreply;
     masterreplybuf.dataLength = sizeof(masterreply)-1;
-} 
+}
 
 void checkmasterreply(bool dedicated)
 {
     if(mastersock!=ENET_SOCKET_NULL && !httpgetreceive(mastersock, masterreplybuf))
     {
         mastersock = ENET_SOCKET_NULL;
-#ifndef STANDALONE
-        if(!dedicated) conoutf("master server reply: %s", stripheader(masterreply));
-        else
-#endif
-            printf("master server reply:\n%s\n", stripheader(masterreply));
+        const char * stripped_masterreply = stripheader(masterreply);
+        registered = strcmp(stripped_masterreply,"your server was updated") == 0;
+        printf("master server reply:\n%s\n", stripped_masterreply);
+        if(!registered) fprintf(stderr,"Server registration was unsuccessful; master server reply was: %s.\n",stripped_masterreply);
     }
 }
 

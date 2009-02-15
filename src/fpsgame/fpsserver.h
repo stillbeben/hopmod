@@ -59,6 +59,9 @@ void cleanupserver();
 void addspy(int);
 void removespy(int);
 void kicknonlocalclients(int reason);
+extern bool registered;
+extern char * stripped_masterreply;
+void updatemasterserver();
 
 static void shutdown_from_signal(int);
 
@@ -593,6 +596,7 @@ struct fpsserver : igameserver
     cubescript::function1<void,int>                         func_slay;
     cubescript::function1<void,int>                         func_spawn;
     cubescript::function1<bool,bool>                        func_gameclock;
+    cubescript::function0<void>                             func_registerserver;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -617,6 +621,7 @@ struct fpsserver : igameserver
     cubescript::variable_ref<int>                           var_kickbantime;
     cubescript::variable_ref<bool>                          var_respawn_locked;
     cubescript::cstr_variable                               var_serverpass;
+    cubescript::variable_ref<bool>                          var_registered;
     
     cubescript::constant<int>                               const_mm_open;
     cubescript::constant<int>                               const_mm_veto;
@@ -761,6 +766,7 @@ struct fpsserver : igameserver
         func_slay(boost::bind(&fpsserver::slay_player,this,_1)),
         func_spawn(boost::bind(&fpsserver::spawn_player,this,_1)),
         func_gameclock(boost::bind(&fpsserver::set_rungameclock,this,_1)),
+        func_registerserver(updatemasterserver),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -785,6 +791,7 @@ struct fpsserver : igameserver
         var_kickbantime(m_tmpban_time),
         var_respawn_locked(respawn_locked),
         var_serverpass(serverpass,sizeof(serverpass)),
+        var_registered(registered),
         
         const_mm_open(MM_OPEN),
         const_mm_veto(MM_VETO),
@@ -887,6 +894,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("slay",&func_slay);
         server_domain.register_symbol("spawn",&func_spawn);
         server_domain.register_symbol("rungameclock",&func_gameclock);
+        server_domain.register_symbol("registerserver",&func_registerserver);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -911,6 +919,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("kickbantime",&var_kickbantime);
         server_domain.register_symbol("respawn_locked",&var_respawn_locked);
         server_domain.register_symbol("serverpass",&var_serverpass);
+        server_domain.register_symbol("registered?",&var_registered); var_registered.readonly(true);
         
         server_domain.register_symbol("MM_OPEN",&const_mm_open);
         server_domain.register_symbol("MM_VETO",&const_mm_veto);
