@@ -37,7 +37,6 @@ event_handler $onconnect [
     if $recording_stats [
         if (! (player_has_var $cn stats_id)) [
             create_player_record $cn
-            log_event (format "%1 connected" (player_name $cn))
         ]
     ] [create_match_record]
 ]
@@ -49,7 +48,6 @@ event_handler $ondisconnect [
         
         discmsg = "disconnected"
         if (! (= $reason $DISC_NONE)) [discmsg = (format "disconnected (%1)" (disc_reason $reason))]
-        log_event (format "%1 %2" (player_name $cn) $discmsg)
     ]
 ]
 
@@ -138,8 +136,6 @@ event_handler $onmapchanged [
 event_handler $onrename [
     parameters cn oldname newname
     if $recording_stats [
-        log_event (format "%1 renamed to %2" $oldname $newname)
-        
         update_player_record $cn
         create_player_record $cn
     ]
@@ -148,25 +144,8 @@ event_handler $onrename [
 event_handler $onreteam [
     parameters cn oldteam newteam
     if $recording_stats [
-        log_event (format "%1 changed to team %2" (player_name $cn) $newteam)
-        
         update_player_record $cn
         create_player_record $cn
-    ]
-]
-
-event_handler $onspectator [
-    parameters cn value
-    if $value [action = "joined"] [action = "left"]
-    if $recording_stats [
-        log_event (format "%1 %2 spectators" (player_name $cn) $action)
-    ]
-]
-
-event_handler $onkick [
-    parameters target master
-    if $recording_stats [
-        log_event (format "%1 was kicked by %2" (player_name $target) (player_name $master))
     ]
 ]
 
@@ -216,10 +195,7 @@ event_handler $onwincapture [
 ]
 
 event_handler $onshutdown [
-    if $recording_stats [
-        update_player_records
-        log_event "server shutdown"
-    ]
+    if $recording_stats update_player_records
     statsdb close
 ]
 
@@ -477,8 +453,6 @@ update_captureplayer_record = [
     if (strcmp $teamkills "") [teamkills = 0]
     statsdb eval [update captureplayers set teamkills=$teamkills] []
 ]
-
-log_event = []
 
 delete_match_stats = [
     parameters mid
