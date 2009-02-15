@@ -245,20 +245,11 @@ admin_cmd = [
 pausegame = [
     rungameclock 0
     respawn_locked 1
-    foreach (players) [
-        player_var $arg1 resume_spec (strcmp (player_status $arg1) "spectator"))
-        slay $arg1
-    ]
-    resume_mastermode = $mastermode;
-    mastermode $MM_LOCKED
+    foreach (players) [slay $arg1]
 ]
 
 resumegame = [
     rungameclock 1
     respawn_locked 0
-    foreach (players) [
-        if (&& (strcmp (player_status $arg1) "spectator") [player_var $arg1 resume_spec]) [] [unspec $arg1]
-        spawn $arg1
-    ]
-    mastermode $resume_mastermode
+    foreach (players) [spawn $arg1]
 ]

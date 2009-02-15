@@ -2461,7 +2461,7 @@ struct fpsserver : igameserver
         }
         if(ci && (m_demo || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
         {
-            if(smode && !smode->canspawn(ci, true))
+            if(smode && !smode->canspawn(ci, true) || respawn_locked)
             {
                 ci->state.state = CS_DEAD;
                 putint(p, SV_FORCEDEATH);
