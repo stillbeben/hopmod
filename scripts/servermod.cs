@@ -49,17 +49,10 @@ event_handler $ondisconnect [
     
     discmsg = "disconnected"
     if (! (= $reason 0)) [discmsg = (format "disconnected (%1)(%2)" (disc_reason $reason) (player_ip $cn))]
-    
     log (format "%1(%2) %3, connection time: %4" (player_name $cn) $cn $discmsg (duration (player_contime $cn)))
     
     if (= $reason $DISC_KICK) [player_var $cn kicked 1]
-    
-    if (= $playercount 0) [
-        sched [
-            if $auto_update server_update
-            sched defaultgame
-        ]
-    ]
+    if (= $playercount 0) [sched defaultgame]
 ]
 
 event_handler $onrename [
@@ -246,21 +239,8 @@ event_handler $onshutdown [
         server_sleep 2000 //give the ircbot time to read and broadcast the latest log messages
         kill $irc_pid
     ]
-    
-    //if $run_banlist_updater [system "killall updatebanlist"]
 ]
 
-// Start of auto update
-//if $auto_update [
-//    exec scripts/auto-update.csl
-//    track_file_for_update $SERVER_FILENAME
-//    track_file_for_update conf/server.conf
-//    track_file_for_update conf/vars.conf
-//    track_file_for_update conf/maps.conf
-//    track_file_for_update scripts/servermod.cs
-//    track_file_for_update scripts/stats/stats.csl
-//    track_file_for_update scripts/commands.csl
-//]
 if $record_player_stats [exec scripts/stats/stats.csl]
 if $autoteambalance [exec scripts/teambalance.csl]
 
