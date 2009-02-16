@@ -3419,7 +3419,9 @@ struct fpsserver : igameserver
     
     int get_player_conid(int cn)const
     {
-        return get_ci(cn)->connect_id;
+        clientinfo *ci = (clientinfo *)getinfo(cn);
+        if(!ci) return -1;
+        return ci->connect_id;
     }
     
     const char * get_player_priv(int cn)

@@ -26,7 +26,7 @@ event_handler $onconnect [
     sleep (secs 2) [
         local cn @cn
         local connection_id @(player_conid $cn)
-        if (= $connection_id (try player_conid $cn [-1])) [
+        if (= $connection_id (player_conid $cn)) [
             privmsg $cn (orange [@servername server])
             privmsg $cn $motd
         ]
