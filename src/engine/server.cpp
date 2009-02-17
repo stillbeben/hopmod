@@ -491,7 +491,7 @@ void checkmasterreply(bool dedicated)
     {
         mastersock = ENET_SOCKET_NULL;
         const char * stripped_masterreply = stripheader(masterreply);
-        registered = strcmp(stripped_masterreply,"your server was updated") == 0;
+        registered = strstr(stripped_masterreply,"your server was updated") != NULL;
         printf("master server reply:\n%s\n", stripped_masterreply);
         if(!registered) fprintf(stderr,"Server registration was unsuccessful; master server reply was: %s.\n",stripped_masterreply);
     }

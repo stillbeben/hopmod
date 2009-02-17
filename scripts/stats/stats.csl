@@ -1,7 +1,7 @@
 stats_db_schema_filename = "scripts/stats/stats.db.schema"
 pending_sql_filename = "scripts/stats/data/pending_sql"
-
 absolute_stats_db_filename = (concatword $PWD [/] $stats_db_filename)
+
 createdb = (! (path? $stats_db_filename) )
 latestgame = (now)
 upload_player_stats = 0
@@ -218,6 +218,7 @@ clearplayerstatvars = [
     player_var $arg1 frags 0
     player_var $arg1 deaths 0
     player_var $arg1 suicides 0
+    player_var $arg1 damage 0
     
     player_var $arg1 ctf_pickups 0
     player_var $arg1 ctf_drops 0
