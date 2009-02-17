@@ -25,10 +25,6 @@ if $createdb [
     statsdb eval [begin transaction]
     statsdb eval (readfile $stats_db_schema_filename)
     statsdb eval [commit transaction]
-] [
-    if (! (statsdb compare_schema $stats_db_schema_filename)) [
-        log_error "WARNING Detected schema change in the stats database!"
-    ]
 ]
 
 event_handler $onconnect [
@@ -129,10 +125,6 @@ stats_endgame = [
 
 event_handler $onmapchanged [
     latestgame = (now)
-    
-    if (! (symbol? rankgame)) [rankgame = 0]
-    if (! (symbol? demofile)) [demofile = ""]
-    
     create_match_record
 ]
 
