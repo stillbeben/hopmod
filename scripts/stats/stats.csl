@@ -1,5 +1,4 @@
 stats_db_schema_filename = "scripts/stats/stats.db.schema"
-stats_db_filename = "scripts/stats/data/stats.db"
 pending_sql_filename = "scripts/stats/data/pending_sql"
 
 absolute_stats_db_filename = (concatword $PWD [/] $stats_db_filename)
