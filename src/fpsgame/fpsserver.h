@@ -2337,7 +2337,18 @@ struct fpsserver : igameserver
                 
                 bool allow=!ci->check_flooding(ci->svsetmaster_interval,svsetmaster_min_interval,"requesting master");
                 
-                if(allow) setmaster(ci, val!=0, text);
+                if(allow)
+                {
+                    if(ci->hidden_priv)
+                    {
+                        int priv_request = val ? PRIV_MASTER : PRIV_NONE;
+                        bool haspass = masterpass[0] && checkpassword(ci, masterpass, text);
+                        priv_request = haspass ? PRIV_ADMIN : priv_request;
+                        setpriv(ci,priv_request);
+                    }
+                    else setmaster(ci, val!=0, text);
+                }
+                
                 // don't broadcast the master password
                 break;
             }
@@ -2920,10 +2931,11 @@ struct fpsserver : igameserver
         sync_game_settings();
     }
     
-    const char *privname(int type)
+    const char * privname(int type)
     {
         switch(type)
         {
+            case PRIV_NONE: return "none";
             case PRIV_ADMIN: return "admin";
             case PRIV_MASTER: return "master";
             default: return "unknown";
@@ -3039,7 +3051,7 @@ struct fpsserver : igameserver
         bool visible_player = ci->connected && !ci->spy;
         if(visible_player)
         {
-            if(ci->privilege) setmaster(ci, false);
+            if(currentmaster == ci->clientnum) setmaster(ci, false);
             if(smode) smode->leavegame(ci, true);
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
             savescore(ci);
@@ -3293,32 +3305,24 @@ struct fpsserver : igameserver
         setpriv(get_ci(cn),privilege);
     }
     
+    //set privilege level - invisible to other players
     void setpriv(clientinfo * ci,int newpriv)
     {
-        int cn=ci->clientnum;
-        int oldpriv=ci->privilege;
+        int cn = ci->clientnum;
+        int oldpriv = ci->privilege;
         
-        if(currentmaster==cn) setmaster(ci,false);
+        if(oldpriv == newpriv) return;
         
-        if(ci->hidden_priv && newpriv==PRIV_NONE)
-        {
-            std::ostringstream nonprivmsg;
-            nonprivmsg<<ConColour_Info<<"Your invisible "<<privname(oldpriv)<<" status has been revoked.";
-            ci->sendprivmsg(nonprivmsg.str().c_str());
-            sendf(cn, 1, "ri3", SV_CURRENTMASTER, cn, 0);
-            ci->hidden_priv=false;
-        }
+        //take away visible privilege
+        if(currentmaster == cn) setmaster(ci,false);
         
-        ci->privilege=newpriv;
+        ci->privilege = newpriv;
+        ci->hidden_priv = ci->privilege > PRIV_NONE;
         
-        if(oldpriv==PRIV_NONE && ci->privilege > PRIV_NONE)
-        {
-            std::ostringstream privmsg;
-            privmsg<<ConColour_Info<<"You have been given invisible "<<privname(ci->privilege)<<" status.";
-            ci->sendprivmsg(privmsg.str().c_str());
-            sendf(cn, 1, "ri3", SV_CURRENTMASTER, cn, ci->privilege);
-            ci->hidden_priv=true;
-        }
+        s_sprintfd(msg)("Your privilege level has been %s to %s.",newpriv > oldpriv ? "raised" : "lowered",privname(newpriv));
+        ci->sendprivmsg(msg);
+        
+        sendf(cn,1,"ri3",SV_CURRENTMASTER,cn,ci->privilege);
     }
     
     void clearbans()
