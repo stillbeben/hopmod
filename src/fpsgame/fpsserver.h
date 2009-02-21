@@ -3785,10 +3785,11 @@ struct fpsserver : igameserver
         sendf(-1, 1, "riis", SV_SETTEAM, cn, ci->team);
     }
     
-    void changetime(int ms)
+    void changetime(int remaining)
     {
-        gamelimit=ms;
-        checkintermission();
+        gamelimit = gamemillis + remaining;
+        if(gametimefreeze) gametimefreeze = gamemillis;
+        else checkintermission();
     }
     
     bool cmp_adminpass(const char * src)const
@@ -3860,6 +3861,7 @@ struct fpsserver : igameserver
             {
                 gamelimit += gamemillis - gametimefreeze;
                 gametimefreeze = 0;
+                checkintermission();
             }
         }
         else
