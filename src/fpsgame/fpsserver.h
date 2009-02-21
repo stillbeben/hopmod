@@ -535,6 +535,7 @@ struct fpsserver : igameserver
     cubescript::function1<const char *,int>                 func_player_gun;
     cubescript::function1<int,int>                          func_player_health;
     cubescript::function1<int,int>                          func_player_maxhealth;
+    cubescript::function1<int,int>                          func_player_damage;
     cubescript::functionV<std::string>                      func_player_var;
     cubescript::functionV<std::string>                      func_player_pvar;
     cubescript::function2<bool,int,const std::string &>     func_player_has_var;
@@ -708,6 +709,7 @@ struct fpsserver : igameserver
         func_player_gun(boost::bind(&fpsserver::get_player_gun,this,_1)),
         func_player_health(boost::bind(&fpsserver::get_player_health,this,_1)),
         func_player_maxhealth(boost::bind(&fpsserver::get_player_maxhealth,this,_1)),
+        func_player_damage(boost::bind(&fpsserver::get_player_damage,this,_1)),
         func_player_var(boost::bind(&fpsserver::access_player_var,this,_1,_2,clientinfo::GAME_VAR)),
         func_player_pvar(boost::bind(&fpsserver::access_player_var,this,_1,_2,clientinfo::PERM_VAR)),
         func_player_has_var(boost::bind(&fpsserver::has_player_var,this,_1,_2)),
@@ -851,6 +853,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_effectiveness",&func_player_effectiveness);
         server_domain.register_symbol("player_timeplayed",&func_player_timeplayed);
         server_domain.register_symbol("player_rating",&func_player_rating);
+        server_domain.register_symbol("player_damage",&func_player_damage);
         server_domain.register_symbol("disc_reason",&func_get_disc_reason);
         server_domain.register_symbol("setpriv",&func_setpriv);
         server_domain.register_symbol("kick",&func_kick);
@@ -3493,6 +3496,7 @@ struct fpsserver : igameserver
     int get_player_maxhealth(int cn)const{return get_ci(cn)->state.maxhealth;}
     float get_player_effectiveness(int cn)const{return get_ci(cn)->state.effectiveness;}
     int get_player_timeplayed(int cn)const{return get_ci(cn)->state.timeplayed;}
+    int get_player_damage(int cn)const{return get_ci(cn)->state.damage;}
     
     std::string access_player_var(std::list<std::string> & arglist,cubescript::domain * aDomain,clientinfo::var_type type)
     {

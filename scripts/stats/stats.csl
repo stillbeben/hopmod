@@ -50,11 +50,6 @@ event_handler $ondisconnect [
     ]
 ]
 
-event_handler $ondamage [
-    parameters target actor damage gun
-    player_var $actor damage (+ $damage (player_var $actor damage))
-]
-
 event_handler $ondeath [
     parameters offender victim
     
@@ -218,7 +213,6 @@ clearplayerstatvars = [
     player_var $arg1 frags 0
     player_var $arg1 deaths 0
     player_var $arg1 suicides 0
-    player_var $arg1 damage 0
     
     player_var $arg1 ctf_pickups 0
     player_var $arg1 ctf_drops 0
@@ -294,7 +288,7 @@ update_player_record = [
         local suicides (player_var $cn suicides)
         local hits (player_hits $cn)
         local misses (player_misses $cn)
-        local damage (player_var $cn damage)
+        local damage (player_damage $cn)
         local kicked (player_var $cn kicked)
         
         if (strcmp $kicked "") [kicked = 0]
