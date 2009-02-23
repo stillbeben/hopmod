@@ -161,7 +161,7 @@ struct fpsserver : igameserver
         int lastdeath, lastspawn, lifesequence;
         int lastshot;
         projectilestate<8> rockets, grenades;
-        int frags, deaths, teamkills, shotdamage, damage,hits,misses;
+        int frags, deaths, suicides, teamkills, shotdamage, damage,hits,misses;
 
         int lasttimeplayed, timeplayed;
         float effectiveness;
@@ -189,7 +189,7 @@ struct fpsserver : igameserver
             timeplayed = 0;
             effectiveness = 0;
 
-            frags = deaths = teamkills = shotdamage = damage = hits = misses = 0;
+            frags = deaths = suicides = teamkills = shotdamage = damage = hits = misses = 0;
             
             respawn();
         }
@@ -208,7 +208,7 @@ struct fpsserver : igameserver
     {
         uint ip;
         string name;
-        int maxhealth, frags, deaths, teamkills, shotdamage, damage, hits,misses;
+        int maxhealth, frags, deaths, suicides, teamkills, shotdamage, damage, hits,misses;
         int timeplayed;
         float effectiveness;
 
@@ -217,6 +217,7 @@ struct fpsserver : igameserver
             maxhealth = gs.maxhealth;
             frags = gs.frags;
             deaths = gs.deaths;
+            suicides = gs.suicides;
             teamkills = gs.teamkills;
             shotdamage = gs.shotdamage;
             damage = gs.damage;
@@ -232,6 +233,7 @@ struct fpsserver : igameserver
             gs.maxhealth = maxhealth;
             gs.frags = frags;
             gs.deaths = deaths;
+            gs.suicides = suicides;
             gs.teamkills = teamkills;
             gs.shotdamage = shotdamage;
             gs.damage = damage;
@@ -529,6 +531,7 @@ struct fpsserver : igameserver
     cubescript::function1<const char *,int>                 func_player_priv;
     cubescript::function1<int,int>                          func_player_frags;
     cubescript::function1<int,int>                          func_player_deaths;
+    cubescript::function1<int,int>                          func_player_suicides;
     cubescript::function1<int,int>                          func_player_hits;
     cubescript::function1<int,int>                          func_player_misses;
     cubescript::function1<std::string,int>                  func_player_accuracy;
@@ -703,6 +706,7 @@ struct fpsserver : igameserver
         func_player_priv(boost::bind(&fpsserver::get_player_priv,this,_1)),
         func_player_frags(boost::bind(&fpsserver::get_player_frags,this,_1)),
         func_player_deaths(boost::bind(&fpsserver::get_player_deaths,this,_1)),
+        func_player_suicides(boost::bind(&fpsserver::get_player_suicides,this,_1)),
         func_player_hits(boost::bind(&fpsserver::get_player_hits,this,_1)),
         func_player_misses(boost::bind(&fpsserver::get_player_misses,this,_1)),
         func_player_accuracy(boost::bind(&fpsserver::get_player_accuracy,this,_1)),
@@ -832,6 +836,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("player_priv",&func_player_priv);
         server_domain.register_symbol("player_frags",&func_player_frags);
         server_domain.register_symbol("player_deaths",&func_player_deaths);
+        server_domain.register_symbol("player_suicides",&func_player_suicides);
         server_domain.register_symbol("player_hits",&func_player_hits);
         server_domain.register_symbol("player_misses",&func_player_misses);
         server_domain.register_symbol("player_accuracy",&func_player_accuracy);
@@ -1500,11 +1505,13 @@ struct fpsserver : igameserver
                 }
             }
         }
+        
         loopv(scores)
         {
             savedscore &sc = scores[i];
             if(sc.ip == ip && !strcmp(sc.name, ci->name)) return sc;
         }
+        
         if(!insert) return *(savedscore *)0;
         savedscore &sc = scores.add();
         sc.ip = ip;
@@ -1517,7 +1524,7 @@ struct fpsserver : igameserver
         savedscore &sc = findscore(ci, true);
         if(&sc) sc.save(ci->state);
     }
-
+    
     struct votecount
     {
         char *map;
@@ -2630,7 +2637,16 @@ struct fpsserver : igameserver
         if(ts.health<=0)
         {
             target->state.deaths++;
-            if(actor!=target && isteam(actor->team, target->team)) actor->state.teamkills++;
+            
+            if(actor!=target)
+            {
+                if(isteam(actor->team, target->team)) actor->state.teamkills++;
+            }
+            else
+            {
+                actor->state.suicides++;
+            }
+            
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target==actor || isteam(target->team, actor->team) ? -1 : 1);
             actor->state.frags += fragvalue;
             if(fragvalue>0)
@@ -2646,7 +2662,8 @@ struct fpsserver : igameserver
             ts.state = CS_DEAD;
             ts.lastdeath = gamemillis;
             
-            scriptable_events.dispatch(&on_damage,cubescript::arguments(actor->clientnum, target->clientnum, damage, guns[gun].name),NULL);
+            if(damage) 
+                scriptable_events.dispatch(&on_damage,cubescript::arguments(actor->clientnum, target->clientnum, damage, guns[gun].name),NULL);
             
             scriptable_events.dispatch(&on_death,cubescript::arguments(actor->clientnum, target->clientnum),NULL);
             
@@ -2665,6 +2682,7 @@ struct fpsserver : igameserver
         if(gs.state!=CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
+        ci->state.suicides++;
         sendf(-1, 1, "ri4", SV_DIED, ci->clientnum, ci->clientnum, gs.frags);
         ci->position.setsizenodelete(0);
         if(smode) smode->died(ci, NULL);
@@ -3480,6 +3498,7 @@ struct fpsserver : igameserver
     
     int get_player_frags(int cn)const{return get_ci(cn)->state.frags;}
     int get_player_deaths(int cn)const{return get_ci(cn)->state.deaths;}
+    int get_player_suicides(int cn)const{return get_ci(cn)->state.suicides;}
     int get_player_hits(int cn)const{return get_ci(cn)->state.hits;}
     int get_player_misses(int cn)const{return get_ci(cn)->state.misses;}
     std::string get_player_accuracy(int cn)const
