@@ -1,6 +1,6 @@
 
-if $custom_maprotation_enabled [
-    if $custom_maprotation_balance [privmsg $cn (err "Next mode and map is unknown to the server.")] [
+if $use_server_maprotation [
+    if $use_balanced_maprotation [privmsg $cn (err "Next mode and map is unknown to the server.")] [
             local ms (mapsetname)
             if (symbol? $ms) [
                 local nextmode $gamemode

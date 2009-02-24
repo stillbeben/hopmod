@@ -143,7 +143,7 @@ event_handler $onmapvote [
 ]
 
 event_handler $onsetmap [
-    if $custom_maprotation_enabled setnextmap
+    if $use_server_maprotation setnextmap
     if $custom_gametime_enabled [gametime $custom_gametime]
 ]
 
@@ -333,7 +333,7 @@ gamesize = [
 ]
 
 mapsetname = [
-    concatword (if $custom_maprotation_balance [result (concatword (gamesize) _)] [result ""]) $gamemode _maps
+    concatword (if $use_balanced_maprotation [result (concatword (gamesize) _)] [result ""]) $gamemode _maps
 ]
 
 setnextmap = [

@@ -4,8 +4,8 @@ maxclients 6
 password ""
 motd = "Our server is now running hopmod 3.0"
 
-custom_maprotation_enabled = 1
-custom_maprotation_balance = 0
+use_server_maprotation = 1
+use_balanced_maprotation = 0
 
 custom_gametime_enabled = 0
 custom_gametime = (mins 10)
