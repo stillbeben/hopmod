@@ -268,13 +268,13 @@ struct fpsserver : igameserver
         stopwatch svc2sinit_interval;
         
         bool connected;
-        int disc_reason;
+        int disc_type;
+        std::string custom_disc_reason;
         int connect_id;
         int ping;
         int lastupdate;
         int lag;
         bool spy;
-        int disc_reason_code;
         
         vec respawnpos;
         
@@ -286,7 +286,7 @@ struct fpsserver : igameserver
         typedef std::map<std::string,std::pair<var_type,std::string> > varmap;
         
         clientinfo()
-         :hidden_priv(false),connected(false),disc_reason_code(0)
+         :hidden_priv(false),connected(false),disc_type(0)
         { 
             reset();
         }
@@ -556,7 +556,7 @@ struct fpsserver : igameserver
     cubescript::function1<float,int>                        func_player_rating;
     cubescript::function1<const char *,int>                 func_get_disc_reason;
     cubescript::function2<void,int,const std::string &>     func_setpriv;
-    cubescript::function1<void,int>                         func_kick;
+    cubescript::functionV<void>                             func_kick;
     cubescript::function1<void,int>                         func_set_interm;
     cubescript::function1<void,int>                         func_spec;
     cubescript::function1<void,int>                         func_unspec;
@@ -731,7 +731,7 @@ struct fpsserver : igameserver
         func_player_rating(boost::bind(&fpsserver::get_player_rating,this,_1)),
         func_get_disc_reason(boost::bind(&fpsserver::get_disc_reason,this,_1)),
         func_setpriv(boost::bind((void (fpsserver::*)(int,const std::string &))&fpsserver::setpriv,this,_1,_2)),
-        func_kick(boost::bind(&fpsserver::kickban,this,_1,-1)),
+        func_kick(boost::bind(&fpsserver::kickban_scriptfun,this,_1,_2)),
         func_set_interm(boost::bind(&fpsserver::set_interm,this,_1)),
         func_spec(boost::bind(&fpsserver::set_spectator,this,_1,true)),
         func_unspec(boost::bind(&fpsserver::set_spectator,this,_1,false)),
@@ -2242,7 +2242,7 @@ struct fpsserver : igameserver
                         break;
                     }
                     
-                    if(allow) kickban(victim,sender);
+                    if(allow) kickban(victim,sender,"");
                 }
                 break;
             }
@@ -2381,7 +2381,7 @@ struct fpsserver : igameserver
             default:
             {
                 int size = msgsizelookup(type);
-                if(size==-1) { ci->disc_reason=DISC_TAGT; disconnect_client(sender, DISC_TAGT); return; }
+                if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
                 if(size>0) loopi(size-1) getint(p);
                 if(ci && ci->state.state!=CS_SPECTATOR) QUEUE_MSG;
                 break;
@@ -3066,18 +3066,27 @@ struct fpsserver : igameserver
         return DISC_NONE;
     }
 
-    void clientdisconnect(int n)
+    void clientdisconnect(int n,int reason)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
+        ci->disc_type = reason;
+        
         bool visible_player = ci->connected && !ci->spy;
         if(visible_player)
         {
             if(currentmaster == ci->clientnum) setmaster(ci, false);
             if(smode) smode->leavegame(ci, true);
-            ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
+            ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
             savescore(ci);
             sendf(-1, 1, "ri2", SV_CDIS, n);
             playercount--;
+            
+            if(ci->disc_type != DISC_NONE)
+            {
+                s_sprintfd(discmsg)("client (%s) disconnected because: %s", ip_ntoa(getclientip(ci->clientnum)).c_str(), get_player_disconnect_reason(*ci));
+                sendservmsg(discmsg);
+            }
+            
             clients.removeobj(ci);
         }
         else
@@ -3096,7 +3105,7 @@ struct fpsserver : igameserver
             var_gamemode.readonly(false);
         }
         
-        scriptable_events.dispatch(&on_disconnect,cubescript::arguments(n,ci->disc_reason_code),NULL);
+        scriptable_events.dispatch(&on_disconnect,cubescript::arguments(n,ci->disc_type),NULL);
         
         if(playercount == 0)
         {
@@ -3280,10 +3289,19 @@ struct fpsserver : igameserver
         return get_ci(cn)->team;
     }
     
-    void kickban(int victim,int actor)
+    void kickban_scriptfun(std::list<std::string> & arglist,cubescript::domain *)
+    {
+        int cn = cubescript::functionN::pop_arg<int>(arglist);
+        std::string reason;
+        if(!arglist.empty())
+            reason = cubescript::functionN::pop_arg<std::string>(arglist);
+        kickban(cn,-1,reason);
+    }
+    
+    void kickban(int victim,int actor,const std::string & reason)
     {
         bool blocked=false;
-        scriptable_events.dispatch(&on_kick,cubescript::arguments(victim, actor),&blocked);
+        scriptable_events.dispatch(&on_kick,cubescript::arguments(victim, actor,reason),&blocked);
         if(!blocked)
         {
             /*
@@ -3291,14 +3309,14 @@ struct fpsserver : igameserver
                 be deleted which is not safe to do from all places. Schedule the 
                 task, to be invoked on next serverupdate().
             */
-            m_scheduler.schedule(boost::bind(&fpsserver::kickban_now,this,victim),0);
+            m_scheduler.schedule(boost::bind(&fpsserver::kickban_now,this,victim,reason),0);
         }
     }
     
-    void kickban_now(int cn)
+    void kickban_now(int cn,const std::string & reason)
     {
         clientinfo * ci = get_ci(cn);
-        ci->disc_reason_code = DISC_KICK;
+        ci->custom_disc_reason = reason;
         
         uint ip = getclientip(ci->clientnum);
         m_tmpbans.push(ban_entry(totalmillis+m_tmpban_time,ip));
@@ -3307,13 +3325,24 @@ struct fpsserver : igameserver
         disconnect_client(cn, DISC_KICK);
     }
     
-    const char * get_disc_reason(unsigned int reason)
+    const char * get_disc_reason(unsigned int type)
     {
         static const char *disc_reasons[] = { "normal", "end of packet", 
             "client num", "kicked and banned", "tag type", "ip is banned", 
             "server is in private mode", "server FULL (maxclients)" };
-        assert(reason>=0 && reason<sizeof(disc_reasons));
-        return disc_reasons[reason];
+        assert(type>=0 && type<sizeof(disc_reasons));
+        return disc_reasons[type];
+    }
+    
+    const char * get_player_disconnect_reason(const clientinfo & ci)
+    {
+        if(ci.custom_disc_reason.length()) return ci.custom_disc_reason.c_str();
+        else get_disc_reason(ci.disc_type);
+    }
+    
+    const char * get_player_disconnect_reason(int cn)
+    {
+        return get_player_disconnect_reason(*get_ci(cn));
     }
     
     void setpriv(int cn,const std::string & level)

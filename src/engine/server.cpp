@@ -311,14 +311,14 @@ void disconnect_client(int n, int reason)
 {
     if(clients[n]->type!=ST_TCPIP) return;
     enet_peer_disconnect(clients[n]->peer, reason);
-    sv->clientdisconnect(n);
+    sv->clientdisconnect(n,reason);
     clients[n]->type = ST_EMPTY;
     clients[n]->peer->data = NULL;
     sv->deleteinfo(clients[n]->info);
     clients[n]->info = NULL;
-    s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
-    puts(s);
-    sv->sendservmsg(s);
+    //s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
+    //puts(s);
+    //sv->sendservmsg(s);
 }
 
 void kicknonlocalclients(int reason)
@@ -625,7 +625,7 @@ void serverslice(bool dedicated, uint timeout)   // main server update, called f
                 client *c = (client *)event.peer->data;
                 if(!c) break;
                 printf("disconnected client (%s)\n", c->hostname);
-                sv->clientdisconnect(c->num);
+                sv->clientdisconnect(c->num,DISC_NONE);
                 nonlocalclients--;
                 c->type = ST_EMPTY;
                 event.peer->data = NULL;

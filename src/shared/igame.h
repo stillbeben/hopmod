@@ -100,7 +100,7 @@ struct igameserver
     virtual void deleteinfo(void *ci) = 0;
     virtual void serverinit() = 0;
     virtual int reserveclients() = 0;
-    virtual void clientdisconnect(int n) = 0;
+    virtual void clientdisconnect(int n,int reason) = 0;
     virtual int clientconnect(int n, uint ip) = 0;
     virtual void localdisconnect(int n) = 0;
     virtual void localconnect(int n) = 0;

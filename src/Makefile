@@ -24,7 +24,7 @@ LIBCUBESCRIPT_OBJS= \
     fpsgame/hopmod/libcubescript/src/exec_helpers.o \
     fpsgame/hopmod/libcubescript/src/runtime.o \
 
-CXXOPTFLAGS= -O2 -g
+CXXOPTFLAGS= -g
 INCLUDES= -I/usr/local/include -Ishared -Iengine -Ifpsgame -Ienet/include -Ifpsgame/hopmod/libcubescript/include
 CXXFLAGS= -Wall -fsigned-char $(CXXOPTFLAGS) $(INCLUDES) -DSTANDALONE -DUSE_SQLITE3 -DUSE_GEOIP -DUSE_SCRIPT_SOCKET
 LDFLAGS= -L/usr/local/lib -rpath=/usr/local/lib

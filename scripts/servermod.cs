@@ -362,13 +362,13 @@ teamkill_update = [
         ]
 
         if (> (player_var $offender teamkills) $teamkill_limit) [
-            kick $offender
+            kick $offender "kick and banned for team killing"
             sleep (mins 30) [removeban (player_ip $offender)]
             console script [@(player_name $offender) was kicked for exceeding teamkill limit.]
             log (format "%1 was kicked for team killing." (player_name $offender))
         ] [
             if (&& (> (listlen $times) $teamkill_maxrate) [< (add_intervals $times $teamkill_maxrate) 60000]) [
-                kick $offender
+                kick $offender "kick and banned for team killing"
                 sleep (mins 30) [removeban (player_ip $offender)]
                 console script [@(player_name $offender) was kicked for exceeding maximum teamkill rate.]
                 log (format "%1 was kicked for team killing." (player_name $offender))
