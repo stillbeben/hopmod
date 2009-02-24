@@ -53,20 +53,15 @@ event_handler $ondisconnect [
 event_handler $ondeath [
     parameters offender victim
     
-    if (= $offender $victim) [
-        player_var $offender suicides (+ 1 (player_var $offender suicides))
-    ] [
-        player_var $offender frags (+ 1 (player_var $offender frags))
+    if (!= $offender $victim) [
         player_var $offender (player_gun $offender) (+ 1 (player_var $offender (player_gun $offender)))
         
         local teamkill (&& (teamgame) [strcmp (player_team $offender) (player_team $victim)])
-        
         if (&& (! $teamkill) (= 1 (player_var $victim had_flag))) [
             player_var $offender ctf_defended (+ 1 (player_var $offender ctf_defended))
         ]
     ]
     
-    player_var $victim deaths (+ 1 (player_var $victim deaths))
     player_var $victim had_flag 0
 ]
 
@@ -283,9 +278,9 @@ update_player_record = [
         local id (player_var $cn stats_id)
         local name (player_name $cn)
         local team (player_team $cn)
-        local frags (player_var $cn frags)
-        local deaths (player_var $cn deaths)
-        local suicides (player_var $cn suicides)
+        local deaths (player_deaths $cn)
+        local suicides (player_suicides $cn)
+        local frags (+ (player_var $cn frags) $suicides)
         local hits (player_hits $cn)
         local misses (player_misses $cn)
         local damage (player_damage $cn)

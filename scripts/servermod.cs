@@ -257,13 +257,6 @@ if $irc_enabled [
     daemon bin/irc.pl [] logs/irc.log logs/irc.log
 ]
 
-flood_protection SV_TEXT        (secs 1)
-flood_protection SV_SETMASTER   (secs 10)
-flood_protection SV_KICK        (secs 30)
-flood_protection SV_MAPVOTE     (secs 5)
-flood_protection SV_C2SINIT     (secs 1)
-
-
 // ============== Start of script pipe functions ==============
 
 scriptpipe_filename = serverexec
