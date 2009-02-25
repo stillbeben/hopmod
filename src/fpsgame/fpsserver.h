@@ -2891,7 +2891,10 @@ struct fpsserver : igameserver
         
         auth.update();
         
-        if((m_lobby ? hasnonlocalclients() : m_timed) && gamemillis-curtime>0 && gamemillis/60000!=(gamemillis-curtime)/60000) checkintermission();
+        if((m_lobby ? hasnonlocalclients() : m_timed) && 
+            gamemillis - curtime > 0 && !gametimefreeze && 
+            (gamelimit - gamemillis + 60000 - 1)/60000 != minremain) checkintermission();
+        
         if(interm && gamemillis>interm)
         {
             if(demorecord) enddemorecord();
