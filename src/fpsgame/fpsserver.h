@@ -1083,7 +1083,7 @@ struct fpsserver : igameserver
     {
         if(minremain<=0 || !sents.inrange(i) || !sents[i].spawned) return false;
         clientinfo *ci = (clientinfo *)getinfo(sender);
-        if(!ci || (!ci->local && !ci->state.canpickup(sents[i].type))) return false;
+        if(!ci || !ci->state.canpickup(sents[i].type)) return false;
         sents[i].spawned = false;
         sents[i].spawntime = spawntime(sents[i].type);
         sendf(-1, 1, "ri3", SV_ITEMACC, i, sender);
@@ -1100,10 +1100,10 @@ struct fpsserver : igameserver
         s_strcpy(ci->mapvote, map);
         ci->modevote = reqmode;
         if(!ci->mapvote[0]) return;
-        if(ci->local || mapreload || (ci->privilege && mastermode>=MM_VETO))
+        if(mapreload || (ci->privilege && mastermode>=MM_VETO))
         {
             if(demorecord) enddemorecord();
-            if((!ci->local || hasnonlocalclients()) && !mapreload) 
+            if(hasnonlocalclients() && !mapreload) 
             {
                 s_sprintfd(msg)("%s forced %s on map %s", ci->privilege && mastermode>=MM_VETO ? privname(ci->privilege) : "local player", modestr(reqmode), map);
                 sendservmsg(msg);
@@ -1540,7 +1540,7 @@ struct fpsserver : igameserver
         loopv(clients)
         {
             clientinfo *oi = clients[i];
-            if(oi->state.state==CS_SPECTATOR && !oi->privilege && !oi->local) continue;
+            if(oi->state.state==CS_SPECTATOR && !oi->privilege) continue;
             maxvotes++;
             if(!oi->mapvote[0]) continue;
             votecount *vc = NULL;
@@ -1600,7 +1600,7 @@ struct fpsserver : igameserver
 
     int checktype(int type, clientinfo *ci)
     {
-        if(ci && ci->local) return type;
+        //if(ci && ci->local) return type;
 #if 0
         // other message types can get sent by accident if a master forces spectator on someone, so disabling this case for now and checking for spectator state in message handlers
         // spectators can only connect and talk
@@ -1777,9 +1777,9 @@ struct fpsserver : igameserver
         
         if(reliable) reliablemessages = true;
         
-        #define QUEUE_MSG { if(!ci->local || demorecord || hasnonlocalclients()) while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
+        #define QUEUE_MSG { if(demorecord || hasnonlocalclients()) while(curmsg<p.length()) ci->messages.add(p.buf[curmsg++]); }
         #define QUEUE_BUF(size, body) { \
-            if(!ci->local || demorecord || hasnonlocalclients()) \
+            if(demorecord || hasnonlocalclients()) \
             { \
                 curmsg = p.length(); \
                 ucharbuf buf = ci->messages.reserve(size); \
@@ -1809,7 +1809,7 @@ struct fpsserver : igameserver
                 if(physstate&0x20) loopi(2) getint(p);
                 if(physstate&0x10) getint(p);
                 getuint(p);
-                if((!ci->local || demorecord || hasnonlocalclients()) && (ci->state.state==CS_ALIVE || ci->state.state==CS_EDITING))
+                if((demorecord || hasnonlocalclients()) && (ci->state.state==CS_ALIVE || ci->state.state==CS_EDITING))
                 {
                     ci->position.setsizenodelete(0);
                     while(curmsg<p.length()) ci->position.add(p.buf[curmsg++]);
@@ -1828,7 +1828,7 @@ struct fpsserver : igameserver
             case SV_EDITMODE:
             {
                 int val = getint(p);
-                if(!ci->local && !m_edit) break;
+                if(!m_edit) break;
                 if(val ? ci->state.state!=CS_ALIVE && ci->state.state!=CS_DEAD : ci->state.state!=CS_EDITING) break;
                 if(smode)
                 {
@@ -2029,7 +2029,7 @@ struct fpsserver : igameserver
                 
                 ci->playermodel = getint(p);
                 
-                if(!ci->local && (smode && !smode->canchangeteam(ci, ci->team, sent_team)) && m_teammode)
+                if((smode && !smode->canchangeteam(ci, ci->team, sent_team)) && m_teammode)
                 {
                     const char *worst = chooseworstteam(sent_team, ci);
                     if(worst)
@@ -2076,7 +2076,7 @@ struct fpsserver : igameserver
                 getstring(text,p);
                 filtertext(text,text);
                 int reqmode = getint(p);
-                if(!ci->local && !m_mp(reqmode)) reqmode = 0;
+                if(!m_mp(reqmode)) reqmode = 0;
                 bool allow=!ci->check_flooding(ci->svmapvote_interval,svmapvote_min_interval,"map voting");
                 
                 bool event_block=false;
@@ -2094,14 +2094,14 @@ struct fpsserver : igameserver
                 filtertext(text, text);
                 int reqmode = getint(p);
                 if(!mapreload) break;
-                if(!ci->local && !m_mp(reqmode)) reqmode = 0;
+                if(!m_mp(reqmode)) reqmode = 0;
                 vote(text, reqmode, sender);
                 break;
             }
 
             case SV_ITEMLIST:
             {
-                if((ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || !notgotitems) { while(getint(p)>=0 && !p.overread()) getint(p); break; }
+                if((ci->state.state==CS_SPECTATOR && !ci->privilege) || !notgotitems) { while(getint(p)>=0 && !p.overread()) getint(p); break; }
                 int n;
                 while((n = getint(p))>=0 && n<MAXENTS && !p.overread())
                 {
@@ -2152,7 +2152,7 @@ struct fpsserver : igameserver
                 break;
 
             case SV_BASES:
-                if(smode==&capturemode) capturemode.parsebases(p, ci->state.state!=CS_SPECTATOR || ci->privilege || ci->local);
+                if(smode==&capturemode) capturemode.parsebases(p, ci->state.state!=CS_SPECTATOR || ci->privilege);
                 break;
 
             case SV_REPAMMO:
@@ -2173,7 +2173,7 @@ struct fpsserver : igameserver
             }
 
             case SV_INITFLAGS:
-                if(smode==&ctfmode) ctfmode.parseflags(p, ci->state.state!=CS_SPECTATOR || ci->privilege || ci->local);
+                if(smode==&ctfmode) ctfmode.parseflags(p, ci->state.state!=CS_SPECTATOR || ci->privilege);
                 break;
 
             case SV_PING:
@@ -2189,7 +2189,7 @@ struct fpsserver : igameserver
             {
                 int mm = getint(p);
                 update_mastermask();
-                if((ci->privilege || ci->local) && mm>=MM_OPEN && mm<=MM_PRIVATE)
+                if((ci->privilege) && mm>=MM_OPEN && mm<=MM_PRIVATE)
                 {
                     if(ci->privilege>=PRIV_ADMIN || (mastermask&(1<<mm)))
                     {
@@ -2270,7 +2270,7 @@ struct fpsserver : igameserver
             } 
 
             case SV_FORCEINTERMISSION:
-                if(ci->local && !hasnonlocalclients()) startintermission();
+                if(!hasnonlocalclients()) startintermission();
                 break;
 
             case SV_RECORDDEMO:
@@ -2285,7 +2285,7 @@ struct fpsserver : igameserver
 
             case SV_STOPDEMO:
             {
-                if(!ci->local && ci->privilege<PRIV_ADMIN) break;
+                if(ci->privilege<PRIV_ADMIN) break;
                 stopdemo();
                 break;
             }
@@ -2474,7 +2474,7 @@ struct fpsserver : igameserver
                 putint(p, -1);
             }
         }
-        if(ci && !ci->local)
+        if(ci)
         {
             putint(p, SV_SETTEAM);
             putint(p, ci->clientnum);
@@ -2539,7 +2539,6 @@ struct fpsserver : igameserver
 
     void sendresume(clientinfo *ci)
     {
-        if(ci->local) return;
         savedscore &sc = findscore(ci, false);
         if(&sc)
         {
@@ -2978,7 +2977,7 @@ struct fpsserver : igameserver
             {
                 if(!masterpass[0] || haspass==(ci->privilege==PRIV_ADMIN)) return;
             }
-            else if(ci->state.state==CS_SPECTATOR && !haspass && !authname && !ci->local) return;
+            else if(ci->state.state==CS_SPECTATOR && !haspass && !authname) return;
             loopv(clients) if(ci!=clients[i] && clients[i]->privilege && !clients[i]->hidden_priv)
             {
                 if(haspass) clients[i]->privilege = PRIV_NONE;
@@ -3030,6 +3029,8 @@ struct fpsserver : igameserver
     
     void localconnect(int n)
     {
+        assert(false);
+        
         clientinfo *ci = (clientinfo *)getinfo(n);
         ci->clientnum = n;
         ci->connectmillis = totalmillis;
@@ -3042,6 +3043,8 @@ struct fpsserver : igameserver
 
     void localdisconnect(int n)
     {
+        assert(false);
+        
         clientinfo *ci = (clientinfo *)getinfo(n);
         if(ci->connected)
         {
@@ -3145,7 +3148,6 @@ struct fpsserver : igameserver
 
     int allowconnect(clientinfo *ci, const char *pwd)
     {
-        if(ci->local) return DISC_NONE;
         if(!m_mp(gamemode)) return DISC_PRIVATE;
         if(serverpass[0])
         {
