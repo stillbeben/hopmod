@@ -427,25 +427,6 @@ if (= $UID 0) [
 
 if (= $check_pings 1) [
         interval (secs $check_pings_rate) [
-                foreach (players) [if (> (player_ping $arg1) $maxping ) [
-                playercn = $arg1
-                player_var $playercn warnings (+ (player_var $playercn warnings) 1)
-                if (> (player_var $playercn warnings) 3) [
-                        msg (format "%1 %2" (blue (player_name $playercn)) (red [has a too high ping and will be kicked!]) )
-                        log (format "%1 %2 %3" [PING:] (player_name $playercn) [get kicked!] )
-                        kick $playercn
-                        ]
-
-                if (= (player_var $playercn warnings) 1) [
-                privmsg $playercn (format "%1 " (red [WARNING: You will get kicked after 4 warnings!]) ) ]
-
-                msg (format "%1 %2 %3 %4 %5 %6" (red [WARNING:]) (red [(]) (blue (player_var $playercn warnings)) (red[)]) (blue (player_name $playercn)) (red [Your PING is too high!]) )
-                ]]
-        ]
-]
-
-if (= $check_pings 1) [
-        interval (secs $check_pings_rate) [
 
                 checkpingsactivate = 1
 

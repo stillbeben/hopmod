@@ -175,7 +175,7 @@ playercmd_warning = [
 
 if (= $cheater_cmd 1) [
 interval (mins 2) [
-msg (format "%1 %2" (blue [If you detect a cheater type:]) (red [#cheater cn]) )]
+msg (format "%1 %2" (blue [If you detect a cheater type:]) (red [#cheater <cn>]) )]
 playercmd_cheater = [
 
         playercnch = $cn
