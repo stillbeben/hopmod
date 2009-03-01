@@ -180,20 +180,25 @@ playercmd_cheater = [
 
         playercnch = $cn
         playercncheater = $arg1
+        if (|| (strcmp $playercncheater "cn") (strcmp $playercncheater "<cn>") )[
+        privmsg $playercnch (format "%1" (red [cn = clientnumber
+To see which clientnumber the cheater have type: /showclientnum 1
+Now take a look on the scoreboard.
+Your cheater_cmd must look like: #cheater 0 or #cheater 3]) ) ] [
+        player_var $playercnch cheatreq (+ (player_var $playercnch cheatreq) 1)
 
-	player_var $playercnch cheatreq (+ (player_var $playercnch cheatreq) 1)
-	
-	if (>= (player_var $playercnch cheatreq) 8) [
-		privmsg $playercnch (format "%1" (red [You will get kicked and banned now!]) )
-		kick $playercnch
-		]
-	 
+        if (>= (player_var $playercnch cheatreq) 8) [
+                privmsg $playercnch (format "%1" (red [You will get kicked and banned now!]) )
+                kick $playercnch
+                ]
+
         if (>= (player_var $playercnch cheatreq) 4) [
-	        privmsg $playercnch (format "%1" (red [Don't Spam or you will get kicked!!!]) )
-        	][
-			log (format "CHEATER: %1 %2" (player_name $cn) (player_name $playercncheater) )
-			privmsg $playercnch (format "%1" (red [Thank you for your report. The admins will check this!]) )
-        	]
+                privmsg $playercnch (format "%1" (red [Don't Spam or you will get kicked!!!]) )
+                ][
+                        log (format "CHEATER: %1 %2" (player_name $cn) (player_name $playercncheater) )
+                        privmsg $playercnch (format "%1" (red [Thank you for your report. The admins will check this!]) )
+                ]
+]
 ]
 ]
 
