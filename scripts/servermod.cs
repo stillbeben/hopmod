@@ -271,6 +271,8 @@ defaultgame = [
         changemap $default_mode $default_map
         gametime $default_gametime
     ]
+    
+    clearbans
 ]
 
 if $irc_enabled [
