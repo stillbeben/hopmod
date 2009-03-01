@@ -298,6 +298,49 @@ update_player_record = [
     ]
 ]
 
+update_playertotals_record = [
+    parameters cn
+    if (player_has_var $cn stats_id) [
+    
+        local ipaddr (player_ip $cn)
+        local name (player_name $cn)
+        local deaths (player_deaths $cn)
+        local suicides (player_suicides $cn)
+        local frags (+ (player_var $cn frags) $suicides)
+        local hits (player_hits $cn)
+        local misses (player_misses $cn)
+        local damage (player_damage $cn)
+        local kicked (player_var $cn kicked)
+        
+        local pickups (player_var $cn ctf_pickups)
+        local drops (player_var $cn ctf_drops)
+        local scored (player_var $cn ctf_scored)
+        local defended (player_var $cn ctf_defended)
+        local returns (player_var $cn ctf_returns)
+        local teamkills (player_var $cn teamkills)
+        
+        if (strcmp $kicked "") [kicked = 0]
+        
+        statsdb eval [
+            UPDATE playertotals SET
+                ipaddr = $ipaddr,
+                frags = frags + $frags,
+                deaths = deaths + $deaths,
+                suicides = suicides + $suicides,
+                hits = hits + $hits,
+                misses = misses + $misses,
+                damage = damage + $damage,
+                kicked = kicked + $kicked,
+                ctf_pickups = ctf_pickups + $pickups,
+                ctf_drops = ctf_drops + $drops
+                ctf_defended = $ctf_defended + $defended,
+                ctf_returns = $ctf_returns + $returns,
+                teamkills = teamkills + $teamkills
+            WHERE name = $name
+        ]
+    ]
+]
+
 update_items_record = [
     parameters cn
     
@@ -336,7 +379,10 @@ update_gunusage_record = [
 
 update_player_records = [
     statsdb eval [begin transaction] []
-    foreach (players) [update_player_record $arg1]
+    foreach (players) [
+        update_player_record $arg1
+        //update_playertotals_record $arg1
+    ]
     statsdb eval [commit transaction] []
 ]
 

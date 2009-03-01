@@ -1,6 +1,6 @@
 // Common library code
 
-newstatsp = [&& (> $playercount 1) (! (strcmp $gamemode "coopedit"))]
+newstatsp = [&& (> $playercount 0) (! (strcmp $gamemode "coopedit"))]
 mongunsp = [! (match insta $gamemode)]
 ctfp = [match ctf $gamemode]
 capturep = [match capture $gamemode]

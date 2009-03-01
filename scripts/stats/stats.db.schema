@@ -7,6 +7,7 @@ CREATE TABLE matches (
     duration            INTEGER,
     players             INTEGER
 );
+
 CREATE TABLE players (
     id                  INTEGER PRIMARY KEY,
     match_id            INTEGER REFERENCES matches(id),
@@ -21,6 +22,7 @@ CREATE TABLE players (
     damage              INTEGER DEFAULT 0,
     kicked              BOOLEAN DEFAULT 0
 );
+
 CREATE TABLE itempickups (
     id                  INTEGER PRIMARY KEY,
     player_id           INTEGER REFERENCES players(id),
@@ -36,6 +38,7 @@ CREATE TABLE itempickups (
     yellowarmor         INTEGER DEFAULT 0,
     quad                INTEGER DEFAULT 0
 );
+
 CREATE TABLE gunusage (
     id                  INTEGER PRIMARY KEY,
     player_id           INTEGER REFERENCES players(id),
@@ -46,6 +49,7 @@ CREATE TABLE gunusage (
     rocketlauncher      INTEGER DEFAULT 0,
     grenadelauncher     INTEGER DEFAULT 0
 );
+
 CREATE TABLE ctfteams (
     id                  INTEGER PRIMARY KEY,
     match_id            INTEGER REFERENCES matches(id),
@@ -56,6 +60,7 @@ CREATE TABLE ctfteams (
     returns             INTEGER DEFAULT 0,
     resets              INTEGER DEFAULT 0
 );
+
 CREATE TABLE ctfplayers (
     id                  INTEGER PRIMARY KEY,
     player_id           INTEGER REFERENCES players(id),
@@ -67,6 +72,7 @@ CREATE TABLE ctfplayers (
     returns             INTEGER DEFAULT 0,
     teamkills           INTEGER DEFAULT 0
 );
+
 CREATE TABLE captureteams (
     id                  INTEGER PRIMARY KEY,
     match_id            INTEGER REFERENCES matches(id),
@@ -76,13 +82,58 @@ CREATE TABLE captureteams (
     lost                INTEGER DEFAULT 0,
     win                 BOOLEAN DEFAULT 0
 );
+
 CREATE TABLE captureplayers (
     id                  INTEGER PRIMARY KEY,
     player_id           INTEGER REFERENCES players(id),
     team_id             INTEGER REFERENCES captureteams(id),
     teamkills           INTEGER DEFAULT 0
 );
+
+CREATE TABLE playertotals (
+    id                  INTEGER PRIMARY KEY,
+    name                UNIQUE TEXT,
+    ipaddr              TEXT,
+    first_game_time     TEXT,
+    last_game_time      TEXT,    
+    frags               INTEGER DEFAULT 0,
+    deaths              INTEGER DEFAULT 0,
+    suicides            INTEGER DEFAULT 0,
+    hits                INTEGER DEFAULT 0,
+    misses              INTEGER DEFAULT 0,
+    damage              INTEGER DEFAULT 0,
+    kicked              BOOLEAN DEFAULT 0,
+    ctf_pickups         INTEGER DEFAULT 0,
+    ctf_drops           INTEGER DEFAULT 0,
+    ctf_scored          INTEGER DEFAULT 0,
+    ctf_defended        INTEGER DEFAULT 0,
+    ctf_returns         INTEGER DEFAULT 0,
+    teamkills           INTEGER DEFAULT 0,
+    games               INTEGER DEFAULT 0
+);
+
 CREATE INDEX "player_id" on ctfplayers (player_id ASC);
 CREATE INDEX "player_name" on players (name);
 CREATE INDEX "player_ipaddr" on players (ipaddr);
 CREATE INDEX "match_id" on players (match_id ASC);
+CREATE INDEX "playertotals_by_name" playertotals (name ASC);
+
+CREATE TRIGGER delete_player_cleanup AFTER DELETE ON players
+BEGIN
+    DELETE FROM itempickups WHERE player_id = old.id;
+    DELETE FROM gunusage WHERE player_id = old.id;
+    DELETE FROM ctfplayers WHERE player_id = old.id;
+    DELETE FROM captureplayers WHERE player_id = old.id;
+END;
+
+CREATE TRIGGER delete_match_cleanup AFTER DELETE ON matches
+BEGIN
+    DELETE FROM ctfteams WHERE match_id = old.id;
+    DELETE FROM captureteams WHERE match_id = old.id;
+    DELETE FROM players where match_id = old.id;
+END;
+
+CREATE TRIGGER insert_playertotals AFTER INSERT ON players
+BEGIN
+    INSERT OR IGNORE INTO playertotals (name,first_game_time) VALUES (NEW.name,strftime('%s','now'));
+END;
