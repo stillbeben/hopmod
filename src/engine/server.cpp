@@ -490,10 +490,16 @@ void checkmasterreply(bool dedicated)
     if(mastersock!=ENET_SOCKET_NULL && !httpgetreceive(mastersock, masterreplybuf))
     {
         mastersock = ENET_SOCKET_NULL;
+        
         const char * stripped_masterreply = stripheader(masterreply);
-        registered = strstr(stripped_masterreply,"your server was updated") != NULL;
+        bool updated = strstr(stripped_masterreply,"your server was updated") != NULL;
+        bool _registered = strstr(stripped_masterreply, "your server was registered") != NULL;
+        registered = updated || _registered;
+        
         printf("master server reply:\n%s\n", stripped_masterreply);
-        if(!registered) fprintf(stderr,"Server registration was unsuccessful; master server reply was: %s.\n",stripped_masterreply);
+        
+        if(!registered)
+            fprintf(stderr,"Server registration was unsuccessful; master server reply was: %s.\n",stripped_masterreply);
     }
 }
 
