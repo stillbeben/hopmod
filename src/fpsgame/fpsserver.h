@@ -601,6 +601,7 @@ struct fpsserver : igameserver
     cubescript::function1<void,int>                         func_spawn;
     cubescript::function1<bool,bool>                        func_gameclock;
     cubescript::function0<void>                             func_registerserver;
+    cubescript::function2<bool,int,const char *>            func_process_player_command;
     
     cubescript::variable_ref<int>                           var_maxclients;
     cubescript::variable_ref<int>                           var_mastermode;
@@ -773,6 +774,7 @@ struct fpsserver : igameserver
         func_spawn(boost::bind(&fpsserver::spawn_player,this,_1)),
         func_gameclock(boost::bind(&fpsserver::set_rungameclock,this,_1)),
         func_registerserver(updatemasterserver),
+        func_process_player_command(boost::bind(&fpsserver::process_player_command,this,_1,_2)),
         
         var_maxclients(maxclients),
         var_mastermode(mastermode),
@@ -903,6 +905,7 @@ struct fpsserver : igameserver
         server_domain.register_symbol("spawn",&func_spawn);
         server_domain.register_symbol("rungameclock",&func_gameclock);
         server_domain.register_symbol("registerserver",&func_registerserver);
+        server_domain.register_symbol("process_player_command",&func_process_player_command);
         
         server_domain.register_symbol("maxclients",&var_maxclients);
         server_domain.register_symbol("mastermode",&var_mastermode);
@@ -3928,6 +3931,111 @@ struct fpsserver : igameserver
         }
         
         return !gametimefreeze;
+    }
+    
+    bool process_player_command(int cn, const char * cmdline)
+    {
+        clientinfo * ci = get_ci(cn);
+        
+        if(cmdline[0] != '#') return false;
+        const char * original = cmdline;
+        cmdline++;
+        
+        std::vector<std::string> arguments;
+        
+        // command line parsing
+        
+        while(*cmdline)
+        {
+            cmdline += strspn(cmdline," ");
+            
+            if(cmdline[0]=='\"' || cmdline[0]=='[')
+            {
+                char start = cmdline[0];
+                cmdline++;
+                const char * end = cmdline;
+                if(start == '[')
+                {
+                    int nested = 1;
+                    while(nested && *(++end))
+                    {
+                        if(*end =='[') nested++;
+                        else if (*end==']') nested--;
+                    }
+                }
+                else end = cmdline + strcspn(cmdline,"\"");
+                arguments.push_back(std::string(cmdline,end));
+                cmdline = end + 1;
+            }
+            else
+            {
+                int skip = strcspn(cmdline," ");
+                char delim = *(cmdline + skip - 1);
+                arguments.push_back(std::string(cmdline, cmdline+skip));
+                cmdline = cmdline + skip;
+            }
+        }
+        
+        if(arguments.empty()) return false;
+        
+        cubescript::domain command_context(&server_domain,cubescript::domain::TEMPORARY_DOMAIN);
+        
+        cubescript::cstr_variable cmdline_var(original,strlen(original));
+        command_context.register_symbol("arguments",&cmdline_var);
+        
+        cubescript::variable_ref<int> cn_var(cn);
+        cn_var.readonly(true);
+        command_context.register_symbol("cn",&cn_var);
+        
+        s_sprintfd(cmdfile)("./scripts/commands/%s.csl",arguments[0].c_str());
+        if(fileexists(cmdfile,"r"))
+        {
+            try
+            {
+                cubescript::exec_file(cmdfile, &command_context);
+            }
+            catch(cubescript::error_key key)
+            {
+                ci->sendprivmsg("3Command Failed!");
+                std::cerr<<"Script error in #"<<arguments[0]<<": "<<key.get_key()<<std::endl;
+            }
+            catch(cubescript::error_context * error)
+            {
+                ci->sendprivmsg("3Command Failed!");
+                std::cerr<<"Script error in #"<<arguments[0]<<":"<<cubescript::format_error_report(error)<<std::endl;
+                delete error;
+            }
+        }
+        else
+        {
+            s_sprintfd(cmdname)("playercmd_%s",arguments[0].c_str());
+            cubescript::symbol * cmdobj = server_domain.lookup_symbol(cmdname);
+            if(!cmdobj)
+            {
+                ci->sendprivmsg("3Command Not Found!");
+            }
+            else
+            {
+                std::list<std::string> arglist(arguments.begin()+1,arguments.end());
+                try
+                {
+                    cmdobj->apply(arglist, &command_context);
+                }
+                catch(cubescript::error_key key)
+                {
+                    ci->sendprivmsg("3Command Failed!");
+                    std::cerr<<"Script error in #"<<arguments[0]<<": "<<key.get_key()<<std::endl;
+                }
+                catch(cubescript::error_context * error)
+                {
+                    ci->sendprivmsg("3Command Failed!");
+                    std::cerr<<"Script error in #"<<arguments[0]<<":"<<cubescript::format_error_report(error)<<std::endl;
+                    delete error;
+                }
+            }
+        }
+        
+        return true;
     }
 };
 

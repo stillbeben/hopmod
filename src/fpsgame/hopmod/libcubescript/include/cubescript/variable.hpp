@@ -165,6 +165,12 @@ class cstr_variable:public symbol::persistable
 {
 public:
     cstr_variable(char * str,size_t maxlen):m_str(str),m_maxlen(maxlen),m_ro(false){}
+    cstr_variable(const char * str,size_t maxlen)
+    {
+        m_str = const_cast<char *>(str);
+        m_maxlen = maxlen;
+        m_ro = true;
+    }
     std::string apply(std::list<std::string> & args,domain *)
     {
         if(m_ro) throw error_key("runtime.variable.read_only");

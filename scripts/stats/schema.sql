@@ -20,7 +20,8 @@ CREATE TABLE players (
     hits                INTEGER DEFAULT 0,
     misses              INTEGER DEFAULT 0,
     damage              INTEGER DEFAULT 0,
-    kicked              BOOLEAN DEFAULT 0
+    kicked              BOOLEAN DEFAULT 0,
+    timeplayed          INTEGER DEFAULT 0
 );
 
 CREATE TABLE itempickups (
@@ -109,14 +110,15 @@ CREATE TABLE playertotals (
     ctf_defended        INTEGER DEFAULT 0,
     ctf_returns         INTEGER DEFAULT 0,
     teamkills           INTEGER DEFAULT 0,
-    games               INTEGER DEFAULT 0
+    games               INTEGER DEFAULT 0,
+    timeplayed          INTEGER DEFAULT 0
 );
 
 CREATE INDEX "player_id" on ctfplayers (player_id ASC);
 CREATE INDEX "player_name" on players (name);
 CREATE INDEX "player_ipaddr" on players (ipaddr);
 CREATE INDEX "match_id" on players (match_id ASC);
-CREATE INDEX "playertotals_by_name" playertotals (name ASC);
+CREATE INDEX "playertotals_by_name" on playertotals (name ASC);
 
 CREATE TRIGGER delete_player_cleanup AFTER DELETE ON players
 BEGIN

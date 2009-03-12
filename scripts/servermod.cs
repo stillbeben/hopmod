@@ -96,25 +96,7 @@ event_handler $ontext [
     ]
     
     local cmd 0
-    
-    if (match "^#.*$" $text) [
-        veto 1
-        arguments = (split $text " ")
-        
-        cmdname = (at (split (at $arguments 0) #) 0)
-        filename = (format "./scripts/commands/%1.csl" $cmdname)
-        if (path? $filename) [exec $filename] [
-            dynamic_command = (concatword playercmd_ $cmdname)
-            if (symbol? $dynamic_command) [
-                arguments = (erase1st $arguments)
-                try do [@dynamic_command @arguments] [
-                    log_error [@dynamic_command function failed with error @arg1]
-                    privmsg $cn (err "Command failed. Check your arguments and your privilege level.")
-                ]
-            ] [privmsg $cn (err "Command not found.")]
-        ]
-        cmd = 1
-    ]
+    if (process_player_command $cn $text) [veto 1; cmd = 1]
     
     if (&& (! $cmd) (strcmp (player_status $cn) "spying")) [
         veto 1
