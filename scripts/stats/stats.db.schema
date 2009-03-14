@@ -97,3 +97,4 @@ CREATE INDEX "player_id" on ctfplayers (player_id ASC);
 CREATE INDEX "player_name" on players (name);
 CREATE INDEX "player_ipaddr" on players (ipaddr);
 CREATE INDEX "match_id" on players (match_id ASC);
+INSERT INTO register VALUES(1, 'admin', 'changeme', 0, 1, 0, 0, 0);
