@@ -197,6 +197,7 @@ Your cheater_cmd must look like: #cheater 0 or #cheater 3]) ) ] [
                 ][
                         log (format "CHEATER: %1 %2" (player_name $cn) (player_name $playercncheater) )
                         privmsg $playercnch (format "%1" (red [Thank you for your report. The admins will check this!]) )
+			msg (format "CHEATER: %1 reports %2 is a cheater!" (green (player_name $cn)) (red (player_name $playercncheater)) ) 
                 ]
 ]
 ]
