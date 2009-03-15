@@ -9,14 +9,14 @@ playercmd_login = [
         if (= (player_var $cn logged_in) 1) [privmsg $cn (red[You are already logged in])][
 
          statsdb eval [select password from register where name=$arg1] [loginpassword = (column password)]
-         statsdb eval [select firstlogin from register where name=$arg1] [firstlogin = (column firstlogin)]
-         statsdb eval [select ipaddr from register where name=$arg1] [loginip = (column ipaddr)]
-	 statsdb eval [select greet from register where name=$arg1] [greet = (column greet)]
-	 statsdb eval [select admin from register where name =$arg1] [adminlvl = (column admin)]
 	
 	 if (strcmp $arg2 "") [privmsg $cn (format "%1" (red [Nice try!]) )] [
          if (strcmp $loginpassword $arg2) [
-                if (= $firstlogin 1) [
+         	 statsdb eval [select firstlogin from register where name=$arg1] [firstlogin = (column firstlogin)]
+         	 statsdb eval [select ipaddr from register where name=$arg1] [loginip = (column ipaddr)]
+        	 statsdb eval [select greet from register where name=$arg1] [greet = (column greet)]
+	         statsdb eval [select admin from register where name =$arg1] [adminlvl = (column admin)]
+	     if (= $firstlogin 1) [
                         playerip = (player_ip $cn)
                         privmsg $cn (format "%1" (blue [This is your first login!]) )
                         statsdb eval [update register set firstlogin = 0 where name = $arg1]
