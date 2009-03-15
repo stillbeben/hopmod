@@ -1,7 +1,7 @@
 
 exec "scripts/irc.csl"
 exec "scripts/playercommands.cs"
-if (= $login_script_enable 1) [exec "scripts/playercommands.cs"]
+if (= $login_script_enable 1) [exec "scripts/loginscript.cs"]
 logfile "logs/server.log" server_log
 log = [
     reference text arg1
