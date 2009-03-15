@@ -32,6 +32,7 @@ playercmd_login = [
 		if (= (player_var $cn adminlvl) 1) [
 			privmsg $cn (format "Type: %1 to get master/admin." (red [#getmaster]) )
 		]
+		privmsg $cn (format "Type %1 to see your commandlist" (red [#cmds]) )
                 playerip = (player_ip $cn)
                 statsdb eval [update register set ipaddr = $playerip where name = $arg1]
                 player_var $cn mute 0
@@ -83,8 +84,9 @@ playercmd_register = [
 playercmd_greet = [
         if (= (player_var $cn logged_in) 1) [
                 logged_in_as_name = (player_var $cn logged_in_as)
+		msg $logged_in_as_name
                 statsdb eval [update register set greet = $arg1 where name = $logged_in_as_name]
-                privmsg $cn (format "%1" (green [Command successful!]) )
+                privmsg $cn [test]
 	] [privmsg $cn (format "%1" (red [You are not logged in!]) )]
 ]
 
@@ -141,3 +143,25 @@ playercmd_deladmin = [
 	]	
 ]
 
+playercmd_cmds = [ 
+	privmsg $cn (format "%1" (blue[COMMAND		DESCRIPTION
+#greet		Change your greet message when you log in
+		    Example: #greet "Hello :)"
+#changepw	Change your password
+		    Example: #changepw newpassword
+#whoisonline	Will show you the persons, who are logged in
+#logout		Logout]) )
+	if (= (player_var $cn adminlvl) 1) [
+	privmsg $cn (format "%1" (blue[#getmaster	You will get master/admin
+#leavemaster	You will leave master/admin
+#changeuserpw	Change User's password
+		    Example: #changeuserpw name password
+#giveadmin	You will increase user level to admin permanent]) )
+privmsg $cn (format "%1" (blue[#deladmin	The user level will be decreased]) )
+	]
+	privmsg $cn (format "%1" (red[
+
+Open the console by pushing F11 to see the commandlist!!
+
+]) )
+]
