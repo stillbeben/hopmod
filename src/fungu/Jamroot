@@ -1,0 +1,40 @@
+
+project : requirements <include>include <define>FUNGU_WITH_LUA ;
+
+use-project /boost : utils/boost ;
+
+lib script : 
+    src/script/env.cpp
+    src/script/env_object.cpp
+    src/script/env_symbol.cpp
+    src/script/env_frame.cpp
+    src/script/expression.cpp
+    src/script/subexpression.cpp
+    src/script/quote.cpp
+    src/script/block.cpp
+    src/script/comment.cpp
+    src/script/structure.cpp
+    src/script/execute.cpp
+    src/script/arguments_container.cpp
+    src/script/code_block.cpp
+    src/script/error.cpp
+    src/script/table.cpp
+    src/script/eval_stream.cpp
+    src/script/corelib/alias.cpp
+    src/script/corelib/anonymous_function.cpp
+    src/script/corelib/controlflow.cpp
+    src/script/corelib/datetime.cpp
+    src/script/corelib/exception.cpp
+    src/script/corelib/exec.cpp
+    src/script/corelib/list.cpp
+    src/script/corelib/maths.cpp
+    src/script/corelib/object.cpp
+    src/script/corelib/reference.cpp
+    src/script/corelib/string.cpp
+    src/script/corelib/vector.cpp
+    src/script/lua/arguments.cpp
+    src/script/lua/lua_function.cpp
+    src/script/lua/object_wrapper.cpp
+    : <link>static ;
+
+build-project test ;

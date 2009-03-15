@@ -1,0 +1,15 @@
+
+== Building Hopmod ==
+
+If the configure script is missing:
+
+    aclocal && autoconf
+
+To compile and install the server:
+
+    ./configure
+    bjam
+
+== TODO ==
+
+* Fix script::lua::get_argument_value function to throw LUA_ERROR

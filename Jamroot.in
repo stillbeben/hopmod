@@ -1,0 +1,45 @@
+
+lib enet : 
+    src/enet/host.c
+    src/enet/list.c
+    src/enet/callbacks.c
+    src/enet/packet.c
+    src/enet/peer.c
+    src/enet/protocol.c
+    src/enet/unix.c
+    src/enet/win32.c
+    : <link>static <include>src/enet/include
+    @DEFINE_HAS_GETHOSTBYADDR_R@
+    @DEFINE_HAS_GETHOSTBYNAME_R@
+    @DEFINE_HAS_POLL@
+    @DEFINE_HAS_FCNTL@
+    @DEFINE_HAS_INET_PTON@
+    @DEFINE_HAS_INET_NTOP@ 
+    @DEFINE_HAS_MSGHDR_FLAGS@ 
+    @DEFINE_HAS_SOCKLEN_T@ 
+    @DEFINE_ENET_BUFFER_MAXIMUM@ 
+    @DEFINE_USE_CRC32@ ;
+
+lib z : : <name>z ;
+lib lua : : <name>lua ;
+lib dl : : <name>dl ;
+
+use-project /fungu : src/fungu ;
+
+@BUILD_PROJECT_HOPMOD_TEST@ # test programs for hopmod's standalone features
+
+exe server : 
+    src/shared/tools.cpp
+    src/engine/server.cpp
+    src/fpsgame/fpsserver.cpp
+    src/hopmod/floodprotection.cpp
+    src/hopmod/scripting.cpp
+    src/hopmod/script_bindings.cpp
+    enet
+    z
+    lua
+    dl
+    /fungu//script
+    : <define>STANDALONE <define>FUNGU_WITH_LUA <include>src/shared <include>src/enet/include <include>src/fungu/include <include>src/hopmod ;
+
+install dist : server : <location>bin ;

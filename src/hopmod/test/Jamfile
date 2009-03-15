@@ -1,0 +1,6 @@
+
+import testing ;
+
+unit-test netmask_test : netmask_test.cpp ;
+unit-test banned_networks_test : banned_networks_test.cpp ;
+unit-test timedbans_service_test : timedbans_service_test.cpp ;
