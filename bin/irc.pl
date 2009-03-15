@@ -298,6 +298,15 @@ sub filterlog {
     { return "\x039MATCH\x03       \x034 $1 \x03 versus \x0312 $2 \x03 on \x037 $3 \x03"}
     if ($line =~ /MATCH: Game has end! (.*) wins, with (.*) - (.*) Poor (.*)/)
     { return "\x039MATCH\x03       \x034 Game has end! $1 \x03 wins, with $2 - $3 Poor $4 \x03"}
+    #### LOGIN #####
+    if ($line =~ /#login (.*)/)
+    { return ""}
+    if ($line =~ /#changepw (.*)/)
+    { return ""}
+    if ($line =~ /#changeuserpw (.*)/)
+    { return ""}
+    if ($line =~ /#register (.*)/)
+    { return ""}
     ##### MSG ###
     if ($line =~ /#msg (.*)/)
     { return "" }
