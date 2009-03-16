@@ -22,7 +22,11 @@ event_handler $onconnect [
             msg (format "%1 is connected from %2" (green (player_name $cn)) (green $location))
         ]
     ]
-    
+	if (= $login_script_enable 1) [
+	player_pvar $cn logged_in 0
+	player_pvar $cn adminlvl 0
+	player_pvar $cn logged_in_as 0 
+   	]
     sleep (secs 2) [
         local cn @cn
         local connection_id @(player_conid $cn)
