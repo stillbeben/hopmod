@@ -157,7 +157,7 @@ playercmd_cmds = [
 #changeuserpw	Change User's password
 		    Example: #changeuserpw name password
 #giveadmin	You will increase user level to admin permanent]) )
-privmsg $cn (format "%1" (blue[#deladmin	The user level will be decreased]) )
+privmsg $cn (format "%1" (blue[#deladmin    The user level will be decreased]) )
 	]
 	privmsg $cn (format "%1" (red[
 
