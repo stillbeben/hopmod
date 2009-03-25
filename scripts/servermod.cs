@@ -26,7 +26,20 @@ event_handler $onconnect [
 	player_pvar $cn logged_in 0
 	player_pvar $cn adminlvl 0
 	player_pvar $cn logged_in_as 0 
+		if (= $protect_names 1) [
+			local reservename ""
+			playername = (player_name $cn)
+			statsdb eval [select name from register where name=$playername] [reservename = (column name)]
+			if (&& (= (player_var $cn logged_in) 0)(strcmp $reservename $playername)) [
+				spec $cn
+				player_var $cn mute 1
+				player_var $cn speccr 1
+				privmsg $cn (format "%1" (red [You are using a protected name!]) )
+				privmsg $cn (format "%1" (red[Please change your name and reconnect]) )
+			]
+		]
    	]
+
     sleep (secs 2) [
         local cn @cn
         local connection_id @(player_conid $cn)
@@ -70,6 +83,22 @@ event_handler $onrename [
     parameters cn oldname newname
     
     log (format "%1(%2) renamed to %3" $oldname $cn $newname)
+
+	if (= $login_script_enable 1) [
+		if (= $protect_names 1) [
+			local reservename ""
+			playernamere = $newname
+			statsdb eval [select name from register where name=$playernamere] [reservename = (column name)]
+			if (&& (= (player_var $cn logged_in) 0)(strcmp $reservename $playernamere)) [
+				spec $cn
+				player_var $cn mute 1
+				player_var $cn speccr 1
+				privmsg $cn (format "%1 %2" (red [You are using a protected name!]) )
+				privmsg $cn (format "%1 %2" (red [Please change your name and reconnect]) )
+			]
+		]
+	]
+
 ]
 
 event_handler $onreteam [
