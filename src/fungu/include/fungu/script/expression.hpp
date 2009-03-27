@@ -10,10 +10,6 @@
 
 #include "construct.hpp"
 #include "error.hpp"
-#include "typed_literal.hpp"
-
-#include <limits>
-#include <boost/spirit/include/classic_core.hpp> //used for int parsing
 
 namespace fungu{
 namespace script{

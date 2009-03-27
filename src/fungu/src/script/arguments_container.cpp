@@ -87,5 +87,12 @@ void arguments_container::reset()
     }
 }
 
+void arguments_container::clear()
+{
+    m_arguments.clear();
+    m_placeholders.clear();
+    reset();
+}
+
 } //namespace script
 } //namespace fungu

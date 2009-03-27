@@ -7,6 +7,7 @@
  */
 
 #include "fungu/script/table.hpp"
+#include "fungu/script/any_variable.hpp"
 
 namespace fungu{
 namespace script{

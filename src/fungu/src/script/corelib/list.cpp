@@ -7,8 +7,7 @@
  */
 #include "fungu/script/env.hpp"
 #include "fungu/script/function.hpp"
-#include "fungu/script/variable.hpp"
-
+#include "fungu/script/any_variable.hpp"
 #include <boost/shared_ptr.hpp>
 
 namespace fungu{

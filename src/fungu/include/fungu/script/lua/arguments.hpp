@@ -57,6 +57,7 @@ public:
     value_type serialize(const char * str);
     value_type serialize(const std::string & str);
     value_type serialize(int n);
+    value_type serialize(bool);
     
     value_type get_void_value();
 private:

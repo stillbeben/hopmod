@@ -58,6 +58,7 @@ public:
     bool empty()const;
     
     void reset();
+    void clear();
 private:
     std::vector<value_type> m_arguments;
     std::vector<value_type>::iterator m_front;

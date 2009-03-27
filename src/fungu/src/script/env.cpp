@@ -16,7 +16,6 @@
 #include "fungu/script/result_type.hpp"
 #include "fungu/script/arguments_container.hpp"
 #include "fungu/script/symbol_table.hpp"
-#include "fungu/script/anyvar_macro.hpp"
 
 #include <typeinfo>
 #include <map>

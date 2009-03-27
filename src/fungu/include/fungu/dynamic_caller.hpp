@@ -21,13 +21,13 @@
 namespace fungu{
 
 //used by deserialize methods in a Serializer class...
-#ifndef TARGET_TAG_CLASS
-#define TARGET_TAG_CLASS
+#ifndef HAS_TARGET_TAG_CLASS
+#define HAS_TARGET_TAG_CLASS
 template<typename T> struct target_tag{};
 #endif
 
-#ifndef MISSING_ARGS_CLASS
-#define MISSING_ARGS_CLASS
+#ifndef HAS_MISSING_ARGS_CLASS
+#define HAS_MISSING_ARGS_CLASS
 class missing_args:public std::exception
 {
 public:

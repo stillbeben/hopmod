@@ -1,3 +1,6 @@
+/*
+    Copyright (C) 2009 Graham Daws
+*/
 #ifndef HOPMOD_BANNED_NETWORKS_HPP
 #define HOPMOD_BANNED_NETWORKS_HPP
 

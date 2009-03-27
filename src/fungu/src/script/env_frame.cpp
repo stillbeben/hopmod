@@ -7,6 +7,7 @@
  */
 
 #include "fungu/script/env.hpp"
+#include "fungu/script/any_variable.hpp"
 
 namespace fungu{
 namespace script{

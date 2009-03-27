@@ -1,5 +1,5 @@
-#ifndef HOPMOD_TIMED_BAN_HPP
-#define HOPMOD_TIMED_BAN_HPP
+#ifndef HOPMOD_TIMEDBANS_SERVICE_HPP
+#define HOPMOD_TIMEDBANS_SERVICE_HPP
 
 #include "banned_networks.hpp"
 #include <queue>
@@ -40,6 +40,15 @@ public:
             m_bans.unset_ban(m_ban_times.top().addr);
             m_ban_times.pop();
             update(time);
+        }
+    }
+    
+    void clear()
+    {
+        while(!m_ban_times.empty())
+        {
+            m_bans.unset_ban(m_ban_times.top().addr);
+            m_ban_times.pop();
         }
     }
 };

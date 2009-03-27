@@ -27,6 +27,11 @@ public:
         
     }
     
+    object_type get_object_type()const
+    {
+        return DATA_OBJECT;
+    }
+    
     result_type apply(apply_arguments & args,env::frame *)
     {
         throw error(NO_WRITE);

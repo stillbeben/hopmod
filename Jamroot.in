@@ -1,4 +1,6 @@
 
+use-project /fungu : src/fungu ;
+
 lib enet : 
     src/enet/host.c
     src/enet/list.c
@@ -18,15 +20,32 @@ lib enet :
     @DEFINE_HAS_MSGHDR_FLAGS@ 
     @DEFINE_HAS_SOCKLEN_T@ 
     @DEFINE_ENET_BUFFER_MAXIMUM@ 
-    @DEFINE_USE_CRC32@ ;
+    @DEFINE_USE_CRC32@ 
+    : : <include>src/enet/include ;
 
 lib z : : <name>z ;
 lib lua : : <name>lua ;
 lib dl : : <name>dl ;
+lib boost_signals : : <name>boost_signals-mt ;
 
-use-project /fungu : src/fungu ;
+without_geoip = @WITHOUT_GEOIP@ ;
+if $(without_geoip) = 1 {
+    alias geoip : : : : <define>WITHOUT_GEOIP ;
+} else {
+    lib geoip : : <name>GeoIP ;
+}
 
-@BUILD_PROJECT_HOPMOD_TEST@ # test programs for hopmod's standalone features
+without_microhttpd = @WITHOUT_MICROHTTPD@ ;
+if $(without_microhttpd) = 1 {
+    alias microhttpd : : : : <define>WITHOUT_MICROHTTPD ;
+} else {
+    lib microhttpd : : <name>microhttpd ;
+}
+
+without_test_project = @WITHOUT_TEST_PROJECT@ ;
+if $(without_test_project) = 0 {
+    build-project src/hopmod/test ;
+}
 
 exe server : 
     src/shared/tools.cpp
@@ -35,11 +54,21 @@ exe server :
     src/hopmod/floodprotection.cpp
     src/hopmod/scripting.cpp
     src/hopmod/script_bindings.cpp
+    src/hopmod/signals.cpp
+    src/hopmod/script_pipe.cpp
+    src/hopmod/script_socket.cpp
+    src/hopmod/parse_player_command.cpp
+    src/hopmod/process_player_command.cpp
+    src/hopmod/scheduler.cpp
+    src/hopmod/geoip.cpp
     enet
     z
     lua
     dl
     /fungu//script
-    : <define>STANDALONE <define>FUNGU_WITH_LUA <include>src/shared <include>src/enet/include <include>src/fungu/include <include>src/hopmod ;
+    boost_signals
+    geoip
+    microhttpd
+    : <define>STANDALONE <include>src/shared <include>src/fpsgame <include>src/hopmod ;
 
 install dist : server : <location>bin ;

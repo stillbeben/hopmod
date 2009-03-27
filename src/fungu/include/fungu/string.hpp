@@ -8,22 +8,18 @@
 #ifndef FUNGU_STRING_HPP
 #define FUNGU_STRING_HPP
 
-#include <string>
-#include <typeinfo>
-#include <ostream>
-#include <istream>
 #include <assert.h>
 #include <math.h>
-
+#include <string>
+#include <ostream>
+#include <istream>
 #include <boost/functional/hash.hpp>
-
-#include <iostream>
 
 namespace fungu{
 
 template<typename T> class basic_const_string;
 
-namespace string{
+namespace string_detail{
 
 template<typename T>
 struct const_string_traits
@@ -116,7 +112,7 @@ class basic_const_string
 public:
     typedef const T value_type;
     typedef value_type * const_iterator;
-    typedef string::comparator<basic_const_string<T>,string::less_than> less_than_comparator;
+    typedef string_detail::comparator<basic_const_string<T>,string_detail::less_than> less_than_comparator;
     typedef std::size_t index_type;
     
     basic_const_string()
@@ -189,12 +185,12 @@ public:
     
     bool operator<(const basic_const_string<T> & operand)const
     {
-        return string::less_than(*this,operand);
+        return string_detail::less_than(*this,operand);
     }
     
     bool operator==(const basic_const_string<T> & operand)const
     {
-        return string::equals(*this,operand);
+        return string_detail::equals(*this,operand);
     }
     
     template<typename IntType>

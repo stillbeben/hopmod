@@ -111,8 +111,6 @@ private:
         pointer m_fun;
     };
     
-    DEFINE_ANY_VARIABLE_CLASS;
-    
     env * m_env;
     frame * m_outer_frame;  //used to get to the root of a lexical scope
     frame_symbol * m_last_binding;

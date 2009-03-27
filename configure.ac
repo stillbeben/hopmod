@@ -4,8 +4,19 @@ AC_PROG_CXX
 
 AC_HAVE_LIBRARY([z],,[AC_MSG_ERROR("You are missing a required library: zlib.")])
 AC_HAVE_LIBRARY([lua],,[AC_MSG_ERROR("You are missing a required library: lua.")])
-# AC_HAVE_LIBRARY([GeoIP],,[AC_MSG_ERROR("You are missing a required library: GeoIP")])
-# AC_HAVE_LIBRARY([microhttpd],,[AC_MSG_ERROR("You are missing a required library: libmicrohttpd.")])
+AC_HAVE_LIBRARY([boost_signals-mt],,[AC_MSG_ERROR([You are missing a required library: Boost Signals.
+    Check you built the Boost libraries for system layout and with multithreading support.
+])])
+
+AC_HAVE_LIBRARY([GeoIP],[AC_SUBST(WITHOUT_GEOIP,0)],[
+    AC_SUBST(WITHOUT_GEOIP,1)
+    AC_MSG_WARN("Building WITHOUT GeoIP support.")
+])
+
+AC_HAVE_LIBRARY([microhttpd],[AC_SUBST(WITHOUT_MICROHTTPD,0)],[
+    AC_SUBST(WITHOUT_MICROHTTPD,1)
+    AC_MSG_WARN("Building WITHOUT script_socket support.")
+])
 
 AC_CHECK_TOOL([BJAM], [bjam],[:])
 if test $BJAM = ":"; then
@@ -22,7 +33,9 @@ if test $BJAM = ":"; then
 fi
 
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADER([boost/detail/lightweight_test.hpp],[AC_SUBST(BUILD_PROJECT_HOPMOD_TEST,"build-project src/hopmod/test ;")],[AC_MSG_WARN("Will not be building and running tests.")])
+AC_CHECK_HEADER([boost/detail/lightweight_test.hpp],[AC_SUBST(WITHOUT_TEST_PROJECT,0)],[
+    AC_SUBST(WITHOUT_TEST_PROJECT,1)
+    AC_MSG_WARN("Will not be building and running tests.")])
 AC_LANG_POP()
 
 AC_CHECK_FUNC(gethostbyaddr_r, [AC_SUBST(DEFINE_HAS_GETHOSTBYADDR_R,"<define>HAS_GETHOSTBYADDR_R")])

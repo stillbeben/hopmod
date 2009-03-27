@@ -7,6 +7,7 @@
  */
 
 #include "fungu/script/lua/arguments.hpp"
+#include "fungu/script/lua/lua_function.hpp"
 
 namespace fungu{
 namespace script{
@@ -90,6 +91,12 @@ arguments::value_type arguments::serialize(int n)
     return 1;
 }
 
+arguments::value_type arguments::serialize(bool value)
+{
+    lua_pushboolean(m_stack, value);
+    return 1;
+}
+
 arguments::value_type arguments::get_void_value()
 {
     return 0;
@@ -109,11 +116,16 @@ any get_argument_value(lua_State * L)
             else return any(n);
         }
         case LUA_TBOOLEAN:
-            return any(lua_toboolean(L,-1));
+            return lua_toboolean(L,-1);
         case LUA_TSTRING:
-            return any(const_string(lua_tostring(L,-1)));
+            return const_string(lua_tostring(L,-1));
+        case LUA_TFUNCTION:
+        {
+            env::object * obj = new lua_function(L);
+            obj->set_adopted_flag();
+            return obj->get_shared_ptr();
+        }
         case LUA_TTABLE:    //TODO
-        case LUA_TFUNCTION: //TODO self-referenced lua_function object
         default:
             throw error(NO_CAST);
     }

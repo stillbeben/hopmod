@@ -1,3 +1,6 @@
+/*
+    Copyright (C) 2009 Graham Daws
+*/
 #ifndef HOPMOD_NETMASK_HPP
 #define HOPMOD_NETMASK_HPP
 

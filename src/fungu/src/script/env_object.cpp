@@ -23,6 +23,11 @@ env::object::~object()
     
 }
 
+env::object::object_type env::object::get_object_type()const
+{
+    return env::object::UNCLASSIFIED_OBJECT;
+}
+
 #ifdef FUNGU_WITH_LUA
 int env::object::apply(lua_State * L)
 {

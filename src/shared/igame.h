@@ -86,7 +86,7 @@ namespace server
     extern void deleteclientinfo(void *ci);
     extern void serverinit();
     extern int reserveclients();
-    extern void clientdisconnect(int n);
+    extern void clientdisconnect(int n,int reason);
     extern int clientconnect(int n, uint ip);
     extern void localdisconnect(int n);
     extern void localconnect(int n);
@@ -102,5 +102,6 @@ namespace server
     extern int serverport();
     extern const char *getdefaultmaster();
     extern void sendservmsg(const char *s);
+    extern void shutdown();
 }
 

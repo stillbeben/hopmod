@@ -33,6 +33,11 @@ public:
         
     }
     
+    object_type get_object_type()const
+    {
+        return m_object->get_object_type();
+    }
+    
     result_type apply(apply_arguments & args,frame * aScope)
     {
         return m_object->apply(args,aScope);

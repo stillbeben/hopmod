@@ -13,6 +13,16 @@
 namespace fungu{
 namespace script{
 
+eval_stream::eval_stream(env::frame * frame)
+: m_expression(new base_expression),
+  m_scope(frame),
+  m_parsing(false),
+  m_buffer_use(&m_first_buffer[0]),
+  m_dynbuf_size(0)
+{
+    reset_buffer();
+}
+
 eval_stream::~eval_stream()
 {
     reset_expression();
@@ -35,9 +45,12 @@ void eval_stream::feed(const void * data,std::size_t length)
     {
         if(m_expression->parse(&m_buffer_read,m_buffer_write-1,m_scope)==PARSE_COMPLETE)
         {
-            if(m_expression->is_empty_expression() == false) 
-                m_evaluator(m_expression,m_scope);
-            reset=true;
+            if(m_expression->is_empty_expression() == false)
+            {
+                if(m_evaluator) m_evaluator(m_expression,m_scope);
+                else m_expression->eval(m_scope);
+            }
+            reset = true;
         }
     }
     catch(...)
@@ -124,6 +137,12 @@ void eval_stream::reset_expression()
     delete m_expression;
     m_expression = new base_expression;
     m_parsing = false;
+}
+
+void eval_stream::reset()
+{
+    reset_expression();
+    reset_buffer();
 }
 
 } //namespace script

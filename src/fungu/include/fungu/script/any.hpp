@@ -312,12 +312,13 @@ struct any
 template<typename T>
 T* any_cast(any* this_) {
     if (this_->get_type() != typeid(T)) {
+        static T tmp;
         if(boost::is_arithmetic<T>::value && this_->is_arithmetic())
         {
-            static T tmp;
             tmp = this_->get_dynamic_typecaster()->numeric_cast((T *)NULL);
             return &tmp;
         }
+        if(this_->empty()) {tmp = T(); return &tmp;}
         return NULL;
     }
     if (sizeof(T) <= sizeof(void*)) {

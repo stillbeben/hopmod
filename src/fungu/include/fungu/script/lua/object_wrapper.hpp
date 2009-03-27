@@ -19,10 +19,12 @@ namespace fungu{
 namespace script{
 namespace lua{
 
+void push_object(lua_State * L, env::object *obj);
 void register_object(lua_State * L, int index,env::object * obj, const char * name);
 void register_object(lua_State * L, env::object * obj, const char * name);
 
 env::object * get_object(lua_State *,int index,const char * name);
+env::object * get_object(lua_State *,int index);
 
 } //namespace lua
 } //namespace script

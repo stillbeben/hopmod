@@ -35,10 +35,11 @@ public:
     {
         reset_buffer();
     }
-    
+    eval_stream(env::frame *);
     ~eval_stream();
     void feed(const void * data,std::size_t length);
     bool is_parsing_expression()const;
+    void reset();
 private:
     bool using_dynamic_buffer()const;
     bool is_buffer_overflow(std::size_t length)const;

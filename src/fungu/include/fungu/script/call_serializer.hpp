@@ -46,6 +46,14 @@ public:
     }
     
     template<typename T>
+    T deserialize_return_value(const serialized_argument_type & value,target_tag<T>)
+    {
+        return lexical_cast<T>(value);
+    }
+    
+    void deserialize_return_value(const serialized_argument_type &, target_tag<void>){}
+    
+    template<typename T>
     T deserialize(const serialized_argument_type &, target_tag<T>)
     {
         return m_argv.casted_front<T>();
@@ -96,6 +104,11 @@ public:
     return_type get_void_value()
     {
         return any::null_value();
+    }
+    
+    void clear()
+    {
+        m_string_list.clear();
     }
 private:
     env::object::apply_arguments & m_argv; 

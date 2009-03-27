@@ -4,3 +4,5 @@ import testing ;
 unit-test netmask_test : netmask_test.cpp ;
 unit-test banned_networks_test : banned_networks_test.cpp ;
 unit-test timedbans_service_test : timedbans_service_test.cpp ;
+unit-test player_command_test : player_command_test.cpp ../parse_player_command.cpp : <include>../../fungu/include ;
+unit-test schedule_service_test : schedule_service_test.cpp ;

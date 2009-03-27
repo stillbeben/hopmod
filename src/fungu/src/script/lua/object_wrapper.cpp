@@ -22,10 +22,15 @@ int object_wrapper(lua_State * L)
 
 } //namespace detail
 
-void register_object(lua_State * L, int index,env::object * obj, const char * name)
+void push_object(lua_State * L, env::object * obj)
 {
     lua_pushlightuserdata(L, obj);
     lua_pushcclosure(L, &detail::object_wrapper, 1);
+}
+
+void register_object(lua_State * L, int index,env::object * obj, const char * name)
+{
+    push_object(L,obj);
     lua_setfield(L, index, name);
 }
 
@@ -37,10 +42,17 @@ void register_object(lua_State * L, env::object * obj, const char * name)
 env::object * get_object(lua_State * L, int index, const char * name)
 {
     lua_getfield(L,index,name);
-    lua_CFunction func = lua_tocfunction(L,-1);
+    return get_object(L,-1);
+}
+
+env::object * get_object(lua_State * L,int index)
+{
+    lua_CFunction func = lua_tocfunction(L,index);
     if(!func || func != (const void *)&detail::object_wrapper) return NULL;
-    lua_getupvalue(L,-1,1);
-    return reinterpret_cast<env::object *>(lua_touserdata(L,-1));
+    lua_getupvalue(L,index,1);
+    env::object * obj = reinterpret_cast<env::object *>(lua_touserdata(L,-1));
+    lua_pop(L,1);
+    return obj;
 }
 
 } //namespace lua

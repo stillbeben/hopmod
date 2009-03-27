@@ -2,6 +2,12 @@
 // runs dedicated or as client coroutine
 
 #include "cube.h"
+#include <signal.h>
+
+static void shutdown_from_signal(int i)
+{
+    server::shutdown();
+}
 
 #ifdef STANDALONE
 void fatal(const char *s, ...) 
@@ -98,6 +104,20 @@ void sendstring(const char *t, ucharbuf &p)
 {
     while(*t) putint(p, *t++);
     putint(p, 0);
+}
+
+void putfloat(ucharbuf &p, float f)
+{
+    endianswap(&f, sizeof(float), 1);
+    p.put((uchar *)&f, sizeof(float));
+}
+
+float getfloat(ucharbuf &p)
+{
+    float f;
+    p.get((uchar *)&f, sizeof(float));
+    endianswap(&f, sizeof(float), 1);
+    return f;
 }
 
 void getstring(char *text, ucharbuf &p, int len)
@@ -217,6 +237,12 @@ void sendf(int cn, int chan, const char *format, ...)
             loopi(n) putint(p, va_arg(args, int));
             break;
         }
+        case 'f':
+        {
+            int n = isdigit(*format) ? *format++-'0' : 1;
+            loopi(n) putfloat(p, (float)va_arg(args, double));
+            break;
+        }
         case 's': sendstring(va_arg(args, const char *), p); break;
         case 'm':
         {
@@ -281,20 +307,15 @@ void sendfile(int cn, int chan, FILE *file, const char *format, ...)
 #endif
 }
 
-const char *disc_reasons[] = { "normal", "end of packet", "client num", "kicked/banned", "tag type", "ip is banned", "server is in private mode", "server FULL (maxclients)", "connection timed out" };
-
 void disconnect_client(int n, int reason)
 {
     if(clients[n]->type!=ST_TCPIP) return;
     enet_peer_disconnect(clients[n]->peer, reason);
-    server::clientdisconnect(n);
+    server::clientdisconnect(n,reason);
     clients[n]->type = ST_EMPTY;
     clients[n]->peer->data = NULL;
     server::deleteclientinfo(clients[n]->info);
     clients[n]->info = NULL;
-    s_sprintfd(s)("client (%s) disconnected because: %s", clients[n]->hostname, disc_reasons[reason]);
-    puts(s);
-    server::sendservmsg(s);
 }
 
 void kicknonlocalclients(int reason)
@@ -512,6 +533,7 @@ char *retrieveservers(char *buf, int buflen)
 #endif
 
 #define DEFAULTCLIENTS 6
+#define MAXCLIENTS_HARDLIMIT 128
 
 int uprate = 0, maxclients = DEFAULTCLIENTS;
 const char *ip = "", *master = NULL;
@@ -600,8 +622,7 @@ void serverslice(bool dedicated, uint timeout)   // main server update, called f
             {
                 client *c = (client *)event.peer->data;
                 if(!c) break;
-                printf("disconnected client (%s)\n", c->hostname);
-                server::clientdisconnect(c->num);
+                server::clientdisconnect(c->num,DISC_NONE);
                 nonlocalclients--;
                 c->type = ST_EMPTY;
                 event.peer->data = NULL;
@@ -616,8 +637,10 @@ void serverslice(bool dedicated, uint timeout)   // main server update, called f
     if(server::sendpackets()) enet_host_flush(serverhost);
 }
 
-void localdisconnect()
+#ifndef STANDALONE
+void localdisconnect(bool cleanup)
 {
+    bool disconnected = false;
     loopv(clients) if(clients[i]->type==ST_LOCAL) 
     {
         server::localdisconnect(i);
@@ -625,7 +648,11 @@ void localdisconnect()
         clients[i]->type = ST_EMPTY;
         server::deleteclientinfo(clients[i]->info);
         clients[i]->info = NULL;
+        disconnected = true;
     }
+    if(!disconnected) return;
+    game::gamedisconnect(cleanup);
+    mainmenu = 1;
 }
 
 void localconnect()
@@ -634,8 +661,10 @@ void localconnect()
     c.type = ST_LOCAL;
     s_strcpy(c.hostname, "local");
     localclients++;
+    game::gameconnect(false);
     server::localconnect(c.num);
 }
+#endif
 
 void rundedicatedserver()
 {
@@ -668,7 +697,7 @@ bool setuplistenserver(bool dedicated)
         if(enet_address_set_host(&address, ip)<0) printf("WARNING: server ip not resolved");
         else serveraddress.host = address.host;
     }
-    serverhost = enet_host_create(&address, maxclients + server::reserveclients(), 0, uprate);
+    serverhost = enet_host_create(&address, MAXCLIENTS_HARDLIMIT, 0, uprate);
     if(!serverhost) return servererror(dedicated, "could not create server host");
     loopi(maxclients) serverhost->peers[i].data = NULL;
     address.port = server::serverinfoport();
@@ -695,6 +724,14 @@ void setmasterpath()
 
 void initserver(bool listen, bool dedicated)
 {
+    struct sigaction terminate_action;
+    sigemptyset(&terminate_action.sa_mask);
+    terminate_action.sa_handler = shutdown_from_signal;
+    terminate_action.sa_flags = 0;
+    
+    sigaction(SIGINT, &terminate_action, NULL);
+    sigaction(SIGTERM, &terminate_action, NULL);
+    
     setmasterpath();
 
     if(listen) setuplistenserver(dedicated);

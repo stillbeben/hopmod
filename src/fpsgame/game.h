@@ -173,7 +173,9 @@ enum
     S_FLAGSCORE,
     S_FLAGRESET,
 
-    S_BURN
+    S_BURN,
+    S_CHAINSAW_ATTACK,
+    S_CHAINSAW_IDLE
 };
 
 // network messages codes, c2s, c2c, s2c
@@ -191,7 +193,7 @@ enum
     SV_PING, SV_PONG, SV_CLIENTPING,
     SV_TIMEUP, SV_MAPRELOAD, SV_FORCEINTERMISSION,
     SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
-    SV_EDITMODE, SV_EDITENT, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP,
+    SV_EDITMODE, SV_EDITENT, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP, SV_EDITVAR,
     SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM,
     SV_BASES, SV_BASEINFO, SV_BASESCORE, SV_REPAMMO, SV_BASEREGEN, SV_ANNOUNCE,
     SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
@@ -200,6 +202,7 @@ enum
     SV_SAYTEAM,
     SV_CLIENT,
     SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS,
+    SV_PAUSEGAME,
     NUMSV
 };
 
@@ -214,7 +217,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
     SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_FORCEINTERMISSION, 1,
     SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
-    SV_EDITMODE, 2, SV_EDITENT, 11, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0,
+    SV_EDITMODE, 2, SV_EDITENT, 11, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0, SV_EDITVAR, 0,
     SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0,
     SV_BASES, 0, SV_BASEINFO, 0, SV_BASESCORE, 0, SV_REPAMMO, 1, SV_BASEREGEN, 6, SV_ANNOUNCE, 2,
     SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
@@ -223,6 +226,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     SV_SAYTEAM, 0, 
     SV_CLIENT, 0,
     SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0,
+    SV_PAUSEGAME, 2,
     -1
 };
 
@@ -265,7 +269,7 @@ static struct itemstat { int add, max, sound; const char *name; int info; } item
 
 static const struct guninfo { short sound, attackdelay, damage, projspeed, part, kickamount, range; const char *name, *file; } guns[NUMGUNS] =
 {
-    { S_PUNCH1,    250,  50, 0,   0, 0,   12,  "fist",            "fist"  },
+    { S_PUNCH1,    250,  50, 0,   0, 0,   14,  "fist",            "fist"  },
     { S_SG,       1400,  10, 0,   0, 20, 1024, "shotgun",         "shotg" },  // *SGRAYS
     { S_CG,        100,  30, 0,   0, 7, 1024,  "chaingun",        "chaing"},
     { S_RLFIRE,    800, 120, 80,  0, 10, 1024, "rocketlauncher",  "rocket"},
@@ -428,6 +432,7 @@ struct fpsstate
     }
 };
 
+#ifndef STANDALONE
 struct fpsent : dynent, fpsstate
 {   
     int weight;                         // affects the effectiveness of hitpush
@@ -436,6 +441,7 @@ struct fpsent : dynent, fpsstate
     int lastpain;
     int lastaction, lastattackgun;
     bool attacking;
+    int attacksound, attackchan, idlesound, idlechan;
     int lasttaunt;
     int lastpickup, lastpickupmillis, lastbase;
     int superdamage;
@@ -449,9 +455,17 @@ struct fpsent : dynent, fpsstate
 
     vec muzzle;
 
-    fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), lastpain(0), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), playermodel(-1), muzzle(-1, -1, -1)
-               { name[0] = team[0] = info[0] = 0; respawn(); }
-    ~fpsent() { freeeditinfo(edit); }
+    fpsent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), lastpain(0), attacksound(-1), attackchan(-1), idlesound(-1), idlechan(-1), frags(0), deaths(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), playermodel(-1), muzzle(-1, -1, -1)
+    { 
+        name[0] = team[0] = info[0] = 0; 
+        respawn(); 
+    }
+    ~fpsent() 
+    { 
+        freeeditinfo(edit); 
+        if(attackchan >= 0) stopsound(attacksound, attackchan);
+        if(idlechan >= 0) stopsound(idlesound, idlechan);
+    }
 
     void hitpush(int damage, const vec &dir, fpsent *actor, int gun)
     {
@@ -459,6 +473,18 @@ struct fpsent : dynent, fpsstate
         push.mul(80*damage/weight);
         if(gun==GUN_RL || gun==GUN_GL) push.mul(actor==this ? 5 : (type==ENT_AI ? 3 : 2));
         vel.add(push);
+    }
+
+    void stopattacksound()
+    {
+        if(attackchan >= 0) stopsound(attacksound, attackchan, 250);
+        attacksound = attackchan = -1;
+    }
+
+    void stopidlesound()
+    {
+        if(idlechan >= 0) stopsound(idlesound, idlechan, 100);
+        idlesound = idlechan = -1;
     }
 
     void respawn()
@@ -473,8 +499,10 @@ struct fpsent : dynent, fpsstate
         lastpickupmillis = 0;
         lastbase = -1;
         superdamage = 0;
+        stopattacksound();
     }
 };
+#endif
 
 struct teamscore
 {
@@ -484,6 +512,7 @@ struct teamscore
     teamscore(const char *s, int n) : team(s), score(n) {}
 };
 
+#ifndef STANDALONE
 namespace entities
 {
     extern vector<extentity *> ents;
@@ -512,6 +541,7 @@ namespace game
         virtual ~clientmode() {}
 
         virtual void preload() {}
+        virtual int clipconsole(int w, int h) { return 0; }
         virtual void drawhud(fpsent *d, int w, int h) {}
         virtual void rendergame() {}
         virtual void respawned(fpsent *d) {}
@@ -532,7 +562,9 @@ namespace game
     extern void setclientmode();
 
     // fps
-    extern int gamemode, minremain;
+    extern int gamemode, nextmode;
+    extern string clientmap;
+    extern int minremain;
     extern bool intermission;
     extern int maptime, maprealtime;
     extern fpsent *player1;
@@ -581,7 +613,7 @@ namespace game
         HICON_BLUE_FLAG
     };
 
-    extern void drawicon(int icon, int x, int y);
+    extern void drawicon(int icon, float x, float y, float sz = 120);
  
     // client
     extern bool connected, remote, demoplayback, spectator;
@@ -621,7 +653,7 @@ namespace game
 
     // weapon
     extern void shoot(fpsent *d, const vec &targ);
-    extern void shoteffects(int gun, const vec &from, const vec &to, fpsent *d, bool local);
+    extern void shoteffects(int gun, const vec &from, const vec &to, fpsent *d, bool local, int prevaction);
     extern void explode(bool local, fpsent *owner, const vec &v, dynent *safe, int dam, int gun);
     extern void damageeffect(int damage, fpsent *d, bool thirdperson = true);
     extern void superdamageeffect(const vec &vel, fpsent *d);
@@ -636,6 +668,7 @@ namespace game
     extern void removeprojectiles(fpsent *owner);
     extern void renderprojectiles();
     extern void preloadbouncers();
+    extern void updateweapons(int curtime);
 
     // scoreboard
     extern void showscores(bool on);
@@ -660,6 +693,7 @@ namespace game
     extern void swayhudgun(int curtime);
     extern vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d);
 }
+#endif
 
 namespace server
 {

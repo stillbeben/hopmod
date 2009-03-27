@@ -3,11 +3,12 @@ project : requirements <include>include <define>FUNGU_WITH_LUA ;
 
 use-project /boost : utils/boost ;
 
-lib script : 
+lib script :
     src/script/env.cpp
     src/script/env_object.cpp
     src/script/env_symbol.cpp
     src/script/env_frame.cpp
+    src/script/lexical_cast.cpp
     src/script/expression.cpp
     src/script/subexpression.cpp
     src/script/quote.cpp
@@ -18,6 +19,7 @@ lib script :
     src/script/arguments_container.cpp
     src/script/code_block.cpp
     src/script/error.cpp
+    src/script/any_variable.cpp
     src/script/table.cpp
     src/script/eval_stream.cpp
     src/script/corelib/alias.cpp
@@ -35,6 +37,6 @@ lib script :
     src/script/lua/arguments.cpp
     src/script/lua/lua_function.cpp
     src/script/lua/object_wrapper.cpp
-    : <link>static ;
+    : <link>static : : <define>FUNGU_WITH_LUA <include>include ;
 
-build-project test ;
+#build-project test ;

@@ -21,7 +21,7 @@ struct captureclientmode : clientmode
     static const int REGENAMMO = 20;
     static const int MAXAMMO = 5;
     static const int REPAMMODIST = 32;
-    static const int RESPAWNSECS = 10;        
+    static const int RESPAWNSECS = 5;        
 
     struct baseinfo
     {
@@ -442,6 +442,11 @@ struct captureclientmode : clientmode
         return max(0, RESPAWNSECS-(lastmillis-d->lastpain)/1000);
     }
 
+    int clipconsole(int w, int h)
+    {
+        return w*6/40;
+    }
+
     void drawhud(fpsent *d, int w, int h)
     {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -547,7 +552,7 @@ struct captureclientmode : clientmode
                 s_sprintfd(msg)("@%d", total);
                 vec above(b.ammopos);
                 above.z += FIREBALLRADIUS+1.0f;
-                particle_text(above, msg, PART_TEXT_RISE, 2000, strcmp(team, player1->team) ? 0xFF4B19 :  0x6496FF, 4.0f);
+                particle_text(above, msg, PART_TEXT, 2000, strcmp(team, player1->team) ? 0xFF4B19 :  0x6496FF, 4.0f, -8);
             }
         }
     }

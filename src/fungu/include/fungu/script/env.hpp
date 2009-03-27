@@ -16,7 +16,6 @@
 #include "result_type.hpp"
 #include "arguments_container.hpp"
 #include "symbol_table.hpp"
-#include "anyvar_macro.hpp"
 
 #include <map>
 #include <boost/intrusive_ptr.hpp>

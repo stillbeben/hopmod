@@ -17,6 +17,19 @@ lua_function::lua_function(lua_State * L,int index, const char * name)
     lua_getfield(L,index,name);
     assert(lua_type(L,-1) == LUA_TFUNCTION);
     m_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    m_lua = L;
+}
+
+lua_function::lua_function(lua_State * L)
+{
+    assert(lua_type(L,-1) == LUA_TFUNCTION);
+    m_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    m_lua = L;
+}
+
+lua_function::~lua_function()
+{
+    luaL_unref(m_lua, LUA_REGISTRYINDEX, m_ref);
 }
 
 result_type lua_function::apply(apply_arguments & args,env::frame * aFrame)
@@ -30,10 +43,10 @@ result_type lua_function::apply(apply_arguments & args,env::frame * aFrame)
         args.pop_front();
     }
     if(lua_pcall(L, nargs, 1, 0) != 0)
-        throw error(OPERATION_ERROR,boost::make_tuple(std::string(lua_tostring(L,-1))));
+        throw error(LUA_ERROR,boost::make_tuple(L));
     else
     {
-        if(lua_type(L, LUA_TNIL)) return any::null_value();
+        if(lua_type(L, -1) == LUA_TNIL) return any::null_value();
         else return const_string(lua_tostring(L,-1)); //const_string ctor will copy the string
     }
 }

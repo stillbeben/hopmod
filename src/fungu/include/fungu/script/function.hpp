@@ -5,8 +5,8 @@
  *
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
-#ifndef FUNGU_CUBESCRIPT_FUNCTION_HPP
-#define FUNGU_CUBESCRIPT_FUNCTION_HPP
+#ifndef FUNGU_SCRIPT_FUNCTION_HPP
+#define FUNGU_SCRIPT_FUNCTION_HPP
 
 #include "env.hpp"
 #include "../dynamic_caller.hpp"
@@ -34,6 +34,11 @@ public:
      :m_function(aFunctor)
     {
         
+    }
+    
+    object_type get_object_type()const
+    {
+        return FUNCTION_OBJECT;
     }
     
     result_type apply(apply_arguments & apply_args,frame * aFrame)

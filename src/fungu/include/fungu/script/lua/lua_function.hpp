@@ -23,10 +23,13 @@ class lua_function:public env::object
 {
 public:
     lua_function(lua_State *,int index, const char * name);
+    lua_function(lua_State *); //function at top of stack
+    ~lua_function();
     result_type apply(apply_arguments & args,env::frame * aFrame);
     int apply(lua_State * L);
 private:
     int m_ref;
+    lua_State * m_lua;
 };
 
 } //namespace lua

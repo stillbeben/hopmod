@@ -2,6 +2,8 @@
 #include "scoped_setting.hpp"
 #include <fungu/script/lua/object_wrapper.hpp>
 #include <fungu/script/lua/lua_function.hpp>
+#include <fungu/dynamic_cast_derived.hpp>
+#include <fungu/script/variable.hpp>
 #include <sstream>
 #include <iostream>
 
@@ -22,7 +24,7 @@ static inline int svrtable_newindex(lua_State *);
 static inline void push_server_table(lua_State *);
 //static inline void push_server_index_table(lua_State *,int);
 static inline void register_to_server_table(lua_State *,lua_CFunction,const char *);
-static std::string get_error_report(script::error_info * errinfo);
+
 
 void init_scripting()
 {
@@ -94,6 +96,12 @@ int svrtable_index(lua_State * L)
     lua_rawgeti(L, -2, svrtable_index_ref);
     if(lua_type(L,-1)!=LUA_TTABLE) return luaL_error(L,"missing server index table");
     lua_getfield(L, -1, key);
+    script::env::object * obj = script::lua::get_object(L,-1);
+    if(obj && obj->get_object_type() == script::env::object::DATA_OBJECT)
+    {
+        lua_pop(L,1);
+        lua_pushstring(L, obj->value().to_string().copy().c_str());
+    }
     return 1;
 }
 
@@ -142,7 +150,7 @@ int svrtable_newindex(lua_State * L)
     catch(script::error_info * errinfo)
     {
         delete hangingObj;
-        lua_pushstring(L,get_error_report(errinfo).c_str());
+        lua_pushstring(L,get_script_error_message(errinfo).c_str());
         return lua_error(L);
     }
     catch(script::error err)
@@ -179,7 +187,7 @@ void bind_object_to_lua(const_string id, script::env::object * obj)
     lua_pop(L,1);
 }
 
-std::string get_error_report(script::error_info * errinfo)
+std::string get_script_error_message(script::error_info * errinfo)
 {
     const script::source_context * source = errinfo->get_root_info()->get_source_context();
     std::stringstream out;
@@ -194,5 +202,17 @@ std::string get_error_report(script::error_info * errinfo)
 
 void report_script_error(script::error_info * errinfo)
 {
-    std::cerr<<get_error_report(errinfo)<<std::endl;
+    std::cerr<<get_script_error_message(errinfo)<<std::endl;
+}
+
+void register_lua_function(lua_CFunction func,const char * name)
+{
+    lua_State * L = env.get_lua_state();
+    push_server_table(L);
+    lua_rawgeti(L, -1, svrtable_index_ref);
+    
+    lua_pushcclosure(L, func,0);
+    lua_setfield(L, -2, name);
+    
+    lua_pop(L,2);
 }

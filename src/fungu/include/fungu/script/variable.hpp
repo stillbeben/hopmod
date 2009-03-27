@@ -9,8 +9,6 @@
 #define FUNGU_SCRIPT_VARIABLE_HPP
 
 #include "env.hpp"
-#include "anyvar_macro.hpp"
-
 #include <boost/function.hpp>
 #include <sstream>
 
@@ -28,6 +26,11 @@ public:
      :m_var(var)
     {
         
+    }
+    
+    object_type get_object_type()const
+    {
+        return DATA_OBJECT;
     }
     
     void assign(const any & value)
@@ -150,10 +153,54 @@ void inclusive_range(const T & min,const T & max, const T & value)
 
 } //namespace var_hooks
 
-/**
+template<typename T>
+class lockable_variable:public variable<T>
+{
+public:
+    lockable_variable(T & var)
+     :variable<T>(var),
+      m_perms(0)
+    {
+        
+    }
     
-*/
-DEFINE_ANY_VARIABLE_CLASS;
+    void assign(const any & value)
+    {
+        if(m_perms & DENY_WRITE) throw error(NO_WRITE,boost::make_tuple());
+        variable<T>::assign(value);
+    }
+    
+    result_type apply(env::object::apply_arguments & args,env::frame * frame)
+    {
+        if(m_perms & DENY_WRITE) throw error(NO_WRITE,boost::make_tuple());
+        return variable<T>::apply(args,frame);
+    }
+    
+    result_type value()
+    {
+        if(m_perms & DENY_READ) throw error(NO_READ,boost::make_tuple());
+        return variable<T>::value();
+    }
+    
+    lockable_variable<T> & lock_read(bool enable)
+    {
+        m_perms = (enable ? m_perms | DENY_READ : m_perms & ~DENY_READ);
+        return *this;
+    }
+    
+    lockable_variable<T> & lock_write(bool enable)
+    {
+        m_perms = (enable ? m_perms | DENY_WRITE : m_perms & ~DENY_WRITE);
+        return *this;
+    }
+private:
+    enum
+    {
+        DENY_READ = 1,
+        DENY_WRITE = 2
+    };
+    char m_perms;
+};
 
 } //namespace script
 } //namespace fungu

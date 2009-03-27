@@ -11,6 +11,7 @@
 #include "env.hpp"
 #include "constant.hpp"
 #include "variable.hpp"
+#include "any_variable.hpp"
 #include "function.hpp"
 
 namespace fungu{
@@ -34,6 +35,22 @@ inline void bind_global_var(T & ref, const_string id, env & environ)
 {
     variable<T> * variable_obj = new variable<T>(ref);
     environ.bind_global_object(variable_obj, id).adopt_object();
+}
+
+template<typename T>
+inline void bind_global_ro_var(T & ref, const_string id, env & environ)
+{
+    lockable_variable<T> * varobj = new lockable_variable<T>(ref);
+    varobj->lock_write(true);
+    environ.bind_global_object(varobj, id).adopt_object();
+}
+
+template<typename T>
+inline void bind_global_wo_var(T & ref, const_string id, env & environ)
+{
+    lockable_variable<T> * varobj = new lockable_variable<T>(ref);
+    varobj->lock_read(true);
+    environ.bind_global_object(varobj, id).adopt_object();
 }
 
 template<typename Signature,typename Functor>

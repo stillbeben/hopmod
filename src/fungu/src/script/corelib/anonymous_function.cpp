@@ -12,9 +12,9 @@
 
 #include "fungu/script/function.hpp"
 #include "fungu/script/code_block.hpp"
-#include "fungu/script/variable.hpp"
 #include "fungu/script/parse_array.hpp"
 #include "fungu/script/varg_setter.hpp"
+#include "fungu/script/any_variable.hpp"
 
 namespace fungu{
 namespace script{
