@@ -1,5 +1,8 @@
+
 if (strcmp (player_priv $cn) "admin") [
     if (>= (listlen $arguments) 2) [
-	log (format "ANNOUNCE %1 %2" (player_name $cn) $arg2)
-    ] [privmsg $cn (err "Missing argument 1=on / 0=off . This command is used to enable persistent teams for team games.")]
+        log (format "ANNOUNCE %1 %2" (player_name $cn) (at $arguments 1)) 
+	privmsg $cn "Announcement sent"
+    ] [privmsg $cn (err "Missing argument #announce <announcement>.")]
 ] [privmsg $cn (err "Permission denied.")]
+
