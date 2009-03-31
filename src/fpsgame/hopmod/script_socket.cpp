@@ -53,12 +53,12 @@ public:
     
     ~script_socket_server()
     {
-        MHD_stop_daemon(m_daemon);
+        if(m_daemon) MHD_stop_daemon(m_daemon);
     }
     
     void run()
     {
-        MHD_run(m_daemon);
+        if(m_daemon) MHD_run(m_daemon);
     }
 private:
     static int http_accept_callback(void *cls,const struct sockaddr * addr,socklen_t addrlen)
