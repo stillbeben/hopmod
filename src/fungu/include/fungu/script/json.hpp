@@ -8,6 +8,8 @@
 #ifndef FUNGU_SCRIPT_STRUCTURED_OBJECT_HPP
 #define FUNGU_SCRIPT_STRUCTURED_OBJECT_HPP
 
+#error "deprecated"
+
 #include "json/tinyjson.hpp"
 
 namespace fungu{

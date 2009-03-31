@@ -136,6 +136,7 @@ std::basic_string<typename CharIterator::value_type> write_string_literal(CharIt
     return out;
 }
 
+#if 0
 template<typename AnyType>
 std::string write_json_value(const AnyType * value)
 {
@@ -169,6 +170,7 @@ std::string write_json_value(const AnyType * value)
 const_string lexical_cast(const json::object * src, return_tag<const_string>);
 const_string lexical_cast(boost::shared_ptr<json::object> src,return_tag<const_string>);
 const_string lexical_cast(const json::object & src,return_tag<const_string>);
+#endif
 
 // printing array stuff (must be parsable by the functions in parse_array.hpp)
 
@@ -191,13 +193,13 @@ std::string write_sequence(const ForwardContainer & container)
 }
 
 template<typename Source>
-inline const_string lexical_cast(const std::vector<Source> & src,return_tag<const_string>)
+inline const_string lexical_cast(const std::vector<Source,std::allocator<Source> > & src,return_tag<const_string>)
 {
     return write_sequence(src);
 }
 
 template<typename Source>
-inline const_string lexical_cast(const std::deque<Source> & src,return_tag<const_string>)
+inline const_string lexical_cast(const std::deque<Source,std::allocator<Source> > & src,return_tag<const_string>)
 {
     return write_sequence(src);
 }

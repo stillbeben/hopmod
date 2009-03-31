@@ -13,7 +13,7 @@ namespace server
     extern int minremain;
     
     extern int mastermode;
-    extern int next_gamemode;
+    extern string next_gamemode;
     extern string next_mapname;
     extern int next_gametime;
     

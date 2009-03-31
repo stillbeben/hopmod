@@ -6,7 +6,6 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 #include "fungu/script/any.hpp"
-#include "fungu/script/json.hpp"
 #include "fungu/script/lexical_cast.hpp"
 
 namespace fungu{
@@ -105,6 +104,7 @@ const_string lexical_cast(const char * src,return_tag<const_string>)
     return const_string(src);
 }
 
+#if 0
 const_string lexical_cast(const json::object * src, return_tag<const_string>)
 {
     std::stringstream output;
@@ -127,6 +127,7 @@ const_string lexical_cast(const json::object & src,return_tag<const_string>)
 {
     return lexical_cast((const json::object *)&src,return_tag<const_string>());
 }
+#endif
 
 std::string write_sequence_element(const std::string & value)
 {

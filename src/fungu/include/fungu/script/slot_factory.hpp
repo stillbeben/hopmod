@@ -42,7 +42,7 @@ public:
     
     void destroy_slot(int handle)
     {
-        if((unsigned int)handle > m_slots.size() || handle < 0) return;
+        if((unsigned int)handle >= m_slots.size() || handle < 0) return;
         
         delete m_slots[handle].first;
         m_slots[handle].first = NULL;

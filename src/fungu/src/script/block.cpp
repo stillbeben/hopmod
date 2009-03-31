@@ -13,16 +13,16 @@ namespace script{
 
 expression::block::block()
  :m_first(const_string::null_const_iterator()),
-  m_nested(0),
-  m_copysrc(false),
-  m_parsing_macro(NULL)
+  m_nested(0)
 {
     
 }
 
 expression::block::~block()
 {
-    if(m_parsing_macro) delete m_parsing_macro;
+    for(std::vector<boost::tuple<source_iterator,source_iterator,macro *> >::iterator it = m_macros.begin();
+    it != m_macros.end(); ++it) delete boost::get<2>(*it);
+    m_macros.clear();
 }
 
 parse_state expression::block::parse(source_iterator * first,source_iterator last,env::frame * frame)
@@ -30,26 +30,20 @@ parse_state expression::block::parse(source_iterator * first,source_iterator las
     if(m_first == const_string::null_const_iterator())
         m_first = *first;
     
-    if(m_parsing_macro)
+    bool parsing_macro = !m_macros.empty() && boost::get<1>(m_macros.back()) == const_string::null_const_iterator();
+    if(parsing_macro)
     {
-        parse_state substate = m_parsing_macro->parse(first,last,frame);
+        macro * m = boost::get<2>(m_macros.back());
+        parse_state substate = m->parse(first,last,frame);
         if(substate != PARSE_COMPLETE) return substate;
         
-        if(m_parsing_macro->get_evaluation_level() > m_nested)
-        {
-            if(!m_copysrc)
-            {
-                m_content.reserve(64);
-                m_content.assign(m_first,m_start_of_macro);
-                m_copysrc = true;
-            }
-            
-            m_content += m_parsing_macro->eval(frame).to_string();
-        }
-        else if(m_copysrc) m_content.append(m_start_of_macro,*first);
+        boost::get<1>(m_macros.back()) = *first;
         
-        delete m_parsing_macro;
-        m_parsing_macro = NULL;
+        if(m->get_evaluation_level()-1 > m_nested)
+        {
+            delete m;
+            m_macros.pop_back();
+        }
     }
     
     for(; *first <= last; ++(*first))
@@ -67,38 +61,53 @@ parse_state expression::block::parse(source_iterator * first,source_iterator las
                 m_nested--;
                 break;
             case '@':
-                m_start_of_macro = *first;
+                m_macros.push_back(boost::make_tuple(*first,const_string::null_const_iterator(),new macro));
                 ++(*first);
-                m_parsing_macro = new macro;
                 return parse(first,last,frame);
             default:;
         }
-        
-        if(m_copysrc) m_content += **first;
     }
     
     return PARSE_PARSING;
 }
 
-result_type expression::block::eval(env::frame *)
+result_type expression::block::eval(env::frame * frame)
 {
     assert(m_first != const_string::null_const_iterator());
-    if(m_copysrc) return const_string(m_content);
-    return const_string(m_first,m_last);
+    if(is_string_constant())
+    {
+        return const_string(m_first,m_last);
+    }
+    else
+    {
+        std::string result;
+        result.reserve(m_last - m_first +1);
+        
+        source_iterator gap = m_first;
+        for(std::vector<boost::tuple<source_iterator,source_iterator,macro *> >::iterator it = m_macros.begin();
+            it != m_macros.end(); ++it)
+        {
+            source_iterator start = boost::get<0>(*it);
+            source_iterator end = boost::get<1>(*it);
+            if(start - gap) result.append(std::string(gap,start));
+            result.append(boost::get<2>(*it)->eval(frame).to_string().copy());
+            gap = end;
+        }
+        if(gap <= m_last) result.append(std::string(gap,m_last+1));
+        
+        return const_string(result);
+    }
 }
 
 bool expression::block::is_string_constant()const
 {
-    return true;
+    return m_macros.empty();
 }
 
 std::string expression::block::form_source()const
 {
     assert(m_first != const_string::null_const_iterator());
-    std::string source;
-    if(m_copysrc) source=m_content;
-    else source+=const_string(m_first,m_last);
-    return std::string(1,'[') + source + std::string(1,']');
+    return std::string(1,'[') + const_string(m_first,m_last).copy() + std::string(1,']');
 }
 
 } //namespace script

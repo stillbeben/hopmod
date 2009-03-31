@@ -99,6 +99,7 @@ code_block & code_block::compile(env::frame * aScope)
             else m_first_expression = boost::shared_ptr<expression>(current);
             before_current = current;
         }
+        else delete current;
         
         if(scan_newline(&(--readptr)))
             m_source_ctx->set_line_number(m_source_ctx->get_line_number()+1);

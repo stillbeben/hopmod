@@ -50,6 +50,17 @@ static int lua_event_handler_function(lua_State * L)
     return 1;
 }
 
+static int cubescript_event_handler_function(const std::string & name, script::any obj)
+{
+    if(obj.get_type() != typeid(script::env::object::shared_ptr)) throw script::error(script::BAD_CAST);
+    return slots.create_slot(name, script::any_cast<script::env::object::shared_ptr>(obj), env.get_global_scope());
+}
+
+void destroy_slot(int handle)
+{
+    slots.destroy_slot(handle);
+}
+
 void register_signals(script::env & env)
 {
     ::env = env;
@@ -65,6 +76,9 @@ void register_signals(script::env & env)
     slots.register_signal(signal_mapchange,"mapchange", normal_error_handler);
     slots.register_signal(signal_mapvote, "mapvote", proceed_error_handler);
     slots.register_signal(signal_setnextgame, "setnextgame", normal_error_handler);
+    
+    script::bind_global_func<int (const std::string &,script::any)>(cubescript_event_handler_function, FUNGU_OBJECT_ID("event_handler"), env);
+    script::bind_global_func<void (int)>(destroy_slot, FUNGU_OBJECT_ID("cancel_handler"), env);
     
     register_lua_function(lua_event_handler_function,"event_handler");
 }

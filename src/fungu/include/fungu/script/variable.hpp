@@ -35,7 +35,7 @@ public:
     
     void assign(const any & value)
     {
-        m_var = any_cast<T>(value);
+        m_var = lexical_cast<T>(value);
     }
     
     result_type apply(apply_arguments & args,env::frame *)

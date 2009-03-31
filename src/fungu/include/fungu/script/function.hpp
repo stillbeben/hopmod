@@ -18,6 +18,7 @@
 #endif
 
 #include <boost/function.hpp>
+#include <vector>
 
 namespace fungu{
 namespace script{
@@ -31,7 +32,14 @@ class function:public env::object
 public:
     template<typename Functor>
     function(Functor aFunctor)
-     :m_function(aFunctor)
+     :m_function(aFunctor),m_default_args(NULL)
+    {
+        
+    }
+    
+    template<typename Functor>
+    function(Functor fun,const std::vector<any> * default_args)
+     :m_function(fun),m_default_args(default_args)
     {
         
     }
@@ -43,6 +51,15 @@ public:
     
     result_type apply(apply_arguments & apply_args,frame * aFrame)
     {
+        if(apply_args.size() < boost::function_traits<Signature>::arity && 
+            m_default_args && 
+            apply_args.size() + m_default_args->size() >= boost::function_traits<Signature>::arity)
+        {
+            int skip = apply_args.size() - (boost::function_traits<Signature>::arity - m_default_args->size());
+            for(std::vector<any>::const_iterator it = m_default_args->begin(); it != m_default_args->end(); ++it)
+                if(--skip < 0) apply_args.push_back(*it);
+        }
+        
         call_serializer serializer(apply_args,aFrame);
         try
         {
@@ -80,6 +97,7 @@ public:
     #endif
 private:
     boost::function<Signature> m_function;
+    const std::vector<any> * m_default_args;
 };
 
 typedef result_type (raw_function_type)(env::object::apply_arguments &,env::frame *);

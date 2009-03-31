@@ -10,7 +10,6 @@
 
 #include "env.hpp"
 #include "variable.hpp"
-
 #include <map>
 #include <string>
 
@@ -20,10 +19,9 @@ namespace script{
 class table:public env::object
 {
 public:
-    table(const json::object * source);
-    static shared_ptr create(const json::object * source);
+    table();
+    static shared_ptr create();
     result_type apply(apply_arguments & args,frame *);
-    result_type value();
     shared_ptr assign(const std::string & name,const any & data);
     void assign(const any & source);
     object * lookup_member(const_string id);

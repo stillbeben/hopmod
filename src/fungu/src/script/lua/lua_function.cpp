@@ -39,7 +39,7 @@ result_type lua_function::apply(apply_arguments & args,env::frame * aFrame)
     int nargs = args.size();
     while(!args.empty())
     {
-        lua_pushstring(L,args.casted_front<std::string>().c_str());
+        lua_pushstring(L,args.front().to_string().copy().c_str());
         args.pop_front();
     }
     if(lua_pcall(L, nargs, 1, 0) != 0)

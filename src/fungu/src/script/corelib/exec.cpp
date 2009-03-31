@@ -17,9 +17,9 @@ namespace corelib{
 
 namespace detail{
 
-table * get_file_ext_handlers_table()
+static inline table * get_file_ext_handlers_table()
 {
-    static table file_ext_handlers(NULL);
+    static table file_ext_handlers;
     return &file_ext_handlers;
 }
 

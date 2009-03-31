@@ -90,8 +90,8 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
         case ' ':
         case '\t':                                       ++(*first); break;
         case '$':  m_parsing = new expr_symbol;          ++(*first); break;
-        case '@':  m_parsing = new expr_reference;       ++(*first); break;
-        case '{': m_parsing = new structure;                         break;
+        case '&':  m_parsing = new expr_reference;       ++(*first); break;
+        //case '{': m_parsing = new structure;                         break;
         default:   m_parsing = new expr_word;                        break;
     }
     

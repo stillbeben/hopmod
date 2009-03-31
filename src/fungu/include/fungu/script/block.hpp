@@ -24,18 +24,8 @@ public:
 private:
     source_iterator m_first;
     source_iterator m_last;
-    
+    std::vector<boost::tuple<source_iterator,source_iterator,macro *> > m_macros;
     int m_nested;
-    
-    /*
-        If the block contains any macros that are ready for evaluation then the
-        block maintains its own source string.
-    */
-    bool m_copysrc;
-    source_iterator m_start_of_macro;
-    std::string m_content;
-    
-    macro * m_parsing_macro;
 };
 
 #endif

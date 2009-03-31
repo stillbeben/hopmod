@@ -16,5 +16,6 @@
 #include "timedbans_service.hpp"
 
 #include <arpa/inet.h> //inet_ntoa
+#include <iostream>
 
 #endif

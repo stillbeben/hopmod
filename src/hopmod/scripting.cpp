@@ -150,14 +150,12 @@ int svrtable_newindex(lua_State * L)
     catch(script::error_info * errinfo)
     {
         delete hangingObj;
-        lua_pushstring(L,get_script_error_message(errinfo).c_str());
-        return lua_error(L);
+        return luaL_error(L,get_script_error_message(errinfo).c_str());
     }
     catch(script::error err)
     {
         delete hangingObj;
-        lua_pushstring(L,err.get_error_message().c_str());
-        return lua_error(L);
+        return luaL_error(L,err.get_error_message().c_str());
     }
     
     return 0;

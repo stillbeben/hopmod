@@ -11,7 +11,6 @@
 #include "fungu/string.hpp"
 #include "fungu/script/error.hpp"
 #include "fungu/script/any.hpp"
-#include "fungu/script/json.hpp"
 #include "fungu/script/lexical_cast.hpp"
 #include "fungu/script/result_type.hpp"
 #include "fungu/script/arguments_container.hpp"

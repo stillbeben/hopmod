@@ -13,8 +13,8 @@ lib script :
     src/script/subexpression.cpp
     src/script/quote.cpp
     src/script/block.cpp
+    src/script/macro.cpp
     src/script/comment.cpp
-    src/script/structure.cpp
     src/script/execute.cpp
     src/script/arguments_container.cpp
     src/script/code_block.cpp

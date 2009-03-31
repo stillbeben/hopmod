@@ -12,6 +12,7 @@
 namespace fungu{
 namespace script{
 
+#if 0
 table::table(const json::object * source)
 {
     if(source)
@@ -30,10 +31,16 @@ table::table(const json::object * source)
     
     m_members[".this"] = this->get_shared_ptr();
 }
+#endif
 
-env::object::shared_ptr table::create(const json::object * source)
+table::table()
 {
-    table * t = new table(source);
+    
+}
+
+env::object::shared_ptr table::create()
+{
+    table * t = new table();
     t->set_adopted_flag();
     return t->get_shared_ptr();
 }
@@ -51,6 +58,7 @@ result_type table::apply(apply_arguments & args,frame *)
     return obj->get_shared_ptr();
 }
 
+#if 0
 result_type table::value()
 {
     std::stringstream output;
@@ -70,6 +78,7 @@ result_type table::value()
     output<<"}";
     return output.str();
 }
+#endif
 
 env::object::shared_ptr table::assign(const std::string & name,const any & data)
 {

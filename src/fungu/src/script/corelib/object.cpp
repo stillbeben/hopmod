@@ -18,6 +18,7 @@ namespace detail{
 
 inline result_type create_object(env::object::apply_arguments & args,env::frame * aFrame)
 {
+    #if 0
     boost::shared_ptr<json::object> initial_data;
     if(!args.empty())
     {
@@ -29,6 +30,9 @@ inline result_type create_object(env::object::apply_arguments & args,env::frame 
         if(!initial_data) throw error(BAD_CAST);
     }
     return table::create(initial_data.get());
+    #endif
+    
+    return table::create();
 }
 
 inline result_type erase_object_member(env::object::apply_arguments & args,env::frame * aFrame)

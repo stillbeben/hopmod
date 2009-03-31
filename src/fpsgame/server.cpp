@@ -308,7 +308,7 @@ namespace server
     #define MM_AUTOAPPROVE 0x1000
     #define MM_DEFAULT (MM_MODE | MM_AUTOAPPROVE)
 
-    int next_gamemode = -1;
+    string next_gamemode = "";
     string next_mapname = "";
     int next_gametime = -1;
     
@@ -415,7 +415,15 @@ namespace server
         if(m_valid(n)) return gamemodes[n - STARTGAMEMODE].name;
         return unknown;
     }
-
+    
+    int modecode(const char * modename)
+    {
+        int count = sizeof(gamemodes)/sizeof(gamemodeinfo);
+        for(int i = 0-STARTGAMEMODE; i < count; i++)
+            if(strcmp(modename,gamemodes[i].name)==0) return i+STARTGAMEMODE;
+        return 0;
+    }
+    
     const char *mastermodename(int n, const char *unknown)
     {
         return (n>=0 && size_t(n)<sizeof(mastermodenames)/sizeof(mastermodenames[0])) ? mastermodenames[n] : unknown;
@@ -427,7 +435,7 @@ namespace server
         {
             case PRIV_ADMIN: return "admin";
             case PRIV_MASTER: return "master";
-            default: return "unknown";
+            default: return "none";
         }
     }
 
@@ -1388,11 +1396,23 @@ namespace server
                 if(clients.length())
                 {
                     signal_setnextgame();
-                    if(next_gamemode != -1 && next_mapname[0])
+                    if(next_gamemode[0] && next_mapname[0])
                     {
-                        mapreload = false;
-                        sendf(-1, 1, "risii", SV_MAPCHANGE, next_mapname, next_gamemode, 1);
-                        changemap(next_mapname, next_gamemode, next_gametime);
+                        int next_gamemode_code = modecode(next_gamemode);
+                        if(m_mp(next_gamemode_code))
+                        {
+                            mapreload = false;
+                            sendf(-1, 1, "risii", SV_MAPCHANGE, next_mapname, next_gamemode_code, 1);
+                            changemap(next_mapname, next_gamemode_code, next_gametime);
+                            next_gamemode[0] = '\0';
+                            next_mapname[0] = '\0';
+                            next_gametime = -1;
+                        }
+                        else
+                        {
+                            std::cerr<<next_gamemode<<" game mode is unrecognised."<<std::endl;
+                            sendf(-1, 1, "ri", SV_MAPRELOAD);
+                        }
                     }
                     else sendf(-1, 1, "ri", SV_MAPRELOAD);
                 }

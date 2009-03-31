@@ -54,9 +54,9 @@ inline void bind_global_wo_var(T & ref, const_string id, env & environ)
 }
 
 template<typename Signature,typename Functor>
-inline void bind_global_func(Functor fun, const_string id, env & environ)
+inline void bind_global_func(Functor fun, const_string id, env & environ,const std::vector<any> * default_args = NULL)
 {
-    function<Signature> * function_obj = new function<Signature>(fun);
+    function<Signature> * function_obj = new function<Signature>(fun, default_args);
     environ.bind_global_object(function_obj, id).adopt_object();
 }
 

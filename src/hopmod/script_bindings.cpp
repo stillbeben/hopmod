@@ -52,12 +52,25 @@ private:
 } //namespace script
 } //namespace fungu
 
+static std::vector<script::any> player_kick_defargs;
+
+static void setup_default_arguments()
+{
+    player_kick_defargs.clear();
+    player_kick_defargs.push_back(14400);
+    player_kick_defargs.push_back(const_string(FUNGU_LITERAL_STRING("server")));
+    player_kick_defargs.push_back(const_string());
+    
+}
+
 void register_server_script_bindings(script::env & env)
 {
+    setup_default_arguments();
+    
     //player-oriented functions
     script::bind_global_func<void (int,const char *)>(server::player_msg, FUNGU_OBJECT_ID("player_msg"), env);
     script::bind_global_func<bool (int,const char *)>(process_player_command, FUNGU_OBJECT_ID("process_player_command"), env);
-    script::bind_global_func<void (int,int,const std::string &,const std::string &)>(server::kick, FUNGU_OBJECT_ID("player_kick"), env);
+    script::bind_global_func<void (int,int,const std::string &,const std::string &)>(server::kick, FUNGU_OBJECT_ID("player_kick"), env, &player_kick_defargs);
     
     //server-oriented functions and variable
     script::bind_global_func<void (bool)>(server::pausegame,FUNGU_OBJECT_ID("pausegame"),env);
@@ -74,6 +87,9 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_ro_var(server::minremain, FUNGU_OBJECT_ID("timeleft"), env);
     script::bind_global_ro_var(totalmillis, FUNGU_OBJECT_ID("uptime"), env);
     script::bind_global_var(maxclients, FUNGU_OBJECT_ID("maxplayers"), env);
+    script::bind_global_var(server::next_gamemode, FUNGU_OBJECT_ID("next_mode"), env);
+    script::bind_global_var(server::next_mapname, FUNGU_OBJECT_ID("next_map"), env);
+    script::bind_global_var(server::next_gametime, FUNGU_OBJECT_ID("next_gametime"), env);
     
     //script_socket functions
     script::bind_global_func<bool ()>(script_socket_supported, FUNGU_OBJECT_ID("script_socket_supported?"), env);

@@ -89,11 +89,13 @@ result_type while_(env::object::apply_arguments & args,env::frame * aScope)
 
 inline result_type loop(env::object::apply_arguments & args,env::frame * aScope)
 {
+    env::frame loop_frame(aScope);
+    
     unsigned int counter=0;
     variable<unsigned int> counter_var(counter);
     
     if(args.empty()) throw error(NOT_ENOUGH_ARGUMENTS);
-    aScope->bind_object(&counter_var,lexical_cast<const_string>(args.front())).
+    loop_frame.bind_object(&counter_var,lexical_cast<const_string>(args.front())).
         allow_rebind(); args.pop_front();
     
     if(args.empty()) throw error(NOT_ENOUGH_ARGUMENTS);
@@ -106,7 +108,7 @@ inline result_type loop(env::object::apply_arguments & args,env::frame * aScope)
     result_type body_result;
     
     for(; counter < count_to && !aScope->has_expired(); ++counter) 
-        body_result = body.eval_each_expression(aScope);
+        body_result = body.eval_each_expression(&loop_frame);
     
     return body_result;
 }

@@ -43,7 +43,6 @@ public:
     #include "quote.hpp"
     #include "block.hpp"
     #include "comment.hpp"
-    #include "structure.hpp"
     #undef FUNGU_CUBESCRIPT_EXPRESSION_NESTED_CLASS
     
     typedef word<word_exit_terminals> expr_word;
