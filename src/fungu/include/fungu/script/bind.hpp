@@ -53,6 +53,13 @@ inline void bind_global_wo_var(T & ref, const_string id, env & environ)
     environ.bind_global_object(varobj, id).adopt_object();
 }
 
+template<typename T,typename Functor>
+inline void bind_global_funvar(Functor fun, const_string id,env & environ)
+{
+    function_variable<T> * varobj = new function_variable<T>(fun);
+    environ.bind_global_object(varobj, id).adopt_object();
+}
+
 template<typename Signature,typename Functor>
 inline void bind_global_func(Functor fun, const_string id, env & environ,const std::vector<any> * default_args = NULL)
 {

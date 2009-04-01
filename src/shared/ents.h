@@ -1,3 +1,6 @@
+#ifndef __ENTS_H__
+#define __ENTS_H__
+
 // this file defines static map entities ("entity") and dynamic entities (players/monsters, "dynent")
 // the gamecode extends these types to add game specific functionality
 
@@ -209,4 +212,4 @@ struct dynent : physent                         // animated characters, or chara
     }
 };
 
-
+#endif

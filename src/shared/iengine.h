@@ -1,3 +1,6 @@
+#ifndef __IENGINE_H__
+#define __IENGINE_H__
+
 // the interface the game uses to access the engine
 
 extern int curtime;                     // current frame time
@@ -116,14 +119,6 @@ enum
     CON_ECHO  = 1<<5
 };
 
-extern void keypress(int code, bool isdown, int cooked);
-extern int rendercommand(int x, int y, int w);
-extern int renderconsole(int w, int h);
-extern void conoutf(const char *s, ...);
-extern void conoutf(int type, const char *s, ...);
-extern void resetcomplete();
-extern void complete(char *s);
-
 // menus
 extern vec menuinfrontofplayer();
 extern void newgui(char *name, char *contents, char *header = NULL);
@@ -135,6 +130,7 @@ extern bool emptymap(int factor, bool force, const char *mname = "", bool usecfg
 extern bool enlargemap(bool force);
 extern int findentity(int type, int index = 0, int attr1 = -1, int attr2 = -1);
 extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool local);
+extern vec getselpos();
 extern int getworldsize();
 extern int getmapversion();
 extern void renderentcone(const extentity &e, const vec &dir, float radius, float angle);
@@ -285,7 +281,7 @@ extern void moveragdoll(dynent *d);
 extern void cleanragdoll(dynent *d);
 
 // server
-#define MAXCLIENTS 256                  // in a multiplayer game, can be arbitrarily changed
+#define MAXCLIENTS 128                  // DO NOT set this any higher
 #define MAXTRANS 5000                  // max amount of data to swallow in 1 go
 
 extern int maxclients;
@@ -302,9 +298,9 @@ inline const char * disconnect_reason(int code)
     return reasons[code];
 }
 
-extern void *getinfo(int i);
+extern void *getclientinfo(int i);
 extern void sendf(int cn, int chan, const char *format, ...);
-extern void sendfile(int cn, int chan, FILE *file, const char *format = "", ...);
+extern void sendfile(int cn, int chan, stream *file, const char *format = "", ...);
 extern void sendpacket(int cn, int chan, ENetPacket *packet, int exclude = -1);
 extern int getnumclients();
 extern uint getclientip(int n);
@@ -325,13 +321,23 @@ extern bool haslocalclients();
 extern void sendserverinforeply(ucharbuf &p);
 
 // client
-extern void c2sinfo(dynent *d, int rate = 33);
-extern void sendpackettoserv(ENetPacket *packet, int chan);
+extern void sendclientpacket(ENetPacket *packet, int chan);
+extern void flushclient();
 extern void disconnect(bool async = false, bool cleanup = true);
 extern bool isconnected(bool attempt = false);
 extern bool multiplayer(bool msg = true);
 extern void neterr(const char *s, bool disc = true);
 extern void gets2c();
+
+// crypto
+extern void genprivkey(const char *seed, vector<char> &privstr, vector<char> &pubstr);
+extern bool hashstring(const char *str, char *result, int maxlen);
+extern void answerchallenge(const char *privstr, const char *challenge, vector<char> &answerstr);
+extern void *parsepubkey(const char *pubstr);
+extern void freepubkey(void *pubkey);
+extern void *genchallenge(void *pubkey, const void *seed, int seedlen, vector<char> &challengestr);
+extern void freechallenge(void *answer);
+extern bool checkchallenge(const char *answerstr, void *correct);
 
 // 3dgui
 struct Texture;
@@ -402,3 +408,4 @@ extern void g3d_cursorpos(float &x, float &y);
 extern void g3d_resetcursor();
 extern void g3d_limitscale(float scale);
 
+#endif

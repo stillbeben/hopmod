@@ -11,17 +11,32 @@ namespace server
     extern string masterpass;
     extern int currentmaster;
     extern int minremain;
+    extern bool reassignteams;
     
     extern int mastermode;
     extern string next_gamemode;
     extern string next_mapname;
     extern int next_gametime;
     
+    extern int player_sessionid(int);
     extern void player_msg(int,const char *);
+    extern const char * player_name(int);
+    extern const char * player_team(int);
+    extern const char * player_privilege(int);
+    extern int player_ping(int);
+    extern const char * player_ip(int);
+    extern int player_iplong(int);
+    extern const char * player_status(int);
+    extern int player_status_code(int);
+    extern int player_connection_time(int);
+    
     extern void pausegame(bool);
     extern void kick(int cn,int time,const std::string & admin,const std::string & reason);
     extern void changetime(int remaining);
     extern void clearbans();
+    extern void changemap(const char * map,const char * mode,int mins);
+    extern int modecode(const char * modename);
+    extern int getplayercount();
 } //namespace server
 
 #endif

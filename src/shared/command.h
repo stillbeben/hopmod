@@ -1,3 +1,6 @@
+#ifndef __COMMAND_H__
+#define __COMMAND_H__
+
 // script binding functionality
 
 
@@ -169,3 +172,5 @@ extern void result(const char *s);
 #define IVARFR(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_OVERRIDE)
 //#define ICALL(n, a) { char *args[] = a; icom_##n.run(args); }
 //
+
+#endif

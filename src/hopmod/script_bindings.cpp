@@ -3,56 +3,13 @@
 #include "hopmod.hpp"
 #include "player_command.hpp"
 #include "extapi.hpp"
+#include "string_var.hpp"
 #include <fungu/script.hpp>
 #include <fungu/script/variable.hpp>
-
 using namespace fungu;
 
-namespace fungu{
-namespace script{
-template<>
-class variable<string>:public env::object
-{
-public:
-    variable(string & str)
-     :m_string(str)
-    {
-        
-    }
-    
-    object_type get_object_type()const
-    {
-        return DATA_OBJECT;
-    }
-    
-    void assign(const any & value)
-    {
-        const_string tmp = value.to_string();
-        std::size_t len = tmp.length();
-        if(len > MAXSTRLEN - 1) throw error(INVALID_VALUE,boost::make_tuple(std::string("string is too long")));
-        strncpy(m_string, tmp.begin(), len);
-        m_string[len] = '\0';
-    }
-    
-    result_type apply(apply_arguments & args,env::frame *)
-    {
-        assign(args.safe_front());
-        args.pop_front();
-        try{return value();}
-        catch(error){return any::null_value();}
-    }
-    
-    result_type value()
-    {
-        return const_string(m_string,m_string+strlen(m_string)-1);
-    }
-private:
-    string & m_string;
-};
-} //namespace script
-} //namespace fungu
-
 static std::vector<script::any> player_kick_defargs;
+static std::vector<script::any> changemap_defargs;
 
 static void setup_default_arguments()
 {
@@ -61,6 +18,9 @@ static void setup_default_arguments()
     player_kick_defargs.push_back(const_string(FUNGU_LITERAL_STRING("server")));
     player_kick_defargs.push_back(const_string());
     
+    changemap_defargs.clear();
+    changemap_defargs.push_back(const_string());
+    changemap_defargs.push_back(-1);
 }
 
 void register_server_script_bindings(script::env & env)
@@ -70,14 +30,31 @@ void register_server_script_bindings(script::env & env)
     //player-oriented functions
     script::bind_global_func<void (int,const char *)>(server::player_msg, FUNGU_OBJECT_ID("player_msg"), env);
     script::bind_global_func<bool (int,const char *)>(process_player_command, FUNGU_OBJECT_ID("process_player_command"), env);
-    script::bind_global_func<void (int,int,const std::string &,const std::string &)>(server::kick, FUNGU_OBJECT_ID("player_kick"), env, &player_kick_defargs);
+    script::bind_global_func<void (int,int,const std::string &,const std::string &)>(server::kick, FUNGU_OBJECT_ID("kick"), env, &player_kick_defargs);
+    script::bind_global_func<const char * (int)>(server::player_name, FUNGU_OBJECT_ID("player_name"), env);
+    script::bind_global_func<const char * (int)>(server::player_team, FUNGU_OBJECT_ID("player_team"), env);
+    script::bind_global_func<const char * (int)>(server::player_privilege, FUNGU_OBJECT_ID("player_priv"), env);
+    script::bind_global_func<int (int)>(server::player_sessionid, FUNGU_OBJECT_ID("player_sessionid"), env);
+    script::bind_global_func<int (int)>(server::player_sessionid, FUNGU_OBJECT_ID("player_ping"), env);
+    script::bind_global_func<const char * (int)>(server::player_ip, FUNGU_OBJECT_ID("player_ip"), env);
+    script::bind_global_func<int (int)>(server::player_iplong, FUNGU_OBJECT_ID("player_iplong"), env);
+    script::bind_global_func<const char * (int)>(server::player_status, FUNGU_OBJECT_ID("player_status"), env);
+    script::bind_global_func<int (int)>(server::player_status_code, FUNGU_OBJECT_ID("player_status_code"), env);
+    script::bind_global_const((int)CS_ALIVE, FUNGU_OBJECT_ID("ALIVE"), env);
+    script::bind_global_const((int)CS_DEAD, FUNGU_OBJECT_ID("DEAD"), env);
+    script::bind_global_const((int)CS_SPAWNING, FUNGU_OBJECT_ID("SPAWNING"), env);
+    script::bind_global_const((int)CS_LAGGED, FUNGU_OBJECT_ID("LAGGED"), env);
+    script::bind_global_const((int)CS_SPECTATOR, FUNGU_OBJECT_ID("SPECTATOR"), env);
+    script::bind_global_const((int)CS_EDITING, FUNGU_OBJECT_ID("EDITING"), env);
+    script::bind_global_func<int (int)>(server::player_connection_time, FUNGU_OBJECT_ID("player_connection_time"), env);
     
-    //server-oriented functions and variable
+    //server-oriented functions and variables
     script::bind_global_func<void (bool)>(server::pausegame,FUNGU_OBJECT_ID("pausegame"),env);
     script::bind_global_func<void (const char *)>(server::sendservmsg, FUNGU_OBJECT_ID("msg"), env);
     script::bind_global_func<void ()>(server::shutdown, FUNGU_OBJECT_ID("shutdown"), env);
     script::bind_global_func<void (int)>(server::changetime, FUNGU_OBJECT_ID("changetime"), env);
     script::bind_global_func<void ()>(server::clearbans, FUNGU_OBJECT_ID("clearbans"), env);
+    script::bind_global_func<void (const char *,const char *,int)>(server::changemap,FUNGU_OBJECT_ID("changemap"), env, &changemap_defargs);
     
     script::bind_global_var(server::serverdesc, FUNGU_OBJECT_ID("servername"), env);
     script::bind_global_ro_var(server::smapname, FUNGU_OBJECT_ID("map"), env);
@@ -90,6 +67,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(server::next_gamemode, FUNGU_OBJECT_ID("next_mode"), env);
     script::bind_global_var(server::next_mapname, FUNGU_OBJECT_ID("next_map"), env);
     script::bind_global_var(server::next_gametime, FUNGU_OBJECT_ID("next_gametime"), env);
+    script::bind_global_var(server::reassignteams, FUNGU_OBJECT_ID("reassignteams"), env);
+    script::bind_global_funvar<int>(server::getplayercount, FUNGU_OBJECT_ID("playercount"), env);
     
     //script_socket functions
     script::bind_global_func<bool ()>(script_socket_supported, FUNGU_OBJECT_ID("script_socket_supported?"), env);

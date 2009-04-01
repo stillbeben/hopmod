@@ -1,3 +1,6 @@
+#ifndef __IGAME_H__
+#define __IGAME_H__
+
 // the interface the engine uses to run the gameplay module
 
 namespace entities
@@ -15,27 +18,30 @@ namespace entities
     extern void entradius(extentity &e, bool color);
     extern bool mayattach(extentity &e);
     extern bool attachent(extentity &e, extentity &a);
+    extern bool printent(extentity &e, char *buf);
     extern extentity *newentity();
     extern void deleteentity(extentity *e);
     extern void clearents();
     extern vector<extentity *> &getents();
+    extern const char *entmodel(const entity &e);
 }
 
 namespace game
 {
     extern void parseoptions(vector<const char *> &args);
 
-    extern void gamedisconnect();
+    extern void gamedisconnect(bool cleanup);
     extern void parsepacketclient(int chan, ucharbuf &p);
-    extern int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d);
+    extern int sendpacketclient(ucharbuf &p, bool &reliable, dynent *d, ENetPacket *packet);
     extern void connectattempt(const char *name, const char *password, const ENetAddress &address);
     extern void connectfail();
     extern void gameconnect(bool _remote);
     extern bool allowedittoggle();
     extern void edittoggled(bool on);
-    extern void writeclientinfo(FILE *f);
+    extern void writeclientinfo(stream *f);
     extern void toserver(char *text);
     extern void changemap(const char *name);
+    extern void forceedit(const char *name);
     extern int numchannels();
 
     extern const char *gameident();
@@ -49,7 +55,9 @@ namespace game
     extern void initclient();
     extern void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel, int material = 0);
     extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0);
-    extern char *getclientmap();
+    extern void vartrigger(ident *id);
+    extern const char *getclientmap();
+    extern const char *getmapinfo();
     extern void resetgamestate();
     extern void suicide(physent *d);
     extern void newmap(int size);
@@ -67,6 +75,7 @@ namespace game
     extern void renderavatar();
     extern void writegamedata(vector<char> &extras);
     extern void readgamedata(vector<char> &extras);
+    extern int clipconsole(int w, int h);
     extern void g3d_gamemenus();
     extern const char *defaultcrosshair(int index);
     extern int selectcrosshair(float &r, float &g, float &b);
@@ -105,3 +114,4 @@ namespace server
     extern void shutdown();
 }
 
+#endif

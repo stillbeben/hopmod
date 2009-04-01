@@ -49,6 +49,9 @@ if $(without_test_project) = 0 {
 
 exe server : 
     src/shared/tools.cpp
+    src/shared/stream.cpp
+    src/shared/zip.cpp
+    src/shared/crypto.cpp
     src/engine/server.cpp
     src/fpsgame/fpsserver.cpp
     src/hopmod/floodprotection.cpp

@@ -202,6 +202,20 @@ private:
     char m_perms;
 };
 
+template<typename T>
+class function_variable:public env::object
+{
+public:
+    template<typename Functor>
+     function_variable(Functor func):m_func(func){}
+    object_type get_object_type()const{return DATA_OBJECT;}
+    void assign(const any & value){throw error(NO_WRITE);}
+    result_type apply(env::object::apply_arguments & args,env::frame * frame){throw error(NO_WRITE);}
+    result_type value(){return m_func();}
+private:
+    boost::function0<T> m_func;
+};
+
 } //namespace script
 } //namespace fungu
 
