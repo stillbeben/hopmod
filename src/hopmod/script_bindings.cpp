@@ -40,6 +40,17 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_iplong, FUNGU_OBJECT_ID("player_iplong"), env);
     script::bind_global_func<const char * (int)>(server::player_status, FUNGU_OBJECT_ID("player_status"), env);
     script::bind_global_func<int (int)>(server::player_status_code, FUNGU_OBJECT_ID("player_status_code"), env);
+    script::bind_global_func<int (int)>(server::player_frags, FUNGU_OBJECT_ID("player_frags"), env);
+    script::bind_global_func<int (int)>(server::player_deaths, FUNGU_OBJECT_ID("player_deaths"), env);
+    script::bind_global_func<int (int)>(server::player_suicides, FUNGU_OBJECT_ID("player_suicides"), env);
+    script::bind_global_func<int (int)>(server::player_teamkills, FUNGU_OBJECT_ID("player_teamkills"), env);
+    script::bind_global_func<int (int)>(server::player_damage, FUNGU_OBJECT_ID("player_damage"), env);
+    script::bind_global_func<int (int)>(server::player_maxhealth, FUNGU_OBJECT_ID("player_maxhealth"), env);
+    script::bind_global_func<int (int)>(server::player_health, FUNGU_OBJECT_ID("player_health"), env);
+    script::bind_global_func<int (int)>(server::player_gun, FUNGU_OBJECT_ID("player_gun"), env);
+    script::bind_global_func<int (int)>(server::player_hits, FUNGU_OBJECT_ID("player_hits"), env);
+    script::bind_global_func<int (int)>(server::player_shots, FUNGU_OBJECT_ID("player_shots"), env);
+    
     script::bind_global_const((int)CS_ALIVE, FUNGU_OBJECT_ID("ALIVE"), env);
     script::bind_global_const((int)CS_DEAD, FUNGU_OBJECT_ID("DEAD"), env);
     script::bind_global_const((int)CS_SPAWNING, FUNGU_OBJECT_ID("SPAWNING"), env);
@@ -47,6 +58,14 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_const((int)CS_SPECTATOR, FUNGU_OBJECT_ID("SPECTATOR"), env);
     script::bind_global_const((int)CS_EDITING, FUNGU_OBJECT_ID("EDITING"), env);
     script::bind_global_func<int (int)>(server::player_connection_time, FUNGU_OBJECT_ID("player_connection_time"), env);
+    script::bind_global_func<void (int)>(server::player_spec, FUNGU_OBJECT_ID("spec"), env);
+    script::bind_global_func<void (int)>(server::player_unspec, FUNGU_OBJECT_ID("unspec"), env);
+    script::bind_global_func<void ()>(server::unsetmaster, FUNGU_OBJECT_ID("unsetmaster"), env);
+    script::bind_global_func<void (int)>(server::server_setmaster, FUNGU_OBJECT_ID("setmaster"), env);
+    script::bind_global_func<void (int)>(server::server_setadmin, FUNGU_OBJECT_ID("setadmin"), env);
+    
+    //team-oriented functions
+    script::bind_global_func<void (const char*,const char*)>(server::team_msg,FUNGU_OBJECT_ID("team_msg"), env);
     
     //server-oriented functions and variables
     script::bind_global_func<void (bool)>(server::pausegame,FUNGU_OBJECT_ID("pausegame"),env);

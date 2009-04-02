@@ -28,7 +28,23 @@ namespace server
     extern int player_iplong(int);
     extern const char * player_status(int);
     extern int player_status_code(int);
+    extern int player_frags(int);
+    extern int player_deaths(int);
+    extern int player_suicides(int);
+    extern int player_teamkills(int);
+    extern int player_damage(int);
+    extern int player_maxhealth(int);
+    extern int player_health(int);
+    extern int player_gun(int);
+    extern int player_hits(int);
+    extern int player_shots(int);
     extern int player_connection_time(int);
+    extern void team_msg(const char *,const char *);
+    extern void player_spec(int);
+    extern void player_unspec(int);
+    extern void unsetmaster();
+    extern void server_setmaster(int);
+    extern void server_setadmin(int);
     
     extern void pausegame(bool);
     extern void kick(int cn,int time,const std::string & admin,const std::string & reason);

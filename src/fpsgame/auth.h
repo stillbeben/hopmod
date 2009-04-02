@@ -94,6 +94,7 @@ struct authserv
         clientinfo *ci = findauth(id);
         if(!ci) return;
         ci->authreq = 0;
+        signal_auth(ci->clientnum, ci->authname, false);
     }
 
     void authsucceeded(uint id)
@@ -102,6 +103,7 @@ struct authserv
         if(!ci) return;
         ci->authreq = 0;
         setmaster(ci, true, "", ci->authname);
+        signal_auth(ci->clientnum, ci->authname, true);
     }
 
     void authchallenged(uint id, const char *val)

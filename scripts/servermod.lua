@@ -1,4 +1,6 @@
 
+dofile("./scripts/logging.lua")
+
 function server.log_status(msg)
     print(msg)
 end
@@ -15,7 +17,3 @@ server.event_handler("text",onText)
 server.event_handler("shutdown",onShutdown)
 
 server.load_geoip_database("share/GeoIP.dat")
-
-server.event_handler("reteam",function(cn,oldteam,newteam)
-    print("reteam" .. cn .. " " .. oldteam .. " " .. newteam)
-end)

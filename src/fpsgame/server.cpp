@@ -120,7 +120,7 @@ namespace server
         int lastdeath, lastspawn, lifesequence;
         int lastshot;
         projectilestate<8> rockets, grenades;
-        int frags, flags, deaths, teamkills, shotdamage, damage;
+        int frags, flags, deaths, suicides, teamkills, shotdamage, damage, hits, shots;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
@@ -146,7 +146,7 @@ namespace server
 
             timeplayed = 0;
             effectiveness = 0;
-            frags = flags = deaths = teamkills = shotdamage = damage = 0;
+            frags = flags = deaths = suicides = teamkills = shotdamage = damage = hits = shots = 0;
 
             respawn();
         }
@@ -165,7 +165,7 @@ namespace server
     {
         uint ip;
         string name;
-        int maxhealth, frags, flags, deaths, teamkills, shotdamage, damage;
+        int maxhealth, frags, flags, deaths, suicides, teamkills, shotdamage, damage, hits, shots;
         int timeplayed;
         float effectiveness;
 
@@ -175,11 +175,14 @@ namespace server
             frags = gs.frags;
             flags = gs.flags;
             deaths = gs.deaths;
+            suicides = gs.suicides;
             teamkills = gs.teamkills;
             shotdamage = gs.shotdamage;
             damage = gs.damage;
             timeplayed = gs.timeplayed;
             effectiveness = gs.effectiveness;
+            hits = gs.hits;
+            shots = gs.shots;
         }
 
         void restore(gamestate &gs)
@@ -189,11 +192,14 @@ namespace server
             gs.frags = frags;
             gs.flags = flags;
             gs.deaths = deaths;
+            gs.suicides = suicides;
             gs.teamkills = teamkills;
             gs.shotdamage = shotdamage;
             gs.damage = damage;
             gs.timeplayed = timeplayed;
             gs.effectiveness = effectiveness;
+            gs.hits = hits;
+            gs.shots = shots;
         }
     };
 
@@ -853,6 +859,8 @@ namespace server
         if(gamepaused==val) return;
         gamepaused = val;
         sendf(-1, 1, "rii", SV_PAUSEGAME, gamepaused ? 1 : 0);
+        if(gamepaused) signal_gamepaused();
+        else signal_gameresumed();
     }
     
     void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen)
@@ -882,11 +890,11 @@ namespace server
                 if(!masterpass[0] || haspass==(ci->privilege==PRIV_ADMIN)) return;
             }
             else if(ci->state.state==CS_SPECTATOR && !haspass && !authname && !ci->local) return;
-            loopv(clients) if(ci!=clients[i] && clients[i]->privilege)
+            if(currentmaster != -1)
             {
-                if(haspass) clients[i]->privilege = PRIV_NONE;
-                else if((authname || ci->local) && clients[i]->privilege<=PRIV_MASTER) continue;
-                else return;
+                clientinfo * existing = getinfo(currentmaster);
+                if(haspass) existing->privilege = PRIV_NONE;
+                else if(existing->privilege >= PRIV_ADMIN) return;
             }
             if(haspass) ci->privilege = PRIV_ADMIN;
             else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege && !ci->local)
@@ -896,10 +904,7 @@ namespace server
             }
             else
             {
-                if(authname)
-                {
-                    loopv(clients) if(ci!=clients[i] && clients[i]->privilege<=PRIV_MASTER) clients[i]->privilege = PRIV_NONE;
-                }
+                if(authname && currentmaster != -1) getinfo(currentmaster)->privilege = PRIV_NONE;
                 ci->privilege = PRIV_MASTER;
             }
             name = privname(ci->privilege);
@@ -924,8 +929,10 @@ namespace server
             loopv(clients) if(clients[i]->privilege >= PRIV_ADMIN || clients[i]->local) admins++;
             if(!admins) pausegame(false);
         }
+        
+        signal_setmaster(ci->clientnum, name, val);
     }
-
+    
     #include "auth.h"
     authserv auth;
 
@@ -1527,7 +1534,12 @@ namespace server
         if(ts.health<=0)
         {
             target->state.deaths++;
-            if(actor!=target && isteam(actor->team, target->team)) actor->state.teamkills++;
+            target->state.suicides += actor==target;
+            if(actor!=target && isteam(actor->team, target->team))
+            {
+                actor->state.teamkills++;
+                signal_teamkill(actor->clientnum, target->clientnum);
+            }
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target==actor || isteam(target->team, actor->team) ? -1 : 1);
             actor->state.frags += fragvalue;
             if(fragvalue>0)
@@ -1553,6 +1565,7 @@ namespace server
         if(gs.state!=CS_ALIVE) return;
         ci->state.frags += smode ? smode->fragvalue(ci, ci) : -1;
         ci->state.deaths++;
+        ci->state.suicides++;
         sendf(-1, 1, "ri4", SV_DIED, ci->clientnum, ci->clientnum, gs.frags);
         ci->position.setsizenodelete(0);
         if(smode) smode->died(ci, NULL);
@@ -1881,6 +1894,32 @@ namespace server
         sendservmsg(msg);
     }
 
+    void setspectator(clientinfo * spinfo, bool val)
+    {
+        if(!spinfo || (spinfo->state.state==CS_SPECTATOR ? val : !val)) return;
+        
+        if(spinfo->state.state==CS_ALIVE && val) suicide(spinfo);
+
+        sendf(-1, 1, "ri3", SV_SPECTATOR, spinfo->clientnum, val);
+
+        if(spinfo->state.state!=CS_SPECTATOR && val)
+        {
+            if(smode) smode->leavegame(spinfo);
+            spinfo->state.state = CS_SPECTATOR;
+            spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
+            aiman::dorefresh = true;
+        }
+        else if(spinfo->state.state==CS_SPECTATOR && !val)
+        {
+            spinfo->state.state = CS_DEAD;
+            spinfo->state.respawn();
+            spinfo->state.lasttimeplayed = lastmillis;
+            aiman::dorefresh = true;
+        }
+        
+        signal_spectator(spinfo->clientnum, val);
+    }
+
     void parsepacket(int sender, int chan, bool reliable, ucharbuf &p)     // has to parse exactly each byte of the packet
     {
         if(sender<0) return;
@@ -2085,6 +2124,10 @@ namespace server
                 loopk(3) shot.shot.from[k] = getint(p)/DMF;
                 loopk(3) shot.shot.to[k] = getint(p)/DMF;
                 int hits = getint(p);
+                
+                cq->state.shots++;
+                cq->state.hits += (hits ? 1 : 0);
+                
                 loopk(hits)
                 {
                     gameevent &hit = cq->addevent();
@@ -2288,6 +2331,7 @@ namespace server
                 {
                     if((ci->privilege>=PRIV_ADMIN || ci->local) || (mastermask&(1<<mm)))
                     {
+                        signal_setmastermode(mastermodename(mastermode),mastermodename(mm));
                         mastermode = mm;
                         allowedips.setsize(0);
                         if(mm>=MM_PRIVATE)
@@ -2333,26 +2377,8 @@ namespace server
                 int spectator = getint(p), val = getint(p);
                 if(!ci->privilege && !ci->local && (spectator!=sender || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED))) break;
                 clientinfo *spinfo = getinfo(spectator);
-                if(!spinfo || (spinfo->state.state==CS_SPECTATOR ? val : !val)) break;
-
-                if(spinfo->state.state==CS_ALIVE && val) suicide(spinfo);
-
-                sendf(-1, 1, "ri3", SV_SPECTATOR, spectator, val);
-
-                if(spinfo->state.state!=CS_SPECTATOR && val)
-                {
-                    if(smode) smode->leavegame(spinfo);
-                    spinfo->state.state = CS_SPECTATOR;
-                    spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
-                    aiman::dorefresh = true;
-                }
-                else if(spinfo->state.state==CS_SPECTATOR && !val)
-                {
-                    spinfo->state.state = CS_DEAD;
-                    spinfo->state.respawn();
-                    spinfo->state.lasttimeplayed = lastmillis;
-                    aiman::dorefresh = true;
-                }
+                if(spinfo->privilege) break;
+                setspectator(spinfo,val);
                 break;
             }
 

@@ -22,6 +22,13 @@ boost::signal<void (int)> signal_timeupdate;
 boost::signal<void (const char *,const char *)> signal_mapchange;
 boost::signal<int (int,const char *,const char *), proceed> signal_mapvote;
 boost::signal<void ()> signal_setnextgame;
+boost::signal<void ()> signal_gamepaused;
+boost::signal<void ()> signal_gameresumed;
+boost::signal<void (const char *,const char *)> signal_setmastermode;
+boost::signal<void (int,int)> signal_spectator;
+boost::signal<void (int,const char *,int)> signal_setmaster;
+boost::signal<void (int,int)> signal_teamkill;
+boost::signal<void (int,const char *,bool)> signal_auth;
 
 static script::any proceed_error_handler(script::error_info * errinfo)
 {
@@ -74,12 +81,20 @@ void register_signals(script::env & env)
     slots.register_signal(signal_reteam, "reteam", proceed_error_handler);
     slots.register_signal(signal_kick,"kick",normal_error_handler);
     slots.register_signal(signal_text,"text",proceed_error_handler);
+    slots.register_signal(signal_sayteam,"sayteam",proceed_error_handler);
     slots.register_signal(signal_shutdown,"shutdown",normal_error_handler);
     slots.register_signal(signal_intermission,"intermission", normal_error_handler);
     slots.register_signal(signal_timeupdate,"timeupdate", normal_error_handler);
     slots.register_signal(signal_mapchange,"mapchange", normal_error_handler);
     slots.register_signal(signal_mapvote, "mapvote", proceed_error_handler);
     slots.register_signal(signal_setnextgame, "setnextgame", normal_error_handler);
+    slots.register_signal(signal_gamepaused, "gamepaused", normal_error_handler);
+    slots.register_signal(signal_gameresumed, "gameresumed", normal_error_handler);
+    slots.register_signal(signal_setmastermode, "setmastermode", normal_error_handler);
+    slots.register_signal(signal_spectator, "spectator", normal_error_handler);
+    slots.register_signal(signal_setmaster, "setmaster", normal_error_handler);
+    slots.register_signal(signal_teamkill, "teamkill", normal_error_handler);
+    slots.register_signal(signal_auth, "auth", normal_error_handler);
     
     script::bind_global_func<int (const std::string &,script::any)>(cubescript_event_handler_function, FUNGU_OBJECT_ID("event_handler"), env);
     script::bind_global_func<void (int)>(destroy_slot, FUNGU_OBJECT_ID("cancel_handler"), env);
