@@ -84,9 +84,8 @@ playercmd_register = [
 playercmd_greet = [
         if (= (player_pvar $cn logged_in) 1) [
                 logged_in_as_name = (player_pvar $cn logged_in_as)
-		msg $logged_in_as_name
                 statsdb eval [update register set greet = $arg1 where name = $logged_in_as_name]
-                privmsg $cn [test]
+                privmsg $cn (format "%1 %2" (green [Your greet message changed to:Â]) $arg1 )
 	] [privmsg $cn (format "%1" (red [You are not logged in!]) )]
 ]
 
