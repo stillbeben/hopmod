@@ -164,3 +164,12 @@ Open the console by pushing F11 to see the commandlist!!
 
 ]) )
 ]
+
+playercmd_listuser = [
+                 if (&& (= (player_pvar $cn adminlvl) 1) (= (player_pvar $cn logged_in) 1)) [
+                        local registered_names ""
+                        statsdb eval [select group_concat(name) from register] [registered_names = (column "group_concat(name)")]
+                        privmsg $cn (format "%1 %2" (blue[All registered players on this Server, seperated by ',':]) (blue $registered_names) )
+                 ] [privmsg $cn (red [Permission Denied]) ]
+]
+
