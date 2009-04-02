@@ -23,6 +23,7 @@ namespace server
     extern const char * player_name(int);
     extern const char * player_team(int);
     extern const char * player_privilege(int);
+    extern int player_privilege_code(int);
     extern int player_ping(int);
     extern const char * player_ip(int);
     extern int player_iplong(int);
@@ -53,6 +54,11 @@ namespace server
     extern void changemap(const char * map,const char * mode,int mins);
     extern int modecode(const char * modename);
     extern int getplayercount();
+    extern bool writebanlist(const char * filename);
+    extern bool loadbanlist(const char * filename);
+    extern void addpermban(const char * addr);
+    extern void unsetban(const char * addr);
+    
 } //namespace server
 
 #endif

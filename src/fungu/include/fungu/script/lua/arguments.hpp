@@ -44,6 +44,7 @@ public:
     
     int deserialize(value_type arg,target_tag<int>);
     unsigned int deserialize(value_type arg, target_tag<unsigned int>);
+    unsigned short deserialize(value_type arg, target_tag<unsigned short>);
     const char * deserialize(value_type arg, target_tag<const char *>);
     std::string deserialize(value_type arg, target_tag<std::string>);
     

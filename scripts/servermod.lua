@@ -16,4 +16,7 @@ end
 server.event_handler("text",onText)
 server.event_handler("shutdown",onShutdown)
 
+server.script_socket_server(7894)
+
+server.loadbanlist("conf/bans")
 server.load_geoip_database("share/GeoIP.dat")

@@ -8,6 +8,7 @@
 
 #include "fungu/script/lua/arguments.hpp"
 #include "fungu/script/lua/lua_function.hpp"
+#include <limits>
 
 namespace fungu{
 namespace script{
@@ -56,6 +57,18 @@ unsigned int arguments::deserialize(value_type arg, target_tag<unsigned int>)
         return 0;
     }
     return n;
+}
+
+unsigned short arguments::deserialize(value_type arg, target_tag<unsigned short>)
+{
+    int n = lua_tointeger(m_stack, arg);
+    if(!lua_isnumber(m_stack, arg) || n < 0 || n > std::numeric_limits<unsigned short>::max())
+    {
+        luaL_argerror(m_stack, arg, "expected positive short integer");
+        assert(false);
+        return 0;
+    }
+    return static_cast<unsigned short>(n);
 }
 
 const char * arguments::deserialize(value_type arg, target_tag<const char *>)
