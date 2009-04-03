@@ -6,7 +6,7 @@ playercmd_login = [
 	local greet ""
 	local adminlvl ""
 	if (= (player_pvar $cn logged_in) 1) [privmsg $cn (red[You are already logged in])][
-		statsdb eval [select password from register where name=$arg1] [loginpassword = (column password)
+		statsdb eval [select password from register where name=$arg1] [loginpassword = (column password)]
 		if (strcmp $arg2 "") [privmsg $cn (format "%1" (red [Nice try!]) )] [
 			if (strcmp $loginpassword $arg2) [
          	 		statsdb eval [select firstlogin from register where name=$arg1] [firstlogin = (column firstlogin)]
