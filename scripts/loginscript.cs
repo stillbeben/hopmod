@@ -152,7 +152,7 @@ playercmd_cmds = [
 	privmsg $cn (blue[#logout - Logout])
 	privmsg $cn (blue[#regclan - Clan will registered])
 	privmsg $cn (blue[#joinclan - You will join a clan])
-	privmsg ÂÂ$cn (blue[#clan - Will display information about the clan])
+	privmsg $cn (blue[#clan - Will display information about the clan])
 	if (= (player_pvar $cn clanadmin) 1) [ // ###ClANADMIN COMMANDS###
 	privmsg $cn (blue[#clansetname - Set the wholeclanname, not only the tag])
 	privmsg $cn (blue[#clansetirc - Set the IRC channel of your clan])
