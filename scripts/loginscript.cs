@@ -152,6 +152,7 @@ playercmd_cmds = [
 	privmsg $cn (blue[#logout - Logout])
 	privmsg $cn (blue[#regclan - Clan will registered])
 	privmsg $cn (blue[#joinclan - You will join a clan])
+	privmsg ÂÂ$cn (blue[#clan - Will display information about the clan])
 	if (= (player_pvar $cn clanadmin) 1) [ // ###ClANADMIN COMMANDS###
 	privmsg $cn (blue[#clansetname - Set the wholeclanname, not only the tag])
 	privmsg $cn (blue[#clansetirc - Set the IRC channel of your clan])
@@ -242,3 +243,21 @@ playercmd_clansetname = [
                 ][privmsg $cn (red [Permission Denied]) ]
 ]
 
+playercmd_clan = [
+		local clanname ""
+		local clanirc ""
+		local clanweb ""
+		local checkclantag2 ""
+		statsdb eval [select tag from clans where tag=$arg1] [checkclantag2 = (column tag)]
+		if (strcmp $arg1 $checkclantag2)[
+			statsdb eval [select name from clans where tag=$arg1] [clanname = (column name)]
+			statsdb eval [select irc from clans where tag=$arg1] [clanirc = (column irc)]
+			statsdb eval [select website from clans where tag=$arg1] [clanweb = (column website)]
+			
+			//Start Display
+			privmsg $cn (format "%1 %2" (green[Clantag:]) $arg1)
+			if (!(strcmp $clanname 0)) [privmsg $cn (format "%1 %2" (green[ClanNAME:]) $clanname)]
+			if (!(strcmp $clanirc 0)) [privmsg $cn (format "%1 %2" (green[ClanIRC:]) $clanirc)]
+			if (!(strcmp $clanweb 0)) [privmsg $cn (format "%1 %2" (green[ClanWEB:]) $clanweb)]
+		][privmsg (red[Clan not in the database]) ]
+]
