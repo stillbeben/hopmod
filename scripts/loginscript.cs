@@ -5,7 +5,7 @@ playercmd_login = [
         local ipaddr ""
 	local greet ""
 	local adminlvl ""
-	if (= (player_pvar $cn logged_in) 1) [privmsg $cn (red[You are already logged in])][
+	if (= (player_pvar $cn logged_in) 1) [privmsg $cn (red[You are already logged in])] [
 		statsdb eval [select password from register where name=$arg1] [loginpassword = (column password)]
 		if (strcmp $arg2 "") [privmsg $cn (format "%1" (red [Nice try!]) )] [
 			if (strcmp $loginpassword $arg2) [
@@ -25,9 +25,7 @@ playercmd_login = [
                 		msg (format "%1 %2 %3" (blue (player_name $cn)) (orange [is now logged in as]) (red (player_pvar $cn logged_in_as)) )
                 		privmsg $cn (format "Last login from IP: %1" (green $loginip) )
                 		privmsg $cn (format "Your IP now: %1" (green (player_ip $cn)) )
-				if (= (player_pvar $cn adminlvl) 1) [
-					privmsg $cn (format "Type: %1 to get master/admin." (red [#getmaster]) )
-				]
+				if (= (player_pvar $cn adminlvl) 1) [privmsg $cn (format "Type: %1 to get master/admin." (red [#getmaster]) )]
 				privmsg $cn (format "Type %1 to see your commandlist" (red [#cmds]) )
                 		playerip = (player_ip $cn)
                 		statsdb eval [update register set ipaddr = $playerip where name = $arg1]
@@ -72,7 +70,7 @@ playercmd_register = [
         	if (strcmp $registername $arg1) [
                 	privmsg $cn (format "%1" (red [This username is already in use!]) )
         	] [
-                	statsdb eval [INSERT INTO register VALUES(1, $arg1 , $arg2 , 0 , 0 , 0 , 'player' , 0);]
+                	statsdb eval [INSERT INTO register VALUES(1, $arg1 , $arg2 , 0 , 0 , 0 , 'player' , 0, 0, 0);]
                 	privmsg $cn (format "%1" (green [Your account is created, you can now login by typing #login name password]) )
                 ]
         ] [privmsg $cn (format "%1" (red [You must enter: #register username password]) )]
