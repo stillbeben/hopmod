@@ -65,73 +65,71 @@ playercmd_slap = [
 playercmd_1on1 = [
         parameters target
         if (strcmp (player_priv $cn) "admin") [
-
-        player1 = $arg1
-        player2 = $arg2
-        game_mo = $arg3
-        gamemap = $arg4
-
-        if (strcmp $game_mo "insta") [game_mo = instagib]
-        if (strcmp $game_mo "instateam") [game_mo = [instagib team]
-                setteam $player1 linux
-                setteam $player2 windows
-        ]
-        if (strcmp $game_mo "ffa") [game_mo = ffa/default]
-        if (strcmp $game_mo "eff") [game_mo = efficiency]
-        if (strcmp $game_mo "ictf") [game_mo = [insta ctf] ]
-        if (strcmp $game_mo "icapture" ) [game_mo = [insta capture] ]
-
-
-        player1con = (player_conid $player1)
-        player2con = (player_conid $player2)
-        log (format "%1 %2 %3 %4 %5 %6" [MATCH:] (player_name $player2) [versus] (player_name $player1) [on] $gamemap )
-        mastermode 2
-        foreach (players) [spec $arg1]
-        msg (format "%1 %2 %3 %4 %5 %6 %7" (orange (player_name $player1)) (grey [versus]) (orange (player_name $player2)) (grey [on]) (grey $game_mo) (orange $gamemap) (grey [in 10 secs]) )
-        sleep (secs 5) [ msg (format "%1" (red [Game will start in 5 secs...]) )
-        sleep (secs 1) [ msg (format "%1" (red [Game will start in 4 secs...]) )
-        sleep (secs 1) [ msg (format "%1" (red [Game will start in 3 secs...]) )
-        sleep (secs 1) [ msg (format "%1" (red [Game will start in 2 secs...]) )
-        sleep (secs 1) [ msg (format "%1" (red [Game will start in 1 secs...]) )
-        msg (format "%1 %2" (red [Map will change now to:]) (orange $gamemap) )
-        sleep (secs 2) [
-        changemap $game_mo $gamemap
-        if (strcmp $game_mo "[instagib team]") [
-                setteam $player1 linux
-                setteam $player2 windows
-        ]
-        unspec $player1
-        unspec $player2
-        msg (format "%1" (blue [Start the fight now!!!]) )
-
-        event_handler $onintermission [
-        msg (format "%1" (orange [Good Game]) )
-
-        if (&& (= $player1con (player_conid $player1)) (= $player2con (player_conid $player2)) ) [
-
-        if (= (player_frags $player1) (player_frags $player2)) [
-        msg (format "%1 %2 %3 %4" (blue [Oh NO winner:]) (orange(player_frags $player1)) (blue [-]) (orange(player_frags $player2)) )
-        log (format "%1 %2 %3 %4 %5" [MATCH:] [Game has end! A draw!] (player_name $player2) [versus] (player_name $player1) )
-        ] [
-                if (> (player_frags $player1) (player_frags $player2)) [
-                winner = $player1
-                loser = $player2
-                ] [
-                winner = $player2
-                loser = $player1
-                ]
-                log (format "%1 %2 %3 %4 %5 %6 %7 %8" [MATCH: Game has end!] (player_name $winner) [wins, with] (player_frags $winner) [-] (player_frags $loser) [Poor] (player_name $loser) )
-                msg (format "%1 %2 %3 %4 %5" (blue [The Winner is:]) (orange (player_name $winner)) (blue [with]) (orange (player_frags $winner)) (orange [FRAGS!]) )
-                msg (format "%1 %2 %3 %4 %5" (blue [Sorry]) (orange (player_name $loser)) (blue [you have only]) (orange (player_frags $loser)) (orange [FRAGS!]) )
-        ]
-        ] [ msg (format "%1" (red [Can't display the score. Maybe one of the players has been disconnected during the game!]) )
-            msg (format "%1" (red [But you can take a look at the scoreboard!]) ) ]
-
-        cancel_handler]
-
-        ]]]]]]
-
-        ] [privmsg $cn (err "You need admin to do that!")]
+	        player1 = $arg1
+        	player2 = $arg2
+        	game_mo = $arg3
+        	gamemap = $arg4
+       		if (strcmp $game_mo "insta") [game_mo = instagib]
+        	if (strcmp $game_mo "instateam") [game_mo = [instagib team]
+               		setteam $player1 linux
+                	setteam $player2 windows
+        	]
+        	if (strcmp $game_mo "ffa") [game_mo = ffa/default]
+        	if (strcmp $game_mo "eff") [game_mo = efficiency]
+        	if (strcmp $game_mo "ictf") [game_mo = [insta ctf] ]
+        	if (strcmp $game_mo "icapture" ) [game_mo = [insta capture] ]
+        	player1con = (player_conid $player1)
+        	player2con = (player_conid $player2)
+        	log (format "%1 %2 %3 %4 %5 %6" [MATCH:] (player_name $player2) [versus] (player_name $player1) [on] $gamemap )
+        	mastermode 2
+        	foreach (players) [spec $arg1]
+        	msg (format "%1 %2 %3 %4 %5 %6 %7" (orange (player_name $player1)) (grey [versus]) (orange (player_name $player2)) (grey [on]) (grey $game_mo) (orange $gamemap) (grey [in 10 secs]) )
+        	sleep (secs 5) [ msg (format "%1" (red [Game will start in 5 secs...]) )
+        		sleep (secs 1) [ msg (format "%1" (red [Game will start in 4 secs...]) )
+        			sleep (secs 1) [ msg (format "%1" (red [Game will start in 3 secs...]) )
+        				sleep (secs 1) [ msg (format "%1" (red [Game will start in 2 secs...]) )
+        					sleep (secs 1) [ msg (format "%1" (red [Game will start in 1 secs...]) )
+        						msg (format "%1 %2" (red [Map will change now to:]) (orange $gamemap) )
+      					  		sleep (secs 2) [
+     					   			changemap $game_mo $gamemap
+      					  			if (strcmp $game_mo "[instagib team]") [
+	          					      		setteam $player1 linux
+        	      					  		setteam $player2 windows
+        							]
+        							unspec $player1
+        							unspec $player2
+        							msg (format "%1" (blue [Start the fight now!!!]) )
+		        					event_handler $onintermission [
+	        							msg (format "%1" (orange [Good Game]) )
+		        						if (&& (= $player1con (player_conid $player1)) (= $player2con (player_conid $player2)) ) [
+						      				if (= (player_frags $player1) (player_frags $player2)) [
+        										msg (format "%1 %2 %3 %4" (blue [Oh NO winner:]) (orange(player_frags $player1)) (blue [-]) (orange(player_frags $player2)) )	
+	        									log (format "%1 %2 %3 %4 %5" [MATCH:] [Game has end! A draw!] (player_name $player2) [versus] (player_name $player1) )
+		        							][
+        		        							if (> (player_frags $player1) (player_frags $player2)) [
+                										winner = $player1
+                										loser = $player2
+                									][
+                									winner = $player2
+                									loser = $player1
+		                							]	
+        		        							log (format "%1 %2 %3 %4 %5 %6 %7 %8" [MATCH: Game has end!] (player_name $winner) [wins, with] (player_frags $winner) [-] (player_frags $loser) [Poor] (player_name $loser) )
+							                		msg (format "%1 %2 %3 %4 %5" (blue [The Winner is:]) (orange (player_name $winner)) (blue [with]) (orange (player_frags $winner)) (orange [FRAGS!]) )
+			        		        				msg (format "%1 %2 %3 %4 %5" (blue [Sorry]) (orange (player_name $loser)) (blue [you have only]) (orange (player_frags $loser)) (orange [FRAGS!]) )
+		        							]
+        								][ 
+										msg (format "%1" (red [Can't display the score. Maybe one of the players has been disconnected during the game!]) )
+            									msg (format "%1" (red [But you can take a look at the scoreboard!]) ) 
+									]
+   		     							cancel_handler
+								]
+	        					]
+						]
+					]
+				]
+			]
+		]
+	] [privmsg $cn (err "You need admin to do that!")]
 ]
 
 playercmd_pause = [
@@ -157,49 +155,48 @@ playercmd_msg = [
 
 playercmd_warning = [
         if (strcmp (player_priv $cn) "admin") [
-        playercnwa = $arg1
-        warning_r = $arg2
+	        playercnwa = $arg1
+       		warning_r = $arg2
 
-        if (strcmp $warning_r "tk") [ warning_r = "Teamkilling is bad! Only shoot RED!" ]
-        if (strcmp $warning_r "namefaker") [ warning_r = "Don't use this name, because it is not your name!" ]
-        if (strcmp $warning_r "bad") [ warning_r = "Please be nice here!" ]
-        if (strcmp $warning_r "fair") [ warning_r = "Please play fair!" ]
-        if (strcmp $warning_r "cheat") [ warning_r = "Don't use cheats here. You destroy the game, when you cheat!" ]
+       		if (strcmp $warning_r "tk") [ warning_r = "Teamkilling is bad! Only shoot RED!" ]
+     		if (strcmp $warning_r "namefaker") [ warning_r = "Don't use this name, because it is not your name!" ]
+      		if (strcmp $warning_r "bad") [ warning_r = "Please be nice here!" ]
+     		if (strcmp $warning_r "fair") [ warning_r = "Please play fair!" ]
+     		if (strcmp $warning_r "cheat") [ warning_r = "Don't use cheats here. You destroy the game, when you cheat!" ]
 
-        player_var $playercnwa warningsm (+ (player_var $playercnwa warningsm) 1)
-        privmsg $playercnwa (format "%1 %2 %3 %4 %5 %6 %7 %8" (red [WARNING:]) [(] (blue (player_var $playercnwa warningsm)) [)] (red [reason:]) (blue $warning_r) (red (+ (- 3 (player_var $playercnwa warningsm)) 1)) (red [warnings more and you will be kicked!]) )
-        if (>(player_var $playercnwa warningsm) 3) [
-        kick $playercnwa ]
-        ] [privmsg $cn (err "Permission Denied")]
+       		player_var $playercnwa warningsm (+ (player_var $playercnwa warningsm) 1)
+		privmsg $playercnwa (format "%1 %2 %3 %4 %5 %6 %7 %8" (red [WARNING:]) [(] (blue (player_var $playercnwa warningsm)) [)] (red [reason:]) (blue $warning_r) (red (+ (- 3 (player_var $playercnwa warningsm)) 1)) (red [warnings more and you will be kicked!]) )
+	        if (>(player_var $playercnwa warningsm) 3) [
+ 			kick $playercnwa
+		]
+        ][privmsg $cn (err "Permission Denied")]
 ]
 
 if (= $cheater_cmd 1) [
-interval (mins 2) [
-msg (format "%1 %2" (blue [If you detect a cheater type:]) (red [#cheater <cn>]) )]
-playercmd_cheater = [
-
-        playercnch = $cn
-        playercncheater = $arg1
-        if (|| (strcmp $playercncheater "cn") (strcmp $playercncheater "<cn>") )[
-        privmsg $playercnch (format "%1" (red [cn = clientnumber
+	interval (mins 2) [
+	msg (format "%1 %2" (blue [If you detect a cheater type:]) (red [#cheater <cn>]) )]
+	playercmd_cheater = [
+        	playercnch = $cn
+        	playercncheater = $arg1
+        	if (|| (strcmp $playercncheater "cn") (strcmp $playercncheater "<cn>") )[
+        		privmsg $playercnch (format "%1" (red [cn = clientnumber
 To see which clientnumber the cheater have type: /showclientnum 1
 Now take a look on the scoreboard.
-Your cheater_cmd must look like: #cheater 0 or #cheater 3]) ) ] [
-        player_var $playercnch cheatreq (+ (player_var $playercnch cheatreq) 1)
-
-        if (>= (player_var $playercnch cheatreq) 8) [
-                privmsg $playercnch (format "%1" (red [You will get kicked and banned now!]) )
-                kick $playercnch
-                ]
-
-        if (>= (player_var $playercnch cheatreq) 4) [
-                privmsg $playercnch (format "%1" (red [Don't Spam or you will get kicked!!!]) )
-                ][
-                        log (format "CHEATER: %1 %2" (player_name $cn) (player_name $playercncheater) )
-                        privmsg $playercnch (format "%1" (red [Thank you for your report. The admins will check this!]) )
-			msg (format "CHEATER: %1 reports %2 is a cheater!" (green (player_name $cn)) (red (player_name $playercncheater)) ) 
-                ]
-]
-]
+Your cheater_cmd must look like: #cheater 0 or #cheater 3]) ) 
+		] [
+        		player_var $playercnch cheatreq (+ (player_var $playercnch cheatreq) 1)
+	       		if (>= (player_var $playercnch cheatreq) 8) [
+        	        	privmsg $playercnch (format "%1" (red [You will get kicked and banned now!]) )
+                		kick $playercnch
+			]
+			if (>= (player_var $playercnch cheatreq) 4) [
+                		privmsg $playercnch (format "%1" (red [Don't Spam or you will get kicked!!!]) )
+        		][
+                		log (format "CHEATER: %1 %2" (player_name $cn) (player_name $playercncheater) )
+                		privmsg $playercnch (format "%1" (red [Thank you for your report. The admins will check this!]) )
+				msg (format "CHEATER: %1 reports %2 is a cheater!" (green (player_name $cn)) (red (player_name $playercncheater)) ) 
+        		]
+		]
+	]
 ]
 
