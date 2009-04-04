@@ -38,8 +38,9 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_const((int)PRIV_NONE, FUNGU_OBJECT_ID("PRIV_NONE"), env);
     script::bind_global_const((int)PRIV_MASTER, FUNGU_OBJECT_ID("PRIV_MASTER"), env);
     script::bind_global_const((int)PRIV_ADMIN, FUNGU_OBJECT_ID("PRIV_ADMIN"), env);
+    script::bind_global_func<int (int)>(server::player_id, FUNGU_OBJECT_ID("player_id"), env);
     script::bind_global_func<int (int)>(server::player_sessionid, FUNGU_OBJECT_ID("player_sessionid"), env);
-    script::bind_global_func<int (int)>(server::player_sessionid, FUNGU_OBJECT_ID("player_ping"), env);
+    script::bind_global_func<int (int)>(server::player_ping, FUNGU_OBJECT_ID("player_ping"), env);
     script::bind_global_func<const char * (int)>(server::player_ip, FUNGU_OBJECT_ID("player_ip"), env);
     script::bind_global_func<int (int)>(server::player_iplong, FUNGU_OBJECT_ID("player_iplong"), env);
     script::bind_global_func<const char * (int)>(server::player_status, FUNGU_OBJECT_ID("player_status"), env);
@@ -54,6 +55,9 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_gun, FUNGU_OBJECT_ID("player_gun"), env);
     script::bind_global_func<int (int)>(server::player_hits, FUNGU_OBJECT_ID("player_hits"), env);
     script::bind_global_func<int (int)>(server::player_shots, FUNGU_OBJECT_ID("player_shots"), env);
+    script::bind_global_func<int (int)>(server::player_accuracy, FUNGU_OBJECT_ID("player_accuracy"), env);
+    script::bind_global_func<void (int)>(server::player_slay, FUNGU_OBJECT_ID("player_slay"), env);
+    script::bind_global_func<bool (int,const char *)>(server::player_changeteam, FUNGU_OBJECT_ID("changeteam"), env);
     
     script::bind_global_const((int)CS_ALIVE, FUNGU_OBJECT_ID("ALIVE"), env);
     script::bind_global_const((int)CS_DEAD, FUNGU_OBJECT_ID("DEAD"), env);
@@ -82,6 +86,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void (const char *)>(server::addpermban, FUNGU_OBJECT_ID("permban"), env);
     script::bind_global_func<void (const char *)>(server::unsetban, FUNGU_OBJECT_ID("unsetban"), env);
     script::bind_global_func<void ()>(server::clearbans, FUNGU_OBJECT_ID("clearbans"), env);
+    script::bind_global_func<void ()>(exec_restarter, FUNGU_OBJECT_ID("exec_restarter"), env);
     
     script::bind_global_var(server::serverdesc, FUNGU_OBJECT_ID("servername"), env);
     script::bind_global_ro_var(server::smapname, FUNGU_OBJECT_ID("map"), env);

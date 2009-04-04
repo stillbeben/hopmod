@@ -12,7 +12,8 @@ boost::signal<void (int)> signal_connect;
 boost::signal<void (int,const char *)> signal_disconnect;
 boost::signal<void (const char *,const char *)> signal_failedconnect;
 boost::signal<void (int,const char *,const char *)> signal_rename;
-boost::signal<int (int,const char *,const char *),proceed> signal_reteam;
+boost::signal<void (int,const char *,const char *)> signal_reteam;
+boost::signal<int (int,const char *,const char *), proceed> signal_chteamrequest;
 boost::signal<void (int,int,std::string,std::string)> signal_kick;
 boost::signal<int (int,const char *), proceed> signal_text;
 boost::signal<int (int,const char *), proceed> signal_sayteam;
@@ -78,7 +79,8 @@ void register_signals(script::env & env)
     slots.register_signal(signal_disconnect,"disconnect",normal_error_handler);
     slots.register_signal(signal_failedconnect, "failedconnect",normal_error_handler);
     slots.register_signal(signal_rename,"rename",normal_error_handler);
-    slots.register_signal(signal_reteam, "reteam", proceed_error_handler);
+    slots.register_signal(signal_reteam, "reteam", normal_error_handler);
+    slots.register_signal(signal_chteamrequest, "chteamrequest", proceed_error_handler);
     slots.register_signal(signal_kick,"kick",normal_error_handler);
     slots.register_signal(signal_text,"text",proceed_error_handler);
     slots.register_signal(signal_sayteam,"sayteam",proceed_error_handler);
@@ -100,4 +102,9 @@ void register_signals(script::env & env)
     script::bind_global_func<void (int)>(destroy_slot, FUNGU_OBJECT_ID("cancel_handler"), env);
     
     register_lua_function(lua_event_handler_function,"event_handler");
+}
+
+void cleanup_dead_slots()
+{
+    slots.deallocate_destroyed_slots();
 }

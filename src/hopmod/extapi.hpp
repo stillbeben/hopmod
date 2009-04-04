@@ -19,6 +19,7 @@ namespace server
     extern int next_gametime;
     
     extern int player_sessionid(int);
+    extern int player_id(int);
     extern void player_msg(int,const char *);
     extern const char * player_name(int);
     extern const char * player_team(int);
@@ -39,6 +40,7 @@ namespace server
     extern int player_gun(int);
     extern int player_hits(int);
     extern int player_shots(int);
+    extern int player_accuracy(int);
     extern int player_connection_time(int);
     extern void team_msg(const char *,const char *);
     extern void player_spec(int);
@@ -46,6 +48,8 @@ namespace server
     extern void unsetmaster();
     extern void server_setmaster(int);
     extern void server_setadmin(int);
+    extern void player_slay(int);
+    extern bool player_changeteam(int,const char *);
     
     extern void pausegame(bool);
     extern void kick(int cn,int time,const std::string & admin,const std::string & reason);

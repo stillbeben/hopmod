@@ -14,6 +14,7 @@
 #include <boost/signal.hpp>
 #include <map>
 #include <vector>
+#include <list>
 
 namespace fungu{
 namespace script{
@@ -44,9 +45,19 @@ public:
     {
         if((unsigned int)handle >= m_slots.size() || handle < 0) return;
         
-        delete m_slots[handle].first;
+        m_destroyed.push_back(m_slots[handle].first);
+        
         m_slots[handle].first = NULL;
         m_slots[handle].second.disconnect();
+    }
+    
+    void deallocate_destroyed_slots()
+    {
+        while(!m_destroyed.empty())
+        {
+            delete m_destroyed.front();
+            m_destroyed.pop_front();
+        }
     }
 private:
     template<typename SignalType>
@@ -75,6 +86,8 @@ private:
     typedef detail::base_script_function<arguments_container, call_serializer, error> base_script_function;
     typedef std::vector<std::pair<base_script_function *,boost::signals::connection> > slot_vector;
     slot_vector m_slots;
+    
+    std::list<base_script_function *> m_destroyed;
 };
 
 } //namespace script

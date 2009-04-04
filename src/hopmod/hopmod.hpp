@@ -14,6 +14,9 @@
 #include "scheduler.hpp"
 #include "banned_networks.hpp"
 #include "timedbans_service.hpp"
+#include "banlist.hpp"
+#include "playerid.hpp"
+#include "restarter.hpp"
 
 #include <arpa/inet.h> //inet_ntoa
 #include <iostream>

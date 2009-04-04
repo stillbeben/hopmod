@@ -23,6 +23,7 @@ namespace game
 #endif
 
 extern ENetAddress masteraddress;
+extern void flushserverhost();
 
 namespace server
 {
@@ -205,7 +206,7 @@ namespace server
 
     struct clientinfo
     {
-        int clientnum, ownernum, connectmillis, sessionid;
+        int clientnum, ownernum, connectmillis, sessionid, playerid;
         string name, team, mapvote;
         int playermodel;
         int modevote;
@@ -501,6 +502,8 @@ namespace server
         
         try{fungu::script::execute_file(STARTUP_SCRIPT,get_script_env().get_global_scope());}
         catch(fungu::script::error_info * error){report_script_error(error);}
+        
+        signal_shutdown.connect(flushserverhost);
     }
     
     int numclients(int exclude = -1, bool nospec = true, bool noai = true)
@@ -1763,6 +1766,7 @@ namespace server
         run_script_socket_service();
         update_scheduler(totalmillis);
         bantimes.update(totalmillis);
+        cleanup_dead_slots();
     }
     
     void sendinits2c(clientinfo *ci)
@@ -1807,7 +1811,7 @@ namespace server
         ci->clientnum = ci->ownernum = n;
         ci->connectmillis = totalmillis;
         ci->sessionid = (rnd(0x1000000)*((totalmillis%10000)+1))&0xFFFFFF;
-
+        
         connects.add(ci);
         if(!m_mp(gamemode)) return DISC_PRIVATE;
         sendinits2c(ci);
@@ -1946,7 +1950,8 @@ namespace server
                 }
 
                 ci->playermodel = getint(p);
-
+                ci->playerid = get_player_id(ci->name, getclientip(ci->clientnum));
+                
                 if(m_demo) enddemoplayback();
                 
                 connects.removeobj(ci);
@@ -2206,7 +2211,11 @@ namespace server
                 filtertext(text, text, false, MAXNAMELEN);
                 if(!text[0]) s_strcpy(text, "unnamed");
                 QUEUE_STR(text);
-                if(strcmp(ci->name,text)!=0) signal_rename(ci->clientnum, ci->name, text);
+                if(strcmp(ci->name,text)!=0)
+                {
+                    ci->playerid = get_player_id(text, getclientip(ci->clientnum));
+                    signal_rename(ci->clientnum, ci->name, text);
+                }
                 s_strncpy(ci->name, text, MAXNAMELEN+1);
                 getstring(text, p);
                 filtertext(text, text, false, MAXTEAMLEN);
@@ -2223,7 +2232,11 @@ namespace server
                 else QUEUE_STR(text);
                 if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, text))
                 {
-                    if(signal_reteam(ci->clientnum, ci->team, text)!=-1) smode->changeteam(ci, ci->team, text);
+                    if(signal_chteamrequest(ci->clientnum, ci->team, text)!=-1)
+                    {
+                        smode->changeteam(ci, ci->team, text);
+                        signal_reteam(ci->clientnum, ci->team, text);
+                    }
                     else s_strcpy(text,ci->team);
                     sendf(sender, 1, "riis", SV_SETTEAM, sender, text);
                     s_strncpy(ci->team, text, MAXTEAMLEN+1);
@@ -2391,10 +2404,11 @@ namespace server
                 if((!ci->privilege && !ci->local) || who<0 || who>=getnumclients()) break;
                 clientinfo *wi = getinfo(who);
                 if(!wi || !strcmp(wi->team, text)) break;
-                if(!smode || smode->canchangeteam(wi, wi->team, text) && signal_reteam(wi->clientnum,wi->team,text)!=-1)
+                if(!smode || smode->canchangeteam(wi, wi->team, text) && signal_chteamrequest(wi->clientnum,wi->team,text)!=-1)
                 {
                     if(smode && wi->state.state==CS_ALIVE)
                         smode->changeteam(wi, wi->team, text);
+                    signal_reteam(wi->clientnum, wi->team, text);
                     s_strncpy(wi->team, text, MAXTEAMLEN+1);
                 }
                 if(wi->state.aitype == AI_NONE) aiman::dorefresh = true;
@@ -2567,77 +2581,5 @@ namespace server
     #include "extserver.cpp"
     #undef INCLUDE_EXTSERVER_CPP
     
-    void shutdown()
-    {
-        signal_shutdown();
-        exit(0);
-    }
-    
-    struct kickinfo
-    {
-        int cn;
-        int sessionid;
-        int time; //seconds
-        std::string admin;
-        std::string reason;
-    };
-    
-    static int execute_kick(void * vinfoptr)
-    {
-        kickinfo * info = (kickinfo *)vinfoptr;
-        clientinfo * ci = (clientinfo *)getinfo(info->cn);
-        
-        if(!ci || ci->sessionid != info->sessionid)
-        {
-            delete info;
-            return 0;
-        }
-        
-        std::string full_reason;
-        if(info->reason.length())
-        {
-            full_reason = (info->time == 0 ? "kicked for " : "kicked and banned for ");
-            full_reason += info->reason;
-        }
-        ci->disconnect_reason = full_reason;
-        
-        allowedips.removeobj(getclientip(ci->clientnum));
-        netmask addr(getclientip(ci->clientnum));
-        if(info->time == -1) bannedips.set_permanent_ban(addr);
-        else bantimes.set_ban(addr,info->time);
-        
-        signal_kick(info->cn, info->time, info->admin, info->reason);
-        
-        disconnect_client(info->cn, DISC_KICK);
-        
-        delete info;
-        return 0;
-    }
-    
-    void kick(int cn,int time,const std::string & admin,const std::string & reason)
-    {
-        clientinfo * ci = get_ci(cn);
-        
-        kickinfo * info = new kickinfo;
-        info->cn = cn;
-        info->sessionid = ci->sessionid;
-        info->time = time;
-        info->admin = admin;
-        info->reason = reason;
-        
-        sched_callback(&execute_kick, info);
-    }
-    
-    void changetime(int remaining)
-    {
-        gamelimit = gamemillis + remaining;
-        if(!gamepaused) checkintermission();
-    }
-    
-    void clearbans()
-    {
-        bantimes.clear();
-    }
-    
     #include "aiman.h"
-}
+} //namespace server
