@@ -6,10 +6,10 @@ use warnings;
 use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Config::Auto;
-use vars qw($cn $config $irc @playerstats @serverlist @data $rrd $topriv $version $hopvar $rev @split);
+use vars qw($mute_status $cn $config $irc @playerstats @serverlist @data $rrd $topriv $version $hopvar $rev @split);
 
 $config = Config::Auto::parse("../conf/vars.conf" , format => "equal");
-
+$mute_status = "0";
 $version = "1.21"; #<----Do NOT change this or I will kill you
 print "<Starting HopBot V$version support at #hopmod\@irc.gamesurge.net> \n";
 
@@ -106,7 +106,7 @@ sub on_disconnect {
 }
 sub on_tail_input {
 	my ($kernel, $sender, $filename, $input) = @_[KERNEL, SENDER, ARG0, ARG1];
-        $irc->yield( privmsg => $config->{irc_channel} => &filterlog($_[ARG1]) );
+	sendtoirc($config->{irc_channel}, &filterlog($_[ARG1]));
 	&toserverpipe("irc_pid = $$"); # Regular refresh for safetys sake
 }
 sub process_command {
@@ -121,9 +121,11 @@ sub process_command {
 		##### COMMAND PROCESSING #####
 
                ##### FIND #####
-                if ( $command =~ / find *(.*)/i )
-                { $topriv = $nick;&find('1',$1,$channel);
-                ; return }
+		if ( $config->{irc_player_locator} eq "1" ) {
+                	if ( $command =~ / find *(.*)/i )
+	                { $topriv = $nick;&find('1',$1,$channel);
+	                ; return }
+		}
 		##### SAY #####
 		if ( $command =~ / say (.*)/i )
                 { 
@@ -285,19 +287,24 @@ sub process_command {
 
 sub filterlog {
 	my $line = shift;
+	##### Bot Muting Functions #####
+	if ($line =~ /COMMAND BOTMUTE (.*)/)
+	{ sendtoirc($config->{irc_channel},"\x034BOTMUTE\x03       \x0312$1\x03 muted the IRC bot."); $mute_status = "1"; return;}
+        if ($line =~ /COMMAND BOTUNMUTE (.*)/)
+        { $mute_status = "0"; sendtoirc($config->{irc_channel},"\x039BOTUNMUTE\x03       \x0312$1\x03 unmuted the IRC bot."); return;}
     ##### Invisible Master ##### 
     if ($line =~ /(\S*\([0-9]+\))(\(*.*\)*): #invadmin/)
     { return "\x039MASTER\x03       \x0312$1\x03 attempted to take invisible master."}
     ##### Cheater #####
     if ($line =~ /CHEATER: (.*) (.*)/)
-    { &sendtoirc($config->{irc_monitor_channel},"$1 reports: $2 is a Cheater please ADMINS check this!"); return }
+    { &sendtoirc($config->{irc_monitor_channel},"$1 reports: $2 is a Cheater, ADMINS please check this!"); return }
     ##### 1on1 #####
     if ($line =~ /#1on1 (.*)/)
     { return "\x039MATCH\x03       \x0312 The match starts now...\x03"}
     if ($line =~ /MATCH: (.*) versus (.*) on (.*)/)
     { return "\x039MATCH\x03       \x034 $1 \x03 versus \x0312 $2 \x03 on \x037 $3 \x03"}
     if ($line =~ /MATCH: Game has end! (.*) wins, with (.*) - (.*) Poor (.*)/)
-    { return "\x039MATCH\x03       \x034 Game has end! $1 \x03 wins, with $2 - $3 Poor $4 \x03"}
+    { return "\x039MATCH\x03       \x034 Game has ended! $1 \x03 wins, with $2 - $3 Poor $4 \x03"}
     #### LOGIN #####
     if ($line =~ /#login (.*)/)
     { return ""}
@@ -315,7 +322,7 @@ sub filterlog {
     { return "" }
     ##### PING #####
     if ($line =~ /PING: (.*) get kicked!/)
-    { return "\x039PING\x03    \x0312$1\x03 \x037get kicked, because of his high ping!\x03" }
+    { return "\x039PING\x03    \x0312$1\x03 \x037was kicked for his high ping!\x03" }
     ##### ANNOUNCE #####
     if ($line =~ /ANNOUNCE (\S*) (.*)/)
     { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
@@ -400,7 +407,9 @@ sub toprivateirc {
 sub sendtoirc {
 	my $channel = shift;
 	my $send = shift; 
-	$irc->yield( privmsg => $channel => "$send" );
+	if ($mute_status == "0") {
+		$irc->yield( privmsg => $channel => "$send" );
+	} else { $irc->yield( privmsg => $channel => "\x034IRC BOT is currently MUTED\x03" );}
 }
 sub splittoirc {
 	my $channel = shift;

@@ -1,0 +1,4 @@
+
+if (strcmp (player_priv $cn) "admin") [
+	log (format "COMMAND BOTMUTE %1" (player_name $cn))
+] [privmsg $cn (err "Permission denied.")]
