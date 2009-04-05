@@ -300,4 +300,9 @@ void update_mastermask()
     if(autoapprove) mastermask |= MM_AUTOAPPROVE;
 }
 
+const char * gamemodename()
+{
+    return modename(gamemode,"unknown");
+}
+
 #endif

@@ -244,6 +244,7 @@ namespace server
         freqlimit sv_mapvote_hit;
         freqlimit sv_initc2s_hit;
         std::string disconnect_reason;
+        bool active;
         
         clientinfo() 
          : sv_text_hit(sv_text_hit_length),
@@ -267,6 +268,7 @@ namespace server
             events.deletecontentsp();
             timesync = false;
             lastevent = 0;
+            active = false;
         }
 
         void reassign()
@@ -2202,6 +2204,12 @@ namespace server
                 }
                 if(cq)
                 {
+                    if(!cq->active)
+                    {
+                        cq->active = true;
+                        signal_active(cq->clientnum);
+                    }
+                    
                     cq->addevent(shot);
                     
                     cq->state.shots++;

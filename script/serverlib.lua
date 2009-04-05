@@ -2,8 +2,15 @@
 dofile("./script/playervars.lua")
 
 -- color formatting strings
-function red() return "\f3" end
 
+function formatcol(col, text)
+    if text then return "\fs\f" .. col .. text .. "\fr" else return "\f" ..col end
+end
+
+function red(text) return formatcol(3,text) end
+function orange(text) return formatcol(6, text) end
+function green(text) return formatcol(0, text) end
+function white(text) return formatcol(10, text) end
 
 local set_cancel_restart = false
 

@@ -107,6 +107,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_funvar<int>(server::getbotcount, FUNGU_OBJECT_ID("botcount"), env);
     script::bind_global_var(server::aiman::botlimit, FUNGU_OBJECT_ID("maxbots"), env);
     script::bind_global_func<void (bool)>(server::enable_master_auth, FUNGU_OBJECT_ID("use_master_auth"), env);
+    script::bind_global_funvar<const char *>(server::gamemodename, FUNGU_OBJECT_ID("gamemode"), env);
     
     script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_veto"), env);
     script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_locked"), env);

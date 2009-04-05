@@ -77,6 +77,8 @@ namespace server
     extern void delbot(int);
     extern void enable_master_auth(bool);
     extern void update_mastermask();
+    extern const char * gamemodename();
+    
 } //namespace server
 
 #endif

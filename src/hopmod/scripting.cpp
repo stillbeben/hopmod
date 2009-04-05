@@ -4,6 +4,7 @@
 #include <fungu/script/lua/lua_function.hpp>
 #include <fungu/dynamic_cast_derived.hpp>
 #include <fungu/script/variable.hpp>
+#include <fungu/script/parse_array.hpp>
 #include <sstream>
 #include <iostream>
 
@@ -24,7 +25,7 @@ static inline int svrtable_newindex(lua_State *);
 static inline void push_server_table(lua_State *);
 //static inline void push_server_index_table(lua_State *,int);
 static inline void register_to_server_table(lua_State *,lua_CFunction,const char *);
-
+static int parse_list(lua_State *);
 
 void init_scripting()
 {
@@ -67,6 +68,8 @@ void init_scripting()
     svrtable_index_ref = luaL_ref(L,-2);
     
     lua_pop(L,-1);
+    
+    register_lua_function(&parse_list,"parse_list");
 }
 
 void shutdown_scripting()
@@ -213,4 +216,33 @@ void register_lua_function(lua_CFunction func,const char * name)
     lua_setfield(L, -2, name);
     
     lua_pop(L,2);
+}
+
+int parse_list(lua_State * L)
+{
+    int argc = lua_gettop(L);
+    if(argc == 0) return luaL_error(L,"missing argument");
+    size_t listclen = 0;
+    const char * list = lua_tolstring(L, 1, &listclen);
+    if(!list) return luaL_argerror(L,1,"expecting string value");
+ 
+    std::vector<const_string> out;
+    try
+    {
+        script::parse_array<std::vector<const_string>,true>(const_string(list,list+listclen-1), env.get_global_scope(), out);
+    }
+    catch(script::error err)
+    {
+        return luaL_error(L, err.get_error_message().c_str());
+    }
+    
+    lua_newtable(L);
+    for(int i = 0; i < static_cast<int>(out.size()); i++)
+    {
+        lua_pushinteger(L,i+1);
+        lua_pushlstring(L, out[i].begin(), out[i].length());
+        lua_settable(L, -3);
+    }
+    
+    return 1;
 }

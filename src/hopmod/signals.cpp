@@ -11,6 +11,7 @@ static script::slot_factory slots;
 boost::signal<void (int)> signal_connect;
 boost::signal<void (int,const char *)> signal_disconnect;
 boost::signal<void (const char *,const char *)> signal_failedconnect;
+boost::signal<void (int)> signal_active;
 boost::signal<void (int,const char *,const char *)> signal_rename;
 boost::signal<void (int,const char *,const char *)> signal_reteam;
 boost::signal<int (int,const char *,const char *), proceed> signal_chteamrequest;
@@ -80,6 +81,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_connect,"connect",normal_error_handler);
     slots.register_signal(signal_disconnect,"disconnect",normal_error_handler);
     slots.register_signal(signal_failedconnect, "failedconnect",normal_error_handler);
+    slots.register_signal(signal_active, "active", normal_error_handler);
     slots.register_signal(signal_rename,"rename",normal_error_handler);
     slots.register_signal(signal_reteam, "reteam", normal_error_handler);
     slots.register_signal(signal_chteamrequest, "chteamrequest", proceed_error_handler);
