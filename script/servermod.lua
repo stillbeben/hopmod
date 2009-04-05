@@ -1,5 +1,5 @@
-dofile("./scripts/serverlib.lua")
-dofile("./scripts/logging.lua")
+dofile("./script/serverlib.lua")
+dofile("./script/logging.lua")
 
 function onText(cn,text)
     

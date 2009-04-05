@@ -1,5 +1,5 @@
 
-dofile("./scripts/playervars.lua")
+dofile("./script/playervars.lua")
 
 -- color formatting strings
 function red() return "\f3" end

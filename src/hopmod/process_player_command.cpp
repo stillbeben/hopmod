@@ -14,7 +14,7 @@ bool eval_player_command(int cn,const char * cmdline, const std::vector<std::str
     cn_var.lock_write(true);
     frame.bind_object(&cn_var,FUNGU_OBJECT_ID("cn"));
     
-    s_sprintfd(cmdfile)("./scripts/commands/%s" CUBESCRIPT_EXTENSION ,arguments[0].c_str());
+    s_sprintfd(cmdfile)("./script/command/%s" CUBESCRIPT_EXTENSION ,arguments[0].c_str());
     if(fileexists(cmdfile,"r"))
     {
         try{

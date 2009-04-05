@@ -1,5 +1,5 @@
 
-local logfile = io.open("logs/server.log","a+")
+local logfile = io.open("log/server.log","a+")
 
 function log(msg)
     logfile:write(os.date("[%a %b %d %X] ",os.time()))
