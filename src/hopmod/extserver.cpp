@@ -173,7 +173,17 @@ void changemap(const char * map,const char * mode = "",int mins = -1)
 
 int getplayercount()
 {
-    return clients.length();
+    return numclients(-1, false, true);
+}
+
+int getbotcount()
+{
+    return numclients(-1, true, false) - numclients();
+}
+
+int getspeccount()
+{
+    return getplayercount() - numclients();
 }
 
 void team_msg(const char * team,const char * msg)
@@ -196,6 +206,12 @@ void player_spec(int cn)
 void player_unspec(int cn)
 {
     setspectator(get_ci(cn), false);
+}
+
+int player_bots(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return ci->bots.length();
 }
 
 void unsetmaster()
@@ -261,6 +277,27 @@ void unsetban(const char * addrstr)
     try{addr = netmask::make(addrstr);}
     catch(std::bad_cast){throw fungu::script::error(fungu::script::BAD_CAST);}
     bannedips.unset_ban(addr);
+}
+
+void delbot(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    aiman::reqdel(ci);
+}
+
+void enable_master_auth(bool enable)
+{
+    mastermask = (enable ? mastermask & ~MM_AUTOAPPROVE : mastermask | MM_AUTOAPPROVE);
+}
+
+void update_mastermask()
+{
+    bool autoapprove = mastermask & MM_AUTOAPPROVE;
+    mastermask &= ~(1<<MM_VETO) & ~(1<<MM_LOCKED) & ~(1<<MM_PRIVATE) & ~MM_AUTOAPPROVE;
+    mastermask |= (allow_mm_veto << MM_VETO);
+    mastermask |= (allow_mm_locked << MM_LOCKED);
+    mastermask |= (allow_mm_private << MM_PRIVATE);
+    if(autoapprove) mastermask |= MM_AUTOAPPROVE;
 }
 
 #endif

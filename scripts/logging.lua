@@ -94,6 +94,14 @@ end)
 server.event_handler("gamepaused", function() log("game is paused") end)
 server.event_handler("gameresumed", function() log("game is resumed") end)
 
+server.event_handler("addbot", function(cn)
+    log(string.format("%s(%i) added a bot",server.player_name(cn),cn))
+end)
+
+server.event_handler("delbot", function(cn)
+    log(string.format("%s(%i) deleted a bot",server.player_name(cn),cn))
+end)
+
 server.event_handler("shutdown", function() log("server shutting down"); logfile:close() end)
 
 log("server started")

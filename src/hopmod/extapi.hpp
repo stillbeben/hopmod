@@ -5,6 +5,11 @@
 
 namespace server
 {
+    namespace aiman
+    {
+        extern int botlimit;
+    }
+    
     extern string serverdesc;
     extern string smapname;
     extern string serverpass;
@@ -17,6 +22,10 @@ namespace server
     extern string next_gamemode;
     extern string next_mapname;
     extern int next_gametime;
+    
+    extern bool allow_mm_veto;
+    extern bool allow_mm_locked;
+    extern bool allow_mm_private;
     
     extern int player_sessionid(int);
     extern int player_id(int);
@@ -45,6 +54,7 @@ namespace server
     extern void team_msg(const char *,const char *);
     extern void player_spec(int);
     extern void player_unspec(int);
+    extern int player_bots(int);
     extern void unsetmaster();
     extern void server_setmaster(int);
     extern void server_setadmin(int);
@@ -58,11 +68,15 @@ namespace server
     extern void changemap(const char * map,const char * mode,int mins);
     extern int modecode(const char * modename);
     extern int getplayercount();
+    extern int getbotcount();
+    extern int getspeccount();
     extern bool writebanlist(const char * filename);
     extern bool loadbanlist(const char * filename);
     extern void addpermban(const char * addr);
     extern void unsetban(const char * addr);
-    
+    extern void delbot(int);
+    extern void enable_master_auth(bool);
+    extern void update_mastermask();
 } //namespace server
 
 #endif

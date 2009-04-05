@@ -1,6 +1,9 @@
 // server-side ai manager
 namespace aiman
 {
+    bool autooverride = false, dorefresh = false;
+    int botlimit = 8;
+
     void calcteams(vector<teamscore> &teams)
     {
         const char *defaults[2] = { "good", "evil" };
@@ -64,44 +67,46 @@ namespace aiman
         return teams.length() ? teams.last().team : "";
     }
 
-	int findaiclient(int exclude)
+	clientinfo *findaiclient(int exclude)
 	{
-        int leastcn = -1, leastbots = INT_MAX;
+        clientinfo *least = NULL;
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
 			if(ci->clientnum < 0 || ci->state.aitype != AI_NONE || !ci->name[0] || !ci->connected || ci->clientnum == exclude) continue;
-		    int numbots = 0;
-			loopvj(bots) if(bots[j] && bots[j]->ownernum == ci->clientnum) numbots++;
-            if(numbots < leastbots) { leastcn = ci->clientnum; leastbots = numbots; }
+            if(!least || ci->bots.length() < least->bots.length()) least = ci;
 		}
-        return leastcn;
+        return least;
 	}
 
-	bool addai(int skill, bool req)
+	bool addai(int skill, int limit, bool req)
 	{
-		int numai = 0, cn = -1;
+		int numai = 0, cn = -1, maxai = (limit >= 0 ? min(limit, MAXBOTS) : MAXBOTS);
 		loopv(bots)
         {
+			if(numai >= maxai) return false;
             clientinfo *ci = bots[i];
             if(!ci) { if(cn < 0) cn = i; continue; }
 			if(ci->ownernum < 0)
 			{ // reuse a slot that was going to removed
-				ci->ownernum = findaiclient();
+                clientinfo *owner = findaiclient();
+				ci->ownernum = owner ? owner->clientnum : -1;
 				ci->aireinit = 2;
 				if(req) autooverride = true;
 				return true;
 			}
 			numai++;
 		}
-        if(numai >= MAXBOTS) return false;
+		if(numai >= maxai) return false;
         if(cn < 0) { cn = bots.length(); bots.add(NULL); }
         const char *team = m_teammode ? chooseteam() : "";
         if(!bots[cn]) bots[cn] = new clientinfo;
         clientinfo *ci = bots[cn];
 		ci->clientnum = MAXCLIENTS + cn;
 		ci->state.aitype = AI_BOT;
-		ci->ownernum = findaiclient();
+        clientinfo *owner = findaiclient();
+		ci->ownernum = owner ? owner->clientnum : -1;
+        if(owner) owner->bots.add(ci);
         ci->state.skill = skill <= 0 ? rnd(50) + 51 : clamp(skill, 1, 101);
 	    clients.add(ci);
 		ci->state.lasttimeplayed = lastmillis;
@@ -120,6 +125,8 @@ namespace aiman
         if(!bots.inrange(cn)) return;
         if(smode) smode->leavegame(ci, true);
         sendf(-1, 1, "ri2", SV_CDIS, ci->clientnum);
+        clientinfo *owner = (clientinfo *)getclientinfo(ci->ownernum);
+        if(owner) owner->bots.removeobj(ci);
         clients.removeobj(ci);
         DELETEP(bots[cn]);
 		dorefresh = true;
@@ -127,7 +134,7 @@ namespace aiman
 
 	bool delai(bool req)
 	{
-        loopv(bots) if(bots[i] && bots[i]->ownernum >= 0)
+        loopvrev(bots) if(bots[i] && bots[i]->ownernum >= 0)
         {
 			deleteai(bots[i]);
 			if(req) autooverride = true;
@@ -148,46 +155,44 @@ namespace aiman
 		{
 			sendf(-1, 1, "ri5ss", SV_INITAI, ci->clientnum, ci->ownernum, ci->state.aitype, ci->state.skill, ci->name, ci->team);
 			if(ci->aireinit == 2)
-			{
-                ci->state.state = CS_DEAD;
-                ci->state.respawn();
-			}
+            {
+                ci->reassign();
+                if(ci->state.state==CS_ALIVE) sendspawn(ci);
+                else sendresume(ci);
+            }
 			ci->aireinit = 0;
 		}
 	}
 
-	void shiftai(clientinfo *ci, int cn = -1)
+	void shiftai(clientinfo *ci, clientinfo *owner)
 	{
-		if(cn < 0) { ci->aireinit = 0; ci->ownernum = -1; }
-		else { ci->aireinit = 2; ci->ownernum = cn; }
+        clientinfo *prevowner = (clientinfo *)getclientinfo(ci->ownernum);
+        if(prevowner) prevowner->bots.removeobj(ci);
+		if(!owner) { ci->aireinit = 0; ci->ownernum = -1; }
+		else { ci->aireinit = 2; ci->ownernum = owner->clientnum; owner->bots.add(ci); }
 	}
 
 	void removeai(clientinfo *ci, bool complete)
 	{ // either schedules a removal, or someone else to assign to
-		loopv(bots) if(bots[i] && bots[i]->ownernum == ci->clientnum)
-			shiftai(bots[i], complete ? -1 : findaiclient(ci->clientnum));
+
+		loopvrev(ci->bots) shiftai(ci->bots[i], complete ? NULL : findaiclient(ci->clientnum));
 	}
 
 	bool reassignai(int exclude)
 	{
-		vector<int> siblings;
-		while(siblings.length() < clients.length()) siblings.add(-1);
         clientinfo *hi = NULL, *lo = NULL;
-		int hibots = INT_MIN, lobots = INT_MAX;
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
 			if(ci->clientnum < 0 || ci->state.aitype != AI_NONE || !ci->name[0] || !ci->connected || ci->clientnum == exclude) continue;
-            int numbots = 0;
-            loopvj(bots) if(bots[j] && bots[j]->ownernum == ci->clientnum) numbots++;
-            if(numbots < lobots) { lo = ci; lobots = numbots; }
-            if(numbots > hibots) { hi = ci; hibots = numbots; }
+            if(!lo || ci->bots.length() < lo->bots.length()) lo = ci;
+            if(!hi || ci->bots.length() > hi->bots.length()) hi = ci;
 		}
-		if(hi && lo && hibots - lobots > 1)
+		if(hi && lo && hi->bots.length() - lo->bots.length() > 1)
 		{
-			loopv(bots) if(bots[i] && bots[i]->ownernum == hi->ownernum)
+			loopvrev(hi->bots)
 			{
-				shiftai(bots[i], lo->ownernum);
+				shiftai(hi->bots[i], lo);
 				return true;
 			}
 		}
@@ -223,13 +228,15 @@ namespace aiman
 
 	void reqadd(clientinfo *ci, int skill)
 	{
-        if(!ci->local && ci->privilege < PRIV_ADMIN) return;
-        if(!addai(skill, true)) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to create or assign bot");
+        if(!ci->local && !ci->privilege) return;
+        if(!addai(skill, ci->privilege < PRIV_ADMIN ? botlimit : -1, true)) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to create or assign bot");
+        else signal_addbot(ci->clientnum);
 	}
 
 	void reqdel(clientinfo *ci)
 	{
-        if(!ci->local && ci->privilege < PRIV_ADMIN) return;
+        if(!ci->local && !ci->privilege) return;
         if(!delai(true)) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to remove any bots");
+        else signal_delbot(ci->clientnum);
 	}
 }

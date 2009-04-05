@@ -36,6 +36,11 @@ std::size_t arguments::size()const
     return lua_gettop(m_stack);
 }
 
+bool arguments::deserialize(value_type arg,target_tag<bool>)
+{
+    return lua_toboolean(m_stack, arg);
+}
+
 int arguments::deserialize(value_type arg,target_tag<int>)
 {
     if(!lua_isnumber(m_stack, arg))

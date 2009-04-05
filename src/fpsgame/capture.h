@@ -270,7 +270,7 @@ struct captureclientmode : clientmode
             baseinfo &b = bases[i];
             if(b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1 && insidebase(b, player1->feetpos()) && player1->hasmaxammo(b.ammotype-1+I_SHELLS)) return;
         }
-        addmsg(SV_REPAMMO, "r");
+        addmsg(SV_REPAMMO, "rc", player1);
     }
 
     void receiveammo(fpsent *d, int type)
@@ -291,7 +291,7 @@ struct captureclientmode : clientmode
             {
                 if(lastrepammo!=i)
                 {
-                    if(b.ammo > 0 && !player1->hasmaxammo(b.ammotype-1+I_SHELLS)) addmsg(SV_REPAMMO, "r");
+                    if(b.ammo > 0 && !player1->hasmaxammo(b.ammotype-1+I_SHELLS)) addmsg(SV_REPAMMO, "rc", d);
                     lastrepammo = i;
                 }
                 return;
@@ -523,13 +523,13 @@ struct captureclientmode : clientmode
         {
             if(strcmp(b.owner, owner)) 
             { 
-                conoutf(CON_GAMEINFO, "\f2%s captured %s", owner, b.name); 
+                conoutf(CON_GAMEINFO, "%s captured %s", owner, b.name); 
                 if(!strcmp(owner, player1->team)) playsound(S_V_BASECAP); 
             }
         }
         else if(b.owner[0]) 
         { 
-            conoutf(CON_GAMEINFO, "\f2%s lost %s", b.owner, b.name); 
+            conoutf(CON_GAMEINFO, "%s lost %s", b.owner, b.name); 
             if(!strcmp(b.owner, player1->team)) playsound(S_V_BASELOST); 
         }
         if(strcmp(b.owner, owner)) particle_splash(PART_SPARK, 200, 250, b.ammopos, 0xB49B4B, 0.24f);
@@ -552,7 +552,7 @@ struct captureclientmode : clientmode
                 s_sprintfd(msg)("@%d", total);
                 vec above(b.ammopos);
                 above.z += FIREBALLRADIUS+1.0f;
-                particle_text(above, msg, PART_TEXT, 2000, strcmp(team, player1->team) ? 0xFF4B19 :  0x6496FF, 4.0f, -8);
+                particle_text(above, msg, PART_TEXT, 2000, isteam(team, player1->team) ? 0x6496FF : 0xFF4B19, 4.0f, -8);
             }
         }
     }
@@ -910,7 +910,7 @@ case SV_BASES:
     break;
 
 case SV_REPAMMO:
-    if(ci->state.state!=CS_SPECTATOR && smode==&capturemode) capturemode.replenishammo(ci);
+    if(ci->state.state!=CS_SPECTATOR && smode==&capturemode) capturemode.replenishammo(cq);
     break;
 
 #else

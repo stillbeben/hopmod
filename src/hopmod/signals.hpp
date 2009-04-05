@@ -38,6 +38,8 @@ extern boost::signal<void (int,int)>                                signal_spect
 extern boost::signal<void (int,const char *,int)>                   signal_setmaster;
 extern boost::signal<void (int,int)>                                signal_teamkill;
 extern boost::signal<void (int,const char *,bool)>                  signal_auth;
+extern boost::signal<void (int)>                                    signal_addbot;
+extern boost::signal<void (int)>                                    signal_delbot;
 
 // Game Events
 extern boost::signal<void ()>                                signal_intermission;

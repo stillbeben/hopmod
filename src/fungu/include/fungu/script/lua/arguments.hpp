@@ -42,6 +42,7 @@ public:
         throw; //used to supress no-return-value warning
     }
     
+    bool deserialize(value_type arg,target_tag<bool>);
     int deserialize(value_type arg,target_tag<int>);
     unsigned int deserialize(value_type arg, target_tag<unsigned int>);
     unsigned short deserialize(value_type arg, target_tag<unsigned short>);

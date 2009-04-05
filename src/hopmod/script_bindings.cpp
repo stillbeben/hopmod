@@ -58,6 +58,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_accuracy, FUNGU_OBJECT_ID("player_accuracy"), env);
     script::bind_global_func<void (int)>(server::player_slay, FUNGU_OBJECT_ID("player_slay"), env);
     script::bind_global_func<bool (int,const char *)>(server::player_changeteam, FUNGU_OBJECT_ID("changeteam"), env);
+    script::bind_global_func<int (int)>(server::player_bots, FUNGU_OBJECT_ID("player_bots"), env);
     
     script::bind_global_const((int)CS_ALIVE, FUNGU_OBJECT_ID("ALIVE"), env);
     script::bind_global_const((int)CS_DEAD, FUNGU_OBJECT_ID("DEAD"), env);
@@ -87,6 +88,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void (const char *)>(server::unsetban, FUNGU_OBJECT_ID("unsetban"), env);
     script::bind_global_func<void ()>(server::clearbans, FUNGU_OBJECT_ID("clearbans"), env);
     script::bind_global_func<void ()>(exec_restarter, FUNGU_OBJECT_ID("exec_restarter"), env);
+    script::bind_global_func<void (int)>(server::delbot, FUNGU_OBJECT_ID("delbot"), env);
     
     script::bind_global_var(server::serverdesc, FUNGU_OBJECT_ID("servername"), env);
     script::bind_global_ro_var(server::smapname, FUNGU_OBJECT_ID("map"), env);
@@ -101,7 +103,15 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(server::next_gametime, FUNGU_OBJECT_ID("next_gametime"), env);
     script::bind_global_var(server::reassignteams, FUNGU_OBJECT_ID("reassignteams"), env);
     script::bind_global_funvar<int>(server::getplayercount, FUNGU_OBJECT_ID("playercount"), env);
+    script::bind_global_funvar<int>(server::getspeccount, FUNGU_OBJECT_ID("speccount"), env);
+    script::bind_global_funvar<int>(server::getbotcount, FUNGU_OBJECT_ID("botcount"), env);
+    script::bind_global_var(server::aiman::botlimit, FUNGU_OBJECT_ID("maxbots"), env);
+    script::bind_global_func<void (bool)>(server::enable_master_auth, FUNGU_OBJECT_ID("use_master_auth"), env);
     
+    script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_veto"), env);
+    script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_locked"), env);
+    script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_private"), env);
+
     //script_socket functions
     script::bind_global_func<bool ()>(script_socket_supported, FUNGU_OBJECT_ID("script_socket_supported?"), env);
     script::bind_global_func<bool (unsigned short)>(open_script_socket, FUNGU_OBJECT_ID("script_socket_server"), env);

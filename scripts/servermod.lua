@@ -16,11 +16,12 @@ function onText(cn,text)
 end
 
 server.event_handler("text",onText)
+server.event_handler("sayteam", onText)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
-server.script_socket_server(7894)
+server.script_socket_server(server.script_socket_port)
 
-server.loadbanlist("conf/bans")
-server.load_geoip_database("share/GeoIP.dat")
+server.loadbanlist(server.banlist_file)
+server.load_geoip_database(server.geoip_db_file)
 
-server.log_status("-> Successfully loaded Hopmod 4")
+server.log_status("-> Successfully loaded Hopmod")
