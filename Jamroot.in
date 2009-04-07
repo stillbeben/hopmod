@@ -1,4 +1,5 @@
 
+use-project /boost : src/boost ;
 use-project /fungu : src/fungu ;
 
 lib enet : 
@@ -26,7 +27,6 @@ lib enet :
 lib z : : <name>z ;
 lib lua : : <name>lua ;
 lib dl : : <name>dl ;
-lib boost_signals : : <name>boost_signals-mt ;
 
 without_geoip = @WITHOUT_GEOIP@ ;
 if $(without_geoip) = 1 {
@@ -47,7 +47,7 @@ if $(without_test_project) = 0 {
     build-project src/hopmod/test ;
 }
 
-exe server : 
+exe sauer_server : 
     src/shared/tools.cpp
     src/shared/stream.cpp
     src/shared/zip.cpp
@@ -71,10 +71,11 @@ exe server :
     z
     lua
     dl
-    /fungu//script
-    boost_signals
     geoip
     microhttpd
+    /fungu//script
+    /boost//headers
+    /boost//signals
     : <define>STANDALONE <include>src/shared <include>src/fpsgame <include>src/hopmod ;
 
-install dist : server : <location>bin ;
+install dist : sauer_server : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;

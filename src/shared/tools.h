@@ -599,11 +599,10 @@ template <class T, int SIZE> struct ringbuf
 
     T &add(const T &e)
     {
-        T &t = data[index];
-        t = e;
+        T &t = (data[index] = e);
         index++;
-        if(index>=SIZE) index = 0;
-        if(len<SIZE) len++;
+        if(index >= SIZE) index -= SIZE;
+        if(len < SIZE) len++;
         return t;
     }
 
@@ -611,20 +610,52 @@ template <class T, int SIZE> struct ringbuf
 
     T &operator[](int i)
     {
-        int start = index - len;
-        if(start < 0) start += SIZE;
-        i += start;
-        if(i >= SIZE) i -= SIZE;
-        return data[i];
+        i += index - len;
+        return data[i < 0 ? i + SIZE : i%SIZE];
     }
 
     const T &operator[](int i) const
     {
-        int start = index - len;
-        if(start < 0) start += SIZE;
-        i += start;
-        if(i >= SIZE) i -= SIZE;
-        return data[i];
+        i += index - len;
+        return data[i < 0 ? i + SIZE : i%SIZE];
+    }
+};
+
+template <class T, int SIZE> struct queue
+{
+    int head, tail, len;
+    T data[SIZE];
+    
+    queue() { clear(); }
+    
+    void clear() { head = tail = len = 0; }
+
+    int length() const { return len; }
+    bool empty() const { return !len; }
+    bool full() const { return len == SIZE; }
+
+    T &added() { return data[tail > 0 ? tail-1 : SIZE-1]; }
+    T &added(int offset) { return data[tail-offset > 0 ? tail-offset-1 : tail-offset-1 + SIZE]; }
+    T &adding() { return data[tail]; }
+    T &adding(int offset) { return data[tail+offset >= SIZE ? tail+offset - SIZE : tail+offset]; }
+    T &add()
+    {
+        ASSERT(len < SIZE);    
+        T &t = data[tail];
+        tail = (tail + 1)%SIZE;
+        len++;
+        return t;
+    }
+
+    T &removing() { return data[head]; }
+    T &removing(int offset) { return data[head+offset >= SIZE ? head+offset - SIZE : head+offset]; }
+    T &remove()
+    {
+        ASSERT(len > 0);
+        T &t = data[head];
+        head = (head + 1)%SIZE;
+        len--;
+        return t;
     }
 };
 
@@ -691,6 +722,7 @@ struct stream
     virtual bool putstring(const char *str) { int len = strlen(str); return write(str, len) == len; }
     virtual bool putline(const char *str) { return putstring(str) && putchar('\n'); }
     virtual int printf(const char *fmt, ...) { return -1; }
+    virtual uint getcrc() { return 0; }
 
     template<class T> bool put(T n) { return write(&n, sizeof(n)) == sizeof(n); }
     template<class T> bool putlil(T n) { return put<T>(lilswap(n)); }

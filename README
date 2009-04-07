@@ -1,12 +1,14 @@
 
 == Building Hopmod ==
 
-If the configure script is missing:
+For the first and only time:
 
-    aclocal && autoconf
-
+    ./buildtools.sh
+    aclocal
+    autoconf
+    
 To compile and install the server:
 
     ./configure
-    bjam
+    ./bin/bjam
 

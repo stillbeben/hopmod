@@ -4,9 +4,7 @@ AC_PROG_CXX
 
 AC_HAVE_LIBRARY([z],,[AC_MSG_ERROR("You are missing a required library: zlib.")])
 AC_HAVE_LIBRARY([lua],,[AC_MSG_ERROR("You are missing a required library: lua.")])
-AC_HAVE_LIBRARY([boost_signals-mt],,[AC_MSG_ERROR([You are missing a required library: Boost Signals.
-    Check you built the Boost libraries for system layout and with multithreading support.
-])])
+
 
 AC_HAVE_LIBRARY([GeoIP],[AC_SUBST(WITHOUT_GEOIP,0)],[
     AC_SUBST(WITHOUT_GEOIP,1)
@@ -17,20 +15,6 @@ AC_HAVE_LIBRARY([microhttpd],[AC_SUBST(WITHOUT_MICROHTTPD,0)],[
     AC_SUBST(WITHOUT_MICROHTTPD,1)
     AC_MSG_WARN("Building WITHOUT script_socket support.")
 ])
-
-AC_CHECK_TOOL([BJAM], [bjam],[:])
-if test $BJAM = ":"; then
-    AC_MSG_ERROR([
-    
-        You are missing a required tool: bjam.
-        
-        Download the Boost Jam package at http://www.boost.org/users/download/
-        
-        You will also need to download and install the Boost Build files, for 
-        help on installation visit
-            http://www.boost.org/doc/tools/build/doc/html/bbv2/installation.html
-    ])
-fi
 
 AC_LANG_PUSH([C++])
 AC_CHECK_HEADER([boost/detail/lightweight_test.hpp],[AC_SUBST(WITHOUT_TEST_PROJECT,0)],[

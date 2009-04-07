@@ -672,6 +672,10 @@ void rundedicatedserver()
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
     #endif
     printf("dedicated server started, waiting for clients...\nCtrl-C to exit\n\n");
+
+    fflush(stdout);
+    fflush(stderr);
+
     for(;;) serverslice(true, 5);
 }
 
@@ -737,11 +741,11 @@ void initserver(bool listen, bool dedicated)
     if(listen) setuplistenserver(dedicated);
 
     server::serverinit();
-
+    
     if(listen)
     {
         if(*masterpath) updatemasterserver();
-
+        
         if(dedicated) rundedicatedserver();
 #ifndef STANDALONE
         else conoutf("listen server started");

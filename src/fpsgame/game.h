@@ -133,6 +133,7 @@ static struct gamemodeinfo
 #define m_edit         (m_check(gamemode, M_EDIT))
 #define m_lobby        (m_check(gamemode, M_LOBBY))
 #define m_timed        (m_checknot(gamemode, M_DEMO|M_EDIT|M_LOCAL))
+#define m_botmode      (m_checknot(gamemode, M_DEMO|M_LOCAL))
 #define m_mp(mode)     (m_checknot(mode, M_LOCAL))
 
 #define m_sp           (m_check(gamemode, M_DMSP | M_CLASSICSP))
@@ -210,6 +211,7 @@ enum
     SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS,
     SV_PAUSEGAME,
     SV_ADDBOT, SV_DELBOT, SV_INITAI, SV_FROMAI,
+    SV_MAPCRC, SV_CHECKMAPS,
     NUMSV
 };
 
@@ -234,7 +236,8 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     SV_CLIENT, 0,
     SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0,
     SV_PAUSEGAME, 2,
-    SV_ADDBOT, 0, SV_DELBOT, 0, SV_INITAI, 0, SV_FROMAI, 2,
+    SV_ADDBOT, 2, SV_DELBOT, 1, SV_INITAI, 0, SV_FROMAI, 2,
+    SV_MAPCRC, 0, SV_CHECKMAPS, 1,
     -1
 };
 

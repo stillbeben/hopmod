@@ -1,8 +1,6 @@
 
 project : requirements <include>include <define>FUNGU_WITH_LUA ;
 
-use-project /boost : utils/boost ;
-
 lib script :
     src/script/env.cpp
     src/script/env_object.cpp
@@ -37,6 +35,7 @@ lib script :
     src/script/lua/arguments.cpp
     src/script/lua/lua_function.cpp
     src/script/lua/object_wrapper.cpp
+    /boost//headers
     : <link>static : : <define>FUNGU_WITH_LUA <include>include ;
 
 #build-project test ;

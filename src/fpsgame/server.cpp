@@ -239,6 +239,10 @@ namespace server
         uint authreq;
         string authname;
         int ping, aireinit;
+        string clientmap;
+        int mapcrc;
+        bool warned;
+        
         freqlimit sv_text_hit;
         freqlimit sv_sayteam_hit;
         freqlimit sv_mapvote_hit;
@@ -277,6 +281,9 @@ namespace server
             events.deletecontentsp();
             timesync = false;
             lastevent = 0;
+            clientmap[0] = '\0';
+            mapcrc = 0;
+            warned = false;
         }
         
         void reset()
@@ -1259,7 +1266,7 @@ namespace server
             sendstring(smapname, p);
             putint(p, gamemode);
             putint(p, notgotitems ? 1 : 0);
-            if(!ci || m_timed)
+            if(!ci || (m_timed && smapname[0]))
             {
                 putint(p, SV_TIMEUP);
                 putint(p, minremain);
@@ -1440,7 +1447,7 @@ namespace server
         else smode = NULL;
         if(smode) smode->reset(false);
 
-        if(m_timed) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
+        if(m_timed && smapname[0]) sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
         loopv(clients)
         {
             clientinfo *ci = clients[i];
@@ -1850,7 +1857,70 @@ namespace server
         bantimes.update(totalmillis);
         cleanup_dead_slots();
     }
-    
+
+    struct crcinfo 
+    { 
+        int crc, matches; 
+
+        crcinfo(int crc, int matches) : crc(crc), matches(matches) {}
+
+        static int compare(const crcinfo *x, const crcinfo *y)
+        {
+            if(x->matches > y->matches) return -1;
+            if(x->matches < y->matches) return 1;
+            return 0;
+        }
+    };
+
+    void checkmaps(int req = -1)
+    {
+        if(m_edit || !smapname[0]) return;
+        vector<crcinfo> crcs;
+        int total = 0, unsent = 0, invalid = 0;
+        loopv(clients)
+        {
+            clientinfo *ci = clients[i];
+            if(ci->state.aitype != AI_NONE) continue;
+            total++;
+            if(!ci->clientmap[0])
+            {
+                if(ci->mapcrc < 0) invalid++;
+                else if(!ci->mapcrc) unsent++;
+            }
+            else
+            {
+                crcinfo *match = NULL;
+                loopvj(crcs) if(crcs[j].crc == ci->mapcrc) { match = &crcs[j]; break; }
+                if(!match) crcs.add(crcinfo(ci->mapcrc, 1)); 
+                else match->matches++;
+            }
+        }
+        if(total - unsent < min(total, 3)) return;
+        crcs.sort(crcinfo::compare);
+        string msg;
+        loopv(clients) 
+        {
+            clientinfo *ci = clients[i];
+            if(ci->state.aitype != AI_NONE || ci->clientmap[0] || ci->mapcrc >= 0 || (req < 0 && ci->warned)) continue; 
+            s_sprintf(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
+            sendf(req, 1, "ris", SV_SERVMSG, msg);
+            if(req < 0) ci->warned = true;
+        }
+        if(crcs.empty() || crcs.length() < 2) return;
+        loopv(crcs)
+        {
+            crcinfo &info = crcs[i];
+            if(i || info.matches <= crcs[i+1].matches) loopvj(clients)
+            {
+                clientinfo *ci = clients[j];
+                if(ci->state.aitype != AI_NONE || !ci->clientmap[0] || ci->mapcrc != info.crc || (req < 0 && ci->warned)) continue;
+                s_sprintf(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
+                sendf(req, 1, "ris", SV_SERVMSG, msg);
+                if(req < 0) ci->warned = true;
+            }
+        }
+    }
+
     void sendinits2c(clientinfo *ci)
     {
         sendf(ci->clientnum, 1, "ri5", SV_INITS2C, ci->clientnum, PROTOCOL_VERSION, ci->sessionid, serverpass[0] ? 1 : 0);
@@ -2139,8 +2209,28 @@ namespace server
                 break;
             }
 
+            case SV_MAPCRC:
+            {
+                getstring(text, p);
+                int crc = getint(p);
+                if(!ci || strcmp(text, smapname)) break;
+                s_strcpy(ci->clientmap, text);
+                ci->mapcrc = text[0] ? crc : 1;
+                checkmaps();
+                break;
+            }
+
+            case SV_CHECKMAPS:
+                checkmaps(sender);
+                break;
+
             case SV_TRYSPAWN:
-                if(!cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (smode && !smode->canspawn(cq))) break;
+                if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (smode && !smode->canspawn(cq))) break;
+                if(!ci->clientmap[0] && !ci->mapcrc) 
+                {
+                    ci->mapcrc = -1;
+                    checkmaps();
+                }
                 if(cq->state.lastdeath)
                 {
                     flushevents(cq, cq->state.lastdeath + DEATHMILLIS);
@@ -2307,11 +2397,11 @@ namespace server
                     else QUEUE_STR(text);
                 }
                 else QUEUE_STR(text);
-                if(smode && ci->state.state==CS_ALIVE && strcmp(ci->team, text))
+                if(strcmp(ci->team, text))
                 {
                     if(signal_chteamrequest(ci->clientnum, ci->team, text)!=-1)
                     {
-                        smode->changeteam(ci, ci->team, text);
+                        if(smode && ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, text);
                         signal_reteam(ci->clientnum, ci->team, text);
                     }
                     else s_strcpy(text,ci->team);
