@@ -273,6 +273,9 @@ namespace server
             timesync = false;
             lastevent = 0;
             active = false;
+            clientmap[0] = '\0';
+            mapcrc = 0;
+            warned = false;
         }
 
         void reassign()
@@ -356,12 +359,15 @@ namespace server
         extern bool addai(int skill, int limit = -1, bool req = false);
         extern void deleteai(clientinfo *ci);
         extern bool delai(bool req = false);
-        extern void removeai(clientinfo *ci, bool complete = false);
+        extern void removeai(clientinfo *ci);
         extern bool reassignai(int exclude = -1);
         extern void clearai();
         extern void checkai();
         extern void reqadd(clientinfo *ci, int skill);
         extern void reqdel(clientinfo *ci);
+        extern void changemap();
+        extern void addclient(clientinfo *ci);
+        extern void changeteam(clientinfo *ci);
     }
 
     #define MM_MODE 0xF
@@ -931,6 +937,12 @@ namespace server
         hashpassword(ci->clientnum, ci->sessionid, wanted, hash, sizeof(hash));
         return !strcmp(hash, given);
     }
+    
+    void revokemaster(clientinfo *ci)
+    {
+        ci->privilege = PRIV_NONE;
+        if(ci->state.state==CS_SPECTATOR && !ci->local) aiman::removeai(ci);
+    }
 
     void setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL)
     {
@@ -969,7 +981,7 @@ namespace server
         {
             if(!ci->privilege) return;
             name = privname(ci->privilege);
-            ci->privilege = 0;
+            revokemaster(ci);
         }
         mastermode = MM_OPEN;
         allowedips.setsize(0);
@@ -990,7 +1002,6 @@ namespace server
     }
     
     #include "auth.h"
-    authserv auth;
 
     savedscore &findscore(clientinfo *ci, bool insert)
     {
@@ -1455,10 +1466,10 @@ namespace server
             ci->state.lasttimeplayed = lastmillis;
             if(m_mp(gamemode) && ci->state.state!=CS_SPECTATOR) sendspawn(ci);
         }
-        
-        aiman::dorefresh = true;
 
-        if(m_demo)
+        aiman::changemap();
+
+        if(m_demo) 
         {
             if(clients.length()) setupdemoplayback();
         }
@@ -1839,8 +1850,8 @@ namespace server
             sendf(-1, 1, "ri3", SV_CURRENTMASTER, currentmaster, m ? m->privilege : 0); 
             masterupdate = false; 
         } 
-   
-        auth.update();
+
+        authserv::update();
 
         if(!gamepaused && m_timed && (gamelimit - gamemillis + 60000 - 1)/60000 != minremain ) checkintermission();
         
@@ -1992,7 +2003,7 @@ namespace server
             signal_disconnect(n, disc_reason_msg);
             
             clients.removeobj(ci);
-            aiman::removeai(ci, clients.empty());
+            aiman::removeai(ci);
             
             if(clients.empty()) noclients();
             else aiman::dorefresh = true;
@@ -2015,7 +2026,7 @@ namespace server
             if(!checkpassword(ci, serverpass, pwd)) return DISC_PRIVATE;
             return DISC_NONE;
         }
-        if(masterpass[0] && checkpassword(ci, masterpass, pwd)) return DISC_NONE;
+        if(masterpass[0] && checkpassword(ci, masterpass, pwd)) return DISC_NONE; 
         if(numclients(-1, false, true)>=maxclients) return DISC_MAXCLIENTS;
         uint ip = getclientip(ci->clientnum);
         if(bannedips.is_banned(netmask(ip))) return DISC_IPBAN;
@@ -2113,9 +2124,9 @@ namespace server
                 sendwelcome(ci);
                 if(restorescore(ci)) sendresume(ci);
                 sendinitc2s(ci);
-                
-                aiman::dorefresh = true;
-                
+
+                aiman::addclient(ci);
+
                 if(m_demo) setupdemoplayback();
                 
                 signal_connect(ci->clientnum);
@@ -2589,7 +2600,7 @@ namespace server
                     signal_reteam(wi->clientnum, wi->team, text);
                     s_strncpy(wi->team, text, MAXTEAMLEN+1);
                 }
-                if(wi->state.aitype == AI_NONE) aiman::dorefresh = true;
+                aiman::changeteam(wi);
                 sendf(sender, 1, "riis", SV_SETTEAM, who, wi->team);
                 QUEUE_INT(SV_SETTEAM);
                 QUEUE_INT(who);
@@ -2687,7 +2698,7 @@ namespace server
             case SV_AUTHTRY:
             {
                 getstring(text, p);
-                auth.tryauth(ci, text);
+                authserv::tryauth(ci, text);
                 break;
             }
 
@@ -2695,7 +2706,7 @@ namespace server
             {
                 uint id = (uint)getint(p);
                 getstring(text, p);
-                auth.answerchallenge(ci, id, text);
+                authserv::answerchallenge(ci, id, text);
                 break;
             }
 
@@ -2717,7 +2728,7 @@ namespace server
                 int size = server::msgsizelookup(type);
                 if(size==-1) { disconnect_client(sender, DISC_TAGT); return; }
                 if(size>0) loopi(size-1) getint(p);
-                if(ci && ci->state.state!=CS_SPECTATOR) { QUEUE_AI; QUEUE_MSG; }
+                if(ci && cq && (ci != cq || ci->state.state!=CS_SPECTATOR)) { QUEUE_AI; QUEUE_MSG; }
                 break;
             }
         }
