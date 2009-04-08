@@ -1,7 +1,9 @@
 #ifndef HOPMOD_EXTAPI_HPP
 #define HOPMOD_EXTAPI_HPP
 
+#include "lua.hpp"
 #include <string>
+#include <vector>
 
 namespace server
 {
@@ -78,6 +80,11 @@ namespace server
     extern void enable_master_auth(bool);
     extern void update_mastermask();
     extern const char * gamemodename();
+    
+    extern std::vector<int> cs_player_list();
+    extern std::vector<int> cs_spec_list();
+    extern int lua_player_list(lua_State *);
+    extern int lua_spec_list(lua_State *);
     
 } //namespace server
 

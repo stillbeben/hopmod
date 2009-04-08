@@ -65,3 +65,11 @@ end
 function server.unmute(cn)
     server.player_unsetpvar(cn, "mute")
 end
+
+function server.specall()
+    for i,cn in ipairs(server.players()) do server.spec(cn) end
+end
+
+function server.unspecall()
+    for i,cn in ipairs(server.spectators()) do server.unspec(cn) end
+end

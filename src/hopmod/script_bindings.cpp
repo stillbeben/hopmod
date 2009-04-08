@@ -73,6 +73,11 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void (int)>(server::server_setmaster, FUNGU_OBJECT_ID("setmaster"), env);
     script::bind_global_func<void (int)>(server::server_setadmin, FUNGU_OBJECT_ID("setadmin"), env);
     
+    script::bind_global_func<std::vector<int> ()>(server::cs_player_list, FUNGU_OBJECT_ID("players"), env);
+    script::bind_global_func<std::vector<int> ()>(server::cs_spec_list, FUNGU_OBJECT_ID("spectators"), env);
+    register_lua_function(&server::lua_player_list, "players");
+    register_lua_function(&server::lua_spec_list, "spectators");
+    
     //team-oriented functions
     script::bind_global_func<void (const char*,const char*)>(server::team_msg,FUNGU_OBJECT_ID("team_msg"), env);
     

@@ -1,13 +1,8 @@
 #ifndef HOPMOD_SCRIPTING_HPP
 #define HOPMOD_SCRIPTING_HPP
 
+#include "lua.hpp"
 #include <fungu/script.hpp>
-
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
 
 #define CUBESCRIPT_EXTENSION ".csl"
 #define STARTUP_SCRIPT "conf/server.conf"

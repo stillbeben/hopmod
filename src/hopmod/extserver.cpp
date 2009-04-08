@@ -234,6 +234,7 @@ void unsetmaster()
 void setpriv(int cn,int priv,bool hidden)
 {
     clientinfo * player = get_ci(cn);
+    if(player->privilege == priv) return;
     unsetmaster();
     player->privilege = priv;
     currentmaster = cn;
@@ -304,5 +305,36 @@ const char * gamemodename()
 {
     return modename(gamemode,"unknown");
 }
+
+std::vector<int> cs_clients_list(bool (* clienttype)(clientinfo *))
+{
+    std::vector<int> result;
+    result.reserve(clients.length());
+    loopv(clients) if(clienttype(clients[i])) result.push_back(clients[i]->clientnum);
+    return result;
+}
+
+int lua_clients_list(lua_State * L,bool (* clienttype)(clientinfo *))
+{
+    lua_newtable(L);
+    int count = 0;
+    
+    loopv(clients) if(clienttype(clients[i]))
+    {
+        lua_pushinteger(L,++count);
+        lua_pushinteger(L,clients[i]->clientnum);
+        lua_settable(L, -3);
+    }
+    
+    return 1;
+}
+
+bool is_player(clientinfo * ci){return ci->state.state != CS_SPECTATOR && ci->state.aitype == AI_NONE;}
+bool is_spectator(clientinfo * ci){return ci->state.state == CS_SPECTATOR; /* bots can't be spectators*/}
+
+std::vector<int> cs_player_list(){return cs_clients_list(&is_player);}
+int lua_player_list(lua_State * L){return lua_clients_list(L, &is_player);}
+std::vector<int> cs_spec_list(){return cs_clients_list(&is_spectator);}
+int lua_spec_list(lua_State * L){return lua_clients_list(L, &is_spectator);}
 
 #endif
