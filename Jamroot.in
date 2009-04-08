@@ -53,7 +53,7 @@ exe sauer_server :
     src/shared/zip.cpp
     src/shared/crypto.cpp
     src/engine/server.cpp
-    src/fpsgame/fpsserver.cpp
+    src/fpsgame/server.cpp
     src/hopmod/floodprotection.cpp
     src/hopmod/scripting.cpp
     src/hopmod/script_bindings.cpp
