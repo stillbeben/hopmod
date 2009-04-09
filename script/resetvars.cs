@@ -11,6 +11,9 @@ global script_socket_port 7894
 global allow_mapvote 1
 global allow_modevote 1
 
+global record_player_stats 0
+global stats_db_filename "log/stats.sqlite"
+
 global use_server_maprotation 1
 
 global ffa_maps [metl4 deathtek fanatic_quake aard3c metl2 ruby curvedm metl3
