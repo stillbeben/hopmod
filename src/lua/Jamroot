@@ -1,0 +1,38 @@
+
+project : source-location src ;
+
+lib lua :
+    lapi.c      
+    lcode.c   
+    ldo.c    
+    lgc.c     
+    llex.c      
+    loadlib.c   
+    loslib.c   
+    lstring.c  
+    ltablib.c  
+    luac.c     
+    lzio.c
+    lauxlib.c   
+    ldblib.c  
+    ldump.c  
+    linit.c   
+    lmathlib.c  
+    lobject.c   
+    lparser.c  
+    lstrlib.c  
+    ltm.c      
+    lundump.c  
+    print.c
+    lbaselib.c  
+    ldebug.c  
+    lfunc.c  
+    liolib.c  
+    lmem.c
+    lopcodes.c
+    lstate.c
+    ltable.c
+    lua.c 
+    lvm.c
+    : <link>static
+    : : <include>src ;

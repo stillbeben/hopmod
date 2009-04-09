@@ -3,8 +3,6 @@ AC_INIT
 AC_PROG_CXX
 
 AC_HAVE_LIBRARY([z],,[AC_MSG_ERROR("You are missing a required library: zlib.")])
-AC_HAVE_LIBRARY([lua],,[AC_MSG_ERROR("You are missing a required library: lua.")])
-
 
 AC_HAVE_LIBRARY([GeoIP],[AC_SUBST(WITHOUT_GEOIP,0)],[
     AC_SUBST(WITHOUT_GEOIP,1)

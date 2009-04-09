@@ -1,6 +1,7 @@
 
 use-project /boost : src/boost ;
 use-project /fungu : src/fungu ;
+use-project /lua : src/lua ;
 use-project /lua-sqlite3 : src/lua-sqlite3 ;
 
 lib enet : 
@@ -26,7 +27,6 @@ lib enet :
     : : <include>src/enet/include ;
 
 lib z : : <name>z ;
-lib lua : : <name>lua ;
 lib dl : : <name>dl ;
 
 without_geoip = @WITHOUT_GEOIP@ ;
@@ -70,8 +70,8 @@ exe sauer_server :
     src/hopmod/restarter.cpp
     enet
     z
-    lua
     dl
+    /lua//lua
     geoip
     microhttpd
     /fungu//script

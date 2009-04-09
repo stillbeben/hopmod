@@ -1,5 +1,4 @@
 
 lib sqlite3 : : <name>sqlite3 ;
-lib lua : : <name>lua ;
-lib luasqlite3 : libluasqlite3.c sqlite3 lua ;
+lib luasqlite3 : libluasqlite3.c sqlite3 /lua//lua ;
 alias script-package : libluasqlite3-loader.lua sqlite3.lua ;
