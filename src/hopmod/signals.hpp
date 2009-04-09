@@ -49,6 +49,8 @@ extern boost::signal<void (const char *,const char *)>       signal_mapchange;
 extern boost::signal<void ()>                                signal_setnextgame;
 extern boost::signal<void ()>                                signal_gamepaused;
 extern boost::signal<void ()>                                signal_gameresumed;
+extern boost::signal<void (int,const char *)>                signal_beginrecord;
+extern boost::signal<void (int,int)>                         signal_endrecord;
 
 // Server Events
 extern boost::signal<void ()> signal_shutdown;

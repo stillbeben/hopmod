@@ -102,6 +102,14 @@ server.event_handler("delbot", function(cn)
     log(string.format("%s(%i) deleted a bot",server.player_name(cn),cn))
 end)
 
+server.event_handler("beginrecord", function(id,filename)
+    log(string.format("recording game to %s",filename))
+end)
+
+server.event_handler("endrecord", function(id, size)
+    log(string.format("finished recording game (%s file size)",format_filesize(tonumber(size))))
+end)
+
 server.event_handler("shutdown", function() log("server shutting down"); logfile:close() end)
 
 log("server started")

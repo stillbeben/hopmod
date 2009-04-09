@@ -419,7 +419,8 @@ namespace server
 
     bool demonextmatch = false;
     stream *demotmp = NULL, *demorecord = NULL, *demoplayback = NULL;
-    int nextplayback = 0, demomillis = 0;
+    int demo_id = 0;
+    int nextplayback = 0, demomillis, demoffset = 0;
     
     struct servmode
     {
@@ -717,7 +718,7 @@ namespace server
     void writedemo(int chan, void *data, int len)
     {
         if(!demorecord) return;
-        int stamp[3] = { gamemillis, chan, len };
+        int stamp[3] = { gamemillis - demoffset, chan, len };
         lilswap(stamp, 3);
         demorecord->write(stamp, sizeof(stamp));
         demorecord->write(data, len);
@@ -754,24 +755,34 @@ namespace server
         demotmp->seek(0, SEEK_SET);
         demotmp->read(d.data, len);
         DELETEP(demotmp);
+        
+        signal_endrecord(demo_id,len);
     }
 
     int welcomepacket(ucharbuf &p, clientinfo *ci, ENetPacket *packet);
     void sendwelcome(clientinfo *ci);
 
-    void setupdemorecord()
+    int setupdemorecord(bool broadcast = true)
     {
-        if(!m_mp(gamemode) || m_edit) return;
-
-        demotmp = opentempfile("w+b");
-        if(!demotmp) return;
-
+        if(!m_mp(gamemode) || m_edit) return -1;
+        
+        demo_id = demos.length() + (demos.length()>=MAXDEMOS ? 0 : 1);
+        char ftime[32];
+        ftime[0]='\0';
+        time_t now = time(NULL);
+        strftime(ftime,sizeof(ftime),"%0e%b%Y_%H:%M",localtime(&now));
+        s_sprintfd(demofilename)("log/demo/%s_%s_%i.dmo",ftime,smapname,demo_id);
+        
+        demotmp = openfile(demofilename,"w+b");
+        if(!demotmp) return -1;
+        
         stream *f = opengzfile(NULL, "wb", demotmp);
-        if(!f) { DELETEP(demotmp); return; } 
+        if(!f) { DELETEP(demotmp); return -1; } 
 
-        sendservmsg("recording demo");
+        if(broadcast) sendservmsg("recording demo");
 
         demorecord = f;
+        demoffset = gamemillis;
 
         demoheader hdr;
         memcpy(hdr.magic, DEMO_MAGIC, sizeof(hdr.magic));
@@ -785,6 +796,10 @@ namespace server
         welcomepacket(p, NULL, packet);
         writedemo(1, p.buf, p.len);
         enet_packet_destroy(packet);
+        
+        signal_beginrecord(demo_id,demofilename);
+        
+        return demo_id;
     }
 
     void listdemos(int cn)
@@ -802,6 +817,7 @@ namespace server
 
     void cleardemos(int n)
     {
+        if(demorecord) return; //HOPMOD
         if(!n)
         {
             loopv(demos) delete[] demos[i].data;

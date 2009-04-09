@@ -80,6 +80,8 @@ namespace server
     extern void enable_master_auth(bool);
     extern void update_mastermask();
     extern const char * gamemodename();
+    extern int recorddemo();
+    extern void enddemorecord();
     
     extern std::vector<int> cs_player_list();
     extern std::vector<int> cs_spec_list();

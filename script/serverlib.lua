@@ -1,6 +1,21 @@
 
 dofile("./script/playervars.lua")
 
+function round(num, idp)
+  local mult = 10^(idp or 0)
+  return math.floor(num * mult + 0.5) / mult
+end
+
+function format_filesize(bytes)
+    bytes = tonumber(bytes)
+    if bytes < 1024 then return bytes .. "B"
+    elseif bytes < (1024*1024) then return round(bytes/1024) .. "KB"
+    else return round(bytes/(1024*1024)) .. "MB"
+    end
+end
+
+server.format_filesize = format_filesize
+
 -- color formatting strings
 
 function formatcol(col, text)

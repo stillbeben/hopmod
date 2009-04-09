@@ -33,6 +33,8 @@ boost::signal<void (int,int)> signal_teamkill;
 boost::signal<void (int,const char *,bool)> signal_auth;
 boost::signal<void (int)> signal_addbot;
 boost::signal<void (int)> signal_delbot;
+boost::signal<void (int,const char *)> signal_beginrecord;
+boost::signal<void (int,int)> signal_endrecord;
 
 static script::any proceed_error_handler(script::error_info * errinfo)
 {
@@ -103,6 +105,8 @@ void register_signals(script::env & env)
     slots.register_signal(signal_auth, "auth", normal_error_handler);
     slots.register_signal(signal_addbot, "addbot", normal_error_handler);
     slots.register_signal(signal_delbot, "delbot", normal_error_handler);
+    slots.register_signal(signal_beginrecord, "beginrecord", normal_error_handler);
+    slots.register_signal(signal_endrecord, "endrecord", normal_error_handler);
     
     script::bind_global_func<int (const std::string &,script::any)>(cubescript_event_handler_function, FUNGU_OBJECT_ID("event_handler"), env);
     script::bind_global_func<void (int)>(destroy_slot, FUNGU_OBJECT_ID("cancel_handler"), env);

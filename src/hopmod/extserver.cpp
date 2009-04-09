@@ -337,4 +337,10 @@ int lua_player_list(lua_State * L){return lua_clients_list(L, &is_player);}
 std::vector<int> cs_spec_list(){return cs_clients_list(&is_spectator);}
 int lua_spec_list(lua_State * L){return lua_clients_list(L, &is_spectator);}
 
+int recorddemo()
+{
+    if(demorecord) return demo_id;
+    else return setupdemorecord(false);
+}
+
 #endif

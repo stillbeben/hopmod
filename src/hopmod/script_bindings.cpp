@@ -94,6 +94,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void ()>(server::clearbans, FUNGU_OBJECT_ID("clearbans"), env);
     script::bind_global_func<void ()>(exec_restarter, FUNGU_OBJECT_ID("exec_restarter"), env);
     script::bind_global_func<void (int)>(server::delbot, FUNGU_OBJECT_ID("delbot"), env);
+    script::bind_global_func<int ()>(server::recorddemo, FUNGU_OBJECT_ID("recorddemo"), env);
+    script::bind_global_func<void ()>(server::enddemorecord, FUNGU_OBJECT_ID("stopdemo"), env);
     
     script::bind_global_var(server::serverdesc, FUNGU_OBJECT_ID("servername"), env);
     script::bind_global_ro_var(server::smapname, FUNGU_OBJECT_ID("map"), env);
