@@ -316,6 +316,7 @@ namespace server
 
         void sendprivtext(const char * text)
         {
+            if(state.aitype != AI_NONE) return;//TODO assert(false) to catch bugs
             sendf(clientnum, 1, "ris", SV_SERVMSG, text);
         }
         

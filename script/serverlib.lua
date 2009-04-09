@@ -31,6 +31,8 @@ local set_cancel_restart = false
 
 function server.restart()
     
+    if tonumber(server.playercount()) == 0 then return server.restart_now() end
+
     set_cancel_restart = false
     local warning_msg = "The server is set for a restart at the end of this game."
     
@@ -88,3 +90,7 @@ end
 function server.unspecall()
     for i,cn in ipairs(server.spectators()) do server.unspec(cn) end
 end
+
+server.event_handler("mapchange", function()
+    gamemodeinfo = server.gengamemodeinfo()
+end)

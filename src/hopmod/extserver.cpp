@@ -343,4 +343,28 @@ int recorddemo()
     else return setupdemorecord(false);
 }
 
+int lua_gamemodeinfo(lua_State * L)
+{
+    lua_newtable(L);
+    
+    #define INFO_FIELD(m, name) \
+        lua_pushboolean(L, m); \
+        lua_setfield(L, -2, name) 
+    INFO_FIELD(m_noitems, "noitems");
+    INFO_FIELD(m_noammo, "noammo");
+    INFO_FIELD(m_insta, "insta");
+    INFO_FIELD(m_tactics, "tactics");
+    INFO_FIELD(m_efficiency, "efficiency");
+    INFO_FIELD(m_capture, "capture");
+    INFO_FIELD(m_regencapture, "regencapture");
+    INFO_FIELD(m_ctf, "ctf");
+    INFO_FIELD(m_protect, "protect");
+    INFO_FIELD(m_teammode, "teams");
+    INFO_FIELD(m_overtime, "overtime");
+    INFO_FIELD(m_timed, "timed");
+    #undef INFO_FIELD
+    
+    return 1;
+}
+
 #endif

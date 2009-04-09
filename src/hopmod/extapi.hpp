@@ -80,6 +80,7 @@ namespace server
     extern void enable_master_auth(bool);
     extern void update_mastermask();
     extern const char * gamemodename();
+    extern int lua_gamemodeinfo(lua_State *);
     extern int recorddemo();
     extern void enddemorecord();
     

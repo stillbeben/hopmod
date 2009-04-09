@@ -71,7 +71,7 @@ namespace aiman
     {
         return ci->clientnum >= 0 && ci->state.aitype == AI_NONE && (ci->state.state!=CS_SPECTATOR || ci->local || ci->privilege);
     }
-
+    
 	clientinfo *findaiclient(int exclude)
 	{
         clientinfo *least = NULL;
@@ -87,7 +87,6 @@ namespace aiman
 	bool addai(int skill, int limit, bool req)
 	{
 		int numai = 0, cn = -1, maxai = limit >= 0 ? min(limit, MAXBOTS) : MAXBOTS;
-
 		loopv(bots)
         {
             clientinfo *ci = bots[i];
@@ -127,6 +126,7 @@ namespace aiman
 		ci->aireinit = 2;
 		ci->connected = true;
 		if(req) autooverride = true;
+        dorefresh = true;
 		return true;
 	}
 
@@ -186,7 +186,7 @@ namespace aiman
 	void removeai(clientinfo *ci)
 	{ // either schedules a removal, or someone else to assign to
 
-        loopvrev(ci->bots) shiftai(ci->bots[i], findaiclient(ci->clientnum));
+		loopvrev(ci->bots) shiftai(ci->bots[i], findaiclient(ci->clientnum));
 	}
 
 	bool reassignai(int exclude)
@@ -195,7 +195,7 @@ namespace aiman
 		loopv(clients)
 		{
 			clientinfo *ci = clients[i];
-            if(!validaiclient(ci) || ci->clientnum == exclude) continue;
+			if(!validaiclient(ci) || ci->clientnum == exclude) continue;
             if(!lo || ci->bots.length() < lo->bots.length()) lo = ci;
             if(!hi || ci->bots.length() > hi->bots.length()) hi = ci;
 		}
@@ -213,7 +213,7 @@ namespace aiman
 
 	void checksetup()
 	{
-        if(m_teammode && !autooverride) balanceteams();
+	    if(m_teammode && !autooverride) balanceteams();
 		loopvrev(bots) if(bots[i]) reinitai(bots[i]);
 	}
 
@@ -225,20 +225,20 @@ namespace aiman
 
 	void checkai()
 	{
-         if(!dorefresh) return;
+        if(!dorefresh) return;
         if(m_botmode && numclients(-1, false, true))
 		{
 			checksetup();
 			while(reassignai());
 		}
 		else clearai();
-         dorefresh = false;
+        dorefresh = false;
 	}
 
 	void reqadd(clientinfo *ci, int skill)
 	{
         if(!ci->local && !ci->privilege) return;
-        if(!addai(skill, ci->privilege < PRIV_ADMIN ? botlimit : -1, true)) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to create or assign bot");
+        if(!addai(skill, !ci->local && ci->privilege < PRIV_ADMIN ? botlimit : -1, true)) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to create or assign bot");
         else signal_addbot(ci->clientnum);
 	}
 
@@ -258,7 +258,7 @@ namespace aiman
     {
         if(ci->state.aitype == AI_NONE) dorefresh = true;
     }
-
+    
     void changeteam(clientinfo *ci)
     {
         if(ci->state.aitype == AI_NONE) dorefresh = true;
