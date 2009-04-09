@@ -10,6 +10,7 @@
 #include <winsock2.h>
 #endif
 
+#include <stdlib.h>
 #include <math.h>
 #include <assert.h>
 #include <string>

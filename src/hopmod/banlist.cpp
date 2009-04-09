@@ -1,5 +1,6 @@
 #include "banned_networks.hpp"
 #include <stdlib.h>
+#include <string.h>
 #include <iostream>
 
 bool write_banlist(const banned_networks * bannedips, const char * filename)

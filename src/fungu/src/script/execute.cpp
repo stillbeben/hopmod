@@ -7,9 +7,8 @@
  */
 
 #include "fungu/script/env.hpp"
-
+#include "fungu/script/expression.hpp"
 #include "fungu/script/execute.hpp"
-
 #include "fungu/script/eval_stream.hpp"
 #include "fungu/script/code_block.hpp"
 #include "fungu/script/constant.hpp"
