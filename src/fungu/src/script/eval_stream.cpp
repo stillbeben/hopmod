@@ -5,9 +5,8 @@
  *
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
-
-#include "fungu/script/eval_stream.hpp"
 #include "fungu/script/expression.hpp"
+#include "fungu/script/eval_stream.hpp"
 #include "fungu/script/error.hpp"
 
 namespace fungu{
