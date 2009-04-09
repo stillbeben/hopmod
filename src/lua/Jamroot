@@ -36,3 +36,5 @@ lib lua :
     lvm.c
     : <link>static
     : : <include>src ;
+
+alias headers : : : : <include>src ;

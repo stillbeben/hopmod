@@ -36,6 +36,7 @@ lib script :
     src/script/lua/lua_function.cpp
     src/script/lua/object_wrapper.cpp
     /boost//headers
+    /lua//headers
     : <link>static : : <define>FUNGU_WITH_LUA <include>include ;
 
 #build-project test ;

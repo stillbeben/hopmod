@@ -15,6 +15,7 @@
 #include <string>
 #include <sstream>
 #include <bitset>
+#include <typeinfo>
 
 /**
     @brief Represent an IPv4 address prefix.

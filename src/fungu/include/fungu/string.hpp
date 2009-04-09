@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <math.h>
 #include <string>
+#include <string.h>
 #include <ostream>
 #include <istream>
 #include <boost/functional/hash.hpp>
