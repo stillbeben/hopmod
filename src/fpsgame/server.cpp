@@ -2193,6 +2193,11 @@ namespace server
                         cp->position.setsizenodelete(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
                     }
+                    if(cp->state.state==CS_ALIVE && !cp->active)
+                    {
+                        cp->active = true;
+                        signal_active(cp->clientnum);
+                    }
                     if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, cp->state.o, pos);
                     cp->state.o = pos;
                 }
@@ -2322,12 +2327,6 @@ namespace server
                 }
                 if(cq)
                 {
-                    if(!cq->active)
-                    {
-                        cq->active = true;
-                        signal_active(cq->clientnum);
-                    }
-                    
                     cq->addevent(shot);
                     
                     cq->state.shots++;
