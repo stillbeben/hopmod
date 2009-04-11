@@ -816,7 +816,7 @@ struct ctfclientmode : clientmode
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 			}
 			else if(f.owner == d) return false; // pop the state and do something else
-			bool walk = 0;
+			int walk = 0;
 			if(lastmillis-b.millis >= (201-d->skill)*33)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
@@ -841,7 +841,7 @@ struct ctfclientmode : clientmode
 				}
 			}
 			vec pos = d->feetpos();
-            float mindist = float(FLAGRADIUS*FLAGRADIUS*8);
+			float mindist = float(FLAGRADIUS*FLAGRADIUS*8);
 			loopv(flags)
 			{ // get out of the way of the returnee!
 				flag &g = flags[i];
@@ -914,7 +914,7 @@ case SV_TAKEFLAG:
 }
 
 case SV_INITFLAGS:
-    if(smode==&ctfmode) ctfmode.parseflags(p, ci->state.state!=CS_SPECTATOR || ci->privilege || ci->local);
+    if(smode==&ctfmode) ctfmode.parseflags(p, (ci->state.state!=CS_SPECTATOR || ci->privilege || ci->local) && !strcmp(ci->clientmap, smapname));
     break;
 
 #else

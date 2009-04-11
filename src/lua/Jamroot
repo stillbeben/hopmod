@@ -34,7 +34,7 @@ lib lua :
     ltable.c
     lua.c 
     lvm.c
-    : <link>static
+    : <define>LUA_USE_LINUX <link>static
     : : <include>src ;
 
 alias headers : : : : <include>src ;

@@ -506,7 +506,7 @@ namespace server
     
     const char *mastermodename(int n, const char *unknown)
     {
-        return (n>=0 && size_t(n)<sizeof(mastermodenames)/sizeof(mastermodenames[0])) ? mastermodenames[n] : unknown;
+        return (n>=MM_START && size_t(n-MM_START)<sizeof(mastermodenames)/sizeof(mastermodenames[0])) ? mastermodenames[n-MM_START] : unknown;
     }
 
     const char *privname(int type)
@@ -535,7 +535,7 @@ namespace server
             case 'y': copystring(serverpass, &arg[2]); return true;
             case 'p': copystring(masterpass, &arg[2]); return true;
             case 'o': if(atoi(&arg[2])) mastermask = (1<<MM_OPEN) | (1<<MM_VETO); return true;
-            case 'j': aiman::botlimit = clamp(atoi(&arg[2]), 0, MAXBOTS); return true;
+            case 'g': aiman::botlimit = clamp(atoi(&arg[2]), 0, MAXBOTS); return true;
         }
         return false;
     }
@@ -1011,8 +1011,6 @@ namespace server
         
         signal_setmaster(ci->clientnum, name, val);
     }
-    
-    #include "auth.h"
 
     savedscore &findscore(clientinfo *ci, bool insert)
     {
@@ -1112,7 +1110,7 @@ namespace server
             ci.messages.setsizenodelete(0);
         }
     }
-
+    
     bool buildworldstate()
     {
         worldstate &ws = *new worldstate;
@@ -1862,8 +1860,6 @@ namespace server
             masterupdate = false; 
         } 
 
-        authserv::update();
-
         if(!gamepaused && m_timed && (gamelimit - gamemillis + 60000 - 1)/60000 != minremain ) checkintermission();
         
         if(interm && gamemillis>interm)
@@ -2051,6 +2047,76 @@ namespace server
     {
         clientinfo *ci = getinfo(n);
         return ci && ci->connected;
+    }
+
+    clientinfo *findauth(uint id)
+    {
+        loopv(clients) if(clients[i]->authreq == id) return clients[i];
+        return NULL;
+    }
+
+    void authfailed(uint id)
+    {
+        clientinfo *ci = findauth(id);
+        if(!ci) return;
+        ci->authreq = 0;
+        signal_auth(ci->clientnum, ci->authname, false);
+    }
+
+    void authsucceeded(uint id)
+    {
+        clientinfo *ci = findauth(id);
+        if(!ci) return;
+        ci->authreq = 0;
+        setmaster(ci, true, "", ci->authname);
+        signal_auth(ci->clientnum, ci->authname, true);
+    }
+
+    void authchallenged(uint id, const char *val)
+    {
+        clientinfo *ci = findauth(id);
+        if(!ci) return;
+        sendf(ci->clientnum, 1, "riis", SV_AUTHCHAL, id, val);
+    }
+
+    uint nextauthreq = 0;
+
+    void tryauth(clientinfo *ci, const char *user)
+    {
+        if(!nextauthreq) nextauthreq = 1;
+        ci->authreq = nextauthreq++;
+        filtertext(ci->authname, user, false, 100);
+        if(!requestmasterf("reqauth %u %s\n", ci->authreq, ci->authname))
+        {
+            ci->authreq = 0;
+            sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
+        }
+    }
+
+    void answerchallenge(clientinfo *ci, uint id, char *val)
+    {
+        if(ci->authreq != id) return;
+        for(char *s = val; *s; s++)
+        {
+            if(!isxdigit(*s)) { *s = '\0'; break; }
+        }
+        if(!requestmasterf("confauth %u %s\n", id, val))
+        {
+            ci->authreq = 0;
+            sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
+        }
+    }
+
+    void processmasterinput(const char *cmd, int cmdlen, const char *args)
+    {
+        uint id;
+        string val;
+        if(sscanf(cmd, "failauth %u", &id) == 1)
+            authfailed(id);
+        else if(sscanf(cmd, "succauth %u", &id) == 1)
+            authsucceeded(id);
+        else if(sscanf(cmd, "chalauth %u %s", &id, val) == 2)
+            authchallenged(id, val);
     }
 
     void receivefile(int sender, uchar *data, int len)
@@ -2241,7 +2307,17 @@ namespace server
             {
                 getstring(text, p);
                 int crc = getint(p);
-                if(!ci || strcmp(text, smapname)) break;
+                if(!ci) break;
+                if(strcmp(text, smapname))
+                {
+                    if(ci->clientmap[0])
+                    {
+                        ci->clientmap[0] = '\0';
+                        ci->mapcrc = 0;
+                    }
+                    else if(ci->mapcrc > 0) ci->mapcrc = 0;
+                    break;
+                }
                 copystring(ci->clientmap, text);
                 ci->mapcrc = text[0] ? crc : 1;
                 checkmaps();
@@ -2460,7 +2536,7 @@ namespace server
 
             case SV_ITEMLIST:
             {
-                if((ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || !notgotitems) { while(getint(p)>=0 && !p.overread()) getint(p); break; }
+                if((ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || !notgotitems || strcmp(ci->clientmap, smapname)) { while(getint(p)>=0 && !p.overread()) getint(p); break; }
                 int n;
                 while((n = getint(p))>=0 && n<MAXENTS && !p.overread())
                 {
@@ -2571,7 +2647,7 @@ namespace server
             case SV_KICK:
             {
                 int victim = getint(p);
-                if((ci->privilege || ci->local) && victim>=0 && victim<getnumclients() && ci->clientnum!=victim && getclientinfo(victim)) // no bots
+                if((ci->privilege || ci->local) && ci->clientnum!=victim && getclientinfo(victim)) // no bots
                 {
                     clientinfo * victim_info = (clientinfo *)getinfo(victim);
                     if(victim_info->privilege && ci->privilege < PRIV_ADMIN)
@@ -2723,7 +2799,7 @@ namespace server
             case SV_AUTHTRY:
             {
                 getstring(text, p);
-                authserv::tryauth(ci, text);
+                tryauth(ci, text);
                 break;
             }
 
@@ -2731,7 +2807,7 @@ namespace server
             {
                 uint id = (uint)getint(p);
                 getstring(text, p);
-                authserv::answerchallenge(ci, id, text);
+                answerchallenge(ci, id, text);
                 break;
             }
 
@@ -2759,10 +2835,11 @@ namespace server
         }
     }
 
-    const char *servername() { return "sauerbratenserver"; }
-    int serverinfoport() { return SAUERBRATEN_SERVINFO_PORT; }
-    int serverport() { return SAUERBRATEN_SERVER_PORT; }
-    const char *getdefaultmaster() { return "sauerbraten.org/masterserver/"; } 
+    int laninfoport() { return SAUERBRATEN_LANINFO_PORT; }
+    int serverinfoport(int servport) { return servport < 0 ? SAUERBRATEN_SERVINFO_PORT : servport+1; }
+    int serverport(int infoport) { return infoport < 0 ? SAUERBRATEN_SERVER_PORT : infoport-1; }
+    const char *defaultmaster() { return "sauerbraten.org"; } 
+    int masterport() { return SAUERBRATEN_MASTER_PORT; } 
 
     #include "extinfo.h"
 
@@ -2780,7 +2857,7 @@ namespace server
         putint(p, gamemode);            // b
         putint(p, minremain);           // c
         putint(p, maxclients);
-        putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : mastermode));
+        putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : (mastermode || mastermask&MM_AUTOAPPROVE ? mastermode : MM_AUTH)));
         sendstring(smapname, p);
         sendstring(serverdesc, p);
         sendserverinforeply(p);

@@ -1,8 +1,11 @@
 
+path-constant SCRIPT_PACKAGE : script/package ;
+
 use-project /boost : src/boost ;
 use-project /lua : src/lua ;
 use-project /fungu : src/fungu ;
 use-project /lua-sqlite3 : src/lua-sqlite3 ;
+use-project /lua-socket : src/lua-socket ;
 
 lib enet : 
     src/enet/host.c
@@ -80,4 +83,6 @@ exe sauer_server :
     : <define>STANDALONE <include>src/shared <include>src/fpsgame <include>src/hopmod ;
 
 install dist : sauer_server /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
-install lua-packages : /lua-sqlite3//script-package : <location>script/package ;
+
+install lua-packages : 
+    /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE) ;
