@@ -94,7 +94,7 @@ namespace authserv
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
         filtertext(ci->authname, user, false, 100);
-        s_sprintfd(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
+        defformatstring(buf)("reqauth %u %s\n", ci->authreq, ci->authname);
         addoutput(buf);
     }
 
@@ -105,7 +105,7 @@ namespace authserv
         {
             if(!isxdigit(*s)) { *s = '\0'; break; }
         }
-        s_sprintfd(buf)("confauth %u %s\n", id, val);
+        defformatstring(buf)("confauth %u %s\n", id, val);
         addoutput(buf);
     }
 

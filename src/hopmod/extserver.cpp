@@ -137,6 +137,12 @@ int player_connection_time(int cn)
     return (totalmillis - get_ci(cn)->connectmillis)/1000;
 }
 
+int player_timeplayed(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return (ci->state.timeplayed + (ci->state.state != CS_SPECTATOR ? (lastmillis - ci->state.lasttimeplayed) : 0))/1000;
+}
+
 void player_slay(int cn)
 {
     clientinfo * ci = get_ci(cn);
@@ -155,7 +161,7 @@ bool player_changeteam(int cn,const char * newteam)
     if(smode) smode->changeteam(ci, ci->team, newteam);
     signal_reteam(ci->clientnum, ci->team, newteam);
     
-    s_strncpy(ci->team, newteam, MAXTEAMLEN+1);
+    copystring(ci->team, newteam, MAXTEAMLEN+1);
     sendf(-1, 1, "riis", SV_SETTEAM, cn, newteam);
     
     if(ci->state.aitype == AI_NONE) aiman::dorefresh = true;
@@ -189,7 +195,7 @@ int getspeccount()
 void team_msg(const char * team,const char * msg)
 {
     if(!m_teammode) return;
-    s_sprintfd(line)("server: " BLUE "%s",msg);
+    defformatstring(line)("server: " BLUE "%s",msg);
     loopv(clients)
     {
         clientinfo *t = clients[i];
@@ -220,7 +226,7 @@ void unsetmaster()
     {
         clientinfo * master = getinfo(currentmaster);
         
-        s_sprintfd(msg)("The server has revoked your %s privilege.",privname(master->privilege));
+        defformatstring(msg)("The server has revoked your %s privilege.",privname(master->privilege));
         master->sendprivtext(msg);
         
         master->privilege = 0;
@@ -240,7 +246,7 @@ void setpriv(int cn,int priv,bool hidden)
     currentmaster = cn;
     masterupdate = true;
     
-    s_sprintfd(msg)("The server has raised your privilege to %s.", privname(priv));
+    defformatstring(msg)("The server has raised your privilege to %s.", privname(priv));
     player->sendprivtext(msg);
 }
 

@@ -53,6 +53,8 @@ namespace server
     extern int player_shots(int);
     extern int player_accuracy(int);
     extern int player_connection_time(int);
+    extern int player_timeplayed(int);
+    
     extern void team_msg(const char *,const char *);
     extern void player_spec(int);
     extern void player_unspec(int);

@@ -78,13 +78,15 @@ unsigned short arguments::deserialize(value_type arg, target_tag<unsigned short>
 
 const char * arguments::deserialize(value_type arg, target_tag<const char *>)
 {
-    if(!lua_isstring(m_stack, arg))
+    const char * str = lua_tostring(m_stack, arg);
+    if(!str)
     {
+        if(lua_isboolean(m_stack, arg)) return (lua_toboolean(m_stack,arg) ? "1" : "0");
         luaL_argerror(m_stack, arg, "expected string");
         assert(false);
         return NULL;
     }
-    return lua_tostring(m_stack, arg);
+    return str;
 }
 
 std::string arguments::deserialize(value_type arg, target_tag<std::string>)

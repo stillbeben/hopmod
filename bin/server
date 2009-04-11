@@ -33,7 +33,7 @@ case "$1" in
         tail -f log/status.log &
         
         # start the game server as a background process
-        nohup bin/sauer_server $SERVER_OPTIONS 1>log/status.log 2>log/error.log </dev/null &
+        nohup bin/sauer_server $SERVER_OPTIONS 1>log/status.log 2>>log/error.log </dev/null &
         
         sleep 1
         

@@ -599,7 +599,7 @@ struct ctfclientmode : clientmode
         }
         if(d!=player1)
         {
-            s_sprintfd(ds)("@%d", score);
+            defformatstring(ds)("@%d", score);
             particle_text(d->abovehead(), ds, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
         }
         conoutf(CON_GAMEINFO, "%s scored for %s team", d==player1 ? "you" : colorname(d), team==ctfteamflag(player1->team) ? "your" : "the enemy");
@@ -816,8 +816,8 @@ struct ctfclientmode : clientmode
 				if(f.owner && ai::violence(d, b, f.owner, true)) return true;
 			}
 			else if(f.owner == d) return false; // pop the state and do something else
-			bool walk = false;
-			if(lastmillis-b.millis >= (201-d->skill)*100)
+			bool walk = 0;
+			if(lastmillis-b.millis >= (201-d->skill)*33)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
 				targets.setsizenodelete(0);
@@ -836,22 +836,22 @@ struct ctfclientmode : clientmode
 				}
 				else
 				{
-					walk = true;
+					walk = 2;
 					b.millis = lastmillis;
 				}
 			}
 			vec pos = d->feetpos();
-			float mindist = float(FLAGRADIUS*FLAGRADIUS*6.25f);
+            float mindist = float(FLAGRADIUS*FLAGRADIUS*8);
 			loopv(flags)
 			{ // get out of the way of the returnee!
 				flag &g = flags[i];
 				if(pos.squaredist(g.pos()) <= mindist)
 				{
-					if(!m_protect && g.owner && !strcmp(g.owner->team, d->team)) walk = true;
+					if(!m_protect && g.owner && !strcmp(g.owner->team, d->team)) walk = 1;
 					if(g.droptime && ai::makeroute(d, b, g.pos())) return true;
 				}
 			}
-			return ai::defend(d, b, f.pos(), float(FLAGRADIUS), float(FLAGRADIUS*4), walk ? 2 : 1);
+			return ai::defend(d, b, f.pos(), float(FLAGRADIUS), float(FLAGRADIUS*(4+walk)), walk);
 		}
 		return false;
 	}

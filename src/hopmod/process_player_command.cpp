@@ -14,7 +14,7 @@ bool eval_player_command(int cn,const char * cmdline, const std::vector<std::str
     cn_var.lock_write(true);
     frame.bind_object(&cn_var,FUNGU_OBJECT_ID("cn"));
     
-    s_sprintfd(cmdfile)("./script/command/%s" CUBESCRIPT_EXTENSION ,arguments[0].c_str());
+    defformatstring(cmdfile)("./script/command/%s" CUBESCRIPT_EXTENSION ,arguments[0].c_str());
     if(fileexists(cmdfile,"r"))
     {
         try{
@@ -28,7 +28,7 @@ bool eval_player_command(int cn,const char * cmdline, const std::vector<std::str
     }
     else
     {
-        s_sprintfd(cmdname)("playercmd_%s",arguments[0].c_str());
+        defformatstring(cmdname)("playercmd_%s",arguments[0].c_str());
         fungu::script::env::object * cmdobj = parent_frame->lookup_object(fungu::const_string(cmdname,cmdname+strlen(cmdname)-1));
         if(cmdobj)
         {

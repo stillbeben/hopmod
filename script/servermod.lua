@@ -3,6 +3,27 @@ dofile("./script/logging.lua")
 dofile("./script/maprotation.lua")
 dofile("./script/playercmd.lua")
 
+function sendServerBanner(cn)
+
+    if server.player_pvar(cn,"shown_banner") then return end
+    
+    local sid = server.player_sessionid(cn)
+    
+    server.sleep(1000,function()
+        
+        -- cancel if not the same player from 1 second ago
+        if sid ~= server.player_sessionid(cn) then return end
+        
+        server.player_msg(cn, orange() .. server.servername)
+        server.player_msg(cn, server.motd)
+        
+        server.player_pvar(cn, "shown_banner", true)
+    end)
+end
+
+server.event_handler("active", sendServerBanner)
+server.event_handler("disconnect", function(cn) server.player_unsetpvar(cn,"shown_banner") end)
+
 function onConnect(cn)
     local country = server.ip_to_country(server.player_ip(cn))
     if #country > 0 then
@@ -10,15 +31,8 @@ function onConnect(cn)
     end
 end
 
-function onActive(cn)
-    server.sleep(1000,function()
-        server.player_msg(cn, orange() .. server.servername)
-        server.player_msg(cn, server.motd)
-    end)
-end
-
 function onText(cn,text)
-    
+
     local block = 0
     
     if server.process_player_command(cn,text) then block = -1 end
@@ -44,7 +58,6 @@ function onMapVote(cn,map,mode)
 end
 
 server.event_handler("connect",onConnect)
-server.event_handler("active", onActive)
 server.event_handler("text",onText)
 server.event_handler("sayteam", onText)
 server.event_handler("mapvote", onMapVote)

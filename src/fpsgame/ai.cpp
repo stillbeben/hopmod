@@ -91,7 +91,7 @@ namespace ai
     {
         fpsent *o = newclient(ocn);
         string oname;
-        s_strcpy(oname, o ? colorname(o) : "?");
+        copystring(oname, o ? colorname(o) : "?");
 
         d->aitype = at;
 
@@ -112,8 +112,8 @@ namespace ai
             if(d->skill != sk && aidebug) conoutf("%s changed skill to %d", colorname(d, name), sk);
         }
 
-        s_strncpy(d->name, name, MAXNAMELEN+1);
-        s_strncpy(d->team, team, MAXTEAMLEN+1);
+        copystring(d->name, name, MAXNAMELEN+1);
+        copystring(d->team, team, MAXTEAMLEN+1);
         d->state = CS_DEAD;
         d->ownernum = ocn;
         d->skill = sk;
@@ -1009,7 +1009,7 @@ namespace ai
         string s;
         if(top)
         {
-            s_sprintf(s)("@\f0%s (%d[%d]) goal: %s:%d (%d[%d])",
+            formatstring(s)("@\f0%s (%d[%d]) goal: %s:%d (%d[%d])",
                 bnames[b.type],
                 lastmillis-b.millis, b.next-lastmillis,
                 btypes[clamp(b.targtype+1, 0, AI_T_MAX+1)], b.target,
@@ -1019,7 +1019,7 @@ namespace ai
         }
         else
         {
-            s_sprintf(s)("@\f2%s (%d[%d]) goal: %s:%d",
+            formatstring(s)("@\f2%s (%d[%d]) goal: %s:%d",
                 bnames[b.type],
                 lastmillis-b.millis, b.next-lastmillis,
                 btypes[clamp(b.targtype+1, 0, AI_T_MAX+1)], b.target
@@ -1028,7 +1028,7 @@ namespace ai
         particle_text(vec(d->abovehead()).add(vec(0, 0, above)), s, PART_TEXT, 1);
         if(b.targtype == AI_T_ENTITY && entities::ents.inrange(b.target))
         {
-            s_sprintf(s)("@GOAL: %s", colorname(d));
+            formatstring(s)("@GOAL: %s", colorname(d));
             particle_text(entities::ents[b.target]->o, s, PART_TEXT, 1);
         }
     }

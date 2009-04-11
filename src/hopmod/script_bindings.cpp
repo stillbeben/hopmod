@@ -56,6 +56,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_hits, FUNGU_OBJECT_ID("player_hits"), env);
     script::bind_global_func<int (int)>(server::player_shots, FUNGU_OBJECT_ID("player_shots"), env);
     script::bind_global_func<int (int)>(server::player_accuracy, FUNGU_OBJECT_ID("player_accuracy"), env);
+    script::bind_global_func<int (int)>(server::player_timeplayed, FUNGU_OBJECT_ID("player_timeplayed"), env);
     script::bind_global_func<void (int)>(server::player_slay, FUNGU_OBJECT_ID("player_slay"), env);
     script::bind_global_func<bool (int,const char *)>(server::player_changeteam, FUNGU_OBJECT_ID("changeteam"), env);
     script::bind_global_func<int (int)>(server::player_bots, FUNGU_OBJECT_ID("player_bots"), env);
