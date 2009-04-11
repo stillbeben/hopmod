@@ -110,6 +110,8 @@ server.event_handler("endrecord", function(id, size)
     log(string.format("finished recording game (%s file size)",format_filesize(tonumber(size))))
 end)
 
+server.event_handler("mapcrcfail", function(cn) log(string.format("%s(%i) has a modified map",server.player_name(cn),cn)) end)
+
 server.event_handler("shutdown", function() log("server shutting down"); logfile:close() end)
 
 log("server started")

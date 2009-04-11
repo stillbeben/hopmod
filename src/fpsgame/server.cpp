@@ -1927,6 +1927,7 @@ namespace server
             formatstring(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
             sendf(req, 1, "ris", SV_SERVMSG, msg);
             if(req < 0) ci->warned = true;
+            signal_mapcrcfail(ci->clientnum);
         }
         if(crcs.empty() || crcs.length() < 2) return;
         loopv(crcs)
@@ -1939,6 +1940,7 @@ namespace server
                 formatstring(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
                 sendf(req, 1, "ris", SV_SERVMSG, msg);
                 if(req < 0) ci->warned = true;
+                signal_mapcrcfail(ci->clientnum);
             }
         }
     }
