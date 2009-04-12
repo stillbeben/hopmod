@@ -838,6 +838,8 @@ char * const * prog_argv;
 #ifdef STANDALONE
 int main(int argc, char* argv[])
 {   
+    prog_argc = argc;
+    prog_argv = argv;
     if(enet_initialize()<0) fatal("Unable to initialise network module");
     atexit(enet_deinitialize);
     enet_time_set(0);

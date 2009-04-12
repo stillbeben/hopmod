@@ -373,4 +373,28 @@ int lua_gamemodeinfo(lua_State * L)
     return 1;
 }
 
+bool selectnextgame()
+{
+    signal_setnextgame();
+    if(next_gamemode[0] && next_mapname[0])
+    {
+        int next_gamemode_code = modecode(next_gamemode);
+        if(m_mp(next_gamemode_code))
+        {
+            mapreload = false;
+            sendf(-1, 1, "risii", SV_MAPCHANGE, next_mapname, next_gamemode_code, 1);
+            changemap(next_mapname, next_gamemode_code, next_gametime);
+            next_gamemode[0] = '\0';
+            next_mapname[0] = '\0';
+            next_gametime = -1;
+        }
+        else
+        {
+            std::cerr<<next_gamemode<<" game mode is unrecognised."<<std::endl;
+            sendf(-1, 1, "ri", SV_MAPRELOAD);
+        }
+        return true;
+    }else return false;
+}
+
 #endif

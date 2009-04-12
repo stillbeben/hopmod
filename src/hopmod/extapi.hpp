@@ -91,6 +91,8 @@ namespace server
     extern int lua_player_list(lua_State *);
     extern int lua_spec_list(lua_State *);
     
+    extern bool selectnextgame();
+    
 } //namespace server
 
 #endif

@@ -1,11 +1,15 @@
 
-path-constant SCRIPT_PACKAGE : script/package ;
+path-constant LIB_PATH : bin ;
+path-constant SCRIPT_PACKAGE_PATH : script/package ;
 
 use-project /boost : src/boost ;
 use-project /lua : src/lua ;
 use-project /fungu : src/fungu ;
 use-project /lua-sqlite3 : src/lua-sqlite3 ;
-use-project /lua-socket : src/lua-socket ;
+
+# use-project /lua-socket : src/lua-socket ;
+
+build-project src/lua-socket ;
 
 lib enet : 
     src/enet/host.c
@@ -85,4 +89,4 @@ exe sauer_server :
 install dist : sauer_server /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 
 install lua-packages : 
-    /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE) ;
+    /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;

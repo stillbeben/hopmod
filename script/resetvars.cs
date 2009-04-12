@@ -51,3 +51,6 @@ global "insta ctf_maps" &ctf_maps
 global "protect_maps" &ctf_maps
 global "insta protect_maps" &ctf_maps
 
+global first_map "metl4"
+global first_mode "ffa"
+global use_first_map 0

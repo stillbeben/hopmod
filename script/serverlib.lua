@@ -1,9 +1,35 @@
 
 dofile("./script/playervars.lua")
 
+-- Copied from http://lua-users.org/wiki/SimpleRound
 function round(num, idp)
   local mult = 10^(idp or 0)
   return math.floor(num * mult + 0.5) / mult
+end
+
+-- Copied from http://lua-users.org/wiki/TableUtils
+-- Count the number of times a value occurs in a table 
+function table_count(tt, item)
+  local count
+  count = 0
+  for ii,xx in pairs(tt) do
+    if item == xx then count = count + 1 end
+  end
+  return count
+end
+
+-- Copied from http://lua-users.org/wiki/TableUtils
+-- Remove duplicates from a table array (doesn't currently work
+-- on key-value tables)
+function table_unique(tt)
+  local newtable
+  newtable = {}
+  for ii,xx in ipairs(tt) do
+    if(table_count(newtable, xx) == 0) then
+      newtable[#newtable+1] = xx
+    end
+  end
+  return newtable
 end
 
 function format_filesize(bytes)
@@ -13,10 +39,6 @@ function format_filesize(bytes)
     else return round(bytes/(1024*1024)) .. "MB"
     end
 end
-
-server.format_filesize = format_filesize
-
--- color formatting strings
 
 function formatcol(col, text)
     if text then return "\fs\f" .. col .. text .. "\fr" else return "\f" ..col end
