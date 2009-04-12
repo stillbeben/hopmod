@@ -10,7 +10,7 @@ function sendServerBanner(cn)
     local sid = server.player_sessionid(cn)
     
     server.sleep(1000,function()
-        
+
         -- cancel if not the same player from 1 second ago
         if sid ~= server.player_sessionid(cn) then return end
         

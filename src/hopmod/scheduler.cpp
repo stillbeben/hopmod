@@ -59,8 +59,21 @@ script::result_type sched_cubescript_code(bool repeat,script::env::object::apply
 
 int run_lua_code(script::env::object::shared_ptr func,script::env::frame * frame)
 {
-    script::arguments_container empty;
-    return script::lexical_cast<int>(func->apply(empty,frame));
+    try
+    {
+        script::arguments_container empty;
+        return script::lexical_cast<int>(func->apply(empty,frame));
+    }
+    catch(script::error err)
+    {
+        report_script_error(new script::error_info(err,const_string(),func->get_source_context()->clone()));
+        return -1;
+    }
+    catch(script::error_info * errinfo)
+    {
+        report_script_error(errinfo);
+        return -1;
+    }
 }
 
 int sched_lua_code(bool repeat,lua_State * L)

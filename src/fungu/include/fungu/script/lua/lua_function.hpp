@@ -27,9 +27,12 @@ public:
     ~lua_function();
     result_type apply(apply_arguments & args,env::frame * aFrame);
     int apply(lua_State * L);
+    const source_context * get_source_context()const;
 private:
+    void set_location(lua_State *);
     int m_ref;
     lua_State * m_lua;
+    file_source_context m_location;
 };
 
 } //namespace lua

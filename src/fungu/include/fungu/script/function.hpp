@@ -85,13 +85,13 @@ public:
         }
         catch(error err)
         {
-            return luaL_error(L, err.get_error_message().c_str());
+            return luaL_error(L, "%s", err.get_error_message().c_str());
         }
         catch(error_info * errinfo)
         {
             std::string msg = errinfo->get_error().get_error_message();
             delete errinfo;
-            return luaL_error(L, msg.c_str());
+            return luaL_error(L, "%s", msg.c_str());
         }
     }
     #endif
