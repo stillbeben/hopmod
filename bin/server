@@ -28,17 +28,22 @@ case "$1" in
         rm -f log/status.log
         touch log/status.log
         touch log/error.log
-        
-        tail -c 0 -f log/error.log &
-        tail -f log/status.log &
+        ERROR_START=`stat -c %s log/error.log`
+        ERROR_START=$(( $ERROR_START + 1 ))
         
         # start the game server as a background process
         nohup bin/sauer_server $SERVER_OPTIONS 1>log/status.log 2>>log/error.log </dev/null &
         
-        sleep 1
+        #wait for server to start up and print the initial status messages
+        until `cat log/status.log | grep -q *READY*`
+        do
+            : sit tight
+        done
         
-        kill %1
-        kill %2
+        tail -c +$ERROR_START log/error.log
+        cat log/status.log
+        
+        #TODO start up a shell
 ;;
     'restart')
         execOnServer restart

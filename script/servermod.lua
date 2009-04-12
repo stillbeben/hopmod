@@ -14,8 +14,6 @@ function sendServerBanner(cn)
         -- cancel if not the same player from 1 second ago
         if sid ~= server.player_sessionid(cn) then return end
         
-         server.msg(type(server.player_frags(cn)))
-        
         server.player_msg(cn, orange() .. server.servername)
         server.player_msg(cn, server.motd)
         

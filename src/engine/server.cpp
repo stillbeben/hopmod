@@ -698,8 +698,7 @@ void rundedicatedserver()
     #ifdef WIN32
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
     #endif
-    printf("dedicated server started, waiting for clients...\nCtrl-C to exit\n\n");
-    
+    printf("dedicated server started, waiting for clients...\n*READY*\n\n");
     fflush(stdout);
     fflush(stderr);
 
