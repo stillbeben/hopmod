@@ -14,7 +14,7 @@ execOnServer(){
 
 case "$1" in
     'start')
-        
+
         if [ -p serverexec ]
         then
             echo "It appears the server is already running."
@@ -37,7 +37,13 @@ case "$1" in
         #wait for server to start up and print the initial status messages
         until `cat log/status.log | grep -q *READY*`
         do
-            : sit tight
+            #stop if server has terminated
+            jobs %- > /dev/null 2>&1
+            RUNNING=$?
+            if [ "$RUNNING" = "1" ]
+            then
+                break
+            fi
         done
         
         tail -c +$ERROR_START log/error.log

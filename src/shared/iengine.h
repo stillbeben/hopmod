@@ -129,6 +129,7 @@ extern int cleargui(int n = 0);
 extern bool emptymap(int factor, bool force, const char *mname = "", bool usecfg = true);
 extern bool enlargemap(bool force);
 extern int findentity(int type, int index = 0, int attr1 = -1, int attr2 = -1);
+extern void findents(int low, int high, bool notspawned, const vec &pos, const vec &radius, vector<int> &found);
 extern void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, int attr4, int attr5, bool local);
 extern vec getselpos();
 extern int getworldsize();
@@ -194,7 +195,6 @@ enum
     PART_LENS_FLARE
 };
 
-extern void render_particles(int time);
 extern bool canaddparticles();
 extern void regular_particle_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 1.0f, int radius = 150, int gravity = 2, int delay = 0);
 extern void particle_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 1.0f, int radius = 150, int gravity = 2);
@@ -218,6 +218,8 @@ extern void adddecal(int type, const vec &center, const vec &surface, float radi
 // worldio
 extern bool load_world(const char *mname, const char *cname = NULL);
 extern bool save_world(const char *mname, bool nolms = false);
+extern void getmapfilenames(const char *fname, const char *cname, char *pakname, char *mapname, char *cfgname);
+extern uint getmapcrc();
 
 // physics
 extern void moveplayer(physent *pl, int moveres, bool local);
@@ -226,6 +228,7 @@ extern bool collide(physent *d, const vec &dir = vec(0, 0, 0), float cutoff = 0.
 extern bool bounce(physent *d, float secs, float elasticity, float waterfric);
 extern bool bounce(physent *d, float elasticity, float waterfric);
 extern void avoidcollision(physent *d, const vec &dir, physent *obstacle, float space);
+extern bool movecamera(physent *pl, const vec &dir, float dist, float stepdist);
 extern void physicsframe();
 extern void dropenttofloor(entity *e);
 extern bool droptofloor(vec &o, float radius, float height);
@@ -247,7 +250,7 @@ extern void stopsounds();
 extern void initsound();
 
 // rendermodel
-enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_TRANSLUCENT = 1<<8, MDL_FULLBRIGHT = 1<<9, MDL_NORENDER = 1<<10 };
+enum { MDL_CULL_VFC = 1<<0, MDL_CULL_DIST = 1<<1, MDL_CULL_OCCLUDED = 1<<2, MDL_CULL_QUERY = 1<<3, MDL_SHADOW = 1<<4, MDL_DYNSHADOW = 1<<5, MDL_LIGHT = 1<<6, MDL_DYNLIGHT = 1<<7, MDL_FULLBRIGHT = 1<<8, MDL_NORENDER = 1<<9 };
 
 struct model;
 struct modelattach
@@ -264,7 +267,7 @@ struct modelattach
 
 extern void startmodelbatches();
 extern void endmodelbatches();
-extern void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw = 0, float pitch = 0, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED | MDL_LIGHT, dynent *d = NULL, modelattach *a = NULL, int basetime = 0, int basetime2 = 0);
+extern void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw = 0, float pitch = 0, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED | MDL_LIGHT, dynent *d = NULL, modelattach *a = NULL, int basetime = 0, int basetime2 = 0, float trans = 1);
 extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
 extern void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, bool ragdoll = false);
@@ -281,7 +284,7 @@ extern void moveragdoll(dynent *d);
 extern void cleanragdoll(dynent *d);
 
 // server
-#define MAXCLIENTS 128                  // DO NOT set this any higher
+#define MAXCLIENTS 128                 // DO NOT set this any higher
 #define MAXTRANS 5000                  // max amount of data to swallow in 1 go
 
 extern int maxclients;
@@ -305,12 +308,16 @@ extern void sendpacket(int cn, int chan, ENetPacket *packet, int exclude = -1);
 extern int getnumclients();
 extern uint getclientip(int n);
 extern void putint(ucharbuf &p, int n);
+extern void putint(packetbuf &p, int n);
 extern int getint(ucharbuf &p);
 extern void putuint(ucharbuf &p, int n);
+extern void putuint(packetbuf &p, int n);
 extern int getuint(ucharbuf &p);
 extern void putfloat(ucharbuf &p, float f);
+extern void putfloat(packetbuf &p, float f);
 extern float getfloat(ucharbuf &p);
 extern void sendstring(const char *t, ucharbuf &p);
+extern void sendstring(const char *t, packetbuf &p);
 extern void getstring(char *t, ucharbuf &p, int len = MAXTRANS);
 extern void filtertext(char *dst, const char *src, bool whitespace = true, int len = sizeof(string)-1);
 extern void localconnect();

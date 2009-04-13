@@ -76,12 +76,16 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_global_func<std::vector<int> ()>(server::cs_player_list, FUNGU_OBJECT_ID("players"), env);
     script::bind_global_func<std::vector<int> ()>(server::cs_spec_list, FUNGU_OBJECT_ID("spectators"), env);
+    
     register_lua_function(&server::lua_player_list, "players");
     register_lua_function(&server::lua_spec_list, "spectators");
     register_lua_function(&server::lua_gamemodeinfo, "gengamemodeinfo");
     
     //team-oriented functions
     script::bind_global_func<void (const char*,const char*)>(server::team_msg,FUNGU_OBJECT_ID("team_msg"), env);
+    script::bind_global_func<std::vector<std::string> ()>(server::get_teams, FUNGU_OBJECT_ID("teams"), env);
+    register_lua_function(&server::lua_team_list, "teams");
+    script::bind_global_func<int (const char *)>(server::get_team_score, FUNGU_OBJECT_ID("team_score"), env);
     
     //server-oriented functions and variables
     script::bind_global_func<void (bool)>(server::pausegame,FUNGU_OBJECT_ID("pausegame"),env);

@@ -116,3 +116,4 @@ end
 server.event_handler("mapchange", function()
     gamemodeinfo = server.gengamemodeinfo()
 end)
+

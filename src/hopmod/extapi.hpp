@@ -55,7 +55,6 @@ namespace server
     extern int player_connection_time(int);
     extern int player_timeplayed(int);
     
-    extern void team_msg(const char *,const char *);
     extern void player_spec(int);
     extern void player_unspec(int);
     extern int player_bots(int);
@@ -64,6 +63,13 @@ namespace server
     extern void server_setadmin(int);
     extern void player_slay(int);
     extern bool player_changeteam(int,const char *);
+    
+    extern void team_msg(const char *,const char *);
+    extern std::vector<std::string> get_teams();
+    extern int lua_team_list(lua_State * L);
+    extern int get_team_score(const char * );
+    extern std::vector<int> get_team_players(const char * team);
+    extern int lua_team_players(lua_State *);
     
     extern void pausegame(bool);
     extern void kick(int cn,int time,const std::string & admin,const std::string & reason);

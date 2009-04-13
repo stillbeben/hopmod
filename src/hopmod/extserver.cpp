@@ -343,6 +343,63 @@ int lua_player_list(lua_State * L){return lua_clients_list(L, &is_player);}
 std::vector<int> cs_spec_list(){return cs_clients_list(&is_spectator);}
 int lua_spec_list(lua_State * L){return lua_clients_list(L, &is_spectator);}
 
+std::vector<std::string> get_teams()
+{
+    std::set<std::string> teams;
+    loopv(clients) teams.insert(clients[i]->team);
+    std::vector<std::string> result;
+    std::copy(teams.begin(),teams.end(),std::back_inserter(result));
+    return result;
+}
+
+int lua_team_list(lua_State * L)
+{
+    lua_newtable(L);
+    std::vector<std::string> teams = get_teams();
+    int count = 0;
+    for(std::vector<std::string>::iterator it = teams.begin(); it != teams.end(); ++it)
+    {
+        lua_pushinteger(L, ++count);
+        lua_pushstring(L, it->c_str());
+        lua_settable(L, -3);
+    }
+    return 1;
+}
+
+int get_team_score(const char * team)
+{
+    int score = 0;
+    if(smode) return smode->getteamscore(team);
+    else loopv(clients)
+        if(clients[i]->state.state != CS_SPECTATOR && !strcmp(clients[i]->team,team))
+            score += clients[i]->state.frags;
+    return score;
+}
+
+std::vector<int> get_team_players(const char * team)
+{
+    std::vector<int> result;
+    loopv(clients)
+        if(clients[i]->state.state != CS_SPECTATOR && clients[i]->state.aitype == AI_NONE && !strcmp(clients[i]->team,team))
+            result.push_back(clients[i]->clientnum);
+    return result;
+}
+
+int lua_team_players(lua_State * L)
+{
+    int argc = lua_gettop(L);
+    if(argc < 1) return luaL_error(L,"missing team name argument");
+    std::vector<int> players = get_team_players(lua_tostring(L,1));
+    int count = 0;
+    for(std::vector<int>::iterator it = players.begin(); it != players.end(); ++it)
+    {
+        lua_pushinteger(L, ++count);
+        lua_pushinteger(L, *it);
+        lua_settable(L, -3);
+    }
+    return 1;
+}
+
 int recorddemo()
 {
     if(demorecord) return demo_id;
