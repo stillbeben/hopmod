@@ -29,6 +29,10 @@ namespace server
     extern bool allow_mm_locked;
     extern bool allow_mm_private;
     
+    extern void init_hopmod();
+    extern void reload_hopmod();
+    extern void update_hopmod();
+    
     extern int player_sessionid(int);
     extern int player_id(int);
     extern void player_msg(int,const char *);
@@ -54,7 +58,7 @@ namespace server
     extern int player_accuracy(int);
     extern int player_connection_time(int);
     extern int player_timeplayed(int);
-    
+    extern int player_win(int);
     extern void player_spec(int);
     extern void player_unspec(int);
     extern int player_bots(int);
@@ -70,6 +74,8 @@ namespace server
     extern int get_team_score(const char * );
     extern std::vector<int> get_team_players(const char * team);
     extern int lua_team_players(lua_State *);
+    extern int team_win(const char *);
+    extern int team_draw(const char *);
     
     extern void pausegame(bool);
     extern void kick(int cn,int time,const std::string & admin,const std::string & reason);

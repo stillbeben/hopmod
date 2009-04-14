@@ -45,6 +45,7 @@ extern boost::signal<void (int)>                                    signal_mapcr
 
 // Game Events
 extern boost::signal<void ()>                                signal_intermission;
+extern boost::signal<void ()>                                signal_finishedgame;
 extern boost::signal<void (int)>                             signal_timeupdate;
 extern boost::signal<void (const char *,const char *)>       signal_mapchange;
 extern boost::signal<void ()>                                signal_setnextgame;
@@ -55,6 +56,8 @@ extern boost::signal<void (int,int)>                         signal_endrecord;
 
 // Server Events
 extern boost::signal<void ()> signal_shutdown;
+extern boost::signal<void (const char *,const char *)>      signal_votepassed;
+extern boost::signal<void ()> signal_reloadhopmod;
 
 /**
     @brief Register signals with the global script::slot_factory instance.
@@ -65,5 +68,7 @@ void register_signals(fungu::script::env &);
     @brief Deallocates destroyed slots - should be called regularly on the main loop.
 */
 void cleanup_dead_slots();
+
+void disconnect_all_slots();
 
 #endif

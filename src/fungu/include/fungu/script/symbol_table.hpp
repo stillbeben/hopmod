@@ -52,6 +52,14 @@ public:
     
     ~symbol_table()
     {
+        // IGNORE MEMORY LEAK WARNING
+        
+        //Do not delete allocated objects because this class is used a static data member in the env class and
+        //and the undefined destruction order can cause dangling pointers.
+    }
+    
+    void clear()
+    {
         for(typename hash_index::iterator it = m_symbols.begin(); it != m_symbols.end(); ++it)
             delete it->object;
     }

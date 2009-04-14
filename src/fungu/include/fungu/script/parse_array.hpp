@@ -86,6 +86,8 @@ inline bool parse_array(const_string string, env::frame * frame, ForwardContaine
         
         if(parsing->is_eval_supported())
             container.push_back(lexical_cast<typename ForwardContainer::value_type>(parsing->eval(frame).to_string()));
+        
+        delete parsing;
     }
     
     return true;

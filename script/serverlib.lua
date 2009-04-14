@@ -48,6 +48,7 @@ function red(text) return formatcol(3,text) end
 function orange(text) return formatcol(6, text) end
 function green(text) return formatcol(0, text) end
 function white(text) return formatcol(10, text) end
+function yellow(text) return formatcol(2, text) end
 
 local set_cancel_restart = false
 

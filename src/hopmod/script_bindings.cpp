@@ -57,6 +57,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_shots, FUNGU_OBJECT_ID("player_shots"), env);
     script::bind_global_func<int (int)>(server::player_accuracy, FUNGU_OBJECT_ID("player_accuracy"), env);
     script::bind_global_func<int (int)>(server::player_timeplayed, FUNGU_OBJECT_ID("player_timeplayed"), env);
+    script::bind_global_func<int (int)>(server::player_win, FUNGU_OBJECT_ID("player_win"), env);
     script::bind_global_func<void (int)>(server::player_slay, FUNGU_OBJECT_ID("player_slay"), env);
     script::bind_global_func<bool (int,const char *)>(server::player_changeteam, FUNGU_OBJECT_ID("changeteam"), env);
     script::bind_global_func<int (int)>(server::player_bots, FUNGU_OBJECT_ID("player_bots"), env);
@@ -86,8 +87,13 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<std::vector<std::string> ()>(server::get_teams, FUNGU_OBJECT_ID("teams"), env);
     register_lua_function(&server::lua_team_list, "teams");
     script::bind_global_func<int (const char *)>(server::get_team_score, FUNGU_OBJECT_ID("team_score"), env);
+    script::bind_global_func<int (const char *)>(server::team_win, FUNGU_OBJECT_ID("team_win"), env);
+    script::bind_global_func<int (const char *)>(server::team_draw, FUNGU_OBJECT_ID("team_draw"), env);
+    script::bind_global_func<std::vector<int> (const char *)>(server::get_team_players, FUNGU_OBJECT_ID("team_players"), env);
+    register_lua_function(&server::lua_team_players, "team_players");
     
     //server-oriented functions and variables
+    script::bind_global_func<void ()>(server::reload_hopmod, FUNGU_OBJECT_ID("reloadconfig"), env);
     script::bind_global_func<void (bool)>(server::pausegame,FUNGU_OBJECT_ID("pausegame"),env);
     script::bind_global_func<void (const char *)>(server::sendservmsg, FUNGU_OBJECT_ID("msg"), env);
     script::bind_global_func<void ()>(server::shutdown, FUNGU_OBJECT_ID("shutdown"), env);

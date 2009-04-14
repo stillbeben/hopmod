@@ -26,7 +26,7 @@ bool script_socket_supported()
 
 void init_script_socket()
 {
-    signal_shutdown.connect(close_script_socket);
+    signal_shutdown.connect(close_script_socket,boost::signals::at_front);
 }
 
 bool open_script_socket(unsigned short port)

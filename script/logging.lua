@@ -114,4 +114,6 @@ server.event_handler("mapcrcfail", function(cn) log(string.format("%s(%i) has a 
 
 server.event_handler("shutdown", function() log("server shutting down"); logfile:close() end)
 
+server.event_handler("reloadhopmod", function() log("reloading hopmod...") end)
+
 log("server started")

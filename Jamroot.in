@@ -8,8 +8,7 @@ use-project /fungu : src/fungu ;
 use-project /lua-sqlite3 : src/lua-sqlite3 ;
 
 # use-project /lua-socket : src/lua-socket ;
-
-build-project src/lua-socket ;
+# build-project src/lua-socket ;
 
 lib enet : 
     src/enet/host.c
@@ -79,9 +78,9 @@ exe sauer_server :
     z
     dl
     /lua//lua
+    /fungu//script
     geoip
     microhttpd
-    /fungu//script
     /boost//headers
     /boost//signals
     : <define>STANDALONE <include>src/shared <include>src/fpsgame <include>src/hopmod ;

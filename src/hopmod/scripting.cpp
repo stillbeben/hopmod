@@ -10,7 +10,7 @@
 
 using namespace fungu;
 
-static script::env env;
+script::env * env = NULL;
 
 static const char * const svrtablename = "server";
 static int svrtableref = 0;
@@ -29,18 +29,19 @@ static int parse_list(lua_State *);
 
 void init_scripting()
 {
-    script::load_corelib(env);
+    assert(!env);
+    env = new script::env;
     
-    assert(!env.get_lua_state());
+    script::load_corelib(*env);
     
     //startup lua
     lua_State * L = luaL_newstate();
     luaL_openlibs(L);
-    env.set_lua_state(L);
-    env.set_bind_observer(bind_object_to_lua);
+    env->set_lua_state(L);
+    env->set_bind_observer(bind_object_to_lua);
     
     //required for lua to call cubescript functions
-    lua_pushlightuserdata(L, env.get_global_scope());
+    lua_pushlightuserdata(L, env->get_global_scope());
     lua_setfield(L,LUA_REGISTRYINDEX, "fungu_script_global_frame");
     
     //create the server table
@@ -74,10 +75,12 @@ void init_scripting()
 
 void shutdown_scripting()
 {
-    assert(env.get_lua_state());
+    assert(env->get_lua_state());
+    lua_State * L = env->get_lua_state();
+    env->set_lua_state(NULL);
     
-    lua_State * L = env.get_lua_state();
-    env.set_lua_state(NULL);
+    delete env;
+    env = NULL;
     
     push_server_table(L);
     luaL_unref(L,-1,svrtable_index_ref);
@@ -90,7 +93,7 @@ void shutdown_scripting()
 
 script::env & get_script_env()
 {
-    return env;
+    return *env;
 }
 
 int svrtable_index(lua_State * L)
@@ -131,13 +134,13 @@ int svrtable_newindex(lua_State * L)
         {
             scoped_setting<bool> setting(binding_object_to_cubescript,true);
             hangingObj = new script::lua::lua_function(L,-1,key.c_str());
-            env.get_global_scope()->bind_global_object(hangingObj,const_string(key)).adopt_object();
+            env->get_global_scope()->bind_global_object(hangingObj,const_string(key)).adopt_object();
             hangingObj = NULL;
         }
         else
         {
             lua_pushvalue(L,-2);
-            script::env::object * obj = env.get_global_scope()->lookup_object(key);
+            script::env::object * obj = env->get_global_scope()->lookup_object(key);
             if(obj) obj->assign(script::lua::get_argument_value(L));
             else
             {
@@ -145,7 +148,7 @@ int svrtable_newindex(lua_State * L)
                 script::any_variable * newvar = new script::any_variable;
                 hangingObj = newvar;
                 newvar->assign(script::lua::get_argument_value(L));
-                env.get_global_scope()->bind_global_object(newvar,const_string(key)).adopt_object();
+                env->get_global_scope()->bind_global_object(newvar,const_string(key)).adopt_object();
                 hangingObj = NULL;
             }
         }
@@ -180,7 +183,7 @@ void register_to_server_table(lua_State * L,lua_CFunction func,const char * name
 void bind_object_to_lua(const_string id, script::env::object * obj)
 {
     if(binding_object_to_cubescript) return;
-    lua_State * L = env.get_lua_state();
+    lua_State * L = env->get_lua_state();
     assert(!binding_object_to_lua);
     scoped_setting<bool> setting(binding_object_to_lua,true);
     push_server_table(L);
@@ -208,7 +211,7 @@ void report_script_error(script::error_info * errinfo)
 
 void register_lua_function(lua_CFunction func,const char * name)
 {
-    lua_State * L = env.get_lua_state();
+    lua_State * L = env->get_lua_state();
     push_server_table(L);
     lua_rawgeti(L, -1, svrtable_index_ref);
     
@@ -229,7 +232,7 @@ int parse_list(lua_State * L)
     std::vector<const_string> out;
     try
     {
-        script::parse_array<std::vector<const_string>,true>(const_string(list,list+listclen-1), env.get_global_scope(), out);
+        script::parse_array<std::vector<const_string>,true>(const_string(list,list+listclen-1), env->get_global_scope(), out);
     }
     catch(script::error err)
     {

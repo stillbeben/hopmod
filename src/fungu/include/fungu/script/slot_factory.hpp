@@ -24,14 +24,20 @@ class slot_factory
 public:
     ~slot_factory()
     {
+        clear();
+    }
+    
+    void clear()
+    {
         for(unsigned int i = 0; i < m_slots.size(); ++i) destroy_slot(i);
+        m_slots.clear();
     }
     
     template<typename SignalType,typename ErrorHandlerFunction>
-    void register_signal(SignalType & sig,const_string name,ErrorHandlerFunction error_handler)
+    void register_signal(SignalType & sig,const_string name,ErrorHandlerFunction error_handler,boost::signals::connect_position cp = boost::signals::at_back)
     {
         boost::function<arguments_container::value_type (error_info *)> error_handler_wrapper = error_handler;
-        m_signal_connectors[name] = boost::bind(&slot_factory::connect_slot<SignalType>,this,boost::ref(sig),error_handler,_1,_2);
+        m_signal_connectors[name] = boost::bind(&slot_factory::connect_slot<SignalType>,this,boost::ref(sig),error_handler,cp,_1,_2);
     }
     
     int create_slot(const_string name,env::object::shared_ptr obj,env::frame * frame)
@@ -63,6 +69,7 @@ private:
     template<typename SignalType>
     int connect_slot(SignalType & sig,
         boost::function<arguments_container::value_type (error_info *)> error_handler,
+        boost::signals::connect_position cp,
         env::object::shared_ptr obj,
         env::frame * frame)
     {
@@ -70,7 +77,7 @@ private:
         std::pair<base_script_function *,boost::signals::connection> newSlot;
         script_function<SignalSignature> * newSlotFunction = new script_function<SignalSignature>(obj,frame,error_handler);
         newSlot.first = newSlotFunction;
-        newSlot.second = sig.connect(boost::ref(*newSlotFunction));
+        newSlot.second = sig.connect(boost::ref(*newSlotFunction),cp);
         
         int handle = -1;
         for(slot_vector::iterator it = m_slots.begin(); it != m_slots.end(); ++it) 

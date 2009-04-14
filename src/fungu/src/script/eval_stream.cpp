@@ -26,6 +26,7 @@ eval_stream::~eval_stream()
 {
     reset_expression();
     reset_buffer();
+    delete m_expression;
 }
 
 void eval_stream::feed(const void * data,std::size_t length)

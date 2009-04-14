@@ -24,7 +24,7 @@ static bool pending_close = false;
 
 void init_script_pipe()
 {
-    signal_shutdown.connect(close_script_pipe);
+    signal_shutdown.connect(close_script_pipe,boost::signals::at_front);
 }
 
 bool open_script_pipe(const char * filename, int mode, script::env & server_env)
@@ -89,6 +89,7 @@ void run_script_pipe_service(int curtime)
     pollfd p;
     p.fd = fd;
     p.events = POLLIN;
+    p.revents = 0;
     
     int pret = poll(&p, 1, 0);
     if(pret == -1)
@@ -158,4 +159,7 @@ void close_script_pipe()
     
     delete scriptexec;
     scriptexec = NULL;
+    
+    delete script_context;
+    script_context = NULL;
 }

@@ -24,3 +24,10 @@ end
 function server.playercmd_unspecall(cn)
     return admincmd(server.unspecall,cn)
 end
+
+function server.playercmd_players(cn_client) 
+    for i, cn in ipairs(server.players()) do 
+        str = "Name: " .. server.player_name(cn) .. " Frags: " .. server.player_frags(cn) .. " Deaths: " .. server.player_deaths(cn) .. " Acc: " .. server.player_accuracy (cn)
+        server.player_msg(cn_client, str)
+    end
+end

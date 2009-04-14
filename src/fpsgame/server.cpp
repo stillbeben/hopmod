@@ -544,19 +544,7 @@ namespace server
         smapname[0] = '\0';
         resetitems();
         
-        init_scripting();
-        register_server_script_bindings(get_script_env());
-        register_signals(get_script_env());
-        init_scheduler();
-        init_script_pipe();
-        open_script_pipe("serverexec",511,get_script_env());
-        init_script_socket();
-        
-        try{fungu::script::execute_file(STARTUP_SCRIPT,get_script_env().get_global_scope());}
-        catch(fungu::script::error_info * error){report_script_error(error);}
-        
-        signal_shutdown.connect(flushserverhost);
-        
+        init_hopmod();
         selectnextgame();
     }
     
@@ -1362,6 +1350,8 @@ namespace server
 
     void changemap(const char *s, int mode,int mins = -1)
     {
+        signal_finishedgame();
+        
         stopdemo();
         pausegame(false);
         
@@ -1452,6 +1442,7 @@ namespace server
             if(best && (best->count > (force ? 1 : maxvotes/2)))
             {
                 sendservmsg(force ? "vote passed by default" : "vote passed by majority");
+                signal_votepassed(best->map, modename(best->mode));
                 sendf(-1, 1, "risii", SV_MAPCHANGE, best->map, best->mode, 1);
                 changemap(best->map, best->mode);
             }
@@ -1772,11 +1763,7 @@ namespace server
             checkvotes(true);
         }
         
-        run_script_pipe_service(totalmillis);
-        run_script_socket_service();
-        update_scheduler(totalmillis);
-        bantimes.update(totalmillis);
-        cleanup_dead_slots();
+        update_hopmod();
     }
 
     struct crcinfo 

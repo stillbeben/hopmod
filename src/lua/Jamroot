@@ -10,8 +10,7 @@ lib lua :
     loadlib.c   
     loslib.c   
     lstring.c  
-    ltablib.c  
-    luac.c     
+    ltablib.c      
     lzio.c
     lauxlib.c   
     ldblib.c  
@@ -23,7 +22,6 @@ lib lua :
     lstrlib.c  
     ltm.c      
     lundump.c  
-    print.c
     lbaselib.c  
     ldebug.c  
     lfunc.c  
@@ -32,9 +30,8 @@ lib lua :
     lopcodes.c
     lstate.c
     ltable.c
-    lua.c 
     lvm.c
-    : <define>LUA_USE_LINUX <link>static
+    : <define>LUA_USE_LINUX
     : : <include>src ;
 
 alias headers : : : : <include>src ;

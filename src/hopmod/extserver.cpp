@@ -1,5 +1,56 @@
 #ifdef INCLUDE_EXTSERVER_CPP
 
+static boost::signals::connection close_listenserver_slot;
+static bool reload = false;
+
+void init_hopmod()
+{
+    init_scripting();
+    close_listenserver_slot = signal_shutdown.connect(flushserverhost);
+    signal_shutdown.connect(shutdown_scripting);
+    
+    register_server_script_bindings(get_script_env());
+    register_signals(get_script_env());
+    init_scheduler();
+    init_script_pipe();
+    open_script_pipe("serverexec",511,get_script_env());
+    init_script_socket();
+    
+    try{fungu::script::execute_file(STARTUP_SCRIPT,get_script_env().get_global_scope());}
+    catch(fungu::script::error_info * error){report_script_error(error);}
+}
+
+void reload_hopmod()
+{
+    if(!reload)
+    {
+        reload = true;
+        return;
+    }
+    else reload = false;
+    
+    signal_reloadhopmod();
+    
+    close_listenserver_slot.block();
+    signal_shutdown();
+    close_listenserver_slot.unblock();
+    
+    disconnect_all_slots();
+    
+    init_hopmod();
+}
+
+void update_hopmod()
+{
+    if(reload) reload_hopmod();
+    
+    run_script_pipe_service(totalmillis);
+    run_script_socket_service();
+    update_scheduler(totalmillis);
+    bantimes.update(totalmillis);
+    cleanup_dead_slots();
+}
+
 void shutdown()
 {
     signal_shutdown();
@@ -101,7 +152,7 @@ int player_accuracy(int cn)
     
     int hits = ci->state.hits;
     int shots = ci->state.shots;
-    if(!shots) return -1;
+    if(!shots) return 0;
     
     return static_cast<int>(roundf(static_cast<float>(hits)/shots*100));
 }
@@ -141,6 +192,21 @@ int player_timeplayed(int cn)
 {
     clientinfo * ci = get_ci(cn);
     return (ci->state.timeplayed + (ci->state.state != CS_SPECTATOR ? (lastmillis - ci->state.lasttimeplayed) : 0))/1000;
+}
+
+int player_win(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    loopv(clients)
+        if(clients[i] != ci && clients[i]->state.state != CS_SPECTATOR && 
+            clients[i]->state.aitype == AI_NONE)
+        {
+            if( (clients[i]->state.frags > ci->state.frags) ||
+                (clients[i]->state.frags == ci->state.frags && clients[i]->state.deaths < clients[i]->state.deaths) ||
+                (clients[i]->state.deaths == ci->state.deaths && player_accuracy(clients[i]->clientnum) > player_accuracy(cn)) ||
+                true ) return false;
+        }
+    return true;
 }
 
 void player_slay(int cn)
@@ -390,6 +456,7 @@ int lua_team_players(lua_State * L)
     int argc = lua_gettop(L);
     if(argc < 1) return luaL_error(L,"missing team name argument");
     std::vector<int> players = get_team_players(lua_tostring(L,1));
+    lua_newtable(L);
     int count = 0;
     for(std::vector<int>::iterator it = players.begin(); it != players.end(); ++it)
     {
@@ -398,6 +465,30 @@ int lua_team_players(lua_State * L)
         lua_settable(L, -3);
     }
     return 1;
+}
+
+int team_win(const char * team)
+{
+    std::vector<std::string> teams = get_teams();
+    int score = get_team_score(team);
+    for(std::vector<std::string>::iterator it = teams.begin(); it != teams.end(); ++it)
+    {
+        if(*it == team) continue;
+        if(get_team_score(it->c_str()) > score) return false;
+    }
+    return true;
+}
+
+int team_draw(const char * team)
+{
+    std::vector<std::string> teams = get_teams();
+    int score = get_team_score(team);
+    for(std::vector<std::string>::iterator it = teams.begin(); it != teams.end(); ++it)
+    {
+        if(*it == team) continue;
+        if(get_team_score(it->c_str()) != score) return false;
+    }
+    return true;
 }
 
 int recorddemo()

@@ -5,7 +5,7 @@
 
 using namespace fungu;
 
-static script::env env;
+static script::env * env = NULL;
 static script::slot_factory slots;
 
 boost::signal<void (int)> signal_connect;
@@ -20,6 +20,7 @@ boost::signal<int (int,const char *), proceed> signal_text;
 boost::signal<int (int,const char *), proceed> signal_sayteam;
 boost::signal<void ()> signal_shutdown;
 boost::signal<void ()> signal_intermission;
+boost::signal<void ()> signal_finishedgame;
 boost::signal<void (int)> signal_timeupdate;
 boost::signal<void (const char *,const char *)> signal_mapchange;
 boost::signal<int (int,const char *,const char *), proceed> signal_mapvote;
@@ -36,6 +37,8 @@ boost::signal<void (int)> signal_delbot;
 boost::signal<void (int,const char *)> signal_beginrecord;
 boost::signal<void (int,int)> signal_endrecord;
 boost::signal<void (int)> signal_mapcrcfail;
+boost::signal<void (const char *,const char *)> signal_votepassed;
+boost::signal<void ()> signal_reloadhopmod;
 
 static script::any proceed_error_handler(script::error_info * errinfo)
 {
@@ -61,7 +64,7 @@ static int lua_event_handler_function(lua_State * L)
     script::env::object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
     luaFunctionObject->set_adopted_flag();
     
-    int handle = slots.create_slot(name, luaFunctionObject, env.get_global_scope());
+    int handle = slots.create_slot(name, luaFunctionObject, env->get_global_scope());
     lua_pushinteger(L, handle);
     return 1;
 }
@@ -69,7 +72,7 @@ static int lua_event_handler_function(lua_State * L)
 static int cubescript_event_handler_function(const std::string & name, script::any obj)
 {
     if(obj.get_type() != typeid(script::env::object::shared_ptr)) throw script::error(script::BAD_CAST);
-    return slots.create_slot(name, script::any_cast<script::env::object::shared_ptr>(obj), env.get_global_scope());
+    return slots.create_slot(name, script::any_cast<script::env::object::shared_ptr>(obj), env->get_global_scope());
 }
 
 void destroy_slot(int handle)
@@ -77,9 +80,17 @@ void destroy_slot(int handle)
     slots.destroy_slot(handle);
 }
 
+void cleanup()
+{
+    slots.clear();
+    slots.deallocate_destroyed_slots();
+}
+
 void register_signals(script::env & env)
 {
-    ::env = env;
+    ::env = &env;
+    
+    signal_shutdown.connect(cleanup, boost::signals::at_front);
     
     slots.register_signal(signal_connect,"connect",normal_error_handler);
     slots.register_signal(signal_disconnect,"disconnect",normal_error_handler);
@@ -91,8 +102,9 @@ void register_signals(script::env & env)
     slots.register_signal(signal_kick,"kick",normal_error_handler);
     slots.register_signal(signal_text,"text",proceed_error_handler);
     slots.register_signal(signal_sayteam,"sayteam",proceed_error_handler);
-    slots.register_signal(signal_shutdown,"shutdown",normal_error_handler);
+    slots.register_signal(signal_shutdown,"shutdown",normal_error_handler, boost::signals::at_front);
     slots.register_signal(signal_intermission,"intermission", normal_error_handler);
+    slots.register_signal(signal_finishedgame, "finishedgame", normal_error_handler);
     slots.register_signal(signal_timeupdate,"timeupdate", normal_error_handler);
     slots.register_signal(signal_mapchange,"mapchange", normal_error_handler);
     slots.register_signal(signal_mapvote, "mapvote", proceed_error_handler);
@@ -109,6 +121,8 @@ void register_signals(script::env & env)
     slots.register_signal(signal_beginrecord, "beginrecord", normal_error_handler);
     slots.register_signal(signal_endrecord, "endrecord", normal_error_handler);
     slots.register_signal(signal_mapcrcfail, "mapcrcfail", normal_error_handler);
+    slots.register_signal(signal_votepassed, "votepassed", normal_error_handler);
+    slots.register_signal(signal_reloadhopmod, "reloadhopmod", normal_error_handler);
     
     script::bind_global_func<int (const std::string &,script::any)>(cubescript_event_handler_function, FUNGU_OBJECT_ID("event_handler"), env);
     script::bind_global_func<void (int)>(destroy_slot, FUNGU_OBJECT_ID("cancel_handler"), env);
@@ -119,4 +133,39 @@ void register_signals(script::env & env)
 void cleanup_dead_slots()
 {
     slots.deallocate_destroyed_slots();
+}
+
+void disconnect_all_slots()
+{
+    signal_connect.disconnect_all_slots();
+    signal_disconnect.disconnect_all_slots();
+    signal_failedconnect.disconnect_all_slots();
+    signal_active.disconnect_all_slots();
+    signal_rename.disconnect_all_slots();
+    signal_reteam.disconnect_all_slots();
+    signal_chteamrequest.disconnect_all_slots();
+    signal_kick.disconnect_all_slots();
+    signal_text.disconnect_all_slots();
+    signal_sayteam.disconnect_all_slots();
+    signal_shutdown.disconnect_all_slots();
+    signal_intermission.disconnect_all_slots();
+    signal_finishedgame.disconnect_all_slots();
+    signal_timeupdate.disconnect_all_slots();
+    signal_mapchange.disconnect_all_slots();
+    signal_mapvote.disconnect_all_slots();
+    signal_setnextgame.disconnect_all_slots();
+    signal_gamepaused.disconnect_all_slots();
+    signal_gameresumed.disconnect_all_slots();
+    signal_setmastermode.disconnect_all_slots();
+    signal_spectator.disconnect_all_slots();
+    signal_setmaster.disconnect_all_slots();
+    signal_teamkill.disconnect_all_slots();
+    signal_auth.disconnect_all_slots();
+    signal_addbot.disconnect_all_slots();
+    signal_delbot.disconnect_all_slots();
+    signal_beginrecord.disconnect_all_slots();
+    signal_endrecord.disconnect_all_slots();
+    signal_mapcrcfail.disconnect_all_slots();
+    signal_votepassed.disconnect_all_slots();
+    signal_reloadhopmod.disconnect_all_slots();
 }

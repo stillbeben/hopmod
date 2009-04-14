@@ -24,7 +24,7 @@ void init_scheduler()
     register_lua_function(sched_sleep_lua_code,"sleep");
     register_lua_function(sched_interval_lua_code,"interval");
     
-    signal_shutdown.connect(cancel_all_scheduled);
+    signal_shutdown.connect(cancel_all_scheduled,boost::signals::at_front);
 }
 
 void update_scheduler(int curtime)
