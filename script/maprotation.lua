@@ -1,6 +1,9 @@
 
 local gamecount = 0
 local maps = {}
+local sizedmaps = {}
+local bestmapsize = 0
+local smallgamesize = 0
 
 function server.reload_maprotation()
 
@@ -21,10 +24,23 @@ function server.reload_maprotation()
     maps["protect"] = table_unique(parse(server["protect_maps"]))
     maps["insta protect"] = table_unique(parse(server["insta protect_maps"]))
     
+    sizedmaps.big_maps = table_unique(parse(server.big_maps))
+    sizedmaps.small_maps = table_unique(parse(server.small_maps))
+    bestmapsize = tonumber(server.use_best_map_size)
+    smallgamesize = tonumber(server.small_gamesize)
 end
 
 local function nextmap(gmode,i)
     maplist = maps[gmode]
+    
+    if bestmapsize and not gamemodeinfo.teams then
+        if tonumber(server.playercount) <= smallgamesize then
+            maplist = sizedmaps.small_maps
+        else
+            maplist = sizedmaps.big_maps
+        end
+    end
+    
     if not maplist then return nil end
     local nm = maplist[(i % #maplist)+1]
     if nm == server.map then return nextmap(gmode,i+1) end
@@ -56,6 +72,12 @@ function server.playercmd_nextmap(cn)
         local nm = nextmap(server.gamemode, gamecount)
         if nm then
             server.player_msg(cn, "The next map is " .. green(nm) .. ".")
+            
+            if bestmapsize and not gamemodeinfo.teams then
+                server.player_msg(cn, "Note: The next map will be determined on the number of players still connected at the end of this game.")
+                return
+            end
+            
             return
         end
     end

@@ -39,6 +39,11 @@ global ctf_maps [hallo reissen dust2 berlin_wall shipwreck akroseum flagstone
     face-capture valhalla urban_c damnation mach2 redemption tejen europium 
     capture_night l_ctf forge sctf1 paradiselost campo wdcd]
 
+global small_maps [aard3c metl2 metl3 nmp8 complex douze academy refuge shinmei1 kffa kalking1 ot neondevastation neonpanic dock island oddworld sdm1]
+global big_maps [deathtek fanatic_quake ruby cuvedm killfactory lostinspace aqueducts corruption orbe shadowed konkuri-to darkdeath ksauer1 pgdm thetowers wdcd]
+global use_best_map_size 0
+global small_gamesize 5
+
 global "teamplay_maps" &ffa_maps
 global "efficiency_maps" &ffa_maps
 global "efficiency team_maps" &ffa_maps
