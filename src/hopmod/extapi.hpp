@@ -102,7 +102,7 @@ namespace server
     extern std::vector<int> cs_spec_list();
     extern int lua_player_list(lua_State *);
     extern int lua_spec_list(lua_State *);
-    
+
     extern bool selectnextgame();
     
 } //namespace server

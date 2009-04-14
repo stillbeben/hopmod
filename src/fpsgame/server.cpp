@@ -2367,6 +2367,7 @@ namespace server
                 if(!text[0]) copystring(text, "unnamed");
                 if(strcmp(ci->name,text)!=0)
                 {
+                    signal_renaming(ci->clientnum);
                     ci->playerid = get_player_id(text, getclientip(ci->clientnum));
                     signal_rename(ci->clientnum, ci->name, text);
                 }

@@ -27,6 +27,7 @@ extern boost::signal<void (int)>                                    signal_conne
 extern boost::signal<void (int,const char *)>                       signal_disconnect;
 extern boost::signal<void (const char *,const char *)>              signal_failedconnect;
 extern boost::signal<void (int)>                                    signal_active;
+extern boost::signal<void (int)>                                    signal_renaming;
 extern boost::signal<void (int,const char *,const char *)>          signal_rename;
 extern boost::signal<void (int,const char *,const char *)>          signal_reteam;
 extern boost::signal<int (int,const char *,const char *),proceed>   signal_chteamrequest;

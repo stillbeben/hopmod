@@ -13,6 +13,7 @@ boost::signal<void (int,const char *)> signal_disconnect;
 boost::signal<void (const char *,const char *)> signal_failedconnect;
 boost::signal<void (int)> signal_active;
 boost::signal<void (int,const char *,const char *)> signal_rename;
+boost::signal<void (int)> signal_renaming;
 boost::signal<void (int,const char *,const char *)> signal_reteam;
 boost::signal<int (int,const char *,const char *), proceed> signal_chteamrequest;
 boost::signal<void (int,int,std::string,std::string)> signal_kick;
@@ -97,6 +98,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_failedconnect, "failedconnect",normal_error_handler);
     slots.register_signal(signal_active, "active", normal_error_handler);
     slots.register_signal(signal_rename,"rename",normal_error_handler);
+    slots.register_signal(signal_renaming, "renaming", normal_error_handler);
     slots.register_signal(signal_reteam, "reteam", normal_error_handler);
     slots.register_signal(signal_chteamrequest, "chteamrequest", proceed_error_handler);
     slots.register_signal(signal_kick,"kick",normal_error_handler);
@@ -142,6 +144,7 @@ void disconnect_all_slots()
     signal_failedconnect.disconnect_all_slots();
     signal_active.disconnect_all_slots();
     signal_rename.disconnect_all_slots();
+    signal_renaming.disconnect_all_slots();
     signal_reteam.disconnect_all_slots();
     signal_chteamrequest.disconnect_all_slots();
     signal_kick.disconnect_all_slots();
