@@ -10,9 +10,9 @@ bool eval_player_command(int cn,const char * cmdline, const std::vector<std::str
     
     fungu::script::env::frame frame(parent_frame);
     
-    fungu::script::managed_variable<int> cn_var(cn);
-    cn_var.lock_write(true);
-    frame.bind_object(&cn_var,FUNGU_OBJECT_ID("cn"));
+    //fungu::script::managed_variable<int> cn_var(cn);
+    //cn_var.lock_write(true);
+    //frame.bind_object(&cn_var,FUNGU_OBJECT_ID("cn"));
     
     defformatstring(cmdfile)("./script/command/%s" CUBESCRIPT_EXTENSION ,arguments[0].c_str());
     if(fileexists(cmdfile,"r"))
