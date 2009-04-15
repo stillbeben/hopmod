@@ -56,7 +56,7 @@ global playercmd_1on1 (func [cn arg1 arg2 arg3 arg4] [
                 my p1_frags (player_frags $player1)
                 my p2_frags (player_frags $player2)
                 
-                if (= $p1_frags $p2_frags)) [
+                if (= $p1_frags $p2_frags) [
                     msg (format "%1 %2 %3 %4" [Oh NO winner:] (green (player_frags $player1)) [-] (green (player_frags $player2)) )
                     log (format "%1 %2 %3 %4 %5" [MATCH:] [Game has ended in a draw!] (player_name $player1) versus (player_name $player2) )
                 ] [
@@ -90,3 +90,5 @@ global playercmd_1on1 (func [cn arg1 arg2 arg3 arg4] [
 
     ] [player_msg $cn (red "You need admin to do that!")]
 ])
+
+global playercmd_test (func [] [if 1 [fadsfsdfasdfasdf]])

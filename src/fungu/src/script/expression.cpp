@@ -106,6 +106,9 @@ result_type expression::eval(env::frame * frame)
     
     const construct * subject_arg = m_first_construct;
     
+    const source_context * prev_ctx = frame->get_env()->get_source_context();
+    frame->get_env()->set_source_context(m_source_ctx);
+    
     try
     {
         result_type arg1_result_type = m_first_construct->eval(frame);
@@ -143,17 +146,20 @@ result_type expression::eval(env::frame * frame)
         
         result_type result = opobj->apply(m_arguments,frame);
         m_arguments.reset();
+        frame->get_env()->set_source_context(prev_ctx);
         return result;
     }
     catch(const error & key)
     {
         m_arguments.reset();
+        frame->get_env()->set_source_context(prev_ctx);
         throw new error_info(
             key, subject_arg->form_source(), get_source_context());
     }
     catch(error_info * head_info)
     {
         m_arguments.reset();
+        frame->get_env()->set_source_context(prev_ctx);
         throw new error_info(
             head_info, subject_arg->form_source(), get_source_context());
     }

@@ -6,13 +6,8 @@
 bool eval_player_command(int cn,const char * cmdline, const std::vector<std::string> & arguments,fungu::script::env::frame * parent_frame)
 {
     if(arguments.empty()) return false;
-    //will now be returning true no matter what happens
     
     fungu::script::env::frame frame(parent_frame);
-    
-    //fungu::script::managed_variable<int> cn_var(cn);
-    //cn_var.lock_write(true);
-    //frame.bind_object(&cn_var,FUNGU_OBJECT_ID("cn"));
     
     defformatstring(cmdfile)("./script/command/%s" CUBESCRIPT_EXTENSION ,arguments[0].c_str());
     if(fileexists(cmdfile,"r"))

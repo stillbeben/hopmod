@@ -44,6 +44,8 @@ public:
         any_variable * callee_var = new any_variable;
         callee_var->assign(get_shared_ptr());
         m_closure->bind_object(callee_var,FUNGU_OBJECT_ID("callee")).adopt_object();
+        
+        m_closure->detach_bindings_from_env();
     }
     
     ~anonymous_function()

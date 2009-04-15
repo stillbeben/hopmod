@@ -128,8 +128,18 @@ void player_msg(int cn,const char * text)
     get_ci(cn)->sendprivtext(text);
 }
 
-int player_id(int cn){return get_ci(cn)->playerid;}
-int player_sessionid(int cn){return get_ci(cn)->sessionid;}
+int player_id(int cn)
+{
+    clientinfo * ci = getinfo(cn);
+    return (ci ? ci->playerid : -1);
+}
+
+int player_sessionid(int cn)
+{
+    clientinfo * ci = getinfo(cn);
+    return (ci ? ci->sessionid : -1);
+}
+
 const char * player_name(int cn){return get_ci(cn)->name;}
 const char * player_team(int cn){return get_ci(cn)->team;}
 const char * player_ip(int cn){return get_ci(cn)->hostname();}

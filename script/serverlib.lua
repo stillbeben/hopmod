@@ -40,6 +40,14 @@ function format_filesize(bytes)
     end
 end
 
+function format_duration(seconds)
+    local hours = math.floor(seconds / 3600)
+    seconds = seconds - (hours * 3600)
+    local mins = math.floor(seconds / 60)
+    seconds = seconds - (mins * 60)
+    return string.format("%02i:%02i:%02i",hours,mins,seconds)
+end
+
 function formatcol(col, text)
     if text then return "\fs\f" .. col .. text .. "\fr" else return "\f" ..col end
 end

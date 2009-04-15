@@ -2029,7 +2029,7 @@ namespace server
         
         if(spinfo->state.state!=CS_SPECTATOR && val)
         {
-            if(spinfo->state.state==CS_ALIVE) suicide(spinfo);
+            //if(spinfo->state.state==CS_ALIVE) suicide(spinfo);
             if(smode) smode->leavegame(spinfo);
             spinfo->state.state = CS_SPECTATOR;
             spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
