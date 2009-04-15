@@ -93,7 +93,7 @@ void register_server_script_bindings(script::env & env)
     register_lua_function(&server::lua_team_players, "team_players");
     
     //server-oriented functions and variables
-    script::bind_global_func<void ()>(server::reload_hopmod, FUNGU_OBJECT_ID("reloadconfig"), env);
+    script::bind_global_func<void ()>(server::reload_hopmod, FUNGU_OBJECT_ID("reloadscripts"), env);
     script::bind_global_func<void (bool)>(server::pausegame,FUNGU_OBJECT_ID("pausegame"),env);
     script::bind_global_func<void (const char *)>(server::sendservmsg, FUNGU_OBJECT_ID("msg"), env);
     script::bind_global_func<void ()>(server::shutdown, FUNGU_OBJECT_ID("shutdown"), env);
