@@ -67,10 +67,13 @@ bool open_script_pipe(const char * filename, int mode, script::env & server_env)
     
     ::filename = filename;
     ::env = &server_env;
+    
     scriptexec = new script::eval_stream(server_env.get_global_scope());
     script_context = new script::file_source_context(filename);
     
     script::bind_global_var(pending_idle_timeout,"script_pipe_pending_idle_timeout",server_env);
+    
+    pending_close = false;
     
     return true;
 }
@@ -139,10 +142,13 @@ void run_script_pipe_service(int curtime)
         {
             delete scriptexec;
             scriptexec = NULL;
+            
+            delete script_context;
+            script_context = NULL;
+            
             return;
         }
     }
-    
 }
 
 void close_script_pipe()

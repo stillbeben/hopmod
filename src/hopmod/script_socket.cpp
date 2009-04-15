@@ -12,7 +12,7 @@
 using namespace fungu;
 
 static MHD_Daemon * s_daemon = NULL;
-static bool processing_request = false;
+static bool in_request = false;
 static bool sched_close = false;
 
 static int http_accept(void *, const struct sockaddr *, socklen_t);
@@ -51,19 +51,19 @@ void run_script_socket_service()
     if(s_daemon)
     {
         MHD_run(s_daemon);
-        
-        if(sched_close && !processing_request) 
-            close_script_socket();
+        if(sched_close) close_script_socket();
     }
 }
 
 void close_script_socket()
 {
-    if(processing_request)
+    if(in_request)
     {
         sched_close = true;
         return;
     }
+    
+    sched_close = false;
     
     if(s_daemon) MHD_stop_daemon(s_daemon);
     s_daemon = NULL;
@@ -71,6 +71,8 @@ void close_script_socket()
 
 int execute_request(const std::string & request,std::string & response)
 {
+    in_request = true;
+    
     int status = 400;
     std::stringstream output;
     
@@ -87,6 +89,8 @@ int execute_request(const std::string & request,std::string & response)
     {
         output<<get_script_error_message(error)<<std::endl;
     }
+    
+    in_request = false;
     
     response = output.str();
     return !response.length() && status == 200 ? 204 : status;
@@ -118,8 +122,6 @@ int http_access(void *, MHD_Connection * connection, const char * url,
     
     if(!code_buffer)
     {
-        processing_request = true;
-        
         bool put_method = !strcmp(method,"POST");
         const char * ctype = MHD_lookup_connection_value(connection,
             MHD_HEADER_KIND,"content-type");
@@ -165,7 +167,6 @@ void http_completed(void *, struct MHD_Connectionconnection * connection,
     std::string * code_buffer = (std::string *) *con_cls;
     *con_cls = NULL;
     delete code_buffer;
-    processing_request = false;
 }
 
 #else
