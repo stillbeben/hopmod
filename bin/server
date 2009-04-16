@@ -57,6 +57,9 @@ case "$1" in
     'stop')
         execOnServer shutdown
 ;;
+    'start_ircbot')
+        nohup bin/irc_bot.pl 1>>log/irc.log 2>>log/irc.log </dev/null &
+;;
     *)
         $0 start
 esac

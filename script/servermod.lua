@@ -64,9 +64,17 @@ server.event_handler("sayteam", onText)
 server.event_handler("mapvote", onMapVote)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
-if tonumber(server.use_script_socket_server) == 1 then
-    server.script_socket_server(server.script_socket_port)
-end
+server.sleep(1,function()
+    
+    if tonumber(server.use_script_socket_server) == 1 then
+        server.script_socket_server(server.script_socket_port)
+    end
+    
+    if tonumber(server.use_irc_bot) == 1 then
+        os.execute("bin/server start_ircbot")
+        server.event_handler("shutdown", function() server.stop_ircbot() end)
+    end
+end)
 
 server.loadbanlist(server.banlist_file)
 

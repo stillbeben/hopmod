@@ -39,7 +39,7 @@ parse_state expression::block::parse(source_iterator * first,source_iterator las
         
         boost::get<1>(m_macros.back()) = *first;
         
-        if(m->get_evaluation_level()-1 > m_nested)
+        if(m->get_evaluation_level() <= m_nested)
         {
             delete m;
             m_macros.pop_back();

@@ -59,3 +59,5 @@ global small_gamesize 5
 global first_map "metl4"
 global first_mode "ffa"
 global use_first_map 0
+
+global use_irc_bot 0

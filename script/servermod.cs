@@ -15,3 +15,4 @@ blue = [concol 1 $arg1]
 yellow = [concol 2 $arg1]
 
 exec "script/playercmd.cs"
+exec "script/irc.csl"

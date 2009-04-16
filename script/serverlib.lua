@@ -57,6 +57,7 @@ function orange(text) return formatcol(6, text) end
 function green(text) return formatcol(0, text) end
 function white(text) return formatcol(10, text) end
 function yellow(text) return formatcol(2, text) end
+function magenta(text) return formatcol(5, text) end
 
 local set_cancel_restart = false
 
@@ -126,3 +127,8 @@ server.event_handler("mapchange", function()
     gamemodeinfo = server.gengamemodeinfo()
 end)
 
+function server.console(admin,msg)
+    server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))
+end
+
+server.system = os.execute

@@ -26,7 +26,7 @@ end)
 server.event_handler("disconnect", function (cn,reason)
     
     local reason_tag = ""
-    if reason ~= " normal" then reason_tag = " because: " .. reason end
+    if reason ~= "normal" then reason_tag = " because: " .. reason end
     
     log(string.format("%s(%i) disconnected%s, ctime %s",server.player_name(cn),cn,reason_tag,format_duration(server.player_connection_time(cn))))
 end)
@@ -51,7 +51,9 @@ server.event_handler("reteam",function(cn, oldteam, newteam)
 end)
 
 server.event_handler("text", function(cn, msg)
-    log(string.format("%s(%i): %s",server.player_name(cn),cn,msg))
+    local mute_tag = ""
+    if server.player_pvar(cn,"mute") then mute_tag = "(muted)" end
+    log(string.format("%s(%i)%s: %s",server.player_name(cn),cn,mute_tag,msg))
 end)
 
 server.event_handler("sayteam", function(cn, msg)
