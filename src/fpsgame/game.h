@@ -227,7 +227,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     SV_PING, 2, SV_PONG, 2, SV_CLIENTPING, 2,
     SV_TIMEUP, 2, SV_MAPRELOAD, 1, SV_FORCEINTERMISSION, 1,
     SV_SERVMSG, 0, SV_ITEMLIST, 0, SV_RESUME, 0,
-    SV_EDITMODE, 2, SV_EDITENT, 11, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 15, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0, SV_EDITVAR, 0,
+    SV_EDITMODE, 2, SV_EDITENT, 11, SV_EDITF, 16, SV_EDITT, 16, SV_EDITM, 16, SV_FLIP, 14, SV_COPY, 14, SV_PASTE, 14, SV_ROTATE, 15, SV_REPLACE, 16, SV_DELCUBE, 14, SV_REMIP, 1, SV_NEWMAP, 2, SV_GETMAP, 1, SV_SENDMAP, 0, SV_EDITVAR, 0,
     SV_MASTERMODE, 2, SV_KICK, 2, SV_CLEARBANS, 1, SV_CURRENTMASTER, 3, SV_SPECTATOR, 3, SV_SETMASTER, 0, SV_SETTEAM, 0,
     SV_BASES, 0, SV_BASEINFO, 0, SV_BASESCORE, 0, SV_REPAMMO, 1, SV_BASEREGEN, 6, SV_ANNOUNCE, 2,
     SV_LISTDEMOS, 1, SV_SENDDEMOLIST, 0, SV_GETDEMO, 2, SV_SENDDEMO, 0,
@@ -466,7 +466,7 @@ struct fpsent : dynent, fpsstate
     bool attacking;
     int attacksound, attackchan, idlesound, idlechan;
     int lasttaunt;
-    int lastpickup, lastpickupmillis, lastbase;
+    int lastpickup, lastpickupmillis, lastbase, lastrepammo, flagpickup;
     int superdamage;
     int frags, deaths, totaldamage, totalshots;
     editinfo *edit;
@@ -524,7 +524,8 @@ struct fpsent : dynent, fpsstate
         lasttaunt = 0;
         lastpickup = -1;
         lastpickupmillis = 0;
-        lastbase = -1;
+        lastbase = lastrepammo = -1;
+        flagpickup = 0;
         superdamage = 0;
         stopattacksound();
         lastnode = -1;

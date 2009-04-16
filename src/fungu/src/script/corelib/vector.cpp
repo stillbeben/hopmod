@@ -10,6 +10,8 @@
 #include "fungu/script/function.hpp"
 #include "fungu/script/variable.hpp"
 
+#include <iostream>
+
 namespace fungu{
 namespace script{
 namespace corelib{
@@ -49,6 +51,8 @@ inline result_type foreach(env::object::apply_arguments & args,env::frame * fram
     current_arg_var.lock_write(true);
     
     inner_frame.bind_object(&current_arg_var, FUNGU_OBJECT_ID("arg1"));
+    
+   
     
     for(std::vector<const_string>::const_iterator it = v.begin();
          it != v.end(); it++)

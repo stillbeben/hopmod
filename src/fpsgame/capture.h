@@ -243,19 +243,17 @@ struct captureclientmode : clientmode
     static const int FIREBALLRADIUS = 5;
 
     float radarscale;
-    int lastrepammo;
 
     IVARP(capturetether, 0, 1, 1);
     IVARP(autorepammo, 0, 1, 1);
 
-    captureclientmode() : captures(0), radarscale(0), lastrepammo(-1)
+    captureclientmode() : captures(0), radarscale(0)
     {
         CCOMMAND(repammo, "", (captureclientmode *self), self->replenishammo());
     }
 
     void respawned(fpsent *d)
     {
-        lastrepammo = -1;
     }
 
     void replenishammo()
@@ -285,15 +283,15 @@ struct captureclientmode : clientmode
             baseinfo &b = bases[i];
             if(b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1 && insidebase(b, d->feetpos()) && !strcmp(b.owner, d->team) && b.o.dist(o) < 12)
             {
-                if(lastrepammo!=i)
+                if(d->lastrepammo!=i)
                 {
                     if(b.ammo > 0 && !player1->hasmaxammo(b.ammotype-1+I_SHELLS)) addmsg(SV_REPAMMO, "rc", d);
-                    lastrepammo = i;
+                    d->lastrepammo = i;
                 }
                 return;
             }
         }
-        lastrepammo = -1;
+        d->lastrepammo = -1;
     }
 
     void rendertether(fpsent *d)
@@ -493,7 +491,6 @@ struct captureclientmode : clientmode
         center.div(bases.length());
         radarscale = 0;
         loopv(bases) radarscale = max(radarscale, 2*center.dist(bases[i].o));
-        lastrepammo = -1;
     }
 
     void senditems(packetbuf &p)
@@ -746,14 +743,14 @@ struct captureclientmode : clientmode
         }
     }
 
-    void movebases(const char *team, const vec &oldpos, const vec &newpos)
+    void movebases(const char *team, const vec &oldpos, bool oldclip, const vec &newpos, bool newclip)
     {
         if(!team[0] || minremain<=0) return;
         loopv(bases)
         {
             baseinfo &b = bases[i];
-            bool leave = insidebase(b, oldpos),
-                 enter = insidebase(b, newpos);
+            bool leave = !oldclip && insidebase(b, oldpos),
+                 enter = !newclip && insidebase(b, newpos);
             if(leave && !enter && b.leave(team)) sendbaseinfo(i);
             else if(enter && !leave && b.enter(team)) sendbaseinfo(i);
             else if(leave && enter && b.steal(team)) stealbase(i, team);
@@ -762,12 +759,12 @@ struct captureclientmode : clientmode
 
     void leavebases(const char *team, const vec &o)
     {
-        movebases(team, o, vec(-1e10f, -1e10f, -1e10f));
+        movebases(team, o, false, vec(-1e10f, -1e10f, -1e10f), true);
     }
 
     void enterbases(const char *team, const vec &o)
     {
-        movebases(team, vec(-1e10f, -1e10f, -1e10f), o);
+        movebases(team, vec(-1e10f, -1e10f, -1e10f), true, o, false);
     }
 
     void addscore(int base, const char *team, int n)
@@ -916,37 +913,37 @@ struct captureclientmode : clientmode
 
     void entergame(clientinfo *ci)
     {
-        if(notgotbases || ci->state.state!=CS_ALIVE) return;
+        if(notgotbases || ci->state.state!=CS_ALIVE || ci->gameclip) return;
         enterbases(ci->team, ci->state.o);
     }
 
     void spawned(clientinfo *ci)
     {
-        if(notgotbases) return;
+        if(notgotbases || ci->gameclip) return;
         enterbases(ci->team, ci->state.o);
     }
 
     void leavegame(clientinfo *ci, bool disconnecting = false)
     {
-        if(notgotbases || ci->state.state!=CS_ALIVE) return;
+        if(notgotbases || ci->state.state!=CS_ALIVE || ci->gameclip) return;
         leavebases(ci->team, ci->state.o);
     }
 
     void died(clientinfo *ci, clientinfo *actor)
     {
-        if(notgotbases) return;
+        if(notgotbases || ci->gameclip) return;
         leavebases(ci->team, ci->state.o);
     }
 
-    void moved(clientinfo *ci, const vec &oldpos, const vec &newpos)
+    void moved(clientinfo *ci, const vec &oldpos, bool oldclip, const vec &newpos, bool newclip)
     {
         if(notgotbases) return;
-        movebases(ci->team, oldpos, newpos);
+        movebases(ci->team, oldpos, oldclip, newpos, newclip);
     }
 
     void changeteam(clientinfo *ci, const char *oldteam, const char *newteam)
     {
-        if(notgotbases) return;
+        if(notgotbases || ci->gameclip) return;
         leavebases(oldteam, ci->state.o);
         enterbases(newteam, ci->state.o);
     }
@@ -991,7 +988,7 @@ case SV_BASES:
     break;
 
 case SV_REPAMMO:
-    if(ci->state.state!=CS_SPECTATOR && smode==&capturemode) capturemode.replenishammo(cq);
+    if(ci->state.state!=CS_SPECTATOR && cq && smode==&capturemode) capturemode.replenishammo(cq);
     break;
 
 #else

@@ -6,9 +6,8 @@ player_list = [
     my scores ""
     my line ""
     
-    foreach [@(players)] [
-        params cn
-        set line (format "N=%1C=%2P=%3 " (player_name $cn) $cn (player_ping $cn))
+    foreach (players) [
+        set line (format "N=%1C=%2P=%3 " (player_name $arg1) $arg1 (player_ping $arg1))
         set scores (concat $scores $line)
     ]
     
@@ -26,9 +25,8 @@ score = [
 	my scores ""
     my line ""
     
-	foreach [@(players)] [
-		params cn
-		set line (format "N=%3F=%1D=%2" (player_frags $cn) (player_deaths $cn) (player_name $cn))
+	foreach (players) [
+		set line (format "N=%3F=%1D=%2" (player_frags $arg1) (player_deaths $arg1) (player_name $arg1))
 		set scores (concat $scores $line)
 	]
     
@@ -83,9 +81,8 @@ global avgpings (func [] [
     
     my pingtotal 1 
     
-    foreach [@(players)] [
-        params cn
-        pingtotal = (+ $pingtotal (player_ping $cn))
+    foreach (players) [
+        pingtotal = (+ $pingtotal (player_ping $arg1))
     ]
     
 	if (!= $playercount 0) [

@@ -85,7 +85,9 @@ exe sauer_server :
     /boost//signals
     : <define>STANDALONE <include>src/shared <include>src/fpsgame <include>src/hopmod ;
 
-install dist : sauer_server /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
+exe test : testapp.cpp /fungu//script /lua//lua dl ;
+
+install dist : sauer_server /lua-sqlite3//luasqlite3 test : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 
 install lua-packages : 
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;

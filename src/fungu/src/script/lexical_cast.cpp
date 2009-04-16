@@ -17,6 +17,11 @@ const_string lexical_cast(const std::string & src,return_tag<const_string>)
     return const_string(src);
 }
 
+std::string lexical_cast(const const_string & src,return_tag<std::string>)
+{
+    return src.copy();
+}
+
 int lexical_cast(const const_string & src, return_tag<int>)
 {
     try{return src.to_int<int>();}

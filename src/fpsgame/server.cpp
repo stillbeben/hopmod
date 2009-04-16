@@ -14,14 +14,6 @@ namespace game
     }
 }
 
-#ifdef WIN32
-#include <io.h>
-#else
-#include <unistd.h>
-#define _dup    dup
-#define _fileno fileno
-#endif
-
 extern ENetAddress masteraddress;
 extern void flushserverhost();
 
@@ -240,7 +232,7 @@ namespace server
         int ping, aireinit;
         string clientmap;
         int mapcrc;
-        bool warned;
+        bool warned, gameclip;
 
         freqlimit sv_text_hit;
         freqlimit sv_sayteam_hit;
@@ -275,6 +267,7 @@ namespace server
             clientmap[0] = '\0';
             mapcrc = 0;
             warned = false;
+            gameclip = false;
         }
 
         void reassign()
@@ -423,7 +416,7 @@ namespace server
         virtual void entergame(clientinfo *ci) {}
         virtual void leavegame(clientinfo *ci, bool disconnecting = false) {}
 
-        virtual void moved(clientinfo *ci, const vec &oldpos, const vec &newpos) {}
+        virtual void moved(clientinfo *ci, const vec &oldpos, bool oldclip, const vec &newpos, bool newclip) {}
         virtual bool canspawn(clientinfo *ci, bool connecting = false) { return true; }
         virtual void spawned(clientinfo *ci) {}
         virtual int fragvalue(clientinfo *victim, clientinfo *actor)
@@ -2149,8 +2142,9 @@ namespace server
                         cp->active = true;
                         signal_active(cp->clientnum);
                     }
-                    if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, cp->state.o, pos);
+                    if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, cp->state.o, cp->gameclip, pos, (physstate&0x80)!=0);
                     cp->state.o = pos;
+                    cp->gameclip = (physstate&0x80)!=0;
                 }
                 break;
             }

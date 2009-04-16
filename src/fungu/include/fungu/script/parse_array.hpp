@@ -85,7 +85,18 @@ inline bool parse_array(const_string string, env::frame * frame, ForwardContaine
         if(current == start) throw error(UNEXPECTED_SYMBOL,boost::make_tuple(*current));
         
         if(parsing->is_eval_supported())
-            container.push_back(lexical_cast<typename ForwardContainer::value_type>(parsing->eval(frame).to_string()));
+        {
+            try
+            {
+                container.push_back(lexical_cast<typename ForwardContainer::value_type>(parsing->eval(frame).to_string().copy()));
+            }
+            catch(error err)
+            {
+                if(throw_exception) throw;
+                delete parsing;
+                return false;
+            }
+        }
         
         delete parsing;
     }

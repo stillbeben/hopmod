@@ -55,6 +55,7 @@ inline Target lexical_cast(const Source & src, return_tag<Target>)
 }
 
 const_string    lexical_cast(const std::string & src,return_tag<const_string>);
+std::string     lexical_cast(const const_string & src, return_tag<std::string>);
 int             lexical_cast(const const_string & src, return_tag<int>);
 unsigned int    lexical_cast(const const_string & src, return_tag<unsigned int>);
 const_string    lexical_cast(int src, return_tag<const_string>);
@@ -196,13 +197,13 @@ std::string write_sequence(const ForwardContainer & container)
 template<typename Source>
 inline const_string lexical_cast(const std::vector<Source,std::allocator<Source> > & src,return_tag<const_string>)
 {
-    return write_sequence(src);
+    return const_string(write_sequence(src));
 }
 
 template<typename Source>
 inline const_string lexical_cast(const std::deque<Source,std::allocator<Source> > & src,return_tag<const_string>)
 {
-    return write_sequence(src);
+    return const_string(write_sequence(src));
 }
 
 } //namespace lexical_cast_detail

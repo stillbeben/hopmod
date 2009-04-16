@@ -21,17 +21,17 @@ enum
 
 enum // cube empty-space materials
 {
-    MAT_AIR   = 0,                      // the default, fill the empty space with air
-    MAT_WATER = 1 << MATF_VOLUME_SHIFT, // fill with water, showing waves at the surface
-    MAT_LAVA  = 2 << MATF_VOLUME_SHIFT, // fill with lava
-    MAT_GLASS = 3 << MATF_VOLUME_SHIFT, // behaves like clip but is blended blueish
+    MAT_AIR      = 0,                      // the default, fill the empty space with air
+    MAT_WATER    = 1 << MATF_VOLUME_SHIFT, // fill with water, showing waves at the surface
+    MAT_LAVA     = 2 << MATF_VOLUME_SHIFT, // fill with lava
+    MAT_GLASS    = 3 << MATF_VOLUME_SHIFT, // behaves like clip but is blended blueish
 
-    MAT_NOCLIP = 1 << MATF_CLIP_SHIFT,  // collisions always treat cube as empty
-    MAT_CLIP   = 2 << MATF_CLIP_SHIFT,  // collisions always treat cube as solid
-    MAT_AICLIP = 3 << MATF_CLIP_SHIFT,  // clip monsters only
+    MAT_NOCLIP   = 1 << MATF_CLIP_SHIFT,  // collisions always treat cube as empty
+    MAT_CLIP     = 2 << MATF_CLIP_SHIFT,  // collisions always treat cube as solid
+    MAT_GAMECLIP = 3 << MATF_CLIP_SHIFT,  // game specific clip material
 
-    MAT_DEATH  = 1 << MATF_FLAG_SHIFT,  // force player suicide
-    MAT_EDIT   = 4 << MATF_FLAG_SHIFT   // edit-only surfaces
+    MAT_DEATH    = 1 << MATF_FLAG_SHIFT,  // force player suicide
+    MAT_EDIT     = 4 << MATF_FLAG_SHIFT   // edit-only surfaces
 };
 
 extern void lightent(extentity &e, float height = 8.0f);
@@ -77,7 +77,7 @@ extern bool noedit(bool view = false);
 extern void toggleedit(bool force = true);
 extern void mpeditface(int dir, int mode, selinfo &sel, bool local);
 extern void mpedittex(int tex, int allfaces, selinfo &sel, bool local);
-extern void mpeditmat(int matid, selinfo &sel, bool local);
+extern void mpeditmat(int matid, int filter, selinfo &sel, bool local);
 extern void mpflip(selinfo &sel, bool local);
 extern void mpcopy(editinfo *&e, selinfo &sel, bool local);
 extern void mppaste(editinfo *&e, selinfo &sel, bool local);
@@ -118,6 +118,9 @@ enum
     CON_INIT  = 1<<4,
     CON_ECHO  = 1<<5
 };
+
+extern void conoutf(const char *s, ...);
+extern void conoutf(int type, const char *s, ...);
 
 // menus
 extern vec menuinfrontofplayer();
@@ -270,7 +273,7 @@ extern void endmodelbatches();
 extern void rendermodel(entitylight *light, const char *mdl, int anim, const vec &o, float yaw = 0, float pitch = 0, int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED | MDL_LIGHT, dynent *d = NULL, modelattach *a = NULL, int basetime = 0, int basetime2 = 0, float trans = 1);
 extern void abovemodel(vec &o, const char *mdl);
 extern void rendershadow(dynent *d);
-extern void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, bool ragdoll = false);
+extern void renderclient(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false);
 extern void interpolateorientation(dynent *d, float &interpyaw, float &interppitch);
 extern void setbbfrommodel(dynent *d, const char *mdl);
 extern const char *mapmodelname(int i);
