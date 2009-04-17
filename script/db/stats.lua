@@ -1,5 +1,6 @@
 require "sqlite3"
 dofile("./script/db/sqliteutils.lua")
+require "Json"
 
 local game = nil
 local stats = nil
@@ -43,6 +44,7 @@ function statsmod.updatePlayer(cn)
     local t = statsmod.getPlayerTable(player_id)
     
     t.name = server.player_name(cn)
+    if gamemodeinfo.teams then t.team = server.player_team(cn) end -- useful for stats serialized to json
     t.ipaddr = server.player_ip(cn)
     t.ipaddrlong = server.player_iplong(cn)
     
@@ -89,7 +91,17 @@ function statsmod.commitStats()
         end
     end
     
-    if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+    --if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+    --    stats = nil
+    --    return
+    --end
+    
+    if tonumber(server.stats_use_json) == 1 then
+        statsmod.writeStatsToJsonFile()
+        return
+    end
+    
+    if tonumber(server.stats_use_sqlite) == 0 then
         stats = nil
         return
     end
@@ -191,4 +203,35 @@ function server.playercmd_stats(cn,selection)
         end
         server.player_msg(cn, string.format("Games: %s Frags: %s Deaths: %s Wins: %s Losses: %s",yellow(row.games),green(row.frags),red(row.deaths),green(row.games),red(row.losses)))
     end
+end
+
+function statsmod.writeStatsToJsonFile()
+
+    local d = os.date("%0e%b%Y_%H:%M")
+    local filename = string.format("log/game/%s_%s.json",d, game.map)
+    
+    local file = io.open(filename,"w");
+    
+    local root = {}
+    root.game = game
+    root.players = map_to_array(stats)
+    
+    if gamemodeinfo.teams then
+        
+        root.teams = {}
+        
+        for i,teamname in ipairs(server.teams()) do
+            
+            team = {}
+            team.name = teamname
+            team.score = server.team_score(teamname)
+            team.win = server.team_win(teamname)
+            team.draw = server.team_draw(teamname)
+            
+            table.insert(root.teams, team)
+        end
+    end
+    
+    file:write(Json.Encode(root))
+    file:flush()
 end

@@ -48,6 +48,14 @@ function format_duration(seconds)
     return string.format("%02i:%02i:%02i",hours,mins,seconds)
 end
 
+function map_to_array(map)
+    local result = {}
+    for i,v in pairs(map) do
+        table.insert(result, v)
+    end
+    return result
+end
+
 function formatcol(col, text)
     if text then return "\fs\f" .. col .. text .. "\fr" else return "\f" ..col end
 end

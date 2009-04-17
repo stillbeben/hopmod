@@ -13,6 +13,8 @@ global allow_modevote 1
 
 global record_player_stats 1
 global stats_db_filename "log/stats.sqlite"
+global stats_use_sqlite 1
+global stats_use_json 0
 
 global use_server_maprotation 1
 
