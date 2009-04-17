@@ -289,9 +289,9 @@ sub filterlog {
 	my $line = shift;
 	##### Bot Muting Functions #####
 	if ($line =~ /COMMAND BOTMUTE (.*)/)
-	{ sendtoirc($config->{irc_channel},"\x034BOTMUTE\x03       \x0312$1\x03 muted the IRC bot."); $mute_status = "1"; return;}
+	{ $mute_status = "1"; $irc->yield( nick => $config->{irc_botname}."{M}" ); return;}
         if ($line =~ /COMMAND BOTUNMUTE (.*)/)
-        { $mute_status = "0"; sendtoirc($config->{irc_channel},"\x039BOTUNMUTE\x03       \x0312$1\x03 unmuted the IRC bot."); return;}
+        { $mute_status = "0"; $irc->yield( nick => $config->{irc_botname} );return;}
     ##### Invisible Master ##### 
     if ($line =~ /(\S*\([0-9]+\))(\(*.*\)*): #invadmin/)
     { return "\x039MASTER\x03       \x0312$1\x03 attempted to take invisible master."}
@@ -409,7 +409,7 @@ sub sendtoirc {
 	my $send = shift; 
 	if ($mute_status == "0") {
 		$irc->yield( privmsg => $channel => "$send" );
-	} else { $irc->yield( privmsg => $channel => "\x034IRC BOT is currently MUTED\x03" );}
+	} 
 }
 sub splittoirc {
 	my $channel = shift;
