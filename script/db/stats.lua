@@ -91,10 +91,10 @@ function statsmod.commitStats()
         end
     end
     
-    --if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
-    --    stats = nil
-    --    return
-    --end
+    if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+        stats = nil
+        return
+    end
     
     if tonumber(server.stats_use_json) == 1 then
         statsmod.writeStatsToJsonFile()
@@ -234,4 +234,14 @@ function statsmod.writeStatsToJsonFile()
     
     file:write(Json.Encode(root))
     file:flush()
+end
+
+local find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr")
+if not find_names_by_ip then error(perr) end
+
+function server.find_names_by_ip(ip)
+    local names = {}
+    find_names_by_ip:bind{ipaddr=ip}
+    for row in find_names_by_ip:rows() do table.insert(names, row.name) end
+    return names
 end

@@ -12,6 +12,37 @@
 namespace fungu{
 namespace script{
 
+class table_iterator:public env::object::member_iterator
+{
+    typedef std::map<std::string,env::object::shared_ptr>::const_iterator internal_iterator;
+public:
+    table_iterator(internal_iterator it, internal_iterator end)
+     :m_it(it),m_end(end)
+    {
+        
+    }
+    
+    const_string get_name()const
+    {
+        return m_it->first;
+    }
+    
+    env::object * get_object()const
+    {
+        return m_it->second.get();
+    }
+    
+    bool next()
+    {
+        assert(m_it != m_end);
+        ++m_it;
+        return m_it != m_end;
+    }
+private:
+    internal_iterator m_it;
+    internal_iterator m_end;
+};
+    
 #if 0
 table::table(const json::object * source)
 {
@@ -107,6 +138,12 @@ env::object * table::lookup_member(const_string id)
 bool table::erase_member(const std::string & name)
 {
     return m_members.erase(name);
+}
+
+env::object::member_iterator * table::first_member()const
+{
+    if(m_members.empty()) return NULL;
+    return new table_iterator(m_members.begin(), m_members.end());
 }
 
 } //namespace script

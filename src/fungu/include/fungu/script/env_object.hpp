@@ -17,6 +17,15 @@ public:
     object();
     virtual ~object();
     
+    class member_iterator
+    {
+    public:
+        virtual ~member_iterator(){}
+        virtual const_string get_name()const=0;
+        virtual object * get_object()const=0;
+        virtual bool next()=0;
+    };
+
     enum object_type
     {
         UNCLASSIFIED_OBJECT = 0,
@@ -33,6 +42,7 @@ public:
     virtual result_type value();
     virtual void assign(const any &);
     virtual object * lookup_member(const_string);
+    virtual member_iterator * first_member()const;
     
     virtual const source_context * get_source_context()const;
     

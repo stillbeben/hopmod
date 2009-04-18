@@ -12,15 +12,15 @@ namespace fungu{
 namespace script{
 
 env::object::object()
- :m_refcount(0),
-  m_flags(0)
+:m_refcount(0),
+ m_flags(0)
 {
     
 }
 
 env::object::~object()
 {
-    
+
 }
 
 env::object::object_type env::object::get_object_type()const
@@ -46,6 +46,11 @@ void env::object::assign(const any &)
 }
 
 env::object * env::object::lookup_member(const_string id)
+{
+    return NULL;
+}
+
+env::object::member_iterator * env::object::first_member()const
 {
     return NULL;
 }

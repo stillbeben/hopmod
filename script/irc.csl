@@ -89,3 +89,20 @@ global avgpings (func [] [
 		return (div $pingtotal $playercount)
 	] [return 0]
 ])
+
+global showaliasesbyip (func [ip] [
+    my output ""
+    foreach (find_names_by_ip $ip) [
+        set output (concatword $output $arg2 ", ")
+    ]
+    return $output
+])
+
+global showaliases (func [cn] [
+    my ipaddr (player_ip $cn)
+    my output ""
+    foreach (find_names_by_ip $ip) [
+        set output (concatword $output $arg2 ", ")
+    ]
+    return $output
+])

@@ -26,6 +26,7 @@ public:
     void assign(const any & source);
     object * lookup_member(const_string id);
     bool erase_member(const std::string & name);
+    member_iterator * first_member()const;
 private:
     typedef std::map<std::string,shared_ptr> map;
     map m_members;

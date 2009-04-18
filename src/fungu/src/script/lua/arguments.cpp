@@ -8,6 +8,7 @@
 
 #include "fungu/script/lua/arguments.hpp"
 #include "fungu/script/lua/lua_function.hpp"
+#include "fungu/script/table.hpp"
 #include <limits>
 
 namespace fungu{
@@ -145,7 +146,30 @@ any get_argument_value(lua_State * L)
             obj->set_adopted_flag();
             return obj->get_shared_ptr();
         }
-        case LUA_TTABLE:    //TODO
+        case LUA_TTABLE:
+        {
+            table * outT = new table();
+
+            lua_pushnil(L);
+            while(lua_next(L, -2) != 0)
+            {
+                try
+                {
+                    any value = get_argument_value(L);
+                    lua_pop(L,1);
+                    std::string name = get_argument_value(L).to_string().copy();
+                    outT->assign(name, value);
+                }
+                catch(error)
+                {
+                    delete outT;
+                    throw;
+                }
+            }
+            
+            outT->set_adopted_flag();
+            return outT->get_shared_ptr();
+        }
         default:
             throw error(NO_CAST);
     }

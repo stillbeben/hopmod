@@ -7,6 +7,7 @@
  */
 
 #include "fungu/script/lua/lua_function.hpp"
+#include "fungu/script/lua/arguments.hpp"
 
 namespace fungu{
 namespace script{
@@ -48,11 +49,7 @@ result_type lua_function::apply(apply_arguments & args,env::frame * aFrame)
     }
     if(lua_pcall(L, nargs, 1, 0) != 0)
         throw error(LUA_ERROR,boost::make_tuple(L));
-    else
-    {
-        if(lua_type(L, -1) == LUA_TNIL) return any::null_value();
-        else return const_string(lua_tostring(L,-1)); //const_string ctor will copy the string
-    }
+    else return get_argument_value(L);
 }
 
 int lua_function::apply(lua_State * L)
