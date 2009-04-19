@@ -28,12 +28,16 @@ if not select_player_totals then error(perr) end
 function statsmod.setNewGame()
     game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map}
     stats = {}
+    
+    for i, playerCn in ipairs(server.players()) do
+        statsmod.updatePlayer(server.player_id(playerCn)).playing = true
+    end
 end
 
 function statsmod.getPlayerTable(player_id)
     player_id = tonumber(player_id)
     if stats[player_id] then return stats[player_id] end
-    stats[player_id] = {team_id = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, won = false}
+    stats[player_id] = {team_id = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, win = false}
     return stats[player_id]
 end
 
@@ -42,6 +46,7 @@ function statsmod.updatePlayer(cn)
     local player_id = server.player_id(cn)
     
     local t = statsmod.getPlayerTable(player_id)
+    if not t then return {} end
     
     t.name = server.player_name(cn)
     if gamemodeinfo.teams then t.team = server.player_team(cn) end -- useful for stats serialized to json

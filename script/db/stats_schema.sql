@@ -13,8 +13,8 @@ CREATE TABLE teams (
     game_id             INTEGER REFERENCES games(id),
     name                TEXT,
     score               INTEGER DEFAULT 0,
-    win                 BOOLEAN DEFAULT false,
-    draw                BOOLEAN DEFAULT false
+    win                 BOOLEAN DEFAULT 0,
+    draw                BOOLEAN DEFAULT 0
 );
 
 CREATE TABLE players (
@@ -31,8 +31,8 @@ CREATE TABLE players (
     shots               INTEGER DEFAULT 0,
     damage              INTEGER DEFAULT 0,
     timeplayed          INTEGER DEFAULT 0,
-    finished            BOOLEAN DEFAULT false,
-    win                 BOOLEAN DEFAULT false
+    finished            BOOLEAN DEFAULT 0,
+    win                 BOOLEAN DEFAULT 0
 );
 
 CREATE TABLE playertotals (
