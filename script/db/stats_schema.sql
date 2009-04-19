@@ -23,6 +23,7 @@ CREATE TABLE players (
     team_id             INTEGER REFERENCES teams(id) DEFAULT 0,
     name                TEXT,
     ipaddr              TEXT,
+    country             TEXT,
     frags               INTEGER DEFAULT 0,
     deaths              INTEGER DEFAULT 0,
     suicides            INTEGER DEFAULT 0,
@@ -39,6 +40,7 @@ CREATE TABLE playertotals (
     id                  INTEGER PRIMARY KEY,
     name                TEXT UNIQUE,
     ipaddr              TEXT,
+    country             TEXT,
     first_game          TEXT,
     last_game           TEXT,
     frags               INTEGER DEFAULT 0,
@@ -86,6 +88,7 @@ BEGIN
     INSERT OR IGNORE INTO playertotals (name,first_game) VALUES (new.name,strftime('%s','now'));
     UPDATE playertotals SET 
         ipaddr = new.ipaddr,
+        country = new.country,
         last_game = strftime('%s','now'), 
         frags = frags + new.frags, 
         deaths = deaths + new.deaths,

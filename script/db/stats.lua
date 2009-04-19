@@ -44,6 +44,7 @@ end
 function statsmod.updatePlayer(cn)
 
     local player_id = server.player_id(cn)
+    if player_id == -1 then return {} end
     
     local t = statsmod.getPlayerTable(player_id)
     if not t then return {} end
@@ -52,7 +53,8 @@ function statsmod.updatePlayer(cn)
     if gamemodeinfo.teams then t.team = server.player_team(cn) end -- useful for stats serialized to json
     t.ipaddr = server.player_ip(cn)
     t.ipaddrlong = server.player_iplong(cn)
-    
+    t.country = server.ip_to_country_code(cn)
+
     local frags = server.player_frags(cn)
     local suicides = server.player_suicides(cn)
     
