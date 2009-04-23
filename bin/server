@@ -3,7 +3,7 @@
 export PATH="$PATH:."
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:bin"
 export LUA_PATH="$LUA_PATH;script/package/?.lua"
-export LUA_CPATH="$LUA_CPATH;bin"
+export LUA_CPATH="$LUA_CPATH;bin/lib?.so"
 
 execOnServer(){
     if [ -p serverexec ] 
@@ -59,6 +59,12 @@ case "$1" in
 ;;
     'start_ircbot')
         nohup bin/irc_bot.pl 1>>log/irc.log 2>>log/irc.log </dev/null &
+;;
+    'stop_ircbot')
+        execOnServer stop_ircbot
+;;
+    'script_tests')
+        bin/lunit -i bin/luashell script/db/test/stats_testsuite.lua
 ;;
     *)
         $0 start

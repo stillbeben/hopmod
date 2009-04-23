@@ -94,6 +94,12 @@ const_string lexical_cast(unsigned short src, return_tag<const_string>)
     catch(std::bad_cast){throw error(BAD_CAST);}
 }
 
+const_string lexical_cast(unsigned int src, return_tag<const_string>)
+{
+    try{return const_string::from_int<unsigned int>(src);}
+    catch(std::bad_cast){throw error(BAD_CAST);}
+}
+
 const_string lexical_cast_from_any(const any & arg,return_tag<const_string>)
 {
     return arg.to_string();

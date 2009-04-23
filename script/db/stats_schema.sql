@@ -44,6 +44,7 @@ CREATE TABLE playertotals (
     first_game          TEXT,
     last_game           TEXT,
     frags               INTEGER DEFAULT 0,
+    max_frags           INTEGER DEFAULT 0,
     deaths              INTEGER DEFAULT 0,
     suicides            INTEGER DEFAULT 0,
     teamkills           INTEGER DEFAULT 0,
@@ -56,10 +57,10 @@ CREATE TABLE playertotals (
     timeplayed          INTEGER DEFAULT 0
 );
 
-CREATE INDEX "player_name" on players (name);
-CREATE INDEX "player_ipaddr" on players (ipaddr);
-CREATE INDEX "game_id" on players (game_id ASC);
-CREATE INDEX "playertotals_by_name" on playertotals (name ASC);
+CREATE INDEX "player_name" ON players (name);
+CREATE INDEX "player_ipaddr" ON players (ipaddr);
+CREATE INDEX "game_id" ON players (game_id ASC);
+CREATE INDEX "playertotals_by_name" ON playertotals (name ASC);
 
 CREATE TRIGGER delete_game_trigger AFTER DELETE ON games
 BEGIN
@@ -71,6 +72,7 @@ CREATE TRIGGER delete_player_trigger AFTER DELETE ON players
 BEGIN
     UPDATE playertotals SET
         frags = frags - old.frags,
+        max_frags = (select max(frags) from players where id = old.id),
         deaths = deaths - old.deaths,
         suicides = suicides - old.suicides,
         teamkills = teamkills - old.teamkills,
@@ -90,7 +92,8 @@ BEGIN
         ipaddr = new.ipaddr,
         country = new.country,
         last_game = strftime('%s','now'), 
-        frags = frags + new.frags, 
+        frags = frags + new.frags,
+        max_frags = max(max_frags, new.frags),
         deaths = deaths + new.deaths,
         suicides = suicides + new.suicides,
         teamkills = teamkills + new.teamkills,

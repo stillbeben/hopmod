@@ -6,18 +6,29 @@ static bool reload = false;
 void init_hopmod()
 {
     init_scripting();
+    
+    register_server_script_bindings(get_script_env());
+    
+    register_signals(get_script_env());
+    
     close_listenserver_slot = signal_shutdown.connect(flushserverhost);
     signal_shutdown.connect(shutdown_scripting);
     
-    register_server_script_bindings(get_script_env());
-    register_signals(get_script_env());
     init_scheduler();
+    
     init_script_pipe();
     open_script_pipe("serverexec",511,get_script_env());
+    
     init_script_socket();
     
-    try{fungu::script::execute_file(STARTUP_SCRIPT,get_script_env().get_global_scope());}
-    catch(fungu::script::error_info * error){report_script_error(error);}
+    try
+    {
+        fungu::script::execute_file(STARTUP_SCRIPT,get_script_env().get_global_scope());
+    }
+    catch(fungu::script::error_info * error)
+    {
+        report_script_error(error);
+    }
 }
 
 void reload_hopmod()
@@ -38,6 +49,8 @@ void reload_hopmod()
     disconnect_all_slots();
     
     init_hopmod();
+    
+    signal_started();
 }
 
 void update_hopmod()
@@ -49,6 +62,11 @@ void update_hopmod()
     update_scheduler(totalmillis);
     bantimes.update(totalmillis);
     cleanup_dead_slots();
+}
+
+void started()
+{
+    signal_started();
 }
 
 void shutdown()

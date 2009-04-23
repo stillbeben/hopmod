@@ -10,6 +10,7 @@ namespace server
     namespace aiman
     {
         extern int botlimit;
+        extern bool botbalance;
     }
     
     extern string serverdesc;

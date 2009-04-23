@@ -1,4 +1,4 @@
-
+dofile("./script/preloading.lua")
 dofile("./script/playervars.lua")
 
 -- Copied from http://lua-users.org/wiki/SimpleRound
@@ -131,9 +131,12 @@ function server.unspecall()
     for i,cn in ipairs(server.spectators()) do server.unspec(cn) end
 end
 
-server.event_handler("mapchange", function()
+function update_gamemodeinfo()
     gamemodeinfo = server.gengamemodeinfo()
-end)
+    server.gamemodeinfo = gamemodeinfo
+end
+server.event_handler("mapchange", update_gamemodeinfo)
+update_gamemodeinfo()
 
 function server.console(admin,msg)
     server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))

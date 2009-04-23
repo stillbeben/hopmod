@@ -4,6 +4,7 @@
 #include "player_command.hpp"
 #include "extapi.hpp"
 #include "string_var.hpp"
+#include "utils.hpp"
 #include <fungu/script.hpp>
 #include <fungu/script/variable.hpp>
 using namespace fungu;
@@ -117,6 +118,10 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_ro_var(server::minremain, FUNGU_OBJECT_ID("timeleft"), env);
     script::bind_global_ro_var(totalmillis, FUNGU_OBJECT_ID("uptime"), env);
     script::bind_global_var(maxclients, FUNGU_OBJECT_ID("maxplayers"), env);
+    script::bind_global_var(serverip, FUNGU_OBJECT_ID("serverip"), env);
+    script::bind_global_var(serverport, FUNGU_OBJECT_ID("serverport"), env);
+    script::bind_global_var(mastername, FUNGU_OBJECT_ID("masterserver"), env);
+    script::bind_global_var(allowupdatemaster, FUNGU_OBJECT_ID("updatemaster"), env);
     script::bind_global_var(server::next_gamemode, FUNGU_OBJECT_ID("next_mode"), env);
     script::bind_global_var(server::next_mapname, FUNGU_OBJECT_ID("next_map"), env);
     script::bind_global_var(server::next_gametime, FUNGU_OBJECT_ID("next_gametime"), env);
@@ -124,7 +129,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_funvar<int>(server::getplayercount, FUNGU_OBJECT_ID("playercount"), env);
     script::bind_global_funvar<int>(server::getspeccount, FUNGU_OBJECT_ID("speccount"), env);
     script::bind_global_funvar<int>(server::getbotcount, FUNGU_OBJECT_ID("botcount"), env);
-    script::bind_global_var(server::aiman::botlimit, FUNGU_OBJECT_ID("maxbots"), env);
+    script::bind_global_var(server::aiman::botlimit, FUNGU_OBJECT_ID("botlimit"), env);
+    script::bind_global_var(server::aiman::botbalance, FUNGU_OBJECT_ID("botbalance"), env);
     script::bind_global_func<void (bool)>(server::enable_master_auth, FUNGU_OBJECT_ID("use_master_auth"), env);
     script::bind_global_funvar<const char *>(server::gamemodename, FUNGU_OBJECT_ID("gamemode"), env);
     
@@ -149,4 +155,19 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_const((int)MM_LOCKED, FUNGU_OBJECT_ID("MM_LOCKED"), env);
     script::bind_global_const((int)MM_PRIVATE, FUNGU_OBJECT_ID("MM_PRIVATE"), env);
     script::bind_global_const((int)MM_PASSWORD, FUNGU_OBJECT_ID("MM_PASSWORD"), env);
+    
+    script::bind_global_var(server::sv_text_hit_length, FUNGU_OBJECT_ID("flood_protect_text"), env);
+    script::bind_global_var(server::sv_sayteam_hit_length, FUNGU_OBJECT_ID("flood_protect_sayteam"), env);
+    script::bind_global_var(server::sv_mapvote_hit_length, FUNGU_OBJECT_ID("flood_protect_mapvote"), env);
+    script::bind_global_var(server::sv_switchname_hit_length, FUNGU_OBJECT_ID("flood_protect_switchname"), env);
+    script::bind_global_var(server::sv_switchteam_hit_length, FUNGU_OBJECT_ID("flood_protect_switchteam"), env);
+    
+    //utility
+    script::bind_global_func<std::string (const char *)>(resolve_hostname, FUNGU_OBJECT_ID("gethostbyname"), env);
+    
+    script::bind_global_var(tx_bytes, FUNGU_OBJECT_ID("tx_bytes"), env);
+    script::bind_global_var(rx_bytes, FUNGU_OBJECT_ID("rx_bytes"), env);
+    script::bind_global_var(tx_packets, FUNGU_OBJECT_ID("tx_packets"), env);
+    script::bind_global_var(rx_packets, FUNGU_OBJECT_ID("rx_packets"), env);
+    
 }

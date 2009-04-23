@@ -13,6 +13,7 @@ global allow_modevote 1
 
 global record_player_stats 1
 global stats_db_filename "log/stats.sqlite"
+global stats_debug 0
 global stats_use_sqlite 1
 global stats_use_json 0
 
@@ -59,7 +60,15 @@ global use_best_map_size 0
 global small_gamesize 5
 
 global first_map "metl4"
-global first_mode "ffa"
-global use_first_map 0
+global first_gamemode "ffa"
 
 global use_irc_bot 0
+
+flood_protect_text 1000
+flood_protect_sayteam 1000
+flood_protect_mapvote 1000
+flood_protect_switchteam 1000
+flood_protect_switchname 1000
+
+global teamkill_limit 7
+global teamkill_showlimit 1

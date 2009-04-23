@@ -1,0 +1,45 @@
+
+project : source-location src ;
+
+alias unix :
+    buffer.c
+    auxiliar.c
+    options.c
+    unix.c
+    timeout.c
+    io.c
+    usocket.c
+    /lua//lua ;
+
+lib socket_core :
+    inet.c
+    mime.c
+    tcp.c
+    except.c
+    luasocket.c
+    select.c
+    udp.c
+    unix
+    /lua//lua ;
+
+lib mime_core :
+    mime.c
+    /lua//lua ;
+
+alias socket-package : 
+    http.lua 
+	url.lua 
+	tp.lua 
+	ftp.lua 
+	smtp.lua ;
+
+alias core-package :
+    ltn12.lua
+	socket.lua
+	mime.lua ;
+
+install install-socket_core : socket_core : <install-dependencies>off <location>../../bin ;
+install install-mime_core : mime_core : <install-dependencies>off <location>../../bin ;
+
+install socket-scripts : socket-package : <location>../../script/package/socket ;
+install core-scripts : core-package : <location>../../script/package ;

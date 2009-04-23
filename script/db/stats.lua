@@ -5,21 +5,22 @@ require "Json"
 local game = nil
 local stats = nil
 local evthandlers = {}
-statsmod = {} -- namespace for stats functions
+local statsmod = {} -- namespace for stats functions
 
 local db = sqlite3.open(server.stats_db_filename)
 createMissingTables("./script/db/stats_schema.sql", db)
 
-local perr
+if tonumber(server.stats_debug) == 1 then statsmod.db = db end
 
+local perr
 local insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players) VALUES (:datetime,:duration,:mode,:map,:players)")
 if not insert_game then error(perr) end
 
 local insert_team,perr = db:prepare("INSERT INTO teams (game_id, name, score, win, draw) VALUES (:gameid,:name,:score,:win,:draw)")
 if not insert_team then error(perr) end
 
-local insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, frags, deaths, suicides, teamkills, hits, shots, damage, timeplayed, finished, win) 
-    VALUES(:gameid,:team_id,:name,:ipaddr,:frags,:deaths,:suicides,:teamkills,:hits,:shots,:damage,:timeplayed,:finished,:win)]]
+local insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, frags, deaths, suicides, teamkills, hits, shots, damage, timeplayed, finished, win) 
+    VALUES(:gameid,:team_id,:name,:ipaddr,:country,:frags,:deaths,:suicides,:teamkills,:hits,:shots,:damage,:timeplayed,:finished,:win)]]
 if not insert_player then error(perr) end
 
 local select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
@@ -30,7 +31,7 @@ function statsmod.setNewGame()
     stats = {}
     
     for i, playerCn in ipairs(server.players()) do
-        statsmod.updatePlayer(server.player_id(playerCn)).playing = true
+        statsmod.updatePlayer(playerCn).playing = true
     end
 end
 
@@ -44,13 +45,13 @@ end
 function statsmod.updatePlayer(cn)
 
     local player_id = server.player_id(cn)
-    if player_id == -1 then return {} end
+    if stats == nil or player_id == -1 then return {} end
     
     local t = statsmod.getPlayerTable(player_id)
     if not t then return {} end
     
     t.name = server.player_name(cn)
-    if gamemodeinfo.teams then t.team = server.player_team(cn) end -- useful for stats serialized to json
+    if server.gamemodeinfo.teams then t.team = server.player_team(cn) end -- useful for stats serialized to json
     t.ipaddr = server.player_ip(cn)
     t.ipaddrlong = server.player_iplong(cn)
     t.country = server.ip_to_country_code(cn)
@@ -119,7 +120,7 @@ function statsmod.commitStats()
     insert_game:exec()
     local game_id = db:last_insert_rowid()
     
-    if gamemodeinfo.teams then
+    if server.gamemodeinfo.teams then
         for i,teamname in ipairs(server.teams()) do
             
             team = {}
@@ -152,8 +153,8 @@ function statsmod.commitStats()
     local cpu_time = os.clock() - cpu_start
     local real_time = os.time() - real_start
     
-    if real_time > 0 or cpu_time > 0 then
-        print(string.format("committed player stats to database: cpu %i secs, real %i secs.",cpu_time,real_time))
+    if real_time > 0 or cpu_time > 0.1 then
+        print(string.format("committed player stats to database: cpu %f secs, real %f secs.",cpu_time,real_time))
     end
     
     stats = nil
@@ -198,7 +199,7 @@ end)
 function server.playercmd_stats(cn,selection)
     if not selection then
         server.player_msg(cn,string.format("Frags: %s Deaths: %s Accuracy %s",green(server.player_frags(cn)),red(server.player_deaths(cn)),yellow(server.player_accuracy(cn).."%")))
-        if gamemodeinfo.teams then
+        if server.gamemodeinfo.teams then
             server.player_msg(cn,string.format("Teamkills: %s",red(server.player_teamkills(cn))))
         end
     elseif selection == "total" then
@@ -223,7 +224,7 @@ function statsmod.writeStatsToJsonFile()
     root.game = game
     root.players = map_to_array(stats)
     
-    if gamemodeinfo.teams then
+    if server.gamemodeinfo.teams then
         
         root.teams = {}
         
@@ -252,3 +253,5 @@ function server.find_names_by_ip(ip)
     for row in find_names_by_ip:rows() do table.insert(names, row.name) end
     return names
 end
+
+return statsmod

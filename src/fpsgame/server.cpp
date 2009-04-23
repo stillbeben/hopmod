@@ -237,7 +237,8 @@ namespace server
         freqlimit sv_text_hit;
         freqlimit sv_sayteam_hit;
         freqlimit sv_mapvote_hit;
-        freqlimit sv_initc2s_hit;
+        freqlimit sv_switchname_hit;
+        freqlimit sv_switchteam_hit;
         std::string disconnect_reason;
         bool active;
         
@@ -245,7 +246,8 @@ namespace server
          : sv_text_hit(sv_text_hit_length),
            sv_sayteam_hit(sv_sayteam_hit_length),
            sv_mapvote_hit(sv_mapvote_hit_length),
-           sv_initc2s_hit(sv_initc2s_hit_length)
+           sv_switchname_hit(sv_switchname_hit_length),
+           sv_switchteam_hit(sv_switchteam_hit_length)
         { reset(); }
         
         ~clientinfo() { events.deletecontentsp(); }
@@ -309,13 +311,13 @@ namespace server
             sendf(clientnum, 1, "ris", SV_SERVMSG, text);
         }
         
-        bool check_flooding(freqlimit & hit,const char * activity = NULL)
+        bool check_flooding(freqlimit & hit,const char * activity = NULL,bool sendwarning = true)
         {
             int remaining = hit.next(totalmillis);
             bool flooding = remaining > 999;
-            if(flooding && activity)
+            if(flooding && activity && sendwarning)
             {
-                defformatstring(blockedinfo)(RED "(Flood Protection) You are blocked from %s for the next %i seconds.", activity, remaining/1000);
+                defformatstring(blockedinfo)(RED "[Flood Protection] You are blocked from %s for the next %i seconds.", activity, remaining/1000);
                 sendprivtext(blockedinfo);
             }
             return flooding;
@@ -359,16 +361,17 @@ namespace server
 
     #define MM_MODE 0xF
     #define MM_AUTOAPPROVE 0x1000
-    #define MM_DEFAULT (MM_MODE | MM_AUTOAPPROVE)
+    #define MM_PRIVSERV (MM_MODE | MM_AUTOAPPROVE)
+    #define MM_PUBSERV ((1<<MM_OPEN) | (1<<MM_VETO))
+
+    bool allow_mm_veto = false;
+    bool allow_mm_locked = false;
+    bool allow_mm_private = false;
 
     string next_gamemode = "";
     string next_mapname = "";
     int next_gametime = -1;
-    
-    bool allow_mm_veto;
-    bool allow_mm_locked;
-    bool allow_mm_private;
-    
+
     bool notgotitems = true;        // true when map has changed and waiting for clients to send item
     int gamemode = 0;
     int gamemillis = 0, gamelimit = 0;
@@ -380,7 +383,7 @@ namespace server
     int interm = 0, minremain = 0;
     bool mapreload = false;
     enet_uint32 lastsend = 0;
-    int mastermode = MM_OPEN, mastermask = MM_DEFAULT;
+    int mastermode = MM_OPEN, mastermask = MM_PRIVSERV;
     int currentmaster = -1;
     bool masterupdate = false;
     string masterpass = "";
@@ -526,7 +529,7 @@ namespace server
             case 'n': copystring(serverdesc, &arg[2]); return true;
             case 'y': copystring(serverpass, &arg[2]); return true;
             case 'p': copystring(masterpass, &arg[2]); return true;
-            case 'o': if(atoi(&arg[2])) mastermask = (1<<MM_OPEN) | (1<<MM_VETO); return true;
+            case 'o': {mastermask = (atoi(&arg[2]) ? MM_PUBSERV : MM_PRIVSERV); return true;}
             case 'g': aiman::botlimit = clamp(atoi(&arg[2]), 0, MAXBOTS); return true;
         }
         return false;
@@ -1229,7 +1232,7 @@ namespace server
 
     int welcomepacket(packetbuf &p, clientinfo *ci)
     {
-        int hasmap = (m_edit && (clients.length()>1 || (ci && ci->local))) || (smapname[0] && (minremain>0 || (ci && ci->state.state==CS_SPECTATOR) || numclients(ci ? ci->clientnum : -1)));
+        int hasmap = (m_edit && (clients.length()>1 || (ci && ci->local))) || (smapname[0] && (minremain>0 || (ci && ci->state.state==CS_SPECTATOR) || numclients(ci && ci->local ? ci->clientnum : -1)));
         putint(p, SV_WELCOME);
         putint(p, hasmap);
         if(hasmap)
@@ -1348,6 +1351,7 @@ namespace server
         stopdemo();
         pausegame(false);
         
+        if(smode) smode->reset(false);
         aiman::clearai();
         
         mapreload = false;
@@ -1415,7 +1419,7 @@ namespace server
         {
             clientinfo *oi = clients[i];
             if(oi->state.state==CS_SPECTATOR && !oi->privilege && !oi->local) continue;
-            if(oi->state.state!=AI_NONE) continue;
+            if(oi->state.aitype!=AI_NONE) continue;
             maxvotes++;
             if(!oi->mapvote[0]) continue;
             votecount *vc = NULL;
@@ -1511,10 +1515,8 @@ namespace server
         sendf(-1, 1, "ri6", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.armour, ts.health); 
         if(target!=actor && !hitpush.iszero()) 
         {
-            vec v(hitpush);
-            if(!v.iszero()) v.normalize();
-            sendf(ts.health<=0 ? -1 : target->ownernum, 1, "ri7", SV_HITPUSH, target->clientnum, gun, damage,
-                int(v.x*DNF), int(v.y*DNF), int(v.z*DNF));
+            ivec v = vec(hitpush).rescale(DNF);
+            sendf(ts.health<=0 ? -1 : target->ownernum, 1, "ri7", SV_HITPUSH, target->clientnum, gun, damage, v.x, v.y, v.z);
         }
         if(ts.health<=0)
         {
@@ -1863,6 +1865,9 @@ namespace server
         connects.add(ci);
         if(!m_mp(gamemode)) return DISC_PRIVATE;
         sendservinfo(ci);
+        
+        if(!clients.length() && mapreload) selectnextgame();
+        
         return DISC_NONE;
     }
 
@@ -2009,7 +2014,7 @@ namespace server
         if(ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) return;
         if(mapdata) DELETEP(mapdata);
         if(!len) return;
-        mapdata = opentempfile("w+b");
+        mapdata = opentempfile("mapdata","w+b");
         if(!mapdata) { sendf(sender, 1, "ris", SV_SERVMSG, "failed to open temporary file for map"); return; }
         mapdata->write(data, len);
         defformatstring(msg)("[%s uploaded map to server, \"/getmap\" to receive it]", colorname(ci));
@@ -2177,12 +2182,6 @@ namespace server
                     ci->state.state = CS_EDITING;
                 }
                 else ci->state.state = ci->state.editstate;
-                if(val)
-                {
-                    ci->events.setsizenodelete(0);
-                    ci->state.rockets.reset();
-                    ci->state.grenades.reset();
-                }
                 QUEUE_MSG;
                 break;
             }
@@ -2367,6 +2366,11 @@ namespace server
                 }
                 copystring(ci->name,text);
                 QUEUE_STR(ci->name);
+                
+                // Unable to block rename so only option is to kick the player.
+                if(ci->check_flooding(ci->sv_switchname_hit, "switching name", false))
+                    kick(ci->clientnum, 60, "server", "switching between names too quickly");
+
                 break;
             }
 
@@ -2381,33 +2385,21 @@ namespace server
             {
                 getstring(text, p);
                 filtertext(text, text, false, MAXTEAMLEN);
-                if(strcmp(ci->team, text))
+                if(strcmp(ci->team, text) && m_teammode)
                 {
-                    if(m_teammode && smode && !smode->canchangeteam(ci, ci->team, text))
-                        sendf(sender, 1, "riis", SV_SETTEAM, sender, ci->team);
-                    else
+                    bool cancel = ci->check_flooding(ci->sv_switchteam_hit,"switching teams") || 
+                        (smode && !smode->canchangeteam(ci,ci->team,text)) ||
+                        signal_chteamrequest(ci->clientnum, ci->team, text) == -1;
+                    
+                    if(!cancel)
                     {
                         if(smode && ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, text);
+                        signal_reteam(ci->clientnum, ci->team, text);
                         copystring(ci->team, text);
                         aiman::changeteam(ci);
                         sendf(-1, 1, "riis", SV_SETTEAM, sender, ci->team);
                     }
-                    
-                    if(m_teammode)
-                    {
-                        bool cancel = (smode && !smode->canchangeteam(ci,ci->team,text)) ||
-                            signal_chteamrequest(ci->clientnum, ci->team, text) == -1;
-                        
-                        if(!cancel)
-                        {
-                            if(smode && ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, text);
-                            signal_reteam(ci->clientnum, ci->team, text);
-                            copystring(ci->team, text);
-                            aiman::changeteam(ci);
-                            sendf(-1, 1, "riis", SV_SETTEAM, sender, ci->team);
-                        }
-                        else sendf(sender, 1, "riis", SV_SETTEAM, sender, ci->team);
-                    }
+                    else sendf(sender, 1, "riis", SV_SETTEAM, sender, ci->team);
                 }
                 break;
             }
@@ -2731,7 +2723,7 @@ namespace server
             }
         }
     }
-
+    
     int laninfoport() { return SAUERBRATEN_LANINFO_PORT; }
     int serverinfoport(int servport) { return servport < 0 ? SAUERBRATEN_SERVINFO_PORT : servport+1; }
     int serverport(int infoport) { return infoport < 0 ? SAUERBRATEN_SERVER_PORT : infoport-1; }

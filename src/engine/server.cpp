@@ -173,6 +173,7 @@ vector<client *> clients;
 
 ENetHost *serverhost = NULL;
 size_t bsend = 0, brec = 0;
+size_t tx_packets = 0 , rx_packets = 0, tx_bytes = 0, rx_bytes = 0;
 int laststatus = 0; 
 ENetSocket pongsock = ENET_SOCKET_NULL, lansock = ENET_SOCKET_NULL;
 
@@ -207,6 +208,8 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
         {
             enet_peer_send(clients[n]->peer, chan, packet);
             bsend += packet->dataLength;
+            tx_bytes += packet->dataLength;
+            tx_packets++;
             break;
         }
 
@@ -380,7 +383,7 @@ int connectwithtimeout(ENetSocket sock, const char *hostname, const ENetAddress 
 
 ENetSocket mastersock = ENET_SOCKET_NULL;
 ENetAddress masteraddress = { ENET_HOST_ANY, ENET_PORT_ANY }, serveraddress = { ENET_HOST_ANY, ENET_PORT_ANY };
-const char *mastername = server::defaultmaster();
+string mastername = "";
 bool allowupdatemaster = true;
 int lastupdatemaster = 0;
 vector<char> masterout, masterin;
@@ -400,8 +403,8 @@ void disconnectmaster()
 
 ENetSocket connectmaster()
 {
-    if(!mastername) return ENET_SOCKET_NULL;
-
+    if(!mastername[0]) return ENET_SOCKET_NULL;
+    
     if(masteraddress.host == ENET_HOST_ANY)
     {
 #ifdef STANDALONE
@@ -562,10 +565,10 @@ void checkserversockets()        // reply all server info requests
     if(mastersock != ENET_SOCKET_NULL && ENET_SOCKETSET_CHECK(sockset, mastersock)) flushmasterinput();
 }
 
-#define DEFAULTCLIENTS 6
+#define DEFAULTCLIENTS 8
 
 int uprate = 0, maxclients = DEFAULTCLIENTS;
-const char *serverip = "";
+string serverip = "";
 int serverport = server::serverport();
 
 #ifdef STANDALONE
@@ -574,7 +577,7 @@ int curtime = 0, lastmillis = 0, totalmillis = 0;
 
 void updatemasterserver()
 {
-    if(!mastername || !allowupdatemaster) return;
+    if(!mastername[0] || !allowupdatemaster) return;
 
     requestmasterf("regserv %d\n", serverport);
 }
@@ -649,6 +652,8 @@ void serverslice(bool dedicated, uint timeout)   // main server update, called f
             case ENET_EVENT_TYPE_RECEIVE:
             {
                 brec += event.packet->dataLength;
+                rx_bytes += event.packet->dataLength;
+                rx_packets++;
                 client *c = (client *)event.peer->data;
                 if(c) process(event.packet, c->num, event.channelID);
                 if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
@@ -707,6 +712,9 @@ void rundedicatedserver()
     #ifdef WIN32
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
     #endif
+    
+    server::started();
+    
     printf("dedicated server started, waiting for clients...\n*READY*\n\n");
     fflush(stdout);
     fflush(stderr);
@@ -731,7 +739,7 @@ bool servererror(bool dedicated, const char *desc)
 bool setuplistenserver(bool dedicated)
 {
     ENetAddress address = { ENET_HOST_ANY, serverport <= 0 ? server::serverport() : serverport };
-    if(*serverip)
+    if(serverip[0])
     {
         if(enet_address_set_host(&address, serverip)<0) conoutf(CON_WARN, "WARNING: server ip not resolved");
         else serveraddress.host = address.host;
@@ -769,9 +777,11 @@ void initserver(bool listen, bool dedicated)
     sigaction(SIGINT, &terminate_action, NULL);
     sigaction(SIGTERM, &terminate_action, NULL);
     
-    if(listen) setuplistenserver(dedicated);
-
+    copystring(mastername, server::defaultmaster());
+    
     server::serverinit();
+    
+    if(listen) setuplistenserver(dedicated);
 
     if(listen)
     {
@@ -826,9 +836,9 @@ bool serveroption(char *opt)
             else maxclients = DEFAULTCLIENTS;
             return true;
         }
-        case 'i': serverip = opt+2; return true;
+        case 'i': copystring(serverip, opt+2); return true;
         case 'j': serverport = atoi(opt+2); if(serverport<=0) serverport = server::serverport(); return true;
-        case 'm': mastername = opt[2] ? opt+2 : NULL; allowupdatemaster = mastername!=NULL; return true;
+        case 'm': copystring(mastername,opt+2); return true;
         default: return false;
     }
 }

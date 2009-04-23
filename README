@@ -11,4 +11,7 @@ To compile and install the server:
 
     ./configure
     ./bin/bjam
+    
 
+    ./bin/server
+    

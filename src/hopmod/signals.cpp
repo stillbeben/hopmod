@@ -19,6 +19,7 @@ boost::signal<int (int,const char *,const char *), proceed> signal_chteamrequest
 boost::signal<void (int,int,std::string,std::string)> signal_kick;
 boost::signal<int (int,const char *), proceed> signal_text;
 boost::signal<int (int,const char *), proceed> signal_sayteam;
+boost::signal<void ()> signal_started;
 boost::signal<void ()> signal_shutdown;
 boost::signal<void ()> signal_intermission;
 boost::signal<void ()> signal_finishedgame;
@@ -104,6 +105,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_kick,"kick",normal_error_handler);
     slots.register_signal(signal_text,"text",proceed_error_handler);
     slots.register_signal(signal_sayteam,"sayteam",proceed_error_handler);
+    slots.register_signal(signal_started, "started", normal_error_handler);
     slots.register_signal(signal_shutdown,"shutdown",normal_error_handler, boost::signals::at_front);
     slots.register_signal(signal_intermission,"intermission", normal_error_handler);
     slots.register_signal(signal_finishedgame, "finishedgame", normal_error_handler);
@@ -150,6 +152,7 @@ void disconnect_all_slots()
     signal_kick.disconnect_all_slots();
     signal_text.disconnect_all_slots();
     signal_sayteam.disconnect_all_slots();
+    signal_started.disconnect_all_slots();
     signal_shutdown.disconnect_all_slots();
     signal_intermission.disconnect_all_slots();
     signal_finishedgame.disconnect_all_slots();

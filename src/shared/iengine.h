@@ -291,6 +291,14 @@ extern void cleanragdoll(dynent *d);
 #define MAXTRANS 5000                  // max amount of data to swallow in 1 go
 
 extern int maxclients;
+extern string serverip;
+extern int serverport;
+extern string mastername;
+extern bool allowupdatemaster;
+extern size_t tx_packets;
+extern size_t rx_packets;
+extern size_t tx_bytes;
+extern size_t rx_bytes;
 
 enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_NUM };
 

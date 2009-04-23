@@ -69,6 +69,7 @@ float           lexical_cast(const const_string & src,return_tag<float>);
 const_string    lexical_cast(float src,return_tag<const_string>);
 unsigned short  lexical_cast(const const_string & src,return_tag<unsigned short>);
 const_string    lexical_cast(unsigned short src, return_tag<const_string>);
+const_string    lexical_cast(unsigned int src, return_tag<const_string>);
 const_string    lexical_cast(const char * src,return_tag<const_string>);
 
 template<typename Source>

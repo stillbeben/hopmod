@@ -43,6 +43,7 @@ extern boost::signal<void (int,const char *,bool)>                  signal_auth;
 extern boost::signal<void (int)>                                    signal_addbot;
 extern boost::signal<void (int)>                                    signal_delbot;
 extern boost::signal<void (int)>                                    signal_mapcrcfail;
+extern boost::signal<void (int,int)>                                signal_teamkill;
 
 // Game Events
 extern boost::signal<void ()>                                signal_intermission;
@@ -56,6 +57,7 @@ extern boost::signal<void (int,const char *)>                signal_beginrecord;
 extern boost::signal<void (int,int)>                         signal_endrecord;
 
 // Server Events
+extern boost::signal<void ()> signal_started;
 extern boost::signal<void ()> signal_shutdown;
 extern boost::signal<void (const char *,const char *)>      signal_votepassed;
 extern boost::signal<void ()> signal_reloadhopmod;

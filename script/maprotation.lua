@@ -51,15 +51,10 @@ server.event_handler("setnextgame",function()
     
     local use_first_map = tonumber(server.use_first_map)
     
-    if tonumber(server.playercount) == 0 and use_first_map then
-        server.next_mode = server.first_mode
-        server.next_map = server.first_map
-    else
-        if tonumber(server.use_server_maprotation) == 1 then
-            server.next_mode = server.gamemode
-            local nm = nextmap(server.gamemode, gamecount)
-            if nm then server.next_map = nm end
-        end
+    if tonumber(server.use_server_maprotation) == 1 then
+        server.next_mode = server.gamemode
+        local nm = nextmap(server.gamemode, gamecount)
+        if nm then server.next_map = nm end
     end
     
     gamecount = gamecount + 1
@@ -85,5 +80,3 @@ function server.playercmd_nextmap(cn)
     -- TODO keep an official map rotation list
     server.player_msg(cn, "?")
 end
-
-server.reload_maprotation()

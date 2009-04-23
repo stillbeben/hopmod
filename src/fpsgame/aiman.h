@@ -253,13 +253,12 @@ namespace aiman
     void setbotbalance(clientinfo *ci, bool balance)
     {
         if(ci && !ci->local && !ci->privilege) return;
-        botbalance = balance;
+        botbalance = balance ? 1 : 0;
         dorefresh = true;
         defformatstring(msg)("bot team balancing is now %s", botbalance ? "enabled" : "disabled");
         sendservmsg(msg);
     }
 
-        
     void changemap()
     {
         dorefresh = true;
