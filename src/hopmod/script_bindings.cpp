@@ -137,7 +137,19 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_veto"), env);
     script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_locked"), env);
     script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_private"), env);
-
+    
+    script::bind_global_var(server::allow_item[I_SHELLS-I_SHELLS], FUNGU_OBJECT_ID("allow_shells"), env);
+    script::bind_global_var(server::allow_item[I_BULLETS-I_SHELLS], FUNGU_OBJECT_ID("allow_bullets"), env);
+    script::bind_global_var(server::allow_item[I_ROCKETS-I_SHELLS], FUNGU_OBJECT_ID("allow_rockets"), env);
+    script::bind_global_var(server::allow_item[I_ROUNDS-I_SHELLS], FUNGU_OBJECT_ID("allow_rounds"), env);
+    script::bind_global_var(server::allow_item[I_GRENADES-I_SHELLS], FUNGU_OBJECT_ID("allow_grenades"), env);
+    script::bind_global_var(server::allow_item[I_CARTRIDGES-I_SHELLS], FUNGU_OBJECT_ID("allow_cartridges"), env);
+    script::bind_global_var(server::allow_item[I_HEALTH-I_SHELLS], FUNGU_OBJECT_ID("allow_health"), env);
+    script::bind_global_var(server::allow_item[I_BOOST-I_SHELLS], FUNGU_OBJECT_ID("allow_healthboost"), env);
+    script::bind_global_var(server::allow_item[I_GREENARMOUR-I_SHELLS], FUNGU_OBJECT_ID("allow_greenarmour"), env);
+    script::bind_global_var(server::allow_item[I_YELLOWARMOUR-I_SHELLS], FUNGU_OBJECT_ID("allow_yellowarmour"), env);
+    script::bind_global_var(server::allow_item[I_QUAD-I_SHELLS], FUNGU_OBJECT_ID("allow_quad"), env);
+    
     //script_socket functions
     script::bind_global_func<bool ()>(script_socket_supported, FUNGU_OBJECT_ID("script_socket_supported?"), env);
     script::bind_global_func<bool (unsigned short)>(open_script_socket, FUNGU_OBJECT_ID("script_socket_server"), env);

@@ -29,6 +29,7 @@ namespace server
     extern bool allow_mm_veto;
     extern bool allow_mm_locked;
     extern bool allow_mm_private;
+    extern bool allow_item[11];
     
     extern void init_hopmod();
     extern void reload_hopmod();
