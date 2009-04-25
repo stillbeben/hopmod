@@ -86,8 +86,6 @@ static struct gamemodeinfo
     const char *info;
 } gamemodes[] =
 {
-    { "slowmo SP", M_LOCAL | M_CLASSICSP | M_SLOWMO, NULL },
-    { "slowmo DMSP", M_LOCAL | M_DMSP | M_SLOWMO, NULL },
     { "SP", M_LOCAL | M_CLASSICSP, NULL },
     { "DMSP", M_LOCAL | M_DMSP, NULL },
     { "demo", M_DEMO | M_LOCAL, NULL},
@@ -108,7 +106,7 @@ static struct gamemodeinfo
     { "insta protect", M_NOITEMS | M_INSTA | M_CTF | M_PROTECT | M_TEAM, "Instagib Protect The Flag: Touch \fs\f3the enemy flag\fr to score points for \fs\f1your team\fr. Pick up \fs\f1your flag\fr to protect it. \fs\f1Your team\fr loses points if a dropped flag resets. You spawn with full rifle ammo and die instantly from one shot. There are no items." }
 };
 
-#define STARTGAMEMODE (-5)
+#define STARTGAMEMODE (-3)
 #define NUMGAMEMODES ((int)(sizeof(gamemodes)/sizeof(gamemodes[0])))
 
 #define m_valid(mode)          ((mode) >= STARTGAMEMODE && (mode) < STARTGAMEMODE + NUMGAMEMODES)
@@ -139,7 +137,6 @@ static struct gamemodeinfo
 #define m_sp           (m_check(gamemode, M_DMSP | M_CLASSICSP))
 #define m_dmsp         (m_check(gamemode, M_DMSP))
 #define m_classicsp    (m_check(gamemode, M_CLASSICSP))
-#define m_slowmo       (m_check(gamemode, M_SLOWMO))
 
 enum { MM_AUTH = -1, MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE, MM_PASSWORD, MM_START = MM_AUTH };
 
@@ -208,7 +205,7 @@ enum
     SV_TAKEFLAG, SV_RETURNFLAG, SV_RESETFLAG, SV_INVISFLAG, SV_TRYDROPFLAG, SV_DROPFLAG, SV_SCOREFLAG, SV_INITFLAGS,
     SV_SAYTEAM,
     SV_CLIENT,
-    SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS,
+    SV_AUTHTRY, SV_AUTHCHAL, SV_AUTHANS, SV_REQAUTH,
     SV_PAUSEGAME,
     SV_ADDBOT, SV_DELBOT, SV_INITAI, SV_FROMAI, SV_BOTLIMIT, SV_BOTBALANCE,
     SV_MAPCRC, SV_CHECKMAPS,
@@ -235,7 +232,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     SV_TAKEFLAG, 2, SV_RETURNFLAG, 3, SV_RESETFLAG, 4, SV_INVISFLAG, 3, SV_TRYDROPFLAG, 1, SV_DROPFLAG, 6, SV_SCOREFLAG, 6, SV_INITFLAGS, 6,   
     SV_SAYTEAM, 0, 
     SV_CLIENT, 0,
-    SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0,
+    SV_AUTHTRY, 0, SV_AUTHCHAL, 0, SV_AUTHANS, 0, SV_REQAUTH, 0,
     SV_PAUSEGAME, 2,
     SV_ADDBOT, 2, SV_DELBOT, 1, SV_INITAI, 0, SV_FROMAI, 2, SV_BOTLIMIT, 2, SV_BOTBALANCE, 2,
     SV_MAPCRC, 0, SV_CHECKMAPS, 1,
@@ -631,7 +628,7 @@ namespace game
     extern void damaged(int damage, fpsent *d, fpsent *actor, bool local = true);
     extern void killed(fpsent *d, fpsent *actor);
     extern void timeupdate(int timeremain);
-    extern void msgsound(int n, fpsent *d = NULL);
+    extern void msgsound(int n, physent *d = NULL);
 
     enum
     {

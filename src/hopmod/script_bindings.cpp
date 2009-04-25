@@ -4,7 +4,6 @@
 #include "player_command.hpp"
 #include "extapi.hpp"
 #include "string_var.hpp"
-#include "utils.hpp"
 #include <fungu/script.hpp>
 #include <fungu/script/variable.hpp>
 using namespace fungu;
@@ -42,6 +41,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_id, FUNGU_OBJECT_ID("player_id"), env);
     script::bind_global_func<int (int)>(server::player_sessionid, FUNGU_OBJECT_ID("player_sessionid"), env);
     script::bind_global_func<int (int)>(server::player_ping, FUNGU_OBJECT_ID("player_ping"), env);
+    script::bind_global_func<int (int)>(server::player_lag, FUNGU_OBJECT_ID("player_lag"), env);
     script::bind_global_func<const char * (int)>(server::player_ip, FUNGU_OBJECT_ID("player_ip"), env);
     script::bind_global_func<int (int)>(server::player_iplong, FUNGU_OBJECT_ID("player_iplong"), env);
     script::bind_global_func<const char * (int)>(server::player_status, FUNGU_OBJECT_ID("player_status"), env);

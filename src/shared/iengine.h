@@ -299,6 +299,8 @@ extern size_t tx_packets;
 extern size_t rx_packets;
 extern size_t tx_bytes;
 extern size_t rx_bytes;
+extern int prog_argc;
+extern char * const * prog_argv;
 
 enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_NUM };
 

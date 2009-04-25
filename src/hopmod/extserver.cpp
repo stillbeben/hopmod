@@ -164,6 +164,7 @@ const char * player_ip(int cn){return get_ci(cn)->hostname();}
 int player_iplong(int cn){return getclientip(get_ci(cn)->clientnum);}
 int player_status_code(int cn){return get_ci(cn)->state.state;}
 int player_ping(int cn){return get_ci(cn)->ping;}
+int player_lag(int cn){return get_ci(cn)->lag;}
 int player_frags(int cn){return get_ci(cn)->state.frags;}
 int player_deaths(int cn){return get_ci(cn)->state.deaths;}
 int player_suicides(int cn){return get_ci(cn)->state.suicides;}

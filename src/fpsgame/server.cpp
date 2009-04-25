@@ -229,7 +229,7 @@ namespace server
         vector<clientinfo *> bots;
         uint authreq;
         string authname;
-        int ping, aireinit;
+        int ping, lastposupdate, lag, aireinit;
         string clientmap;
         int mapcrc;
         bool warned, gameclip;
@@ -290,6 +290,8 @@ namespace server
             position.setsizenodelete(0);
             messages.setsizenodelete(0);
             ping = 0;
+            lastposupdate = 0;
+            lag = 0;
             aireinit = 0;
             mapchange();
         }
@@ -1966,7 +1968,7 @@ namespace server
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        sendf(ci->clientnum, 1, "riis", SV_AUTHCHAL, id, val);
+        sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, "", id, val);
     }
 
     uint nextauthreq = 0;
@@ -2016,7 +2018,7 @@ namespace server
         if(ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) return;
         if(mapdata) DELETEP(mapdata);
         if(!len) return;
-        mapdata = opentempfile("mapdata","w+b");
+        mapdata = opentempfile("mapdata", "w+b");
         if(!mapdata) { sendf(sender, 1, "ris", SV_SERVMSG, "failed to open temporary file for map"); return; }
         mapdata->write(data, len);
         defformatstring(msg)("[%s uploaded map to server, \"/getmap\" to receive it]", colorname(ci));
@@ -2146,8 +2148,14 @@ namespace server
                     }
                     if(cp->state.state==CS_ALIVE && !cp->active)
                     {
+                        cp->lastposupdate = totalmillis - 30;
                         cp->active = true;
                         signal_active(cp->clientnum);
+                    }
+                    if(cp->active)
+                    {
+                        cp->lag = (std::max(30,cp->lag)*10 + (totalmillis - cp->lastposupdate))/12;
+                        cp->lastposupdate = totalmillis;
                     }
                     if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, cp->state.o, cp->gameclip, pos, (physstate&0x80)!=0);
                     cp->state.o = pos;
@@ -2182,6 +2190,9 @@ namespace server
                 {
                     ci->state.editstate = ci->state.state;
                     ci->state.state = CS_EDITING;
+                    ci->events.setsizenodelete(0);
+                    ci->state.rockets.reset();
+                    ci->state.grenades.reset();
                 }
                 else ci->state.state = ci->state.editstate;
                 QUEUE_MSG;
@@ -2689,16 +2700,20 @@ namespace server
 
             case SV_AUTHTRY:
             {
-                getstring(text, p);
-                tryauth(ci, text);
+                string desc, name;
+                getstring(desc, p, sizeof(desc)); // unused for now
+                getstring(name, p, sizeof(name));
+                if(!desc[0]) tryauth(ci, name);
                 break;
             }
 
             case SV_AUTHANS:
             {
+                string desc, ans;
+                getstring(desc, p, sizeof(desc)); // unused for now
                 uint id = (uint)getint(p);
-                getstring(text, p);
-                answerchallenge(ci, id, text);
+                getstring(ans, p, sizeof(ans));
+                if(!desc[0]) answerchallenge(ci, id, ans);
                 break;
             }
 

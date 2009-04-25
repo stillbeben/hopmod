@@ -43,6 +43,7 @@ namespace server
     extern const char * player_privilege(int);
     extern int player_privilege_code(int);
     extern int player_ping(int);
+    extern int player_lag(int);
     extern const char * player_ip(int);
     extern int player_iplong(int);
     extern const char * player_status(int);

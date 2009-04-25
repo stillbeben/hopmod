@@ -33,7 +33,7 @@ function onConnect(cn)
 end
 
 function onText(cn,text)
-
+    
     local block = 0
     
     if server.process_player_command(cn,text) then block = -1 end
