@@ -70,6 +70,7 @@ namespace server
     extern void server_setadmin(int);
     extern void player_slay(int);
     extern bool player_changeteam(int,const char *);
+    extern int player_authreq(int);
     
     extern void team_msg(const char *,const char *);
     extern std::vector<std::string> get_teams();

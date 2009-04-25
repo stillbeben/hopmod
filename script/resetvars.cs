@@ -17,6 +17,8 @@ global stats_debug 0
 global stats_use_sqlite 1
 global stats_use_json 0
 
+global auth_db_filename "log/auth.sqlite"
+
 global use_server_maprotation 1
 
 global ffa_maps [metl4 deathtek fanatic_quake aard3c metl2 ruby curvedm metl3

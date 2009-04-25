@@ -3,6 +3,7 @@ dofile("./script/logging.lua")
 dofile("./script/maprotation.lua")
 dofile("./script/playercmd.lua")
 dofile("./script/db/stats.lua")
+dofile("./script/db/auth.lua")
 
 function sendServerBanner(cn)
 
@@ -79,28 +80,6 @@ function onTeamkill(actor, victim)
     end
     
 end
-
-server.event_handler("authreq", function(cn,name,domain)
-    server.delegateauth(cn)
-end)
-
-server.event_handler("authrep", function(cn, answer)
-    server.relayauthanswer(cn, answer)
-end)
-
-server.event_handler("auth", function(cn,name,domain,success)
-
-    server.msg("auth " .. tostring(success))
-
-    if domain == "" and success and server.player_priv_code(cn) == 0 then
-        server.msg(string.format("%s claimed master as '%s'",server.player_name(cn),magenta(name)))
-        server.setmaster(cn)
-    end
-    
-    if domain == "admins" then
-        server.setadmin(cn)
-    end
-end)
 
 server.event_handler("connect",onConnect)
 server.event_handler("text",onText)

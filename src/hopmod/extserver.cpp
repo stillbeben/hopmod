@@ -264,6 +264,8 @@ bool player_changeteam(int cn,const char * newteam)
     return true;
 }
 
+int player_authreq(int cn){return get_ci(cn)->authreq;}
+
 void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);
