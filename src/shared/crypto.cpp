@@ -745,6 +745,25 @@ void genprivkey(const char *seed, vector<char> &privstr, vector<char> &pubstr)
     pubstr.add('\0');
 }
 
+void genprivkey(const void * seed, int seedlen, vector<char> & privkeyout, vector<char> & pubkeyout)
+{
+    tiger::hashval hash;
+    tiger::hash((const uchar *)seed, seedlen, hash);
+    
+    bigint<8*sizeof(hash.bytes)/BI_DIGIT_BITS> privkey;
+    memcpy(privkey.digits, hash.bytes, sizeof(privkey.digits));
+    privkey.len = 8*sizeof(hash.bytes)/BI_DIGIT_BITS;
+    privkey.shrink();
+    privkey.printdigits(privkeyout);
+    privkeyout.add('\0');
+    
+    ecjacobian c(ecjacobian::base);
+    c.mul(privkey);
+    c.normalize();
+    c.print(pubkeyout);
+    pubkeyout.add('\0');
+}
+
 bool hashstring(const char *str, char *result, int maxlen)
 {
     tiger::hashval hv;

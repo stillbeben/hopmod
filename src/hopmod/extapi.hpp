@@ -108,6 +108,16 @@ namespace server
 
     extern bool selectnextgame();
     
+    extern int lua_genkeypair(lua_State *);
+    extern int lua_genchallenge(lua_State *);
+
+    extern void delegateauth(int);
+    extern void relayauthanswer(int,const char *);
+    extern void sendauthchallenge(int,const char *);
+    extern void sendauthreq(int, const char *);
+    extern void signal_auth_success(int);
+    extern void signal_auth_failure(int);
+    
 } //namespace server
 
 #endif

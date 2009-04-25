@@ -574,4 +574,81 @@ bool selectnextgame()
     }else return false;
 }
 
+int lua_genkeypair(lua_State * L)
+{
+    vector<char> privkeyout, pubkeyout;
+    uint seed[3] = { rx_bytes, totalmillis, randomMT() };
+    genprivkey(seed,sizeof(seed), privkeyout, pubkeyout);
+    
+    lua_pushstring(L, privkeyout.getbuf());
+    lua_pushstring(L, pubkeyout.getbuf());
+    
+    return 2;
+}
+
+int lua_genchallenge(lua_State * L)
+{
+    int argc = lua_gettop(L);
+    if(argc < 1) return luaL_error(L, "missing key argument");
+    const char * pubkeystr = lua_tostring(L, 1);
+    if(!pubkeystr || !pubkeystr[0]) return luaL_error(L,"expected non-empty string");
+    void * pubkey = parsepubkey(pubkeystr);
+    
+    uint seed[3] = { rx_bytes, totalmillis, randomMT() };
+    vector<char> challenge;
+    genchallenge(pubkey, seed, sizeof(seed), challenge);
+    
+    lua_pushstring(L, challenge.getbuf());
+    
+    freepubkey(pubkey);
+    return 1;
+}
+
+void delegateauth(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    
+    if(!requestmasterf("reqauth %u %s\n", ci->authreq, ci->authname))
+    {
+        ci->authreq = 0;
+        sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
+    }
+}
+
+void relayauthanswer(int cn, const char * ans)
+{
+    clientinfo * ci = get_ci(cn);
+    if(!requestmasterf("confauth %u %s\n", ci->authreq, ans))
+    {
+        ci->authreq = 0;
+        sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
+    }
+}
+
+void sendauthchallenge(int cn, const char * challenge)
+{
+    clientinfo * ci = get_ci(cn);
+    sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, ci->authdomain, ci->authname, challenge);
+}
+
+void sendauthreq(int cn, const char * domain)
+{
+    clientinfo * ci = get_ci(cn);
+    sendf(ci->clientnum, 1, "ris", SV_REQAUTH, domain);
+}
+
+void signal_auth_success(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    ci->authreq = 0;
+    signal_auth(ci->clientnum, ci->authname, ci->authdomain, true);
+}
+
+void signal_auth_failure(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    ci->authreq = 0;
+    signal_auth(ci->clientnum, ci->authname, ci->authdomain, false);
+}
+
 #endif

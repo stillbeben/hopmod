@@ -182,4 +182,12 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(tx_packets, FUNGU_OBJECT_ID("tx_packets"), env);
     script::bind_global_var(rx_packets, FUNGU_OBJECT_ID("rx_packets"), env);
     
+    register_lua_function(&server::lua_genkeypair, "genkeypair");
+    register_lua_function(&server::lua_genchallenge, "genchallenge");
+    script::bind_global_func<void (int)>(server::delegateauth, FUNGU_OBJECT_ID("delegateauth"), env);
+    script::bind_global_func<void (int,const char *)>(server::relayauthanswer, FUNGU_OBJECT_ID("relayauthanswer"), env);
+    script::bind_global_func<void (int,const char *)>(server::sendauthreq, FUNGU_OBJECT_ID("sendauthreq"), env);
+    script::bind_global_func<void (int,const char *)>(server::sendauthchallenge, FUNGU_OBJECT_ID("sendauthchallenge"), env);
+    script::bind_global_func<void (int)> (server::signal_auth_success, FUNGU_OBJECT_ID("signal_auth_success"), env);
+    script::bind_global_func<void (int)> (server::signal_auth_failure, FUNGU_OBJECT_ID("signal_auth_failure"), env);
 }

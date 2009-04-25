@@ -53,11 +53,16 @@ if $(without_test_project) = 0 {
     build-project src/hopmod/test ;
 }
 
-exe sauer_server : 
+lib sauertools :
     src/shared/tools.cpp
     src/shared/stream.cpp
-    src/shared/zip.cpp
     src/shared/crypto.cpp
+    :   <include>src/shared <include>src/enet/include 
+        <define>STANDALONE
+        <link>static
+    : : <include>src/shared <include>src/enet/include ;
+
+exe sauer_server :
     src/engine/server.cpp
     src/fpsgame/server.cpp
     src/hopmod/floodprotection.cpp
@@ -74,8 +79,9 @@ exe sauer_server :
     src/hopmod/playerid.cpp
     src/hopmod/restarter.cpp
     src/hopmod/utils.cpp
-    enet
+    sauertools
     z
+    enet
     dl
     /lua//lua
     /fungu//script
@@ -83,9 +89,14 @@ exe sauer_server :
     microhttpd
     /boost//headers
     /boost//signals
-    : <define>STANDALONE <include>src/shared <include>src/fpsgame <include>src/hopmod ;
+    : <define>STANDALONE <include>src/fpsgame <include>src/hopmod ;
 
-install dist : sauer_server /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
+exe keygen :
+    sauertools
+    z
+    src/hopmod/keygen.cpp : <define>STANDALONE ;
+
+install dist : sauer_server keygen /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 
 install lua-packages : 
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;

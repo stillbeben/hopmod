@@ -39,7 +39,9 @@ extern boost::signal<void (const char *,const char *)>              signal_setma
 extern boost::signal<void (int,int)>                                signal_spectator;
 extern boost::signal<void (int,const char *,int)>                   signal_setmaster;
 extern boost::signal<void (int,int)>                                signal_teamkill;
-extern boost::signal<void (int,const char *,bool)>                  signal_auth;
+extern boost::signal<void (int,const char *,const char *,bool)>     signal_auth;
+extern boost::signal<void (int,const char *,const char *)>          signal_authreq;
+extern boost::signal<void (int,const char *)>                       signal_authrep;
 extern boost::signal<void (int)>                                    signal_addbot;
 extern boost::signal<void (int)>                                    signal_delbot;
 extern boost::signal<void (int)>                                    signal_mapcrcfail;

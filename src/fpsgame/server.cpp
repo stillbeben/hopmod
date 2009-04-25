@@ -229,6 +229,7 @@ namespace server
         vector<clientinfo *> bots;
         uint authreq;
         string authname;
+        string authdomain;
         int ping, lastposupdate, lag, aireinit;
         string clientmap;
         int mapcrc;
@@ -1952,7 +1953,7 @@ namespace server
         clientinfo *ci = findauth(id);
         if(!ci) return;
         ci->authreq = 0;
-        signal_auth(ci->clientnum, ci->authname, false);
+        signal_auth(ci->clientnum, ci->authname, ci->authdomain, false);
     }
 
     void authsucceeded(uint id)
@@ -1960,8 +1961,8 @@ namespace server
         clientinfo *ci = findauth(id);
         if(!ci) return;
         ci->authreq = 0;
-        setmaster(ci, true, "", ci->authname);
-        signal_auth(ci->clientnum, ci->authname, true);
+        //setmaster(ci, true, "", ci->authname);
+        signal_auth(ci->clientnum, ci->authname, ci->authdomain, true);
     }
 
     void authchallenged(uint id, const char *val)
@@ -1973,16 +1974,15 @@ namespace server
 
     uint nextauthreq = 0;
 
-    void tryauth(clientinfo *ci, const char *user)
+    void tryauth(clientinfo *ci, const char * domain, const char * user)
     {
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
         filtertext(ci->authname, user, false, 100);
-        if(!requestmasterf("reqauth %u %s\n", ci->authreq, ci->authname))
-        {
-            ci->authreq = 0;
-            sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
-        }
+        filtertext(ci->authdomain, domain, false, 100);
+        copystring(ci->authdomain, domain);
+        
+        signal_authreq(ci->clientnum, user, domain);
     }
 
     void answerchallenge(clientinfo *ci, uint id, char *val)
@@ -1992,11 +1992,8 @@ namespace server
         {
             if(!isxdigit(*s)) { *s = '\0'; break; }
         }
-        if(!requestmasterf("confauth %u %s\n", id, val))
-        {
-            ci->authreq = 0;
-            sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
-        }
+        
+        signal_authrep(ci->clientnum, val);
     }
 
     void processmasterinput(const char *cmd, int cmdlen, const char *args)
@@ -2701,9 +2698,9 @@ namespace server
             case SV_AUTHTRY:
             {
                 string desc, name;
-                getstring(desc, p, sizeof(desc)); // unused for now
+                getstring(desc, p, sizeof(desc));
                 getstring(name, p, sizeof(name));
-                if(!desc[0]) tryauth(ci, name);
+                tryauth(ci, desc, name);
                 break;
             }
 
