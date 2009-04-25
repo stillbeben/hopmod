@@ -111,7 +111,9 @@ namespace server
     
     extern int lua_genkeypair(lua_State *);
     extern int lua_genchallenge(lua_State *);
-
+    extern int lua_checkchallenge(lua_State *);
+    extern int lua_freechalanswer(lua_State *);
+    
     extern void delegateauth(int);
     extern void relayauthanswer(int,const char *);
     extern void sendauthchallenge(int,const char *);

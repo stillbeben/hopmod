@@ -3,7 +3,7 @@ dofile("./script/logging.lua")
 dofile("./script/maprotation.lua")
 dofile("./script/playercmd.lua")
 dofile("./script/db/stats.lua")
---dofile("./script/db/auth.lua")
+dofile("./script/db/auth.lua")
 
 function sendServerBanner(cn)
 
@@ -120,6 +120,4 @@ server.event_handler("started", function()
     
     server.log_status("-> Successfully loaded Hopmod")
 end)
-
-
 

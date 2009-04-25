@@ -84,12 +84,14 @@ server.event_handler("spectator", function(cn, value)
     log(string.format("%s(%i) %s spectators",server.player_name(cn),cn,action_tag))
 end)
 
-server.event_handler("auth", function(cn, authname, success)
+server.event_handler("auth", function(cn, authname, authdomain, success)
     
     local action_tag = "passed"
     if tonumber(success) == 0 then action_tag = "failed" end
     
-    log(string.format("%s(%i) %s authentication as %s",server.player_name(cn),cn,action_tag,authname))
+    if #authdomain == 0 then authdomain = "masters.sauerbraten.org" end
+    
+    log(string.format("%s(%i) %s authentication as %s@%s",server.player_name(cn),cn,action_tag,authname,authdomain))
 end)
 
 

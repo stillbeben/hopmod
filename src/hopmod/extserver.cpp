@@ -598,12 +598,39 @@ int lua_genchallenge(lua_State * L)
     
     uint seed[3] = { rx_bytes, totalmillis, randomMT() };
     vector<char> challenge;
-    genchallenge(pubkey, seed, sizeof(seed), challenge);
+    void * answer = genchallenge(pubkey, seed, sizeof(seed), challenge);
     
+    lua_pushlightuserdata(L, answer);
     lua_pushstring(L, challenge.getbuf());
     
     freepubkey(pubkey);
+    return 2;
+}
+
+int lua_checkchallenge(lua_State * L)
+{
+    int argc = lua_gettop(L);
+    if(argc < 1) return luaL_error(L, "missing answer argument");
+    if(argc < 2) return luaL_error(L, "missing compare argument");
+    
+    const char * answer = lua_tostring(L, 1);
+    if(!answer) return luaL_argerror(L, 1, "not a valid string");
+    
+    void * correct = lua_touserdata(L, 2);
+    if(!correct) return luaL_argerror(L, 2, "not valid pointer");
+    
+    lua_pushboolean(L, checkchallenge(answer, correct));
     return 1;
+}
+
+int lua_freechalanswer(lua_State * L)
+{
+    int argc = lua_gettop(L);
+    if(argc < 1) return 0;
+    void * ptr = lua_touserdata(L,1);
+    if(!ptr) return luaL_argerror(L,1, "not pointer value");
+    freechallenge(ptr);
+    return 0;
 }
 
 void delegateauth(int cn)
@@ -630,7 +657,7 @@ void relayauthanswer(int cn, const char * ans)
 void sendauthchallenge(int cn, const char * challenge)
 {
     clientinfo * ci = get_ci(cn);
-    sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, ci->authdomain, ci->authname, challenge);
+    sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, ci->authdomain, ci->authreq, ci->authname, challenge);
 }
 
 void sendauthreq(int cn, const char * domain)
@@ -642,15 +669,15 @@ void sendauthreq(int cn, const char * domain)
 void signal_auth_success(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    ci->authreq = 0;
     signal_auth(ci->clientnum, ci->authname, ci->authdomain, true);
+    ci->authreq = 0;
 }
 
 void signal_auth_failure(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    ci->authreq = 0;
     signal_auth(ci->clientnum, ci->authname, ci->authdomain, false);
+    ci->authreq = 0;
 }
 
 #endif

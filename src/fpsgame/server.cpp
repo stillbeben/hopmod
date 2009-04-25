@@ -1960,9 +1960,8 @@ namespace server
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        ci->authreq = 0;
-        //setmaster(ci, true, "", ci->authname);
         signal_auth(ci->clientnum, ci->authname, ci->authdomain, true);
+        ci->authreq = 0;
     }
 
     void authchallenged(uint id, const char *val)
@@ -2710,7 +2709,7 @@ namespace server
                 getstring(desc, p, sizeof(desc)); // unused for now
                 uint id = (uint)getint(p);
                 getstring(ans, p, sizeof(ans));
-                if(!desc[0]) answerchallenge(ci, id, ans);
+                answerchallenge(ci, id, ans);
                 break;
             }
 
