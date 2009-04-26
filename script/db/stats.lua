@@ -33,32 +33,6 @@ local send_verified_msg = function(cn, name)
     server.msg(string.format("%s is verified as %s", green(name), green(string.format("%s@%s",name, domain_name))))
 end
 
-if tonumber(server.stats_use_auth) == 1 then
-    local domId = auth.get_domain_id(server.stats_auth_domain)
-    if not domId then error(string.format("stats auth domain '%s' not found",server.stats_auth_domain)) end
-    domain_id = domId
-    domain_name = server.stats_auth_domain
-    
-    auth_domain_handlers[domain_name] = function(cn, name)
-
-        if name ~= server.player_name(cn) then
-            server.kick(cn, 0, "server", "using wrong auth name")
-            return
-        end
-
-        local pvars = server.player_pvars(cn)
-        pvars.stats_block = false
-        pvars.stats_id_verified = true
-        pvars.stats_id_name = name
-        
-        send_verified_msg(cn, name)
-        
-        statsmod.addPlayer(cn)
-
-    end
-    
-end
-
 function statsmod.setNewGame()
     game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map}
     stats = {}
@@ -116,7 +90,7 @@ function statsmod.addPlayer(cn)
         local pvars = server.player_pvars(cn)
         
         if pvars.stats_id_verified and pvars.stats_id_name == server.player_name(cn) then
-            if server.player_connection_time(cn) < 60 then send_verified_msg(cn, name) end
+            --if server.player_connection_time(cn) < 60 then send_verified_msg(cn, server.player_name(cn)) end
         else
             
             pvars.stats_block = true
@@ -249,6 +223,33 @@ local function installHandlers()
     table.insert(evthandlers, mapchange)
     table.insert(evthandlers, _rename)
     table.insert(evthandlers, renaming)
+    
+    
+    if tonumber(server.stats_use_auth) == 1 then
+    
+        local domId = auth.get_domain_id(server.stats_auth_domain)
+        if not domId then error(string.format("stats auth domain '%s' not found",server.stats_auth_domain)) end
+        domain_id = domId
+        domain_name = server.stats_auth_domain
+        
+        auth_domain_handlers[domain_name] = function(cn, name)
+
+            if name ~= server.player_name(cn) then
+                server.kick(cn, 0, "server", "using wrong auth name")
+                return
+            end
+
+            local pvars = server.player_pvars(cn)
+            pvars.stats_block = false
+            pvars.stats_id_verified = true
+            pvars.stats_id_name = name
+            
+            send_verified_msg(cn, name)
+            
+            statsmod.addPlayer(cn)
+        end
+    end
+    
 end
 
 local function uninstallHandlers()
@@ -324,6 +325,13 @@ function server.find_names_by_ip(ip)
     find_names_by_ip:bind{ipaddr=ip}
     for row in find_names_by_ip:rows() do table.insert(names, row.name) end
     return names
+end
+
+function server.playercmd_showauth(cn)
+    local pvars = server.player_pvars(cn)
+    if pvars.stats_id_verified and pvars.stats_id_name == server.player_name(cn) then
+        send_verified_msg(cn, server.player_name(cn))
+    end
 end
 
 return statsmod
