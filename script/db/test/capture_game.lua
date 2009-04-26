@@ -9,8 +9,11 @@ local math = require("math")
 
 module( "capture_game_testcase", lunit.testcase )
 
+dofile("script/playervars.lua")
+
 server.stats_db_filename = ":memory:"
 server.stats_debug = 1
+server.stats_use_auth = 0
 statsmod = dofile("script/db/stats.lua")
 
 function reset_db()
