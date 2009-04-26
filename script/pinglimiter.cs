@@ -28,5 +28,5 @@ interval $ping_limiter_tick [
         
     ]
     
-    if (= $use_ping_limiter 0) [return -1] //stop interval
+    if (= $enable_ping_limiter 0) [return -1] //stop interval
 ]

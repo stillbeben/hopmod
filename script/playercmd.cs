@@ -90,5 +90,3 @@ global playercmd_1on1 (func [cn arg1 arg2 arg3 arg4] [
 
     ] [player_msg $cn (red "You need admin to do that!")]
 ])
-
-global playercmd_test (func [] [if 1 [fadsfsdfasdfasdf]])

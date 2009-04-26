@@ -77,7 +77,9 @@ flood_protect_switchname 1000
 global teamkill_limit 7
 global teamkill_showlimit 1
 
-global use_ping_limiter 1
+global enable_ping_limiter 1
 global ping_limiter_tick 25000
 global ping_limit 500
 global ping_limit_warnings 4
+
+global enable_cheater_command 0
