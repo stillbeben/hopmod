@@ -8,7 +8,7 @@ use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC
 use Config::Auto;
 use vars qw($cn $config $irc @playerstats @serverlist @data $rrd $topriv $version $hopvar $rev @split);
 
-$config = Config::Auto::parse("../conf/irc.conf" , format => "equal");
+$config = Config::Auto::parse("../conf/server.conf" , format => "equal");
 
 $version = "1.21"; #<----Do NOT change this or I will kill you
 print "<Starting HopBot V$version support at #hopmod\@irc.gamesurge.net> \n";
