@@ -26,13 +26,46 @@ if not insert_player then error(perr) end
 local select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
 if not select_player_totals then error(perr) end
 
+local domain_id
+local domain_name
+
+local send_verified_msg = function(cn, name)
+    server.msg(string.format("%s is verified as %s", green(name), green(string.format("%s@%s",name, domain_name))))
+end
+
+if tonumber(server.stats_use_auth) == 1 then
+    local domId = auth.get_domain_id(server.stats_auth_domain)
+    if not domId then error(string.format("stats auth domain '%s' not found",server.stats_auth_domain)) end
+    domain_id = domId
+    domain_name = server.stats_auth_domain
+    
+    auth_domain_handlers[domain_name] = function(cn, name)
+
+        if name ~= server.player_name(cn) then
+            server.kick(cn, 0, "server", "using wrong auth name")
+            return
+        end
+
+        local pvars = server.player_pvars(cn)
+        pvars.stats_block = false
+        pvars.stats_id_verified = true
+        pvars.stats_id_name = name
+        
+        send_verified_msg(cn, name)
+        
+        statsmod.addPlayer(cn)
+
+    end
+    
+end
+
 function statsmod.setNewGame()
     game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map}
     stats = {}
     
-    for i, playerCn in ipairs(server.players()) do
-        statsmod.updatePlayer(playerCn).playing = true
-    end
+    --for i, playerCn in ipairs(server.players()) do
+    --    statsmod.addPlayer(playerCn)
+    --end
 end
 
 function statsmod.getPlayerTable(player_id)
@@ -43,7 +76,9 @@ function statsmod.getPlayerTable(player_id)
 end
 
 function statsmod.updatePlayer(cn)
-
+    
+    if server.player_pvars(cn).stats_block then return {} end
+    
     local player_id = server.player_id(cn)
     if stats == nil or player_id == -1 then return {} end
     
@@ -72,6 +107,43 @@ function statsmod.updatePlayer(cn)
     t.timeplayed = server.player_timeplayed(cn)
     
     return t
+end
+
+function statsmod.addPlayer(cn)
+    
+    if domain_id and auth.found_name(server.player_name(cn),domain_id) then
+        
+        local pvars = server.player_pvars(cn)
+        
+        if pvars.stats_id_verified and pvars.stats_id_name == server.player_name(cn) then
+            if server.player_connection_time(cn) < 60 then send_verified_msg(cn, name) end
+        else
+            
+            pvars.stats_block = true
+            
+            server.sendauthreq(cn, domain_name)
+            
+            local sid = server.player_sessionid(cn)
+            
+            server.player_msg(cn, "You are using a reserved name and have 10 seconds to authenticate your ID.")
+            
+            server.sleep(10000, function()
+                
+                if sid ~= server.player_sessionid(cn) then return end
+                
+                if not server.player_pvars(cn).stats_id_verified then
+                    server.kick(cn, 0, "server", "using reserved name")
+                end
+                
+            end)
+            
+            return
+            
+        end
+    end
+    
+    statsmod.updatePlayer(cn).playing = true
+    
 end
 
 function statsmod.commitStats()
@@ -162,12 +234,12 @@ end
 
 local function installHandlers()
 
-    local connect = server.event_handler("connect", function(cn) statsmod.updatePlayer(cn).playing = true end)
+    local connect = server.event_handler("active", statsmod.addPlayer)
     local disconnect = server.event_handler("disconnect", function(cn) statsmod.updatePlayer(cn).playing = false end)
     local intermission = server.event_handler("intermission", statsmod.commitStats)
     local finishedgame = server.event_handler("finishedgame", statsmod.commitStats)
     local mapchange = server.event_handler("mapchange", statsmod.setNewGame)
-    local _rename = server.event_handler("rename", function(cn) statsmod.updatePlayer(cn).playing = true end)
+    local _rename = server.event_handler("rename", statsmod.addPlayer)
     local renaming = server.event_handler("renaming", function(cn) statsmod.updatePlayer(cn).playing = false end)
     
     table.insert(evthandlers, connect)

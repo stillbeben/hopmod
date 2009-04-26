@@ -52,3 +52,21 @@ end
 server.event_handler("mapchange", function()
     gamevars = {}
 end)
+
+function server.player_vars(cn)
+    local tab = gamevars[server.player_id(cn)]
+    if not tab then
+        tab = {}
+        gamevars[server.player_id(cn)] = tab
+    end
+    return tab
+end
+
+function server.player_pvars(cn)
+    local tab = pvars[server.player_id(cn)]
+    if not tab then
+        tab = {}
+        pvars[server.player_id(cn)] = tab
+    end
+    return tab
+end

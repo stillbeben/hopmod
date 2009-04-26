@@ -2371,9 +2371,14 @@ namespace server
                 {
                     signal_renaming(ci->clientnum);
                     ci->playerid = get_player_id(text, getclientip(ci->clientnum));
-                    signal_rename(ci->clientnum, ci->name, text);
+                    
+                    string oldname;
+                    copystring(oldname, ci->name);
+                    copystring(ci->name,text);
+                    
+                    signal_rename(ci->clientnum, oldname, ci->name);
                 }
-                copystring(ci->name,text);
+                
                 QUEUE_STR(ci->name);
                 
                 // Unable to block rename so only option is to kick the player.

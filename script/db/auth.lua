@@ -14,6 +14,7 @@ if not search_for_user then error(perr) end
 local auth_request = {}
 
 auth_domain_handlers = {}
+auth = {}
 
 server.event_handler("authreq", function(cn,name,domain)
     
@@ -105,3 +106,16 @@ server.event_handler("auth", function(cn, name, domain, success)
     auth_request[req_id] = nil
     
 end)
+
+function auth.get_domain_id(name)
+    search_for_domain:bind{name = name}
+    local row = search_for_domain:first_row()
+    if not row then return end
+    return row.id
+end
+
+function auth.found_name(name,domain_id)
+    search_for_user:bind{domain_id = domain_id, name = name}
+    local row = search_for_user:first_row()
+    if row then return true else return false end
+end
