@@ -18,5 +18,5 @@ exec "script/playercmd.cs"
 exec "script/irc.csl"
 
 event_handler "started" (func [] [
-    //if $use_ping_limiter [exec script/pinglimiter.cs]
+    if $use_ping_limiter [exec script/pinglimiter.cs]
 ])
