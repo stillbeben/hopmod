@@ -32,6 +32,12 @@ expression::~expression()
     
 parse_state expression::parse(source_iterator * first,source_iterator last,env::frame * frame)
 {
+    if(!m_source_ctx)
+    {
+        m_source_ctx = frame->get_env()->get_source_context() ? frame->get_env()->get_source_context()->clone() : NULL;
+        m_line = m_source_ctx->get_line_number();
+    }
+    
     if(m_parsing)
     {
         try
@@ -59,11 +65,7 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
     
     if(is_terminator(**first))
     {
-        if(frame->get_env()->get_source_context())
-        {
-            m_source_ctx = frame->get_env()->get_source_context();
-            m_line = m_source_ctx->get_line_number();
-        }
+
         
         ++(*first);
         

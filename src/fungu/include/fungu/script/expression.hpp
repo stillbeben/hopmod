@@ -86,7 +86,7 @@ private:
     void translate_infix_expression(env::frame * frame);
     
     void fill_arguments_container(env::frame * frame);
-protected:
+public:
     source_context * get_source_context()const;
 private:
     construct * m_parsing;

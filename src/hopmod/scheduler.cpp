@@ -37,9 +37,23 @@ void cancel_all_scheduled()
     scheduler.cancel_all();
 }
 
-int run_cubescript_code(script::code_block code,script::env::frame * frame)
+int run_cubescript_code(script::code_block code,script::env::frame * parent_frame)
 {
-    return script::lexical_cast<int>(code.eval_each_expression(frame));
+    script::env::frame frame(parent_frame->get_env());
+    try
+    {
+        return script::lexical_cast<int>(code.eval_each_expression(&frame));
+    }
+    catch(script::error err)
+    {
+        report_script_error(new script::error_info(err,const_string(),code.get_source_context()->clone()));
+        return -1;
+    }
+    catch(script::error_info * errinfo)
+    {
+        report_script_error(errinfo);
+        return -1;
+    }
 }
 
 script::result_type sched_cubescript_code(bool repeat,script::env::object::apply_arguments & args,script::env::frame * frame)
