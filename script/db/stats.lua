@@ -98,12 +98,13 @@ function statsmod.addPlayer(cn)
             server.sendauthreq(cn, domain_name)
             
             local sid = server.player_sessionid(cn)
+            local pid = server.player_id(cn)
             
             server.player_msg(cn, "You are using a reserved name and have 10 seconds to authenticate your ID.")
             
             server.sleep(10000, function()
                 
-                if sid ~= server.player_sessionid(cn) then return end
+                if sid ~= server.player_sessionid(cn) or pid ~= server.player_id(cn) then return end
                 
                 if not server.player_pvars(cn).stats_id_verified then
                     server.kick(cn, 0, "server", "using reserved name")
