@@ -70,7 +70,7 @@ server.event_handler("started", function()
         if not isnum(cn_kick) then return end  -- isnum = used from duel script
         if not isplayer(cn_kick) then return end -- isplayer = used from duel script
         if cn_kick == cn then return end -- dont kick yourself :)
-        if tonumber(server.playercount) < 1 then return end -- min 3 players
+        if tonumber(server.playercount) < 3 then return end -- min 3 players
         if varvk[cn_kick][cn] then -- already voted
             server.player_msg(cn, red("You have already voted to kick this player!"))
             return
