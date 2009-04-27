@@ -36,10 +36,7 @@ end
 function statsmod.setNewGame()
     game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map}
     stats = {}
-    
-    --for i, playerCn in ipairs(server.players()) do
-    --    statsmod.addPlayer(playerCn)
-    --end
+    -- addPlayer function will be called on active event for each player
 end
 
 function statsmod.getPlayerTable(player_id)
@@ -84,6 +81,8 @@ function statsmod.updatePlayer(cn)
 end
 
 function statsmod.addPlayer(cn)
+    
+    server.msg("add player ".. tostring(cn))
     
     if domain_id and auth.found_name(server.player_name(cn),domain_id) then
         
@@ -335,4 +334,4 @@ function server.playercmd_showauth(cn)
     end
 end
 
-return statsmod
+if tonumber(server.stats_debug) == 1 then return statsmod end

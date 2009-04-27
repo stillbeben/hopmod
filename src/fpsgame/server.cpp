@@ -2142,7 +2142,7 @@ namespace server
                         cp->position.setsizenodelete(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
                     }
-                    if(cp->state.state==CS_ALIVE && !cp->active)
+                    if(cp->state.state==CS_ALIVE && !cp->active && cp->state.aitype == AI_NONE)
                     {
                         cp->lastposupdate = totalmillis - 30;
                         cp->active = true;
