@@ -15,8 +15,8 @@ static void setup_default_arguments()
 {
     player_kick_defargs.clear();
     player_kick_defargs.push_back(14400);
-    player_kick_defargs.push_back(const_string(FUNGU_LITERAL_STRING("server")));
-    player_kick_defargs.push_back(const_string());
+    player_kick_defargs.push_back(std::string("server"));
+    player_kick_defargs.push_back(std::string(""));
     
     changemap_defargs.clear();
     changemap_defargs.push_back(const_string());

@@ -10,6 +10,7 @@
 
 #include "../../dynamic_call.hpp"
 #include "../any.hpp"
+#include <vector>
 #include <cstddef>
 #include <assert.h>
 extern "C"{
@@ -27,7 +28,7 @@ class arguments //...also serves as the Serialization class
 public:
     typedef int value_type;
     
-    arguments(lua_State * stack);
+    arguments(lua_State * stack,const std::vector<any> *,std::size_t);
     value_type & front();
     
     void pop_front();
@@ -65,6 +66,8 @@ public:
 private:
     lua_State * m_stack;
     int m_arg_index;
+    const std::vector<any> * m_default_args;
+    int m_def_index; //start using default args when m_arg_index reaches m_def_index
 };
 
 any get_argument_value(lua_State *);

@@ -74,7 +74,7 @@ public:
     #ifdef FUNGU_WITH_LUA
     int apply(lua_State * L)
     {
-        lua::arguments args(L);
+        lua::arguments args(L,m_default_args,boost::function_traits<Signature>::arity);
         try
         {
             return dynamic_call<Signature>(m_function,args,args);
