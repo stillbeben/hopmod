@@ -88,6 +88,9 @@ server.event_handler("teamkill", onTeamkill)
 server.event_handler("mapvote", onMapVote)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
+server.auth_add_user = auth.add_user
+server.auth_add_domain = auth.add_domain
+
 server.event_handler("started", function()
     
     if tonumber(server.use_script_socket_server) == 1 then

@@ -93,7 +93,3 @@ server.event_handler("started", function()
 end)
 
 -- ]]
-
-function server.playercmd_test(cn)
-    server.kick(cn)
-end

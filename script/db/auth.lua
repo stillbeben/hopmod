@@ -11,6 +11,12 @@ if not search_for_domain then error(perr) end
 local search_for_user, perr = db:prepare("SELECT * FROM users WHERE domain_id = :domain_id and name = :name")
 if not search_for_user then error(perr) end
 
+local insert_user, perr = db:prepare("INSERT INTO users (domain_id, name, pubkey) VALUES (:domain_id,:name,:pubkey)")
+if not insert_user then error(perr) end
+
+local insert_domain, perr = db:prepare("INSERT INTO domains (name, local) VALUES (:name,:local)")
+if not insert_domain then error(perr) end
+
 local auth_request = {}
 
 auth_domain_handlers = {}
@@ -32,7 +38,7 @@ server.event_handler("authreq", function(cn,name,domain)
         req.domain_id = row.domain_id
     end
     
-    if not row or row["local"] == 1 then
+    if not row or row["local"] == 0 then
     
         req.delegated = true
         server.delegateauth(cn)
@@ -118,4 +124,21 @@ function auth.found_name(name,domain_id)
     search_for_user:bind{domain_id = domain_id, name = name}
     local row = search_for_user:first_row()
     if row then return true else return false end
+end
+
+function auth.add_user(name, pubkey, domain)
+    local domain_id = auth.get_domain_id(domain)
+    if not domain_id then error("domain not found") end
+    if auth.found_name(name, domain_id) then error("user name already in use") end
+    insert_user:bind{domain_id = domain_id, name = name, pubkey = pubkey}
+    insert_user:exec()
+end
+
+function auth.add_domain(name, islocal)
+    local domain_id = auth.get_domain_id(name)
+    if domain_id then return domain_id end
+    if not islocal then islocal = true end
+    insert_domain:bind{name = name, ["local"] = islocal}
+    insert_domain:exec()
+    return db:last_insert_rowid()
 end
