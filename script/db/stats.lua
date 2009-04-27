@@ -82,8 +82,6 @@ end
 
 function statsmod.addPlayer(cn)
     
-    server.msg("add player ".. tostring(cn))
-    
     if domain_id and auth.found_name(server.player_name(cn),domain_id) then
         
         local pvars = server.player_pvars(cn)

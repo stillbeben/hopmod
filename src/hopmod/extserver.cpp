@@ -226,16 +226,21 @@ int player_timeplayed(int cn)
 int player_win(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    loopv(clients)
-        if(clients[i] != ci && clients[i]->state.state != CS_SPECTATOR && 
-            clients[i]->state.aitype == AI_NONE)
-        {
-            if( (clients[i]->state.frags > ci->state.frags) ||
-                (clients[i]->state.frags == ci->state.frags && clients[i]->state.deaths < clients[i]->state.deaths) ||
-                (clients[i]->state.deaths == ci->state.deaths && player_accuracy(clients[i]->clientnum) > player_accuracy(cn)) ||
-                true ) return false;
-        }
-    return true;
+    
+    if(!m_teammode)
+    {
+        loopv(clients)
+            if(clients[i] != ci && clients[i]->state.state != CS_SPECTATOR && 
+                clients[i]->state.aitype == AI_NONE)
+            {
+                if( (clients[i]->state.frags > ci->state.frags) ||
+                    (clients[i]->state.frags == ci->state.frags && clients[i]->state.deaths < clients[i]->state.deaths) ||
+                    (clients[i]->state.deaths == ci->state.deaths && player_accuracy(clients[i]->clientnum) > player_accuracy(cn)) ||
+                    true ) return false;
+            }
+        return true;
+    }
+    else return team_win(ci->team);
 }
 
 void player_slay(int cn)
