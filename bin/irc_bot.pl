@@ -6,7 +6,7 @@ use warnings;
 use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Config::Auto;
-use vars qw($cn $config $irc @playerstats @serverlist @data $rrd $topriv $version $hopvar $rev @split);
+use vars qw($temp $cn $config $irc @playerstats @serverlist @data $rrd $topriv $version $hopvar $rev @split);
 
 $config = Config::Auto::parse("../conf/server.conf" , format => "equal");
 
@@ -106,7 +106,9 @@ sub on_disconnect {
 }
 sub on_tail_input {
 	my ($kernel, $sender, $filename, $input) = @_[KERNEL, SENDER, ARG0, ARG1];
-        $irc->yield( privmsg => $config->{irc_channel} => &filterlog($_[ARG1]) );
+	$temp = &filterlog($_[ARG1]);
+        $irc->yield( privmsg => $config->{irc_channel} => $temp );
+	print $temp;
 	&toserverpipe("irc_pid $$"); # Regular refresh for safetys sake
 }
 sub process_command {
@@ -285,7 +287,7 @@ sub process_command {
 
 sub filterlog {
 	my $line = shift;
-    
+   	print "------------------------------------------------------------"; 
     ##### Invisible Master ##### 
     if ($line =~ /(\S*\([0-9]+\))(\(*.*\)*): #invadmin/)
     { return "\x039MASTER\x03       \x0312$1\x03 attempted to take invisible master."}
@@ -320,20 +322,18 @@ sub filterlog {
     ##### ANNOUNCE #####
     if ($line =~ /ANNOUNCE (\S*) (.*)/)
     { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
-	##### CONNECT #####
+	##### CONNECT 
 	if ($line =~ /(\S*\([0-9]+\))(\(.+\))\((.*)\) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 \x037$3\x03" }
-	##### DISCONNECT #####
+	##### DISCONNECT
 	if ($line =~ /(\S*\([0-9]+\)) disconnected, (.+)/)
 	{ return "\x032DISCONNECT\x03 \x0312$1\x03 \x037$2\x03" }
 	##### RENAME #####
 	if ($line =~ /(\S*\([0-9]+\)) renamed to (.+)/) 
 	{ return  "\x032RENAME\x03     \x0312$1\x03 has renamed to \x037$2\x03"}
 	##### CHAT #####
-	if (  $line !~ /#announce/ ) {
-		if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.*)/) 
-		{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" } 
-	} return; 
+	if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.*)/) 
+	{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" } 
 	##### MAP CHANGE #####
 	if ($line =~ /new game: (.*), (.*), (.*)/) 
 	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for\x037 $2\x03 with\x037 $1\x03 " }
@@ -347,9 +347,11 @@ sub filterlog {
 	if ($line =~ /(\S*) was kicked by (.*)/) 
 	{ return "\x034KICK\x03      Master \x034$2\x03 kicked \x0312$1\x03" }
 	##### KICK BAN 2
-	if ($line =~ /(\S*\([0-9]+\)) kick\/banned for:(.+)\.\.\.by console./) 
+	if ($line =~ /(\s\S*\([0-9]+\)) kick\/banned for:(.+)\.\.\.by console./) 
 	{ return "\x034KICK\x03      Console kicked \x0312$1\x03 for $2" }
 	##### ADMIN #####
+	#         [Mon Apr 27 19:07:31] bob(0) claimed admin
+	print "------------------------------------------------------------";
 	if ($line =~ /(\S*\([0-9]+\)) claimed admin/) 
 	{ return "\x034ADMIN\x03       \x0312$1\x03 took admin" }
 	##### TEAM CHANGE
