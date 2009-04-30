@@ -7,6 +7,7 @@ global geoip_db_file "share/GeoIP.dat"
 
 global use_script_socket_server 1
 global script_socket_port 7894
+global script_socket_password ""
 
 global allow_mapvote 1
 global allow_modevote 1

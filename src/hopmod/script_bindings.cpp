@@ -153,7 +153,7 @@ void register_server_script_bindings(script::env & env)
     
     //script_socket functions
     script::bind_global_func<bool ()>(script_socket_supported, FUNGU_OBJECT_ID("script_socket_supported?"), env);
-    script::bind_global_func<bool (unsigned short)>(open_script_socket, FUNGU_OBJECT_ID("script_socket_server"), env);
+    script::bind_global_func<bool (unsigned short,const char *)>(open_script_socket, FUNGU_OBJECT_ID("script_socket_server"), env);
     script::bind_global_func<void ()>(close_script_socket, FUNGU_OBJECT_ID("close_script_socket_server"), env);
     
     //geoip functions

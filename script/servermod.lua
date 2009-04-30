@@ -94,7 +94,7 @@ server.auth_add_domain = auth.add_domain
 server.event_handler("started", function()
     
     if tonumber(server.use_script_socket_server) == 1 then
-        server.script_socket_server(server.script_socket_port)
+        server.script_socket_server(server.script_socket_port, server.script_socket_password)
     end
     
     if tonumber(server.use_irc_bot) == 1 then

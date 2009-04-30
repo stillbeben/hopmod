@@ -1,10 +1,10 @@
 #include "script_socket.hpp"
 #include "signals.hpp"
 #include "scripting.hpp"
+#include "crypto.hpp"
 
 #ifndef WITHOUT_MICROHTTPD
 #include <iostream>
-#include <string>
 #include <microhttpd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -14,6 +14,7 @@ using namespace fungu;
 static MHD_Daemon * s_daemon = NULL;
 static bool in_request = false;
 static bool sched_close = false;
+static char password[32];
 
 static int http_accept(void *, const struct sockaddr *, socklen_t);
 static int http_access(void *,MHD_Connection *,const char *,const char *, const char *,const char *,unsigned int *, void **);
@@ -29,7 +30,7 @@ void init_script_socket()
     signal_shutdown.connect(close_script_socket,boost::signals::at_front);
 }
 
-bool open_script_socket(unsigned short port)
+bool open_script_socket(unsigned short port, const char * _password)
 {
     if(s_daemon) return false;
     
@@ -42,6 +43,8 @@ bool open_script_socket(unsigned short port)
         MHD_OPTION_END);
     
     sched_close = false;
+    
+    strncpy(password, _password, sizeof(password)-1);
     
     return s_daemon;
 }
@@ -98,6 +101,7 @@ int execute_request(const std::string & request,std::string & response)
 
 int http_accept(void *, const struct sockaddr * addr, socklen_t addrlen)
 {
+    #if 0
     sockaddr_in * peer_addr = (sockaddr_in *)addr;
     char * ip = inet_ntoa(peer_addr->sin_addr);
     
@@ -106,6 +110,7 @@ int http_accept(void *, const struct sockaddr * addr, socklen_t addrlen)
         std::cerr<<"Rejected script_socket connection from "<<ip<<std::endl;
         return MHD_NO;
     }
+    #endif
     
     return MHD_YES;
 }
@@ -114,6 +119,28 @@ int http_access(void *, MHD_Connection * connection, const char * url,
     const char * method, const char * version, const char * upload_data,
     unsigned int * upload_data_size, void ** con_cls)
 {
+    
+    const MHD_ConnectionInfo * conninfo = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
+    if(htonl(conninfo->client_addr->sin_addr.s_addr) != INADDR_LOOPBACK)
+    {
+        const char * passwordhash = MHD_lookup_connection_value(connection, MHD_HEADER_KIND, "x-server-password");
+        if(!passwordhash) return MHD_NO;
+        
+        char * client_ip = inet_ntoa(conninfo->client_addr->sin_addr);
+        unsigned short client_port = ntohs(conninfo->client_addr->sin_port);
+        
+        char unhashed[21+sizeof(password)];
+        sprintf(unhashed, "%s%i%s", client_ip, client_port, password);
+        char correcthash[260];
+        hashstring(unhashed, correcthash, sizeof(correcthash));
+        
+        if(strcmp(password, correcthash)!=0)
+        {
+            std::cerr<<"Rejected request from host "<<client_ip<<" for having incorrect password."<<std::endl;
+            return MHD_NO;
+        }
+    }
+    
     std::string * code_buffer = (std::string *)*con_cls;
     
     const char * clen = MHD_lookup_connection_value(connection,
@@ -143,7 +170,7 @@ int http_access(void *, MHD_Connection * connection, const char * url,
         {
             code_buffer->append(upload_data,*upload_data_size);
         }
-        else if(code_buffer->length() >= atoi(clen))
+        else if(code_buffer->length() >= (std::size_t)atoi(clen))
         {
             std::string responseBody;
             int status = execute_request(*code_buffer,responseBody);

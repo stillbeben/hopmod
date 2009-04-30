@@ -5,7 +5,7 @@
 
 bool script_socket_supported();
 void init_script_socket();
-bool open_script_socket(unsigned short);
+bool open_script_socket(unsigned short, const char *);
 void run_script_socket_service();
 void close_script_socket();
 
