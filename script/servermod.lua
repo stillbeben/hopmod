@@ -23,6 +23,7 @@ function sendServerBanner(cn)
     end)
 end
 
+server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
 server.event_handler("active", sendServerBanner)
 server.event_handler("disconnect", function(cn) server.player_unsetpvar(cn,"shown_banner") end)
 
