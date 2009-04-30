@@ -23,28 +23,25 @@ global stats_use_json 0
 
 global use_server_maprotation 1
 
-global ffa_maps [metl4 deathtek fanatic_quake aard3c metl2 ruby curvedm metl3
-    nmp8 complex douze killfactory lostinspace oasis aqueducts corruption thor
-    academy tartech refuge kffa kalking1 orbe wake5 ot fragplaza hog2 
-    roughinery shadowed DM_BS1 shindou moonlite darkdeath thetowers
-    konkuri-to stemple tejen ogrosupply frostbyte fanatic_castle_trap
-    nmp10 island neondevastation neonpanic orion katrez_d ksauer1 
-    pgdm oddworld phosgene sdm1 kmap5 serpentine battleofthenile
-    guacamole hades paradigm mechanic wdcd]
+global ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
+    kalking1 dock turbine fanatic_quake oddworld wake5 aard3c curvedm
+    fragplaza pgdm kffa neondevastation hog2 memento neonpanic lostinspace
+    DM_BS1 shindou sdm1 shinmei1 stemple powerplant phosgene oasis island
+    metl4 ruby frozen ksauer1 killfactory corruption deathtek aqueducts orbe]
 
-global insta_maps [fanatic_quake aard3c metl2 curvedm metl3 nmp8 complex douze
-    academy refuge kffa kalking1 ot island neondevastation neonpanic orion 
-    oddworld sdm1]
+global insta_maps [complex douze ot academy metl2 metl3 nmp8 tartech kalking1
+    dock turbine fanatic_quake oddworld wake5 aard3c curvedm kffa
+    neondevastation hog2 neonpanic sdm1]
 
-global capture_maps [river_c paradigm fb_capture urban_c serenity nevil_c
-    lostinspace face-capture nmp9 c_valley nmp4 nmp8 fc3 ph-capture 
-    monastery corruption hades asteroids venice relic frostbyte ogrosupply
-    hallo reissen akroseum duomo capture_night c_egypt tejen fc4 dust2 campo
-    killcore3 damnation]
+global capture_maps [urban_c nevil_c fb_capture nmp9 c_valley lostinspace fc3
+    face-capture nmp4 nmp8 hallo monastery ph-capture hades fc4 relic frostbyte
+    venice river_c paradigm corruption asteroids ogrosupply reissen akroseum
+    duomo capture_night c_egypt tejen dust2 campo killcore3 damnation serenity
+    cwcastle]
 
-global ctf_maps [hallo reissen dust2 berlin_wall shipwreck akroseum flagstone
-    face-capture valhalla urban_c damnation mach2 redemption tejen europium 
-    capture_night l_ctf forge sctf1 paradiselost campo wdcd]
+global ctf_maps [hallo reissen face-capture flagstone shipwreck urban_c dust2
+    berlin_wall akroseum valhalla damnation mach2 redemption tejen europium
+    capture_night l_ctf forge campo wdcd sacrifice core_transfer]
 
 global "teamplay_maps" &ffa_maps
 global "efficiency_maps" &ffa_maps
@@ -58,12 +55,17 @@ global "insta ctf_maps" &ctf_maps
 global "protect_maps" &ctf_maps
 global "insta protect_maps" &ctf_maps
 
-global small_maps [aard3c metl2 metl3 nmp8 complex douze academy refuge shinmei1 kffa kalking1 ot neondevastation neonpanic dock island oddworld sdm1]
-global big_maps [deathtek fanatic_quake ruby cuvedm killfactory lostinspace aqueducts corruption orbe shadowed konkuri-to darkdeath ksauer1 pgdm thetowers wdcd]
+global small_maps [complex douze ot academy metl2 metl3 nmp8 tartech dock
+    turbine oddworld aard3c kffa neondevastation hog2 memento neonpanic
+    sdm1 shinme1 island metl4 frozen]
+
+global big_maps [refuge kalking1 fanatic_quake lostinspace DM_BS1 shindou
+    stemple powerplant killfactory corruptions deathtek aqueducts orbe]
+
 global use_best_map_size 0
 global small_gamesize 5
 
-global first_map "metl4"
+global first_map "complex"
 global first_gamemode "ffa"
 
 global use_irc_bot 0
