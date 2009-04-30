@@ -94,6 +94,9 @@ server.auth_add_domain = auth.add_domain
 server.event_handler("started", function()
     
     if tonumber(server.use_script_socket_server) == 1 then
+        if not server["script_socket_supported?"]() then
+            server.log_status("Cannot run script_socket server as it's not supported (couldn't detect libmicrohttpd as being installed at build time).")
+        end
         server.script_socket_server(server.script_socket_port, server.script_socket_password)
     end
     
