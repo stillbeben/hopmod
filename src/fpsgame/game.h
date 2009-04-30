@@ -741,6 +741,7 @@ namespace game
     extern void clearragdolls();
     extern void moveragdolls();
     extern const playermodelinfo &getplayermodelinfo(fpsent *d);
+    extern int chooserandomplayermodel(int seed);
     extern void swayhudgun(int curtime);
     extern vec hudgunorigin(int gun, const vec &from, const vec &to, fpsent *d);
 }

@@ -1211,6 +1211,7 @@ namespace server
             putint(p, ci->ownernum);
             putint(p, ci->state.aitype);
             putint(p, ci->state.skill);
+            putint(p, ci->playermodel);
             sendstring(ci->name, p);
             sendstring(ci->team, p);
         }
