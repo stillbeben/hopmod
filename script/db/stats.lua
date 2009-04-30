@@ -283,7 +283,7 @@ function server.playercmd_stats(cn,selection)
             server.player_msg(cn, "No stats found.")
             return
         end
-        server.player_msg(cn, string.format("Games: %s Frags: %s Deaths: %s Wins: %s Losses: %s",yellow(row.games),green(row.frags),red(row.deaths),green(row.games),red(row.losses)))
+        server.player_msg(cn, string.format("Games: %s Frags: %s Deaths: %s Wins: %s Losses: %s",yellow(row.games),green(row.frags),red(row.deaths),green(row.wins),red(row.losses)))
     end
 end
 
