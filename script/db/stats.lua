@@ -30,7 +30,7 @@ local domain_id
 local domain_name
 
 local send_verified_msg = function(cn, name)
-    server.msg(string.format("%s is verified as %s", green(name), green(string.format("%s@%s",name, domain_name))))
+    server.msg(string.format("%s is verified.", green(name)))
 end
 
 function statsmod.setNewGame()
@@ -80,16 +80,18 @@ function statsmod.updatePlayer(cn)
     return t
 end
 
+function statsmod.isPlayerVerified(cn)
+    local pvars = server.player_pvars(cn)
+    return pvars.stats_id_verified and pvars.stats_id_name == server.player_name(cn) and tonumber(server.uptime) < pvars.stats_id_expire
+end
+
 function statsmod.addPlayer(cn)
     
     if domain_id and auth.found_name(server.player_name(cn),domain_id) then
+    
+        if not statsmod.isPlayerVerified(cn) then
         
-        local pvars = server.player_pvars(cn)
-        
-        if pvars.stats_id_verified and pvars.stats_id_name == server.player_name(cn) then
-            --if server.player_connection_time(cn) < 60 then send_verified_msg(cn, server.player_name(cn)) end
-        else
-            
+            local pvars = server.player_pvars(cn)
             pvars.stats_block = true
             
             server.sendauthreq(cn, domain_name)
@@ -97,13 +99,13 @@ function statsmod.addPlayer(cn)
             local sid = server.player_sessionid(cn)
             local pid = server.player_id(cn)
             
-            server.player_msg(cn, "You are using a reserved name and have 10 seconds to authenticate your ID.")
+            server.player_msg(cn, "You are using a reserved name and have about 10 seconds to authenticate your ID.")
             
-            server.sleep(10000, function()
+            server.sleep(13000, function()
                 
                 if sid ~= server.player_sessionid(cn) or pid ~= server.player_id(cn) then return end
                 
-                if not server.player_pvars(cn).stats_id_verified then
+                if not statsmod.isPlayerVerified(cn) then
                     server.kick(cn, 0, "server", "using reserved name")
                 end
                 
@@ -233,7 +235,7 @@ local function installHandlers()
         auth_domain_handlers[domain_name] = function(cn, name)
 
             if name ~= server.player_name(cn) then
-                server.kick(cn, 0, "server", "using wrong auth name")
+                server.player_msg(cn, string.format("You authenticated as %s but the server was expecting you as %s", green(name), green(server.player_name(cn))))
                 return
             end
 
@@ -241,6 +243,7 @@ local function installHandlers()
             pvars.stats_block = false
             pvars.stats_id_verified = true
             pvars.stats_id_name = name
+            pvars.stats_id_expire = tonumber(server.uptime) + 86400
             
             send_verified_msg(cn, name)
             
