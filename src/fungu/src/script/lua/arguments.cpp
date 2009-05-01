@@ -99,6 +99,7 @@ static const char * get_cstr_from_lua_stack(lua_State * stack, int index)
         assert(false);
         return NULL;
     }
+    return str;
 }
 
 const char * arguments::deserialize(value_type arg, target_tag<const char *>)
