@@ -178,12 +178,9 @@ int player_shots(int cn){return get_ci(cn)->state.shots;}
 int player_accuracy(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    
     int hits = ci->state.hits;
     int shots = ci->state.shots;
-    if(!shots) return 0;
-    
-    return static_cast<int>(roundf(static_cast<float>(hits)/shots*100));
+    return static_cast<int>(roundf(static_cast<float>(hits)/std::max(shots,1)*100));
 }
 
 int player_privilege_code(int cn){return get_ci(cn)->privilege;}

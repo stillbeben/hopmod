@@ -2294,7 +2294,7 @@ namespace server
                     cq->addevent(shot);
                     
                     cq->state.shots++;
-                    cq->state.hits += (hits ? 1 : 0);
+                    cq->state.hits += hits;
                 }
                 else delete shot;
                 break;
@@ -2317,7 +2317,13 @@ namespace server
                     hit.dist = getint(p)/DMF;
                     loopk(3) hit.dir[k] = getint(p)/DNF;
                 }
-                if(cq) cq->addevent(exp);
+                if(cq)
+                {
+                    cq->addevent(exp);
+                    
+                    cq->state.shots++;
+                    cq->state.hits += hits;
+                }
                 else delete exp;
                 break;
             }
