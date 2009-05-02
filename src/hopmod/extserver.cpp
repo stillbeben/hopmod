@@ -273,6 +273,8 @@ bool player_changeteam(int cn,const char * newteam)
 
 int player_authreq(int cn){return get_ci(cn)->authreq;}
 
+int player_rank(int cn){return get_ci(cn)->rank;}
+
 void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);
@@ -685,6 +687,45 @@ void signal_auth_failure(int cn)
     clientinfo * ci = get_ci(cn);
     signal_auth(ci->clientnum, ci->authname, ci->authdomain, false);
     ci->authreq = 0;
+}
+
+static int get_best_player_score(clientinfo ** ci,int highestscore,const char * team = NULL)
+{
+    clientinfo * bestplayer = NULL;
+    int best = 0;
+    loopv(clients)
+    {
+        if(clients[i]->state.state == CS_SPECTATOR || clients[i]->state.aitype != AI_NONE) continue;
+        int score = clients[i]->state.frags;
+        if((!bestplayer || score > best) && score < highestscore && (!team || !strcmp(clients[i]->team,team)))
+        {
+            bestplayer = clients[i];
+            best = clients[i]->state.frags;
+        }
+    }
+    *ci = bestplayer;
+}
+
+void calc_player_ranks(const char * team)
+{
+    if(m_edit) return;
+    
+    if(m_teammode && !team)
+    {
+        std::vector<std::string> teams = get_teams();
+        for(std::vector<std::string>::const_iterator it = teams.begin();
+             it != teams.end(); it++) calc_player_ranks(it->c_str());
+    }
+    
+    int rank = 1;
+    int bestscore = std::numeric_limits<int>::max();
+    
+    loopv(clients)
+    {
+        clientinfo * bestplayer = NULL;
+        bestscore = get_best_player_score(&bestplayer, bestscore);
+        bestplayer->rank = rank++;
+    }
 }
 
 #endif

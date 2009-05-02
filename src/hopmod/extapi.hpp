@@ -72,6 +72,7 @@ namespace server
     extern void player_slay(int);
     extern bool player_changeteam(int,const char *);
     extern int player_authreq(int);
+    extern int player_rank(int);
     
     extern void team_msg(const char *,const char *);
     extern std::vector<std::string> get_teams();
@@ -102,6 +103,7 @@ namespace server
     extern int lua_gamemodeinfo(lua_State *);
     extern int recorddemo();
     extern void enddemorecord();
+    extern void calc_player_ranks(const char * team);
     
     extern std::vector<int> cs_player_list();
     extern std::vector<int> cs_spec_list();

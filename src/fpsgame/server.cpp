@@ -245,6 +245,8 @@ namespace server
         std::string disconnect_reason;
         bool active;
         
+        int rank;
+        
         clientinfo() 
          : sv_text_hit(sv_text_hit_length),
            sv_sayteam_hit(sv_sayteam_hit_length),
@@ -273,6 +275,7 @@ namespace server
             mapcrc = 0;
             warned = false;
             gameclip = false;
+            rank = 0;
         }
 
         void reassign()
@@ -1509,6 +1512,7 @@ namespace server
         if(!interm && minremain<=0)
         {
             interm = gamemillis+10000;
+            calc_player_ranks(NULL);
             signal_intermission();
         }
     }
