@@ -232,7 +232,7 @@ namespace aiman
 	{
         if(!ci->local && !ci->privilege) return;
         if(!addai(skill, !ci->local && ci->privilege < PRIV_ADMIN ? botlimit : -1)) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to create or assign bot");
-        else signal_addbot(ci->clientnum);
+        else signal_addbot(ci->clientnum,skill);
 	}
 
 	void reqdel(clientinfo *ci)

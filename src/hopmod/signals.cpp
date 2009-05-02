@@ -36,7 +36,7 @@ boost::signal<void (int,int)> signal_teamkill;
 boost::signal<void (int,const char *,const char *,bool)> signal_auth;
 boost::signal<void (int,const char *,const char *)> signal_authreq;
 boost::signal<void (int,const char *)> signal_authrep;
-boost::signal<void (int)> signal_addbot;
+boost::signal<void (int,int)> signal_addbot;
 boost::signal<void (int)> signal_delbot;
 boost::signal<void (int,const char *)> signal_beginrecord;
 boost::signal<void (int,int)> signal_endrecord;
