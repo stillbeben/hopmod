@@ -142,7 +142,7 @@ function statsmod.commitStats()
 
     for i,cn in ipairs(server.bots()) do
         local t = statsmod.updatePlayer(cn)
-        if t.playing then t.finished = true end
+        if t.playing and game.finished then t.finished = true end
     end
     
     local human_players = 0
