@@ -3,6 +3,7 @@ namespace aiman
 {
     bool dorefresh = false, botbalance = true;
     int botlimit = 8;
+    int next_botid = -2;
 
     void calcteams(vector<teamscore> &teams)
     {
@@ -165,6 +166,7 @@ namespace aiman
                 else sendresume(ci);
             }
 			ci->aireinit = 0;
+            ci->playerid = next_botid--;
 		}
 	}
 
@@ -214,6 +216,7 @@ namespace aiman
 	void clearai()
 	{ // clear and remove all ai immediately
         loopvrev(bots) if(bots[i]) deleteai(bots[i]);
+        next_botid = -2;
 	}
 
 	void checkai()
