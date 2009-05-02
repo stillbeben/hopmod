@@ -274,6 +274,7 @@ bool player_changeteam(int cn,const char * newteam)
 int player_authreq(int cn){return get_ci(cn)->authreq;}
 
 int player_rank(int cn){return get_ci(cn)->rank;}
+bool player_isbot(int cn){return get_ci(cn)->state.aitype != AI_NONE;}
 
 void changemap(const char * map,const char * mode = "",int mins = -1)
 {
