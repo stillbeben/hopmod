@@ -5,6 +5,7 @@ CREATE TABLE games (
     gamemode            TEXT DEFAULT "",
     mapname             TEXT DEFAULT "",
     duration            INTEGER DEFAULT 0,
+    finished            BOOLEAN DEFAULT 0,
     players             INTEGER DEFAULT 0
 );
 
@@ -24,6 +25,7 @@ CREATE TABLE players (
     name                TEXT,
     ipaddr              TEXT,
     country             TEXT,
+    score               INTEGER DEFAULT 0,
     frags               INTEGER DEFAULT 0,
     deaths              INTEGER DEFAULT 0,
     suicides            INTEGER DEFAULT 0,
@@ -31,9 +33,11 @@ CREATE TABLE players (
     hits                INTEGER DEFAULT 0,
     shots               INTEGER DEFAULT 0,
     damage              INTEGER DEFAULT 0,
+    damagewasted        INTEGER DEFAULT 0,
     timeplayed          INTEGER DEFAULT 0,
     finished            BOOLEAN DEFAULT 0,
-    win                 BOOLEAN DEFAULT 0
+    win                 BOOLEAN DEFAULT 0,
+    rank                INTEGER DEFAULT 0
 );
 
 CREATE TABLE playertotals (
@@ -50,6 +54,8 @@ CREATE TABLE playertotals (
     teamkills           INTEGER DEFAULT 0,
     hits                INTEGER DEFAULT 0,
     shots               INTEGER DEFAULT 0,
+    damage              INTEGER DEFAULT 0,
+    damagewasted        INTEGER DEFAULT 0,
     wins                INTEGER DEFAULT 0,
     losses              INTEGER DEFAULT 0,
     games               INTEGER DEFAULT 0,
@@ -99,6 +105,8 @@ BEGIN
         teamkills = teamkills + new.teamkills,
         hits = hits + new.hits,
         shots = shots + new.shots,
+        damage = damage + new.damage,
+        damagewasted = damagewasted + new.damagewasted,
         wins = wins + new.win,
         losses = losses + (new.win = 0),
         games = games + 1,
