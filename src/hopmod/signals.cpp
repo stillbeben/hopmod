@@ -38,6 +38,7 @@ boost::signal<void (int,const char *,const char *)> signal_authreq;
 boost::signal<void (int,const char *)> signal_authrep;
 boost::signal<void (int,int,int)> signal_addbot;
 boost::signal<void (int)> signal_delbot;
+boost::signal<void (int)> signal_botleft;
 boost::signal<void (int,const char *)> signal_beginrecord;
 boost::signal<void (int,int)> signal_endrecord;
 boost::signal<void (int)> signal_mapcrcfail;
@@ -126,6 +127,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_authrep, "authrep", normal_error_handler);
     slots.register_signal(signal_addbot, "addbot", normal_error_handler);
     slots.register_signal(signal_delbot, "delbot", normal_error_handler);
+    slots.register_signal(signal_botleft, "botleft", normal_error_handler);
     slots.register_signal(signal_beginrecord, "beginrecord", normal_error_handler);
     slots.register_signal(signal_endrecord, "endrecord", normal_error_handler);
     slots.register_signal(signal_mapcrcfail, "mapcrcfail", normal_error_handler);
@@ -175,6 +177,7 @@ void disconnect_all_slots()
     signal_authrep.disconnect_all_slots();
     signal_addbot.disconnect_all_slots();
     signal_delbot.disconnect_all_slots();
+    signal_botleft.disconnect_all_slots();
     signal_beginrecord.disconnect_all_slots();
     signal_endrecord.disconnect_all_slots();
     signal_mapcrcfail.disconnect_all_slots();

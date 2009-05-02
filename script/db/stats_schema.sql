@@ -6,7 +6,8 @@ CREATE TABLE games (
     mapname             TEXT DEFAULT "",
     duration            INTEGER DEFAULT 0,
     finished            BOOLEAN DEFAULT 0,
-    players             INTEGER DEFAULT 0
+    players             INTEGER DEFAULT 0,
+    bots                INTEGER DEFAULT 0
 );
 
 CREATE TABLE teams (
@@ -37,7 +38,8 @@ CREATE TABLE players (
     timeplayed          INTEGER DEFAULT 0,
     finished            BOOLEAN DEFAULT 0,
     win                 BOOLEAN DEFAULT 0,
-    rank                INTEGER DEFAULT 0
+    rank                INTEGER DEFAULT 0,
+    botskill            INTEGER DEFAULT 0
 );
 
 CREATE TABLE playertotals (

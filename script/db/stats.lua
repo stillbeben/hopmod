@@ -13,14 +13,14 @@ createMissingTables("./script/db/stats_schema.sql", db)
 if tonumber(server.stats_debug) == 1 then statsmod.db = db end
 
 local perr
-local insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, finished) VALUES (:datetime,:duration,:mode,:map,:players,:finished)")
+local insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, bots, finished) VALUES (:datetime, :duration, :mode, :map, :players, :bots, :finished)")
 if not insert_game then error(perr) end
 
 local insert_team,perr = db:prepare("INSERT INTO teams (game_id, name, score, win, draw) VALUES (:gameid,:name,:score,:win,:draw)")
 if not insert_team then error(perr) end
 
-local insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win,rank) 
- VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank)]]
+local insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win, rank, botskill) 
+ VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank, :botskill)]]
 if not insert_player then error(perr) end
 
 local select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
@@ -42,7 +42,7 @@ end
 function statsmod.getPlayerTable(player_id)
     player_id = tonumber(player_id)
     if stats[player_id] then return stats[player_id] end
-    stats[player_id] = {team_id = 0, score = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, win = false, rank = 0, country = ""}
+    stats[player_id] = {team_id = 0, score = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, win = false, rank = 0, country = "", botskill = 0}
     return stats[player_id]
 end
 
@@ -91,7 +91,9 @@ end
 
 function statsmod.addPlayer(cn)
     
-    if domain_id and auth.found_name(server.player_name(cn),domain_id) then
+    local human = not server.player_isbot(cn)
+    
+    if human and domain_id and auth.found_name(server.player_name(cn),domain_id) then
     
         if not statsmod.isPlayerVerified(cn) then
         
@@ -107,7 +109,7 @@ function statsmod.addPlayer(cn)
             
             server.sleep(13000, function()
                 
-                if sid ~= server.player_sessionid(cn) or pid ~= server.player_id(cn) then return end
+                if sid ~= server.player_sessionid(cn) or pid ~= server.player_id(cn) then return {} end
                 
                 if not statsmod.isPlayerVerified(cn) then
                     server.kick(cn, 0, "server", "using reserved name")
@@ -115,13 +117,13 @@ function statsmod.addPlayer(cn)
                 
             end)
             
-            return
-            
+            return {}
         end
     end
     
-    statsmod.updatePlayer(cn).playing = true
-    
+    local t = statsmod.updatePlayer(cn)
+    t.playing = true
+    return t
 end
 
 function statsmod.commitStats()
@@ -138,22 +140,38 @@ function statsmod.commitStats()
         t.rank = server.player_rank(cn)
     end
     
-    game.players = #stats
-    game.duration = game.duration - server.timeleft
+    for i,cn in ipairs(server.bots()) do
+        local t = statsmod.updatePlayer(cn)
+        if t.playing then t.finished = true end
+    end
     
-    local unique_players = 0
+    local human_players = 0
+    local bot_players = 0
+    local unique_players = 0 -- human players
     local ipcount = {}
     for id,player in pairs(stats) do
-        if not ipcount[player.ipaddrlong] then
-            ipcount[player.ipaddrlong] = true
-            unique_players = unique_players + 1
+    
+        if player.botskill == 0 then
+            human_players = human_players + 1
+            
+            if not ipcount[player.ipaddrlong] then
+                ipcount[player.ipaddrlong] = true
+                unique_players = unique_players + 1
+            end
+        else
+            bot_players = bot_players + 1
         end
+        
     end
     
-    if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
-        stats = nil
-        return
-    end
+    --if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+    --    stats = nil
+    --    return
+    --end
+    
+    game.players = human_players
+    game.bots = bot_players
+    game.duration = game.duration - server.timeleft
     
     if tonumber(server.stats_use_json) == 1 then
         statsmod.writeStatsToJsonFile()
@@ -216,6 +234,14 @@ local function installHandlers()
     local connect = server.event_handler("active", statsmod.addPlayer)
     local disconnect = server.event_handler("disconnect", function(cn) statsmod.updatePlayer(cn).playing = false end)
     
+    local addbot = server.event_handler("addbot", function(cn, skill, botcn)
+        statsmod.addPlayer(botcn).botskill = skill
+    end)
+    
+    local botleft = server.event_handler("botleft", function(botcn)
+        statsmod.updatePlayer(botcn).playing = false
+    end)
+    
     local intermission = server.event_handler("intermission", function()
         game.finished = true
         statsmod.commitStats()
@@ -228,12 +254,13 @@ local function installHandlers()
     
     table.insert(evthandlers, connect)
     table.insert(evthandlers, disconnect)
+    table.insert(evthandlers, addbot)
+    table.insert(evthandlers, botleft)
     table.insert(evthandlers, intermission)
     table.insert(evthandlers, finishedgame)
     table.insert(evthandlers, mapchange)
     table.insert(evthandlers, _rename)
     table.insert(evthandlers, renaming)
-    
     
     if tonumber(server.stats_use_auth) == 1 then
     
@@ -346,3 +373,4 @@ function server.playercmd_showauth(cn)
 end
 
 if tonumber(server.stats_debug) == 1 then return statsmod end
+

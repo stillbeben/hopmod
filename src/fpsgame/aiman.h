@@ -126,6 +126,7 @@ namespace aiman
         ci->playermodel = rnd(128);
 		ci->aireinit = 2;
 		ci->connected = true;
+        ci->playerid = next_botid--;
         dorefresh = true;
 		return ci;
 	}
@@ -136,6 +137,7 @@ namespace aiman
         if(!bots.inrange(cn)) return;
         if(smode) smode->leavegame(ci, true);
         sendf(-1, 1, "ri2", SV_CDIS, ci->clientnum);
+        signal_botleft(ci->clientnum);
         clientinfo *owner = (clientinfo *)getclientinfo(ci->ownernum);
         if(owner) owner->bots.removeobj(ci);
         clients.removeobj(ci);
@@ -166,7 +168,6 @@ namespace aiman
                 else sendresume(ci);
             }
 			ci->aireinit = 0;
-            ci->playerid = next_botid--;
 		}
 	}
 
