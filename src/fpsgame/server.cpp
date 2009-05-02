@@ -1357,7 +1357,7 @@ namespace server
 
     void changemap(const char *s, int mode,int mins = -1)
     {
-        calc_player_ranks();
+        calc_player_ranks(NULL);
         signal_finishedgame();
         
         stopdemo();
