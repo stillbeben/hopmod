@@ -84,7 +84,7 @@ namespace aiman
         return least;
 	}
 
-	bool addai(int skill, int limit)
+	clientinfo * addai(int skill, int limit)
 	{
 		int numai = 0, cn = -1, maxai = limit >= 0 ? min(limit, MAXBOTS) : MAXBOTS;
 		loopv(bots)
@@ -93,7 +93,7 @@ namespace aiman
             if(!ci || ci->ownernum < 0) { if(cn < 0) cn = i; continue; }
 			numai++;
 		}
-		if(numai >= maxai) return false;
+		if(numai >= maxai) return NULL;
         if(bots.inrange(cn))
         {
             clientinfo *ci = bots[cn];
@@ -104,7 +104,7 @@ namespace aiman
                 ci->ownernum = owner ? owner->clientnum : -1;
                 ci->aireinit = 2;
                 dorefresh = true;
-                return true;
+                return owner;
             }
         }
         else { cn = bots.length(); bots.add(NULL); }
@@ -126,7 +126,7 @@ namespace aiman
 		ci->aireinit = 2;
 		ci->connected = true;
         dorefresh = true;
-		return true;
+		return ci;
 	}
 
 	void deleteai(clientinfo *ci)
@@ -231,8 +231,9 @@ namespace aiman
 	void reqadd(clientinfo *ci, int skill)
 	{
         if(!ci->local && !ci->privilege) return;
-        if(!addai(skill, !ci->local && ci->privilege < PRIV_ADMIN ? botlimit : -1)) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to create or assign bot");
-        else signal_addbot(ci->clientnum,skill);
+        clientinfo * boti = addai(skill, !ci->local && ci->privilege < PRIV_ADMIN ? botlimit : -1);
+        if(!boti) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to create or assign bot");
+        else signal_addbot(ci->clientnum, skill, boti->clientnum);
 	}
 
 	void reqdel(clientinfo *ci)
