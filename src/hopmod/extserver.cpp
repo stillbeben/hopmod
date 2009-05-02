@@ -722,6 +722,7 @@ void calc_player_ranks(const char * team)
     
     loopv(clients)
     {
+        if(clients[i]->state.state == CS_SPECTATOR || clients[i]->state.aitype != AI_NONE) continue;
         clientinfo * bestplayer = NULL;
         bestscore = get_best_player_score(&bestplayer, bestscore);
         bestplayer->rank = rank++;
