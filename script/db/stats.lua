@@ -64,9 +64,10 @@ function statsmod.updatePlayer(cn)
 
     local frags = server.player_frags(cn)
     local suicides = server.player_suicides(cn)
+    local teamkills = server.player_teamkills(cn)
     
-    -- sauer bug: frags decremented for every suicide
-    frags = frags + suicides
+    -- sauer bug: frags decremented for every suicide and teamkill
+    frags = frags + suicides + teamkills
     
     t.frags = frags
     t.teamkills = server.player_teamkills(cn)
