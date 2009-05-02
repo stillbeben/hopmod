@@ -13,14 +13,14 @@ createMissingTables("./script/db/stats_schema.sql", db)
 if tonumber(server.stats_debug) == 1 then statsmod.db = db end
 
 local perr
-local insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players) VALUES (:datetime,:duration,:mode,:map,:players)")
+local insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, finished) VALUES (:datetime,:duration,:mode,:map,:players,:finished)")
 if not insert_game then error(perr) end
 
 local insert_team,perr = db:prepare("INSERT INTO teams (game_id, name, score, win, draw) VALUES (:gameid,:name,:score,:win,:draw)")
 if not insert_team then error(perr) end
 
-local insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, frags, deaths, suicides, teamkills, hits, shots, damage, timeplayed, finished, win) 
-    VALUES(:gameid,:team_id,:name,:ipaddr,:country,:frags,:deaths,:suicides,:teamkills,:hits,:shots,:damage,:timeplayed,:finished,:win)]]
+local insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win,rank) 
+ VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank)]]
 if not insert_player then error(perr) end
 
 local select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
@@ -34,7 +34,7 @@ local send_verified_msg = function(cn, name)
 end
 
 function statsmod.setNewGame()
-    game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map}
+    game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map, finished = false}
     stats = {}
     -- addPlayer function will be called on active event for each player
 end
@@ -42,7 +42,7 @@ end
 function statsmod.getPlayerTable(player_id)
     player_id = tonumber(player_id)
     if stats[player_id] then return stats[player_id] end
-    stats[player_id] = {team_id = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, win = false}
+    stats[player_id] = {team_id = 0, score = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, win = false, rank = 0, country = ""}
     return stats[player_id]
 end
 
@@ -66,16 +66,19 @@ function statsmod.updatePlayer(cn)
     local suicides = server.player_suicides(cn)
     local teamkills = server.player_teamkills(cn)
     
+    t.score = frags
+    
     -- sauer bug: frags decremented for every suicide and teamkill
     frags = frags + suicides + teamkills
-    
     t.frags = frags
+    
     t.teamkills = server.player_teamkills(cn)
     t.suicides = suicides
     t.deaths = server.player_deaths(cn)
     t.hits = server.player_hits(cn)
     t.shots = server.player_shots(cn)
     t.damage = server.player_damage(cn)
+    t.damagewasted = server.player_damagewasted(cn)
     t.timeplayed = server.player_timeplayed(cn)
     
     return t
@@ -132,6 +135,7 @@ function statsmod.commitStats()
         local t = statsmod.updatePlayer(cn)
         if t.playing then t.finished = true end
         t.win = server.player_win(cn)
+        t.rank = server.player_rank(cn)
     end
     
     game.players = #stats
@@ -211,7 +215,12 @@ local function installHandlers()
 
     local connect = server.event_handler("active", statsmod.addPlayer)
     local disconnect = server.event_handler("disconnect", function(cn) statsmod.updatePlayer(cn).playing = false end)
-    local intermission = server.event_handler("intermission", statsmod.commitStats)
+    
+    local intermission = server.event_handler("intermission", function()
+        game.finished = true
+        statsmod.commitStats()
+    end)
+    
     local finishedgame = server.event_handler("finishedgame", statsmod.commitStats)
     local mapchange = server.event_handler("mapchange", statsmod.setNewGame)
     local _rename = server.event_handler("rename", statsmod.addPlayer)
