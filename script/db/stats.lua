@@ -139,7 +139,7 @@ function statsmod.commitStats()
         t.win = server.player_win(cn)
         t.rank = server.player_rank(cn)
     end
-    
+
     for i,cn in ipairs(server.bots()) do
         local t = statsmod.updatePlayer(cn)
         if t.playing then t.finished = true end

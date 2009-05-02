@@ -109,8 +109,8 @@ BEGIN
         shots = shots + new.shots,
         damage = damage + new.damage,
         damagewasted = damagewasted + new.damagewasted,
-        wins = wins + new.win,
-        losses = losses + (new.win = 0),
+        wins = wins + (new.win and new.finished),
+        losses = losses + (new.win = 0 and new.finished),
         games = games + 1,
         withdraws = withdraws + (new.finished = 0),
         timeplayed = timeplayed + new.timeplayed
