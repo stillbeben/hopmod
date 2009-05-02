@@ -51,6 +51,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_suicides, FUNGU_OBJECT_ID("player_suicides"), env);
     script::bind_global_func<int (int)>(server::player_teamkills, FUNGU_OBJECT_ID("player_teamkills"), env);
     script::bind_global_func<int (int)>(server::player_damage, FUNGU_OBJECT_ID("player_damage"), env);
+    script::bind_global_func<int (int)>(server::player_damagewasted, FUNGU_OBJECT_ID("player_damagewasted"), env);
     script::bind_global_func<int (int)>(server::player_maxhealth, FUNGU_OBJECT_ID("player_maxhealth"), env);
     script::bind_global_func<int (int)>(server::player_health, FUNGU_OBJECT_ID("player_health"), env);
     script::bind_global_func<int (int)>(server::player_gun, FUNGU_OBJECT_ID("player_gun"), env);

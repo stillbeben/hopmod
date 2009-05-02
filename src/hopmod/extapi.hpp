@@ -53,6 +53,7 @@ namespace server
     extern int player_suicides(int);
     extern int player_teamkills(int);
     extern int player_damage(int);
+    extern int player_damagewasted(int);
     extern int player_maxhealth(int);
     extern int player_health(int);
     extern int player_gun(int);

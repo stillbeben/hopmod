@@ -170,6 +170,11 @@ int player_deaths(int cn){return get_ci(cn)->state.deaths;}
 int player_suicides(int cn){return get_ci(cn)->state.suicides;}
 int player_teamkills(int cn){return get_ci(cn)->state.teamkills;}
 int player_damage(int cn){return get_ci(cn)->state.damage;}
+int player_damagewasted(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return ci->state.explosivedamage + ci->state.shotdamage - ci->state.damage;
+}
 int player_maxhealth(int cn){return get_ci(cn)->state.maxhealth;}
 int player_health(int cn){return get_ci(cn)->state.health;}
 int player_gun(int cn){return get_ci(cn)->state.gunselect;}

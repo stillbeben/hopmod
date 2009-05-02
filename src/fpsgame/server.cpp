@@ -124,7 +124,7 @@ namespace server
         int lastdeath, lastspawn, lifesequence;
         int lastshot;
         projectilestate<8> rockets, grenades;
-        int frags, flags, deaths, suicides, teamkills, shotdamage, damage, hits, shots;
+        int frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, shots;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
@@ -149,7 +149,7 @@ namespace server
 
             timeplayed = 0;
             effectiveness = 0;
-            frags = flags = deaths = suicides = teamkills = shotdamage = damage = hits = shots = 0;
+            frags = flags = deaths = suicides = teamkills = shotdamage = explosivedamage = damage = hits = shots = 0;
 
             respawn();
         }
@@ -175,7 +175,7 @@ namespace server
     {
         uint ip;
         string name;
-        int maxhealth, frags, flags, deaths, suicides, teamkills, shotdamage, damage, hits, shots;
+        int maxhealth, frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, shots;
         int timeplayed;
         float effectiveness;
 
@@ -188,6 +188,7 @@ namespace server
             suicides = gs.suicides;
             teamkills = gs.teamkills;
             shotdamage = gs.shotdamage;
+            explosivedamage = gs.explosivedamage;
             damage = gs.damage;
             timeplayed = gs.timeplayed;
             effectiveness = gs.effectiveness;
@@ -205,6 +206,7 @@ namespace server
             gs.suicides = suicides;
             gs.teamkills = teamkills;
             gs.shotdamage = shotdamage;
+            gs.explosivedamage = explosivedamage;
             gs.damage = damage;
             gs.timeplayed = timeplayed;
             gs.effectiveness = effectiveness;
@@ -1588,6 +1590,7 @@ namespace server
             default:
                 return;
         }
+        gs.explosivedamage += guns[gun].damage * (gs.quadmillis ? 4 : 1);
         loopv(hits)
         {
             hitinfo &h = hits[i];
