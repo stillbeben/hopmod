@@ -60,7 +60,7 @@ function statsmod.updatePlayer(cn)
     if server.gamemodeinfo.teams then t.team = server.player_team(cn) end -- useful for stats serialized to json
     t.ipaddr = server.player_ip(cn)
     t.ipaddrlong = server.player_iplong(cn)
-    t.country = server.ip_to_country_code(cn)
+    t.country = server.ip_to_country_code(server.player_ip(cn))
 
     local frags = server.player_frags(cn)
     local suicides = server.player_suicides(cn)
