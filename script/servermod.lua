@@ -117,7 +117,7 @@ server.event_handler("started", function()
     
     server.reload_maprotation()
     
-    if server.playercount == 0 then
+    if tonumber(server.playercount) == 0 then
         server.changemap(server.first_map,server.first_gamemode,-1)
     end
     
