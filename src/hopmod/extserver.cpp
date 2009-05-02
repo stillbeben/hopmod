@@ -704,6 +704,7 @@ static int get_best_player_score(clientinfo ** ci,int highestscore,const char * 
         }
     }
     *ci = bestplayer;
+    return best;
 }
 
 void calc_player_ranks(const char * team)
