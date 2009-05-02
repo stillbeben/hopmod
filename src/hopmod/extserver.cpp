@@ -444,11 +444,14 @@ int lua_clients_list(lua_State * L,bool (* clienttype)(clientinfo *))
 
 bool is_player(clientinfo * ci){return ci->state.state != CS_SPECTATOR && ci->state.aitype == AI_NONE;}
 bool is_spectator(clientinfo * ci){return ci->state.state == CS_SPECTATOR; /* bots can't be spectators*/}
+bool is_bot(clientinfo * ci){return ci->state.aitype != AI_NONE;}
 
 std::vector<int> cs_player_list(){return cs_clients_list(&is_player);}
 int lua_player_list(lua_State * L){return lua_clients_list(L, &is_player);}
 std::vector<int> cs_spec_list(){return cs_clients_list(&is_spectator);}
 int lua_spec_list(lua_State * L){return lua_clients_list(L, &is_spectator);}
+std::vector<int> cs_bot_list(){return cs_clients_list(&is_bot);}
+int lua_bot_list(lua_State *L){return lua_clients_list(L, &is_bot);}
 
 std::vector<std::string> get_teams()
 {

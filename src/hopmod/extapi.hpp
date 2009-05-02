@@ -108,8 +108,10 @@ namespace server
     
     extern std::vector<int> cs_player_list();
     extern std::vector<int> cs_spec_list();
+    extern std::vector<int> cs_bot_list();
     extern int lua_player_list(lua_State *);
     extern int lua_spec_list(lua_State *);
+    extern int lua_bot_list(lua_State *);
 
     extern bool selectnextgame();
     

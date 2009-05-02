@@ -65,6 +65,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_bots, FUNGU_OBJECT_ID("player_bots"), env);
     script::bind_global_func<int (int)>(server::player_authreq, FUNGU_OBJECT_ID("player_authreq"), env);
     script::bind_global_func<int (int)>(server::player_rank, FUNGU_OBJECT_ID("player_rank"), env);
+    script::bind_global_func<bool (int)>(server::player_isbot, FUNGU_OBJECT_ID("player_isbot"), env);
     
     script::bind_global_const((int)CS_ALIVE, FUNGU_OBJECT_ID("ALIVE"), env);
     script::bind_global_const((int)CS_DEAD, FUNGU_OBJECT_ID("DEAD"), env);
@@ -81,9 +82,11 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_global_func<std::vector<int> ()>(server::cs_player_list, FUNGU_OBJECT_ID("players"), env);
     script::bind_global_func<std::vector<int> ()>(server::cs_spec_list, FUNGU_OBJECT_ID("spectators"), env);
-    
+    script::bind_global_func<std::vector<int> ()>(server::cs_bot_list, FUNGU_OBJECT_ID("bots"), env);
     register_lua_function(&server::lua_player_list, "players");
     register_lua_function(&server::lua_spec_list, "spectators");
+    register_lua_function(&server::lua_bot_list, "bots");
+    
     register_lua_function(&server::lua_gamemodeinfo, "gengamemodeinfo");
     
     //team-oriented functions
