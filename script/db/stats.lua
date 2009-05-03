@@ -57,7 +57,7 @@ function statsmod.updatePlayer(cn)
     if not t then return {} end
     
     t.name = server.player_name(cn)
-    if server.gamemodeinfo.teams then t.team = server.player_team(cn) end -- useful for stats serialized to json
+    t.team = server.player_team(cn)
     t.ipaddr = server.player_ip(cn)
     t.ipaddrlong = server.player_iplong(cn)
     t.country = server.ip_to_country_code(server.player_ip(cn))
@@ -164,10 +164,10 @@ function statsmod.commitStats()
         
     end
     
-    if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
-        stats = nil
-        return
-    end
+    --if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+    --    stats = nil
+    --    return
+    --end
     
     game.players = human_players
     game.bots = bot_players
@@ -203,9 +203,14 @@ function statsmod.commitStats()
             insert_team:exec()
             
             local team_id = db:last_insert_rowid()
+            local team_name = team.name
             
-            for i2,teamplayer in ipairs(server.team_players(teamname)) do
-                statsmod.getPlayerTable(server.player_id(teamplayer)).team_id = team_id
+            --for i2,teamplayer in ipairs(server.team_players(teamname)) do
+            --    statsmod.getPlayerTable(server.player_id(teamplayer)).team_id = team_id
+            --end
+            
+            for id,player in pairs(stats) do
+                if player.team == team_name then player.team_id = team_id end
             end
         end
     end
@@ -309,7 +314,12 @@ end)
 
 function server.playercmd_stats(cn,selection)
     if not selection then
-        server.player_msg(cn,string.format("Frags: %s Deaths: %s Accuracy %s",green(server.player_frags(cn)),red(server.player_deaths(cn)),yellow(server.player_accuracy(cn).."%")))
+        local frags = server.player_frags(cn) + server.player_suicides(cn) + server.player_teamkills(cn)
+        server.player_msg(cn,string.format("Score: %s Frags: %s Deaths: %s Accuracy %s",
+            yellow(server.player_frags(cn)),
+            green(frags),
+            red(server.player_deaths(cn)),
+            yellow(server.player_accuracy(cn).."%")))
         if server.gamemodeinfo.teams then
             server.player_msg(cn,string.format("Teamkills: %s",red(server.player_teamkills(cn))))
         end
