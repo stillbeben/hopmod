@@ -276,6 +276,20 @@ int player_authreq(int cn){return get_ci(cn)->authreq;}
 int player_rank(int cn){return get_ci(cn)->rank;}
 bool player_isbot(int cn){return get_ci(cn)->state.aitype != AI_NONE;}
 
+void set_invadmin(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    ci->privilege = PRIV_ADMIN;
+    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_ADMIN);
+}
+
+void unset_invadmin(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    ci->privilege = PRIV_NONE;
+    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_NONE);
+}
+
 void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);
