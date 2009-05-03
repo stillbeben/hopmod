@@ -707,25 +707,12 @@ void signal_auth_failure(int cn)
     ci->authreq = 0;
 }
 
-static int get_best_player_score(clientinfo ** ci,int highestscore,const char * team = NULL)
+static bool compare_player_score(const std::pair<int,int> & x, const std::pair<int,int> & y)
 {
-    clientinfo * bestplayer = NULL;
-    int best = 0;
-    loopv(clients)
-    {
-        if(clients[i]->state.state == CS_SPECTATOR || clients[i]->state.aitype != AI_NONE) continue;
-        int score = clients[i]->state.frags;
-        if((!bestplayer || score > best) && score <= highestscore && (!team || !strcmp(clients[i]->team,team)))
-        {
-            bestplayer = clients[i];
-            best = clients[i]->state.frags;
-        }
-    }
-    *ci = bestplayer;
-    return best;
+    return x.first > y.first;
 }
 
-void calc_player_ranks(const char * team)
+static void calc_player_ranks(const char * team)
 {
     if(m_edit) return;
     
@@ -734,19 +721,31 @@ void calc_player_ranks(const char * team)
         std::vector<std::string> teams = get_teams();
         for(std::vector<std::string>::const_iterator it = teams.begin();
              it != teams.end(); it++) calc_player_ranks(it->c_str());
+        return;
     }
     
-    int rank = 1;
-    int bestscore = std::numeric_limits<int>::max();
+    std::vector<std::pair<int,int> > players;
+    players.reserve(clients.length());
     
-    loopv(clients)
+    loopv(clients) 
+        if(clients[i]->state.state != CS_SPECTATOR && (!team || !strcmp(clients[i]->team,team)))
+            players.push_back(std::pair<int,int>(clients[i]->state.frags, i));
+    
+    std::sort(players.begin(), players.end(), compare_player_score);
+    
+    int rank = 0;
+    for(std::vector<std::pair<int,int> >::const_iterator it = players.begin();
+        it != players.end(); ++it)
     {
-        if(clients[i]->state.state == CS_SPECTATOR || clients[i]->state.aitype != AI_NONE) continue;
-        clientinfo * bestplayer = NULL;
-        bestscore = get_best_player_score(&bestplayer, bestscore, team);
-        assert(bestplayer);
-        bestplayer->rank = rank++;
+        rank++;
+        if(it != players.begin() && it->first == (it-1)->first) rank--;
+        clients[it->second]->rank = rank;
     }
+}
+
+void calc_player_ranks()
+{
+    return calc_player_ranks(NULL);
 }
 
 #endif

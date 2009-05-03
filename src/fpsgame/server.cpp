@@ -1357,7 +1357,7 @@ namespace server
 
     void changemap(const char *s, int mode,int mins = -1)
     {
-        calc_player_ranks(NULL);
+        calc_player_ranks();
         signal_finishedgame();
         
         stopdemo();
@@ -1513,7 +1513,7 @@ namespace server
         if(!interm && minremain<=0)
         {
             interm = gamemillis+10000;
-            calc_player_ranks(NULL);
+            calc_player_ranks();
             signal_intermission();
         }
     }

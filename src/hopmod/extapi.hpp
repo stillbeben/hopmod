@@ -106,8 +106,8 @@ namespace server
     extern int lua_gamemodeinfo(lua_State *);
     extern int recorddemo();
     extern void enddemorecord();
-    extern void calc_player_ranks(const char * team);
-    
+    extern void calc_player_ranks();
+
     extern std::vector<int> cs_player_list();
     extern std::vector<int> cs_spec_list();
     extern std::vector<int> cs_bot_list();
