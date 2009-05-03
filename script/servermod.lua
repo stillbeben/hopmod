@@ -49,6 +49,9 @@ function onText(cn,text)
 end
 
 function onMapVote(cn,map,mode)
+    
+    if server.player_priv_code(cn) == 2 then return end -- admin player
+    
     if tonumber(server.allow_mapvote) <= 0 then
         server.player_msg(cn, red() .. "Map voting is disabled.")
         return -1
