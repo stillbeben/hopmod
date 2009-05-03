@@ -164,10 +164,10 @@ function statsmod.commitStats()
         
     end
     
-    --if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
-    --    stats = nil
-    --    return
-    --end
+    if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+        stats = nil
+        return
+    end
     
     game.players = human_players
     game.bots = bot_players
