@@ -715,7 +715,7 @@ static int get_best_player_score(clientinfo ** ci,int highestscore,const char * 
     {
         if(clients[i]->state.state == CS_SPECTATOR || clients[i]->state.aitype != AI_NONE) continue;
         int score = clients[i]->state.frags;
-        if((!bestplayer || score > best) && score < highestscore && (!team || !strcmp(clients[i]->team,team)))
+        if((!bestplayer || score > best) && score <= highestscore && (!team || !strcmp(clients[i]->team,team)))
         {
             bestplayer = clients[i];
             best = clients[i]->state.frags;
@@ -743,7 +743,8 @@ void calc_player_ranks(const char * team)
     {
         if(clients[i]->state.state == CS_SPECTATOR || clients[i]->state.aitype != AI_NONE) continue;
         clientinfo * bestplayer = NULL;
-        bestscore = get_best_player_score(&bestplayer, bestscore);
+        bestscore = get_best_player_score(&bestplayer, bestscore, team);
+        assert(bestplayer);
         bestplayer->rank = rank++;
     }
 }
