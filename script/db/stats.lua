@@ -109,7 +109,7 @@ function statsmod.addPlayer(cn)
             
             server.sleep(13000, function()
                 
-                if sid ~= server.player_sessionid(cn) or pid ~= server.player_id(cn) then return {} end
+                if sid ~= server.player_sessionid(cn) or pid ~= server.player_id(cn) then return end
                 
                 if not statsmod.isPlayerVerified(cn) then
                     server.kick(cn, 0, "server", "using reserved name")

@@ -2,8 +2,6 @@ dofile("./script/serverlib.lua")
 dofile("./script/logging.lua")
 dofile("./script/maprotation.lua")
 dofile("./script/playercmd.lua")
-dofile("./script/db/auth.lua")
-dofile("./script/db/stats.lua")
 
 function sendServerBanner(cn)
 
@@ -92,10 +90,13 @@ server.event_handler("teamkill", onTeamkill)
 server.event_handler("mapvote", onMapVote)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
-server.auth_add_user = auth.add_user
-server.auth_add_domain = auth.add_domain
-
 server.event_handler("started", function()
+    
+    dofile("./script/db/auth.lua")
+    server.auth_add_user = auth.add_user
+    server.auth_add_domain = auth.add_domain
+    
+    dofile("./script/db/stats.lua")
     
     if tonumber(server.use_script_socket_server) == 1 then
         if not server["script_socket_supported?"]() then
