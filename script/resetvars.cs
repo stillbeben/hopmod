@@ -42,7 +42,7 @@ global capture_maps [urban_c nevil_c fb_capture nmp9 c_valley lostinspace fc3
 
 global ctf_maps [hallo reissen face-capture flagstone shipwreck urban_c dust2
     berlin_wall akroseum valhalla damnation mach2 redemption tejen europium
-    capture_night l_ctf forge campo wdcd sacrifice core_transfer]
+    capture_night l_ctf forge campo wdcd sacrifice core_transfer recovery]
 
 global "teamplay_maps" &ffa_maps
 global "efficiency_maps" &ffa_maps
