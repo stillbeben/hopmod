@@ -232,14 +232,27 @@ int player_win(int cn)
     if(!m_teammode)
     {
         loopv(clients)
-            if(clients[i] != ci && clients[i]->state.state != CS_SPECTATOR && 
-                clients[i]->state.aitype == AI_NONE)
-            {
-                if( (clients[i]->state.frags > ci->state.frags) ||
-                    (clients[i]->state.frags == ci->state.frags && clients[i]->state.deaths < clients[i]->state.deaths) ||
-                    (clients[i]->state.deaths == ci->state.deaths && player_accuracy(clients[i]->clientnum) > player_accuracy(cn)) ||
-                    true ) return false;
-            }
+        {
+            if(clients[i] == ci || clients[i]->state.state == CS_SPECTATOR) continue;
+            
+            bool more_frags = clients[i]->state.frags > ci->state.frags;
+            bool eq_frags = clients[i]->state.frags == ci->state.frags;
+            
+            bool less_deaths = clients[i]->state.deaths < ci->state.deaths;
+            bool eq_deaths = clients[i]->state.deaths == ci->state.deaths;
+            
+            int p1_acc = player_accuracy(clients[i]->clientnum);
+            int p2_acc = player_accuracy(cn);
+            
+            bool better_acc = p1_acc > p2_acc;
+            bool eq_acc = p1_acc == p2_acc;
+            
+            bool lower_ping = clients[i]->ping < ci->ping;
+            
+            if( more_frags || (eq_frags && less_deaths) ||
+                (eq_frags && eq_deaths && better_acc) || 
+                (eq_frags && eq_deaths && eq_acc && lower_ping)) return false;            
+        }
         return true;
     }
     else return team_win(ci->team);
