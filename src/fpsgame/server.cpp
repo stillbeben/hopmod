@@ -1762,6 +1762,7 @@ namespace server
             clientinfo *m = currentmaster>=0 ? getinfo(currentmaster) : NULL;
             loopv(clients)
             {
+                if(clients[i]->state.aitype != AI_NONE) continue;
                 if(clients[i]->privilege) sendf(clients[i]->clientnum, 1, "ri3", SV_CURRENTMASTER, clients[i]->clientnum, clients[i]->privilege);
                 else sendf(clients[i]->clientnum, 1, "ri3", SV_CURRENTMASTER, currentmaster, m ? m->privilege : 0);
             }
