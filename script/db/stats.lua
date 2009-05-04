@@ -285,7 +285,7 @@ local function installHandlers()
             pvars.stats_block = false
             pvars.stats_id_verified = true
             pvars.stats_id_name = name
-            pvars.stats_id_expire = tonumber(server.uptime) + 86400
+            pvars.stats_id_expire = tonumber(server.uptime) + 86400000
             
             send_verified_msg(cn, name)
             
