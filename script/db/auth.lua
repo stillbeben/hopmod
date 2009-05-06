@@ -53,7 +53,7 @@ server.event_handler("authreq", function(cn,name,domain)
         if not row then
             server.signal_auth_failure(cn)
         else
-            
+        
             local ans,chal = server.genchallenge(row.pubkey)
             req.answer = ans
             server.sendauthchallenge(cn, chal)
@@ -76,7 +76,7 @@ server.event_handler("authrep", function(cn, answer)
         server.relayauthanswer(cn, answer)
         return
     end
-    
+
     if server.checkchallenge(answer, req.answer) then
         server.signal_auth_success(cn)
     else
@@ -94,7 +94,7 @@ server.event_handler("auth", function(cn, name, domain, success)
         server.freechalanswer(req.answer)
     end
     
-    if success then
+    if tonumber(success) == 1 then
         if req.domain then
             
             local handler = auth_domain_handlers[req.domain]

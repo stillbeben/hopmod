@@ -637,7 +637,10 @@ int lua_genchallenge(lua_State * L)
     void * pubkey = parsepubkey(pubkeystr);
     
     uint seed[3] = { rx_bytes, totalmillis, randomMT() };
-    vector<char> challenge;
+    
+    static vector<char> challenge;
+    challenge.setsizenodelete(0);
+    
     void * answer = genchallenge(pubkey, seed, sizeof(seed), challenge);
     
     lua_pushlightuserdata(L, answer);
@@ -659,7 +662,8 @@ int lua_checkchallenge(lua_State * L)
     void * correct = lua_touserdata(L, 2);
     if(!correct) return luaL_argerror(L, 2, "not valid pointer");
     
-    lua_pushboolean(L, checkchallenge(answer, correct));
+    int check = checkchallenge(answer, correct);
+    lua_pushboolean(L, check);
     return 1;
 }
 
@@ -697,7 +701,7 @@ void relayauthanswer(int cn, const char * ans)
 void sendauthchallenge(int cn, const char * challenge)
 {
     clientinfo * ci = get_ci(cn);
-    sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, ci->authdomain, ci->authreq, ci->authname, challenge);
+    sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, ci->authdomain, ci->authreq, challenge);
 }
 
 void sendauthreq(int cn, const char * domain)

@@ -58,7 +58,7 @@ global "insta protect_maps" &ctf_maps
 
 global small_maps [complex douze ot academy metl2 metl3 nmp8 tartech dock
     turbine oddworld aard3c kffa neondevastation hog2 memento neonpanic
-    sdm1 shinme1 island metl4 frozen]
+    sdm1 shinmei1 island metl4 frozen]
 
 global big_maps [refuge kalking1 fanatic_quake lostinspace DM_BS1 shindou
     stemple powerplant killfactory corruptions deathtek aqueducts orbe]
