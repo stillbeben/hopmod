@@ -10,7 +10,7 @@ interval $ping_limiter_tick [
             
             set cn $arg1
             
-            if (> (player_ping $cn) $ping_limit) [
+            if (&& (> (player_ping $cn) $ping_limit) (> (player_lag $cn) $lag_limit)) [
                 
                 set warnings (+ 1 (player_var $cn ping_warnings))
                 player_var $cn ping_warnings $warnings
