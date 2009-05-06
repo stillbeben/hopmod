@@ -144,8 +144,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_funvar<const char *>(server::gamemodename, FUNGU_OBJECT_ID("gamemode"), env);
     
     script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_veto"), env);
-    script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_locked"), env);
-    script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_private"), env);
+    script::bind_global_var(server::allow_mm_locked, FUNGU_OBJECT_ID("allow_mm_locked"), env);
+    script::bind_global_var(server::allow_mm_private, FUNGU_OBJECT_ID("allow_mm_private"), env);
     
     script::bind_global_var(server::allow_item[I_SHELLS-I_SHELLS], FUNGU_OBJECT_ID("allow_shells"), env);
     script::bind_global_var(server::allow_item[I_BULLETS-I_SHELLS], FUNGU_OBJECT_ID("allow_bullets"), env);
