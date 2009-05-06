@@ -1,7 +1,7 @@
 
 interval $ping_limiter_tick [
 
-    if (> $playercount 0) [
+    if (> $playercount 2) [
         
         my cn 0
         my warnings 0
