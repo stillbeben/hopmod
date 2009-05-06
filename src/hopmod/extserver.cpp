@@ -303,6 +303,8 @@ void unset_invadmin(int cn)
     sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_NONE);
 }
 
+int player_mapcrc(int cn){return get_ci(cn)->mapcrc;}
+
 void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);

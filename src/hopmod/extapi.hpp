@@ -76,6 +76,7 @@ namespace server
     extern bool player_isbot(int);
     extern void set_invadmin(int);
     extern void unset_invadmin(int);
+    extern int player_mapcrc(int);
     
     extern void team_msg(const char *,const char *);
     extern std::vector<std::string> get_teams();
