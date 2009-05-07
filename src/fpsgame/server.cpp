@@ -1921,14 +1921,14 @@ namespace server
             savescore(ci);
             sendf(-1, 1, "ri2", SV_CDIS, n);
 
-            signal_disconnect(n, disc_reason_msg);
-            
             clients.removeobj(ci);
             aiman::removeai(ci);
             
             maxclients -= reservedslots_added_maxclients > 0;
             reservedslots_added_maxclients -= reservedslots_added_maxclients > 0; 
             reservedslots += ci->using_reservedslot;
+            
+            signal_disconnect(n, disc_reason_msg);
             
             if(clients.empty()) noclients();
             else aiman::dorefresh = true;
