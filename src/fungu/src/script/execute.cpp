@@ -61,7 +61,7 @@ int execute_file(const char * filename, env::frame * aFrame)
         
         try
         {
-            reader.feed(tmpbuf, strlen(tmpbuf));
+            reader.feed(tmpbuf, strlen(tmpbuf)+feof(file_stream));
         }
         catch(error_info *)
         {
