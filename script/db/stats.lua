@@ -289,7 +289,9 @@ local function installHandlers()
             
             send_verified_msg(cn, name)
             
-            statsmod.addPlayer(cn)
+            local t = statsmod.addPlayer(cn)
+            
+            t.auth_name = pvars.stats_id_name
         end
     end
     
