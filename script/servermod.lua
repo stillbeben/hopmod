@@ -119,6 +119,10 @@ server.event_handler("started", function()
         end
     end
     
+    if tonumber(server.enable_dynamic_maxclients) == 1 then
+        dofile("./script/resize_server.lua")
+    end
+    
     server.reload_maprotation()
     
     if tonumber(server.playercount) == 0 then
@@ -131,4 +135,3 @@ server.event_handler("started", function()
     
     server.log_status("-> Successfully loaded Hopmod")
 end)
-

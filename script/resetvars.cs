@@ -88,3 +88,5 @@ global ping_limit_warnings 4
 
 global enable_cheater_command 0
 global enable_votekick_command 0
+
+global enable_dynamic_maxclients 0
