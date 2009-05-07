@@ -244,9 +244,9 @@ namespace server
         freqlimit sv_switchteam_hit;
         std::string disconnect_reason;
         bool active;
-        
         int rank;
-        
+        bool using_reservedslot;
+
         clientinfo() 
          : sv_text_hit(sv_text_hit_length),
            sv_sayteam_hit(sv_sayteam_hit_length),
@@ -299,6 +299,7 @@ namespace server
             lastposupdate = 0;
             lag = 0;
             aireinit = 0;
+            using_reservedslot = false;
             mapchange();
         }
 
@@ -382,6 +383,9 @@ namespace server
     string next_mapname = "";
     int next_gametime = -1;
 
+    int reservedslots = 0;
+    int reservedslots_added_maxclients = 0;
+    
     bool notgotitems = true;        // true when map has changed and waiting for clients to send item
     int gamemode = 0;
     int gamemillis = 0, gamelimit = 0;
@@ -1922,6 +1926,10 @@ namespace server
             clients.removeobj(ci);
             aiman::removeai(ci);
             
+            maxclients -= reservedslots_added_maxclients > 0;
+            reservedslots_added_maxclients -= reservedslots_added_maxclients > 0; 
+            reservedslots += ci->using_reservedslot;
+            
             if(clients.empty()) noclients();
             else aiman::dorefresh = true;
         }
@@ -1938,16 +1946,33 @@ namespace server
     {
         if(ci->local) return DISC_NONE;
         if(!m_mp(gamemode)) return DISC_PRIVATE;
+        int clientcount = numclients(-1, false, true);
+        
+        if(masterpass[0] && checkpassword(ci, masterpass, pwd) && reservedslots > 0) 
+        {
+            if(clientcount >= maxclients)
+            {
+                reservedslots_added_maxclients++;
+                maxclients++;
+            }
+            reservedslots--;
+            ci->privilege = PRIV_ADMIN;
+            ci->using_reservedslot = true;
+            return DISC_NONE;
+        }
+        
+        if(clientcount >= maxclients) return DISC_MAXCLIENTS;
+        
         if(serverpass[0])
         {
             if(!checkpassword(ci, serverpass, pwd)) return DISC_PRIVATE;
             return DISC_NONE;
         }
-        if(masterpass[0] && checkpassword(ci, masterpass, pwd)) return DISC_NONE; 
-        if(numclients(-1, false, true)>=maxclients) return DISC_MAXCLIENTS;
+        
         uint ip = getclientip(ci->clientnum);
         if(bannedips.is_banned(netmask(ip))) return DISC_IPBAN;
         if(mastermode>=MM_PRIVATE && allowedips.find(ip)<0) return DISC_PRIVATE;
+        
         return DISC_NONE;
     }
 
@@ -2086,6 +2111,9 @@ namespace server
                     return;
                 }
 
+                bool give_admin_priv = ci->privilege == PRIV_ADMIN;
+                ci->privilege = PRIV_NONE;
+
                 ci->playermodel = getint(p);
                 ci->playerid = get_player_id(ci->name, getclientip(ci->clientnum));
                 
@@ -2111,6 +2139,8 @@ namespace server
                 if(m_demo) setupdemoplayback();
                 
                 signal_connect(ci->clientnum);
+                
+                if(give_admin_priv) set_invadmin(ci->clientnum);
             }
         }
         else if(chan==2)

@@ -26,6 +26,8 @@ namespace server
     extern string next_mapname;
     extern int next_gametime;
     
+    extern int reservedslots;
+    
     extern bool allow_mm_veto;
     extern bool allow_mm_locked;
     extern bool allow_mm_private;

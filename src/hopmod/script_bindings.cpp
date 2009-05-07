@@ -158,6 +158,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(server::allow_item[I_GREENARMOUR-I_SHELLS], FUNGU_OBJECT_ID("allow_greenarmour"), env);
     script::bind_global_var(server::allow_item[I_YELLOWARMOUR-I_SHELLS], FUNGU_OBJECT_ID("allow_yellowarmour"), env);
     script::bind_global_var(server::allow_item[I_QUAD-I_SHELLS], FUNGU_OBJECT_ID("allow_quad"), env);
+    script::bind_global_var(server::reservedslots, FUNGU_OBJECT_ID("reservedslots"), env);
     
     //script_socket functions
     script::bind_global_func<bool ()>(script_socket_supported, FUNGU_OBJECT_ID("script_socket_supported?"), env);
