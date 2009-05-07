@@ -104,6 +104,7 @@ namespace server
     extern void unsetban(const char * addr);
     extern void delbot(int);
     extern void enable_master_auth(bool);
+    extern bool using_master_auth();
     extern void update_mastermask();
     extern const char * gamemodename();
     extern int lua_gamemodeinfo(lua_State *);
@@ -131,6 +132,7 @@ namespace server
     extern void sendauthreq(int, const char *);
     extern void signal_auth_success(int);
     extern void signal_auth_failure(int);
+
     
 } //namespace server
 

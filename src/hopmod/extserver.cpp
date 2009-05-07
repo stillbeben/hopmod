@@ -433,6 +433,11 @@ void enable_master_auth(bool enable)
     mastermask = (enable ? mastermask & ~MM_AUTOAPPROVE : mastermask | MM_AUTOAPPROVE);
 }
 
+bool using_master_auth()
+{
+    return !(mastermask & MM_AUTOAPPROVE);
+}
+
 void update_mastermask()
 {
     bool autoapprove = mastermask & MM_AUTOAPPROVE;

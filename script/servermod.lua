@@ -90,6 +90,33 @@ server.event_handler("teamkill", onTeamkill)
 server.event_handler("mapvote", onMapVote)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
+server.event_handler("mapchange", function(map, mode)
+    
+    if mode == "coop edit" and server.using_master_auth() and tonumber(server.disable_masterauth_in_coopedit) == 1 then
+        
+        server.use_master_auth(false)
+        
+        local handler
+        handler = server.event_handler("mapchange", function(map, mode)
+            
+            if mode ~= "coop edit" then
+            
+                server.use_master_auth(true)
+                server.cancel_handler(handler)
+                
+                for index, cn in ipairs(server.players()) do
+                    if server.player_priv_code(cn) == 1 then
+                        server.unsetmaster(cn)
+                    end
+                end
+            end
+            
+        end)
+        
+        server.msg("Master is now available to the first player who types /setmaster 1")
+    end
+end)
+
 server.event_handler("started", function()
     
     dofile("./script/db/auth.lua")
