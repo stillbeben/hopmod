@@ -57,6 +57,12 @@ getvar = [
 ]
 
 global stop_ircbot (func [] [
+    
+    if (= $irc_pid -1) [
+        log_error "IRC bot not running (irc_pid is unset)"
+        return
+    ]
+
     system [kill @irc_pid]
     set irc_pid -1
 ])
@@ -99,7 +105,7 @@ global showaliasesbyip (func [ip] [
 ])
 
 global showaliases (func [cn] [
-    my ipaddr (player_ip $cn)
+    my ip (player_ip $cn)
     my output ""
     foreach (find_names_by_ip $ip) [
         set output (concatword $output $arg2 ", ")
