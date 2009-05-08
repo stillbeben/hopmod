@@ -367,13 +367,17 @@ function statsmod.writeStatsToJsonFile()
     file:flush()
 end
 
-local find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr")
+local find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
 if not find_names_by_ip then error(perr) end
 
-function server.find_names_by_ip(ip)
+function server.find_names_by_ip(ip, exclude_name)
     local names = {}
     find_names_by_ip:bind{ipaddr=ip}
-    for row in find_names_by_ip:rows() do table.insert(names, row.name) end
+    for row in find_names_by_ip:rows() do
+        if not exclude_name or exclude_name ~= row.name then
+            table.insert(names, row.name)
+        end
+    end
     return names
 end
 

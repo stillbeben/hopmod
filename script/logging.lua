@@ -2,13 +2,32 @@
 local logfile = io.open("log/server.log","a+")
 
 function log(msg)
-    logfile:write(os.date("[%a %b %d %X] ",os.time()))
+    logfile:write(os.date("[%a %d %b %X] ",os.time()))
     logfile:write(msg)
     logfile:write("\n")
     logfile:flush()
 end
 
 server.log = log
+
+local function log_usednames(cn)
+
+    if server.find_names_by_ip then
+        local current_name = server.player_name(cn)
+        local names = server.find_names_by_ip(server.player_ip(cn), current_name)
+        
+        local namelist = ""
+        
+        for index, name in ipairs(names) do
+            local sep = ""
+            if #namelist > 0 then sep = ", " end
+            namelist = namelist .. sep .. name
+        end
+        
+        log(string.format("Names used by %s(%i): %s", current_name, cn, namelist))
+    end
+    
+end
 
 server.event_handler("failedconnect", function(ip, reason)
     if reason == "normal" then reason = "client-side failure" end
@@ -21,6 +40,7 @@ server.event_handler("connect", function (cn)
     local country = server.ip_to_country(ip)
     
     log(string.format("%s(%i)(%s)(%s) connected",server.player_name(cn),cn,ip,country))
+
 end)
 
 server.event_handler("disconnect", function (cn,reason)
@@ -28,7 +48,7 @@ server.event_handler("disconnect", function (cn,reason)
     local reason_tag = ""
     if reason ~= "normal" then reason_tag = " because: " .. reason end
     
-    log(string.format("%s(%i) disconnected%s, ctime %s",server.player_name(cn),cn,reason_tag,format_duration(server.player_connection_time(cn))))
+    log(string.format("%s(%i) disconnected%s, time %s",server.player_name(cn),cn,reason_tag,format_duration(server.player_connection_time(cn))))
 end)
 
 server.event_handler("kick", function(cn, bantime, admin, reason)
@@ -94,7 +114,6 @@ server.event_handler("auth", function(cn, authname, authdomain, success)
     log(string.format("%s(%i) %s authentication as %s@%s",server.player_name(cn),cn,action_tag,authname,authdomain))
 end)
 
-
 server.event_handler("gamepaused", function() log("game is paused") end)
 server.event_handler("gameresumed", function() log("game is resumed") end)
 
@@ -114,7 +133,10 @@ server.event_handler("endrecord", function(id, size)
     log(string.format("finished recording game (%s file size)",format_filesize(tonumber(size))))
 end)
 
-server.event_handler("mapcrcfail", function(cn) log(string.format("%s(%i) has a modified map",server.player_name(cn),cn)) end)
+server.event_handler("mapcrcfail", function(cn) 
+    log(string.format("%s(%i) has a modified map",server.player_name(cn),cn))
+    log_usednames(cn)
+end)
 
 server.event_handler("shutdown", function() log("server shutting down"); logfile:close() end)
 
