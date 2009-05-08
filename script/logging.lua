@@ -10,6 +10,13 @@ end
 
 server.log = log
 
+function server.log_error(msg)
+    io.stderr:write(os.date("[%a %d %b %X] ",os.time()))
+    io.stderr:write(msg)
+    io.stderr:write("\n")
+    io.stderr:flush()
+end
+
 local function log_usednames(cn)
 
     if server.find_names_by_ip then
