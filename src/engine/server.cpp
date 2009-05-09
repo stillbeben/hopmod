@@ -724,6 +724,8 @@ void rundedicatedserver()
 
 bool servererror(bool dedicated, const char *desc)
 {
+    server::shutdown();
+    
 #ifndef STANDALONE
     if(!dedicated)
     {
@@ -732,7 +734,7 @@ bool servererror(bool dedicated, const char *desc)
     }
     else
 #endif
-        fatal(desc);
+    fatal(desc);
     return false;
 }
   
@@ -780,7 +782,7 @@ void initserver(bool listen, bool dedicated)
     copystring(mastername, server::defaultmaster());
     
     server::serverinit();
-    
+  
     if(listen) setuplistenserver(dedicated);
 
     if(listen)
