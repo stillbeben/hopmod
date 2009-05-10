@@ -45,6 +45,6 @@ AC_ARG_ENABLE(crc32,
      fi],
     [AC_MSG_RESULT(no)])
 
-AC_OUTPUT([Jamroot])
-
 AC_CONFIG_SUBDIRS([src/libmicrohttpd])
+
+AC_OUTPUT([Makefile Jamroot])
