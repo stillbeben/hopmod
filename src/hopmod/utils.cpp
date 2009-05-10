@@ -1,6 +1,7 @@
 #include <string>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 in_addr to_in_addr(in_addr_t x)
 {
@@ -19,4 +20,3 @@ std::string resolve_hostname(const char * hostname)
       return inet_ntoa(to_in_addr(*((in_addr_t *)result->h_addr_list[0])));
     else return "0.0.0.0";
 }
-

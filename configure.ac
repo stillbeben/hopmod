@@ -9,11 +9,6 @@ AC_HAVE_LIBRARY([GeoIP],[AC_SUBST(WITHOUT_GEOIP,0)],[
     AC_MSG_WARN("Building WITHOUT GeoIP support.")
 ])
 
-AC_HAVE_LIBRARY([microhttpd],[AC_SUBST(WITHOUT_MICROHTTPD,0)],[
-    AC_SUBST(WITHOUT_MICROHTTPD,1)
-    AC_MSG_WARN("Building WITHOUT script_socket support.")
-])
-
 AC_HAVE_LIBRARY([ncurses],[],[AC_MSG_WARN("Unable to find ncurses library which means the build for luashell will fail.")])
 
 AC_LANG_PUSH([C++])
@@ -51,3 +46,5 @@ AC_ARG_ENABLE(crc32,
     [AC_MSG_RESULT(no)])
 
 AC_OUTPUT([Jamroot])
+
+AC_CONFIG_SUBDIRS([src/libmicrohttpd])

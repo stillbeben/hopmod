@@ -6,6 +6,7 @@ use-project /boost : src/boost ;
 use-project /lua : src/lua ;
 use-project /fungu : src/fungu ;
 use-project /lua-sqlite3 : src/lua-sqlite3 ;
+use-project /libmicrohttpd : src/libmicrohttpd ;
 
 build-project src/lua-socket ;
 
@@ -41,13 +42,6 @@ if $(without_geoip) = 1 {
     lib geoip : : <name>GeoIP ;
 }
 
-without_microhttpd = @WITHOUT_MICROHTTPD@ ;
-if $(without_microhttpd) = 1 {
-    alias microhttpd : : : : <define>WITHOUT_MICROHTTPD ;
-} else {
-    lib microhttpd : : <name>microhttpd ;
-}
-
 without_test_project = @WITHOUT_TEST_PROJECT@ ;
 if $(without_test_project) = 0 {
     build-project src/hopmod/test ;
@@ -79,6 +73,7 @@ exe sauer_server :
     src/hopmod/playerid.cpp
     src/hopmod/restarter.cpp
     src/hopmod/utils.cpp
+    src/hopmod/masterserver_client.cpp
     sauertools
     z
     enet
@@ -86,9 +81,9 @@ exe sauer_server :
     /lua//lua
     /fungu//script
     geoip
-    microhttpd
     /boost//headers
     /boost//signals
+    /libmicrohttpd//httpd
     : <define>STANDALONE <include>src/fpsgame <include>src/hopmod ;
 
 exe keygen :

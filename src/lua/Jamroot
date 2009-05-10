@@ -1,5 +1,17 @@
 
+import modules ;
+
 project : source-location src ;
+
+switch [ modules.peek : OS ]
+{
+    case "LINUX" : 
+        lib dl : : <name>dl ;
+        alias osconfig : : : : <define>LUA_USE_LINUX ;
+    case "*BSD" :
+        alias dl : ;
+        alias osconfig : : : : <define>LUA_USE_POSIX <define>LUA_USE_DLOPEN ;
+}
 
 lib lua :
     lapi.c      
@@ -31,8 +43,9 @@ lib lua :
     lstate.c
     ltable.c
     lvm.c
-    : <define>LUA_USE_LINUX
-    : : <include>src ;
+    dl
+    osconfig
+    : : : <include>src ;
 
 lib readline : : <name>readline ;
 lib ncurses : : <name>ncurses ;
