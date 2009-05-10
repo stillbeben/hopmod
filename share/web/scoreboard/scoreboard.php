@@ -1,14 +1,27 @@
 <?php
-// Requires PHP >= 5.3.0 RC1
 php_version_check();
 
 // Config
-$database["path"] = 'path to /stats.sqlite';
-
+$database["path"] = '/home/sauer/server/server_new/db/stats.sqlite';
 
 $db = new SQLite3($database["path"]);
 
-if ($_GET["show"] == null) { 
+if ($_GET["nick"] != NULL) {
+	$results = $db->query('	
+	select *, round(hits/(max(shots,1)+0.0)*100) as acc
+	from playertotals
+	where timeplayed >= 1 and name != "unnamed" and name != "bot"
+	and name like \'%'.$_GET["nick"].'%\'
+	order by name desc
+	');
+	while ($row = $results->fetchArray()) {
+		$html .= '<b><a href="?show=player&player='.$row["name"].'">'.$row["name"].'</a></b> || ';
+	}	
+	echo substr($html, 0, strlen($html)-4);
+	exit;
+}
+
+if ($_GET["show"] == NULL) { 
 	if ($_GET["fplayer"] == NULL) header("Location: ?show=players"); 
 	else header("Location: ?show=players&fplayer=".$_GET["fplayer"]);
 	exit;
@@ -27,8 +40,9 @@ if ($_GET["show"] == "player") {
 function find_player() {
 	echo '<div align="center">';
 	echo '<form action="?show=players" method="GET">';
-	echo '<input type="text" name="fplayer">';
+	echo '<input type="text" onKeyPress="find_user(this.value)" onKeyUp="find_user(this.value)" name="fplayer">';
 	echo '&nbsp;<input type="submit" value="Find Player">';
+	echo '<div id="html"></div>';
 	echo '</form>';
 	echo '</div>';
 }
@@ -270,13 +284,6 @@ function show_games($db) {
 	echo '</table>';
 }
 
-
-
-
-
-
-
-
 function print_time($n,$unit)
 {
     if($n == 0) return "";
@@ -352,6 +359,56 @@ function style() {
 		font-size: 12px;
 		font-weight: bold;} 
 	</style>
+	<script type="text/javascript">
+	function find_user(nick) {
+		if (!nick) {
+			document.getElementById('html').innerHTML="";
+			return false;
+		}
+		get("?nick=" + nick, "ausgabe_html");
+	}
+			
+	function ausgabe_html(users) {
+		document.getElementById('html').innerHTML='<font face="Tahoma" size="-2">Matches: ' + users + '</font>';
+		document.getElementById('html').style.visibility='visible';
+	}
+			
+	function get(url, callback_function, return_xml){
+		var http_request = false;	
+		if (window.XMLHttpRequest) {
+			http_request = new XMLHttpRequest();
+		if (http_request.overrideMimeType) {
+			http_request.overrideMimeType('text/xml; charset= iso-8859-1');
+		}
+		}else if(window.ActiveXObject) {
+			try {
+				http_request = new ActiveXObject("Msxml2.XMLHTTP");
+			}catch (e) {
+				try {
+					http_request = new ActiveXObject("Microsoft.XMLHTTP");
+				} catch (e) {}
+			}
+		}
+		if (!http_request) {
+			eval(callback_function + '(404)');
+			return false;
+		}
+		http_request.onreadystatechange = function() {
+			if (http_request.readyState == 4) {
+				if (http_request.status == 200) {
+					if (return_xml) {
+						eval(callback_function + '(http_request.responseXML)');
+					} else {
+						eval(callback_function + '(http_request.responseText)');
+						StopTheClock();
+					}
+				} 
+			}
+		}
+		http_request.open('GET', url, true);
+		http_request.send(null);
+	}
+	</script>
 </head>
 <body bgcolor="#CCCCCC">
 	<?php
