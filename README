@@ -4,14 +4,12 @@
 For the first and only time:
 
     ./buildtools.sh
-    aclocal
-    autoconf
+    ./autogen.sh
     
 To compile and install the server:
 
     ./configure
-    ./bin/bjam
+    make
     
-
     ./bin/server
     
