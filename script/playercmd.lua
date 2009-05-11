@@ -112,3 +112,34 @@ function server.playercmd_motd(cn, text)
         server.player_msg(cn, "MOTD changed to " .. text)
     end, cn)
 end
+
+function server.playercmd_group(cn, tag_pattern, team)
+    return admincmd(function ()
+        
+        if not server.gamemodeinfo.teams then return end
+        
+        if not tag_pattern then
+            server.player_msg(red("missing tag pattern argument"))
+            return
+        end
+        
+        if not team then
+            server.player_msg(red("missing team argument"))
+            return
+        end
+        
+        for i, cn in ipairs(server.players()) do
+            
+            local onteam = server.player_team(cn)
+            
+            if onteam ~= team and string.match(onteam, tag_pattern) then
+                
+                server.msg(string.format("Admin has moved %s to %s team.", green(server.player_name(cn)), green(team)))
+                
+                server.changeteam(cn, team)
+            end
+            
+        end
+        
+    end, cn)
+end
