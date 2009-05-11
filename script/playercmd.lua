@@ -93,3 +93,15 @@ server.event_handler("started", function()
 end)
 
 -- ]]
+
+function server.playercmd_pause(cn)
+    return admincmd(function ()
+        server.pausegame(true)
+    end, cn)
+end
+
+function server.playercmd_resume(cn)
+    return admincmd(function ()
+        server.pausegame(false)
+    end, cn)
+end
