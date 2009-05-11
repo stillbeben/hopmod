@@ -198,8 +198,8 @@ void register_server_script_bindings(script::env & env)
     register_lua_function(&server::lua_genchallenge, "genchallenge");
     register_lua_function(&server::lua_checkchallenge, "checkchallenge");
     register_lua_function(&server::lua_freechalanswer, "freechalanswer");
-    script::bind_global_func<void (int)>(server::delegateauth, FUNGU_OBJECT_ID("delegateauth"), env);
-    script::bind_global_func<void (int,const char *)>(server::relayauthanswer, FUNGU_OBJECT_ID("relayauthanswer"), env);
+    script::bind_global_func<bool (int)>(server::delegateauth, FUNGU_OBJECT_ID("delegateauth"), env);
+    script::bind_global_func<bool (int,const char *)>(server::relayauthanswer, FUNGU_OBJECT_ID("relayauthanswer"), env);
     script::bind_global_func<void (int,const char *)>(server::sendauthreq, FUNGU_OBJECT_ID("sendauthreq"), env);
     script::bind_global_func<void (int,const char *)>(server::sendauthchallenge, FUNGU_OBJECT_ID("sendauthchallenge"), env);
     script::bind_global_func<void (int)> (server::signal_auth_success, FUNGU_OBJECT_ID("signal_auth_success"), env);

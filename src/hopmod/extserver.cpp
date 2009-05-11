@@ -750,7 +750,7 @@ int lua_freechalanswer(lua_State * L)
     return 0;
 }
 
-void delegateauth(int cn)
+bool delegateauth(int cn)
 {
     clientinfo * ci = get_ci(cn);
     
@@ -760,7 +760,7 @@ void delegateauth(int cn)
     {
         ci->authreq = 0;
         sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
-        return;
+        return false;
     }
     
     char * args[3];
@@ -771,9 +771,11 @@ void delegateauth(int cn)
     args[2] = NULL;
     
     authserver.send_request("reqauth", args);
+    
+    return true;
 }
 
-void relayauthanswer(int cn, const char * ans)
+bool relayauthanswer(int cn, const char * ans)
 {
     clientinfo * ci = get_ci(cn);
     
@@ -783,7 +785,7 @@ void relayauthanswer(int cn, const char * ans)
     {
         ci->authreq = 0;
         sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
-        return;
+        return false;
     }
     
     const char * args[3];
@@ -794,6 +796,8 @@ void relayauthanswer(int cn, const char * ans)
     args[2] = NULL;
     
     authserver.send_request("confauth", args);
+    
+    return true;
 }
 
 void sendauthchallenge(int cn, const char * challenge)

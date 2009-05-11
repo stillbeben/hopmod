@@ -41,7 +41,10 @@ server.event_handler("authreq", function(cn,name,domain)
     if not row or row["local"] == 0 then
     
         req.delegated = true
-        server.delegateauth(cn)
+        
+        if not server.delegateauth(cn) then
+            auth_request[req_id] = nil
+        end
 
     else
    
@@ -73,7 +76,9 @@ server.event_handler("authrep", function(cn, answer)
     end
     
     if req.delegated then
-        server.relayauthanswer(cn, answer)
+        if not server.relayauthanswer(cn, answer) then
+            auth_request[req_id] = nil
+        end
         return
     end
 
