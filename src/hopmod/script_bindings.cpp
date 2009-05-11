@@ -130,6 +130,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(serverip, FUNGU_OBJECT_ID("serverip"), env);
     script::bind_global_var(serverport, FUNGU_OBJECT_ID("serverport"), env);
     script::bind_global_var(mastername, FUNGU_OBJECT_ID("masterserver"), env);
+    script::bind_global_var(server::authserver_hostname, FUNGU_OBJECT_ID("authserver"), env);
     script::bind_global_var(allowupdatemaster, FUNGU_OBJECT_ID("updatemaster"), env);
     script::bind_global_var(server::next_gamemode, FUNGU_OBJECT_ID("next_mode"), env);
     script::bind_global_var(server::next_mapname, FUNGU_OBJECT_ID("next_map"), env);

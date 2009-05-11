@@ -9,17 +9,16 @@ public:
     typedef void (* input_reactor_function)(masterserver_client &, const char *, int, const char * const *);
     static const int max_args = 20;
     
-    masterserver_client();
+    masterserver_client(input_reactor_function);
     ~masterserver_client();
 
-    void set_input_reactor(input_reactor_function);
-    
     bool connect(const ENetAddress & addr);
     void disconnect();
     
     const ENetSocket & get_socket_descriptor()const;
     bool is_connected()const;
-    
+    bool has_queued_output()const;
+
     void flush_input();
     void flush_output();
     

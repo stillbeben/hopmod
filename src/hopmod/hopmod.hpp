@@ -18,6 +18,7 @@
 #include "playerid.hpp"
 #include "restarter.hpp"
 #include "utils.hpp"
+#include "masterserver_client.hpp"
 
 #include <arpa/inet.h> //inet_ntoa
 #include <iostream>

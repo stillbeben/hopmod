@@ -2,10 +2,10 @@
 
 // The code for masterserver_client class is mostly copied from engine/server.cpp
 
-masterserver_client::masterserver_client()
+masterserver_client::masterserver_client(input_reactor_function func)
  :m_socket(ENET_SOCKET_NULL),
   m_input_pos(0),m_output_pos(0),
-  m_input_reactor(NULL)
+  m_input_reactor(func)
 {
     
 }
@@ -15,21 +15,9 @@ masterserver_client::~masterserver_client()
     disconnect();
 }
 
-void masterserver_client::set_input_reactor(input_reactor_function func)
-{
-    m_input_reactor = func;
-}
-
 bool masterserver_client::connect(const ENetAddress & addr)
 {
     m_socket = enet_socket_create(ENET_SOCKET_TYPE_STREAM);
-    
-    if(m_socket != ENET_SOCKET_NULL && addr.host != ENET_HOST_ANY && enet_socket_bind(m_socket, &addr) < 0)
-    {
-        enet_socket_destroy(m_socket);
-        m_socket = ENET_SOCKET_NULL;
-        return false;
-    }
     
     if( enet_socket_connect(m_socket, &addr) < 0 )
     {
@@ -65,6 +53,11 @@ const ENetSocket & masterserver_client::get_socket_descriptor()const
 bool masterserver_client::is_connected()const
 {
     return m_socket != ENET_SOCKET_NULL;
+}
+
+bool masterserver_client::has_queued_output()const
+{
+    return !m_output.empty();
 }
 
 void masterserver_client::flush_input()
@@ -111,13 +104,21 @@ void masterserver_client::flush_output()
 
 void masterserver_client::send_request(const char * command,const char * const * args)
 {
-    static char cmdline[4096];
-    int cmdline_length;
+    vector<char> cmdline;
+    cmdline.reserve(4096);
     
-    strncpy(cmdline, command, sizeof(cmdline));
-    cmdline_length += strlen(command);
+    cmdline.put(command, strlen(command));
     
-    m_output.put(cmdline, cmdline_length);
+    while(*args)
+    {
+        cmdline.put(" ", 1);
+        cmdline.put(*args, strlen(*args));
+        args++;
+    }
+    
+    cmdline.put("\n", 1);
+    
+    m_output.put(cmdline.getbuf(), cmdline.length());
 }
 
 void masterserver_client::process_input()
@@ -141,7 +142,7 @@ void masterserver_client::process_input()
             char * scan_end = start;
             while(scan_end < end && !isspace(*scan_end)) scan_end++;
             
-            scan_end = '\0';
+            *scan_end = '\0';
             argv[argc++] = scan_start;
             
             scan_start = scan_end + 1;

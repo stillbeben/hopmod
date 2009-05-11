@@ -1992,8 +1992,8 @@ namespace server
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        ci->authreq = 0;
         signal_auth(ci->clientnum, ci->authname, ci->authdomain, false);
+        ci->authreq = 0;
     }
 
     void authsucceeded(uint id)

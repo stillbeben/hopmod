@@ -33,6 +33,8 @@ namespace server
     extern bool allow_mm_private;
     extern bool allow_item[11];
     
+    extern string authserver_hostname;
+    
     extern void init_hopmod();
     extern void reload_hopmod();
     extern void update_hopmod();
@@ -132,7 +134,10 @@ namespace server
     extern void sendauthreq(int, const char *);
     extern void signal_auth_success(int);
     extern void signal_auth_failure(int);
-
+    
+    extern void authfailed(uint id);
+    extern void authsucceeded(uint id);
+    extern void authchallenged(uint id, const char *val);
     
 } //namespace server
 

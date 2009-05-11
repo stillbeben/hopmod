@@ -3,8 +3,72 @@
 static boost::signals::connection close_listenserver_slot;
 static bool reload = false;
 
+string authserver_hostname = "";
+
+void authserver_reactor(masterserver_client & client, const char * reply, int argc, const char * const * argv)
+{
+    if(argc == 0) return;
+    
+    uint id = static_cast<uint>(atoi(argv[0]));
+    
+    if(strcmp(reply, "chalauth") == 0)
+    {
+        if(argc > 1) authchallenged(id, argv[1]);
+    }
+    else if(strcmp(reply, "succauth") == 0) authsucceeded(id);
+    else if(strcmp(reply, "failauth") == 0) authfailed(id);
+}
+
+masterserver_client authserver(authserver_reactor);
+
+masterserver_client & connect_to_authserver()
+{
+    if(!authserver.is_connected())
+    {
+        ENetAddress address;
+        
+        if( enet_address_set_host(&address, authserver_hostname) < 0)
+        {
+            std::cerr<<"Could not resolve hostname "<<authserver_hostname<<" for auth server connection."<<std::endl;
+            return authserver;
+        }
+        
+        address.port = masterport();
+        
+        if(authserver.connect(address) == false)
+        {
+            std::cerr<<"Unable to connect to auth server at "<<authserver_hostname<<":"<<address.port<<std::endl;
+            return authserver;
+        }
+    }
+    
+    return authserver;
+}
+
+void check_authserver()
+{
+    if(authserver.is_connected())
+    {
+        static ENetSocketSet sockset;
+        ENET_SOCKETSET_EMPTY(sockset);
+        ENetSocket sock = authserver.get_socket_descriptor();
+        ENET_SOCKETSET_ADD(sockset, sock);
+        
+        int status = enet_socketset_select(sock, &sockset, NULL, 0);
+        
+        if(status == 1)
+            authserver.flush_input();
+        else if(status == -1) authserver.disconnect();
+    }
+    
+    if(authserver.is_connected() && authserver.has_queued_output())
+        authserver.flush_output();
+}
+
 void init_hopmod()
 {
+    copystring(authserver_hostname, defaultmaster());
+    
     init_scripting();
     
     register_server_script_bindings(get_script_env());
@@ -50,7 +114,7 @@ void reload_hopmod()
     
     init_hopmod();
     
-    signal_started();
+    started();
 }
 
 void update_hopmod()
@@ -62,6 +126,8 @@ void update_hopmod()
     update_scheduler(totalmillis);
     bantimes.update(totalmillis);
     cleanup_dead_slots();
+    
+    check_authserver();
 }
 
 void started()
@@ -688,21 +754,46 @@ void delegateauth(int cn)
 {
     clientinfo * ci = get_ci(cn);
     
-    if(!requestmasterf("reqauth %u %s\n", ci->authreq, ci->authname))
+    masterserver_client & authserver = connect_to_authserver();
+    
+    if(authserver.is_connected()==false)
     {
         ci->authreq = 0;
         sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
+        return;
     }
+    
+    char * args[3];
+    defformatstring(id)("%i", ci->authreq);
+    
+    args[0] = id;
+    args[1] = ci->authname;
+    args[2] = NULL;
+    
+    authserver.send_request("reqauth", args);
 }
 
 void relayauthanswer(int cn, const char * ans)
 {
     clientinfo * ci = get_ci(cn);
-    if(!requestmasterf("confauth %u %s\n", ci->authreq, ans))
+    
+    masterserver_client & authserver = connect_to_authserver();
+    
+    if(authserver.is_connected()==false)
     {
         ci->authreq = 0;
         sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "not connected to authentication server");
+        return;
     }
+    
+    const char * args[3];
+    defformatstring(id)("%i", ci->authreq);
+    
+    args[0] = id;
+    args[1] = ans;
+    args[2] = NULL;
+    
+    authserver.send_request("confauth", args);
 }
 
 void sendauthchallenge(int cn, const char * challenge)
