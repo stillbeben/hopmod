@@ -13,6 +13,20 @@ function admincmd(...)
     return func(unpack(arg))
 end
 
+function mastercmd(...)
+    local func = arg[1]
+    local cn = arg[2]
+    
+    if tonumber(server.player_priv_code(cn)) < tonumber(server.PRIV_MASTER) then
+        server.player_msg(cn,red("Permission denied."))
+        return
+    end
+    
+    table.remove(arg,1)
+    
+    return func(unpack(arg))
+end
+
 function server.playercmd_info(cn)
     server.player_msg(cn, orange(server.servername) .. ": " .. server.motd )
 end
@@ -140,6 +154,22 @@ function server.playercmd_group(cn, tag_pattern, team)
             end
             
         end
+        
+    end, cn)
+end
+
+function server.playercmd_givemaster(cn, target)
+    return mastercmd(function ()
+        
+        if server.player_id(target) == -1 then
+            server.player_msg(cn, red("Player not found."))
+            return
+        end
+        
+        server.unsetmaster()
+        
+        server.player_msg(target, server.player_name(cn) .. " has passed master privilege to you.")
+        server.setmaster(target)
         
     end, cn)
 end
