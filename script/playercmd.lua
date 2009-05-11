@@ -105,3 +105,10 @@ function server.playercmd_resume(cn)
         server.pausegame(false)
     end, cn)
 end
+
+function server.playercmd_motd(cn, text)
+    return admincmd(function (cn)
+        server.motd = text
+        server.player_msg(cn, "MOTD changed to " .. text)
+    end, cn)
+end
