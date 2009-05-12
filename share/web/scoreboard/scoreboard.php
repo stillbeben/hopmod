@@ -1,10 +1,11 @@
 <?php
 php_version_check();
-
 // Config
 $database["path"] = '/home/sauer/server/server_new/db/stats.sqlite';
 
 $db = new SQLite3($database["path"]);
+
+//if ($_GET["admin"] == 1) $admin = true;
 
 if ($_GET["nick"] != NULL) {
 	$results = $db->query('	
@@ -30,11 +31,11 @@ if ($_GET["show"] == NULL) {
 style();
 if ($_GET["show"] == "games") show_games($db);
 if ($_GET["show"] == "players") {
-	if ($_GET["fplayer"] == NULL) show_players($db, $_GET["order"], $_GET["c"]);
-	else show_players($db, $_GET["order"], $_GET["c"], $_GET["fplayer"], true);
+	if ($_GET["fplayer"] == NULL) show_players($db, $_GET["order"], $_GET["c"], NULL, NULL, $admin);
+	else show_players($db, $_GET["order"], $_GET["c"], $_GET["fplayer"], true, $admin);
 }
 if ($_GET["show"] == "player") {
-	show_player($db, $_GET["player"], $_GET["order"]);
+	show_player($db, $_GET["player"], $_GET["order"], $admin);
 }
 
 function find_player() {
@@ -48,18 +49,19 @@ function find_player() {
 }
 
 
-function show_player($db, $player, $order) {
+function show_player($db, $player, $order, $admin) {
+	$player = fix_back($player);
 	$order = str_replace("'", null, str_replace('"', null, $order));
 	$order = str_replace(chr(92), null, $order);
 	if(!$order) $order = "timeplayed";
 	$results = $db->query('	
 	select *, round(hits/(max(shots,1)+0.0)*100) as acc
 	from players 
-	inner join games on games.id = players.game_id where players.name = \''.$player.'\'
+	inner join games on games.id = players.game_id where players.name = "'.$player.'"
 	and players.timeplayed >= 2 and gamemode != "coop edit"
 	order by "'.$order.'" desc
 	');
-	echo '<div align="center">Player Name: '.$player;
+	echo '<div align="center">Player Name:  '.$player;
 	echo '<table border="1" align="center" class="stats">';
 	echo '
 	<tr>
@@ -148,7 +150,7 @@ function page_links($page, $pages, $order) {
 	echo '</font></div>';
 }
 
-function show_players($db, $order,$country = NULL, $player = NULL, $norank = FALSE) {
+function show_players($db, $order,$country = NULL, $player = NULL, $norank = FALSE, $admin) {
 	$max_per_page = 100;
 	
 	$order = str_replace("'", null, str_replace('"', null, $order));
@@ -168,7 +170,9 @@ function show_players($db, $order,$country = NULL, $player = NULL, $norank = FAL
 		<tr>';
 			if (!$norank) {	echo '		<td>Rank</td>'; }
 			echo '<td><a href="?show=players&order=country&fplayer='.$_GET["fplayer"].'">Country</a></td>
-			<td><a href="?show=players&order=name&fplayer='.$_GET["fplayer"].'">Name</a></td>
+			<td><a href="?show=players&order=name&fplayer='.$_GET["fplayer"].'">Name</a></td>';
+			if ($admin) echo '<td>IP</td>';
+			echo '
 			<td><a href="?show=players&order=frags&fplayer='.$_GET["fplayer"].'">Frags</a></td>
 			<td><a href="?show=players&order=deaths&fplayer='.$_GET["fplayer"].'">Deaths</a></td>
 			<td>Kpd</td>
@@ -209,10 +213,15 @@ function show_players($db, $order,$country = NULL, $player = NULL, $norank = FAL
 		echo '<td><div align="center" id="flag"><a href="?show=players&fplayer='.$_GET["fplayer"].'&page='.$page.'&c='.$row["country"].'"><img class="a" src="flags/'.strtolower($row["country"]).'.gif" alt="'.$row["country"].'" title="'.$row["country"].'"></a></div>';
 		echo '</td>';
 		echo '<td><a href="?show=player&player=';
-		echo $row["name"];
+		echo fix($row["name"]);
 		echo '">';
 		echo $row["name"];
 		echo '</a></td>';
+		if ($admin) {
+			echo '<td>';
+			echo " ".$row["ipaddr"];
+			echo '</td>';
+		}
 		echo '<td>';
 		echo $row["frags"];
 		echo '</td>';
@@ -413,6 +422,23 @@ function style() {
 <body bgcolor="#CCCCCC">
 	<?php
 }
+
+function fix($str) {
+	$str = str_replace("#", "%%1", $str);
+	$str = str_replace("+", "%%2", $str);
+	$str = str_replace(chr(92), '%%3', $str);
+	$str = str_replace("'", '%%4', $str);
+	return $str;
+}
+
+function fix_back($str) {
+	$str = str_replace("%%1", "#", $str);
+	$str = str_replace("%%2", "+", $str);
+	$str = str_replace('%%3', chr(92), $str);
+	$str = str_replace("%%4", "'", $str);
+	$str = str_replace('"', NULL, $str);
+	return $str;
+}	
 
 function php_version_check() {
 	$version = phpversion();
