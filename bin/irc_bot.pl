@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl 
 
 use LWP::UserAgent;
 use HTTP::Request;
@@ -6,23 +6,51 @@ use warnings;
 use strict;
 use POE qw(Component::IRC::State Component::IRC::Plugin::AutoJoin Component::IRC::Plugin::Connector Component::IRC::Plugin::FollowTail);
 use Config::Auto;
-use vars qw($temp $cn $config $irc @playerstats @serverlist @data $rrd $topriv $version $hopvar $rev @split);
+use vars qw($dynamic_reload $mute_status $cn $config $irc @playerstats @serverlist @data $rrd $topriv $version $hopvar $rev @split);
+
+$version = ".01NG";
+print "INFO	: Starting HopBot NG V$version support at #hopmod\@irc.gamesurge.net \n";
+print "INFO	: Bot CORE is			LOADED\n";
+
+if ( eval { require Module::Reload::Selective } ) {
+        print "INFO	: Dynamic Reloading is		LOADED\n";
+	$dynamic_reload = 1;
+} else {
+        print "ERROR	: Dynamic Reloading module is		DISABLED\n\n";
+        print "ERROR MSG: $@\n";
+	$dynamic_reload = 0;	
+}
+
+if ( eval { require 'bin/Command.pm' } ) {
+	print "INFO	: Command module is		LOADED\n";
+} else {
+	print "ERROR	: Command module is		DISABLED\n\n";
+	print "ERROR MSG: $@\n";
+	exit
+}
+
+if ( eval { require 'bin/Filter.pm' } ) {
+        print "INFO	: Filter module is		LOADED\n";
+} else {
+        print "ERROR    : Filter module is		DISABLED\n\n";
+        print "MSG:	$@\n";
+	exit
+}
 
 $config = Config::Auto::parse("../conf/server.conf" , format => "equal");
-
-$version = "1.21"; #<----Do NOT change this or I will kill you
-print "<Starting HopBot V$version support at #hopmod\@irc.gamesurge.net> \n";
-
-&toserverpipe("irc_pid $$"); #Send the server my pid for restarting purposes.
-
 if ( $config->{irc_player_locator} eq "1" ) {
         if ( eval { require 'bin/player_locator.pm' } ) {
-                print "INFO     : Player Locator module is    ENABLED\n";
+                print "INFO	: Player Locator module is	LOADED\n";
         } else {
-                print "ERROR    : Trending module is    DISABLED\n\n";
-		print "ERROR MSG: $@\n";
+                print "ERROR	: Player Locator module is		DISABLED\n\n";
+                print "MSG	: $@\n";
         }
 }
+
+$mute_status = "0";
+$Module::Reload::Selective::Options->{ReloadOnlyIfEnvVarsSet} = 0;
+$Module::Reload::Selective::Options->{ReloadOnlyIfEnvVarsSet} = 0;
+&toserverpipe("set irc_pid $$"); #Send the server my pid for restarting purposes.
 
 my ($irc) = POE::Component::IRC::State->spawn();
 POE::Session->create(
@@ -82,7 +110,13 @@ sub on_public {
 	my $channel = $where->[0];
 	my $ts = scalar localtime;
 	if ( $config->{irc_channel} eq "1" ) { print "[$ts] <$nick:$channel> $msg\n"; }
-	&process_command($sender, $who, $msg, $channel);
+	if ( $msg =~ /^$config->{irc_botcommandname}/i  )                            {
+		my $poco_object = $sender->get_heap();
+                if ( ! $poco_object->is_channel_operator( $config->{irc_channel}, $nick )) { &sendtoirc("Sorry you must be an operator to issues commands"); return }
+		if ( my @output=Command::Process($sender, $nick, $msg, $channel) ) {
+			&sendtoirc($config->{irc_channel}, "\x03\x036IRC\x03         \x034-/$output[0]/-\x03 $output[1]");
+		}
+	}
 }
 sub on_private {
 	my ( $kernel, $sender, $who, $where, $msg ) = @_[ KERNEL, SENDER, ARG0, ARG1, ARG2 ];
@@ -90,7 +124,14 @@ sub on_private {
 	my $channel = $where->[0];
 	my $ts = scalar localtime;
 	print "INFO	: [$ts] <$nick:$channel> $msg\n";
-	&process_command($sender, $nick, $msg, $nick);
+        if ( $config->{irc_channel} eq "1" ) { print "[$ts] <$nick:$channel> $msg\n"; }
+        if ( $msg =~ /^$config->{irc_botcommandname}/i  )                            {
+                my $poco_object = $sender->get_heap();
+                if ( ! $poco_object->is_channel_operator( $config->{irc_channel}, $nick )) { &sendtoirc("Sorry you must be an operator to issues commands"); return }
+                if ( my @output=Command::Process($sender, $nick, $msg, $nick)  ) {
+                        &sendtoirc($nick, "\x03\x036IRC\x03         \x034-/$output[0]/-\x03 $output[1]");
+                }
+        }
 }
 sub on_error {
 	my ( $kernel, $sender, $error ) = @_[ KERNEL, SENDER, ARG0 ];
@@ -106,294 +147,8 @@ sub on_disconnect {
 }
 sub on_tail_input {
 	my ($kernel, $sender, $filename, $input) = @_[KERNEL, SENDER, ARG0, ARG1];
-	$temp = &filterlog($_[ARG1]);
-        $irc->yield( privmsg => $config->{irc_channel} => $temp );
-	print $temp;
-	&toserverpipe("irc_pid $$"); # Regular refresh for safetys sake
-}
-sub process_command {
-	my $sender = shift;
-	my $who = shift;
-	my $command = shift;
-	my $channel = shift;
-	my $nick = ( split /!/, $who )[0];
-    	my $poco_object = $sender->get_heap();
-	if ( $command =~ /^$config->{irc_botcommandname}/i  )                            {
-		if ( ! $poco_object->is_channel_operator( $config->{irc_channel}, $nick )) { &sendtoirc("Sorry you must be an operator to issues commands"); return }
-		##### COMMAND PROCESSING #####
-
-               ##### FIND #####
-                if ( $command =~ / find *(.*)/i )
-                { $topriv = $nick;&find('1',$1,$channel);
-                ; return }
-		##### SAY #####
-		if ( $command =~ / say (.*)/i )
-                { 
-			&sendtoirc($channel,"\x03\x036IRC\x03         \x034-/SAY/-\x03 Console($nick): \x034$1\x03"); &toserverpipe("console [$nick] [$1]");
-		&toirccommandlog("Console($nick): $1"); print "Console($nick): $1"; return }
-		##### KICK #####
-		if ( $command =~ / kick ([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/KICK/-\x03 $nick kicked $1"); &toserverpipe("kick $1"); 
-		&toirccommandlog("$nick KICKED $1"); return }
-		##### BAN #####
-                if ( $command =~ / ban ([0-9]+)/i )
-                { &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/BAN/-\x03 $nick banned $1 until server reboot"); &toserverpipe("kick $1 44640");
-                &toirccommandlog("$nick BANNED $1"); return }
-		##### CLEARBANS #####
-		if ( $command =~ / clearbans/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/CLEARBANS/-\x03 $nick has cleared bans"); &toserverpipe("clearbans"); 
-		&toirccommandlog("$nick CLEARED BANS"); return }
-		##### SPECTATOR ######
-		if ( $command =~ / spec.*\s([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/SPEC/-\x03 $nick has spec'd $1"); &toserverpipe("spec $1"); 
-		&toirccommandlog("$nick has SPECTATED $1"); return }
-		##### UNSPECTATOR ######
-		if ( $command =~ / unspec.*\s([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/UNSPEC/-\x03 $nick has unspec'd $1"); &toserverpipe("unspec $1"); 
-		&toirccommandlog("$nick has UNSPECTATED $1 "); return }
-		##### MUTE #####
-		if ( $command =~ / mute ([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/MUTE/-\x03 $nick muted $1"); &toserverpipe("mute $1");
-		&toirccommandlog("$nick MUTED $1"); return }
-		##### UNMUTE #####
-		if ( $command =~ / unmute ([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/UNMUTE/-\x03 $nick Unmuted $1"); &toserverpipe("unmute $1"); 
-		&toirccommandlog("$nick UNMUTED $1"); return }
-		##### GIVEMASTER #####
-		if ( $command =~ / givemaster ([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/GIVEMASTER/-\x03 $nick gave master to $1"); &toserverpipe("setmaster $1");
-		&toirccommandlog("$nick GIVEMASTER $1"); return }
-		##### TAKEMASTER #####
-		if ( $command =~ / takemaster ([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/TAKEMASTER/-\x03 $nick took master from $1"); &toserverpipe("unsetmaster"); 
-		&toirccommandlog("$nick TAKEMASTER $1"); return }
-		##### GIVEINVMASTER #####
-		if ( $command =~ / giveinvmaster ([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/GIVEINVMASTER/-\x03 $nick gave invisible master to $1"); &toserverpipe("setpriv $1 master");
-		&toirccommandlog("$nick GIVEINVMASTER $1"); return }
-		##### TAKEINVMASTER #####
-		if ( $command =~ / takeinvmaster ([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/TAKEINVMASTER/-\x03 $nick took invisible master from $1"); &toserverpipe("setpriv $1 none"); 
-		&toirccommandlog("$nick TAKEINVMASTER $1"); return }
-		##### MASTERMODE #####
-		if ( $command =~ / mastermode ([0-9]+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/MASTERMODE/-\x03 $nick changed mastermode to $1"); &toserverpipe("mastermode $1"); 
-		&toirccommandlog("$nick MASTERMODE $1"); return }
-		##### MAPCHANGE #####
-		if ( $command =~ / map (\S+) (\S+)/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/MAPCHANGE/-\x03 $nick changed map to \x037$1\x03 on \x037$2\x03"); &toserverpipe("changemap $2 $1"); 
-		&toirccommandlog("$nick MAP $1 $2"); return }
-		##### HELP #####
-		if ( $command =~ / help/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/HELP/-\x03 help can be found here http://hopmod.e-topic.info/index.php5?title=IRC_Bot"); return}
-		##### WHO #####
-		if ( $command =~ / who/i )
-		{ $topriv = $nick ; my $line = &toserverpipe("player_list");
-                my $temp = "";
-                my @temp = split (/ /, $line);
-                foreach (@temp) {
-                        if ( $_ =~ /N=/ ) {
-                                $temp = $_;
-                                $temp =~ s/N=(\S*)C=(\S*)P=(\S*)/\x0312$1\x03\($2\)\x03  /;
-                                push (@split, $temp);
-                        } else { if ($line eq "0") {&sendtoirc($channel,"Apparently no one is connected"); return} }
-
-                }
-	        &splittoirc($channel,"\x03\x036IRC\x03         \x034-/WHO/-\x03 is"); return}
-		##### DIE #####
-		if ( $command =~ / die/i ) 
-		{&sendtoirc($channel,"\x03\x036IRC\x03         \x034-/DIE/-\x03 $nick terminated the bot") ;
-		&toserverpipe("restart_ircbot") ; 
-		&toirccommandlog("$nick RESTART_IRCBOT"); return }
-		##### VERSION #####
-		if ( $command =~ / version/i )
-                { my @info = `svn info`;
-		foreach (@info) { if ( $_ =~ /Revision: (.*)/ ) { $rev = $1 }}
-		&sendtoirc($channel,"\x03\x036IRC\x03         \x034-/VERSION/-\x03 HopBot\x034V $version\x03 HopMod Rev:\x034 $rev\x03"); return}
-		##### RESTART SERVER #####
-		if ( $command =~ / restart server/i )
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/RESTART SAUER/-\x03 $nick restarted the server process"); &toserverpipe("restart_now");
-		&toirccommandlog("$nick RESTART_SERVER"); return }
-		##### SHOWALIAS #####
-                if ( $command =~ / showalias ([0-9]+.*)/i )
-                { my $line = &toserverpipe("showaliases $1"); $topriv = $nick; 
-		&toirccommandlog("$nick SHOWALIAS $1"); 
-        	&sendtoirc($channel,"\x036IRC\x03         \x034-/SHOWALIAS/-\x03 \x037$line\x03 @") ; return}
-		##### SCORE #####
-		if ( $command =~ / score/i )
-		{ $topriv = $nick ; my $line = &toserverpipe("score");
-		&toirccommandlog("$nick SCORE"); 
-                my $temp = "";
-                my @temp = split (/ /, $line);
-                foreach (@temp) {
-                        if ( $_ =~ /N=/ ) {
-                                $temp = $_;
-                                $temp =~ s/N=(\S*)F=(\S*)D=(\S*)/\x0312$1\x03\[\x033 $2\x03 \/\x034 $3 \x03\]  /;
-                                push (@split, $temp);
-                        } else { if ($line eq "0") {&sendtoirc($channel,"Apparently no one is connected"); return} }
-                }
-       		&splittoirc($channel,"\x03\x036SCORE\x03 [\x033kills\x03/\x034deaths\x03]"); return }
-		##### SETMOTD #####
-		if ( $command =~ / setmotd (.*)/i)
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/MOTD/-\x03 $nick changed to \x037$1\x03");
-		&toserverpipe("set motd \"$1\""); 
-		&toirccommandlog("$nick SETMOTD $1"); return }
-		##### GETMOTD #####
-                if ( $command =~ / getmotd/i )
-		{
-                my $line = &toserverpipe("getvar motd"); 
-		&sendtoirc($channel,"$line");
-		&toirccommandlog("$nick GETMOTD"); return }
-		##### GETSLOTS #####
-                if ( $command =~ / getslots/i )
-		{my $line = &toserverpipe("getvar maxclients"); 
-		&toirccommandlog("$nick GETSLOTS"); 
-		&sendtoirc($channel,"\x03\x036IRC\x03         \x034-/SLOTS/-\x03 are set to \x037$line\x03");return }
-		##### SETSLOTS #####
-		if ( $command =~ / setslots (.*)/i)
-		{ &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/SLOTS/-\x03 $nick changed to \x037$1\x03");
-		&toserverpipe("maxclients $1"); 
-		&toirccommandlog("$nick SETSLOTS $1"); return }
-		##### GETVAR #####
-		if ( $command =~ / getvar (.*)/i )
-                { $hopvar = $1; if ( $hopvar eq "irc_adminpw" ) { $hopvar = "title" }
-		my $output = &toserverpipe("getvar $hopvar");
-		&toirccommandlog("$nick GETVAR $hopvar"); 
-		&sendtoirc($channel,"\x03\x036IRC\x03         \x034-/GETVAR $1/-\x03 is\x037 $output\03"); return }
-		##### STATUS #####
-		if ( $command =~ / status/i )
-                { my $line = &toserverpipe("status");
-		&toirccommandlog("$nick STATUS"); 
-      		if ($line =~ /COMMAND STATUS map=(\S*) mode=(.*) time=(\S*) master=(\S*) mm=(\S*) playercount=(\S*) avgping=(\S*)/)
-        	{&sendtoirc($channel,"\x03\x036IRC\x03         \x034-/STATUS/-\x03 Map\x037 $1\x03 Mode\x037 $2\x03 Timeleft\x037 $3\x03 Master\x037 $4\x03 Mastermode\x037 $5\x03 Playercount\x037 $6\x03 Avgping\x037 $7\x03"); } return;}
-		#######################################PASSWORD PROTECTED COMMANDS
-		##### UPDATE #####	
-		if ( $command =~ / update $config->{irc_adminpw}/i )
-                { &toserverpipe("updating"); &sendtoirc($channel,&update);
-                &toirccommandlog("$nick UPDATE"); return }
-		##### CUBESCRIPT ##### 
-		if ( $command =~ / cubescript (.*) $config->{irc_adminpw}/i )
-                { my $output = &toserverpipe($1); &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/CUBESCRIPT/-\x03 $nick executed \x037$1\x03:$output"); 
-		##### Show IP #####
-                &toirccommandlog("$nick CUBESCRIPT $1"); return }
-		                if ( $command =~ / showip (.*) $config->{irc_adminpw}/i )
-                { my $output = &toserverpipe($1); &sendtoirc($channel,"\x03\x036IP\x03         \x034-/CUBESCRIPT/-\x03 $nick executed \x037$1\x03:$output");
-                &toirccommandlog("$nick CUBESCRIPT $1"); return }
-		#######Catchall
-		if ( $command =~ /^$config->{irc_botcommandname} (.*)/i )
-		{ my $output = &toserverpipe("irc_$1"); &sendtoirc($channel,"\x03\x036IRC\x03         \x034-/OUTPUT/-\x03 $nick executed \x037$1\x03:$output"); } return;
-	}
-}
-
-sub filterlog {
-	my $line = shift;
-   	print "------------------------------------------------------------"; 
-    ##### Invisible Master ##### 
-    if ($line =~ /(\S*\([0-9]+\))(\(*.*\)*): #invadmin/)
-    { return "\x039MASTER\x03       \x0312$1\x03 attempted to take invisible master."}
-    ##### Cheater #####
-    if ($line =~ /CHEATER: (.*) (.*)/)
-    { &sendtoirc($config->{irc_monitor_channel},"$1 reports: $2 is a Cheater please ADMINS check this!"); return }
-    ##### 1on1 #####
-    if ($line =~ /#1on1 (.*)/)
-    { return "\x039MATCH\x03       \x0312 The match starts now...\x03"}
-    if ($line =~ /MATCH: (.*) versus (.*) on (.*)/)
-    { return "\x039MATCH\x03       \x034 $1 \x03 versus \x0312 $2 \x03 on \x037 $3 \x03"}
-    if ($line =~ /MATCH: Game has end! (.*) wins, with (.*) - (.*) Poor (.*)/)
-    { return "\x039MATCH\x03       \x034 Game has end! $1 \x03 wins, with $2 - $3 Poor $4 \x03"}
-    #### LOGIN #####
-    if ($line =~ /#login (.*)/)
-    { return ""}
-    if ($line =~ /#changepw (.*)/)
-    { return ""}
-    if ($line =~ /#changeuserpw (.*)/)
-    { return ""}
-    if ($line =~ /#register (.*)/)
-    { return ""}
-    ##### MSG ###
-    if ($line =~ /#msg (.*)/)
-    { return "" }
-    ##### WARNING #####
-    if ($line =~ /#warning (.*) (.*)/)
-    { return "" }
-    ##### PING #####
-    if ($line =~ /PING: (.*) get kicked!/)
-    { return "\x039PING\x03    \x0312$1\x03 \x037get kicked, because of his high ping!\x03" }
-    ##### ANNOUNCE #####
-    if ($line =~ /ANNOUNCE (\S*) (.*)/)
-    { &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
-	##### CONNECT 
-	if ($line =~ /(\S*\([0-9]+\))(\(.+\))\((.*)\) connected/)
-	{ return "\x039CONNECT\x03    \x0312$1\x03 \x037$3\x03" }
-	##### DISCONNECT
-	if ($line =~ /(\S*\([0-9]+\)) disconnected, (.+)/)
-	{ return "\x032DISCONNECT\x03 \x0312$1\x03 \x037$2\x03" }
-	##### RENAME #####
-	if ($line =~ /(\S*\([0-9]+\)) renamed to (.+)/) 
-	{ return  "\x032RENAME\x03     \x0312$1\x03 has renamed to \x037$2\x03"}
-	##### CHAT #####
-	if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.*)/) 
-	{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" } 
-	##### MAP CHANGE #####
-	if ($line =~ /new game: (.*), (.*), (.*)/) 
-	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for\x037 $2\x03 with\x037 $1\x03 " }
-	##### MASTER #####
-	if ($line =~ /(\S*\([0-9]+\)) claimed master/) 
-	{ return "\x034MASTER\x03     \x0312$1\x03 took master." }
-	##### RELEASE MASTER #####
-	if ($line =~ /(\S*\([0-9]+\)) relinquished privileged status./) 
-	{ return "\x034UNMASTADM\x03   \x0312$1\x03 relinquished privileged status" }
-	##### KICK BAN #####
-	if ($line =~ /(\S*) was kicked by (.*)/) 
-	{ return "\x034KICK\x03      Master \x034$2\x03 kicked \x0312$1\x03" }
-	##### KICK BAN 2
-	if ($line =~ /(\s\S*\([0-9]+\)) kick\/banned for:(.+)\.\.\.by console./) 
-	{ return "\x034KICK\x03      Console kicked \x0312$1\x03 for $2" }
-	##### ADMIN #####
-	#         [Mon Apr 27 19:07:31] bob(0) claimed admin
-	print "------------------------------------------------------------";
-	if ($line =~ /(\S*\([0-9]+\)) claimed admin/) 
-	{ return "\x034ADMIN\x03       \x0312$1\x03 took admin" }
-	##### TEAM CHANGE
-	if ($line =~ /(\S*\([0-9]+\)) changed team to (.+)/) 
-	{ return "\x034CHANGETEAM \x03\x0312$1\x03 changed teams to \x037$2\x03" }
-	##### MAP VOTE #####
-	if ($line =~ /(\S*\([0-9]+\)) suggests (.+) on map (.+)/) 
-	{ return "\x033SUGGEST\x03    \x0312$1\x03 suggests \x037$2\x03 on \x037$3\x03" }
-	##### SERVER RESTART #####
-	if ($line =~ /server started (.+)/) 
-	{ return "\x034SERVER\x03    Server Restarted at\x037 $1\x03" }
-	##### MASTERMODE #####
-	if ($line =~ /mastermode changed to (.+)/) 
-	{ return "\x034MASTERMODE\x03  Mastermode is now\x0312 $1\x03" }
-    ##### IRC BOT SHUTDOWN #####
-    if ($line =~  /Terminating the IRC bot/)
-    { return "\x034SERVER\x03 \x0312IRC Bot Shutdown Initiated\x03" }
-
-##########################################Command Filtering
-	##### SPECTATOR ###
-	if ($line =~ /(\S*\([0-9]+\)) (.*) spectators/) 
-	{ return "\x034SPECTATOR\x03  \x0312$1\x03 $2 spectators" }
-	##### SERVER UPDATE #####
-	if ($line =~  /(Performing server update:.*)/) 
-	{ return "\x034SERVER\x03\x0312 $1\x03" }
-	##### SERVER SHUTDOWN #####
-	if ($line =~  /server shutdown (.*)/) 
-	{ return "\x034SERVER\x03 \x0312Server Shutdown at $1\x03" }
-	##### NEW COOP MAP #####
-	if ($line =~  /(\S*\([0-9]+\)) set new map of size ([0-9]*)/) 
-	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size\x037 $2\x03" }
-	##### APPROVE MASTER #####
-	if ($line =~  /(\S*\([0-9]+\)) approved for master by (.+\([0-9]+\))/) 
-	{ return "\x032APPROVE\x03    \x0312$1\x03 was approved for master by \x0312$2\x03" }	
-	##### GENERIC #####
-	if ($line =~  /Apparently no one is connected/)
-        { return "Apparently no one is connected" }
-	##### AUTHENTICATION #####
-	if ($line =~  /(\S*\([0-9]+\)) passed authentication as '(.*)'./) 
-	{ return "\x034AUTH\x03    \x0312$1\x03 passed authentication as \x037$2\x03" }
-	
-	return $line;
+	&sendtoirc($config->{irc_channel}, Filter::Message($input));
+	&toserverpipe("set irc_pid  $$"); # Regular refresh for safetys sake
 }
 sub toprivateirc {
 	my $send = shift; 
@@ -402,12 +157,9 @@ sub toprivateirc {
 sub sendtoirc {
 	my $channel = shift;
 	my $send = shift; 
-	$irc->yield( privmsg => $channel => "$send" );
-}
-sub sendtoircnow {
-	my $channel = shift;
-	my $send = shift; 
-	$irc->call($_[SESSION], privmsg => $channel => "$send" );
+	if ($mute_status == "0") {
+		$irc->yield( privmsg => $channel => "$send" );
+	} 
 }
 sub splittoirc {
 	my $channel = shift;
@@ -425,8 +177,8 @@ sub splittoirc {
 	undef @split; return  	
 }
 sub update {
-	my $output = `svn update bin/irc_bot.pl script/irc.csl`;
-	&toserverpipe("exec script/irc.csl");
+	my $output = `svn update bin/irc.pl scripts/irc.csl`;
+	&toserverpipe("exec scripts/irc.csl");
 	return "\x03\x036IRC\x03         \x034-/BOT_UPDATE/-\x03 \x037$output\03";
 
 }
