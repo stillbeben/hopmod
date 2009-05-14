@@ -43,9 +43,9 @@ lib lua :
     lstate.c
     ltable.c
     lvm.c
-    dl
     osconfig
-    : : : <include>src ;
+    dl
+    : <link>shared : : <include>src ;
 
 lib readline : : <name>readline ;
 lib ncurses : : <name>ncurses ;

@@ -1,5 +1,7 @@
 AC_INIT
 
+AM_INIT_AUTOMAKE([hopmod],[0.0])
+
 AC_PROG_CXX
 
 AC_HAVE_LIBRARY([z],,[AC_MSG_ERROR("You are missing a required library: zlib.")])

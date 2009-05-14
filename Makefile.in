@@ -1,12 +1,16 @@
 BJAM=bin/bjam
+USER_CONFIG="--user-config=user-config.jam"
 
 all: .dummy
-	@$(BJAM) $(BJAM_CONFIG) --user-config=user-config.jam
+	@$(BJAM) release $(USER_CONFIG)
+
+debug: .dummy
+	@$(BJAM) debug $(USER_CONFIG)
 
 clean: .dummy
-	@$(BJAM) clean
+	@$(BJAM) clean $(USER_CONFIG)
 
 distclean: clean
-	rm -rf Makefile config.log
+	rm -rf Jamfile Makefile config.log
 
 .dummy:
