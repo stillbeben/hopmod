@@ -7,6 +7,15 @@ $db = new SQLite3($database["path"]);
 
 //if ($_GET["admin"] == 1) $admin = true;
 
+// OPTIONAL: (STILL IN TODO!!)
+$ENABLE_SERVER_STATUS = 0; 
+$SERVER_PORT = 7894; // Cube Script Pipe
+
+if ($_GET["serverport"] != NULL) {
+	echo players($_GET["serverport"]);
+	exit;
+}
+
 if ($_GET["nick"] != NULL) {
 	$results = $db->query('	
 	select *, round(hits/(max(shots,1)+0.0)*100) as acc
@@ -29,7 +38,6 @@ if ($_GET["show"] == NULL) {
 } // if no show argument is given, force to view players 
 
 style();
-if ($_GET["show"] == "games") show_games($db);
 if ($_GET["show"] == "players") {
 	if ($_GET["fplayer"] == NULL) show_players($db, $_GET["order"], $_GET["c"], NULL, NULL, $admin);
 	else show_players($db, $_GET["order"], $_GET["c"], $_GET["fplayer"], true, $admin);
@@ -135,10 +143,11 @@ function show_player($db, $player, $order, $admin) {
 	echo '</div>';
 }
 
-function page_links($page, $pages, $order) {
+function page_links($page, $pages, $order, $players) {
 	echo '<div align="center"><font face="Tahoma" size="-1">';
+	if (($players % $pages) < 50) $pages--;
 	if (($page+1) >= $pages)
-		echo '<a href="?show=players&order='.$order.'&page='.($page-1).'"><b>back</b></a>&nbsp';
+		echo '<a href="?show=players&order='.$order.'&page='.($page-1).'"><b>back</b></a>&nbsp';	
 	for ($i = 0; $i <= $pages; $i++) {
 		if ($page == $i)
 			echo '<a href="?show=players&order='.$order.'&page='.$i.'"><b>'.$i.'</b></a>&nbsp;';
@@ -260,12 +269,13 @@ function show_players($db, $order,$country = NULL, $player = NULL, $norank = FAL
 		echo '</td>';
 		echo '</tr>';
 		echo "\n";
-		flush();
+		$x++;
+		flush(); // Flush HTML-Content for each Player on Page=n
 	}
 	echo '</table>';
 	echo '<br>';
 	find_player();
-	page_links($page, round($i / $max_per_page, 0), $order);
+	page_links($page, round($i / $max_per_page, 0), $order, $x);
 }
 
 function tr($str) {
@@ -274,23 +284,6 @@ function tr($str) {
 
 function td($str) {
 	echo "		".$str;
-}
-
-function show_games($db) {
-	$results = $db->query('SELECT * FROM games ORDER BY datetime DESC');
-
-	echo '<table border="1" align="center">';
-	echo '<tr><td>Time</td><td>Mode</td><td>Map</td><td>Players</td></tr>';
-
-	while ($row = $results->fetchArray()) {
-	  echo '<tr>';
-	  echo '<td>'.date("d.m.Y | H:i", $row["datetime"]).'</td>';
-	  echo '<td>'.$row["gamemode"].'</td>';
-	  echo '<td>'.$row["mapname"].'</td>';
-	  echo '<td>'.$row["players"].'</td>';
-	  echo '</tr>';   
-	}
-	echo '</table>';
 }
 
 function print_time($n,$unit)
@@ -381,6 +374,19 @@ function style() {
 		document.getElementById('html').innerHTML='<font face="Tahoma" size="-2">Matches: ' + users + '</font>';
 		document.getElementById('html').style.visibility='visible';
 	}
+	
+	function get_server(port) {
+		if (!port) {
+			document.getElementById('html_server').innerHTML="";
+			return false;
+		}
+		get("?serverport=" + port, "server");
+	}
+	
+	function server(html) {
+		document.getElementById('html_server').innerHTML=html;
+		document.getElementById('html_server').style.visibility='visible';
+	}
 			
 	function get(url, callback_function, return_xml){
 		var http_request = false;	
@@ -422,6 +428,36 @@ function style() {
 <body bgcolor="#CCCCCC">
 	<?php
 }
+function phpvar2jsvar($value, $var) {
+	echo '<script>'.$var.' = \''.$value.'\';</script>'."\n";
+}
+
+function players($server, $type = 'text/cubescript') {
+	$x = cube('
+			logstring = "Players: "
+			foreach (players) [
+				logstring = (concat $logstring (player_name $arg1),)
+			]
+			logstring = (concatword $logstring "||" $servername "||" $maxplayers)
+			result $logstring', $server, $type);
+	$x = explode("\n", $x);
+	$x = explode(" ,", $x[4]);
+	return count($x)-1;
+}
+
+function cube($command, $mini_httpd_port = 7894, $type = 'text/cubescript') {
+        $headers = "POST /serverexec HTTP/1.0\r\nHost: 127.0.0.1\r\n".
+		"Content-Length: ".strlen($command)."\r\nContent-Type: $type\r\n\r\n";
+        $fp = fsockopen("127.0.0.1:$mini_httpd_port");
+		if (!$fp) return false;
+        fputs($fp, $headers);
+        fputs($fp, $command);
+        while (!feof($fp)) {
+            $ret .= fgets($fp, 1024);
+        }
+        fclose($fp);
+		return $ret;
+}
 
 function fix($str) {
 	$str = str_replace("#", "%%1", $str);
@@ -447,6 +483,17 @@ function php_version_check() {
 	$x .= $version[4]; // 0
 	if ($x < 530) die("PHP >= 5.3.0RC1 is required");
 }
+
+phpvar2jsvar($ENABLE_SERVER_STATUS, 'ENABLE_SERVER_STATUS');
+phpvar2jsvar($SERVER_PORT, 'SERVER_PORT');
+
+flush();
 ?>
+<script>
+if (ENABLE_SERVER_STATUS) {
+	//get_server(SERVER_PORT);
+}
+</script>
+<div id="html_server"></div>
 </body>
 </html>
