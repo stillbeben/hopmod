@@ -148,7 +148,7 @@ function page_links($page, $pages, $order, $players) {
 	if (($players % $pages) < 50) $pages--;
 	if (($page+1) >= $pages)
 		echo '<a href="?show=players&order='.$order.'&page='.($page-1).'"><b>back</b></a>&nbsp';	
-	for ($i = 0; $i <= $pages; $i++) {
+	for ($i = 1; $i <= ($pages+1); $i++) {
 		if ($page == $i)
 			echo '<a href="?show=players&order='.$order.'&page='.$i.'"><b>'.$i.'</b></a>&nbsp;';
 		else
@@ -159,7 +159,7 @@ function page_links($page, $pages, $order, $players) {
 	echo '</font></div>';
 }
 
-function show_players($db, $order,$country = NULL, $player = NULL, $norank = FALSE, $admin) {
+function show_players($db, $order, $country = NULL, $player = NULL, $norank = FALSE, $admin) {
 	$max_per_page = 100;
 	
 	$order = str_replace("'", null, str_replace('"', null, $order));
@@ -197,8 +197,10 @@ function show_players($db, $order,$country = NULL, $player = NULL, $norank = FAL
 	';
 	if ($_GET["page"] == NULL) 
 		$page = 0;
-	elseif (is_numeric($_GET["page"]))
-		$page = $_GET["page"];
+	elseif (is_numeric($_GET["page"])) {
+			$page = $_GET["page"];
+			$page--; // we are starting by 0
+		}
 	else 
 		exit;
 		
