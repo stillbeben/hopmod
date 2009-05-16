@@ -5,7 +5,7 @@ package Filter;
 sub Message { 
 	my $line = shift;
 	##### Returns EMPTY #####
-	if ($line =~ /(#login|#changepw|#changeuserpw|#msg|#warning)/) { return }
+	if ($line =~ /(#login|#changepw|#changeuserpw|#msg|#warning|maxclients)/) { return }
 	##### Bot Muting Functions #####
 	if ($line =~ /COMMAND BOTMUTE (.*)/)
 	{ sendtoirc($config->{irc_channel},"\x034BOTMUTE\x03       \x0312$1\x03 muted the IRC bot."); $mute_status = "1"; return;}
@@ -49,8 +49,8 @@ sub Message {
 	if ($line =~ /(\S*\([0-9]+\)) claimed master/) 
 	{ return "\x034MASTER\x03     \x0312$1\x03 took master." }
 	##### RELEASE MASTER #####
-	if ($line =~ /(\S*\([0-9]+\)) relinquished admin./) 
-	{ return "\x034NOADMIN\x03   \x0312$1\x03 relinquished admin" }
+	if ($line =~ /(\S*\([0-9]+\)) relenquished admin/) 
+	{ return "\x034NOADMIN\x03   \x0312$1\x03 relenquished admin" }
 	##### KICK BAN #####
 	if ($line =~ /(\S*) was kicked by (.*)/) 
 	{ return "\x034KICK\x03      Master \x034$2\x03 kicked \x0312$1\x03" }
@@ -70,8 +70,8 @@ sub Message {
 	if ($line =~ /server started (.+)/) 
 	{ return "\x034SERVER\x03    Server Restarted at\x037 $1\x03" }
 	##### MASTERMODE #####
-	if ($line =~ /mastermode is now ([0-9])/) 
-	{ return "\x034MASTERMODE\x03  Mastermode is now\x0312 $1\x03" }
+	if ($line =~ /mastermode changed to (locked|veto|private|open)/) 
+	{ return "\x034MM\x03          Mastermode is now\x0312 $1\x03" }
 	##### IRC BOT SHUTDOWN #####
         if ($line =~  /Terminating the IRC bot/)
         { return "\x034SERVER\x03 \x0312IRC Bot Shutdown Initiated\x03" }
