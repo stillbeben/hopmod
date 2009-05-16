@@ -8,7 +8,7 @@ sub Message {
 	if ($line =~ /(#login|#changepw|#changeuserpw|#msg|#warning|maxclients|client-side)/) { return }
 	##### NEWMAP #####
         if ($line =~ /\S* New game: (\S*) on (\S*), (\S*)/)
-        { return "\x032NEWMAP\x03     New map \x037$2\x03 on \x037 $1\x03 with\x037 $3\x03 players" }
+        { return "\x032NEWMAP\x03     New map \x037$1\x03 on \x037$2\x03 with\x037 $3\x03 players" }
         ##### HOPMOD RELOAD #####
         if ($line =~ /\S* reloading hopmod.../)
         { return "\x034SRVRELOAD\x03     HopMod was reloaded..." }

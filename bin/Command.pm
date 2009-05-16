@@ -95,7 +95,7 @@ sub Process {
 		{ main::toserverpipe("mastermode $1");		return "MASTERMODE","$nick changed mastermode to $1"}
 		##### MAPCHANGE #####
 		if ( $command =~ / map (\S+) (\S+)/i )
-		{ main::toserverpipe("changemap $1 $2");	return "MAP","$nick changed map to \x037$1\x03 on \x037$2\x03"}
+		{ main::toserverpipe("changemap $2 $1");	return "MAP","$nick changed map to \x037$1\x03 on \x037$2\x03"}
 		##### HELP #####
 		if ( $command =~ / help/i )
 		{ return "HELP","http://code.google.com/p/hopmod/wiki/IRCbotCommands"; }
