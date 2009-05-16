@@ -11,6 +11,8 @@ $db = new SQLite3($database["path"]);
 $ENABLE_SERVER_STATUS = 0; 
 $SERVER_PORT = 7894; // Cube Script Pipe
 
+check_sql_injection();
+
 if ($_GET["serverport"] != NULL) {
 	echo players($_GET["serverport"]);
 	exit;
@@ -49,9 +51,9 @@ if ($_GET["show"] == "player") {
 function find_player() {
 	echo '<div align="center">';
 	echo '<form action="?show=players" method="GET">';
-	echo '<input type="text" onKeyPress="find_user(this.value)" onKeyUp="find_user(this.value)" name="fplayer">';
-	echo '&nbsp;<input type="submit" value="Find Player">';
-	echo '<div id="html"></div>';
+	echo '<table><tr><td><input class="txt" type="text" onKeyPress="find_user(this.value)" onKeyUp="find_user(this.value)" name="fplayer"></td><td>';
+	echo '&nbsp;<input class="btn" type="submit" value="Find Player"></td>';
+	echo '</table><div id="html"></div>';
 	echo '</form>';
 	echo '</div>';
 }
@@ -67,7 +69,7 @@ function show_player($db, $player, $order, $admin) {
 	from players 
 	inner join games on games.id = players.game_id where players.name = "'.$player.'"
 	and players.timeplayed >= 2 and gamemode != "coop edit"
-	order by "'.$order.'" desc
+	order by "'.$order.'" DESC
 	');
 	echo '<div align="center">Player Name:  '.$player;
 	echo '<table border="1" align="center" class="stats">';
@@ -100,7 +102,7 @@ function show_player($db, $player, $order, $admin) {
 		echo $row["gamemode"];
 		echo '</td>';
 		echo '<td>';
-		echo '<div id="flag" align="left"><a href="maps/png/'.$row["mapname"].'.png"><img width="20" height="20" src="maps/'.$row["mapname"].'.jpg"></a> - '.$row["mapname"].'</div>';
+		echo '<div id="flag" align="left"><!--<a href="maps/png/'.$row["mapname"].'.png"><img width="20" height="20" src="maps/'.$row["mapname"].'.jpg"></a> - -->'.$row["mapname"].'</div>'."\n";
 		//echo $row["mapname"];
 		echo '</td>';
 		echo '<td>';
@@ -145,17 +147,18 @@ function show_player($db, $player, $order, $admin) {
 
 function page_links($page, $pages, $order, $players) {
 	echo '<div align="center"><font face="Tahoma" size="-1">';
-	if (($players % $pages) < 50) $pages--;
+	if ($pages > 0)
+		if (($players % $pages) < 50) $pages--;
 	if (($page+1) >= $pages)
 		echo '<a href="?show=players&order='.$order.'&page='.($page-1).'"><b>back</b></a>&nbsp';	
 	for ($i = 1; $i <= ($pages+1); $i++) {
-		if ($page == $i)
+		if (($page+1) == $i)
 			echo '<a href="?show=players&order='.$order.'&page='.$i.'"><b>'.$i.'</b></a>&nbsp;';
 		else
 			echo '<a href="?show=players&order='.$order.'&page='.$i.'">'.$i.'</a>&nbsp;';
 	}
 	if (($page+1) <= $pages)
-		echo '<a href="?show=players&order='.$order.'&page='.($page+1).'"><b>next</b></a>&nbsp';
+		echo '<a href="?show=players&order='.$order.'&page='.($page+2).'"><b>next</b></a>&nbsp';
 	echo '</font></div>';
 }
 
@@ -182,17 +185,17 @@ function show_players($db, $order, $country = NULL, $player = NULL, $norank = FA
 			<td><a href="?show=players&order=name&fplayer='.$_GET["fplayer"].'">Name</a></td>';
 			if ($admin) echo '<td>IP</td>';
 			echo '
-			<td><a href="?show=players&order=frags&fplayer='.$_GET["fplayer"].'">Frags</a></td>
-			<td><a href="?show=players&order=deaths&fplayer='.$_GET["fplayer"].'">Deaths</a></td>
+			<td><a href="?show=players&order=frags&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Frags</a></td>
+			<td><a href="?show=players&order=deaths&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Deaths</a></td>
 			<td>Kpd</td>
-			<td><a href="?show=players&order=acc&fplayer='.$_GET["fplayer"].'">Acc</a></td>
-			<td><a href="?show=players&order=wins&fplayer='.$_GET["fplayer"].'">Wins</a></td>
-			<td><a href="?show=players&order=losses&fplayer='.$_GET["fplayer"].'">Losses</a></td>
-			<td><a href="?show=players&order=suicides&fplayer='.$_GET["fplayer"].'">Suicides</a></td>
-			<td><a href="?show=players&order=teamkills&fplayer='.$_GET["fplayer"].'">Teamkills</a></td>
-			<td><a href="?show=players&order=hits&fplayer='.$_GET["fplayer"].'">Hits</a></td>
-			<td><a href="?show=players&order=shots&fplayer='.$_GET["fplayer"].'">Shots</a></td>
-			<td><a href="?show=players&order=timeplayed&fplayer='.$_GET["fplayer"].'">Played Time</a></td>
+			<td><a href="?show=players&order=acc&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Acc</a></td>
+			<td><a href="?show=players&order=wins&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Wins</a></td>
+			<td><a href="?show=players&order=losses&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Losses</a></td>
+			<td><a href="?show=players&order=suicides&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Suicides</a></td>
+			<td><a href="?show=players&order=teamkills&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Teamkills</a></td>
+			<td><a href="?show=players&order=hits&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Hits</a></td>
+			<td><a href="?show=players&order=shots&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Shots</a></td>
+			<td><a href="?show=players&order=timeplayed&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Played Time</a></td>
 		</tr>
 	';
 	if ($_GET["page"] == NULL) 
@@ -200,6 +203,7 @@ function show_players($db, $order, $country = NULL, $player = NULL, $norank = FA
 	elseif (is_numeric($_GET["page"])) {
 			$page = $_GET["page"];
 			$page--; // we are starting by 0
+			if ($page < 0) exit;
 		}
 	else 
 		exit;
@@ -334,34 +338,47 @@ function style() {
 	<style type="text/css">
 		A:link { color: black; text-decoration: none; border:0px; }
 		A:visited { color: black; text-decoration: none; border:0px; }
-		A:hover { color: orange; border:0px;  }
-		
-		#flag img { border: 0px; }
+		A:hover { color: orange; border:0px;  }	
+		#flag img { border: 0px; }	
+		input.btn {
+			width:80px;
+			color:#283386;
+			font-size:12px;
+			border:1px solid #8FD3EF;
+		}
+		input.txt {
+			width:110px;
+			color:#283386;
+			font-size:12px;
+			border:1px solid #8FD3EF;
+		}
 
-		table.stats
-		{text-align: center;
-		font-family: Verdana, Geneva, Arial, Helvetica, sans-serif ;
-		font-weight: normal;
-		font-size: 11px;
-		color: #fff;
-		background-color: #666;
-		border: 0px;
-		border-collapse: collapse;
-		border-spacing: 0px;}
-		table.stats td
-		{background-color: #CCC;
-		color: #000;
-		padding: 4px;
-		text-align: left;
-		border: 1px #fff solid;}
-			table.stats td.hed
-		{background-color: #666;
-		color: #aaa;
-		padding: 4px;
-		text-align: left;
-		border-bottom: 2px #fff solid;
-		font-size: 12px;
-		font-weight: bold;} 
+		table.stats {
+			text-align: center;
+			font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+			font-weight: normal;
+			font-size: 11px;
+			color: #fff;
+			background-color: #666;
+			border: 0px;
+			border-collapse: collapse;
+			border-spacing: 0px;}
+			table.stats td
+			{background-color: #CCC;
+			color: #000;
+			padding: 4px;
+			text-align: left;
+			border: 1px #fff solid;
+		}
+		table.stats td.hed {
+			background-color: #666;
+			color: #aaa;
+			padding: 4px;
+			text-align: left;
+			border-bottom: 2px #fff solid;
+			font-size: 12px;
+			font-weight: bold;
+		} 
 	</style>
 	<script type="text/javascript">
 	function find_user(nick) {
@@ -484,6 +501,32 @@ function php_version_check() {
 	$x .= $version[2]; // 3
 	$x .= $version[4]; // 0
 	if ($x < 530) die("PHP >= 5.3.0RC1 is required");
+}
+
+function check_sql_injection() {
+	foreach (array_keys($_REQUEST) as $var_name) {
+		if (contains($_REQUEST[$var_name], " ")) $exit = true;
+		if (contains($_REQUEST[$var_name], "OR")) $exit = true;
+		if (contains($_REQUEST[$var_name], "AND")) $exit = true;
+		if (contains($_REQUEST[$var_name], ";")) $exit = true;
+		if (contains($_REQUEST[$var_name], "IF")) $exit = true;
+		if (contains($_REQUEST[$var_name], "'")) $exit = true;
+		if (contains($_REQUEST[$var_name], '"')) $exit = true;
+		
+		if ($exit) {
+		    $log = fopen("warn.txt","a+");
+			$ip = $_SERVER['REMOTE_ADDR']; if (!$ip) $ip = getenv('REMOTE_ADDR');
+		    fwrite($log, "Possible SQL-Injection: ".$ip." Time: ".time()."\n");
+		    fclose($log);
+			exit;
+		}
+	}
+}
+
+function contains($var, $str) {
+	if (strlen(strtoupper(str_replace($str, NULL, strtoupper($var)))) < strlen(strtoupper($var))) 
+	return true;
+	return false;
 }
 
 phpvar2jsvar($ENABLE_SERVER_STATUS, 'ENABLE_SERVER_STATUS');
