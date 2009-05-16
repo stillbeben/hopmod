@@ -91,6 +91,17 @@ server.event_handler("mapvote", function(cn, map, mode)
     log(string.format("%s(%i) suggests %s on map %s",server.player_name(cn),cn,mode,map))
 end)
 
+server.event_handler("mapchange", function(map, mode)
+    
+    local playerstats = ""
+    local sc = tonumber(server.speccount)
+    local pc = tonumber(server.playercount) - sc
+    playerstats = tostring(pc) .. " players"
+    if sc > 0 then playerstats = playerstats .. " " .. tostring(sc) .. " spectators" end
+    
+    log(string.format("New game: %s on %s, %s", mode, map, playerstats))
+end)
+
 server.event_handler("setmastermode", function(oldmode, newmode)
     log(string.format("mastermode changed to %s",newmode))
 end)
