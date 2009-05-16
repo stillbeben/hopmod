@@ -6,6 +6,9 @@ sub Message {
 	my $line = shift;
 	##### Returns EMPTY #####
 	if ($line =~ /(#login|#changepw|#changeuserpw|#msg|#warning|maxclients|client-side)/) { return }
+	##### NEWMAP #####
+        if ($line =~ /\S* New game: (\S*) on (\S*), (\S*)/)
+        { return "\x032NEWMAP\x03     New map \x037$2\x03 on \x037 $1\x03 with\x037 $3\x03 players" }
         ##### HOPMOD RELOAD #####
         if ($line =~ /\S* reloading hopmod.../)
         { return "\x034SRVRELOAD\x03     HopMod was reloaded..." }
@@ -63,9 +66,6 @@ sub Message {
 	##### CHAT #####
 	if ($line =~  /(\S*\([0-9]+\))(\(*.*\)*): (.*)/) 
 	{ return "\x033CHAT\x03       \x0312$1\x034$2\x03 --> \x033$3\x03" } 
-	##### MAP CHANGE #####
-	if ($line =~ /new game: (.*), (.*), (.*)/) 
-	{ return "\x032NEWMAP\x03     New map \x037$3\x03 for\x037 $2\x03 with\x037 $1\x03 " }
 	##### MASTER #####
 	if ($line =~ /(\S*\([0-9]+\)) claimed master/) 
 	{ return "\x034MASTER\x03     \x0312$1\x03 took master." }
