@@ -336,7 +336,7 @@ bool player_changeteam(int cn,const char * newteam)
 {
     clientinfo * ci = get_ci(cn);
     if(!m_teammode || ci->state.state == CS_SPECTATOR || 
-        (!smode || !smode->canchangeteam(ci, ci->team, newteam)) ||
+        (smode && !smode->canchangeteam(ci, ci->team, newteam)) ||
         signal_chteamrequest(cn, ci->team, newteam) == -1) return false;
     
     if(smode) smode->changeteam(ci, ci->team, newteam);
