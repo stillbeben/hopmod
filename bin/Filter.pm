@@ -5,7 +5,10 @@ package Filter;
 sub Message { 
 	my $line = shift;
 	##### Returns EMPTY #####
-	if ($line =~ /(#login|#changepw|#changeuserpw|#msg|#warning|maxclients)/) { return }
+	if ($line =~ /(#login|#changepw|#changeuserpw|#msg|#warning|maxclients|client-side)/) { return }
+	##### NET STATS #####
+        if ($line =~ /\S* Net stats for (.*): ping ([0-9]*) lag ([0-9]*)/)
+        { return "\x034NETSTAT\x03    Net stats for \x0312$1\x03: ping \x0312$2\x03 lag \x0312$3\x03" }
 	##### Bot Muting Functions #####
 	if ($line =~ /COMMAND BOTMUTE (.*)/)
 	{ sendtoirc($config->{irc_channel},"\x034BOTMUTE\x03       \x0312$1\x03 muted the IRC bot."); $mute_status = "1"; return;}
