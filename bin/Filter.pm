@@ -6,6 +6,24 @@ sub Message {
 	my $line = shift;
 	##### Returns EMPTY #####
 	if ($line =~ /(#login|#changepw|#changeuserpw|#msg|#warning|maxclients|client-side)/) { return }
+        ##### HOPMOD RELOAD #####
+        if ($line =~ /\S* reloading hopmod.../)
+        { return "\x034SRVRELOAD\x03     HopMod was reloaded..." }
+        ##### DELBOT #####
+        if ($line =~ /(\S*\([0-9]+\)) deleted a bot/)
+        { return "\x034DELBOT\x03     \x0312$1\x03 deleted a bot" }
+        ##### ADDBOT #####
+        if ($line =~ /(\S*\([0-9]+\)) added a bot \(skill ([0-9]*)\)/)
+        { return "\x034ADDBOT\x03     \x0312$1\x03 added a bot of skill \x037$2\x03" }
+        ##### STARTDEMO #####
+        if ($line =~ /\S* recording game to (.*)/)
+        { return "\x034DEMO\x03     Recording demo to file \x037$1\x03" }
+        ##### ENDDEMO #####
+        if ($line =~ /\S* finished recording game \(([0-9]*) file size\)/)
+        { return "\x034ENDDEMO\x03     finished recording game file size \x037$1\x03" }
+        ##### MAPCRC #####
+        if ($line =~ /(\S*\([0-9]+\)) has a modified map/)
+        { return "\x034MAPCRC\x03     \x0312$1\x03 has a modified map." }
 	##### NET STATS #####
         if ($line =~ /\S* Net stats for (.*): ping ([0-9]*) lag ([0-9]*)/)
         { return "\x034NETSTAT\x03    Net stats for \x0312$1\x03: ping \x0312$2\x03 lag \x0312$3\x03" }
@@ -85,8 +103,8 @@ sub Message {
 	if ($line =~  /(Performing server update:.*)/) 
 	{ return "\x034SERVER\x03\x0312 $1\x03" }
 	##### SERVER SHUTDOWN #####
-	if ($line =~  /server shutdown (.*)/) 
-	{ return "\x034SERVER\x03 \x0312Server Shutdown at $1\x03" }
+	if ($line =~  /server shutting down/) 
+	{ return "\x034SERVER\x03 \x0312Server is shutting down\x03" }
 	##### NEW COOP MAP #####
 	if ($line =~  /(\S*\([0-9]+\)) set new map of size ([0-9]*)/) 
 	{ return "\x034NEWCOOPMAP\x03 \x0312$1\x03 starts new map of size\x037 $2\x03" }
