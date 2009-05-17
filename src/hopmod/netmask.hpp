@@ -18,6 +18,8 @@
 #include <bitset>
 #include <typeinfo>
 
+#include <iostream>
+
 /**
     @brief Represent an IPv4 address prefix.
 */
@@ -40,7 +42,7 @@ public:
      :m_prefix(ntohl(ip))
     {
         assert(bits > 0 && bits < 33);
-        m_mask = (unsigned long)pow(2, bits)-1 << (32 - bits);
+        m_mask = (unsigned long)(pow(2, bits)-1) << (32 - bits);
         m_prefix &= m_mask;
     }
     
@@ -138,10 +140,10 @@ public:
         std::bitset<32> maskbits(m_mask);
         
         std::ostringstream out;
-        out <<(m_prefix >> 24)          <<"."
-            <<(m_prefix >> 16 & 0xff)   <<"."
-            <<(m_prefix >> 8  & 0xff)   <<"."
-            <<(m_prefix       & 0xff);
+        out <<(int)(m_prefix >> 24)          <<"."
+            <<(int)(m_prefix >> 16 & 0xff)   <<"."
+            <<(int)(m_prefix >> 8  & 0xff)   <<"."
+            <<(int)(m_prefix       & 0xff);
         
         if(maskbits.count() < 32) out<<"/"<<maskbits.count();
         
