@@ -42,8 +42,8 @@ global playercmd_1on1 (func [cn arg1 arg2 arg3 arg4] [
         changemap $gamemap $game_mo 
         
         if (strcmp $game_mo "[instagib team]") [
-            setteam $player1 linux
-            setteam $player2 windows
+            setteam $player1 lin
+            setteam $player2 win
         ]
 
         msg (format "%1" [Start the fight now!!!] )
