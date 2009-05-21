@@ -315,16 +315,22 @@ server.event_handler("shutdown", function()
 end)
 
 function server.playercmd_stats(cn,selection)
+	local function player_stats(cn, player) 
+		local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
+		server.player_msg(player,string.format("Name: %s Score: %s Frags: %s Deaths: %s Accuracy %s",
+			green(server.player_name(player)),
+			yellow(server.player_frags(player)),
+			green(frags),
+			red(server.player_deaths(player)),
+			yellow(server.player_accuracy(player).."%"))
+		)
+		if server.gamemodeinfo.teams then
+			server.player_msg(cn,string.format("Teamkills: %s",red(server.player_teamkills(player))))
+		end
+	end
+    
     if not selection then
-        local frags = server.player_frags(cn) + server.player_suicides(cn) + server.player_teamkills(cn)
-        server.player_msg(cn,string.format("Score: %s Frags: %s Deaths: %s Accuracy %s",
-            yellow(server.player_frags(cn)),
-            green(frags),
-            red(server.player_deaths(cn)),
-            yellow(server.player_accuracy(cn).."%")))
-        if server.gamemodeinfo.teams then
-            server.player_msg(cn,string.format("Teamkills: %s",red(server.player_teamkills(cn))))
-        end
+        player_stats(cn, cn) 
     elseif selection == "total" then
         select_player_totals:bind{name = server.player_name(cn)}
         row = select_player_totals:first_row()
@@ -333,7 +339,9 @@ function server.playercmd_stats(cn,selection)
             return
         end
         server.player_msg(cn, string.format("Games: %s Frags: %s Deaths: %s Wins: %s Losses: %s",yellow(row.games),green(row.frags),red(row.deaths),green(row.wins),red(row.losses)))
-    end
+	else
+		player_stats(cn, selection) 
+   end
 end
 
 function statsmod.writeStatsToJsonFile()
