@@ -107,7 +107,7 @@ server.event_handler("auth", function(cn, name, domain, success)
                 handler(cn, name)
             end
         else
-            if server.player_priv_code(cn) == 0 then
+            if server.player_priv_code(cn) == 0 and tonumber(server.master) == -1 then
                 server.msg(string.format("%s claimed master as '%s'",server.player_name(cn),magenta(name)))
                 server.setmaster(cn)
             end
