@@ -6,73 +6,43 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
-
-#include "fungu/string.hpp"
-#include "fungu/script/error.hpp"
-#include "fungu/script/any.hpp"
-#include "fungu/script/lexical_cast.hpp"
-#include "fungu/script/result_type.hpp"
-#include "fungu/script/arguments_container.hpp"
-#include "fungu/script/symbol_table.hpp"
-
-#include <typeinfo>
-#include <map>
-#include <list>
-#include <boost/intrusive_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/type_traits.hpp>
-#include <boost/static_assert.hpp>
-#include <boost/function.hpp>
 
 namespace fungu{
 namespace script{
 
-env::env():m_global(this), m_source_ctx(NULL), m_recursion_limit(FUNGU_SCRIPT_DEFAULT_RECURSION_LIMIT)
+const int env::recursion_limit;
+
+env::env()
+  :m_source_ctx(NULL)
 {
-    
+    for(int i = 0; i<env::max_modules; i++) m_module[i] = NULL;
 }
-    
+
 env::~env()
 {
-    
+    for(boost::unordered_map<const_string, symbol *>::iterator it = m_symbol.begin();
+        it != m_symbol.end(); ++it) delete it->second;
 }
 
-env::frame * env::get_global_scope()
+env::symbol * env::lookup_symbol(env::object_id id)const
 {
-    return &m_global;
+    boost::unordered_map<const_string, symbol *>::const_iterator it = m_symbol.find(id);
+    if(it == m_symbol.end()) return NULL;
+    return it->second;
 }
 
-const env::frame * env::get_global_scope()const
+env::symbol * env::create_symbol(env::object_id id)
 {
-    return &m_global;
-}
-
-bool env::bind_infix_operator(env::object_identifier infix_id,object_identifier mapped_id)
-{
-    if(!m_global.lookup_object(mapped_id)) return false;
-    m_infix_operators[infix_id] = mapped_id;
-    return true;
-}
-
-bool env::is_infix_operator(env::object_identifier id)const
-{
-    return m_infix_operators.count(id);
-}
-
-env::object_identifier env::get_infix_operator_mapping(env::object_identifier id)const
-{
-    return m_infix_operators.find(id)->second;
-}
-
-env::frame::frame_symbol ** env::lookup_symbol(env::object_identifier id)
-{
-    return get_symbol_table().lookup_symbol(id);
-}
-    
-env::frame::frame_symbol ** env::register_symbol(env::object_identifier id)
-{
-    return get_symbol_table().register_symbol(id);
+    std::pair<boost::unordered_map<const_string, env::symbol *>::iterator, bool> insert_status = m_symbol.insert(std::pair<const_string,env::symbol *>(id,NULL));
+    if(insert_status.second == false) return insert_status.first->second;
+    symbol * newSymbol = new symbol;
+    insert_status.first->second = newSymbol;
+    return newSymbol;
 }
 
 void env::set_source_context(const source_context * source_ctx)
@@ -85,30 +55,18 @@ const source_context * env::get_source_context() const
     return m_source_ctx;
 }
 
-env::symbol & env::bind_global_object(env::object * obj, env::object_identifier id)
+void env::bind_global_object(env::object * obj, env::object_id id)
 {
-    return m_global.bind_global_object(obj,id);
+    env::symbol * sym = create_symbol(id);
+    sym->set_global_object(obj);
+    if(m_bind_observer) m_bind_observer(id, obj);
 }
 
-env::symbol & env::bind_universal_object(env::object * obj, env::object_identifier id)
+env::object * env::lookup_global_object(env::object_id id)const
 {
-    return (new frame::frame_symbol(env::register_symbol(id), NULL))
-        ->attach_to_env().bind_object(obj).set_dynamically_scoped();
-}
-
-bool env::is_valid_symbol_handle(symbol_handle handle)
-{
-    return handle && *handle;
-}
-
-env::symbol_handle env::invalid_symbol_handle()
-{
-    return NULL;
-}
-
-int env::get_recursion_limit()const
-{
-    return m_recursion_limit;
+    env::symbol * sym = lookup_symbol(id);
+    if(!sym) return NULL;
+    return sym->lookup_object(NULL);
 }
 
 env::observer_function env::unset_bind_observer()
@@ -130,10 +88,26 @@ void env::set_lua_state(lua_State * state)
 }
 #endif
 
-symbol_table<env::frame::frame_symbol *> & env::get_symbol_table()
+void env::push_arg(any value)
 {
-    static symbol_table<frame::frame_symbol *> sm_symbol_table(NULL);
-    return sm_symbol_table;
+    m_arg.push(value);
+}
+
+any & env::top_arg()
+{
+    assert(m_arg.empty()==false);
+    return m_arg.top();
+}
+
+void env::pop_arg()
+{
+    assert(m_arg.empty()==false);
+    m_arg.pop();
+}
+
+int env::get_arg_count()const
+{
+    return m_arg.size();
 }
 
 } //namespace script

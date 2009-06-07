@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/table.hpp"
 #include "fungu/script/any_variable.hpp"
 
@@ -52,7 +56,7 @@ table::table(const json::object * source)
             it != source->end(); it++)
         {
             any_variable * a = new any_variable;
-            a->set_adopted_flag();
+            a->set_adopted();
             if(it->second->get_type() == typeid(json::object))
                 a->assign(create(any_cast<json::object>(it->second.get())));
             else a->assign(*it->second);
@@ -66,17 +70,17 @@ table::table(const json::object * source)
 
 table::table()
 {
-    
+    m_members[".this"] = this->get_shared_ptr();
 }
 
 env::object::shared_ptr table::create()
 {
     table * t = new table();
-    t->set_adopted_flag();
+    t->set_adopted();
     return t->get_shared_ptr();
 }
 
-result_type table::apply(apply_arguments & args,frame *)
+result_type table::call(call_arguments & args,frame *)
 {
     object::shared_ptr obj = this;
     while(!args.empty())
@@ -114,7 +118,7 @@ result_type table::value()
 env::object::shared_ptr table::assign(const std::string & name,const any & data)
 {
     any_variable * anyvar = new any_variable;
-    anyvar->set_adopted_flag();
+    anyvar->set_adopted();
     anyvar->assign(data);
     m_members[name] = anyvar->get_shared_ptr();
     return anyvar->get_shared_ptr();

@@ -13,11 +13,6 @@ AC_HAVE_LIBRARY([GeoIP],[AC_SUBST(WITHOUT_GEOIP,0)],[
 
 AC_HAVE_LIBRARY([ncurses],[],[AC_MSG_WARN("Unable to find ncurses library which means the build for luashell will fail.")])
 
-AC_LANG_PUSH([C++])
-AC_CHECK_HEADER([boost/detail/lightweight_test.hpp],[AC_SUBST(WITHOUT_TEST_PROJECT,0)],[
-    AC_SUBST(WITHOUT_TEST_PROJECT,1)
-    AC_MSG_WARN("Will not be building and running the tests.")])
-AC_LANG_POP()
 
 AC_CHECK_FUNC(gethostbyaddr_r, [AC_SUBST(DEFINE_HAS_GETHOSTBYADDR_R,"<define>HAS_GETHOSTBYADDR_R")])
 AC_CHECK_FUNC(gethostbyname_r, [AC_SUBST(DEFINE_HAS_GETHOSTBYNAME_R,"<define>HAS_GETHOSTBYNAME_R")])

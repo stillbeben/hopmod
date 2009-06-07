@@ -19,12 +19,11 @@ public:
     any_variable();
     object_type get_object_type()const;
     void assign(const any & value);
-    result_type apply(apply_arguments & args,env::frame * frame);    
+    result_type call(call_arguments & args,env::frame * frame);    
     #ifdef FUNGU_WITH_LUA
-    int apply(lua_State * L);
+    int call(lua_State * L);
     #endif
     result_type value();
-    const source_context * get_source_context()const;
     object * lookup_member(const_string id);
     const any & get_any()const;
 private:

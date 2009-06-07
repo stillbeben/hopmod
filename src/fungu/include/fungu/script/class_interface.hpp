@@ -46,13 +46,13 @@ public:
     
     result_type call_method(Class * object,
         const_string id,
-        env::object::apply_arguments args,
+        env::object::call_arguments args,
         env::frame * frame)
     {
         if(m_object) m_object_instances.push(m_object);
         m_object=object;
         
-        result_type result=m_member_access.lookup_required_object(id)->apply(args,frame);
+        result_type result=m_member_access.lookup_required_object(id)->call(args,frame);
         
         m_object=NULL;
         if(!m_object_instances.empty()) 

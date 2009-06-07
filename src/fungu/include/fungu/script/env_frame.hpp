@@ -7,102 +7,150 @@
  */
 #ifdef FUNGU_CUBESCRIPT_ENV_NESTED_CLASS
 
+/**
+    @brief Local environment
+*/
 class frame
 {
 public:
-    class frame_symbol:public symbol
-    {
-    public:
-        frame_symbol(frame_symbol ** table_entry,frame * aFrame);
-        ~frame_symbol();
-        
-        frame_symbol & attach_to_env();
-        frame_symbol * attach_global_to_env();
-        
-        frame_symbol & detach_from_env();
-        frame_symbol & detach_from_frame();
-        
-        frame * get_frame()const;
-        frame_symbol * get_next_sibling()const;
-        frame_symbol * get_prev_frame_binding()const;
-    private:
-        frame_symbol(const frame_symbol &);
-    
-        frame_symbol ** m_table_entry;
-        frame_symbol * m_prev_frame_binding;
-        frame_symbol * m_next_sibling;
-        frame * m_frame;
-    };
-    
+    /**
+        @brief Start a new scope
+    */
     frame(env * envir);
+
+    /**
+        @brief Continue scope of parent frame - construct an inner frame.
+    */
     frame(frame * outer_frame);
+
+    /**
+        Local bindings are deleted at frame object destruction.
+    */
     ~frame();
     
-    symbol & bind_object(object * obj, object_identifier id);
-    symbol & bind_object(object * obj, frame_symbol ** table_entry);
-    symbol & bind_global_object(object * obj, object_identifier id);
+    /**
+        @brief Create local symbol binding.        
+    */
+    void bind_object(object *, object_id);
+
+    /**
+        @brief Create local symbol binding.
+    */
+    void bind_object(object *, symbol *);
     
-    object * lookup_object(object_identifier id)const;
-    object * lookup_object(const frame::frame_symbol * const * handle)const;
-    object * lookup_required_object(object_identifier id)const;
-    object * lookup_required_object(const frame_symbol * const * handle)const;
+    /**
+        @brief Get the object bound to a local symbol.
+        
+        Returns NULL if the symbol is not found.
+    */
+    object * lookup_object(object_id id)const;
     
-    bool has_expired()const;
+    /**
+        @brief Get the object bound to a local symbol.
+        
+        Returns NULL if the symbol is not found.
+    */
+    object * lookup_object(const symbol *)const;
+
+    /**
+        @brief Get the object bound to a local symbol.
+        
+        Throws error(UNKNOWN_SYMBOL) exception if the symbol is not found.
+    */
+    object * lookup_required_object(object_id id)const;
     
+    /**
+        @brief Get the object bound to a local symbol.
+        
+        Throws error(UNKNOWN_SYMBOL) exception if the symbol is not found.
+    */
+    object * lookup_required_object(const symbol *)const;
+    
+    /**
+        @brief Tell the evaluator not to evaluate anymore expressions.
+    */
     void signal_return();
+    
+    /**
+        @brief Tell the evaluator not to evaluate anymore expressions.
+        @param value set the explicit result value
+    */
     void signal_return(result_type value);
     
-    result_type get_result_value();
-    
-    env * get_env()const;
-    
-    static void register_universal_functions();
-    
-    void detach_bindings_from_env();
-    void attach_bindings_to_env();
-    
-    bool is_detached_from_env()const;
-    
+    /**
+        @brief Undo a signal_return() call.
+    */
     void unset_return();
     
-    frame_symbol * get_last_bind()const;
+    /**
+        @brief Get the explicit result value.
+    */
+    result_type get_result_value();
     
-    unsigned int get_closure_refcount()const;
-    void incr_closure_refcount();
-    frame & decr_closure_refcount();
-protected:
-    void setup_closure_refcount();
+    /**
+        @brief Has signal_return() been called?
+    */
+    bool has_expired()const;
+    
+    /**
+        @brief Return a pointer of the associated environment object.
+    */
+    env * get_env()const;
+    
+    /**
+        @brief Get the root frame of this scope.
+    */
+    frame * get_scope_frame()const;
+    
+    /**
+        @brief Get the latest symbol_local object created.
+    */
+    symbol_local * get_last_bind()const;
+    
+    /**
+        @brief Register frame-related runtime functions with a global environment.
+    */
+    static void register_functions(env &);
 private:
     frame(const frame &);
+
+    /**
+        @brief Reattach local symbol bindings to environment.
+    */
+    void attach_locals();
     
-    result_type signal_return_scriptfun(object::apply_arguments & args);
-    result_type set_result_scriptfun(object::apply_arguments & args);
-    
-    result_type bind_myvar_scriptfun(object::apply_arguments & args);
-    result_type bind_localvar_scriptfun(object::apply_arguments & args);
-    result_type bind_globalvar_scriptfun(object::apply_arguments & args);
-    result_type bind_var_scriptfun(object::apply_arguments & args,int scope);
-    
-    result_type getvar_scriptfun(object::apply_arguments & args);
-    result_type setvar_scriptfun(object::apply_arguments & args);
-    
-    result_type issymbol_scriptfun(object::apply_arguments & args);
-    result_type isnull_scriptfun(object::apply_arguments & args);
-    
-    result_type retnull_scriptfun(object::apply_arguments & args);
-    
-    result_type isprocedure_scriptfun(object::apply_arguments & args);
-    
-    result_type getsrc_scriptfun(object::apply_arguments & args);
-    
-    void notify_bind_event(const_string id,object * obj);
-    
+    /**
+        @brief Detach local symbol bindings from environment.
+        
+        Once detached, the local symbols will remain allocated but will be
+        invisible to symbol lookups.
+    */
+    void detach_locals();
+
+    /**
+        @brief Are local symbols currently detached from the environment?
+    */
+    bool is_detached_from_env()const;
+
+    result_type signal_return_scriptfun(object::call_arguments & args);
+    result_type set_result_scriptfun(object::call_arguments & args);
+    result_type bind_myvar_scriptfun(object::call_arguments & args);
+    result_type bind_localvar_scriptfun(object::call_arguments & args);
+    result_type bind_globalvar_scriptfun(object::call_arguments & args);
+    result_type bind_var_scriptfun(object::call_arguments & args,int scope);
+    result_type getvar_scriptfun(object::call_arguments & args);
+    result_type setvar_scriptfun(object::call_arguments & args);
+    result_type issymbol_scriptfun(object::call_arguments & args);
+    result_type isnull_scriptfun(object::call_arguments & args);
+    result_type retnull_scriptfun(object::call_arguments & args);
+    result_type isprocedure_scriptfun(object::call_arguments & args);
+
     class va_memfun:public object
     {
     public:
-        typedef result_type (frame::*pointer)(apply_arguments &);
+        typedef result_type (frame::*pointer)(call_arguments &);
         va_memfun(pointer ptr):m_fun(ptr){}
-        result_type apply(apply_arguments & args,frame * x)
+        result_type call(call_arguments & args,frame * x)
         {
             return (x->*m_fun)(args);
         }
@@ -112,31 +160,14 @@ private:
     };
     
     env * m_env;
-    frame * m_outer_frame;  //used to get to the root of a lexical scope
-    frame_symbol * m_last_binding;
+    frame * m_scope;
+    
+    symbol_local * m_last_binding;
+    
     bool m_expired;
     result_type m_result;
     
-    unsigned int m_closure_refcount;
-    
     bool m_detached;
-};
-
-class closure_frame:public frame
-{
-public:
-    static closure_frame * new_(env * envir);
-    static closure_frame * new_inner(frame * outer_frame);
-    static void delete_(closure_frame * aClosureFrame);
-    void attach_bindings_to_env();
-    void detach_bindings_from_env();
-private:
-    closure_frame(env * envir);
-    closure_frame(frame * outer_frame);
-    ~closure_frame();
-    
-    closure_frame * m_outer_closure;
-    bool m_outer_was_detached;
 };
 
 #endif

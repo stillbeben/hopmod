@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
 #include "fungu/script/function.hpp"
 #include "fungu/script/nullary_setter.hpp"
@@ -30,14 +34,16 @@ inline int predicate(code_block & cb,env::frame * aScope)
     return lexical_cast<int>(cb.eval_each_expression(aScope));
 }
 
-result_type if_(env::object::apply_arguments & args, env::frame * frame)
+result_type if_(env::object::call_arguments & args, env::frame * frame)
 {
     call_serializer cs(args,frame);
     
-    code_block cond = cs.deserialize(args.front(),target_tag<code_block>());
+    if(args.size() < 2) throw error(NOT_ENOUGH_ARGUMENTS);
+    
+    code_block cond = cs.deserialize(args.front(),type_tag<code_block>());
     args.pop_front();
     
-    code_block true_code = cs.deserialize(args.front(),target_tag<code_block>());
+    code_block true_code = cs.deserialize(args.front(),type_tag<code_block>());
     args.pop_front();
     
     code_block false_code(const_string(),NULL);
@@ -45,7 +51,7 @@ result_type if_(env::object::apply_arguments & args, env::frame * frame)
     // code for false condition is an optional argument
     if(!args.empty())
     {
-        false_code = cs.deserialize(args.front(),target_tag<code_block>());
+        false_code = cs.deserialize(args.front(),type_tag<code_block>());
         args.pop_front();
     }
     
@@ -53,13 +59,29 @@ result_type if_(env::object::apply_arguments & args, env::frame * frame)
     else return false_code.eval_each_expression(frame);
 }
 
-result_type while_(env::object::apply_arguments & args,env::frame * aScope)
+result_type ternary(env::object::call_arguments & args, env::frame * frame)
+{
+    call_serializer cs(args,frame);
+    
+    code_block cond = cs.deserialize(args.front(),type_tag<code_block>());
+    args.pop_front();
+    
+    any tc_value = args.safe_front();
+    args.pop_front();
+    
+    any fc_value = args.safe_front();
+    args.pop_front();
+    
+    return (predicate(cond, frame) ? tc_value : fc_value);
+}
+
+result_type while_(env::object::call_arguments & args,env::frame * aScope)
 {
     env::frame while_scope(aScope);
     nullary_setter _continue;
-    _continue.set_temporary_flag();
+    _continue.set_temporary();
     nullary_setter _break;
-    _break.set_temporary_flag();
+    _break.set_temporary();
     while_scope.bind_object(&_continue,FUNGU_OBJECT_ID("continue"));
     while_scope.bind_object(&_break,FUNGU_OBJECT_ID("break"));
     
@@ -87,7 +109,7 @@ result_type while_(env::object::apply_arguments & args,env::frame * aScope)
     return while_body_result;
 }
 
-inline result_type loop(env::object::apply_arguments & args,env::frame * aScope)
+inline result_type loop(env::object::call_arguments & args,env::frame * aScope)
 {
     env::frame loop_frame(aScope);
     
@@ -95,14 +117,16 @@ inline result_type loop(env::object::apply_arguments & args,env::frame * aScope)
     variable<unsigned int> counter_var(counter);
     
     if(args.empty()) throw error(NOT_ENOUGH_ARGUMENTS);
-    loop_frame.bind_object(&counter_var,lexical_cast<const_string>(args.front())).
-        allow_rebind(); args.pop_front();
+    loop_frame.bind_object(&counter_var,lexical_cast<const_string>(args.front()));
+    args.pop_front();
     
     if(args.empty()) throw error(NOT_ENOUGH_ARGUMENTS);
-    unsigned int count_to=lexical_cast<unsigned int>(args.front()); args.pop_front();
+    unsigned int count_to=lexical_cast<unsigned int>(args.front()); 
+    args.pop_front();
     
     if(args.empty()) throw error(NOT_ENOUGH_ARGUMENTS);
-    code_block body(lexical_cast<const_string>(args.front())); args.pop_front();
+    code_block body(lexical_cast<const_string>(args.front())); 
+    args.pop_front();
     body.compile(aScope);
     
     result_type body_result;
@@ -113,7 +137,7 @@ inline result_type loop(env::object::apply_arguments & args,env::frame * aScope)
     return body_result;
 }
 
-inline result_type or_(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type or_(env::object::call_arguments & args,env::frame * aFrame)
 {
     bool retval = false;
     while(retval == false && !args.empty())
@@ -124,7 +148,7 @@ inline result_type or_(env::object::apply_arguments & args,env::frame * aFrame)
     return retval;
 }
 
-inline result_type and_(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type and_(env::object::call_arguments & args,env::frame * aFrame)
 {
     bool retval = true;
     while(retval == true && !args.empty())
@@ -141,6 +165,9 @@ void register_controlflow_functions(env & environment)
 {
     static function<raw_function_type> conditional_if_func(detail::if_);
     environment.bind_global_object(&conditional_if_func,FUNGU_OBJECT_ID("if"));
+    
+    static function<raw_function_type> conditional_ternary_func(detail::ternary);
+    environment.bind_global_object(&conditional_ternary_func,FUNGU_OBJECT_ID("?"));
     
     static function<raw_function_type> loop_while(detail::while_);
     environment.bind_global_object(&loop_while,FUNGU_OBJECT_ID("while"));

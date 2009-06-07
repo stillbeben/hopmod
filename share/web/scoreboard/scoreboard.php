@@ -1,7 +1,7 @@
 <?php
 php_version_check();
 // Config
-$database["path"] = '/home/sauer/server/server_new/db/stats.sqlite';
+$database["path"] = '/home/sauerbraten/hopserver/log/stats.sqlite';
 
 $db = new SQLite3($database["path"]);
 
@@ -498,9 +498,9 @@ function fix_back($str) {
 function php_version_check() {
 	$version = phpversion();
 	$x = $version[0]; // 5
-	$x .= $version[2]; // 3
+	$x .= $version[2]; // 0
 	$x .= $version[4]; // 0
-	if ($x < 530) die("PHP >= 5.3.0RC1 is required");
+	if ($x < 520) die("PHP >= 5.3.0RC1 is required");
 }
 
 function check_sql_injection() {

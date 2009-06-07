@@ -9,30 +9,41 @@
 
 class symbol
 {
+    friend class symbol_local;
 public:
     symbol();
     ~symbol();
-    symbol & bind_object(object *);
-    symbol & allow_rebind();
-    symbol & adopt_object();
-    symbol & set_dynamically_scoped();
-    void inherit_dynamic_chain(const symbol *);
-    object * get_object()const;
-    bool is_dynamically_scoped()const;
-    bool in_dynamic_scope_chain()const;
+    symbol_local * push_local_object(object *, const frame *);
+    void set_global_object(object *);
+    object * lookup_object(const frame *)const;
 private:
-    void unbind_object();
+    symbol(const symbol &);
     
-    object * m_object;
+    symbol_local * m_local;
+    object::shared_ptr m_global;
+};
+
+class symbol_local
+{
+public:
+    symbol_local(symbol *, const frame *);
+    ~symbol_local();
+    void attach();
+    void detach();
+    void set_object(object *);
+    object * get_object()const;
+    object * lookup_object(const frame *)const;
+    const frame * get_frame()const;
+    symbol_local * get_next_frame_sibling()const;
+private:
+    symbol_local(const symbol_local &);
+    bool is_latest_attachment()const;
     
-    enum SYMBOL_FLAGS
-    {
-        SYMBOL_SHARED_OBJECT    = 1,
-        SYMBOL_OVERWRITE        = 2,
-        SYMBOL_DYNAMIC_CHAIN    = 4,
-        SYMBOL_DYNAMIC_SCOPE    = 8
-    };
-    unsigned long m_flags;
+    symbol * m_symbol;
+    symbol_local * m_super;
+    const frame * m_frame;
+    symbol_local * m_frame_sibling;
+    object::shared_ptr m_object;
 };
 
 #endif

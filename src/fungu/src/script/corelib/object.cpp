@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/table.hpp"
 #include "fungu/dynamic_cast_derived.hpp"
 #include "fungu/script/function.hpp"
@@ -16,7 +20,7 @@ namespace corelib{
 
 namespace detail{
 
-inline result_type create_object(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type create_object(env::object::call_arguments & args,env::frame * aFrame)
 {
     #if 0
     boost::shared_ptr<json::object> initial_data;
@@ -35,7 +39,7 @@ inline result_type create_object(env::object::apply_arguments & args,env::frame 
     return table::create();
 }
 
-inline result_type erase_object_member(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type erase_object_member(env::object::call_arguments & args,env::frame * aFrame)
 {
     any object_arg = args.safe_front();
     args.pop_front();
@@ -57,7 +61,7 @@ inline result_type erase_object_member(env::object::apply_arguments & args,env::
     return (bool)object->erase_member(membername);
 }
 
-inline result_type add_object_member(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type add_object_member(env::object::call_arguments & args,env::frame * aFrame)
 {
     any object_arg = args.safe_front();
     args.pop_front();

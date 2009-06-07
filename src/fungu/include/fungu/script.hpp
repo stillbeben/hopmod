@@ -14,8 +14,5 @@
 #include "script/execute.hpp"
 #include "script/corelib.hpp"
 #include "script/bind.hpp"
-#include "script/nullary_setter.hpp"
-#include "script/varg_setter.hpp"
-#include "script/tuple_setter.hpp"
 
 #endif

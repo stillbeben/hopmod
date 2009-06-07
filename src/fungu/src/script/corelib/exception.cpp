@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
 #include "fungu/script/function.hpp"
 #include "fungu/script/variable.hpp"
@@ -27,39 +31,39 @@ inline void rethrow(T e)
     throw e;
 }
 
-inline result_type _try(env::object::apply_arguments & args,env::frame * frame)
+inline result_type _try(env::object::call_arguments & args,env::frame * frame)
 {
     if(args.size() < 2) throw error(NOT_ENOUGH_ARGUMENTS,boost::make_tuple(1));
     call_serializer cs(args,frame);
     
-    code_block trycode = cs.deserialize(args.front(), target_tag<code_block>());
+    code_block trycode = cs.deserialize(args.front(), type_tag<code_block>());
     args.pop_front();
     
-    code_block catchcode = cs.deserialize(args.front(), target_tag<code_block>());
+    code_block catchcode = cs.deserialize(args.front(), type_tag<code_block>());
     args.pop_front();
     
     try
     {
         return trycode.eval_each_expression(frame);
     }
-    catch(error_info * errinfo)
+    catch(error_trace * errinfo)
     {
         env::frame inner_frame(frame);
         
-        function<void ()> rethrow_func(boost::bind(rethrow<error_info *>,errinfo));
-        rethrow_func.set_temporary_flag();
+        function<void ()> rethrow_func(boost::bind(rethrow<error_trace *>,errinfo));
+        rethrow_func.set_temporary();
         inner_frame.bind_object(&rethrow_func,FUNGU_OBJECT_ID("rethrow"));
         
         int error_code = errinfo->get_error().get_error_code();
         std::string error_message = errinfo->get_error().get_error_message();
         
         managed_variable<int> error_code_var(error_code);
-        error_code_var.set_temporary_flag();
+        error_code_var.set_temporary();
         error_code_var.lock_write(true);
         inner_frame.bind_object(&error_code_var,FUNGU_OBJECT_ID("errcode"));
         
         managed_variable<std::string> error_message_var(error_message);
-        error_message_var.set_temporary_flag();
+        error_message_var.set_temporary();
         error_message_var.lock_write(true);
         inner_frame.bind_object(&error_message_var,FUNGU_OBJECT_ID("errmsg"));
         
@@ -72,19 +76,19 @@ inline result_type _try(env::object::apply_arguments & args,env::frame * frame)
         env::frame inner_frame(frame);
         
         function<void ()> rethrow_func(boost::bind(rethrow<error>,err));
-        rethrow_func.set_temporary_flag();
+        rethrow_func.set_temporary();
         inner_frame.bind_object(&rethrow_func,FUNGU_OBJECT_ID("rethrow"));
         
         int error_code = err.get_error_code();
         std::string error_message = err.get_error_message();
         
         managed_variable<int> error_code_var(error_code);
-        error_code_var.set_temporary_flag();
+        error_code_var.set_temporary();
         error_code_var.lock_write(true);
         inner_frame.bind_object(&error_code_var,FUNGU_OBJECT_ID("errcode"));
         
         managed_variable<std::string> error_message_var(error_message);
-        error_message_var.set_temporary_flag();
+        error_message_var.set_temporary();
         error_message_var.lock_write(true);
         inner_frame.bind_object(&error_message_var,FUNGU_OBJECT_ID("errmsg"));
         

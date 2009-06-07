@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include <string.h>
 #include "fungu/script/env.hpp"
 #include "fungu/script/function.hpp"
@@ -18,7 +22,7 @@ namespace detail{
 
 inline int strcmp(const char * s1,const char * s2){return ::strcmp(s1,s2) == 0;}
 
-inline result_type format(env::object::apply_arguments & args,env::frame *)
+inline result_type format(env::object::call_arguments & args,env::frame *)
 {
     std::string result;
    
@@ -62,7 +66,7 @@ inline result_type format(env::object::apply_arguments & args,env::frame *)
     return result;
 }
 
-inline result_type concat(env::object::apply_arguments & args,env::frame *)
+inline result_type concat(env::object::call_arguments & args,env::frame *)
 {
     std::string result;
     while(!args.empty())
@@ -74,7 +78,7 @@ inline result_type concat(env::object::apply_arguments & args,env::frame *)
     return result;
 }
 
-inline result_type concatword(env::object::apply_arguments & args,env::frame *)
+inline result_type concatword(env::object::call_arguments & args,env::frame *)
 {
     std::string result;
     while(!args.empty())
@@ -114,13 +118,36 @@ inline std::vector<std::string> split(const char * body,const char * delim)
     return result;
 }
 
+inline int strstr(const char * s1, const char * s2)
+{
+    char * s3 = ::strstr(s1, s2);
+    return (s3 ? s3 - s1 : -1);
+}
+
+std::string strreplace(const char * original, const char * oldsub, const char * newsub)
+{
+    std::string result(original);
+    size_t oldsublen = strlen(oldsub);
+    size_t newsublen = strlen(newsub);
+    std::string::size_type pos = 0;
+    
+    do
+    {
+        pos = result.find(oldsub, pos);
+        if(pos != std::string::npos) 
+            result.replace(pos, oldsublen, newsub, newsublen);
+    }while(pos != std::string::npos);
+
+    return result;
+}
+
 } //namespace detail
 
 void register_string_functions(env & environment)
 {
     static function<int (const char *,const char *)> strcmp_func(detail::strcmp);
     environment.bind_global_object(&strcmp_func, FUNGU_OBJECT_ID("strcmp"));
-    environment.bind_global_object(&strcmp_func, FUNGU_OBJECT_ID("string-equal"));
+    environment.bind_global_object(&strcmp_func, FUNGU_OBJECT_ID("streq"));
     
     static function<raw_function_type> format_func(detail::format);
     environment.bind_global_object(&format_func, FUNGU_OBJECT_ID("format"));
@@ -139,6 +166,15 @@ void register_string_functions(env & environment)
     
     static function<std::vector<std::string> (const char *,const char *)> split_func(detail::split);
     environment.bind_global_object(&split_func, FUNGU_OBJECT_ID("split"));
+    
+    static function<int (const char *,const char *)> strstr_func(detail::strstr);
+    environment.bind_global_object(&strstr_func, FUNGU_OBJECT_ID("strstr"));
+    
+    static function<size_t (const char *)> strlen_func(strlen);
+    environment.bind_global_object(&strlen_func, FUNGU_OBJECT_ID("strlen"));
+    
+    static function<std::string (const char *,const char *,const char *)> strreplace_func(detail::strreplace);
+    environment.bind_global_object(&strreplace_func, FUNGU_OBJECT_ID("strreplace"));
 }
 
 } //namespace corelib

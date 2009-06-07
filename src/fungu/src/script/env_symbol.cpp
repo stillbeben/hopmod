@@ -6,82 +6,132 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
 
 namespace fungu{
 namespace script{
 
 env::symbol::symbol()
- :m_object(NULL),
-  m_flags(0)
+ :m_local(NULL)
 {
     
+}
+
+env::symbol::symbol(const symbol &)
+{
+    assert(false);
 }
 
 env::symbol::~symbol()
 {
-    unbind_object();
+    assert(!m_local);
 }
 
-env::symbol & env::symbol::bind_object(object * new_object)
+env::symbol_local * env::symbol::push_local_object(object * obj, const frame * frm)
 {
-    if(m_object)
+    if(m_local && m_local->get_frame() == frm) 
     {
-        if(!(m_flags & SYMBOL_OVERWRITE)) throw error(NO_BIND);
-        unbind_object();
+        m_local->set_object(obj);
+        return m_local;
     }
     
-    m_object = new_object;
-    m_object->add_ref();
+    symbol_local * newLocal = new symbol_local(this, frm);
     
-    return *this;
+    newLocal->set_object(obj);
+    newLocal->attach();
+    
+    return newLocal;
 }
 
-env::symbol & env::symbol::allow_rebind()
+void env::symbol::set_global_object(object * obj)
 {
-    m_flags |= SYMBOL_OVERWRITE;
-    return *this;
+    m_global = env::object::shared_ptr(obj);
 }
 
-env::symbol & env::symbol::adopt_object()
+env::object * env::symbol::lookup_object(const frame * frm)const
 {
-    m_flags |= SYMBOL_SHARED_OBJECT;
-    m_object->set_adopted_flag();
-    return *this;
+    object * obj = (m_local && frm ? m_local->lookup_object(frm) : NULL);
+    if(!obj) obj = m_global.get();
+    return obj;
 }
 
-env::symbol & env::symbol::set_dynamically_scoped()
+env::symbol_local::symbol_local(symbol * sym, const frame * frm)
+ :m_symbol(sym),
+  m_frame(frm),
+  m_frame_sibling(frm->get_last_bind())
 {
-    m_flags |= SYMBOL_DYNAMIC_CHAIN | SYMBOL_DYNAMIC_SCOPE;
-    return *this;
+    
 }
 
-void env::symbol::inherit_dynamic_chain(const symbol * src)
+env::symbol_local::symbol_local(const env::symbol_local &)
 {
-    m_flags &= ~SYMBOL_DYNAMIC_CHAIN; //reset
-    m_flags |= (m_flags & SYMBOL_DYNAMIC_SCOPE || (src && src->m_flags & SYMBOL_DYNAMIC_CHAIN)) ? SYMBOL_DYNAMIC_CHAIN : 0;
+    assert(false);
 }
 
-env::object * env::symbol::get_object()const
+env::symbol_local::~symbol_local()
 {
-    return m_object;
+    if(is_latest_attachment()) detach();
+    #ifndef NDEBUG
+    else //check that the local is not attached at any level
+    {
+        symbol_local * cur = m_symbol->m_local;
+        while(cur)
+        {
+            assert(cur != this);
+            cur = cur->m_super;
+        }
+    }
+    #endif
+    
+    delete m_frame_sibling;
 }
 
-bool env::symbol::is_dynamically_scoped()const
+void env::symbol_local::attach()
 {
-    return m_flags & SYMBOL_DYNAMIC_SCOPE;
+    m_super = m_symbol->m_local;
+    m_symbol->m_local = this;
 }
 
-bool env::symbol::in_dynamic_scope_chain()const
+void env::symbol_local::detach()
 {
-    return m_flags & SYMBOL_DYNAMIC_CHAIN;
+    assert(is_latest_attachment());
+    m_symbol->m_local = m_super;
 }
 
-void env::symbol::unbind_object()
+void env::symbol_local::set_object(object * obj)
 {
-    if(m_object && m_object->unref().get_refcount() == 0 && 
-        m_object->is_adopted()) delete m_object;
-    m_object = NULL;
+    m_object = env::object::shared_ptr(obj);
+}
+
+env::object * env::symbol_local::get_object()const
+{
+    return m_object.get();
+}
+
+env::object * env::symbol_local::lookup_object(const frame * frm)const
+{
+    bool inScope = frm == m_frame || frm->get_scope_frame() == m_frame->get_scope_frame();
+    if(inScope) return m_object.get();
+    else return NULL;
+}
+
+const env::frame * env::symbol_local::get_frame()const
+{
+    return m_frame;
+}
+
+env::symbol_local * env::symbol_local::get_next_frame_sibling()const
+{
+    return m_frame_sibling;
+}
+
+bool env::symbol_local::is_latest_attachment()const
+{
+    return m_symbol->m_local == this;
 }
 
 } //namespace script

@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
 #include "fungu/script/function.hpp"
 #include "fungu/script/execute.hpp"
@@ -23,16 +27,16 @@ static inline table * get_file_ext_handlers_table()
     return &file_ext_handlers;
 }
 
-inline result_type exec_cubescript(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type exec_cubescript(env::object::call_arguments & args,env::frame * aFrame)
 {
     const_string filename = args.safe_casted_front<const_string>();
     args.pop_front();
-    throw_if_error(execute_file(std::string(filename.copy()).c_str(),aFrame));
+    throw_if_error(execute_file(std::string(filename.copy()).c_str(),*aFrame->get_env()));
     return any::null_value();
 }
 
 #ifdef FUNGU_WITH_LUA
-inline result_type exec_lua(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type exec_lua(env::object::call_arguments & args,env::frame * aFrame)
 {
     const_string filename = args.safe_casted_front<const_string>();
     args.pop_front();
@@ -49,11 +53,11 @@ inline const_string get_filename_extension(const_string filename)
     return const_string();
 }
 
-inline result_type exec_script(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type exec_script(env::object::call_arguments & args,env::frame * aFrame)
 {
     const_string filename = args.safe_casted_front<const_string>();
     env::object * handler = get_file_ext_handlers_table()->lookup_member(get_filename_extension(filename));
-    if(handler) return handler->apply(args, aFrame);
+    if(handler) return handler->call(args, aFrame);
     else return exec_cubescript(args, aFrame);
 }
 

@@ -1,7 +1,12 @@
 
+import pch ;
+
 project : requirements <include>include <define>FUNGU_WITH_LUA ;
 
+cpp-pch pch : include/fungu/script/pch.hpp /boost//headers : <include>include <define>FUNGU_WITH_LUA ;
+
 lib script :
+    src/script/any.cpp
     src/script/env.cpp
     src/script/env_object.cpp
     src/script/env_symbol.cpp
@@ -37,6 +42,7 @@ lib script :
     src/script/lua/object_wrapper.cpp
     /boost//headers
     /lua//headers
+    pch
     : <link>static : : <define>FUNGU_WITH_LUA <include>include ;
 
 #build-project test ;

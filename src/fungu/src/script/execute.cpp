@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
 #include "fungu/script/expression.hpp"
 #include "fungu/script/execute.hpp"
@@ -27,35 +31,31 @@ inline void file_eval(expression * expr,env::frame * frame){expr->eval(frame);}
 
 } //namespace execute_detail
 
-int execute_file(const char * filename, env::frame * aFrame)
+int execute_file(const char * filename, env & environment)
 {
     FILE * file_stream = fopen(filename,"r");
     if(!file_stream) return ENOENT;
     
     file_source_context file_context(filename);
-    env * environment = aFrame->get_env();
-    const source_context * prev_context = environment->get_source_context();
-    environment->set_source_context(&file_context);
+    const source_context * prev_context = environment.get_source_context();
+    environment.set_source_context(&file_context);
     
-    env::closure_frame * file_frame = env::closure_frame::new_(aFrame->get_env());
-    
+    env::frame file_frame(&environment);
+
     #define COMMON_CLEANUP \
-        environment->set_source_context(prev_context); \
-        file_frame->detach_bindings_from_env(); \
-        file_frame->unset_return(); \
-        env::closure_frame::delete_(file_frame); \
+        environment.set_source_context(prev_context); \
         fclose(file_stream);
     
     constant<const char *> filename_const(filename);
-    filename_const.set_temporary_flag();
-    file_frame->bind_object(&filename_const,FUNGU_OBJECT_ID("FILENAME"));
+    filename_const.set_temporary();
+    file_frame.bind_object(&filename_const, FUNGU_OBJECT_ID("FILENAME"));
     
-    execute_detail::file_eval_stream reader(file_frame, &execute_detail::file_eval);
+    execute_detail::file_eval_stream reader(&file_frame, &execute_detail::file_eval);
     
     char tmpbuf[1024];
     int line = 1;
     
-    while(!file_frame->has_expired() && !feof(file_stream) && !ferror(file_stream))
+    while(!file_frame.has_expired() && !feof(file_stream) && !ferror(file_stream))
     {
         if(!fgets(tmpbuf, sizeof(tmpbuf), file_stream)) continue;
         
@@ -63,7 +63,7 @@ int execute_file(const char * filename, env::frame * aFrame)
         {
             reader.feed(tmpbuf, strlen(tmpbuf)+feof(file_stream));
         }
-        catch(error_info *)
+        catch(error_trace *)
         {
             COMMON_CLEANUP;
             throw;

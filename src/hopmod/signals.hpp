@@ -22,6 +22,7 @@ struct proceed
     }
 };
 
+#ifdef HOPMOD_GAMESERVER_EVENTS
 // Player Events
 extern boost::signal<void (int)>                                    signal_connect;
 extern boost::signal<void (int,const char *)>                       signal_disconnect;
@@ -47,23 +48,28 @@ extern boost::signal<void (int)>                                    signal_delbo
 extern boost::signal<void (int)>                                    signal_botleft;
 extern boost::signal<void (int)>                                    signal_mapcrcfail;
 extern boost::signal<void (int,int)>                                signal_teamkill;
-
 // Game Events
-extern boost::signal<void ()>                                signal_intermission;
-extern boost::signal<void ()>                                signal_finishedgame;
-extern boost::signal<void (int)>                             signal_timeupdate;
-extern boost::signal<void (const char *,const char *)>       signal_mapchange;
-extern boost::signal<void ()>                                signal_setnextgame;
-extern boost::signal<void ()>                                signal_gamepaused;
-extern boost::signal<void ()>                                signal_gameresumed;
-extern boost::signal<void (int,const char *)>                signal_beginrecord;
-extern boost::signal<void (int,int)>                         signal_endrecord;
+extern boost::signal<void ()>                                       signal_intermission;
+extern boost::signal<void ()>                                       signal_finishedgame;
+extern boost::signal<void (int)>                                    signal_timeupdate;
+extern boost::signal<void (const char *,const char *)>              signal_mapchange;
+extern boost::signal<void ()>                                       signal_setnextgame;
+extern boost::signal<void ()>                                       signal_gamepaused;
+extern boost::signal<void ()>                                       signal_gameresumed;
+extern boost::signal<void (int,const char *)>                       signal_beginrecord;
+extern boost::signal<void (int,int)>                                signal_endrecord;
+extern boost::signal<void (const char *,const char *)>              signal_votepassed;
+#endif
 
-// Server Events
+// Generic Server Events
 extern boost::signal<void ()> signal_started;
 extern boost::signal<void ()> signal_shutdown;
-extern boost::signal<void (const char *,const char *)>      signal_votepassed;
 extern boost::signal<void ()> signal_reloadhopmod;
+
+#ifdef HOPMOD_AUTHSERVER_EVENTS
+extern boost::signal<void ()> signal_rootserver_failedconnect;
+extern boost::signal<void (const char *,const char *)> signal_load_user;
+#endif
 
 /**
     @brief Register signals with the global script::slot_factory instance.

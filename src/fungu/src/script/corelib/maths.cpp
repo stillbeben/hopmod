@@ -6,9 +6,15 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
 #include "fungu/script/function.hpp"
 #include "fungu/script/execute.hpp"
+#include <stdlib.h> //abs, rand, srand
+#include <time.h>
 #include <math.h>
 #include <limits>
 
@@ -19,7 +25,7 @@ namespace corelib{
 namespace detail{
 
 #define FUNGU_VARIADIC_BINARY_INT_FUNCTION(name,binfun) \
-    inline result_type name(env::object::apply_arguments & args,env::frame *) \
+    inline result_type name(env::object::call_arguments & args,env::frame *) \
     { \
         int operand[2]; \
     \
@@ -94,8 +100,6 @@ inline float fadd(float a,float b){return a + b;}
 inline float fsub(float a,float b){return a - b;}
 inline float fmul(float a,float b){return a * b;}
 inline float fdiv(float a,float b){return a / b;}
-inline float fmin(float a,float b){return a < b ? a : b;}
-inline float fmax(float a,float b){return a < b ? b : a;}
 
 inline float round(float a){return roundf(a);}
 inline float ceil(float a){return ceilf(a);}
@@ -103,11 +107,22 @@ inline float floor(float a){return floorf(a);}
 
 inline bool equal_to(int a,int b){return a == b;}
 FUNGU_VARIADIC_BINARY_INT_FUNCTION(equal_to_v,equal_to);
+inline bool floats_equal_to(float a,float b){return a == b;}
+
 inline bool not_equal_to(int a,int b){return a != b;}
+inline bool floats_not_equal_to(float a,float b){return a != b;}
+
 inline bool less_than(int a,int b){return a < b;}
+inline bool floats_less_than(float a,float b){return a < b;}
+
 inline bool less_than_or_equal_to(int a,int b){return a <= b;}
+inline bool floats_less_than_or_equal_to(float a,float b){return a <= b;}
+
 inline bool greater_than(int a,int b){return a > b;}
+inline bool floats_greater_than(float a,float b){return a > b;}
+
 inline bool greater_than_or_equal_to(int a,int b){return a >= b;}
+inline bool floats_greater_than_or_equal_to(float a,float b){return a >= b;}
 
 inline bool logical_not(int a){return !a;}
 
@@ -118,9 +133,16 @@ inline int bitwise_and(int a,int b){return a & b;}
 inline int bitwise_or(int a,int b){return a | b;}
 inline int bitwise_xor(int a,int b){return a ^ b;}
 
+inline int random_number(int greatest, int lowest)
+{
+    if(lowest >= greatest) return lowest;
+    double range = greatest - lowest;
+    return lowest + static_cast<int>((range * (rand()/(RAND_MAX + 1.0))));
+}
+
 } //namespace detail
 
-void register_math_functions(env & environment)
+void register_int_arithmetic_functions(env & environment)
 {
     static function<raw_function_type> add_func(detail::addv);
     environment.bind_global_object(&add_func,FUNGU_OBJECT_ID("+"));
@@ -143,33 +165,12 @@ void register_math_functions(env & environment)
     static function<raw_function_type> max_func(detail::maxv);
     environment.bind_global_object(&max_func,FUNGU_OBJECT_ID("max"));
     
-    static function<float (float,float)> fadd_func(detail::fadd);
-    environment.bind_global_object(&fadd_func,FUNGU_OBJECT_ID("fadd"));
-    
-    static function<float (float,float)> fsub_func(detail::fsub);
-    environment.bind_global_object(&fsub_func,FUNGU_OBJECT_ID("fsub"));
-    
-    static function<float (float,float)> fmul_func(detail::fmul);
-    environment.bind_global_object(&fmul_func,FUNGU_OBJECT_ID("fmul"));
-    
-    static function<float (float,float)> fdiv_func(detail::fdiv);
-    environment.bind_global_object(&fdiv_func,FUNGU_OBJECT_ID("fdiv"));
-    
-    static function<float (float,float)> fmin_func(detail::fmin);
-    environment.bind_global_object(&fmin_func,FUNGU_OBJECT_ID("fmin"));
-    
-    static function<float (float,float)> fmax_func(detail::fmax);
-    environment.bind_global_object(&fmax_func,FUNGU_OBJECT_ID("fmax"));
-    
-    static function<float (float)> round_func(detail::round);
-    environment.bind_global_object(&round_func,FUNGU_OBJECT_ID("round"));
-    
-    static function<float (float)> ceil_func(detail::ceil);
-    environment.bind_global_object(&ceil_func,FUNGU_OBJECT_ID("ceil"));
-    
-    static function<float (float)> floor_func(detail::floor);
-    environment.bind_global_object(&floor_func,FUNGU_OBJECT_ID("floor"));
-    
+    static function<int (int)> abs_func(abs);
+    environment.bind_global_object(&abs_func, FUNGU_OBJECT_ID("abs"));
+}
+
+void register_int_relation_functions(env & environment)
+{
     static function<raw_function_type> equal_to_func(detail::equal_to_v);
     environment.bind_global_object(&equal_to_func,FUNGU_OBJECT_ID("="));
     
@@ -190,7 +191,74 @@ void register_math_functions(env & environment)
     
     static function<bool (int)> logical_not_func(detail::logical_not);
     environment.bind_global_object(&logical_not_func,FUNGU_OBJECT_ID("!"));
+}
+
+void register_float_arithmetic_functions(env & environment)
+{
+    static function<float (float,float)> fmod_func(fmodf);
+    environment.bind_global_object(&fmod_func, FUNGU_OBJECT_ID("modf"));
     
+    static function<float (float,float)> fadd_func(detail::fadd);
+    environment.bind_global_object(&fadd_func,FUNGU_OBJECT_ID("fadd"));
+    environment.bind_global_object(&fadd_func,FUNGU_OBJECT_ID("+f"));
+    
+    static function<float (float,float)> fsub_func(detail::fsub);
+    environment.bind_global_object(&fsub_func,FUNGU_OBJECT_ID("fsub"));
+    environment.bind_global_object(&fsub_func,FUNGU_OBJECT_ID("-f"));
+    
+    static function<float (float,float)> fmul_func(detail::fmul);
+    environment.bind_global_object(&fmul_func,FUNGU_OBJECT_ID("fmul"));
+    environment.bind_global_object(&fmul_func,FUNGU_OBJECT_ID("*f"));
+    
+    static function<float (float,float)> fdiv_func(detail::fdiv);
+    environment.bind_global_object(&fdiv_func,FUNGU_OBJECT_ID("fdiv"));
+    environment.bind_global_object(&fdiv_func,FUNGU_OBJECT_ID("divf"));
+    
+    static function<float (float,float)> fmin_func(fminf);
+    environment.bind_global_object(&fmin_func,FUNGU_OBJECT_ID("fmin"));
+    environment.bind_global_object(&fmin_func,FUNGU_OBJECT_ID("minf"));
+    
+    static function<float (float,float)> fmax_func(fmaxf);
+    environment.bind_global_object(&fmax_func,FUNGU_OBJECT_ID("fmax"));
+    environment.bind_global_object(&fmax_func,FUNGU_OBJECT_ID("maxf"));
+    
+    static function<float (float)> round_func(detail::round);
+    environment.bind_global_object(&round_func,FUNGU_OBJECT_ID("round"));
+    
+    static function<float (float)> ceil_func(detail::ceil);
+    environment.bind_global_object(&ceil_func,FUNGU_OBJECT_ID("ceil"));
+    
+    static function<float (float)> floor_func(detail::floor);
+    environment.bind_global_object(&floor_func,FUNGU_OBJECT_ID("floor"));
+    
+    static function<float (float)> abs_func(fabsf);
+    environment.bind_global_object(&abs_func, FUNGU_OBJECT_ID("fabs"));
+    environment.bind_global_object(&abs_func, FUNGU_OBJECT_ID("absf"));
+}
+
+void register_float_relation_functions(env & environment)
+{
+    static function<bool (float,float)> equal_to_func(detail::floats_equal_to);
+    environment.bind_global_object(&equal_to_func, FUNGU_OBJECT_ID("=f"));
+        
+    static function<bool (float,float)> not_equal_to_func(detail::floats_not_equal_to);
+    environment.bind_global_object(&not_equal_to_func,FUNGU_OBJECT_ID("!=f"));
+    
+    static function<bool (int,int)> less_than_func(detail::floats_less_than);
+    environment.bind_global_object(&less_than_func,FUNGU_OBJECT_ID("<f"));
+    
+    static function<bool (int,int)> less_than_or_equal_to_func(detail::floats_less_than_or_equal_to);
+    environment.bind_global_object(&less_than_or_equal_to_func,FUNGU_OBJECT_ID("<=f"));
+    
+    static function<bool (int,int)> greater_than_func(detail::floats_greater_than);
+    environment.bind_global_object(&greater_than_func,FUNGU_OBJECT_ID(">f"));
+    
+    static function<bool (int,int)> greater_than_or_equal_to_func(detail::floats_greater_than_or_equal_to);
+    environment.bind_global_object(&greater_than_or_equal_to_func,FUNGU_OBJECT_ID(">=f"));
+}
+
+void register_bitwise_functions(env & environment)
+{
     static function<int (int,int)> blshift_func(detail::bitwise_lshift);
     environment.bind_global_object(&blshift_func,FUNGU_OBJECT_ID("<<"));
     
@@ -208,6 +276,23 @@ void register_math_functions(env & environment)
     
     static function<int (int,int)> bxor_func(detail::bitwise_xor);
     environment.bind_global_object(&bxor_func,FUNGU_OBJECT_ID("^"));
+}
+
+void register_math_functions(env & e)
+{
+    register_int_arithmetic_functions(e);
+    register_int_relation_functions(e);
+    
+    register_float_arithmetic_functions(e);
+    register_float_relation_functions(e);
+    
+    register_bitwise_functions(e);
+    
+    srand(static_cast<unsigned int>(time(NULL)));
+    static std::vector<any> random_number_defargs;
+    random_number_defargs.push_back(0);
+    static function<int (int,int)> random_number_func(detail::random_number,&random_number_defargs);
+    e.bind_global_object(&random_number_func, FUNGU_OBJECT_ID("rnd"));
 }
 
 } //namespace corelib

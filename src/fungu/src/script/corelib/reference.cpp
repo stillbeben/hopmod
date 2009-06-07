@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/function.hpp"
 
 namespace fungu{
@@ -38,9 +42,9 @@ public:
         return m_object->get_object_type();
     }
     
-    result_type apply(apply_arguments & args,frame * aScope)
+    result_type call(call_arguments & args,frame * aScope)
     {
-        return m_object->apply(args,aScope);
+        return m_object->call(args,aScope);
     }
     
     result_type value()
@@ -61,7 +65,7 @@ private:
     shared_ptr m_object;
 };
 
-inline result_type define_ref(env::object::apply_arguments & args,env::frame * aFrame)
+inline result_type define_ref(env::object::call_arguments & args,env::frame * aFrame)
 {
     const_string symbol_id = args.safe_casted_front<const_string>();
     args.pop_front();
@@ -77,7 +81,7 @@ inline result_type define_ref(env::object::apply_arguments & args,env::frame * a
     }
     
     reference * ref = new reference(obj);
-    ref->set_adopted_flag();
+    ref->set_adopted();
     return obj;
 }
 

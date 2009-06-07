@@ -24,7 +24,7 @@ namespace fungu{
 namespace script{
 
 /**
-    
+    @brief C++ function wrapper.
 */
 template<typename Signature>
 class function:public env::object
@@ -49,21 +49,21 @@ public:
         return FUNCTION_OBJECT;
     }
     
-    result_type apply(apply_arguments & apply_args,frame * aFrame)
+    result_type call(call_arguments & call_args,frame * aFrame)
     {
-        if(apply_args.size() < boost::function_traits<Signature>::arity && 
+        if(call_args.size() < boost::function_traits<Signature>::arity && 
             m_default_args && 
-            apply_args.size() + m_default_args->size() >= boost::function_traits<Signature>::arity)
+            call_args.size() + m_default_args->size() >= boost::function_traits<Signature>::arity)
         {
-            int skip = apply_args.size() - (boost::function_traits<Signature>::arity - m_default_args->size());
+            int skip = call_args.size() - (boost::function_traits<Signature>::arity - m_default_args->size());
             for(std::vector<any>::const_iterator it = m_default_args->begin(); it != m_default_args->end(); ++it)
-                if(--skip < 0) apply_args.push_back(*it);
+                if(--skip < 0) call_args.push_back(*it);
         }
         
-        call_serializer serializer(apply_args,aFrame);
+        call_serializer serializer(call_args,aFrame);
         try
         {
-            return dynamic_call<Signature>(m_function,apply_args,serializer);
+            return dynamic_call<Signature>(m_function,call_args,serializer);
         }
         catch(missing_args)
         {
@@ -72,7 +72,7 @@ public:
     }
     
     #ifdef FUNGU_WITH_LUA
-    int apply(lua_State * L)
+    int call(lua_State * L)
     {
         lua::arguments args(L,m_default_args,boost::function_traits<Signature>::arity);
         try
@@ -87,7 +87,7 @@ public:
         {
             return luaL_error(L, "%s", err.get_error_message().c_str());
         }
-        catch(error_info * errinfo)
+        catch(error_trace * errinfo)
         {
             std::string msg = errinfo->get_error().get_error_message();
             delete errinfo;
@@ -100,7 +100,7 @@ private:
     const std::vector<any> * m_default_args;
 };
 
-typedef result_type (raw_function_type)(env::object::apply_arguments &,env::frame *);
+typedef result_type (raw_function_type)(env::object::call_arguments &,env::frame *);
 
 template<>
 class function<raw_function_type>:public env::object
@@ -108,12 +108,12 @@ class function<raw_function_type>:public env::object
 public:
     template<typename Functor> function(Functor aFunctor):m_function(aFunctor){}
     
-    result_type apply(apply_arguments & apply_args,frame * aScope)
+    result_type call(call_arguments & call_args,frame * aScope)
     {
-        return m_function(apply_args,aScope);
+        return m_function(call_args,aScope);
     }
 private:
-    boost::function<result_type (env::object::apply_arguments &,env::frame *)> m_function;
+    boost::function<result_type (env::object::call_arguments &,env::frame *)> m_function;
 };
 
 } //namespace script

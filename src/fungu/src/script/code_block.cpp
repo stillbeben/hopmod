@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/code_block.hpp"
 
 namespace fungu{
@@ -82,7 +86,7 @@ code_block & code_block::compile(env::frame * aScope)
                 current->parse(&lf,lf,aScope);
             }
         }
-        catch(error_info *)
+        catch(error_trace *)
         {
             COMPILE_CLEANUP;
             throw;

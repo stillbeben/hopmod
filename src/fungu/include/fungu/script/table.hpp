@@ -21,7 +21,7 @@ class table:public env::object
 public:
     table();
     static shared_ptr create();
-    result_type apply(apply_arguments & args,frame *);
+    result_type call(call_arguments & args,frame *);
     shared_ptr assign(const std::string & name,const any & data);
     void assign(const any & source);
     object * lookup_member(const_string id);

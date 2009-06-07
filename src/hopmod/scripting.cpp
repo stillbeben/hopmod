@@ -41,8 +41,8 @@ void init_scripting()
     env->set_bind_observer(bind_object_to_lua);
     
     //required for lua to call cubescript functions
-    lua_pushlightuserdata(L, env->get_global_scope());
-    lua_setfield(L,LUA_REGISTRYINDEX, "fungu_script_global_frame");
+    lua_pushlightuserdata(L, env);
+    lua_setfield(L,LUA_REGISTRYINDEX, "fungu_script_env");
     
     //create the server table
     lua_newtable(L);
@@ -106,7 +106,7 @@ int svrtable_index(lua_State * L)
     if(obj && obj->get_object_type() == script::env::object::DATA_OBJECT)
     {
         lua_pop(L,1);
-        lua_pushstring(L, obj->value().to_string().copy().c_str());
+        obj->value(L);
     }
     return 1;
 }
@@ -134,13 +134,13 @@ int svrtable_newindex(lua_State * L)
         {
             scoped_setting<bool> setting(binding_object_to_cubescript,true);
             hangingObj = new script::lua::lua_function(L,-1,key.c_str());
-            env->get_global_scope()->bind_global_object(hangingObj,const_string(key)).adopt_object();
+            env->bind_global_object(hangingObj,const_string(key));
             hangingObj = NULL;
         }
         else
         {
             lua_pushvalue(L,-2);
-            script::env::object * obj = env->get_global_scope()->lookup_object(key);
+            script::env::object * obj = env->lookup_global_object(key);
             if(obj) obj->assign(script::lua::get_argument_value(L));
             else
             {
@@ -148,12 +148,12 @@ int svrtable_newindex(lua_State * L)
                 script::any_variable * newvar = new script::any_variable;
                 hangingObj = newvar;
                 newvar->assign(script::lua::get_argument_value(L));
-                env->get_global_scope()->bind_global_object(newvar,const_string(key)).adopt_object();
+                env->bind_global_object(newvar,const_string(key));
                 hangingObj = NULL;
             }
         }
     }
-    catch(script::error_info * errinfo)
+    catch(script::error_trace * errinfo)
     {
         delete hangingObj;
         return luaL_error(L,get_script_error_message(errinfo).c_str());
@@ -191,7 +191,7 @@ void bind_object_to_lua(const_string id, script::env::object * obj)
     lua_pop(L,1);
 }
 
-std::string get_script_error_message(script::error_info * errinfo)
+std::string get_script_error_message(script::error_trace * errinfo)
 {
     const script::source_context * source = errinfo->get_root_info()->get_source_context();
     std::stringstream out;
@@ -204,7 +204,7 @@ std::string get_script_error_message(script::error_info * errinfo)
     return out.str();
 }
 
-void report_script_error(script::error_info * errinfo)
+void report_script_error(script::error_trace * errinfo)
 {
     std::cerr<<get_script_error_message(errinfo)<<std::endl;
 }
@@ -232,7 +232,8 @@ int parse_list(lua_State * L)
     std::vector<const_string> out;
     try
     {
-        script::parse_array<std::vector<const_string>,true>(const_string(list,list+listclen-1), env->get_global_scope(), out);
+        script::env::frame callframe(env);
+        script::parse_array<std::vector<const_string>,true>(const_string(list,list+listclen-1), &callframe, out);
     }
     catch(script::error err)
     {

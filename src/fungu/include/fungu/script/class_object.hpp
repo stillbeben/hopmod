@@ -30,7 +30,7 @@ public:
         
     }
     
-    result_type apply(apply_arguments & args,frame * aScope)
+    result_type call(call_arguments & args,frame * aScope)
     {
         if(args.empty()) throw error(NOT_ENOUGH_ARGUMENTS);
         const_string methodname=args.front();

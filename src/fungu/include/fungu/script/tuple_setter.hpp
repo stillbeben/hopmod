@@ -24,7 +24,7 @@ public:
         
     }
     
-    result_type apply(apply_arguments & args,env::frame * aFrame)
+    result_type call(call_arguments & args,env::frame * aFrame)
     {
         read_next_element(args, m_tuple);
         return any::null_value();
@@ -46,7 +46,7 @@ public:
 private:
     
     template<typename HT>
-    void read_next_element(apply_arguments & args, boost::tuples::cons<HT,boost::tuples::null_type> & t)
+    void read_next_element(call_arguments & args, boost::tuples::cons<HT,boost::tuples::null_type> & t)
     {
         t.head = args.safe_casted_front<typename boost::tuples::cons<HT,boost::tuples::null_type>::head_type>();
         args.pop_front();
@@ -54,7 +54,7 @@ private:
     }
     
     template<typename HT,typename TT>
-    void read_next_element(apply_arguments & args, boost::tuples::cons<HT,TT> & t)
+    void read_next_element(call_arguments & args, boost::tuples::cons<HT,TT> & t)
     {
         t.head = args.safe_casted_front<typename boost::tuples::cons<HT,boost::tuples::null_type>::head_type>();
         args.pop_front();

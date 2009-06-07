@@ -21,14 +21,14 @@ public:
     {
     public:
         virtual ~constructor(){}
-        virtual env::object * create(apply_arguments &)=0;
+        virtual env::object * create(call_arguments &)=0;
     };
     
     template<typename ClassType>
     class default_constructor:public constructor
     {
     public:
-        env::object * create(apply_arguments & args)
+        env::object * create(call_arguments & args)
         {
             if(args.size()) throw error(TOO_MANY_ARGUMENTS);
             ClassType * newobj = new ClassType;
@@ -41,7 +41,7 @@ public:
         m_classes[className] = classCtor;
     }
     
-    result_type apply(apply_arguments & args,frame * aScope)
+    result_type call(call_arguments & args,frame * aScope)
     {
         if(args.empty()) 
             throw error(NOT_ENOUGH_ARGUMENTS);

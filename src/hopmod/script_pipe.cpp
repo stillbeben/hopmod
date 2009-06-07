@@ -15,6 +15,7 @@ using namespace fungu;
 static const char * filename = NULL;
 static int fd = -1;
 static script::env * env = NULL;
+static script::env::frame * frm = NULL;
 static script::eval_stream * scriptexec = NULL;
 static script::file_source_context * script_context = NULL;
 static int pending_idle_time = 0;
@@ -67,8 +68,9 @@ bool open_script_pipe(const char * filename, int mode, script::env & server_env)
     
     ::filename = filename;
     ::env = &server_env;
+    frm = new script::env::frame(::env);
     
-    scriptexec = new script::eval_stream(server_env.get_global_scope());
+    scriptexec = new script::eval_stream(frm);
     script_context = new script::file_source_context(filename);
     
     script::bind_global_var(pending_idle_timeout,"script_pipe_pending_idle_timeout",server_env);
@@ -126,7 +128,7 @@ void run_script_pipe_service(int curtime)
                 in_feed = true;
                 scriptexec->feed(buffer, readsize);
             }
-            catch(script::error_info * errinfo)
+            catch(script::error_trace * errinfo)
             {
                 report_script_error(errinfo);
             }
@@ -168,4 +170,7 @@ void close_script_pipe()
     
     delete script_context;
     script_context = NULL;
+    
+    delete frm;
+    frm = NULL;
 }

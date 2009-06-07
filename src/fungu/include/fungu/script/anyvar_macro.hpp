@@ -25,10 +25,10 @@
                 m_any = const_string(m_any.to_string().copy());\
         }\
         \
-        result_type apply(apply_arguments & args,env::frame * frame)\
+        result_type call(call_arguments & args,env::frame * frame)\
         {\
             if(m_procedure)\
-                return any_cast<env::object::shared_ptr>(m_any)->apply(args,frame);\
+                return any_cast<env::object::shared_ptr>(m_any)->call(args,frame);\
             else\
             {\
                 assign(args.safe_front());\
@@ -38,10 +38,10 @@
             \
             return false;\
         }\
-        int apply(lua_State * L) \
+        int call(lua_State * L) \
         {\
             if(m_procedure) \
-                return any_cast<env::object::shared_ptr>(m_any)->apply(L);\
+                return any_cast<env::object::shared_ptr>(m_any)->call(L);\
             else return luaL_error(L, "not a function"); \
         }\
         \
@@ -83,10 +83,10 @@
                 m_any = const_string(m_any.to_string().copy());\
         }\
         \
-        result_type apply(apply_arguments & args,env::frame * frame)\
+        result_type call(call_arguments & args,env::frame * frame)\
         {\
             if(m_procedure)\
-                return any_cast<env::object::shared_ptr>(m_any)->apply(args,frame);\
+                return any_cast<env::object::shared_ptr>(m_any)->call(args,frame);\
             else\
             {\
                 assign(args.safe_front());\

@@ -8,15 +8,12 @@
 #ifndef FUNGU_DYNAMIC_CALL_HPP
 #define FUNGU_DYNAMIC_CALL_HPP
 
+#include "type_tag.hpp"
+
 #include <exception>
 #include <boost/type_traits.hpp>
 
 namespace fungu{
-
-#ifndef HAS_TARGET_TAG_CLASS
-#define HAS_TARGET_TAG_CLASS
-template<typename T> struct target_tag{};
-#endif
 
 #ifndef HAS_MISSING_ARGS_CLASS
 #define HAS_MISSING_ARGS_CLASS
@@ -36,7 +33,6 @@ private:
 namespace detail{
 
 template<int N> struct arity_tag{};
-template<typename T> struct return_tag{};
 
 template<typename T> 
 struct arg_holder{
@@ -50,15 +46,15 @@ struct arg_holder{
 #define DYNAMIC_CALL_FUNCTION(nargs) \
     template<typename FunctionTraits,typename Functor,typename ArgumentsContainer,typename Serializer> \
     inline typename ArgumentsContainer::value_type dynamic_call(Functor function, ArgumentsContainer & args, \
-    Serializer & serializer, return_tag<typename FunctionTraits::result_type>, arity_tag<nargs>)
+    Serializer & serializer, type_tag<typename FunctionTraits::result_type>, arity_tag<nargs>)
 
 #define DYNAMIC_CALL_VOID_FUNCTION(nargs) \
     template<typename FunctionTraits,typename Functor,typename ArgumentsContainer,typename Serializer> \
     inline typename ArgumentsContainer::value_type dynamic_call(Functor function, ArgumentsContainer & args, \
-    Serializer & serializer, return_tag<void>, arity_tag<nargs>)
+    Serializer & serializer, type_tag<void>, arity_tag<nargs>)
 
 #define DYNAMIC_CALL_ARGUMENT(name) \
-    typename arg_holder<typename FunctionTraits::name##_type>::type name = serializer.deserialize(args.front(), target_tag<typename arg_holder<typename FunctionTraits::name##_type>::type>()); \
+    typename arg_holder<typename FunctionTraits::name##_type>::type name = serializer.deserialize(args.front(), type_tag<typename arg_holder<typename FunctionTraits::name##_type>::type>()); \
     args.pop_front();
 
 #define DYNAMIC_CALL_ARGS_SIZE_CHECK(n) \
@@ -157,7 +153,7 @@ typename ArgumentsContainer::value_type dynamic_call(
     Serializer & serializer)
 {
     typedef boost::function_traits<Signature> FunctionTraits;
-    return detail::dynamic_call<FunctionTraits>(function,args,serializer,detail::return_tag<typename FunctionTraits::result_type>(),detail::arity_tag<FunctionTraits::arity>());
+    return detail::dynamic_call<FunctionTraits>(function,args,serializer,type_tag<typename FunctionTraits::result_type>(),detail::arity_tag<FunctionTraits::arity>());
 }
 
 } //namespace fungu

@@ -5,6 +5,11 @@
  *
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
+
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif 
+
 #include "fungu/script/expression.hpp"
 #include "fungu/script/eval_stream.hpp"
 #include "fungu/script/error.hpp"
@@ -12,8 +17,14 @@
 namespace fungu{
 namespace script{
 
+static void default_evaluator(expression * expr, env::frame * frm)
+{
+    expr->eval(frm).to_string();
+}
+
 eval_stream::eval_stream(env::frame * frame)
-: m_expression(new base_expression),
+ :m_evaluator(default_evaluator),
+  m_expression(new base_expression),
   m_scope(frame),
   m_parsing(false),
   m_buffer_use(&m_first_buffer[0]),
@@ -43,13 +54,10 @@ void eval_stream::feed(const void * data,std::size_t length)
     
     try
     {
-        if(m_expression->parse(&m_buffer_read,m_buffer_write-1,m_scope)==PARSE_COMPLETE)
+        if(m_expression->parse(&m_buffer_read,m_buffer_write-1,m_scope) == PARSE_COMPLETE)
         {
-            if(m_expression->is_empty_expression() == false)
-            {
-                if(m_evaluator) m_evaluator(m_expression,m_scope);
-                else m_expression->eval(m_scope);
-            }
+            if(m_expression->is_empty_expression() == false) 
+                m_evaluator(m_expression,m_scope);
             reset = true;
         }
     }

@@ -6,7 +6,16 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
+
+#ifdef FUNGU_WITH_LUA
+#include "fungu/script/lua/push_value.hpp"
+#include "fungu/script/lua/arguments.hpp"
+#endif
 
 namespace fungu{
 namespace script{
@@ -29,10 +38,36 @@ env::object::object_type env::object::get_object_type()const
 }
 
 #ifdef FUNGU_WITH_LUA
-int env::object::apply(lua_State * L)
+
+int env::object::call(lua_State * L)
 {
-    return luaL_error(L,"inaccessible from lua");
+    int argc = lua_gettop(L);
+    
+    std::vector<any> args;
+    for(int i = 1; i <= argc; i++)
+        args.push_back(lua::get_argument_value(L));
+    
+    lua_getfield(L, LUA_REGISTRYINDEX, "fungu_script_env");
+    env * environment = reinterpret_cast<env *>(lua_touserdata(L, -1));
+    if(!environment) return luaL_error(L, "missing 'fungu_script_env' field in lua registry");
+    
+    arguments_container callargs(args);
+    frame callframe(environment);
+    
+    result_type result = call(callargs, &callframe);
+    if(result.empty()) return 0;
+    else
+    {
+        lua_pushstring(L, result.to_string().copy().c_str());
+        return 1;
+    }
 }
+
+void env::object::value(lua_State * L)
+{
+    return lua::push_value(L, value().to_string());
+}
+
 #endif
 
 result_type env::object::value()
@@ -42,7 +77,7 @@ result_type env::object::value()
 
 void env::object::assign(const any &)
 {
-    throw error(UNSUPPORTED);
+    throw error(NO_WRITE);
 }
 
 env::object * env::object::lookup_member(const_string id)
@@ -71,33 +106,28 @@ unsigned int env::object::get_refcount()const
     return m_refcount;
 }
 
-const source_context * env::object::get_source_context()const
-{
-    return NULL;
-}
-
-env::object & env::object::set_temporary_flag()
+env::object & env::object::set_temporary()
 {
     assert(m_refcount == 0);
-    m_flags |= FLAG_TEMPORARY;
+    m_flags |= TEMPORARY_OBJECT;
     return *this;
 }
 
-env::object & env::object::set_adopted_flag()
+env::object & env::object::set_adopted()
 {
     assert(!is_temporary());
-    m_flags |= FLAG_ADOPTED;
+    m_flags |= ADOPTED_OBJECT;
     return *this;
 }
 
 bool env::object::is_temporary()const
 {
-    return (m_flags & FLAG_TEMPORARY);
+    return (m_flags & TEMPORARY_OBJECT);
 }
 
 bool env::object::is_adopted()const
 {
-    return (m_flags & FLAG_ADOPTED);
+    return (m_flags & ADOPTED_OBJECT);
 }
 
 env::object::shared_ptr env::object::get_shared_ptr()

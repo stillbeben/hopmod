@@ -45,13 +45,13 @@ std::size_t arguments::size()const
     return lua_gettop(m_stack);
 }
 
-bool arguments::deserialize(value_type arg,target_tag<bool>)
+bool arguments::deserialize(value_type arg,type_tag<bool>)
 {
     if(arg >= m_def_index) return lexical_cast<bool>((*m_default_args)[arg - m_def_index]);
     return lua_toboolean(m_stack, arg);
 }
 
-int arguments::deserialize(value_type arg,target_tag<int>)
+int arguments::deserialize(value_type arg,type_tag<int>)
 {
     if(arg >= m_def_index) return lexical_cast<int>((*m_default_args)[arg - m_def_index]);
     if(!lua_isnumber(m_stack, arg))
@@ -63,7 +63,7 @@ int arguments::deserialize(value_type arg,target_tag<int>)
     return lua_tointeger(m_stack, arg);
 }
 
-unsigned int arguments::deserialize(value_type arg, target_tag<unsigned int>)
+unsigned int arguments::deserialize(value_type arg, type_tag<unsigned int>)
 {
     if(arg >= m_def_index) return lexical_cast<unsigned int>((*m_default_args)[arg - m_def_index]);
     int n = lua_tointeger(m_stack, arg);
@@ -76,7 +76,7 @@ unsigned int arguments::deserialize(value_type arg, target_tag<unsigned int>)
     return n;
 }
 
-unsigned short arguments::deserialize(value_type arg, target_tag<unsigned short>)
+unsigned short arguments::deserialize(value_type arg, type_tag<unsigned short>)
 {
     if(arg >= m_def_index) return lexical_cast<unsigned short>((*m_default_args)[arg - m_def_index]);
     int n = lua_tointeger(m_stack, arg);
@@ -102,13 +102,13 @@ static const char * get_cstr_from_lua_stack(lua_State * stack, int index)
     return str;
 }
 
-const char * arguments::deserialize(value_type arg, target_tag<const char *>)
+const char * arguments::deserialize(value_type arg, type_tag<const char *>)
 {
     if(arg >= m_def_index) return lexical_cast<const char *>((*m_default_args)[arg - m_def_index]);
     return get_cstr_from_lua_stack(m_stack, arg);
 }
 
-std::string arguments::deserialize(value_type arg, target_tag<std::string>)
+std::string arguments::deserialize(value_type arg, type_tag<std::string>)
 {
     if(arg >= m_def_index) return lexical_cast<std::string>((*m_default_args)[arg - m_def_index]);
     const char * val = get_cstr_from_lua_stack(m_stack, arg);
@@ -163,7 +163,7 @@ any get_argument_value(lua_State * L)
         case LUA_TFUNCTION:
         {
             env::object * obj = new lua_function(L);
-            obj->set_adopted_flag();
+            obj->set_adopted();
             return obj->get_shared_ptr();
         }
         case LUA_TTABLE:
@@ -187,7 +187,7 @@ any get_argument_value(lua_State * L)
                 }
             }
             
-            outT->set_adopted_flag();
+            outT->set_adopted();
             return outT->get_shared_ptr();
         }
         default:

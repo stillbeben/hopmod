@@ -24,13 +24,11 @@ public:
     typedef result_type value_type;
     typedef value_type & reference;
     typedef const value_type & const_reference;
+
+    arguments_container(std::vector<value_type> &);
     
-    arguments_container();
-    
-    void push_back(const value_type & arg);
-    void push_back_placeholder();
-    void assign_next_placeholder(const value_type & arg);
-    
+    void push_back(const value_type &);
+
     value_type & front();
     value_type & back();
     
@@ -56,14 +54,9 @@ public:
     
     std::size_t size()const;
     bool empty()const;
-    
-    void reset();
-    void clear();
 private:
-    std::vector<value_type> m_arguments;
+    std::vector<value_type> & m_arguments;
     std::vector<value_type>::iterator m_front;
-    std::vector<int> m_placeholders;
-    std::vector<int>::iterator m_next_placeholder;
 };
 
 } //namespace script

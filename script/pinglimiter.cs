@@ -1,7 +1,7 @@
 
 interval $ping_limiter_tick [
-
-    if (> $playercount 2) [
+    
+    if (> $playercount 0) [
         
         my cn 0
         my warnings 0
@@ -20,7 +20,7 @@ interval $ping_limiter_tick [
                     kick $cn 0 "server" "high ping"
                     player_var $cn ping_warnings 0
                 ] [
-                    player_msg $cn [@(green (player_name $cn)), your ping is too high for this server - it needs to be below @ping_limit ms.]
+                    player_msg $cn [@(player_name $cn), your ping is too high for this server - it needs to be below @ping_limit ms.]
                 ]
             
             ]

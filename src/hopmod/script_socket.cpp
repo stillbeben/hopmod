@@ -81,14 +81,15 @@ int execute_request(const std::string & request,std::string & response)
     
     try
     {
-        output<<script::execute_text(request,get_script_env().get_global_scope()).to_string();
+        script::env::frame frame(&get_script_env());
+        output<<script::execute_text(request, &frame).to_string();
         status = 200;
     }
     catch(script::error error)
     {
         output<<error.get_error_message()<<std::endl;
     }
-    catch(script::error_info * error)
+    catch(script::error_trace * error)
     {
         output<<get_script_error_message(error)<<std::endl;
     }

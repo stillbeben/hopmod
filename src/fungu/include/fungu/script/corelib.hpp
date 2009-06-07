@@ -26,7 +26,7 @@ namespace script{
 
 inline void load_corelib(env & environment)
 {
-    script::env::frame::register_universal_functions();
+    script::env::frame::register_functions(environment);
     
     script::corelib::register_math_functions(environment);
     script::corelib::register_controlflow_functions(environment);
@@ -40,6 +40,11 @@ inline void load_corelib(env & environment)
     script::corelib::register_vector_functions(environment);
     script::corelib::register_datetime_functions(environment);
     script::corelib::register_exception_functions(environment);
+}
+
+inline void unload_corelib(env & environment)
+{
+    script::corelib::unload_alias_functions(environment);
 }
 
 } //namespace script

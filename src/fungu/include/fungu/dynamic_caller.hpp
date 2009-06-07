@@ -8,23 +8,18 @@
 #ifndef FUNGU_DYNAMIC_CALLER_HPP
 #define FUNGU_DYNAMIC_CALLER_HPP
 
+#include "member_function_traits.hpp"
+#include "type_tag.hpp"
+
 #include <exception>
 #include <boost/function.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/at.hpp>
-
-#include "member_function_traits.hpp"
 #include <boost/bind.hpp>
 #include <boost/bind/make_adaptable.hpp>
 
 namespace fungu{
-
-//used by deserialize methods in a Serializer class...
-#ifndef HAS_TARGET_TAG_CLASS
-#define HAS_TARGET_TAG_CLASS
-template<typename T> struct target_tag{};
-#endif
 
 #ifndef HAS_MISSING_ARGS_CLASS
 #define HAS_MISSING_ARGS_CLASS
@@ -47,16 +42,16 @@ namespace detail{
     template<typename ArgumentContainer,typename Serializer> \
     typename ArgumentContainer::value_type operator()(ArgumentContainer & arguments,Serializer & serializer){ \
         if(arguments.size() < n ) throw missing_args(arguments.size(), n ); \
-        return caller(arguments, serializer, target_tag<typename FunctionTraits::result_type>()); \
+        return caller(arguments, serializer, type_tag<typename FunctionTraits::result_type>()); \
     }
 
 #define FUNGU_DYNAMIC_CALLER_VOID_CALLER \
     template<typename ArgumentContainer,typename Serializer> \
-    typename ArgumentContainer::value_type caller(ArgumentContainer & arguments,Serializer & serializer,target_tag<void>)
+    typename ArgumentContainer::value_type caller(ArgumentContainer & arguments,Serializer & serializer,type_tag<void>)
 
 #define FUNGU_DYNAMIC_CALLER_NONVOID_CALLER \
     template<typename ArgumentContainer,typename Serializer,typename RetT> \
-    typename ArgumentContainer::value_type caller(ArgumentContainer & arguments,Serializer & serializer,target_tag<RetT>)
+    typename ArgumentContainer::value_type caller(ArgumentContainer & arguments,Serializer & serializer,type_tag<RetT>)
     
 template<typename FunctionTraits>
 class dynamic_caller0
@@ -67,17 +62,17 @@ public:
     template<typename ArgumentContainer,typename Serializer>
     typename ArgumentContainer::value_type operator()(ArgumentContainer & arguments,Serializer & serializer)
     {
-        return caller(arguments,serializer,target_tag<typename FunctionTraits::result_type>());
+        return caller(arguments,serializer,type_tag<typename FunctionTraits::result_type>());
     }
 private:
     template<typename ArgumentContainer,typename Serializer,typename RetT>
-    typename ArgumentContainer::value_type caller(ArgumentContainer & arguments,Serializer & serializer,target_tag<RetT>)
+    typename ArgumentContainer::value_type caller(ArgumentContainer & arguments,Serializer & serializer,type_tag<RetT>)
     {
         return serializer.serialize(m_function());
     }
     
     template<typename ArgumentContainer,typename Serializer>
-    typename ArgumentContainer::value_type caller(ArgumentContainer & arguments,Serializer & serializer,target_tag<void>)
+    typename ArgumentContainer::value_type caller(ArgumentContainer & arguments,Serializer & serializer,type_tag<void>)
     {
         m_function();
         return serializer.get_void_value();
@@ -98,7 +93,7 @@ struct argtmp{
 
 #define FUNGU_DYNAMIC_CALL_ARGUMENT(name,arguments,serializer) \
     typedef typename argtmp<typename FunctionTraits::name##_type>::type name##_tmp_type; \
-    name##_tmp_type name = serializer.deserialize(arguments.front(), target_tag<name##_tmp_type>()); \
+    name##_tmp_type name = serializer.deserialize(arguments.front(), type_tag<name##_tmp_type>()); \
     arguments.pop_front();
 
 template<typename FunctionTraits>
@@ -328,15 +323,14 @@ public:
     an argument container and a Serializer object as arguments and calls
     the bound function. For each parameter of the bound function, an element
     from the argument container is deserialized and passed by value. If there 
-    not enough elements are in the argument container 'missing_args' is thrown.
-    The value returned by a function call is serialized and returned by the
-    function call operator.
+    are not enough elements are in the argument container then a missing_args
+    exception is thrown. The value returned by a function call is serialized 
+    and returned by the function call operator.
     
-    dynamic_call is useful where you want to directly expose C++ free/member
-    functions to a distributed system or scripting interface without the need 
-    of a code generator to write upcall skeletons - that job is done by this
-    class.
-    
+    dynamic_call is useful where you want to expose C++ free/member functions
+    to a distributed system or scripting interface without needing to use
+    something like a code generator to generate upcall skeletons.
+
     Currently, dynamic_call can support functions with up to 6 arguments.
     
     Example of the syntax:
@@ -354,6 +348,8 @@ public:
     //and a reference to a temporary serialization object.
     std::string answer = dc_add(args,serializer());
     @endcode
+    
+    @warning This class is now deprecated - use the dynamic_call function instead.
 */
 template<typename Signature>
 class dynamic_caller:public detail::get_dynamic_caller_class<Signature>

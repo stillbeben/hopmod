@@ -2,7 +2,6 @@
 #define HOPMOD_STRING_VAR_HPP
 
 #include "cube.h"
-#include "game.h"
 #include <fungu/script/env.hpp>
 #include <fungu/script/variable.hpp>
 
@@ -33,7 +32,7 @@ public:
         m_string[len] = '\0';
     }
     
-    result_type apply(apply_arguments & args,env::frame *)
+    result_type call(call_arguments & args,env::frame *)
     {
         assign(args.safe_front());
         args.pop_front();

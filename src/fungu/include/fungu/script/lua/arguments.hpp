@@ -36,19 +36,19 @@ public:
     std::size_t size()const;
     
     template<typename T>
-    T deserialize(value_type arg, target_tag<T>)
+    T deserialize(value_type arg, type_tag<T>)
     {
         luaL_argerror(m_stack, arg, "unsupported type");
         assert(false);
         throw; //used to supress no-return-value warning
     }
     
-    bool deserialize(value_type arg,target_tag<bool>);
-    int deserialize(value_type arg,target_tag<int>);
-    unsigned int deserialize(value_type arg, target_tag<unsigned int>);
-    unsigned short deserialize(value_type arg, target_tag<unsigned short>);
-    const char * deserialize(value_type arg, target_tag<const char *>);
-    std::string deserialize(value_type arg, target_tag<std::string>);
+    bool deserialize(value_type arg,type_tag<bool>);
+    int deserialize(value_type arg,type_tag<int>);
+    unsigned int deserialize(value_type arg, type_tag<unsigned int>);
+    unsigned short deserialize(value_type arg, type_tag<unsigned short>);
+    const char * deserialize(value_type arg, type_tag<const char *>);
+    std::string deserialize(value_type arg, type_tag<std::string>);
     
     template<typename T>
     value_type serialize(const T &)

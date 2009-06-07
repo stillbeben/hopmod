@@ -6,36 +6,26 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/arguments_container.hpp"
 
 namespace fungu{
 namespace script{
 
-arguments_container::arguments_container()
+arguments_container::arguments_container(std::vector<value_type> & args)
+ :m_arguments(args),m_front(m_arguments.begin())
 {
     
 }
 
-void arguments_container::push_back(const arguments_container::value_type & arg)
+void arguments_container::push_back(const value_type & value)
 {
     int index = m_front - m_arguments.begin();
-    m_arguments.push_back(arg);
+    m_arguments.push_back(value);
     m_front = m_arguments.begin() + index;
-}
-
-void arguments_container::push_back_placeholder()
-{
-    int index = m_next_placeholder - m_placeholders.begin();
-    push_back(any());
-    m_placeholders.push_back(m_arguments.size()-1);
-    m_next_placeholder = m_placeholders.begin() + index;
-}
-
-void arguments_container::assign_next_placeholder(const arguments_container::value_type & arg)
-{
-    assert(m_next_placeholder < m_placeholders.end());
-    m_arguments[*m_next_placeholder] = arg;
-    m_next_placeholder++;
 }
 
 arguments_container::value_type & arguments_container::front()
@@ -73,25 +63,6 @@ std::size_t arguments_container::size()const
 bool arguments_container::empty()const
 {
     return !size();
-}
-
-void arguments_container::reset()
-{
-    m_front = m_arguments.begin();
-    m_next_placeholder = m_placeholders.begin();
-    
-    for(std::vector<int>::const_iterator it = m_placeholders.begin(); 
-        it != m_placeholders.end(); it++)
-    {
-        m_arguments[*it] = any();
-    }
-}
-
-void arguments_container::clear()
-{
-    m_arguments.clear();
-    m_placeholders.clear();
-    reset();
 }
 
 } //namespace script

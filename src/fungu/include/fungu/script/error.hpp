@@ -69,19 +69,19 @@ private:
 /**
 
 */
-class error_info:public error_exception
+class error_trace:public error_exception
 {
 public:
-    explicit error_info(const error & key,const_string arg,source_context * src_ctx);
-    explicit error_info(error_info * head_info,const_string arg,source_context * src_ctx);
-    ~error_info();
+    explicit error_trace(const error & key,const_string arg,source_context * src_ctx);
+    explicit error_trace(error_trace * head_info,const_string arg,source_context * src_ctx);
+    ~error_trace();
     const error & get_error()const;
-    const error_info * get_parent_info()const;
-    const error_info * get_root_info()const;
+    const error_trace * get_parent_info()const;
+    const error_trace * get_root_info()const;
     const source_context * get_source_context()const;
 private:
     error m_key;
-    error_info * m_head_info;
+    error_trace * m_head_info;
     const_string m_arg;
     source_context * m_source_ctx;
 };

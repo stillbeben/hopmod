@@ -9,6 +9,11 @@
 #define FUNGU_SCRIPT_VARIABLE_HPP
 
 #include "env.hpp"
+
+#ifdef FUNGU_WITH_LUA
+#include "lua/push_value.hpp"
+#endif
+
 #include <boost/function.hpp>
 #include <sstream>
 
@@ -16,7 +21,7 @@ namespace fungu{
 namespace script{
 
 /**
-    
+    @brief C++ variable wrapper.
 */
 template<typename T>
 class variable:public env::object
@@ -28,17 +33,26 @@ public:
         
     }
     
+    /**
+        @brief Returns DATA_OBJECT value.
+    */
     object_type get_object_type()const
     {
         return DATA_OBJECT;
     }
     
+    /**
+        @brief Assign new value.
+    */
     void assign(const any & value)
     {
         m_var = lexical_cast<T>(value);
     }
     
-    result_type apply(apply_arguments & args,env::frame *)
+    /**
+        @brief Assign new value and return it.
+    */
+    result_type call(call_arguments & args,env::frame *)
     {
         m_var = args.safe_casted_front<T>();
         args.pop_front();
@@ -46,11 +60,24 @@ public:
         catch(error){return any::null_value();}
     }
     
+    /**
+        @brief Get value.
+    */
     result_type value()
     {
         return m_var;
     }
     
+    #ifdef FUNGU_WITH_LUA
+    void value(lua_State * L)
+    {
+        lua::push_value(L, m_var);
+    }
+    #endif
+    
+    /**
+        @brief Return value as native type.
+    */
     const T & get_value()
     {
         return m_var;
@@ -62,7 +89,7 @@ private:
 };
 
 /**
-    
+    @brief C++ variable wrapper with controlled access and hooking.
 */
 template<typename T>
 class managed_variable:public variable<T>
@@ -86,7 +113,7 @@ public:
         variable<T>::assign(value);
     }
     
-    result_type apply(env::object::apply_arguments & args,env::frame * frame)
+    result_type call(env::object::call_arguments & args,env::frame * frame)
     {
         if(m_perms & DENY_WRITE) throw error(NO_WRITE,boost::make_tuple());
         if(m_write_hook_func)
@@ -94,7 +121,7 @@ public:
             T tmp = args.safe_casted_front<T>();
             m_write_hook_func(tmp);
         }
-        return variable<T>::apply(args,frame);
+        return variable<T>::call(args,frame);
     }
     
     result_type value()
@@ -153,6 +180,9 @@ void inclusive_range(const T & min,const T & max, const T & value)
 
 } //namespace var_hooks
 
+/**
+    @brief C++ variable wrapper with ability to lock read or write access.
+*/
 template<typename T>
 class lockable_variable:public variable<T>
 {
@@ -170,10 +200,10 @@ public:
         variable<T>::assign(value);
     }
     
-    result_type apply(env::object::apply_arguments & args,env::frame * frame)
+    result_type call(env::object::call_arguments & args,env::frame * frame)
     {
         if(m_perms & DENY_WRITE) throw error(NO_WRITE,boost::make_tuple());
-        return variable<T>::apply(args,frame);
+        return variable<T>::call(args,frame);
     }
     
     result_type value()
@@ -202,6 +232,9 @@ private:
     char m_perms;
 };
 
+/**
+    @brief Make wrapped C++ function appear as a read-only variable.
+*/
 template<typename T>
 class function_variable:public env::object
 {
@@ -210,8 +243,14 @@ public:
      function_variable(Functor func):m_func(func){}
     object_type get_object_type()const{return DATA_OBJECT;}
     void assign(const any & value){throw error(NO_WRITE);}
-    result_type apply(env::object::apply_arguments & args,env::frame * frame){throw error(NO_WRITE);}
+    result_type call(env::object::call_arguments & args,env::frame * frame){throw error(NO_WRITE);}
     result_type value(){return m_func();}
+    #ifdef FUNGU_WITH_LUA
+    void value(lua_State * L)
+    {
+        lua::push_value(L, m_func());
+    }
+    #endif
 private:
     boost::function0<T> m_func;
 };

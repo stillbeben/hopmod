@@ -22,7 +22,7 @@ enum parse_state
 };
 
 /**
-    @brief Represents a language construct.
+    @brief The base class for a language construct.
     @see expression
 */
 class construct

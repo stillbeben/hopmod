@@ -1,7 +1,7 @@
 /*
  * The Fungu Scripting Engine Library
  *
- * (C) Copyright 2008 Graham Daws
+ * (C) Copyright 2008-2009 Graham Daws
  * (C) Copyright 2005 Christopher Diggins
  * (C) Copyright 2005 Pablo Aguilar
  * (C) Copyright 2001 Kevlin Henney
@@ -46,13 +46,10 @@
 namespace fungu{
 namespace script{
 
-struct bad_any_cast : std::bad_cast {
-    bad_any_cast(const std::type_info& src, const std::type_info& dest)
-      : from(src.name()), to(dest.name())
-    { }
-    virtual const char* what() {
-      return "bad cast";
-    }
+struct bad_any_cast: std::bad_cast
+{
+    bad_any_cast(const std::type_info& src, const std::type_info& dest);
+    const char* what();
     const char* from;
     const char* to;
 };
@@ -165,13 +162,12 @@ struct get_table
   }
 };
 
-struct empty {
-};
+struct empty {};
+
 } // namespace any_detail
 
 struct any
 {
-    // structors
     template <typename T>
     any(const T& x) {
       table = any_detail::get_table<T>::get();
@@ -183,35 +179,12 @@ struct any
       }
     }
     
-    any() {
-      table = any_detail::get_table<any_detail::empty>::get();
-      object = NULL;
-    }
-
-    any(const any& x) {
-      table = any_detail::get_table<any_detail::empty>::get();
-      assign(x);
-    }
-
-    ~any() {
-      table->static_delete(&object);
-    }
+    any();
+    any(const any& x);
     
-    // assignment
+    ~any();
     
-    any& assign(const any& x) {
-      // are we copying between the same type?
-      if (table == x.table) {
-        // if so, we can avoid reallocation
-        table->move(&x.object, &object);
-      }
-      else {
-        reset();
-        x.table->clone(&x.object, &object);
-        table = x.table;
-      }
-      return *this;
-    }
+    any& assign(const any& x);
 
     template <typename T>
     any& assign(const T& x)
@@ -248,59 +221,30 @@ struct any
       return *this;
     }
 
-    // assignment operator
     template<typename T>
     any& operator=(T const& x) {
       return assign(x);
     }
     
-    any& operator=(const any & x)
-    {
-        return assign(x);
-    }
-
+    any& operator=(const any & x);
+    
     // utility functions
+    
+    any& swap(any& x);
+    
+    const std::type_info& get_type()const;
+    
+    const_string to_string()const;
+    
+    bool is_arithmetic()const;
+    
+    dynamic_typecaster * get_dynamic_typecaster()const;
+    
+    bool empty()const;
 
-    any& swap(any& x) {
-      std::swap(table, x.table);
-      std::swap(object, x.object);
-      return *this;
-    }
-
-    const std::type_info& get_type() const {
-      return table->get_type();
-    }
+    void reset();
     
-    const_string to_string()const {
-      return table->to_string(&object);
-    }
-    
-    bool is_arithmetic()const
-    {
-        return table->is_arithmetic();
-    }
-    
-    dynamic_typecaster * get_dynamic_typecaster()const
-    {
-        return table->get_dynamic_typecaster(&object);
-    }
-    
-    bool empty() const {
-      return table == any_detail::get_table<any_detail::empty>::get();
-    }
-
-    void reset()
-    {
-      if (empty()) return;
-      table->static_delete(&object);
-      table = any_detail::get_table<any_detail::empty>::get();
-      object = NULL;
-    }
-    
-    static any null_value()
-    {
-        return any();
-    }
+    static any null_value();
     
     // fields
     any_detail::fxn_ptr_table* table;
@@ -315,14 +259,14 @@ T* any_cast(any* this_) {
         static T tmp;
         if(boost::is_arithmetic<T>::value && this_->is_arithmetic())
         {
-            tmp = this_->get_dynamic_typecaster()->numeric_cast((T *)NULL);
+            tmp = this_->get_dynamic_typecaster()->numeric_cast(type_tag<T>());
             return &tmp;
         }
         if(this_->empty()) {tmp = T(); return &tmp;}
         return NULL;
     }
     if (sizeof(T) <= sizeof(void*)) {
-        void ** ptr = &this_->object; //fixes strict-aliasing warning
+        void ** ptr = &this_->object; //fixes strict-aliasing warning (GCC 4.1.2)
         return reinterpret_cast<T*>(reinterpret_cast<void *>(ptr));
     }
     else {
@@ -347,6 +291,7 @@ inline bool any_is_string(const any & var)
     return var.get_type() == typeid(const_string);
 }
 
+#if 0 //was used in json/tinyjson.hpp
 struct any_traits
 {
     typedef any any_type;
@@ -361,6 +306,7 @@ struct any_traits
     template<typename TargetType>
     static const TargetType & cast(const any_type & obj){return *cast<TargetType>(const_cast<any_type*>(&obj));}
 };
+#endif
 
 } //namespace script
 } //namespace fungu

@@ -5,7 +5,11 @@
  *
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
- 
+
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/any_variable.hpp"
 
 namespace fungu{
@@ -32,10 +36,10 @@ void any_variable::assign(const any & value)
         m_any = const_string(m_any.to_string().copy());
 }
 
-result_type any_variable::apply(apply_arguments & args,env::frame * frame)
+result_type any_variable::call(call_arguments & args,env::frame * frame)
 {
     if(m_procedure)
-        return any_cast<env::object::shared_ptr>(m_any)->apply(args,frame);
+        return any_cast<env::object::shared_ptr>(m_any)->call(args,frame);
     else
     {
         assign(args.safe_front());
@@ -47,10 +51,10 @@ result_type any_variable::apply(apply_arguments & args,env::frame * frame)
 }
 
 #ifdef FUNGU_WITH_LUA
-int any_variable::apply(lua_State * L)
+int any_variable::call(lua_State * L)
 {
     if(m_procedure)
-        return any_cast<env::object::shared_ptr>(m_any)->apply(L);
+        return any_cast<env::object::shared_ptr>(m_any)->call(L);
     else return luaL_error(L, "not a function");
 }
 #endif
@@ -60,13 +64,6 @@ result_type any_variable::value()
     if(m_procedure)
         return any_cast<env::object::shared_ptr>(m_any)->value();
     return m_any;
-}
-
-const source_context * any_variable::get_source_context()const
-{
-    if(m_procedure)
-        return any_cast<env::object::shared_ptr>(m_any)->get_source_context();
-    return NULL;
 }
 
 env::object * any_variable::lookup_member(const_string id)

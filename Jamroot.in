@@ -40,19 +40,31 @@ if $(without_geoip) = 1 {
     lib geoip : : <name>GeoIP ;
 }
 
-without_test_project = @WITHOUT_TEST_PROJECT@ ;
-if $(without_test_project) = 0 {
-    build-project src/hopmod/test ;
-}
+build-project src/hopmod/test ;
 
 lib sauertools :
     src/shared/tools.cpp
     src/shared/stream.cpp
     src/shared/crypto.cpp
+    src/hopmod/masterserver_client.cpp
     : <include>src/shared <include>src/enet/include
     <define>STANDALONE
     <link>static
     : : <include>src/shared <include>src/enet/include ;
+
+lib serverscripting :
+    src/hopmod/signals.cpp
+    src/hopmod/scripting.cpp
+    /lua//lua
+    /boost//headers
+    /boost//signals
+    /fungu//script
+    : <link>static <include>src/hopmod : : <include>src ;
+
+lib scriptpipe :
+    src/hopmod/script_pipe.cpp
+    serverscripting
+    : <link>static ;
 
 exe sauer_server :
     src/engine/server.cpp
@@ -60,7 +72,6 @@ exe sauer_server :
     src/hopmod/floodprotection.cpp
     src/hopmod/scripting.cpp
     src/hopmod/script_bindings.cpp
-    src/hopmod/signals.cpp
     src/hopmod/script_pipe.cpp
     src/hopmod/script_socket.cpp
     src/hopmod/parse_player_command.cpp
@@ -71,24 +82,41 @@ exe sauer_server :
     src/hopmod/playerid.cpp
     src/hopmod/restarter.cpp
     src/hopmod/utils.cpp
-    src/hopmod/masterserver_client.cpp
     sauertools
+    serverscripting
+    scriptpipe
     z
     enet
-    /lua//lua
-    /fungu//script
     geoip
     /boost//headers
-    /boost//signals
     /libmicrohttpd//httpd
-    : <define>STANDALONE <include>src/fpsgame <include>src/hopmod ;
+    : <define>STANDALONE <define>HOPMOD_GAMESERVER_EVENTS <include>src/fpsgame <include>src/hopmod ;
 
 exe keygen :
     sauertools
     z
     src/hopmod/keygen.cpp : <define>STANDALONE ;
 
-install dist : sauer_server keygen /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
+exe authserver :
+    src/hopmod/authserver.cpp
+    sauertools
+    serverscripting
+    scriptpipe
+    enet
+    : <define>STANDALONE <define>HOPMOD_AUTHSERVER_EVENTS ;
+
+lib ncurses : : <name>ncurses ;
+lib readline : : <name>readline ;
+
+exe testshell :
+    src/fungu/utils/testshell.cpp
+    /boost//headers
+    /fungu//script
+    /lua//lua
+    ncurses
+    readline ;
+    
+install dist : sauer_server authserver keygen testshell /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 
 install lua-packages :
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;

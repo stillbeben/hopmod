@@ -37,7 +37,7 @@ lua_function::~lua_function()
     luaL_unref(m_lua, LUA_REGISTRYINDEX, m_ref);
 }
 
-result_type lua_function::apply(apply_arguments & args,env::frame * aFrame)
+result_type lua_function::call(call_arguments & args,env::frame * aFrame)
 {
     lua_State * L = aFrame->get_env()->get_lua_state();
     lua_rawgeti(L, LUA_REGISTRYINDEX, m_ref);
@@ -52,7 +52,7 @@ result_type lua_function::apply(apply_arguments & args,env::frame * aFrame)
     else return get_argument_value(L);
 }
 
-int lua_function::apply(lua_State * L)
+int lua_function::call(lua_State * L)
 {
     return luaL_error(L, "calling a lua function via cubescript environment.");
 }

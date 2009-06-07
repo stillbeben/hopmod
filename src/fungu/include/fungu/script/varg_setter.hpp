@@ -22,7 +22,7 @@ public:
         
     }
     
-    result_type apply(apply_arguments & args,env::frame * aFrame)
+    result_type call(call_arguments & args,env::frame * aFrame)
     {
         while(!args.empty())
         {
@@ -45,10 +45,10 @@ public:
     }
     
     bool is_set()const{return m_set;}
-    apply_arguments & get_args(){return m_args;}
+    call_arguments & get_args(){return m_args;}
 private:
     bool m_set;
-    apply_arguments m_args;
+    call_arguments m_args;
 };
 
 } //namespace script

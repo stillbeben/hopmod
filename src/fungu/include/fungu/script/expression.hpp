@@ -11,6 +11,8 @@
 #include "construct.hpp"
 #include "error.hpp"
 
+#include <vector>
+
 namespace fungu{
 namespace script{
 
@@ -22,17 +24,7 @@ class expression:public construct
 public:
     struct word_exit_terminals
     {
-        static bool is_member(const_string::value_type c)
-        {
-            switch(c)
-            {
-                case '\"': case '\'': case ')': case '[': case ']': case ' ':
-                case '\r': case '\n': case '\t': case ';': case '{' :case '}': 
-                case '\0':
-                    return true;
-                default: return false;
-            }
-        }
+        static bool is_member(const_string::value_type c);
     };
     
     #define FUNGU_CUBESCRIPT_EXPRESSION_NESTED_CLASS
@@ -82,19 +74,21 @@ private:
     
     void add_child_construct(construct * child);
     
-    bool is_infix_expression(env::frame * frame)const;
-    void translate_infix_expression(env::frame * frame);
+    bool is_alias_assignment(env::frame * frame)const;
+    void translate_alias_assignment(env::frame * frame);
     
     void fill_arguments_container(env::frame * frame);
+    void reset_placeholders();
 public:
     source_context * get_source_context()const;
 private:
     construct * m_parsing;
     construct * m_first_construct;
+
+    std::vector<result_type> m_arguments;
+    std::vector<unsigned char> m_placeholders;
     
-    env::object::apply_arguments m_arguments;
-    
-    env::symbol_handle m_operation_symbol;
+    env::symbol * m_operation_symbol;
     
     // information for debugging
     unsigned short m_line;

@@ -25,7 +25,7 @@ public:
         
     }
     
-    result_type apply(apply_arguments &,env::frame *)
+    result_type call(call_arguments &,env::frame *)
     {
         m_set = true;
         return any::null_value();

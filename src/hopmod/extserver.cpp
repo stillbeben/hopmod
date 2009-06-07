@@ -87,9 +87,9 @@ void init_hopmod()
     
     try
     {
-        fungu::script::execute_file(STARTUP_SCRIPT,get_script_env().get_global_scope());
+        fungu::script::execute_file(STARTUP_SCRIPT, get_script_env());
     }
-    catch(fungu::script::error_info * error)
+    catch(fungu::script::error_trace * error)
     {
         report_script_error(error);
     }

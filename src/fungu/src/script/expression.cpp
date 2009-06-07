@@ -6,18 +6,33 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/expression.hpp"
 
-#include <limits>
-#include <boost/spirit/include/classic_core.hpp> //used for int parsing
+#include <iostream>
 
 namespace fungu{
 namespace script{
 
+bool expression::word_exit_terminals::is_member(const_string::value_type c)
+{
+    switch(c)
+    {
+        case '\"': case '\'': case ')': case '[': case ']': case ' ':
+        case '\r': case '\n': case '\t': case ';': case '{' :case '}': 
+        case '\0':
+            return true;
+        default: return false;
+    }
+}
+
 expression::expression()
  :m_parsing(NULL),
   m_first_construct(NULL),
-  m_operation_symbol(env::invalid_symbol_handle()),
+  m_operation_symbol(NULL),
   m_line(0),
   m_source_ctx(NULL)
 {
@@ -56,7 +71,7 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
         }
         catch(const error & key)
         {
-            throw new error_info(
+            throw new error_trace(
                 key, const_string(), frame->get_env()->get_source_context()->clone());
         }
     }
@@ -65,18 +80,16 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
     
     if(is_terminator(**first))
     {
-
-        
         ++(*first);
         
         if(!is_empty_expression())
         {
-            if(is_infix_expression(frame)) translate_infix_expression(frame);
+            if(is_alias_assignment(frame)) translate_alias_assignment(frame);
             
             fill_arguments_container(frame);
             
             if(m_first_construct->is_string_constant())
-                m_operation_symbol = env::lookup_symbol(m_first_construct->eval(frame).to_string());
+                m_operation_symbol = frame->get_env()->lookup_symbol(m_first_construct->eval(frame).to_string());
         }
         
         return PARSE_COMPLETE;
@@ -93,7 +106,6 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
         case '\t':                                       ++(*first); break;
         case '$':  m_parsing = new expr_symbol;          ++(*first); break;
         case '&':  m_parsing = new expr_reference;       ++(*first); break;
-        //case '{': m_parsing = new structure;                         break;
         default:   m_parsing = new expr_word;                        break;
     }
     
@@ -104,23 +116,30 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
 
 result_type expression::eval(env::frame * frame)
 {
+    env * environment = frame->get_env();
     env::object * opobj;
     
     const construct * subject_arg = m_first_construct;
     
-    const source_context * prev_ctx = frame->get_env()->get_source_context();
-    frame->get_env()->set_source_context(m_source_ctx);
+    const source_context * prev_ctx = environment->get_source_context();
+    environment->set_source_context(m_source_ctx);
+    
+    int pre_argc = environment->get_arg_count();
+    
+    #define EXPRESSION_EVAL_CLEANUP \
+        reset_placeholders(); \
+        environment->set_source_context(prev_ctx); \
+        while(environment->get_arg_count() > pre_argc) environment->pop_arg();
     
     try
     {
         result_type arg1_result_type = m_first_construct->eval(frame);
         
-        if(env::is_valid_symbol_handle(m_operation_symbol))
-            opobj = frame->lookup_object(m_operation_symbol);
+        if(m_operation_symbol) opobj = m_operation_symbol->lookup_object(frame);
         else
         {
-            if((m_operation_symbol = env::lookup_symbol(arg1_result_type.to_string())))
-                opobj = frame->lookup_object(m_operation_symbol);
+            m_operation_symbol = frame->get_env()->lookup_symbol(arg1_result_type.to_string());
+            if(m_operation_symbol) opobj = m_operation_symbol->lookup_object(frame);
             else
             {
                 if(arg1_result_type.get_type() == typeid(env::object::shared_ptr))
@@ -137,34 +156,44 @@ result_type expression::eval(env::frame * frame)
         }
         
         construct * current = m_first_construct->get_next_sibling();
+        std::vector<unsigned char>::const_iterator argIt = m_placeholders.begin();
+        
         while(current)
         {
             subject_arg = current;
-            m_arguments.assign_next_placeholder(current->eval(frame));
+            
+            environment->push_arg(current->eval(frame));
+            
+            m_arguments[*(argIt++)] = environment->top_arg();
+            
             current = current->get_next_sibling();
         }
         
         subject_arg = m_first_construct;
         
-        result_type result = opobj->apply(m_arguments,frame);
-        m_arguments.reset();
-        frame->get_env()->set_source_context(prev_ctx);
+        arguments_container args(m_arguments);
+        result_type result = opobj->call(args, frame);
+        
+        EXPRESSION_EVAL_CLEANUP;
+        
         return result;
     }
     catch(const error & key)
     {
-        m_arguments.reset();
-        frame->get_env()->set_source_context(prev_ctx);
-        throw new error_info(
+        EXPRESSION_EVAL_CLEANUP;
+        
+        throw new error_trace(
             key, subject_arg->form_source(), get_source_context());
     }
-    catch(error_info * head_info)
+    catch(error_trace * head_info)
     {
-        m_arguments.reset();
-        frame->get_env()->set_source_context(prev_ctx);
-        throw new error_info(
+        EXPRESSION_EVAL_CLEANUP;
+        
+        throw new error_trace(
             head_info, subject_arg->form_source(), get_source_context());
     }
+    
+    #undef EXPRESSION_EVAL_CLEANUP
 }
     
 bool expression::is_string_constant()const
@@ -218,7 +247,7 @@ void expression::add_child_construct(construct * child)
     else m_first_construct->get_tail_sibling()->set_next_sibling(child);
 }
     
-bool expression::is_infix_expression(env::frame * frame)const
+bool expression::is_alias_assignment(env::frame * frame)const
 {
     construct * arg1 = m_first_construct;
     if(!arg1) return false;
@@ -226,16 +255,16 @@ bool expression::is_infix_expression(env::frame * frame)const
     if(!op || !op->is_string_constant()) return false;
     construct * arg2 = op->get_next_sibling();
     if(!arg2 || arg2->get_next_sibling()) return false;
-    return frame->get_env()->is_infix_operator(op->eval(frame).to_string());
+    return op->eval(frame).to_string() == const_string(FUNGU_LITERAL_STRING("="));
 }
-    
-void expression::translate_infix_expression(env::frame * frame)
+
+void expression::translate_alias_assignment(env::frame * frame)
 {
     construct * arg1 = m_first_construct;
     construct * op = arg1->get_next_sibling();
     construct * arg2 = op->get_next_sibling();
     
-    m_first_construct = new expr_word(frame->get_env()->get_infix_operator_mapping(op->eval(frame).to_string()));
+    m_first_construct = new expr_word(const_string(FUNGU_LITERAL_STRING("alias")));
     m_first_construct->set_next_sibling(arg1);
     arg1->set_next_sibling(arg2);
     
@@ -266,7 +295,9 @@ void expression::fill_arguments_container(env::frame * frame)
         }
         else
         {
-            m_arguments.push_back_placeholder();
+            m_arguments.push_back(any());
+            m_placeholders.push_back(m_arguments.size()-1);
+            
             last_arg = arg;
             arg = arg->get_next_sibling();
         }
@@ -281,11 +312,17 @@ source_context * expression::get_source_context()const
     return ctx;
 }
 
+void expression::reset_placeholders()
+{
+    for(std::vector<unsigned char>::const_iterator it = m_placeholders.begin(); 
+        it != m_placeholders.end(); it++) m_arguments[*it] = any();
+}
+
 parse_state base_expression::parse(source_iterator * first,source_iterator last,env::frame * frame)
 {
     parse_state state = expression::parse(first,last,frame);
     if(state == PARSE_COMPLETE && *((*first)-1) == ')')
-        throw new error_info(
+        throw new error_trace(
             error(UNEXPECTED_SYMBOL,boost::make_tuple(')')),
             const_string(), get_source_context());
     return state;

@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/error.hpp"
 #include "fungu/script/env.hpp"
 #include <sstream>
@@ -97,7 +101,7 @@ std::string error::get_error_message()const
     return message.str();
 }
 
-error_info::error_info(const error & key, const_string arg, source_context * src_ctx)
+error_trace::error_trace(const error & key, const_string arg, source_context * src_ctx)
  :m_key(key),
   m_head_info(NULL),
   m_arg(arg),
@@ -106,7 +110,7 @@ error_info::error_info(const error & key, const_string arg, source_context * src
     
 }
 
-error_info::error_info(error_info * head_info, const_string arg, source_context * src_ctx)
+error_trace::error_trace(error_trace * head_info, const_string arg, source_context * src_ctx)
  :m_key(head_info->m_key),
   m_head_info(head_info),
   m_arg(arg),
@@ -115,30 +119,30 @@ error_info::error_info(error_info * head_info, const_string arg, source_context 
     
 }
 
-error_info::~error_info()
+error_trace::~error_trace()
 {
     delete m_head_info;
     delete m_source_ctx;
 }
 
-const error & error_info::get_error()const
+const error & error_trace::get_error()const
 {
     return m_key;
 }
 
-const error_info * error_info::get_parent_info()const
+const error_trace * error_trace::get_parent_info()const
 {
     return m_head_info;
 }
 
-const error_info * error_info::get_root_info()const
+const error_trace * error_trace::get_root_info()const
 {
-    const error_info * node = this;
+    const error_trace * node = this;
     while(node->m_head_info) node = node->m_head_info;
     return node;
 }
 
-const source_context * error_info::get_source_context()const
+const source_context * error_trace::get_source_context()const
 {
     return m_source_ctx;
 }

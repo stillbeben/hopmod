@@ -8,7 +8,7 @@
 using namespace fungu;
 
 static schedule_service scheduler;
-static script::result_type sched_cubescript_code(bool,script::env::object::apply_arguments &,script::env::frame *);
+static script::result_type sched_cubescript_code(bool,script::env::object::call_arguments &,script::env::frame *);
 static inline int sched_sleep_lua_code(lua_State *);
 static inline int sched_interval_lua_code(lua_State *);
 
@@ -37,53 +37,55 @@ void cancel_all_scheduled()
     scheduler.cancel_all();
 }
 
-int run_cubescript_code(script::code_block code,script::env::frame * parent_frame)
+int run_cubescript_code(script::code_block code,script::env * e)
 {
-    script::env::frame frame(parent_frame->get_env());
+    script::env::frame frame(e);
     try
     {
         return script::lexical_cast<int>(code.eval_each_expression(&frame));
     }
     catch(script::error err)
     {
-        report_script_error(new script::error_info(err,const_string(),code.get_source_context()->clone()));
+        report_script_error(new script::error_trace(err,const_string(),code.get_source_context()->clone()));
         return -1;
     }
-    catch(script::error_info * errinfo)
+    catch(script::error_trace * errinfo)
     {
         report_script_error(errinfo);
         return -1;
     }
 }
 
-script::result_type sched_cubescript_code(bool repeat,script::env::object::apply_arguments & args,script::env::frame * frame)
+script::result_type sched_cubescript_code(bool repeat,script::env::object::call_arguments & args,script::env::frame * frame)
 {
     script::call_serializer cs(args,frame);
     
-    int countdown = cs.deserialize(args.front(),target_tag<int>());
+    int countdown = cs.deserialize(args.front(),type_tag<int>());
     args.pop_front();
     
-    script::code_block code = cs.deserialize(args.front(),target_tag<script::code_block>());
+    script::code_block code = cs.deserialize(args.front(),type_tag<script::code_block>());
     args.pop_front();
     
-    scheduler.add_job(boost::bind(run_cubescript_code,code,get_script_env().get_global_scope()), countdown, repeat);
+    scheduler.add_job(boost::bind(run_cubescript_code,code,frame->get_env()), countdown, repeat);
     
     return script::any::null_value();
 }
 
-int run_lua_code(script::env::object::shared_ptr func,script::env::frame * frame)
+int run_lua_code(script::env::object::shared_ptr func,script::env * e)
 {
     try
     {
-        script::arguments_container empty;
-        return script::lexical_cast<int>(func->apply(empty,frame));
+        script::env::frame frame(e);
+        std::vector<script::any> args;
+        script::arguments_container empty(args);
+        return script::lexical_cast<int>(func->call(empty,&frame));
     }
     catch(script::error err)
     {
-        report_script_error(new script::error_info(err,const_string(),func->get_source_context()->clone()));
+        report_script_error(new script::error_trace(err,const_string(),e->get_source_context()->clone()));
         return -1;
     }
-    catch(script::error_info * errinfo)
+    catch(script::error_trace * errinfo)
     {
         report_script_error(errinfo);
         return -1;
@@ -100,9 +102,9 @@ int sched_lua_code(bool repeat,lua_State * L)
     lua_pushvalue(L,2);
     
     script::env::object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
-    luaFunctionObject->set_adopted_flag();
+    luaFunctionObject->set_adopted();
     
-    scheduler.add_job(boost::bind(run_lua_code,luaFunctionObject,get_script_env().get_global_scope()), countdown, repeat);
+    scheduler.add_job(boost::bind(run_lua_code,luaFunctionObject,&get_script_env()), countdown, repeat);
     
     return 0;
 }

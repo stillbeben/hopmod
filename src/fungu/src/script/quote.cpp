@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/expression.hpp"
 
 namespace fungu{
@@ -43,6 +47,7 @@ parse_state expression::quote::parse(source_iterator * first,source_iterator las
             switch(c)
             {
                 case '\\':
+                case '^':
                     m_escaped = true;
                     break;
                 case '\"':

@@ -16,13 +16,13 @@ class symbol:public construct
 public:
     symbol()
      : m_first(const_string::null_const_iterator()),
-       m_symbol(env::invalid_symbol_handle())
+       m_symbol(NULL)
     {
         m_members[0] = NULL;
         m_members[1] = NULL;
     }
     
-    parse_state parse(source_iterator * first,source_iterator last,env::frame *)
+    parse_state parse(source_iterator * first,source_iterator last,env::frame * frame)
     {
         if(m_first == const_string::null_const_iterator())
         {
@@ -38,7 +38,7 @@ public:
             if(ExitTerminals::is_member(**first))
             {
                 if(*m_last == '.') throw error(UNEXPECTED_SYMBOL,boost::make_tuple('.'));
-                m_symbol = env::lookup_symbol(get_member(0));
+                m_symbol = frame->get_env()->lookup_symbol(get_member(0));
                 return PARSE_COMPLETE;
             }
             else if(**first == '.') *get_memv_tail() = (*first) + 1;
@@ -81,11 +81,11 @@ protected:
         
         const_string id = get_member(0);
         
-        m_symbol = (!m_symbol ? env::lookup_symbol(id) : m_symbol);
+        m_symbol = (!m_symbol ? frame->get_env()->lookup_symbol(id) : m_symbol);
         if(!m_symbol) throw error(UNKNOWN_SYMBOL,boost::make_tuple(id.copy()));
         
-        env::object * obj = frame->lookup_object(m_symbol);
-        if(!obj) throw error(UNKNOWN_SYMBOL,boost::make_tuple(id.copy()));
+        env::object * obj = m_symbol->lookup_object(frame);
+        if(!obj) throw error(UNKNOWN_SYMBOL, boost::make_tuple(id.copy()));
         
         int members = get_memv_size();
         for(int i = 1; i < members; i++)
@@ -128,7 +128,7 @@ private:
     source_iterator m_first;
     source_iterator m_last;
     source_iterator m_members[6];
-    env::symbol_handle m_symbol;
+    env::symbol * m_symbol;
 };
 
 #endif

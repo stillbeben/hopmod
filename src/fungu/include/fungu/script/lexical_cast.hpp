@@ -9,6 +9,7 @@
 #define FUNGU_SCRIPT_LEXICAL_CAST_HPP
 
 #include "../string.hpp"
+#include "../type_tag.hpp"
 #include "error.hpp"
 #include "any.hpp"
 
@@ -24,8 +25,6 @@ namespace fungu{
 namespace script{
 
 namespace lexical_cast_detail{
-
-template<typename T> struct return_tag{};
 
 template<typename Target,typename Source>
 struct nocastop{
@@ -45,7 +44,7 @@ struct nocastneeded
 };
 
 template<typename Target,typename Source>
-inline Target lexical_cast(const Source & src, return_tag<Target>)
+inline Target lexical_cast(const Source & src, type_tag<Target>)
 {
     typename boost::mpl::if_<
         boost::mpl::bool_<boost::is_same<Target,Source>::value>,
@@ -54,26 +53,26 @@ inline Target lexical_cast(const Source & src, return_tag<Target>)
     return t(src);
 }
 
-const_string    lexical_cast(const std::string & src,return_tag<const_string>);
-std::string     lexical_cast(const const_string & src, return_tag<std::string>);
-int             lexical_cast(const const_string & src, return_tag<int>);
-unsigned int    lexical_cast(const const_string & src, return_tag<unsigned int>);
-const_string    lexical_cast(int src, return_tag<const_string>);
-int             lexical_cast(const std::string & src, return_tag<int>);
-std::string     lexical_cast(int src, return_tag<std::string>);
-const_string    lexical_cast(bool src, return_tag<const_string>);
-bool            lexical_cast(const const_string & src, return_tag<bool>);
-char            lexical_cast(const const_string & src, return_tag<char>);
-const_string    lexical_cast(char src, return_tag<const_string>);
-float           lexical_cast(const const_string & src,return_tag<float>);
-const_string    lexical_cast(float src,return_tag<const_string>);
-unsigned short  lexical_cast(const const_string & src,return_tag<unsigned short>);
-const_string    lexical_cast(unsigned short src, return_tag<const_string>);
-const_string    lexical_cast(unsigned int src, return_tag<const_string>);
-const_string    lexical_cast(const char * src,return_tag<const_string>);
+const_string    lexical_cast(const std::string & src,type_tag<const_string>);
+std::string     lexical_cast(const const_string & src, type_tag<std::string>);
+int             lexical_cast(const const_string & src, type_tag<int>);
+unsigned int    lexical_cast(const const_string & src, type_tag<unsigned int>);
+const_string    lexical_cast(int src, type_tag<const_string>);
+int             lexical_cast(const std::string & src, type_tag<int>);
+std::string     lexical_cast(int src, type_tag<std::string>);
+const_string    lexical_cast(bool src, type_tag<const_string>);
+bool            lexical_cast(const const_string & src, type_tag<bool>);
+char            lexical_cast(const const_string & src, type_tag<char>);
+const_string    lexical_cast(char src, type_tag<const_string>);
+float           lexical_cast(const const_string & src,type_tag<float>);
+const_string    lexical_cast(float src,type_tag<const_string>);
+unsigned short  lexical_cast(const const_string & src,type_tag<unsigned short>);
+const_string    lexical_cast(unsigned short src, type_tag<const_string>);
+const_string    lexical_cast(unsigned int src, type_tag<const_string>);
+const_string    lexical_cast(const char * src,type_tag<const_string>);
 
 template<typename Source>
-inline const_string lexical_cast(const boost::intrusive_ptr<Source> & src,return_tag<const_string>)
+inline const_string lexical_cast(const boost::intrusive_ptr<Source> & src,type_tag<const_string>)
 {
     return boost::lexical_cast<std::string>(src);
 }
@@ -81,23 +80,23 @@ inline const_string lexical_cast(const boost::intrusive_ptr<Source> & src,return
 // Lexical casting involving any type
 
 template<typename Target>
-inline Target lexical_cast_from_any(const any & arg,return_tag<Target>)
+inline Target lexical_cast_from_any(const any & arg,type_tag<Target>)
 {
     if(any_is_string(arg))
-        return lexical_cast(any_cast<const_string>(arg),return_tag<Target>());
+        return lexical_cast(any_cast<const_string>(arg),type_tag<Target>());
     else
         return any_cast<Target>(arg);
 }
 
-const_string lexical_cast_from_any(const any & arg,return_tag<const_string>);
-std::string lexical_cast_from_any(const any & arg,return_tag<std::string>);
+const_string lexical_cast_from_any(const any & arg,type_tag<const_string>);
+std::string lexical_cast_from_any(const any & arg,type_tag<std::string>);
 
 template<typename Target>
-inline Target lexical_cast(const any & src,return_tag<Target>)
+inline Target lexical_cast(const any & src,type_tag<Target>)
 {
     try
     {
-        return lexical_cast_detail::lexical_cast_from_any(src,return_tag<Target>());
+        return lexical_cast_detail::lexical_cast_from_any(src,type_tag<Target>());
     }
     catch(bad_any_cast)
     {
@@ -170,9 +169,9 @@ std::string write_json_value(const AnyType * value)
     else return value->to_string().copy();
 }
 
-const_string lexical_cast(const json::object * src, return_tag<const_string>);
-const_string lexical_cast(boost::shared_ptr<json::object> src,return_tag<const_string>);
-const_string lexical_cast(const json::object & src,return_tag<const_string>);
+const_string lexical_cast(const json::object * src, type_tag<const_string>);
+const_string lexical_cast(boost::shared_ptr<json::object> src,type_tag<const_string>);
+const_string lexical_cast(const json::object & src,type_tag<const_string>);
 #endif
 
 // printing array stuff (must be parsable by the functions in parse_array.hpp)
@@ -196,13 +195,13 @@ std::string write_sequence(const ForwardContainer & container)
 }
 
 template<typename Source>
-inline const_string lexical_cast(const std::vector<Source,std::allocator<Source> > & src,return_tag<const_string>)
+inline const_string lexical_cast(const std::vector<Source,std::allocator<Source> > & src,type_tag<const_string>)
 {
     return const_string(write_sequence(src));
 }
 
 template<typename Source>
-inline const_string lexical_cast(const std::deque<Source,std::allocator<Source> > & src,return_tag<const_string>)
+inline const_string lexical_cast(const std::deque<Source,std::allocator<Source> > & src,type_tag<const_string>)
 {
     return const_string(write_sequence(src));
 }
@@ -212,8 +211,7 @@ inline const_string lexical_cast(const std::deque<Source,std::allocator<Source> 
 template<typename Target,typename Source>
 inline Target lexical_cast(const Source & arg)
 {
-    return lexical_cast_detail::lexical_cast(arg, 
-        lexical_cast_detail::return_tag<Target>());
+    return lexical_cast_detail::lexical_cast(arg, type_tag<Target>());
 }
 
 } //namespace script

@@ -1,13 +1,15 @@
 
-global playercmd_1on1 (func [cn arg1 arg2 arg3 arg4] [
-
+global playercmd_1on1 (func [cn player1 player2 game_mo gamemap] [
+    
     if (strcmp (player_priv $cn) "admin") [
     
-    player1 = $arg1
-    player2 = $arg2
-    game_mo = $arg3
-    gamemap = $arg4
-
+    global player1 $player1
+    global player2 $player2
+    global game_mo $game_mo
+    global gamemap $gamemap
+    global player1con (player_sessionid $player1)
+    global player2con (player_sessionid $player2)
+    
     if (strcmp $game_mo "insta") [game_mo = instagib]
     if (strcmp $game_mo "instateam") [game_mo = [instagib team]
             setteam $player1 linux
@@ -18,9 +20,6 @@ global playercmd_1on1 (func [cn arg1 arg2 arg3 arg4] [
     if (strcmp $game_mo "ictf") [game_mo = [insta ctf] ]
     if (strcmp $game_mo "icapture" ) [game_mo = [insta capture] ]
 
-    player1con = (player_sessionid $player1)
-    player2con = (player_sessionid $player2)
-    
     log (format "%1 %2 %3 %4 %5 %6" [MATCH:] (player_name $player2) versus (player_name $player1) on $gamemap )
     
     mastermode 2

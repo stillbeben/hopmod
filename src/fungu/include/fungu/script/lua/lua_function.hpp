@@ -25,8 +25,8 @@ public:
     lua_function(lua_State *,int index, const char * name);
     lua_function(lua_State *); //function at top of stack
     ~lua_function();
-    result_type apply(apply_arguments & args,env::frame * aFrame);
-    int apply(lua_State * L);
+    result_type call(call_arguments & args,env::frame * aFrame);
+    int call(lua_State * L);
     const source_context * get_source_context()const;
 private:
     void set_location(lua_State *);

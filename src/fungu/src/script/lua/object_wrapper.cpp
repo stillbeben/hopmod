@@ -17,7 +17,7 @@ namespace detail{
 int object_wrapper(lua_State * L)
 {
     env::object * obj = reinterpret_cast<env::object *>(lua_touserdata(L, lua_upvalueindex(1)));
-    return obj->apply(L);
+    return obj->call(L);
 }
 
 } //namespace detail

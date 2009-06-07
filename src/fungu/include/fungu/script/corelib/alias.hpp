@@ -13,6 +13,7 @@ namespace script{
 namespace corelib{
 
 void register_alias_functions(env &);
+void unload_alias_functions(env &);
 
 } //namespace corelib
 } //namespace script

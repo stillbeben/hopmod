@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
 #include "fungu/script/function.hpp"
 #include "fungu/script/variable.hpp"
@@ -30,25 +34,25 @@ inline int listlen(const std::vector<const_string> & v)
     return static_cast<int>(v.size());
 }
 
-result_type foreach_member(env::object::apply_arguments & args,env::frame * frame)
+result_type foreach_member(env::object::call_arguments & args,env::frame * frame)
 {
     env::object::shared_ptr obj = any_cast<env::object::shared_ptr>(args.front());
     args.pop_front();
     
     call_serializer cs(args,frame);
-    code_block cb = cs.deserialize(args.front(), target_tag<code_block>());
+    code_block cb = cs.deserialize(args.front(), type_tag<code_block>());
     args.pop_front();
     
     env::frame inner_frame(frame);
     
     const_string name_arg;
     managed_variable<const_string> name_arg_var(name_arg);
-    name_arg_var.set_temporary_flag();
+    name_arg_var.set_temporary();
     name_arg_var.lock_write(true);
     inner_frame.bind_object(&name_arg_var, FUNGU_OBJECT_ID("arg1"));
     
     any_variable value_arg;
-    value_arg.set_temporary_flag();
+    value_arg.set_temporary();
     inner_frame.bind_object(&value_arg, FUNGU_OBJECT_ID("arg2"));
     
     env::object::member_iterator * curmem = obj->first_member();
@@ -70,7 +74,7 @@ result_type foreach_member(env::object::apply_arguments & args,env::frame * fram
     return result;
 }
 
-inline result_type foreach(env::object::apply_arguments & args,env::frame * frame)
+result_type foreach(const_string varname, env::object::call_arguments & args,env::frame * frame)
 {
     if(args.size() < 2) throw error(NOT_ENOUGH_ARGUMENTS,boost::make_tuple(2));
     
@@ -79,10 +83,10 @@ inline result_type foreach(env::object::apply_arguments & args,env::frame * fram
     
     call_serializer cs(args,frame);
     
-    std::vector<const_string> v = cs.deserialize(args.front(), target_tag<std::vector<const_string> >());
+    std::vector<const_string> v = cs.deserialize(args.front(), type_tag<std::vector<const_string> >());
     args.pop_front();
     
-    code_block cb = cs.deserialize(args.front(), target_tag<code_block>());
+    code_block cb = cs.deserialize(args.front(), type_tag<code_block>());
     args.pop_front();
     
     result_type result;
@@ -91,10 +95,10 @@ inline result_type foreach(env::object::apply_arguments & args,env::frame * fram
     
     const_string current_arg;
     managed_variable<const_string> current_arg_var(current_arg);
-    current_arg_var.set_temporary_flag();
+    current_arg_var.set_temporary();
     current_arg_var.lock_write(true);
     
-    inner_frame.bind_object(&current_arg_var, FUNGU_OBJECT_ID("arg1"));
+    inner_frame.bind_object(&current_arg_var, varname);
     
     for(std::vector<const_string>::const_iterator it = v.begin();
          it != v.end(); it++)
@@ -104,6 +108,20 @@ inline result_type foreach(env::object::apply_arguments & args,env::frame * fram
     }
     
     return result;
+}
+
+inline result_type looplist(env::object::call_arguments & args, env::frame * frame)
+{
+    const_string varname = args.safe_casted_front<const_string>();
+    args.pop_front();
+    return foreach(varname, args, frame);
+}
+
+bool is_member_of(const_string member, const std::vector<const_string> & v)
+{
+    for(std::vector<const_string>::const_iterator it = v.begin();
+        it != v.end(); ++it) if( *it == member ) return true;
+    return false;
 }
 
 } //namespace detail
@@ -116,8 +134,14 @@ void register_vector_functions(env & environment)
     static function<int (const std::vector<const_string> &)> listlen_func(detail::listlen);
     environment.bind_global_object(&listlen_func, FUNGU_OBJECT_ID("listlen"));
     
-    static function<raw_function_type> foreach_func(detail::foreach);
+    static function<raw_function_type> foreach_func(boost::bind(detail::foreach,FUNGU_OBJECT_ID("arg1"),_1,_2));
     environment.bind_global_object(&foreach_func, FUNGU_OBJECT_ID("foreach"));
+    
+    static function<raw_function_type> looplist_func(detail::looplist);
+    environment.bind_global_object(&looplist_func, FUNGU_OBJECT_ID("looplist"));
+    
+    static function<bool (const_string, const std::vector<const_string> &)> is_member_of_func(detail::is_member_of);
+    environment.bind_global_object(&is_member_of_func, FUNGU_OBJECT_ID("member?"));
 }
 
 } //namespace corelib

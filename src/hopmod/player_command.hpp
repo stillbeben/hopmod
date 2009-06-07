@@ -6,7 +6,7 @@
 #include <string>
 
 std::vector<std::string> parse_player_command_line(const char *);
-bool eval_player_command(int,const char *,const std::vector<std::string> &,fungu::script::env::frame *);
+bool eval_player_command(int,const char *,const std::vector<std::string> &,fungu::script::env &);
 bool process_player_command(int,const char *);
 
 #endif

@@ -6,6 +6,10 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "fungu/script/pch.hpp"
+#endif
+
 #include "fungu/script/env.hpp"
 
 #include "fungu/script/corelib/anonymous_function.hpp"
@@ -13,7 +17,6 @@
 #include "fungu/script/function.hpp"
 #include "fungu/script/code_block.hpp"
 #include "fungu/script/parse_array.hpp"
-#include "fungu/script/varg_setter.hpp"
 #include "fungu/script/any_variable.hpp"
 
 namespace fungu{
@@ -26,91 +29,67 @@ class anonymous_function:public env::object
 {
 public:
     anonymous_function(const std::vector<const_string> & params, const_string code, frame * aFrame)
-     :m_first_param(NULL), 
-      m_last_param(NULL),
-      m_code(code, aFrame->get_env()->get_source_context()),
+     :m_code(code, aFrame->get_env()->get_source_context()),
       m_recursion_depth(0)
     {
         m_code.compile(aFrame);
-        m_closure = get_closure(aFrame);
         
-        m_last_param = m_closure->get_last_bind();
-        for(int i = params.size() - 1; i >= 0; i--)
-        {
-            m_closure->bind_object(new any_variable, params[i].copy()).adopt_object();
-            m_first_param = m_closure->get_last_bind();
-        }
+        m_params.reserve(params.size());
+        for(std::vector<const_string>::const_iterator it = params.begin(); it != params.end(); ++it)
+            m_params.push_back(aFrame->get_env()->create_symbol(*it));
         
-        any_variable * callee_var = new any_variable;
-        callee_var->assign(get_shared_ptr());
-        m_closure->bind_object(callee_var,FUNGU_OBJECT_ID("callee")).adopt_object();
-        
-        m_closure->detach_bindings_from_env();
+        m_callee_symbol = aFrame->get_env()->create_symbol(FUNGU_OBJECT_ID("callee"));
     }
     
     ~anonymous_function()
     {
-        env::closure_frame::delete_(m_closure);
+        
     }
     
-    result_type apply(apply_arguments & args,frame * aFrame)
+    result_type call(call_arguments & callargs, frame * aFrame)
     {
-        #define ANONYMOUS_FUNCTION_APPLY_CLEANUP \
-            m_closure->detach_bindings_from_env(); \
-            m_closure->unset_return(); \
-            m_recursion_depth--;
+        if(++m_recursion_depth > env::recursion_limit)
+            throw error(HIT_RECURSION_LIMIT,boost::make_tuple(env::recursion_limit));
         
-        //initialisation
-        if(++m_recursion_depth == 1) m_closure->attach_bindings_to_env();
-        else if(m_recursion_depth > aFrame->get_env()->get_recursion_limit())
-            throw error(HIT_RECURSION_LIMIT,boost::make_tuple(aFrame->get_env()->get_recursion_limit()));
+        if(callargs.size() < m_params.size()) throw error(NOT_ENOUGH_ARGUMENTS);
         
-        //mapping arguments to parameters
-        for( env::frame::frame_symbol * param = m_first_param; 
-             param && param != m_last_param; param = param->get_next_sibling())
+        frame func_frame(aFrame->get_env());
+        
+        func_frame.bind_object(get_shared_ptr().get(), m_callee_symbol);
+        
+        std::vector<any_variable> arg(m_params.size());
+        
+        std::vector<any_variable>::iterator argIt = arg.begin();
+        std::vector<env::symbol *>::iterator paramIt = m_params.begin();
+        
+        for(; paramIt != m_params.end(); ++argIt, ++paramIt)
         {
-            if(args.empty())
-            {
-                ANONYMOUS_FUNCTION_APPLY_CLEANUP;
-                throw error(NOT_ENOUGH_ARGUMENTS);
-            }
-            static_cast<any_variable *>(param->get_object())->assign(args.front());
-            args.pop_front();
+            (*argIt).set_temporary();
+            (*argIt).assign(callargs.front());
+            
+            func_frame.bind_object(&(*argIt), *paramIt);
+            
+            callargs.pop_front();
         }
         
-        //run instructions
-        result_type result;
         try
         {
-            code_block::iterator instruction = m_code.begin();
-            for(; instruction != m_code.end() && !m_closure->has_expired(); ++instruction)
-            {
-                result = instruction->eval(m_closure);
-            }
+            result_type result = m_code.eval_each_expression(&func_frame);
+            m_recursion_depth--;
+            return result;
         }
-        catch(error_exception)
+        catch(...)
         {
-            ANONYMOUS_FUNCTION_APPLY_CLEANUP;
+            m_recursion_depth--;
             throw;
         }
-        catch(error_exception *)
-        {
-            ANONYMOUS_FUNCTION_APPLY_CLEANUP;
-            throw;
-        }
-        
-        if(!m_closure->get_result_value().empty())
-            result = m_closure->get_result_value();
-        
-        ANONYMOUS_FUNCTION_APPLY_CLEANUP;
-        
-        return result;
     }
     
+    //TODO REMOVE
     #ifdef FUNGU_WITH_LUA
-    int apply(lua_State * L)
+    int call(lua_State * L)
     {
-        apply_arguments args;
+        std::vector<any> args;
         int nargs = lua_gettop(L);
         for(int i = 1; i <= nargs; i++)
         {
@@ -119,11 +98,13 @@ public:
             args.push_back(const_string(argi,argi+len-1));
         }
         
-        lua_getfield(L, LUA_REGISTRYINDEX, "fungu_script_global_frame");
-        env::frame * aFrame = reinterpret_cast<env::frame *>(lua_touserdata(L, -1));
-        if(!aFrame) return luaL_error(L, "missing 'fungu_script_global_frame' field in registry");
+        lua_getfield(L, LUA_REGISTRYINDEX, "fungu_script_env");
+        env * environment = reinterpret_cast<env *>(lua_touserdata(L, -1));
+        if(!environment) return luaL_error(L, "missing 'fungu_script_env' field in lua registry");
         
-        result_type result = apply(args,aFrame);
+        env::frame callframe(environment);
+        call_arguments callargs(args);
+        result_type result = call(callargs, &callframe);
         if(result.empty()) return 0;
         else
         {
@@ -143,7 +124,7 @@ public:
         return m_code.get_source_context();
     }
     
-    static result_type define_anonymous_function(apply_arguments & args, frame * aFrame)
+    static result_type define_anonymous_function(call_arguments & args, frame * aFrame)
     {
         std::vector<const_string> params;
         parse_array<std::vector<const_string>,true>(
@@ -158,24 +139,17 @@ public:
         {
             func_obj = new anonymous_function(params, code, aFrame);
         }
-        catch(error_info *){delete func_obj; throw;}
+        catch(error_trace *){delete func_obj; throw;}
         catch(error_exception){delete func_obj; throw;}
         
-        func_obj->set_adopted_flag();
+        func_obj->set_adopted();
         return func_obj->get_shared_ptr();
     }
 private:
-    env::closure_frame * get_closure(frame * aFrame)
-    {
-        if(aFrame->get_closure_refcount()) return env::closure_frame::new_inner(aFrame);
-        else return env::closure_frame::new_(aFrame->get_env());
-    }
-    
-    env::closure_frame * m_closure;
-    env::frame::frame_symbol * m_first_param;
-    env::frame::frame_symbol * m_last_param;
     code_block m_code;
+    std::vector<env::symbol *> m_params;
     int m_recursion_depth;
+    env::symbol * m_callee_symbol;
 };
 
 } //namespace detail

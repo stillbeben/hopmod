@@ -14,7 +14,7 @@ namespace script{
 /**
     
 */
-int execute_file(const char * filename, env::frame * aFrame);
+int execute_file(const char * filename, env &);
 
 void throw_if_error(int errcode);
     
