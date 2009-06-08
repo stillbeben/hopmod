@@ -16,15 +16,15 @@ global auth_db_filename "log/auth.sqlite"
 
 global record_player_stats 1
 global stats_db_filename "log/stats.sqlite"
-global stats_use_auth 1
-global stats_auth_domain "player.hop.servegame.org"
+global stats_use_auth 0
+global stats_auth_domain ""
 global stats_tell_auth_name 1
 global stats_debug 0
 global stats_use_sqlite 1
 global stats_use_json 0
 
-global use_name_reservation 1
-global name_reservation_domain "player.hop.servegame.org"
+global use_name_reservation 0
+global name_reservation_domain ""
 global reserved_name_expire (mins 3600)
 
 global use_server_maprotation 1
