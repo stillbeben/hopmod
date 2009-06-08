@@ -27,6 +27,7 @@ local auth_request = {}
 
 auth_domain_handlers = {}
 auth = {}
+auth.authserver_offline = false;
 
 server.event_handler("authreq", function(cn,name,domain)
     
@@ -50,6 +51,9 @@ server.event_handler("authreq", function(cn,name,domain)
         
         if not server.delegateauth(cn) then
             auth_request[req_id] = nil
+            auth.authserver_offline = true
+        else
+            auth.authserver_offline = false
         end
 
     else
@@ -84,6 +88,9 @@ server.event_handler("authrep", function(cn, answer)
     if req.delegated then
         if not server.relayauthanswer(cn, answer) then
             auth_request[req_id] = nil
+            auth.authserver_offline = true
+        else
+            auth.authserver_offline = false
         end
         return
     end

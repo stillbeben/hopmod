@@ -82,7 +82,8 @@ int run_lua_code(script::env::object::shared_ptr func,script::env * e)
     }
     catch(script::error err)
     {
-        report_script_error(new script::error_trace(err,const_string(),e->get_source_context()->clone()));
+        script::source_context * ctx = (e->get_source_context() ? e->get_source_context()->clone() : NULL);
+        report_script_error(new script::error_trace(err,const_string(), ctx));
         return -1;
     }
     catch(script::error_trace * errinfo)

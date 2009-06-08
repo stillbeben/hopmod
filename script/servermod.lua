@@ -125,6 +125,8 @@ server.event_handler("started", function()
     
     dofile("./script/db/stats.lua")
     
+    dofile("./script/db/nameprotect.lua")
+    
     if tonumber(server.use_script_socket_server) == 1 then
         if not server["script_socket_supported?"]() then
             server.log_status("Cannot run script_socket server as it's not supported (couldn't detect libmicrohttpd as being installed at build time).")
