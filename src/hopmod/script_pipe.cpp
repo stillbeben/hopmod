@@ -25,7 +25,7 @@ static bool pending_close = false;
 
 void init_script_pipe()
 {
-    signal_shutdown.connect(close_script_pipe,boost::signals::at_front);
+    signal_shutdown.connect(&close_script_pipe,boost::signals::at_front);
 }
 
 bool open_script_pipe(const char * filename, int mode, script::env & server_env)

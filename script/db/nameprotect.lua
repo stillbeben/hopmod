@@ -9,8 +9,6 @@ end
 
 auth.add_domain_handler(domain_name, function(cn, name)
 
-    if tonumber(server.use_name_reservation) == 0 then return end
-
     if name ~= server.player_name(cn) then
         server.player_msg(cn, string.format("You authenticated as %s but the server was expecting you to auth as %s", green(name), green(server.player_name(cn))))
         return
@@ -34,8 +32,6 @@ end
 
 local function checkPlayerName(cn)
 
-    if tonumber(server.use_name_reservation) == 0 then return end
-    
     if auth.found_name(server.player_name(cn), domain_id) and not isPlayerVerified(cn) then
     
         server.sendauthreq(cn, domain_name)

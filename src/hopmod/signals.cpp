@@ -98,7 +98,7 @@ void register_signals(script::env & env)
 {
     ::env = &env;
     
-    signal_shutdown.connect(cleanup, boost::signals::at_front);
+    signal_shutdown.connect(&cleanup, boost::signals::at_front);
     
     slots.register_signal(signal_started, "started", normal_error_handler);
     slots.register_signal(signal_shutdown,"shutdown",normal_error_handler, boost::signals::at_front);

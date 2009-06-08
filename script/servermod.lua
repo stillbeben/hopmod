@@ -125,7 +125,9 @@ server.event_handler("started", function()
     
     dofile("./script/db/stats.lua")
     
-    dofile("./script/db/nameprotect.lua")
+    if tonumber(server.use_name_reservation) == 1 then
+        dofile("./script/db/nameprotect.lua")
+    end
     
     if tonumber(server.use_script_socket_server) == 1 then
         if not server["script_socket_supported?"]() then
