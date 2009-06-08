@@ -7,7 +7,7 @@ local send_verified_msg = function(cn, name)
     server.msg(string.format("%s is verified.", green(name)))
 end
 
-auth_domain_handlers[domain_name] = function(cn, name)
+auth.add_domain_handler(domain_name, function(cn, name)
 
     if name ~= server.player_name(cn) then
         server.player_msg(cn, string.format("You authenticated as %s but the server was expecting you to auth as %s", green(name), green(server.player_name(cn))))
@@ -23,7 +23,7 @@ auth_domain_handlers[domain_name] = function(cn, name)
     pvars.reserved_name_expire = tonumber(server.uptime) + tonumber(server.reserved_name_expire)
     
     send_verified_msg(cn, name)
-end
+end)
 
 local function isPlayerVerified(cn)
     local pvars = server.player_pvars(cn)

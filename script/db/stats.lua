@@ -248,11 +248,11 @@ local function installHandlers()
         domain_id = domId
         domain_name = server.stats_auth_domain
         
-        auth_domain_handlers[domain_name] = function(cn, name)
+        auth.add_domain_handler(domain_name, function(cn, name)
             local vars = server.player_vars(cn)
             vars.stats_auth_name = name
             t.auth_name = name
-        end
+        end)
     end
     
 end

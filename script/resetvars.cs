@@ -22,7 +22,7 @@ global stats_debug 0
 global stats_use_sqlite 1
 global stats_use_json 0
 
-global use_name_reservation 0
+global use_name_reservation 1
 global name_reservation_domain "player.hop.servegame.org"
 global reserved_name_expire (mins 3600)
 

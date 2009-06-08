@@ -103,6 +103,17 @@ server.event_handler("authrep", function(cn, answer)
 
 end)
 
+local function dispatchHandlers(domain, cn, name)
+
+    local handlers = auth_domain_handlers[domain]
+    if handlers then
+        for i, handler in ipairs(handlers) do
+            handler(cn, name)
+        end
+    end
+    
+end
+
 server.event_handler("auth", function(cn, name, domain, success)
     
     local req_id = server.player_authreq(cn)
@@ -115,10 +126,8 @@ server.event_handler("auth", function(cn, name, domain, success)
     if tonumber(success) == 1 then
         if req.domain then
             
-            local handler = auth_domain_handlers[req.domain]
-            if handler then
-                handler(cn, name)
-            end
+            dispatchHandlers(req.domain, cn, name)
+            
         else
             if server.player_priv_code(cn) == 0 and tonumber(server.master) == -1 then
                 server.msg(string.format("%s claimed master as '%s'",server.player_name(cn),magenta(name)))
@@ -181,5 +190,17 @@ function auth.load_users()
         end)
     end)
 end
-
 server.load_users = auth.load_users
+
+function auth.add_domain_handler(domain, handler)
+    
+    local handlers = auth_domain_handlers[domain]
+    
+    if handlers then
+        handlers[#handlers+1] = handler
+    else
+        auth_domain_handlers[domain] = {}
+        auth_domain_handlers[domain][1] = handler
+    end
+    
+end
