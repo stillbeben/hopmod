@@ -54,10 +54,10 @@ server.event_handler("mapchange", function()
 end)
 
 function server.player_vars(cn)
-    local tab = gamevars[server.player_id(cn)]
+    local tab = gamevars[server.player_sessionid(cn)]
     if not tab then
         tab = {}
-        gamevars[server.player_id(cn)] = tab
+        gamevars[server.player_sessionid(cn)] = tab
     end
     return tab
 end
