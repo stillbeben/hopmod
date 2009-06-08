@@ -204,4 +204,19 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void (int,const char *)>(server::sendauthchallenge, FUNGU_OBJECT_ID("sendauthchallenge"), env);
     script::bind_global_func<void (int)> (server::signal_auth_success, FUNGU_OBJECT_ID("signal_auth_success"), env);
     script::bind_global_func<void (int)> (server::signal_auth_failure, FUNGU_OBJECT_ID("signal_auth_failure"), env);
+    
+    script::bind_global_func<std::string (int, const std::string &)>(concol, FUNGU_OBJECT_ID("concol"), env);
+    script::bind_global_func<std::string (const std::string &)>(green, FUNGU_OBJECT_ID("green"), env);
+    script::bind_global_func<std::string (const std::string &)>(info, FUNGU_OBJECT_ID("info"), env);
+    script::bind_global_func<std::string (const std::string &)>(err, FUNGU_OBJECT_ID("err"), env);
+    script::bind_global_func<std::string (const std::string &)>(grey, FUNGU_OBJECT_ID("grey"), env);
+    script::bind_global_func<std::string (const std::string &)>(magenta, FUNGU_OBJECT_ID("magenta"), env);
+    script::bind_global_func<std::string (const std::string &)>(orange, FUNGU_OBJECT_ID("orange"), env);
+    script::bind_global_func<std::string (const std::string &)>(gameplay, FUNGU_OBJECT_ID("gameplay"), env);
+    script::bind_global_func<std::string (const std::string &)>(red, FUNGU_OBJECT_ID("red"), env);
+    script::bind_global_func<std::string (const std::string &)>(blue, FUNGU_OBJECT_ID("blue"), env);
+    script::bind_global_func<std::string (const std::string &)>(yellow, FUNGU_OBJECT_ID("yellow"), env);
+    
+    script::bind_global_func<int (int)>(mins, FUNGU_OBJECT_ID("mins"), env);
+    script::bind_global_func<int (int)>(secs, FUNGU_OBJECT_ID("secs"), env);
 }
