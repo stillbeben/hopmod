@@ -107,11 +107,16 @@ function statsmod.commitStats()
     local cpu_start = os.clock()
     local real_start = os.time()
     
-    for i,cn in ipairs(server.players()) do 
+    for i,cn in ipairs(server.players()) do
+    
         local t = statsmod.updatePlayer(cn)
         if t.playing then t.finished = true end
         t.win = server.player_win(cn)
         t.rank = server.player_rank(cn)
+        
+        if domain_name and tonumber(server.stats_tell_auth_name) == 1 then
+            server.player_msg(cn, string.format("Saving your stats as %s@%s", t.auth_name, domain_name))
+        end
     end
 
     for i,cn in ipairs(server.bots()) do
@@ -251,6 +256,8 @@ local function installHandlers()
         auth.add_domain_handler(domain_name, function(cn, name)
             local vars = server.player_vars(cn)
             vars.stats_auth_name = name
+            
+            local t = statsmod.getPlayerTable(server.player_id(cn))
             t.auth_name = name
         end)
     end
