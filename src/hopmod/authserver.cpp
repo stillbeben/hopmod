@@ -52,6 +52,15 @@ void adduser(const char *name, const char * domain, const char *pubkey)
     }
 }
 
+void deleteuser(const char * name,const char * domain)
+{
+    char * namecopy = newstring(name);
+    char * domaincopy = newstring(domain);
+    
+    users.remove(namecopy);
+    if(domain && domain[0]) domains[domaincopy].remove(namecopy);
+}
+
 void clearusers()
 {
     enumerate(users, userinfo, u, { delete[] u.name; delete [] u.domain; freepubkey(u.pubkey); });
@@ -266,6 +275,9 @@ void conoutf(int type, const char *fmt, ...)
     va_end(args);
 }
 
+void log_status(const char * msg){std::cout<<msg<<std::endl;}
+void log_error(const char * msg){std::cout<<msg<<std::endl;}
+
 void purgeclient(int n)
 {
     client &c = *clients[n];
@@ -359,13 +371,8 @@ void reqauth(client &c, uint id, char *name, char * domain)
         hashtable<char *, userinfo *> * d = domains.access(domain);
         if(!d)
         {
-            signal_load_user(name, domain);
-            d = domains.access(domain);
-            if(!d)
-            {
-                delegate_reqauth(c, id, name, domain);
-                return;
-            }
+            delegate_reqauth(c, id, name, domain);
+            return;
         }
         
         u = *(d->access(name));
@@ -380,16 +387,11 @@ void reqauth(client &c, uint id, char *name, char * domain)
         u = users.access(name);
         if(!u)
         {
-            signal_load_user(name, domain ? domain : "");
-            u = users.access(name);
-            if(!u)
-            {
-                delegate_reqauth(c, id, name, domain);
-                return;
-            }
+            delegate_reqauth(c, id, name, domain);
+            return;
         }
     }
-
+    
     if(c.authreqs.length() >= AUTH_LIMIT)
     {
         outputf(c, "failauth %u\n", c.authreqs[0].id);
@@ -405,7 +407,7 @@ void reqauth(client &c, uint id, char *name, char * domain)
     static vector<char> buf;
     buf.setsizenodelete(0);
     a.answer = genchallenge(u->pubkey, seed, sizeof(seed), buf);
-
+    
     outputf(c, "chalauth %u %s\n", id, buf.getbuf());
 }
 
@@ -615,7 +617,11 @@ int main(int argc, char **argv)
     script::bind_global_var<int>(rootserver_port, FUNGU_OBJECT_ID("rootserver_port"), e);
     
     script::bind_global_func<void (const char *,const char *,const char *)>(adduser, FUNGU_OBJECT_ID("adduser"), e);
+    script::bind_global_func<void (const char *,const char *)>(deleteuser, FUNGU_OBJECT_ID("deleteuser"), e);
     script::bind_global_func<void ()>(clearusers, FUNGU_OBJECT_ID("clearusers"), e);
+    
+    script::bind_global_func<void (const char *)>(log_status, FUNGU_OBJECT_ID("log"), e);
+    script::bind_global_func<void (const char *)>(log_error, FUNGU_OBJECT_ID("logerror"), e);
     
     register_signals(e);
     
@@ -632,6 +638,8 @@ int main(int argc, char **argv)
     }
     
     setupserver(port, (ip[0] ? ip : NULL));
+    
+    signal_started();
     
     for(;;)
     {

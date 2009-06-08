@@ -2008,7 +2008,7 @@ namespace server
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, "", id, val);
+        sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, (ci->authdomain ? ci->authdomain : ""), id, val);
     }
 
     uint nextauthreq = 0;

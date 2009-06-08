@@ -47,7 +47,6 @@ boost::signal<void (int)> signal_mapcrcfail;
 boost::signal<void (const char *,const char *)> signal_votepassed;
 
 boost::signal<void ()> signal_rootserver_failedconnect;
-boost::signal<void (const char *,const char *)> signal_load_user;
 
 static script::any proceed_error_handler(script::error_trace * errinfo)
 {
@@ -140,7 +139,6 @@ void register_signals(script::env & env)
     slots.register_signal(signal_votepassed, "votepassed", normal_error_handler);
 
     slots.register_signal(signal_rootserver_failedconnect, "failedrootconnect", normal_error_handler);
-    slots.register_signal(signal_load_user, "loaduser", normal_error_handler);
 
     script::bind_global_func<int (const std::string &,script::any)>(cubescript_event_handler_function, FUNGU_OBJECT_ID("event_handler"), env);
     script::bind_global_func<void (int)>(destroy_slot, FUNGU_OBJECT_ID("cancel_handler"), env);
@@ -194,5 +192,4 @@ void disconnect_all_slots()
     signal_votepassed.disconnect_all_slots();
     
     signal_rootserver_failedconnect.disconnect_all_slots();
-    signal_load_user.disconnect_all_slots();
 }

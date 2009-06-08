@@ -8,8 +8,14 @@ local perr
 local search_for_domain,perr = db:prepare("SELECT * FROM domains WHERE name = :name")
 if not search_for_domain then error(perr) end
 
+local select_local_domains, perr = db:prepare("SELECT * FROM domains WHERE local = 1")
+if not select_local_domains then error(perr) end
+
 local search_for_user, perr = db:prepare("SELECT * FROM users WHERE domain_id = :domain_id and name = :name")
 if not search_for_user then error(perr) end
+
+local select_domain_users, perr = db:prepare("SELECT * FROM users WHERE domain_id = :domain_id")
+if not select_domain_users then error(perr) end
 
 local insert_user, perr = db:prepare("INSERT INTO users (domain_id, name, pubkey) VALUES (:domain_id,:name,:pubkey)")
 if not insert_user then error(perr) end
@@ -147,3 +153,26 @@ function auth.add_domain(name, islocal)
     insert_domain:exec()
     return db:last_insert_rowid()
 end
+
+function auth.enumerate_local_domains(enumerator)
+    for row in select_local_domains:rows() do
+        enumerator(row)
+    end
+end
+
+function auth.enumerate_domain_users(domain_id, enumerator)
+    select_domain_users:bind{domain_id = domain_id}
+    for row in select_domain_users:rows() do
+        enumerator(row)
+    end
+end
+
+function auth.load_users()
+    auth.enumerate_local_domains(function(domain)
+        auth.enumerate_domain_users(domain.id, function(user)
+            server.adduser(user.name, domain.name, user.pubkey)
+        end)
+    end)
+end
+
+server.load_users = auth.load_users

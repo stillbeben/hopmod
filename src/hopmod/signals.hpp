@@ -68,7 +68,6 @@ extern boost::signal<void ()> signal_reloadhopmod;
 
 #ifdef HOPMOD_AUTHSERVER_EVENTS
 extern boost::signal<void ()> signal_rootserver_failedconnect;
-extern boost::signal<void (const char *,const char *)> signal_load_user;
 #endif
 
 /**
