@@ -81,15 +81,22 @@ function statsmod.updatePlayer(cn)
 end
 
 function statsmod.addPlayer(cn)
+
+    local t = statsmod.updatePlayer(cn)
+    t.playing = true
     
     local human = not server.player_isbot(cn)
     
     if human and domain_id then
-        server.sendauthreq(cn, domain_name)
+        
+        local vars = server.player_vars(cn)
+        if vars.stats_auth_name then
+            t.auth_name = vars.stats_auth_name
+        else
+            server.sendauthreq(cn, domain_name)
+        end
     end
     
-    local t = statsmod.updatePlayer(cn)
-    t.playing = true
     return t
 end
 
@@ -242,8 +249,8 @@ local function installHandlers()
         domain_name = server.stats_auth_domain
         
         auth_domain_handlers[domain_name] = function(cn, name)
-            local pvars = server.player_pvars(cn)
-            pvars.stats_auth_name = name            
+            local vars = server.player_vars(cn)
+            vars.stats_auth_name = name
             t.auth_name = name
         end
     end
