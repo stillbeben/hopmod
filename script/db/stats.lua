@@ -89,11 +89,14 @@ function statsmod.addPlayer(cn)
     
     if human and domain_id then
         
-        local vars = server.player_pvars(cn)
-        if vars.stats_auth_name then
-            t.auth_name = vars.stats_auth_name
+        local pvars = server.player_pvars(cn)
+
+        if pvars.stats_auth_name then
+            t.auth_name = pvars.stats_auth_name
         else
-            server.sendauthreq(cn, domain_name)
+            
+            auth.sendauthreq(cn, domain_name)
+            
         end
     end
     
@@ -237,8 +240,17 @@ local function installHandlers()
     
     local finishedgame = server.event_handler("finishedgame", statsmod.commitStats)
     local mapchange = server.event_handler("mapchange", statsmod.setNewGame)
-    local _rename = server.event_handler("rename", statsmod.addPlayer)
-    local renaming = server.event_handler("renaming", function(cn) statsmod.updatePlayer(cn).playing = false end)
+    
+    local _rename = server.event_handler("rename", function(cn)
+    
+        server.player_pvars(cn).stats_auth_name = server.player_vars(cn).stats_auth_name
+        statsmod.addPlayer(cn)
+        
+    end)
+    
+    local renaming = server.event_handler("renaming", function(cn) 
+        statsmod.updatePlayer(cn).playing = false
+    end)
     
     table.insert(evthandlers, connect)
     table.insert(evthandlers, disconnect)
@@ -258,8 +270,9 @@ local function installHandlers()
         domain_name = server.stats_auth_domain
         
         auth.add_domain_handler(domain_name, function(cn, name)
-            local vars = server.player_pvars(cn)
-            vars.stats_auth_name = name
+        
+            server.player_pvars(cn).stats_auth_name = name
+            server.player_vars(cn).stats_auth_name = name
             
             local t = statsmod.getPlayerTable(server.player_id(cn))
             t.auth_name = name

@@ -33,7 +33,7 @@ auth = {}
 auth.authserver_offline = false;
 
 server.event_handler("authreq", function(cn,name,domain)
-    
+ 
     local req_id = server.player_authreq(cn)
     auth_request[req_id] = {}
     local req = auth_request[req_id]
@@ -43,7 +43,8 @@ server.event_handler("authreq", function(cn,name,domain)
 
     req.name = name
     
-
+    req.player_sessid = server.player_sessionid(cn)
+    
     if row then
         req.domain = domain
         req.domain_id = row.domain_id
@@ -54,8 +55,10 @@ server.event_handler("authreq", function(cn,name,domain)
         req.delegated = true
         
         if not server.delegateauth(cn) then
-            auth_request[req_id] = nil
+            
+            auth.cleanup_request(cn, req_id)
             auth.authserver_offline = true
+            
         else
             auth.authserver_offline = false
         end
@@ -140,7 +143,7 @@ server.event_handler("auth", function(cn, id, name, domain, success)
         end
     end
     
-    auth_request[req_id] = nil
+    auth.cleanup_request(cn, req_id)
     
 end)
 
@@ -210,6 +213,38 @@ function auth.add_domain_handler(domain, handler)
     else
         auth_domain_handlers[domain] = {}
         auth_domain_handlers[domain][1] = handler
+    end
+    
+end
+
+function auth.has_request_pending(cn, domain_name)
+    
+    local sessid = server.player_sessionid(cn)
+
+    local vars = server.player_vars(cn)
+    if vars.authreq_domain and vars.authreq_domain == domain_name then
+        return true
+    end
+    
+    for id, req in pairs(auth_request) do
+        if req.sessid == sessid and req.domain_name == domain_name then 
+            return true
+        end
+    end
+    
+    return false
+end
+
+function auth.cleanup_request(cn, req_id)
+    server.player_vars(cn).authreq_domain = nil
+    auth_request[req_id] = nil
+end
+
+function auth.sendauthreq(cn, domain_name)
+
+    if not auth.has_request_pending(cn, domain_name) then
+        server.sendauthreq(cn, domain_name)
+        server.player_vars(cn).authreq_domain = domain_name -- not a full-proof way of detecting duplicates
     end
     
 end

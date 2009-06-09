@@ -13,17 +13,20 @@ auth.add_domain_handler(domain_name, function(cn, name)
     end
     
     local pvars = server.player_pvars(cn)
+    local vars = server.player_vars(cn)
     
     if pvars.nameprotect_wanted_authname and pvars.nameprotect_wanted_authname ~= name then
         server.player_msg(cn, string.format("You authenticated as %s but the server was expecting you to auth as %s", green(name), green(server.player_name(cn))))
         return
     end
-
-    pvars.stats_block = false
     
     pvars.name_verified = true
     pvars.reserved_name = name
     pvars.reserved_name_expire = tonumber(server.uptime) + tonumber(server.reserved_name_expire)
+    
+    vars.name_verified = true
+    vars.reserved_name = name
+    vars.reserved_name_expire = tonumber(server.uptime) + tonumber(server.reserved_name_expire)
     
 end)
 
@@ -33,12 +36,12 @@ local function isPlayerVerified(cn)
 end
 
 local function checkPlayerName(cn)
-
+    
     local playername = server.player_name(cn)
 
     if auth.found_name(playername, domain_id) and not isPlayerVerified(cn) then
     
-        server.sendauthreq(cn, domain_name)
+        auth.sendauthreq(cn, domain_name)
         
         local sid = server.player_sessionid(cn)
         local pid = server.player_id(cn)
@@ -62,4 +65,15 @@ local function checkPlayerName(cn)
 end
 
 server.event_handler("active", checkPlayerName)
-server.event_handler("rename", checkPlayerName)
+
+server.event_handler("rename", function(cn)
+
+    local pvars = server.player_pvars(cn)
+    local vars = server.player_vars(cn)
+    
+    pvars.name_verified = vars.name_verified
+    pvars.reserved_name = vars.reserved_name
+    pvars.reserved_name_expire = vars.reserved_name_expire
+
+    checkPlayerName(cn)
+end)
