@@ -4,10 +4,6 @@ local domain_id = auth.get_domain_id(domain_name)
 if not domain_id then error(string.format("name reservation failure: auth domain '%s' not found",domain_name)) end
 local is_local = auth.is_domain_local(domain_id)
 
-local send_verified_msg = function(cn, name)
-    server.msg(string.format("%s is verified.", green(name)))
-end
-
 auth.add_domain_handler(domain_name, function(cn, name)
     
     -- Add user from remote domain. For this situation to arise the same domain
@@ -16,20 +12,19 @@ auth.add_domain_handler(domain_name, function(cn, name)
         auth.add_user(name, "", domain_name)
     end
     
-    if name ~= server.player_name(cn) then
+    local pvars = server.player_pvars(cn)
+    
+    if pvars.nameprotect_wanted_authname and pvars.nameprotect_wanted_authname ~= name then
         server.player_msg(cn, string.format("You authenticated as %s but the server was expecting you to auth as %s", green(name), green(server.player_name(cn))))
         return
     end
 
-    local pvars = server.player_pvars(cn)
-    
     pvars.stats_block = false
     
     pvars.name_verified = true
     pvars.reserved_name = name
     pvars.reserved_name_expire = tonumber(server.uptime) + tonumber(server.reserved_name_expire)
     
-    send_verified_msg(cn, name)
 end)
 
 local function isPlayerVerified(cn)
@@ -39,7 +34,9 @@ end
 
 local function checkPlayerName(cn)
 
-    if auth.found_name(server.player_name(cn), domain_id) and not isPlayerVerified(cn) then
+    local playername = server.player_name(cn)
+
+    if auth.found_name(playername, domain_id) and not isPlayerVerified(cn) then
     
         server.sendauthreq(cn, domain_name)
         
@@ -47,6 +44,9 @@ local function checkPlayerName(cn)
         local pid = server.player_id(cn)
         
         server.player_msg(cn, "You are using a reserved name and have about 10 seconds to authenticate your player name.")
+        
+        local pvars = server.player_pvars(cn)
+        pvars.nameprotect_wanted_authname = playername
         
         server.sleep(13000, function()
             

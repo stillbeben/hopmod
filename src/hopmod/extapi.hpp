@@ -132,8 +132,8 @@ namespace server
     extern bool relayauthanswer(int,const char *);
     extern void sendauthchallenge(int,const char *);
     extern void sendauthreq(int, const char *);
-    extern void signal_auth_success(int);
-    extern void signal_auth_failure(int);
+    extern void signal_auth_success(int,int);
+    extern void signal_auth_failure(int,int);
     
     extern void authfailed(uint id);
     extern void authsucceeded(uint id);

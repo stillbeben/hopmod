@@ -43,6 +43,7 @@ server.event_handler("authreq", function(cn,name,domain)
 
     req.name = name
     
+
     if row then
         req.domain = domain
         req.domain_id = row.domain_id
@@ -58,7 +59,7 @@ server.event_handler("authreq", function(cn,name,domain)
         else
             auth.authserver_offline = false
         end
-
+        
     else
    
         req.delegated = false
@@ -67,7 +68,7 @@ server.event_handler("authreq", function(cn,name,domain)
         local row = search_for_user:first_row()
         
         if not row then
-            server.signal_auth_failure(cn)
+            server.signal_auth_failure(cn, req_id)
         else
         
             local ans,chal = server.genchallenge(row.pubkey)
@@ -79,13 +80,13 @@ server.event_handler("authreq", function(cn,name,domain)
     
 end)
 
-server.event_handler("authrep", function(cn, answer)
+server.event_handler("authrep", function(cn, reqid, answer)
 
-    local req_id = server.player_authreq(cn)
-    local req = auth_request[req_id]
+    reqid = tonumber(reqid)
+    local req = auth_request[reqid]
     
     if not req then
-        error("auth reply to non-existent request")
+        error("auth reply to non-existent request (id " .. tonumber(reqid) .. ")" )
     end
     
     if req.delegated then
@@ -99,9 +100,9 @@ server.event_handler("authrep", function(cn, answer)
     end
 
     if server.checkchallenge(answer, req.answer) then
-        server.signal_auth_success(cn)
+        server.signal_auth_success(cn, reqid)
     else
-        server.signal_auth_failure(cn)
+        server.signal_auth_failure(cn, reqid)
     end
 
 end)
@@ -117,9 +118,9 @@ local function dispatchHandlers(domain, cn, name)
     
 end
 
-server.event_handler("auth", function(cn, name, domain, success)
+server.event_handler("auth", function(cn, id, name, domain, success)
     
-    local req_id = server.player_authreq(cn)
+    local req_id = tonumber(id)
     local req = auth_request[req_id]
     
     if not req.delegated then

@@ -202,8 +202,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<bool (int,const char *)>(server::relayauthanswer, FUNGU_OBJECT_ID("relayauthanswer"), env);
     script::bind_global_func<void (int,const char *)>(server::sendauthreq, FUNGU_OBJECT_ID("sendauthreq"), env);
     script::bind_global_func<void (int,const char *)>(server::sendauthchallenge, FUNGU_OBJECT_ID("sendauthchallenge"), env);
-    script::bind_global_func<void (int)> (server::signal_auth_success, FUNGU_OBJECT_ID("signal_auth_success"), env);
-    script::bind_global_func<void (int)> (server::signal_auth_failure, FUNGU_OBJECT_ID("signal_auth_failure"), env);
+    script::bind_global_func<void (int,int)> (server::signal_auth_success, FUNGU_OBJECT_ID("signal_auth_success"), env);
+    script::bind_global_func<void (int,int)> (server::signal_auth_failure, FUNGU_OBJECT_ID("signal_auth_failure"), env);
     
     script::bind_global_func<std::string (int, const std::string &)>(concol, FUNGU_OBJECT_ID("concol"), env);
     script::bind_global_func<std::string (const std::string &)>(green, FUNGU_OBJECT_ID("green"), env);

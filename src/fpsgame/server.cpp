@@ -1992,7 +1992,7 @@ namespace server
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        signal_auth(ci->clientnum, ci->authname, ci->authdomain, false);
+        signal_auth(ci->clientnum, id, ci->authname, ci->authdomain, false);
         ci->authreq = 0;
     }
 
@@ -2000,7 +2000,7 @@ namespace server
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        signal_auth(ci->clientnum, ci->authname, ci->authdomain, true);
+        signal_auth(ci->clientnum, id, ci->authname, ci->authdomain, true);
         ci->authreq = 0;
     }
 
@@ -2026,13 +2026,13 @@ namespace server
 
     void answerchallenge(clientinfo *ci, uint id, char *val)
     {
-        if(ci->authreq != id) return;
+        //if(ci->authreq != id) return;
         for(char *s = val; *s; s++)
         {
             if(!isxdigit(*s)) { *s = '\0'; break; }
         }
         
-        signal_authrep(ci->clientnum, val);
+        signal_authrep(ci->clientnum, id, val);
     }
 
     void processmasterinput(const char *cmd, int cmdlen, const char *args)

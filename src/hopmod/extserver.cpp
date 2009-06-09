@@ -812,17 +812,17 @@ void sendauthreq(int cn, const char * domain)
     sendf(ci->clientnum, 1, "ris", SV_REQAUTH, domain);
 }
 
-void signal_auth_success(int cn)
+void signal_auth_success(int cn, int id)
 {
     clientinfo * ci = get_ci(cn);
-    signal_auth(ci->clientnum, ci->authname, ci->authdomain, true);
+    signal_auth(ci->clientnum, id, ci->authname, ci->authdomain, true);
     ci->authreq = 0;
 }
 
-void signal_auth_failure(int cn)
+void signal_auth_failure(int cn, int id)
 {
     clientinfo * ci = get_ci(cn);
-    signal_auth(ci->clientnum, ci->authname, ci->authdomain, false);
+    signal_auth(ci->clientnum, id, ci->authname, ci->authdomain, false);
     ci->authreq = 0;
 }
 
