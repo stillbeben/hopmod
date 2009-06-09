@@ -89,7 +89,7 @@ function statsmod.addPlayer(cn)
     
     if human and domain_id then
         
-        local vars = server.player_vars(cn)
+        local vars = server.player_pvars(cn)
         if vars.stats_auth_name then
             t.auth_name = vars.stats_auth_name
         else
@@ -216,7 +216,11 @@ end
 local function installHandlers()
 
     local connect = server.event_handler("active", statsmod.addPlayer)
-    local disconnect = server.event_handler("disconnect", function(cn) statsmod.updatePlayer(cn).playing = false end)
+    
+    local disconnect = server.event_handler("disconnect", function(cn) 
+        statsmod.updatePlayer(cn).playing = false
+        server.player_unsetpvar(cn,"stats_auth_name")
+    end)
     
     local addbot = server.event_handler("addbot", function(cn, skill, botcn)
         statsmod.addPlayer(botcn).botskill = skill
@@ -254,7 +258,7 @@ local function installHandlers()
         domain_name = server.stats_auth_domain
         
         auth.add_domain_handler(domain_name, function(cn, name)
-            local vars = server.player_vars(cn)
+            local vars = server.player_pvars(cn)
             vars.stats_auth_name = name
             
             local t = statsmod.getPlayerTable(server.player_id(cn))
@@ -354,6 +358,15 @@ function server.find_names_by_ip(ip, exclude_name)
         end
     end
     return names
+end
+
+function server.playercmd_showauth(cn)
+    local pvars = server.player_pvars(cn)
+    if pvars.stats_auth_name then
+        local playername = server.player_name(cn) .. " " .. magenta("(" .. tostring(cn) ..")")
+        local fullauthname = pvars.stats_auth_name .. "@" .. domain_name
+        server.msg(string.format("%s is verified as %s", playername, fullauthname))
+    end
 end
 
 if tonumber(server.stats_debug) == 1 then return statsmod end

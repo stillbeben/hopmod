@@ -63,10 +63,3 @@ end
 
 server.event_handler("active", checkPlayerName)
 server.event_handler("rename", checkPlayerName)
-
-function server.playercmd_showauth(cn)
-    local pvars = server.player_pvars(cn)
-    if pvars.name_verified and pvars.reserved_name == server.player_name(cn) then
-        send_verified_msg(cn, server.player_name(cn))
-    end
-end
