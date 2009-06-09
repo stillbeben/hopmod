@@ -2,13 +2,20 @@
 local domain_name = server.name_reservation_domain
 local domain_id = auth.get_domain_id(domain_name)
 if not domain_id then error(string.format("name reservation failure: auth domain '%s' not found",domain_name)) end
+local is_local = auth.is_domain_local(domain_id)
 
 local send_verified_msg = function(cn, name)
     server.msg(string.format("%s is verified.", green(name)))
 end
 
 auth.add_domain_handler(domain_name, function(cn, name)
-
+    
+    -- Add user from remote domain. For this situation to arise the same domain
+    -- has to be used by another system (i.e. stats auth) to send an auth request.
+    if not is_local and not auth.found_name(name, domain_id) then
+        auth.add_user(name, "", domain_name)
+    end
+    
     if name ~= server.player_name(cn) then
         server.player_msg(cn, string.format("You authenticated as %s but the server was expecting you to auth as %s", green(name), green(server.player_name(cn))))
         return

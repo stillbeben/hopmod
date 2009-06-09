@@ -11,6 +11,9 @@ if not search_for_domain then error(perr) end
 local select_local_domains, perr = db:prepare("SELECT * FROM domains WHERE local = 1")
 if not select_local_domains then error(perr) end
 
+local is_domain_local, perr = db:prepare("SELECT local FROM domains WHERE id = :domain_id")
+if not is_domain_local then error(perr) end
+
 local search_for_user, perr = db:prepare("SELECT * FROM users WHERE domain_id = :domain_id and name = :name")
 if not search_for_user then error(perr) end
 
@@ -145,6 +148,11 @@ function auth.get_domain_id(name)
     local row = search_for_domain:first_row()
     if not row then return end
     return row.id
+end
+
+function auth.is_domain_local(domain_id)
+    is_domain_local:bind{domain_id = domain_id}
+    return is_domain_local:first_row()["local"]
 end
 
 function auth.found_name(name,domain_id)
