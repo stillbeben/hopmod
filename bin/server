@@ -66,6 +66,11 @@ case "$1" in
     'script_tests')
         bin/lunit -i bin/luashell script/db/test/stats_testsuite.lua
 ;;
+    'status')
+        out=`tty`
+        execOnServer "printserverstatus [$out]"
+        sleep 1
+;;
     *)
         $0 start
 esac

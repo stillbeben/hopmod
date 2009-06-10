@@ -144,56 +144,136 @@ end
 
 server.system = os.execute
 
+function string.split(s, pattern)
+    local a = {}
+    for x in string.gmatch(s, pattern) do
+        a[#a+1] = x
+    end
+    return a
+end
+
+function tabulate(text)
+    
+    local output = ""
+    local cols = {}
+    local rows = text:split("[^\n]+")
+    
+    for i in ipairs(rows) do
+        
+        rows[i] = string.split(rows[i], "[%w%p/*]+")
+        
+        for i,col in ipairs(rows[i]) do
+            cols[i] = math.max(#col, cols[i] or 0)
+        end
+    end
+    
+    for i,row in ipairs(rows) do
+    
+        for i2, col in ipairs(row) do
+            output = output .. col .. string.rep(" ",(cols[i2] - #col)+1)
+        end
+        
+        output = output .. "\n"
+    end
+    
+    return output
+end
+
 function server.new_player_object(cn)
     return {
         cn = cn,
-        msg = function(obj, text) server.player_msg(obj.cn, text) end,
-        kick = function(obj) server.kick(obj.cn) end,
-        name = function(obj) server.player_name(obj.cn) end,
-        team = function(obj) server.player_team(obj.cn) end,
-        priv = function(obj) server.player_priv(obj.cn) end,
-        priv_code = function(obj) server.player_priv_code(obj.cn) end,
-        id = function(obj) server.player_id(obj.cn) end,
-        sessionid = function(obj) server.player_sessionid(obj.cn) end,
-        ping = function(obj) server.player_ping(obj.cn) end,
-        lag = function(obj) server.player_lag(obj.cn) end,
-        ip = function(obj) server.player_ip(obj.cn) end,
-        iplong = function(obj) server.player_iplong(obj.cn) end,
-        status = function(obj) server.player_status(obj.cn) end,
-        status_code = function(obj) server.player_status_code(obj.cn) end,
-        frags = function(obj) server.player_frags(obj.cn) end,
-        deaths = function(obj) server.player_deaths(obj.cn) end,
-        suicides = function(obj) server.player_suicides(obj.cn) end,
-        teamkills = function(obj) server.player_teamkills(obj.cn) end,
-        damage = function(obj) server.player_damage(obj.cn) end,
-        damagewasted = function(obj) server.player_damagewasted(obj.cn) end,
-        maxhealth = function(obj) server.player_maxhealth(obj.cn) end,
-        health = function(obj) server.player_health(obj.cn) end,
-        gun = function(obj) server.player_gun(obj.cn) end,
-        hits = function(obj) server.player_hits(obj.cn) end,
-        shots = function(obj) server.player_shots(obj.cn) end,
-        accuracy = function(obj) server.player_accuracy(obj.cn) end,
-        timeplayed = function(obj) server.player_timeplayed(obj.cn) end,
-        win = function(obj) server.player_win(obj.cn) end,
-        slay = function(obj) server.player_slay(obj.cn) end,
-        changeteam = function(obj,newteam) server.player_changeteam(obj.cn,newteam) end,
-        bots = function(obj) server.player_bots(obj.cn) end,
-        authreq = function(obj) server.player_authreq(obj.cn) end,
-        rank = function(obj) server.player_rank(obj.cn) end,
-        isbot = function(obj) server.player_isbot(obj.cn) end,
-        mapcrc = function(obj) server.player_mapcrc(obj.cn) end,
-        connection_time = function(obj) server.player_connection_time(obj.cn) end,
-        spec = function(obj) server.player_spec(obj.cn) end,
-        unspec = function(obj) server.player_unspec(obj.cn) end,
-        setadmin = function(obj) server.player_setadmin(obj.cn) end,
-        setmaster = function(obj) server.player_setmaster(obj.cn) end,
-        set_invadmin = function(obj) server.player_set_invadmin(obj.cn) end,
-        unset_invadmin = function(obj) server.player_unset_invadmin(obj.cn) end,
-        vars = function(obj) server.player_vars(obj.cn) end,
-        pvars = function(obj) server.player_pvars(obj.cn) end,
-        var = function(obj, name, value, defvalue) server.player_var(obj.cn, name, value, defvalue) end,
-        pvar = function(obj, name, value, defvalue) server.player_pvar(obj.cn, name, value, defvalue) end,
-        hasvar = function(obj, name) server.player_hasvar(obj.cn, name) end,
-        haspvar = function(obj, name) server.player_haspvar(obj.cn, name) end
+        msg = function(obj, text) return server.player_msg(obj.cn, text) end,
+        kick = function(obj) return server.kick(obj.cn) end,
+        name = function(obj) return server.player_name(obj.cn) end,
+        team = function(obj) return server.player_team(obj.cn) end,
+        priv = function(obj) return server.player_priv(obj.cn) end,
+        priv_code = function(obj) return server.player_priv_code(obj.cn) end,
+        id = function(obj) return server.player_id(obj.cn) end,
+        sessionid = function(obj) return server.player_sessionid(obj.cn) end,
+        ping = function(obj) return server.player_ping(obj.cn) end,
+        lag = function(obj) return server.player_lag(obj.cn) end,
+        ip = function(obj) return server.player_ip(obj.cn) end,
+        iplong = function(obj) return server.player_iplong(obj.cn) end,
+        status = function(obj) return server.player_status(obj.cn) end,
+        status_code = function(obj) return server.player_status_code(obj.cn) end,
+        frags = function(obj) return server.player_frags(obj.cn) end,
+        deaths = function(obj) return server.player_deaths(obj.cn) end,
+        suicides = function(obj) return server.player_suicides(obj.cn) end,
+        teamkills = function(obj) return server.player_teamkills(obj.cn) end,
+        damage = function(obj) return server.player_damage(obj.cn) end,
+        damagewasted = function(obj) return server.player_damagewasted(obj.cn) end,
+        maxhealth = function(obj) return server.player_maxhealth(obj.cn) end,
+        health = function(obj) return server.player_health(obj.cn) end,
+        gun = function(obj) return server.player_gun(obj.cn) end,
+        hits = function(obj) return server.player_hits(obj.cn) end,
+        shots = function(obj) return server.player_shots(obj.cn) end,
+        accuracy = function(obj) return server.player_accuracy(obj.cn) end,
+        timeplayed = function(obj) return server.player_timeplayed(obj.cn) end,
+        win = function(obj) return server.player_win(obj.cn) end,
+        slay = function(obj) return server.player_slay(obj.cn) end,
+        changeteam = function(obj,newteam) return server.player_changeteam(obj.cn,newteam) end,
+        bots = function(obj) return server.player_bots(obj.cn) end,
+        authreq = function(obj) return server.player_authreq(obj.cn) end,
+        rank = function(obj) return server.player_rank(obj.cn) end,
+        isbot = function(obj) return returnserver.player_isbot(obj.cn) end,
+        mapcrc = function(obj) return server.player_mapcrc(obj.cn) end,
+        connection_time = function(obj) return server.player_connection_time(obj.cn) end,
+        spec = function(obj) return server.player_spec(obj.cn) end,
+        unspec = function(obj) return server.player_unspec(obj.cn) end,
+        setadmin = function(obj) return server.player_setadmin(obj.cn) end,
+        setmaster = function(obj) return server.player_setmaster(obj.cn) end,
+        set_invadmin = function(obj) return server.player_set_invadmin(obj.cn) end,
+        unset_invadmin = function(obj) return server.player_unset_invadmin(obj.cn) end,
+        vars = function(obj) return server.player_vars(obj.cn) end,
+        pvars = function(obj) return server.player_pvars(obj.cn) end,
+        var = function(obj, name, value, defvalue) return server.player_var(obj.cn, name, value, defvalue) end,
+        pvar = function(obj, name, value, defvalue) return server.player_pvar(obj.cn, name, value, defvalue) end,
+        hasvar = function(obj, name) return server.player_hasvar(obj.cn, name) end,
+        haspvar = function(obj, name) return server.player_haspvar(obj.cn, name) end
     }
+end
+
+function server.printserverstatus(filename)
+
+    local out = io.open(filename, "a+")
+    
+    local status_rows = "PLAYERS MAP MODE MASTER HOST PORT DESCRIPTION\n"
+    local host = server.serverip
+    if #host == 0 then host="<ANY>" end
+    local mm = server.mastermode
+    local desc = server.servername -- TODO replace whitespaces with underscores
+    if #desc == 0 then desc = "<EMPTY>" end
+    
+    status_rows = status_rows .. string.format("%i/%i %s %s %i %s %i %s", server.playercount, server.maxplayers, server.map, server.gamemode, mm, host, server.serverport, desc)
+    
+    out:write(tabulate(status_rows))
+    out:write("\n")
+    
+    if server.playercount > 0 then
+    
+        local player_rows = "CN LAG PING IP COUNTRY NAME TIME STATE PRIV\n"
+        
+        for i,cn in ipairs(server.players()) do
+            
+            local p = server.new_player_object(cn)
+            
+            local country = server.ip_to_country_code(p:ip())
+            if #country == 0 then country = "?" end
+            
+            local priv = p:priv()
+            if server.master == cn then priv = "*" .. priv end
+            
+            local player_row = string.format("%i %i %i %s %s %s %s %s %s",
+               cn, p:lag(), p:ping(), p:ip(), country, p:name(), format_duration(p:connection_time()), p:status(), priv)
+            
+            player_rows = player_rows .. player_row .. "\n"
+            
+        end
+        
+        out:write("\n")
+        out:write(tabulate(player_rows))
+        
+    end
+    
+    out:flush()
 end
