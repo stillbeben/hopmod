@@ -298,7 +298,8 @@ server.event_handler("shutdown", function()
     db:close()
 end)
 
-function server.playercmd_stats(cn,selection)
+function server.playercmd_stats(cn, selection)
+
 	local function player_stats(cn, player) 
 		local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
 		server.player_msg(player,string.format("Name: %s Score: %s Frags: %s Deaths: %s Accuracy %s",
@@ -314,7 +315,7 @@ function server.playercmd_stats(cn,selection)
 	end
     
     if not selection then
-        player_stats(cn, cn) 
+        player_stats(cn, cn)
     elseif selection == "total" then
         select_player_totals:bind{name = server.player_name(cn)}
         row = select_player_totals:first_row()
@@ -323,7 +324,7 @@ function server.playercmd_stats(cn,selection)
             return
         end
         server.player_msg(cn, string.format("Games: %s Frags: %s Deaths: %s Wins: %s Losses: %s",yellow(row.games),green(row.frags),red(row.deaths),green(row.wins),red(row.losses)))
-	else
+	elseif server.valid_cn(selection) then
 		player_stats(cn, selection) 
    end
 end

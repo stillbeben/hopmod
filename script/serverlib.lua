@@ -277,3 +277,7 @@ function server.printserverstatus(filename)
     
     out:flush()
 end
+
+function server.valid_cn(cn)
+    return server.player_id(cn) ~= -1
+end
