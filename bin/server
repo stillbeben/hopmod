@@ -1,9 +1,6 @@
 #!/bin/sh
 
-export PATH="$PATH:."
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:bin"
-export LUA_PATH="$LUA_PATH;script/package/?.lua"
-export LUA_CPATH="$LUA_CPATH;bin/lib?.so"
+bin/env.sh
 
 execOnServer(){
     if [ -p serverexec ] 
@@ -17,7 +14,7 @@ case "$1" in
 
         if [ -p serverexec ]
         then
-            echo "It appears the server is already running."
+            echo "It appears the game server is already running."
             exit 1
         fi
         

@@ -592,6 +592,11 @@ static void shutdown_from_signal(int i)
     exit(0);
 }
 
+static void _shutdown()
+{
+    shutdown_from_signal(SIGTERM);
+}
+
 int main(int argc, char **argv)
 {
     struct sigaction terminate_action;
@@ -623,6 +628,8 @@ int main(int argc, char **argv)
     script::bind_global_func<void (const char *)>(log_status, FUNGU_OBJECT_ID("log"), e);
     script::bind_global_func<void (const char *)>(log_error, FUNGU_OBJECT_ID("logerror"), e);
     
+    script::bind_global_func<void ()>(_shutdown, FUNGU_OBJECT_ID("shutdown"), e);
+    
     register_signals(e);
     
     init_script_pipe();
@@ -640,6 +647,9 @@ int main(int argc, char **argv)
     setupserver(port, (ip[0] ? ip : NULL));
     
     signal_started();
+    
+    std::cout<<"*READY*"<<std::endl;
+    std::cout.flush();
     
     for(;;)
     {

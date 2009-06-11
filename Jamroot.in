@@ -97,7 +97,7 @@ exe keygen :
     z
     src/hopmod/keygen.cpp : <define>STANDALONE ;
 
-exe authserver :
+exe sauer_authserver :
     src/hopmod/authserver.cpp
     sauertools
     serverscripting
@@ -116,7 +116,7 @@ exe testshell :
     ncurses
     readline ;
     
-install dist : sauer_server authserver keygen testshell /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
+install dist : sauer_server sauer_authserver keygen testshell /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 
 install lua-packages :
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;
