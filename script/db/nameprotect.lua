@@ -15,10 +15,10 @@ auth.add_domain_handler(domain_name, function(cn, name)
     local pvars = server.player_pvars(cn)
     local vars = server.player_vars(cn)
     
-    if pvars.nameprotect_wanted_authname and pvars.nameprotect_wanted_authname ~= name then
-        server.player_msg(cn, string.format("You authenticated as %s but the server was expecting you to auth as %s", green(name), green(server.player_name(cn))))
-        return
-    end
+    --if pvars.nameprotect_wanted_authname and pvars.nameprotect_wanted_authname ~= name then
+    --    server.player_msg(cn, string.format("You authenticated as %s but the server was expecting you to auth as %s", green(name), green(server.player_name(cn))))
+    --    return
+    --end
     
     pvars.name_verified = true
     pvars.reserved_name = name

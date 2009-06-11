@@ -156,7 +156,7 @@ end
 
 function auth.is_domain_local(domain_id)
     is_domain_local:bind{domain_id = domain_id}
-    return is_domain_local:first_row()["local"]
+    if is_domain_local:first_row()["local"] == 1 then return true else return false end
 end
 
 function auth.found_name(name,domain_id)

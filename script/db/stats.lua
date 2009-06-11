@@ -276,6 +276,8 @@ local function installHandlers()
             
             local t = statsmod.getPlayerTable(server.player_id(cn))
             t.auth_name = name
+            
+            server.player_msg(cn, "You are logged in as " .. magenta(name) .. ".")
         end)
     end
     

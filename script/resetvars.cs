@@ -18,7 +18,7 @@ global record_player_stats 1
 global stats_db_filename "log/stats.sqlite"
 global stats_use_auth 0
 global stats_auth_domain ""
-global stats_tell_auth_name 1
+global stats_tell_auth_name 0
 global stats_debug 0
 global stats_use_sqlite 1
 global stats_use_json 0
