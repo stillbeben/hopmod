@@ -97,3 +97,5 @@ global enable_votekick_command 0
 global enable_dynamic_maxclients 0
 
 global disable_masterauth_in_coopedit 0
+
+global shell_label "server"
