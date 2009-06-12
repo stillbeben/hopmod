@@ -120,9 +120,6 @@ end)
 server.event_handler("started", function()
     
     dofile("./script/db/auth.lua")
-    server.auth_add_user = auth.add_user
-    server.auth_add_domain = auth.add_domain
-    server.auth_is_domain_local = auth.is_domain_local
     
     dofile("./script/db/stats.lua")
     
