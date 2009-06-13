@@ -186,6 +186,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(server::sv_switchname_hit_length, FUNGU_OBJECT_ID("flood_protect_switchname"), env);
     script::bind_global_var(server::sv_switchteam_hit_length, FUNGU_OBJECT_ID("flood_protect_switchteam"), env);
     
+    script::bind_global_var(server::broadcast_mapmodified, FUNGU_OBJECT_ID("broadcast_mapmodified"), env);
+    
     //utility
     script::bind_global_func<std::string (const char *)>(resolve_hostname, FUNGU_OBJECT_ID("gethostbyname"), env);
     
@@ -219,4 +221,5 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_global_func<int (int)>(mins, FUNGU_OBJECT_ID("mins"), env);
     script::bind_global_func<int (int)>(secs, FUNGU_OBJECT_ID("secs"), env);
+
 }

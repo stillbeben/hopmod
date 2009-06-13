@@ -35,6 +35,8 @@ namespace server
     
     extern string authserver_hostname;
     
+    extern bool broadcast_mapmodified;
+    
     extern void init_hopmod();
     extern void reload_hopmod();
     extern void update_hopmod();

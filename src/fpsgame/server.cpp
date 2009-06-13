@@ -411,6 +411,8 @@ namespace server
     vector<worldstate *> worldstates;
     bool reliablemessages = false;
 
+    bool broadcast_mapmodified = true;
+    
     struct demofile
     {
         string info;
@@ -1829,9 +1831,12 @@ namespace server
         {
             clientinfo *ci = clients[i];
             if(ci->state.state==CS_SPECTATOR || ci->state.aitype != AI_NONE || ci->clientmap[0] || ci->mapcrc >= 0 || (req < 0 && ci->warned)) continue; 
-            formatstring(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
-            sendf(req, 1, "ris", SV_SERVMSG, msg);
-            if(req < 0) ci->warned = true;
+            if(broadcast_mapmodified)
+            {
+                formatstring(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
+                sendf(req, 1, "ris", SV_SERVMSG, msg);
+                if(req < 0) ci->warned = true;
+            }
             signal_mapcrcfail(ci->clientnum);
         }
         if(crcs.empty() || crcs.length() < 2) return;
@@ -1842,9 +1847,12 @@ namespace server
             {
                 clientinfo *ci = clients[j];
                 if(ci->state.state==CS_SPECTATOR || ci->state.aitype != AI_NONE || !ci->clientmap[0] || ci->mapcrc != info.crc || (req < 0 && ci->warned)) continue;
-                formatstring(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
-                sendf(req, 1, "ris", SV_SERVMSG, msg);
-                if(req < 0) ci->warned = true;
+                if(broadcast_mapmodified)
+                {
+                    formatstring(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
+                    sendf(req, 1, "ris", SV_SERVMSG, msg);
+                    if(req < 0) ci->warned = true;
+                }
                 signal_mapcrcfail(ci->clientnum);
             }
         }
