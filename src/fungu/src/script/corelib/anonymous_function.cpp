@@ -53,14 +53,13 @@ public:
         
         if(callargs.size() < m_params.size()) throw error(NOT_ENOUGH_ARGUMENTS);
         
-        frame func_frame(aFrame->get_env());
-        
-        func_frame.bind_object(get_shared_ptr().get(), m_callee_symbol);
-        
         std::vector<any_variable> arg(m_params.size());
         
         std::vector<any_variable>::iterator argIt = arg.begin();
         std::vector<env::symbol *>::iterator paramIt = m_params.begin();
+        
+        frame func_frame(aFrame->get_env());
+        func_frame.bind_object(get_shared_ptr().get(), m_callee_symbol);
         
         for(; paramIt != m_params.end(); ++argIt, ++paramIt)
         {

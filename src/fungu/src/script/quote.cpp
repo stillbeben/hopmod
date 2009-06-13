@@ -55,7 +55,7 @@ parse_state expression::quote::parse(source_iterator * first,source_iterator las
                     return PARSE_COMPLETE;
                 case '\r':
                 case '\n':
-                    throw error(EXPECTED_SYMBOL);
+                    throw error(EXPECTED_SYMBOL,boost::make_tuple('\"'));
                 default:;
             }
         }
