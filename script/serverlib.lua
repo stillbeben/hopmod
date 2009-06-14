@@ -233,6 +233,26 @@ function server.new_player_object(cn)
     }
 end
 
+function server.gplayers()
+
+    local function next_player(plist, player)
+       
+        local index = nil
+        if player then index = player.index end
+        
+        local key, cn = next(plist, index)
+        if not key then return nil end
+        
+        local nplayer = server.new_player_object(cn)
+        nplayer.index = key
+        
+        return nplayer
+    end
+    
+    local pv = server.players()
+    return next_player, pv, nil
+end
+
 function server.printserverstatus(filename)
 
     local out = io.open(filename, "a+")
@@ -251,11 +271,9 @@ function server.printserverstatus(filename)
     
     if server.playercount > 0 then
     
-        local player_rows = "CN LAG PING IP COUNTRY NAME TIME STATE PRIV\n"
+        local player_rows = "CN LAG PING IP CO NAME TIME STATE PRIV\n"
         
-        for i,cn in ipairs(server.players()) do
-            
-            local p = server.new_player_object(cn)
+        for p in server.gplayers() do
             
             local country = server.ip_to_country_code(p:ip())
             if #country == 0 then country = "?" end
@@ -264,7 +282,7 @@ function server.printserverstatus(filename)
             if server.master == cn then priv = "*" .. priv end
             
             local player_row = string.format("%i %i %i %s %s %s %s %s %s",
-               cn, p:lag(), p:ping(), p:ip(), country, p:name(), format_duration(p:connection_time()), p:status(), priv)
+               p.cn, p:lag(), p:ping(), p:ip(), country, p:name(), format_duration(p:connection_time()), p:status(), priv)
             
             player_rows = player_rows .. player_row .. "\n"
             
