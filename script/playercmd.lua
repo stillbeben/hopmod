@@ -232,4 +232,16 @@ function server.playercmd_ban(cn,ban_tcn,ban_time,ban_unit,ban_reason)
     end,cn)
 end 
 
+function server.playercmd_kick(cn,kick_tcn,kick_reason)
+    return mastercmd(function()
+        if not kick_tcn then
+            server.player_msg(cn,red("cn is missing"))
+        elseif not kick_reason then
+            server.kick(kick_tcn,"1",cn,"")
+        else
+            server.kick(kick_tcn,"1",cn,kick_reason)
+        end
+    end,cn)
+end 
+
 -- ]]
