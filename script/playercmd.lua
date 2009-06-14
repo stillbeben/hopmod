@@ -173,3 +173,27 @@ function server.playercmd_givemaster(cn, target)
         
     end, cn)
 end
+
+-- [[ Player commands written by ]Zombie[
+
+function server.playercmd_mute(cn,mute_tcn)
+    return mastercmd(function()
+        if not mute_tcn then
+            server.player_msg(cn,red("cn is missing"))
+        else
+            server.mute(mute_tcn)
+        end
+    end,cn)
+end 
+
+function server.playercmd_unmute(cn,unmute_tcn)
+    return mastercmd(function()
+        if not unmute_tcn then
+            server.player_msg(cn,red("cn is missing"))
+        else
+            server.unmute(unmute_tcn)
+        end
+    end,cn)
+end 
+
+-- ]]
