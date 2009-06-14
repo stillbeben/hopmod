@@ -99,3 +99,6 @@ global enable_dynamic_maxclients 0
 global disable_masterauth_in_coopedit 0
 
 global shell_label "server"
+
+global use_kickspec 0
+global kickspec_maxtime (mins 30)
