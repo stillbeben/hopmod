@@ -299,3 +299,7 @@ end
 function server.valid_cn(cn)
     return server.player_id(cn) ~= -1
 end
+
+function server.test()
+    return type(server.ALIVE)
+end

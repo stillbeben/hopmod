@@ -142,15 +142,20 @@ function server.playercmd_group(cn, tag_pattern, team)
             return
         end
         
-        for i, cn in ipairs(server.players()) do
+        for i,cn in ipairs(server.spectators()) do
+            if string.match(server.player_name(cn), tag_pattern) then server.unspec(cn) end
+        end
+        
+        for player in server.gplayers() do
             
-            local onteam = server.player_team(cn)
+            local teamnow = player:team()
             
-            if onteam ~= team and string.match(onteam, tag_pattern) then
-                
+            if teamnow ~= team and string.match(player:name(), tag_pattern) then
+            
                 server.msg(string.format("Admin has moved %s to %s team.", green(server.player_name(cn)), green(team)))
-                
+            
                 server.changeteam(cn, team)
+            
             end
             
         end
