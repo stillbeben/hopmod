@@ -194,6 +194,42 @@ function server.playercmd_unmute(cn,unmute_tcn)
             server.unmute(unmute_tcn)
         end
     end,cn)
+end
+
+function server.playercmd_ban(cn,ban_tcn,ban_time,ban_unit,ban_reason)
+    return mastercmd(function()
+        if not ban_tcn then
+            server.player_msg(cn,red("cn is missing"))
+            return
+        end
+        if not ban_time then
+            ban_ltime = 60
+        else
+            ban_ltime = ban_time
+        end
+        if ( not ban_unit ) or ( ban_unit == "m" ) then
+            ban_ltime = ban_ltime * 60
+        elseif ban_unit == "h" then
+            ban_ltime = ban_ltime * 3600
+        elseif ban_unit == "s" then
+            ban_ltime = ban_time
+        elseif not ban_reason then
+            ban_lreason = ban_unit
+        else
+            server.player_msg(cn,red("unknown time-unit..."))
+        end
+        if not ban_reason then
+            if not ban_lreason then
+                ban_lreason = " "
+            end
+        else
+            ban_lreason = ban_reason
+        end
+        server.kick(ban_tcn,ban_ltime,cn,ban_lreason)
+        ban_tcn = " "
+        ban_ltime = " "
+        ban_lreason = " "
+    end,cn)
 end 
 
 -- ]]
