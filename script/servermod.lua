@@ -34,8 +34,8 @@ function onDisconnect(cn)
 
     server.player_unsetpvar(cn,"shown_banner")
     
-    if server.playercount == 0 and tonumber(firstgame_on_empty) == 1 then
-        server.changemap(server.first_map, server.first_gamemode)
+    if server.playercount == 0 and tonumber(server.firstgame_on_empty) == 1 then
+        server.changemap(server.first_map, server.first_gamemode, -1)
     end
     
 end
