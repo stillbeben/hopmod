@@ -21,15 +21,23 @@ function sendServerBanner(cn)
     end)
 end
 
-server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
-server.event_handler("active", sendServerBanner)
-server.event_handler("disconnect", function(cn) server.player_unsetpvar(cn,"shown_banner") end)
-
 function onConnect(cn)
+
     local country = server.ip_to_country(server.player_ip(cn))
     if #country > 0 then
         server.msg(string.format("%s connected from %s.",green(server.player_name(cn)), green(country)))
     end
+    
+end
+
+function onDisconnect(cn)
+
+    server.player_unsetpvar(cn,"shown_banner")
+    
+    if server.playercount == 0 and tonumber(firstgame_on_empty) == 1 then
+        server.changemap(server.first_map, server.first_gamemode)
+    end
+    
 end
 
 function onText(cn,text)
@@ -84,6 +92,9 @@ function onTeamkill(actor, victim)
 end
 
 server.event_handler("connect",onConnect)
+server.event_handler("disconnect", onDisconnect)
+server.event_handler("active", sendServerBanner)
+server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
 server.event_handler("text",onText)
 server.event_handler("sayteam", onText)
 server.event_handler("teamkill", onTeamkill)

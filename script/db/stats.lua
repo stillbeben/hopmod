@@ -7,6 +7,8 @@ local stats = nil
 local evthandlers = {}
 local statsmod = {} -- namespace for stats functions
 
+server.stats_db_absolute_filename = server.PWD .. "/" .. server.stats_db_filename
+
 local db = sqlite3.open(server.stats_db_filename)
 createMissingTables("./script/db/stats_schema.sql", db)
 

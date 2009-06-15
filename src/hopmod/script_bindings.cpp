@@ -7,6 +7,7 @@
 #include <fungu/script.hpp>
 #include <fungu/script/variable.hpp>
 using namespace fungu;
+#include <unistd.h>
 
 static std::vector<script::any> player_kick_defargs;
 static std::vector<script::any> changemap_defargs;
@@ -221,5 +222,10 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_global_func<int (int)>(mins, FUNGU_OBJECT_ID("mins"), env);
     script::bind_global_func<int (int)>(secs, FUNGU_OBJECT_ID("secs"), env);
-
+    
+    static char cwd[1024];
+    if(getcwd(cwd,sizeof(cwd)))
+        script::bind_global_const((const char *)cwd, FUNGU_OBJECT_ID("PWD"), env);
+    
+    script::bind_global_const(getuid(), FUNGU_OBJECT_ID("UID"), env);
 }
