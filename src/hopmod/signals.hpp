@@ -3,6 +3,7 @@
 
 #include "env_fwd.hpp"
 #include <boost/signal.hpp>
+#include <limits>
 
 /**
     @brief Event proceed combiner
@@ -19,6 +20,20 @@ struct proceed
         for(InputIterator it = first; it != last; ++it)
             if(*it == -1) return -1;
         return 0;
+    }
+};
+
+// used by the timeupdate event, should it be used by anything else, extend it with template parameter to set initial least value
+struct minvalue
+{
+    typedef int result_type;
+    template<typename InputIterator>
+    int operator()(InputIterator first, InputIterator last)const
+    {
+        int least = std::numeric_limits<int>::max();
+        for(InputIterator it = first; it != last; ++it) 
+            least = std::min(least, *it);
+        return least;
     }
 };
 
@@ -51,7 +66,7 @@ extern boost::signal<void (int,int)>                                signal_teamk
 // Game Events
 extern boost::signal<void ()>                                       signal_intermission;
 extern boost::signal<void ()>                                       signal_finishedgame;
-extern boost::signal<void (int)>                                    signal_timeupdate;
+extern boost::signal<int (int),minvalue>                            signal_timeupdate;
 extern boost::signal<void (const char *,const char *)>              signal_mapchange;
 extern boost::signal<void ()>                                       signal_setnextgame;
 extern boost::signal<void ()>                                       signal_gamepaused;

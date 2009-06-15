@@ -1512,9 +1512,23 @@ namespace server
         if(minremain>0)
         {
             minremain = gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
+            
+            int newvalue = signal_timeupdate(minremain);
+            
+            if(newvalue == -1)
+            {
+                gamelimit = gamemillis + (++minremain * 1000 * 60);
+                return;
+            }
+            
+            if(newvalue != minremain)
+            {
+                gamelimit = gamemillis + (newvalue * 1000 * 60);
+                minremain = newvalue;
+            }
+            
             sendf(-1, 1, "ri2", SV_TIMEUP, minremain);
             if(!minremain && smode) smode->intermission();
-            if(minremain) signal_timeupdate(minremain);
         }
         if(!interm && minremain<=0)
         {
