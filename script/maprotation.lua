@@ -47,6 +47,23 @@ local function nextmap(gmode,i)
     return nm
 end
 
+function server.is_known_map(mapname, gamemode)
+    
+    if not gamemode then
+        for k,list in pairs(maps) do
+            if server.is_known_map(mapname, k) then return true end
+        end
+        
+        return false
+    end
+    
+    for i,mapnameX in ipairs(maps[gamemode]) do
+        if mapname == mapnameX then return true end
+    end
+    
+    return false
+end
+
 server.event_handler("setnextgame",function()
     
     local use_first_map = tonumber(server.use_first_map)

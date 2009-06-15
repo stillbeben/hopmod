@@ -11,6 +11,7 @@ global script_socket_password ""
 
 global allow_mapvote 1
 global allow_modevote 1
+global mapvote_disallow_unknown_map 0
 
 global auth_db_filename "log/auth.sqlite"
 

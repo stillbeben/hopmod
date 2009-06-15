@@ -67,6 +67,24 @@ function onMapVote(cn,map,mode)
             return -1
         end
     end
+    
+    if tonumber(server.mapvote_disallow_unknown_map) == 1 then
+        
+        local globalFound = server.is_known_map(map)
+        local localFound = server.is_known_map(map, mode)
+        
+        if not globalFound then
+            server.player_msg(cn, red() .. "\"" .. map .. "\" is an unknown map.")
+            return -1
+        end
+        
+        if not localFound then
+            server.player_msg(cn, red()  .. "\"" .. map .. "\" is not a map you can play in " .. mode .. ".")
+            return -1
+        end
+        
+    end
+    
 end
 
 function onTeamkill(actor, victim)
