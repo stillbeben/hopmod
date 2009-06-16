@@ -1521,7 +1521,7 @@ namespace server
                 return;
             }
             
-            if(newvalue != minremain)
+            if(newvalue != minremain && newvalue >= 0)
             {
                 gamelimit = gamemillis + (newvalue * 1000 * 60);
                 minremain = newvalue;

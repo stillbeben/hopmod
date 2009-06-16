@@ -30,6 +30,7 @@ struct minvalue
     template<typename InputIterator>
     int operator()(InputIterator first, InputIterator last)const
     {
+        if(first == last) return -2;
         int least = std::numeric_limits<int>::max();
         for(InputIterator it = first; it != last; ++it) 
             least = std::min(least, *it);
