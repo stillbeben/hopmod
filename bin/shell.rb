@@ -54,7 +54,13 @@ rescue Errno::ENETUNREACH
     
 rescue Errno::EINVAL
     puts "Error: invalid argument"
-    
+
+rescue Errno::EPIPE
+    puts "Error: server has shutdown."
+    sleep 1
+    puts "Attempting to reconnect..."
+    start_shell(hostname, port)
+
 rescue IOError => e
     puts "Error: #{$!}"
 
