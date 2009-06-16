@@ -1569,6 +1569,7 @@ namespace server
                 else { friends = 1; enemies = clients.length()-1; }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
             }
+            signal_frag(target->clientnum, actor->clientnum);
             sendf(-1, 1, "ri4", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags);
             target->position.setsizenodelete(0);
             if(smode) smode->died(target, actor);

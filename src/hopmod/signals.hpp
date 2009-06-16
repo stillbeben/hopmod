@@ -63,6 +63,7 @@ extern boost::signal<void (int)>                                    signal_delbo
 extern boost::signal<void (int)>                                    signal_botleft;
 extern boost::signal<void (int)>                                    signal_mapcrcfail;
 extern boost::signal<void (int,int)>                                signal_teamkill;
+extern boost::signal<void (int,int)>                                signal_frag;
 // Game Events
 extern boost::signal<void ()>                                       signal_intermission;
 extern boost::signal<void ()>                                       signal_finishedgame;

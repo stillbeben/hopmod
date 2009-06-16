@@ -35,6 +35,7 @@ boost::signal<void (const char *,const char *)> signal_setmastermode;
 boost::signal<void (int,int)> signal_spectator;
 boost::signal<void (int,const char *,int)> signal_setmaster;
 boost::signal<void (int,int)> signal_teamkill;
+boost::signal<void (int,int)> signal_frag;
 boost::signal<void (int,int, const char *,const char *,bool)> signal_auth;
 boost::signal<void (int,const char *,const char *)> signal_authreq;
 boost::signal<void (int,int,const char *)> signal_authrep;
@@ -127,6 +128,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_spectator, "spectator", normal_error_handler);
     slots.register_signal(signal_setmaster, "setmaster", normal_error_handler);
     slots.register_signal(signal_teamkill, "teamkill", normal_error_handler);
+    slots.register_signal(signal_frag, "frag", normal_error_handler);
     slots.register_signal(signal_auth, "auth", normal_error_handler);
     slots.register_signal(signal_authreq, "authreq", normal_error_handler);
     slots.register_signal(signal_authrep, "authrep", normal_error_handler);
@@ -180,6 +182,7 @@ void disconnect_all_slots()
     signal_spectator.disconnect_all_slots();
     signal_setmaster.disconnect_all_slots();
     signal_teamkill.disconnect_all_slots();
+    signal_frag.disconnect_all_slots();
     signal_auth.disconnect_all_slots();
     signal_authreq.disconnect_all_slots();
     signal_authrep.disconnect_all_slots();
