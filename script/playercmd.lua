@@ -295,7 +295,7 @@ end
 server.event_handler("timeupdate", function (mins)
         if sudden_death_enabled == "true" then
                 player_score = {}
-                if endgame == "true" then endgame = ""; return 0 end
+                if endgame == "true" then endgame = "false"; sudden_death = "false" ; return 0 end
                 if mins == "1" then
                         for index, cn in ipairs(server.players()) do
                                 player_score[index] = server.player_frags(cn)
