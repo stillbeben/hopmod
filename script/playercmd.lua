@@ -41,6 +41,21 @@ end
 
 -- [[ Player commands written by Thomas
 
+function server.playercmd_maxclients(cn, arg1) 
+	return admincmd(
+		function ()
+			if not arg1 then server.player_msg(cn, red("missing maxclient argument")) return end
+			if arg1 >= server.playercount and arg1 <= "128" then
+				server.maxplayers = arg1
+			end
+		end
+	,cn)
+end
+
+function server.playercmd_uptime(cn) 
+	server.player_msg(cn, "Server-Uptime: " .. format_duration(server.uptime / 1000))
+end
+
 function server.playercmd_reload(cn_client) 
 	return admincmd(function () server.reloadscripts() end, cn_client)
 end
@@ -60,16 +75,6 @@ function server.playercmd_players(cn_client) -- list players + player stats
         str = "Name: " .. server.player_name(cn) .. " Frags: " .. server.player_frags(cn) .. " Deaths: " .. server.player_deaths(cn) .. " Acc: " .. server.player_accuracy (cn)
         server.player_msg(cn_client, str)
     end
-end
-
-function server.playercmd_uptime(cn) 
-	local seconds = server.uptime / 1000
-	local minutes = round(seconds / 60, 0)
-	seconds = round(seconds % 60, 0)
-	local hours = round(minutes / 60, 0)
-	minutes = minutes % 60
-	local days = round(hours / 24, 0)
-	server.player_msg(cn, "Server-Uptime: " ..days .. " days " .. hours .. " hours " .. minutes .. " minutes and " .. seconds .. " seconds")
 end
 
 function server.playercmd_names(cn, target_cn)
