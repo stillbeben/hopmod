@@ -369,10 +369,10 @@ end)
 server.event_handler("intermission", function () 
         if var1on1 then
                 if server.player_frags(var1on1player1) > server.player_frags(var1on1player2) then
-                        server.msg(green("--[ 1on1 Game ended - " .. blue(server.player_name(var1on1player1)) .. " won the Game!"))       
+                        server.msg(green("--[ 1on1 Game ended - " .. green(server.player_name(var1on1player1)) .. " won the Game!"))       
                 end
                 if server.player_frags(var1on1player1) < server.player_frags(var1on1player2) then
-                        server.msg(green("--[ 1on1 Game ended - " .. blue(server.player_name(var1on1player2)) .. " won the Game!"))
+                        server.msg(green("--[ 1on1 Game ended - " .. green(server.player_name(var1on1player2)) .. " won the Game!"))
                 end
                 if server.player_frags(var1on1player1) == server.player_frags(var1on1player2) then
                         server.msg("--[ 1on1 Game ended - No Winner!")
@@ -384,31 +384,31 @@ end)
 server.event_handler("connect", function (cn)
         if server.player_name(cn) .. server.player_ip(cn) == var1on1player1_id then
 		server.unspec(cn)
-		server.sleep(0,    function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 5")) end)
-                server.sleep(1000, function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 4")) end)
-                server.sleep(2000, function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 3")) end)
-                server.sleep(3000, function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 2")) end)
-                server.sleep(4000, function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 1")) end)
+		server.sleep(0,    function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 5")) end)
+                server.sleep(1000, function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 4")) end)
+                server.sleep(2000, function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 3")) end)
+                server.sleep(3000, function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 2")) end)
+                server.sleep(4000, function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 1")) end)
                 server.sleep(5000, function() server.pausegame(false) end)
         end
         if server.player_name(cn) .. server.player_ip(cn) == var1on1player2_id then
 		server.unspec(cn)
-		server.sleep(0,    function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 5")) end)
-                server.sleep(1000, function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 4")) end)
-                server.sleep(2000, function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 3")) end)
-                server.sleep(3000, function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 2")) end)
-                server.sleep(4000, function() server.msg(orange("--[ Opponent " .. blue(server.player_name(cn)) .. " Reconnected Resuming Game in 1")) end)
+		server.sleep(0,    function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 5")) end)
+                server.sleep(1000, function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 4")) end)
+                server.sleep(2000, function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 3")) end)
+                server.sleep(3000, function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 2")) end)
+                server.sleep(4000, function() server.msg(orange("--[ Opponent " .. green(server.player_name(cn)) .. " Reconnected Resuming Game in 1")) end)
                 server.sleep(5000, function() server.pausegame(false) end)
         end
 end)
 
 server.event_handler("disconnect", function (cn)
 	if server.player_name(cn) .. server.player_ip(cn) == var1on1player1_id then 
-		server.msg(red("--[ Opponent " .. blue(server.player_name(cn)) .. " Disconnected Pausing Game"))
+		server.msg(red("--[ Opponent " .. green(server.player_name(cn)) .. " Disconnected Pausing Game"))
 		server.pausegame(true)
 	end 
 	if server.player_name(cn) .. server.player_ip(cn) == var1on1player2_id then 
-		server.msg(red("--[ Opponent " .. blue(server.player_name(cn)) .. " Disconnected Pausing Game")) 
+		server.msg(red("--[ Opponent " .. green(server.player_name(cn)) .. " Disconnected Pausing Game")) 
 		server.pausegame(true)
 	end
 end)
