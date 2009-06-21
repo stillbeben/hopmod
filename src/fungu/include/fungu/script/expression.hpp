@@ -69,15 +69,12 @@ public:
     */
     bool is_empty_expression()const;
 private:
-    static inline bool is_terminator(const_string::value_type c);
-    static inline bool is_numeric(const const_string & str);
-    
     void add_child_construct(construct * child);
     
     bool is_alias_assignment(env::frame * frame)const;
     void translate_alias_assignment(env::frame * frame);
     
-    void fill_arguments_container(env::frame * frame);
+    void fill_constarg_vector(env::frame * frame);
     void reset_placeholders();
 public:
     source_context * get_source_context()const;

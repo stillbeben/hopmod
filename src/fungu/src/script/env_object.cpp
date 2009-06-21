@@ -65,7 +65,8 @@ int env::object::call(lua_State * L)
 
 void env::object::value(lua_State * L)
 {
-    return lua::push_value(L, value().to_string());
+    //return lua::push_value(L, value().to_string());
+    value().push_value(L);
 }
 
 #endif

@@ -30,16 +30,9 @@ class construct
 public:
     typedef const_string::const_iterator source_iterator;
     
-    construct()
-     :m_next_sibling(NULL)
-    {
-        
-    }
+    construct();
     
-    virtual ~construct()
-    {
-        delete m_next_sibling;
-    }
+    virtual ~construct();
     
     /**
         @brief Link to a sibling construct.
@@ -49,31 +42,19 @@ public:
         linked list is useful for a construct object to reference a chain 
         of subconstructs.
     */
-    void set_next_sibling(construct * next_sibling)
-    {
-        m_next_sibling = next_sibling;
-    }
+    void set_next_sibling(construct * next_sibling);
     
     /**
         @brief Get pointer to the next sibling construct.
     */
-    construct * get_next_sibling()
-    {
-        return m_next_sibling;
-    }
+    construct * get_next_sibling();
     
     /**
         @brief Get pointer of tail sibling.
         
         Traverses the sibling list until the tail node is reached.
     */
-    construct * get_tail_sibling()
-    {
-        construct * tail = this;
-        while(tail->get_next_sibling())
-            tail = tail->get_next_sibling();
-        return tail;
-    }
+    construct * get_tail_sibling();
     
     /**
         @brief Parse source code.
@@ -100,10 +81,7 @@ public:
         is undefined; the method will probably return an empty string (to
         represent void) or throw an exception.
     */
-    virtual bool is_eval_supported() const
-    {
-        return true;
-    }
+    virtual bool is_eval_supported() const;
     
     /**
         @brief Will the eval method return a constant string?
@@ -119,16 +97,8 @@ public:
         was input to the parse method.
     */
     virtual std::string form_source() const =0;
-    
-protected:
-    static inline bool is_terminator(const_string::value_type c,const const_string & termset)
-    {
-        for(const_string::const_iterator i=termset.begin(); i!=termset.end(); ++i)
-            if(*i==c) return true;
-        return false;
-    }
 private:
-    construct(const construct &){}
+    construct(const construct &);
     construct * m_next_sibling;
 };
 

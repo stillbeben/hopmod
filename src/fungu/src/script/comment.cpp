@@ -60,8 +60,7 @@ std::string expression::comment::form_source()const
 
 bool expression::comment::is_terminator(const_string::value_type c)
 {
-    static const_string termset(FUNGU_LITERAL_STRING("\r\n"));
-    return construct::is_terminator(c,termset);
+    return c == '\r' || c=='\n';
 }
 
 } //namespace script

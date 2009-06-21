@@ -19,6 +19,8 @@
 #include "fungu/script/parse_array.hpp"
 #include "fungu/script/any_variable.hpp"
 
+#include <iostream>
+
 namespace fungu{
 namespace script{
 namespace corelib{

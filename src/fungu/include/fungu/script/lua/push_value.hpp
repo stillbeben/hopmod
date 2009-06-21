@@ -8,7 +8,10 @@
 #ifndef FUNGU_SCRIPT_LUA_PUSH_VALUE_HPP
 #define FUNGU_SCRIPT_LUA_PUSH_VALUE_HPP
 
+#ifndef FUNGU_SCRIPT_LEXICAL_CAST_FWD_HPP
 #include "../lexical_cast.hpp"
+#endif
+
 extern "C"{
 #include <lua.h>
 #include <lualib.h>

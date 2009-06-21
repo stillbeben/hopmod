@@ -119,6 +119,13 @@ dynamic_typecaster * any::get_dynamic_typecaster()const
     return table->get_dynamic_typecaster(&object);
 }
 
+#ifdef FUNGU_WITH_LUA
+void any::push_value(lua_State * L)const
+{
+    table->lua_push_value(L, &object);
+}
+#endif
+
 bool any::empty()const
 {
     return table == any_detail::get_table<any_detail::empty>::get();

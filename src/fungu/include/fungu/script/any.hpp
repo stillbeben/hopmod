@@ -37,6 +37,10 @@
 #include "dynamic_typecasting.hpp"
 #include "lexical_cast_fwd.hpp"
 
+#ifdef FUNGU_WITH_LUA
+#include "lua/push_value.hpp"
+#endif
+
 #include <stdexcept>
 #include <typeinfo>
 #include <algorithm>
@@ -69,6 +73,9 @@ struct fxn_ptr_table {
   const_string (*to_string)(void * const *);
   bool (*is_arithmetic)();
   dynamic_typecaster * (*get_dynamic_typecaster)(void * const *);
+#ifdef FUNGU_WITH_LUA
+  void (*lua_push_value)(lua_State *,void * const *);
+#endif
 };
 
 // static functions for small value-types
@@ -104,6 +111,12 @@ struct fxns
         typecaster = derived_dynamic_typecaster<T>(reinterpret_cast<T const *>(src));
         return &typecaster;
     }
+    #ifdef FUNGU_WITH_LUA
+    static void lua_push_value(lua_State * L, void * const * src)
+    {
+        lua::push_value(L, *reinterpret_cast<T const *>(src));
+    }
+    #endif
   };
 };
 
@@ -139,6 +152,12 @@ struct fxns<false>
         typecaster = derived_dynamic_typecaster<T>(*reinterpret_cast<T * const *>(src));
         return &typecaster;
     }
+    #ifdef FUNGU_WITH_LUA
+    static void lua_push_value(lua_State * L, void * const * src)
+    {
+        lua::push_value(L, ** reinterpret_cast<T * const *>(src));
+    }
+    #endif
   };
 };
 
@@ -157,6 +176,9 @@ struct get_table
     , fxns<is_small>::template type<T>::to_string
     , fxns<is_small>::template type<T>::is_arithmetic
     , fxns<is_small>::template type<T>::get_dynamic_typecaster
+    #ifdef FUNGU_WITH_LUA
+    , fxns<is_small>::template type<T>::lua_push_value
+    #endif
     };
     return &static_table;
   }
@@ -239,6 +261,10 @@ struct any
     bool is_arithmetic()const;
     
     dynamic_typecaster * get_dynamic_typecaster()const;
+    
+    #ifdef FUNGU_WITH_LUA
+    void push_value(lua_State *)const;
+    #endif
     
     bool empty()const;
 

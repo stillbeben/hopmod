@@ -11,11 +11,29 @@
 #endif
 
 #include "fungu/script/expression.hpp"
-
-#include <iostream>
+#include <boost/scope_exit.hpp>
 
 namespace fungu{
 namespace script{
+
+static inline bool is_expr_terminator(const_string::value_type c)
+{
+    switch(c)
+    {
+        case ';': case ')': case '\r': case '\n': case '\0': return true;
+        default: return false;
+    }
+}
+
+static inline bool is_numeric(const const_string & str)
+{
+    const_string::const_iterator i=str.begin();
+    if(i<str.end()-1 && (*i=='-' || *i=='+')) ++i;
+    for(; i!=str.end(); ++i)
+        if(!(*i>='0' && *i<='9') && !(i>str.begin() && *i=='.') ) 
+            return false;
+    return true;
+}
 
 bool expression::word_exit_terminals::is_member(const_string::value_type c)
 {
@@ -45,7 +63,7 @@ expression::~expression()
     delete m_first_construct;
 }
     
-parse_state expression::parse(source_iterator * first,source_iterator last,env::frame * frame)
+parse_state expression::parse(source_iterator * first, source_iterator last, env::frame * frame)
 {
     if(!m_source_ctx)
     {
@@ -57,12 +75,13 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
     {
         try
         {
-            source_iterator last_pos = *first;
-            parse_state substate=m_parsing->parse(first,last,frame);
+            source_iterator start_pos = *first;
+            
+            parse_state substate = m_parsing->parse(first, last, frame);
             if( substate != PARSE_COMPLETE ) return substate;
             
-            if( last_pos == *first && !is_terminator(*last_pos)) 
-                throw error(UNEXPECTED_SYMBOL,boost::make_tuple(**first));
+            if( start_pos == *first && !is_expr_terminator(*start_pos)) 
+                throw error(UNEXPECTED_SYMBOL, boost::make_tuple(**first));
             
             if(m_parsing->is_eval_supported()) add_child_construct(m_parsing);
             else delete m_parsing;
@@ -78,7 +97,7 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
     
     if(*first > last) return PARSE_PARSING;
     
-    if(is_terminator(**first))
+    if(is_expr_terminator(**first))
     {
         ++(*first);
         
@@ -86,7 +105,7 @@ parse_state expression::parse(source_iterator * first,source_iterator last,env::
         {
             if(is_alias_assignment(frame)) translate_alias_assignment(frame);
             
-            fill_arguments_container(frame);
+            fill_constarg_vector(frame);
             
             if(m_first_construct->is_string_constant())
                 m_operation_symbol = frame->get_env()->lookup_symbol(m_first_construct->eval(frame).to_string());
@@ -124,13 +143,13 @@ result_type expression::eval(env::frame * frame)
     const source_context * prev_ctx = environment->get_source_context();
     environment->set_source_context(m_source_ctx);
     
-    int pre_argc = environment->get_arg_count();
-    
-    #define EXPRESSION_EVAL_CLEANUP \
-        reset_placeholders(); \
-        environment->set_source_context(prev_ctx); \
-        while(environment->get_arg_count() > pre_argc) environment->pop_arg();
-    
+    expression * _this = this;
+    BOOST_SCOPE_EXIT( (_this)(environment)(prev_ctx) )
+    {
+        _this->reset_placeholders();
+        environment->set_source_context(prev_ctx);
+    } BOOST_SCOPE_EXIT_END
+
     try
     {
         result_type arg1_result_type = m_first_construct->eval(frame);
@@ -155,18 +174,21 @@ result_type expression::eval(env::frame * frame)
             else throw error(UNKNOWN_SYMBOL,boost::make_tuple(opsym.copy()));
         }
         
-        construct * current = m_first_construct->get_next_sibling();
-        std::vector<unsigned char>::const_iterator argIt = m_placeholders.begin();
+        std::vector<result_type> vargs(m_placeholders.size());
+        std::vector<result_type>::iterator vargIter = vargs.begin();
         
-        while(current)
+        for(construct * current = m_first_construct->get_next_sibling();
+            current; current = current->get_next_sibling(), vargIter++ )
         {
             subject_arg = current;
-            
-            environment->push_arg(current->eval(frame));
-            
-            m_arguments[*(argIt++)] = environment->top_arg();
-            
-            current = current->get_next_sibling();
+            *vargIter = current->eval(frame);
+        }
+        
+        std::vector<unsigned char>::const_iterator phIter = m_placeholders.begin();
+        
+        for(vargIter = vargs.begin(); vargIter != vargs.end() ; ++vargIter, ++phIter)
+        {
+            m_arguments[*phIter] = *vargIter;
         }
         
         subject_arg = m_first_construct;
@@ -174,26 +196,18 @@ result_type expression::eval(env::frame * frame)
         arguments_container args(m_arguments);
         result_type result = opobj->call(args, frame);
         
-        EXPRESSION_EVAL_CLEANUP;
-        
         return result;
     }
     catch(const error & key)
     {
-        EXPRESSION_EVAL_CLEANUP;
-        
         throw new error_trace(
             key, subject_arg->form_source(), get_source_context());
     }
     catch(error_trace * head_info)
     {
-        EXPRESSION_EVAL_CLEANUP;
-        
         throw new error_trace(
             head_info, subject_arg->form_source(), get_source_context());
     }
-    
-    #undef EXPRESSION_EVAL_CLEANUP
 }
     
 bool expression::is_string_constant()const
@@ -225,22 +239,6 @@ bool expression::is_empty_expression()const
     return !m_first_construct;
 }
 
-bool expression::is_terminator(const_string::value_type c)
-{
-    static const_string termset(FUNGU_LITERAL_STRING(";)\r\n\0"));
-    return construct::is_terminator(c,termset);
-}
-
-inline bool expression::is_numeric(const const_string & str)
-{
-    const_string::const_iterator i=str.begin();
-    if(i<str.end()-1 && (*i=='-' || *i=='+')) ++i;
-    for(; i!=str.end(); ++i)
-        if(!(*i>='0' && *i<='9') && !(i>str.begin() && *i=='.') ) 
-            return false;
-    return true;
-}
-    
 void expression::add_child_construct(construct * child)
 {
     if(!m_first_construct) m_first_construct = child;
@@ -272,7 +270,7 @@ void expression::translate_alias_assignment(env::frame * frame)
     delete op;
 }
     
-void expression::fill_arguments_container(env::frame * frame)
+void expression::fill_constarg_vector(env::frame * frame)
 {
     assert(m_first_construct);
     
@@ -283,7 +281,15 @@ void expression::fill_arguments_container(env::frame * frame)
     {
         if(arg->is_string_constant())
         {
-            m_arguments.push_back(arg->eval(frame));
+            result_type argval = arg->eval(frame);
+            
+            if(argval.get_type() == typeid(const_string))
+            {
+                const_string argstrval = any_cast<const_string>(argval);
+                if(argstrval.length() && is_numeric(argstrval)) argval = lexical_cast<int>(argstrval);
+            }
+            
+            m_arguments.push_back(argval);
             
             construct * next = arg->get_next_sibling();
             
@@ -315,16 +321,24 @@ source_context * expression::get_source_context()const
 void expression::reset_placeholders()
 {
     for(std::vector<unsigned char>::const_iterator it = m_placeholders.begin(); 
-        it != m_placeholders.end(); it++) m_arguments[*it] = any();
+        it != m_placeholders.end(); it++)
+    {
+        m_arguments[*it] = any();
+    }
 }
 
-parse_state base_expression::parse(source_iterator * first,source_iterator last,env::frame * frame)
+parse_state base_expression::parse(source_iterator * first, source_iterator last, env::frame * frame)
 {
     parse_state state = expression::parse(first,last,frame);
+    
     if(state == PARSE_COMPLETE && *((*first)-1) == ')')
+    {
         throw new error_trace(
-            error(UNEXPECTED_SYMBOL,boost::make_tuple(')')),
-            const_string(), get_source_context());
+            error(UNEXPECTED_SYMBOL, boost::make_tuple(')')),
+            const_string(),
+            get_source_context() );
+    }
+    
     return state;
 }
 
