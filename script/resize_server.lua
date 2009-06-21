@@ -3,12 +3,12 @@ local function calcOutput(players, specs)
     return players ^ 2 - players + (players * specs)
 end
 
-local output_limit = calcOutput(tonumber(server.maxplayers), 0)
+local output_limit = calcOutput(server.maxplayers, 0)
 
 local function readjustCapacity()
 
-    local sc = tonumber(server.speccount)
-    local pc = tonumber(server.playercount) - sc
+    local sc = server.speccount
+    local pc = server.playercount - sc
     local extra = -1
     
     while calcOutput(pc + (extra + 1), sc) <= output_limit do 
@@ -23,10 +23,11 @@ local function readjustCapacity()
 end
 
 local function isOverCapacity()
-    return calcOutput(tonumber(server.playercount), tonumber(server.speccount)) > output_limit
+    return calcOutput(server.playercount, server.speccount) > output_limit
 end
 
 server.event_handler("spectator", function(cn, value)
+
     if tonumber(value) == 1 then
         readjustCapacity()
     else

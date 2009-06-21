@@ -108,6 +108,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void (bool)>(server::pausegame,FUNGU_OBJECT_ID("pausegame"),env);
     script::bind_global_func<void (const char *)>(server::sendservmsg, FUNGU_OBJECT_ID("msg"), env);
     script::bind_global_func<void ()>(server::shutdown, FUNGU_OBJECT_ID("shutdown"), env);
+    script::bind_global_func<void ()>(server::restart_now, FUNGU_OBJECT_ID("restart_now"), env);
     script::bind_global_func<void (int)>(server::changetime, FUNGU_OBJECT_ID("changetime"), env);
     script::bind_global_func<void (const char *,const char *,int)>(server::changemap,FUNGU_OBJECT_ID("changemap"), env, &changemap_defargs);
     script::bind_global_func<bool (const char *)>(server::writebanlist, FUNGU_OBJECT_ID("writebanlist"), env);
@@ -115,7 +116,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void (const char *)>(server::addpermban, FUNGU_OBJECT_ID("permban"), env);
     script::bind_global_func<void (const char *)>(server::unsetban, FUNGU_OBJECT_ID("unsetban"), env);
     script::bind_global_func<void ()>(server::clearbans, FUNGU_OBJECT_ID("clearbans"), env);
-    script::bind_global_func<void ()>(exec_restarter, FUNGU_OBJECT_ID("exec_restarter"), env);
+    script::bind_global_func<void ()>(start_restarter, FUNGU_OBJECT_ID("activate_restarter"), env);
+    script::bind_global_func<void ()>(stop_restarter, FUNGU_OBJECT_ID("deactivate_restarter"), env);
     script::bind_global_func<void (int)>(server::delbot, FUNGU_OBJECT_ID("delbot"), env);
     script::bind_global_func<int ()>(server::recorddemo, FUNGU_OBJECT_ID("recorddemo"), env);
     script::bind_global_func<void ()>(server::enddemorecord, FUNGU_OBJECT_ID("stopdemo"), env);

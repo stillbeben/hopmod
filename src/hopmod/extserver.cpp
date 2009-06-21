@@ -65,8 +65,167 @@ void check_authserver()
         authserver.flush_output();
 }
 
+struct restore_state_header
+{
+    int gamemode;
+    string mapname;
+    
+    int gamemillis;
+    int gamelimit;
+    
+    int numscores;
+    int numteamscores;
+};
+
+struct restore_teamscore
+{
+    string name;
+    int score;
+};
+
+static void crash_handler(int signal)
+{
+    int fd = open("log/restore", O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
+    
+    if(fd != -1)
+    {
+        restore_state_header header;
+        
+        header.gamemode = gamemode;
+        copystring(header.mapname, smapname);
+        
+        header.gamemillis = gamemillis;
+        header.gamelimit = gamelimit;
+        
+        header.numscores = scores.length() + clients.length();
+        
+        bool write_teamscores = false;
+        header.numteamscores = 0;
+        
+        //the last four game modes have fixed team names and have simple team state
+        if(gamemode+3 >= NUMGAMEMODES - 4 && smode)
+        {
+            header.numteamscores = 2;
+            write_teamscores = true;
+        }
+        
+        write(fd, &header, sizeof(header));
+        
+        write(fd, scores.buf, scores.length() * sizeof(savedscore));
+        
+        loopv(clients)
+        {
+            savedscore score;
+            
+            copystring(score.name, clients[i]->name);
+            score.ip = getclientip(clients[i]->clientnum);
+            
+            score.save(clients[i]->state);
+            
+            write(fd, &score, sizeof(score));
+        }
+        
+        if(write_teamscores)
+        {
+            restore_teamscore team;
+            
+            copystring(team.name, "evil");
+            team.score = smode->getteamscore("evil");
+            write(fd, &team, sizeof(team));
+            
+            copystring(team.name, "good");
+            team.score = smode->getteamscore("good");
+            write(fd, &team, sizeof(team));
+        }
+        
+        close(fd);
+    }
+    
+    int maxfd = getdtablesize();
+    for(int i = 3; i < maxfd; i++) close(i);
+    
+    if(totalmillis > 10000)
+    {
+        /*sigset_t mask;
+        sigemptyset(&mask);
+        sigaddset(&mask, signal);
+        sigprocmask(SIG_UNBLOCK, &mask, NULL);
+        
+        execv(prog_argv[0], prog_argv);*/
+        
+        //restart program from child process so a core dump is written for the failed parent process
+        if(fork()!=0)
+        {
+            setpgid(0,0);
+            execv(prog_argv[0], prog_argv);
+        }
+    }
+
+}
+
+static void restore_server(const char * filename)
+{
+    int fd = open(filename, O_RDONLY, 0);
+    if(fd == -1) return;
+    
+    restore_state_header header;
+    
+    int readlen = read(fd, &header, sizeof(header));
+    
+    if(readlen == -1)
+    {
+        close(fd);
+        return;
+    }
+    
+    int mins = (header.gamelimit - header.gamemillis)/60000;
+    changemap(header.mapname, header.gamemode, mins);
+    
+    gamemillis = header.gamemillis;
+    gamelimit = header.gamelimit;
+    
+    for(int i = 0; i < header.numscores; i++)
+    {
+        savedscore playerscore;
+        readlen = read(fd, &playerscore, sizeof(savedscore));
+        if(readlen == -1)
+        {
+            close(fd);
+            return;
+        }
+        scores.add(playerscore);
+    }
+    
+    for(int i = 0; i< header.numteamscores && smode; i++)
+    {
+        restore_teamscore team;
+        readlen = read(fd, &team, sizeof(team));
+        if(readlen == -1)
+        {
+            close(fd);
+            return;
+        }
+        smode->setteamscore(team.name, team.score);
+    }
+    
+    close(fd);
+    unlink(filename);
+}
+
 void init_hopmod()
 {
+    struct sigaction crash_action;
+    sigemptyset(&crash_action.sa_mask);
+    crash_action.sa_handler = &crash_handler;
+    crash_action.sa_flags = SA_RESETHAND;
+    
+    sigaction(SIGILL, &crash_action, NULL);
+    sigaction(SIGABRT, &crash_action, NULL);
+    sigaction(SIGFPE, &crash_action, NULL);
+    sigaction(SIGBUS, &crash_action, NULL);
+    sigaction(SIGSEGV, &crash_action, NULL);
+    sigaction(SIGSYS, &crash_action, NULL);
+    
     copystring(authserver_hostname, defaultmaster());
     
     init_scripting();
@@ -133,10 +292,21 @@ void update_hopmod()
 void started()
 {
     signal_started();
+    
+    if(access("log/restore", R_OK) == 0) restore_server("log/restore");
 }
 
 void shutdown()
 {
+    signal_shutdown();
+    stop_restarter();
+    exit(0);
+}
+
+void restart_now()
+{
+    sendservmsg("Server restarting...");
+    start_restarter();
     signal_shutdown();
     exit(0);
 }

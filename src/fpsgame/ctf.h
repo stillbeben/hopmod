@@ -165,12 +165,18 @@ struct ctfclientmode : clientmode
     {
         return totalscore(ctfteamflag(team));
     }
-
+    
     void getteamscores(vector<teamscore> &tscores)
     {
         loopk(2) if(scores[k]) tscores.add(teamscore(ctfflagteam(k+1), scores[k]));
     }
-
+    
+    bool setteamscore(const char * team, int score)
+    {
+        scores[ctfteamflag(team)-1] = score;
+        return true;
+    }
+    
 #ifdef SERVMODE
     static const int RESETFLAGTIME = 10000;
     static const int INVISFLAGTIME = 15000;

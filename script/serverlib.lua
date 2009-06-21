@@ -105,12 +105,6 @@ function server.cancel_restart()
     set_cancel_restart = true
 end
 
-function server.restart_now()
-    server.msg("Server restarting...")
-    server.exec_restarter()
-    server.shutdown()
-end
-
 function server.log_status(msg)
     print(msg)
 end

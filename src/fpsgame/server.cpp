@@ -454,6 +454,7 @@ namespace server
         virtual int getteamscore(const char *team) { return 0; }
         virtual void getteamscores(vector<teamscore> &scores) {}
         virtual bool extinfoteam(const char *team, ucharbuf &p) { return false; }
+        virtual bool setteamscore(const char *, int){ return false; }
     };
 
     #define SERVMODE 1

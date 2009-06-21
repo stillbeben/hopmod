@@ -17,7 +17,7 @@ static bool sched_close = false;
 static char password[32];
 
 static int http_accept(void *, const struct sockaddr *, socklen_t);
-static int http_access(void *,MHD_Connection *,const char *,const char *, const char *,const char *,unsigned int *, void **);
+static int http_access(void *,MHD_Connection *,const char *,const char *, const char *,const char *,size_t *, void **);
 static void http_completed(void *,struct MHD_Connectionconnection *,void **,enum MHD_RequestTerminationCode);
 
 bool script_socket_supported()
@@ -118,7 +118,7 @@ int http_accept(void *, const struct sockaddr * addr, socklen_t addrlen)
 
 int http_access(void *, MHD_Connection * connection, const char * url,
     const char * method, const char * version, const char * upload_data,
-    unsigned int * upload_data_size, void ** con_cls)
+    size_t * upload_data_size, void ** con_cls)
 {
     
     const MHD_ConnectionInfo * conninfo = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);

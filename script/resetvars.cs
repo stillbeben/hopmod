@@ -74,7 +74,7 @@ global small_gamesize 5
 
 global first_map "complex"
 global first_gamemode "ffa"
-global firstgame_on_empty 1
+global firstgame_on_empty 0
 
 global use_irc_bot 0
 

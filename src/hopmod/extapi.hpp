@@ -4,6 +4,14 @@
 #include "lua.hpp"
 #include <string>
 #include <vector>
+#include <iostream>
+
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/ptrace.h>
 
 namespace server
 {
@@ -141,6 +149,7 @@ namespace server
     extern void authsucceeded(uint id);
     extern void authchallenged(uint id, const char *val);
     
+    extern void restart_now();
 } //namespace server
 
 #endif
