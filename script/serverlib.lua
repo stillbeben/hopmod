@@ -291,7 +291,7 @@ function server.printserverstatus(filename)
 end
 
 function server.valid_cn(cn)
-    return server.player_id(cn) ~= -1
+    return server.player_id(tonumber(cn) or -1) ~= -1
 end
 
 function server.test()
