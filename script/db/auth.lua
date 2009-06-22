@@ -33,7 +33,7 @@ auth = {}
 auth.authserver_offline = false;
 
 server.event_handler("authreq", function(cn,name,domain)
- 
+  
     local req_id = server.player_authreq(cn)
     auth_request[req_id] = {}
     local req = auth_request[req_id]
@@ -62,7 +62,7 @@ server.event_handler("authreq", function(cn,name,domain)
         else
             auth.authserver_offline = false
         end
-        
+ 
     else
    
         req.delegated = false
@@ -130,7 +130,7 @@ server.event_handler("auth", function(cn, id, name, domain, success)
         server.freechalanswer(req.answer)
     end
     
-    if tonumber(success) == 1 then
+    if success then
         if req.domain then
             
             dispatchHandlers(req.domain, cn, name)
