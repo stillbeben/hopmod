@@ -210,7 +210,7 @@ end
 
 -- [[ Player commands written by ]Zombie[
 
-function server.playercmd_mute(cn,mute_tcn)
+function server.playercmd_mute(cn, mute_tcn)
     return mastercmd(function()
         if not mute_tcn then
             server.player_msg(cn,red("cn is missing"))
@@ -220,7 +220,7 @@ function server.playercmd_mute(cn,mute_tcn)
     end,cn)
 end 
 
-function server.playercmd_unmute(cn,unmute_tcn)
+function server.playercmd_unmute(cn, unmute_tcn)
     return mastercmd(function()
         if not unmute_tcn then
             server.player_msg(cn,red("cn is missing"))
@@ -230,27 +230,30 @@ function server.playercmd_unmute(cn,unmute_tcn)
     end,cn)
 end
 
-function server.playercmd_ban(cn,ban_tcn,ban_time,ban_unit,ban_reason)
+function server.playercmd_ban(cn, ban_tcn, ban_time, ban_unit, ban_reason)
     return mastercmd(function()
         if not ban_tcn then
             server.player_msg(cn,red("cn is missing"))
             return
         end
         if not ban_time then
-            ban_ltime = 60
+            ban_ltime = 3600
+        elseif not ( ban_time >= "0" and ban_time <= "999" ) then
+            ban_ltime = 3600
+            ban_lreason = ban_time
         else
             ban_ltime = ban_time
-        end
-        if ( not ban_unit ) or ( ban_unit == "m" ) then
-            ban_ltime = ban_ltime * 60
-        elseif ban_unit == "h" then
-            ban_ltime = ban_ltime * 3600
-        elseif ban_unit == "s" then
-            ban_ltime = ban_time
-        elseif not ban_reason then
-            ban_lreason = ban_unit
-        else
-            server.player_msg(cn,red("unknown time-unit..."))
+            if ( not ban_unit ) or ( ban_unit == "m" ) then
+                ban_ltime = ban_ltime * 60
+            elseif ban_unit == "h" then
+                ban_ltime = ban_ltime * 3600
+            elseif ban_unit == "s" then
+                ban_ltime = ban_time
+            elseif not ban_reason then
+                ban_lreason = ban_unit
+            else
+                server.player_msg(cn,red("unknown time-unit..."))
+            end
         end
         if not ban_reason then
             if not ban_lreason then
@@ -259,24 +262,26 @@ function server.playercmd_ban(cn,ban_tcn,ban_time,ban_unit,ban_reason)
         else
             ban_lreason = ban_reason
         end
-        server.kick(ban_tcn,ban_ltime,cn,ban_lreason)
+        server.kick(ban_tcn,ban_ltime,server.player_name(cn),ban_lreason)
         ban_tcn = " "
         ban_ltime = " "
         ban_lreason = " "
     end,cn)
 end 
 
-function server.playercmd_kick(cn,kick_tcn,kick_reason)
+function server.playercmd_kick(cn, kick_tcn, kick_reason)
     return mastercmd(function()
         if not kick_tcn then
             server.player_msg(cn,red("cn is missing"))
         elseif not kick_reason then
-            server.kick(kick_tcn,"1",cn,"")
+            server.kick(kick_tcn, 1, server.player_name(cn),"")
         else
-            server.kick(kick_tcn,"1",cn,kick_reason)
+            server.kick(kick_tcn, 1, server.player_name(cn),kick_reason)
         end
     end,cn)
 end 
+
+-- ]]
 
 function server.playercmd_sd(cn, arg1)
         return admincmd(function () 
@@ -467,5 +472,3 @@ function server.playercmd_versus(cn, player1, player2, mode, map)
         server.sleep(5000, function() server.changemap(map, mode, -1) end)
 end
 -- 1on1 script end
-
--- ]]
