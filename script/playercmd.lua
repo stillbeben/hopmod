@@ -297,7 +297,7 @@ function server.playercmd_nosd(cn, arg1)
 		player_score = {}
 		sudden_death_enabled = "false" 
 		sudden_death = "false"
-		server.msg(red("--[ Sudden Death Mode Disabled. There will be ties"))
+		server.msg(red("--[ Sudden Death Mode Disabled. There may be ties"))
 	end, cn)
 end
 
@@ -313,7 +313,7 @@ server.event_handler("timeupdate", function (mins)
                     player_score[index] = server.player_frags(cn)
                 end
                 
-                if player_score[1] == player_score[1] then
+                if player_score[1] == player_score[2] then
                     server.msg(red("--[ Sudden Death. Next Frag Wins!"))
                     sudden_death = "true"
                 end
