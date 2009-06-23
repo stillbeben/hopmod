@@ -23,6 +23,7 @@ global stats_tell_auth_name 0
 global stats_debug 0
 global stats_use_sqlite 1
 global stats_use_json 0
+global stats_overwrite_name_with_authname 0
 
 global use_name_reservation 0
 global name_reservation_domain ""

@@ -119,8 +119,17 @@ function statsmod.commitStats()
         t.win = server.player_win(cn)
         t.rank = server.player_rank(cn)
         
-        if domain_name and tonumber(server.stats_tell_auth_name) == 1 then
-            server.player_msg(cn, string.format("Saving your stats as %s@%s", t.auth_name, domain_name))
+        if domain_name and t.auth_name then
+            
+            if server.stats_tell_auth_name == 1 then
+                server.player_msg(cn, string.format("Saving your stats as %s@%s", t.auth_name, domain_name))
+            end
+            
+            if stats_overwrite_name_with_authname == 1 then
+                t.player_name = t.name -- save the original name
+                t.name = t.auth_name
+            end
+            
         end
     end
 
