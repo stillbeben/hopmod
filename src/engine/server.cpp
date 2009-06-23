@@ -724,20 +724,12 @@ void rundedicatedserver()
 
 bool servererror(bool dedicated, const char *desc)
 {
+    cleanupserver(); 
+    printf("servererror: %s\n", desc); 
     server::shutdown();
-    
-#ifndef STANDALONE
-    if(!dedicated)
-    {
-        conoutf(CON_ERROR, desc);
-        cleanupserver();
-    }
-    else
-#endif
-    fatal(desc);
     return false;
 }
-  
+
 bool setuplistenserver(bool dedicated)
 {
     ENetAddress address = { ENET_HOST_ANY, serverport <= 0 ? server::serverport() : serverport };
