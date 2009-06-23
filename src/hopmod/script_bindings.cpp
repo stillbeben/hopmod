@@ -1,3 +1,7 @@
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "pch.hpp"
+#endif
+
 #include "cube.h"
 #include "game.h"
 #include "hopmod.hpp"

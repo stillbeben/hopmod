@@ -1,3 +1,7 @@
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "pch.hpp"
+#endif
+
 #include "script_socket.hpp"
 #include "signals.hpp"
 #include "scripting.hpp"

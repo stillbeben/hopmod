@@ -42,6 +42,8 @@ if $(without_geoip) = 1 {
 
 build-project src/hopmod/test ;
 
+cpp-pch pch : src/hopmod/pch.hpp /fungu//script : <include>src/shared <include>src/enet/include <define>STANDALONE ;
+
 lib sauertools :
     src/shared/tools.cpp
     src/shared/stream.cpp
@@ -59,12 +61,13 @@ lib serverscripting :
     /boost//headers
     /boost//signals
     /fungu//script
-    : <link>static <include>src/hopmod : : <include>src ;
+    pch
+    : <link>static <include>src/hopmod <include>src/shared <include>src/enet/include <define>STANDALONE : : <include>src ;
 
 lib scriptpipe :
     src/hopmod/script_pipe.cpp
     serverscripting
-    : <link>static ;
+    : <link>static <include>src/shared <include>src/enet/include <define>STANDALONE ;
 
 exe sauer_server :
     src/engine/server.cpp
@@ -90,6 +93,7 @@ exe sauer_server :
     geoip
     /boost//headers
     /libmicrohttpd//httpd
+    pch
     : <define>STANDALONE <define>HOPMOD_GAMESERVER_EVENTS <include>src/fpsgame <include>src/hopmod ;
 
 exe keygen :

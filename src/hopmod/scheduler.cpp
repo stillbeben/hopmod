@@ -1,3 +1,7 @@
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "pch.hpp"
+#endif
+
 #include "scheduler.hpp"
 #include "schedule_service.hpp"
 #include "scripting.hpp"

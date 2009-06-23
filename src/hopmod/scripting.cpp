@@ -1,3 +1,7 @@
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "pch.hpp"
+#endif
+
 #include "scripting.hpp"
 #include "scoped_setting.hpp"
 #include <fungu/script/lua/object_wrapper.hpp>

@@ -1,6 +1,7 @@
 #ifndef HOPMOD_EXTAPI_HPP
 #define HOPMOD_EXTAPI_HPP
 
+#include "cube.h"
 #include "lua.hpp"
 #include <string>
 #include <vector>
@@ -11,7 +12,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/ptrace.h>
 
 namespace server
 {
