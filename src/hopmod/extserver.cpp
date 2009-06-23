@@ -283,7 +283,6 @@ void update_hopmod()
     run_script_pipe_service(totalmillis);
     run_script_socket_service();
     update_scheduler(totalmillis);
-    bantimes.update(totalmillis);
     cleanup_dead_slots();
     
     check_authserver();

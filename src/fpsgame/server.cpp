@@ -1994,7 +1994,10 @@ namespace server
         }
         
         uint ip = getclientip(ci->clientnum);
+        
+        bantimes.update(totalmillis);
         if(bannedips.is_banned(netmask(ip))) return DISC_IPBAN;
+        
         if(mastermode>=MM_PRIVATE && allowedips.find(ip)<0) return DISC_PRIVATE;
         
         return DISC_NONE;
