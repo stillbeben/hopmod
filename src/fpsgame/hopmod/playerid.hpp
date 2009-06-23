@@ -10,6 +10,9 @@ typedef std::pair<std::string,unsigned long> playerid;
 class playeridlt
 {
 public:
+    std::string name;
+    unsigned long ip;
+    
     bool operator()(const playerid & x,const playerid & y)const
     {
         return x.second < y.second || x.second == y.second && x.first < y.first;
