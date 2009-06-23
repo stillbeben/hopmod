@@ -242,6 +242,7 @@ namespace server
         freqlimit sv_mapvote_hit;
         freqlimit sv_switchname_hit;
         freqlimit sv_switchteam_hit;
+        freqlimit sv_kick_hit;
         std::string disconnect_reason;
         bool active;
         int rank;
@@ -252,7 +253,8 @@ namespace server
            sv_sayteam_hit(sv_sayteam_hit_length),
            sv_mapvote_hit(sv_mapvote_hit_length),
            sv_switchname_hit(sv_switchname_hit_length),
-           sv_switchteam_hit(sv_switchteam_hit_length)
+           sv_switchteam_hit(sv_switchteam_hit_length),
+           sv_kick_hit(sv_kick_hit_length)
         { reset(); }
         
         ~clientinfo() { events.deletecontentsp(); }
@@ -2633,6 +2635,8 @@ namespace server
                 int victim = getint(p);
                 if((ci->privilege || ci->local) && ci->clientnum!=victim && getclientinfo(victim)) // no bots
                 {
+                    if(ci->privilege < PRIV_ADMIN && ci->check_flooding(ci->sv_kick_hit, "kicking")) break;
+                    
                     clientinfo * victim_info = (clientinfo *)getinfo(victim);
                     if(victim_info->privilege && ci->privilege < PRIV_ADMIN)
                         ci->sendprivtext(RED "You cannot kick that player because they have an above normal privilege.");
