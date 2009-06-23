@@ -72,7 +72,6 @@ lib scriptpipe :
 exe sauer_server :
     src/engine/server.cpp
     src/fpsgame/server.cpp
-    src/hopmod/floodprotection.cpp
     src/hopmod/scripting.cpp
     src/hopmod/script_bindings.cpp
     src/hopmod/script_pipe.cpp
