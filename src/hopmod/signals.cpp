@@ -76,7 +76,7 @@ static int lua_event_handler_function(lua_State * L)
     
     script::env::object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
     luaFunctionObject->set_adopted();
-    
+
     int handle = slots.create_slot(name, luaFunctionObject, env);
     lua_pushinteger(L, handle);
     return 1;
