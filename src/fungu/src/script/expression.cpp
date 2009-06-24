@@ -30,8 +30,9 @@ static inline bool is_numeric(const const_string & str)
     const_string::const_iterator i=str.begin();
     if(i<str.end()-1 && (*i=='-' || *i=='+')) ++i;
     for(; i!=str.end(); ++i)
-        if(!(*i>='0' && *i<='9') && !(i>str.begin() && *i=='.') ) 
-            return false;
+    {
+        if(!(*i>='0' && *i<='9')) return false;
+    }
     return true;
 }
 
