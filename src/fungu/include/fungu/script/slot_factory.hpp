@@ -82,14 +82,18 @@ private:
         newSlot.second = sig.connect(boost::ref(*newSlotFunction),cp);
         
         int handle = -1;
-        for(slot_vector::iterator it = m_slots.begin(); it != m_slots.end(); ++it) 
+        for(slot_vector::iterator it = m_slots.begin(); it != m_slots.end(); ++it)
+        {
             if(!it->first){
                 handle = it - m_slots.begin(); 
                 break;
             }
+        }
         
-        if(handle != -1) 
+        if(handle != -1)
+        {
             m_slots[handle] = newSlot;
+        }
         else
         {
             m_slots.push_back(newSlot); 

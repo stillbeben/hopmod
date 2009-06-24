@@ -15,7 +15,7 @@
 #include <ostream>
 #include <istream>
 #include <boost/functional/hash.hpp>
-//#include <typeinfo>
+#include <typeinfo>
 
 namespace fungu{
 
