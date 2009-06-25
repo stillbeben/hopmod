@@ -28,6 +28,12 @@ public:
     typedef result_type return_type;
     typedef env::object::call_arguments::value_type serialized_argument_type;
     
+    call_serializer()
+     :m_argv(*(env::object::call_arguments *)NULL), m_frame(NULL)
+    {
+        
+    }
+    
     call_serializer(env::object::call_arguments & argv,env::frame * frame)
      :m_argv(argv),m_frame(frame)
     {

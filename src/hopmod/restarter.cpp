@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <iostream>
+#include <stdlib.h>
 
 extern int prog_argc;
 extern char * const * prog_argv;

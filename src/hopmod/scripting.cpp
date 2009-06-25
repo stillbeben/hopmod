@@ -138,6 +138,7 @@ int svrtable_newindex(lua_State * L)
         {
             scoped_setting<bool> setting(binding_object_to_cubescript,true);
             hangingObj = new script::lua::lua_function(L,-1,key.c_str());
+            hangingObj->set_adopted();
             env->bind_global_object(hangingObj,const_string(key));
             hangingObj = NULL;
         }
@@ -150,6 +151,7 @@ int svrtable_newindex(lua_State * L)
             {
                 scoped_setting<bool> setting(binding_object_to_cubescript,true);
                 script::any_variable * newvar = new script::any_variable;
+                newvar->set_adopted();
                 hangingObj = newvar;
                 newvar->assign(script::lua::get_argument_value(L));
                 env->bind_global_object(newvar,const_string(key));

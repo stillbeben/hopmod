@@ -24,15 +24,9 @@ class base_script_function
 public:
     virtual ~base_script_function(){}
 protected:
-    virtual void init(Container **, Serializer **)=0;
     virtual typename Container::value_type call(Container *)=0;
     virtual typename Container::value_type error_handler(int,ErrorException)=0;
 };
-
-#define FUNGU_INIT_SCRIPT_FUNCTION_CALL(a,s) \
-    Container * a = NULL; Serializer * s = NULL; \
-    init(& a , & s ); \
-    int arg;
 
 template<typename FunctionTraits,typename Container,typename Serializer,typename ErrorException>
 class script_function0:public base_script_function<Container,Serializer,ErrorException>
@@ -42,14 +36,17 @@ public:
     
     result_type operator()()
     {
-        FUNGU_INIT_SCRIPT_FUNCTION_CALL(args,s);
+        Container args;
+        Serializer s;
+        int arg;
+        
         try
         {
             arg = 0;
-            return s->deserialize_return_value(call(args),type_tag<result_type>());
+            return s.deserialize_return_value(call(&args), type_tag<result_type>());
         }
         catch(ErrorException e){
-            return s->deserialize_return_value(error_handler(arg,e),type_tag<result_type>());
+            return s.deserialize_return_value(error_handler(arg, e), type_tag<result_type>());
         }
     }
 };
@@ -63,15 +60,18 @@ public:
     
     result_type operator()(arg1_type a1)
     {
-        FUNGU_INIT_SCRIPT_FUNCTION_CALL(args,s);
+        Container args;
+        Serializer s;
+        int arg;
+        
         try
         {
-            arg = 1; args->push_back(s->serialize(a1));
+            arg = 1; args.push_back(s.serialize(a1));
             arg = 0;
-            return s->deserialize_return_value(call(args),type_tag<result_type>());
+            return s.deserialize_return_value(call(&args), type_tag<result_type>());
         }
         catch(ErrorException e){
-            return s->deserialize_return_value(error_handler(arg,e),type_tag<result_type>());
+            return s.deserialize_return_value(error_handler(arg,e), type_tag<result_type>());
         }
     }
 };
@@ -86,16 +86,19 @@ public:
     
     result_type operator()(arg1_type a1,arg2_type a2)
     {
-        FUNGU_INIT_SCRIPT_FUNCTION_CALL(args,s);
+        Container args;
+        Serializer s;
+        int arg;
+        
         try
         {
-            arg = 1; args->push_back(s->serialize(a1));
-            arg = 2; args->push_back(s->serialize(a2));
+            arg = 1; args.push_back(s.serialize(a1));
+            arg = 2; args.push_back(s.serialize(a2));
             arg = 0;
-            return s->deserialize_return_value(call(args),type_tag<result_type>());
+            return s.deserialize_return_value(call(&args), type_tag<result_type>());
         }
         catch(ErrorException e){
-            return s->deserialize_return_value(error_handler(arg,e),type_tag<result_type>());
+            return s.deserialize_return_value(error_handler(arg,e), type_tag<result_type>());
         }
     }
 };
@@ -111,17 +114,20 @@ public:
 
     result_type operator()(arg1_type a1,arg2_type a2,arg3_type a3)
     {
-        FUNGU_INIT_SCRIPT_FUNCTION_CALL(args,s);
+        Container args;
+        Serializer s;
+        int arg;
+        
         try
         {
-            arg = 1; args->push_back(s->serialize(a1));
-            arg = 2; args->push_back(s->serialize(a2));
-            arg = 3; args->push_back(s->serialize(a3));
+            arg = 1; args.push_back(s.serialize(a1));
+            arg = 2; args.push_back(s.serialize(a2));
+            arg = 3; args.push_back(s.serialize(a3));
             arg = 0;
-            return s->deserialize_return_value(call(args),type_tag<result_type>());
+            return s.deserialize_return_value(call(&args), type_tag<result_type>());
         }
         catch(ErrorException e){
-            return s->deserialize_return_value(error_handler(arg,e),type_tag<result_type>());
+            return s.deserialize_return_value(error_handler(arg,e), type_tag<result_type>());
         }
     }
 };
@@ -138,18 +144,21 @@ public:
 
     result_type operator()(arg1_type a1,arg2_type a2,arg3_type a3,arg4_type a4)
     {
-        FUNGU_INIT_SCRIPT_FUNCTION_CALL(args,s);
+        Container args;
+        Serializer s;
+        int arg;
+        
         try
         {
-            arg = 1; args->push_back(s->serialize(a1));
-            arg = 2; args->push_back(s->serialize(a2));
-            arg = 3; args->push_back(s->serialize(a3));
-            arg = 4; args->push_back(s->serialize(a4));
+            arg = 1; args.push_back(s.serialize(a1));
+            arg = 2; args.push_back(s.serialize(a2));
+            arg = 3; args.push_back(s.serialize(a3));
+            arg = 4; args.push_back(s.serialize(a4));
             arg = 0;
-            return s->deserialize_return_value(call(args),type_tag<result_type>());
+            return s.deserialize_return_value(call(&args), type_tag<result_type>());
         }
         catch(ErrorException e){
-            return s->deserialize_return_value(error_handler(arg,e),type_tag<result_type>());
+            return s.deserialize_return_value(error_handler(arg,e), type_tag<result_type>());
         }
     }
 };
@@ -167,19 +176,22 @@ public:
     
     result_type operator()(arg1_type a1,arg2_type a2,arg3_type a3,arg4_type a4,arg5_type a5)
     {
-        FUNGU_INIT_SCRIPT_FUNCTION_CALL(args,s);
+        Container args;
+        Serializer s;
+        int arg;
+        
         try
         {
-            arg = 1; args->push_back(s->serialize(a1));
-            arg = 2; args->push_back(s->serialize(a2));
-            arg = 3; args->push_back(s->serialize(a3));
-            arg = 4; args->push_back(s->serialize(a4));
-            arg = 5; args->push_back(s->serialize(a5));
+            arg = 1; args.push_back(s.serialize(a1));
+            arg = 2; args.push_back(s.serialize(a2));
+            arg = 3; args.push_back(s.serialize(a3));
+            arg = 4; args.push_back(s.serialize(a4));
+            arg = 5; args.push_back(s.serialize(a5));
             arg = 0;
-            return s->deserialize_return_value(call(args),type_tag<result_type>());
+            return s.deserialize_return_value(call(&args), type_tag<result_type>());
         }
         catch(ErrorException e){
-            return s->deserialize_return_value(error_handler(arg,e),type_tag<result_type>());
+            return s.deserialize_return_value(error_handler(arg,e), type_tag<result_type>());
         }
     }
 };
@@ -198,20 +210,23 @@ public:
     
     result_type operator()(arg1_type a1,arg2_type a2,arg3_type a3,arg4_type a4,arg5_type a5,arg6_type a6)
     {
-        FUNGU_INIT_SCRIPT_FUNCTION_CALL(args,s);
+        Container args;
+        Serializer s;
+        int arg;
+        
         try
         {
-            arg = 1; args->push_back(s->serialize(a1));
-            arg = 2; args->push_back(s->serialize(a2));
-            arg = 3; args->push_back(s->serialize(a3));
-            arg = 4; args->push_back(s->serialize(a4));
-            arg = 5; args->push_back(s->serialize(a5));
-            arg = 6; args->push_back(s->serialize(a6));
+            arg = 1; args.push_back(s.serialize(a1));
+            arg = 2; args.push_back(s.serialize(a2));
+            arg = 3; args.push_back(s.serialize(a3));
+            arg = 4; args.push_back(s.serialize(a4));
+            arg = 5; args.push_back(s.serialize(a5));
+            arg = 6; args.push_back(s.serialize(a6));
             arg = 0;
-            return s->deserialize_return_value(call(args),type_tag<result_type>());
+            return s.deserialize_return_value(call(&args), type_tag<result_type>());
         }
         catch(ErrorException e){
-            return s->deserialize_return_value(error_handler(arg,e),type_tag<result_type>());
+            return s.deserialize_return_value(error_handler(arg,e), type_tag<result_type>());
         }
     }
 };

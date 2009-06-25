@@ -22,6 +22,8 @@ namespace script{
 class slot_factory
 {
 public:
+    typedef any (* error_handler_function)(error_trace *);
+    
     ~slot_factory()
     {
         clear();
@@ -33,11 +35,10 @@ public:
         m_slots.clear();
     }
     
-    template<typename SignalType,typename ErrorHandlerFunction>
-    void register_signal(SignalType & sig,const_string name,ErrorHandlerFunction error_handler,boost::signals::connect_position cp = boost::signals::at_back)
+    template<typename SignalType>
+    void register_signal(SignalType & sig, const_string name, error_handler_function error_handler, boost::signals::connect_position cp = boost::signals::at_back)
     {
-        boost::function<std::vector<result_type>::value_type (error_trace *)> error_handler_wrapper = error_handler;
-        m_signal_connectors[name] = boost::bind(&slot_factory::connect_slot<SignalType>,this,boost::ref(sig),error_handler,cp,_1,_2);
+        m_signal_connectors[name] = boost::bind(&slot_factory::connect_slot<SignalType>, this, boost::ref(sig), error_handler, cp, _1, _2);
     }
     
     int create_slot(const_string name, env::object::shared_ptr obj, env * environment)
@@ -68,7 +69,7 @@ public:
 private:
     template<typename SignalType>
     int connect_slot(SignalType & sig,
-        boost::function<std::vector<result_type>::value_type (error_trace *)> error_handler,
+        error_handler_function error_handler,
         boost::signals::connect_position cp,
         env::object::shared_ptr obj,
         env * environment)
@@ -79,12 +80,13 @@ private:
         script_function<SignalSignature> * newSlotFunction = new script_function<SignalSignature>(obj, environment, error_handler);
         
         newSlot.first = newSlotFunction;
-        newSlot.second = sig.connect(boost::ref(*newSlotFunction),cp);
+        newSlot.second = sig.connect(boost::ref(*newSlotFunction), cp);
         
         int handle = -1;
         for(slot_vector::iterator it = m_slots.begin(); it != m_slots.end(); ++it)
         {
-            if(!it->first){
+            if(!it->first)
+            {
                 handle = it - m_slots.begin(); 
                 break;
             }

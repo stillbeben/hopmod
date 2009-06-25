@@ -30,7 +30,7 @@ local auth_request = {}
 
 auth_domain_handlers = {}
 auth = {}
-auth.authserver_offline = false;
+auth.authserver_offline = false
 
 server.event_handler("authreq", function(cn,name,domain)
   

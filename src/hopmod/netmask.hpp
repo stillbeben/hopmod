@@ -55,8 +55,8 @@ public:
     {
         char str_copy[19];
         char * str_copy_p = str_copy;
-        char * tokens[5] = {str_copy,"0","0","0",NULL};
-        char ** current_token = tokens;
+        const char * tokens[5] = {str_copy,"0","0","0",NULL};
+        const char ** current_token = tokens;
         
         for(; *str && str_copy_p < str_copy + sizeof(str_copy) - 1; ++str, ++str_copy_p)
         {

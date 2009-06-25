@@ -21,22 +21,16 @@ template<typename Signature>
 class script_function:public generic_script_function<Signature, std::vector<result_type>, call_serializer, error>
 {
 public:
-    template<typename ErrorHandlerFunction>
-    script_function(env::object::shared_ptr object, env * environment, ErrorHandlerFunction error_handler)
+    typedef any (* error_handler_function)(error_trace *);
+    
+    script_function(env::object::shared_ptr object, env * environment, error_handler_function error_handler)
      :m_object(object),
       m_env(environment),
-      m_serializer(*(arguments_container *)NULL, NULL),
       m_error_handler(error_handler)
     {
         
     }
 protected:
-    void init(std::vector<result_type> ** args, call_serializer ** serializer)
-    {
-        *args = &m_args;
-        *serializer = &m_serializer;
-    }
-    
     std::vector<result_type>::value_type call(std::vector<result_type> * args)
     {
         result_type result;
@@ -44,7 +38,7 @@ protected:
         try
         {
             env::frame callframe(m_env);
-            arguments_container callargs(m_args);
+            arguments_container callargs(*args);
             
             result = m_object->call(callargs, &callframe);
         }
@@ -56,9 +50,6 @@ protected:
         {
             result = m_error_handler(errinfo);
         }
-        
-        m_args.clear();
-        m_serializer.clear();
         
         return result;
     }
@@ -76,9 +67,7 @@ private:
     
     env::object::shared_ptr m_object;
     env * m_env;
-    std::vector<result_type> m_args;
-    call_serializer m_serializer;
-    boost::function<arguments_container::value_type (error_trace *)> m_error_handler;
+    error_handler_function m_error_handler;
 };
 
 } //namespace script
