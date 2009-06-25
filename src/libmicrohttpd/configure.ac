@@ -223,41 +223,11 @@ AC_CHECK_PROG([HAVE_SOCAT],[socat], 1, 0)
 AM_CONDITIONAL(HAVE_ZZUF, test 0 != $HAVE_ZZUF)
 AM_CONDITIONAL(HAVE_SOCAT, test 0 != $HAVE_SOCAT)
 
-
-# libgcrypt linkage: required for HTTPS support 
-AM_PATH_LIBGCRYPT(1.2.4, gcrypt=true)
-
 # define the minimal version of libgcrypt required   
 MHD_GCRYPT_VERSION=1:1.2.4
 AC_DEFINE_UNQUOTED([MHD_GCRYPT_VERSION], "$MHD_GCRYPT_VERSION", [gcrypt lib version])
 
-
-# optional: HTTPS support.  Enabled by default
-AC_MSG_CHECKING(whether to enable HTTPS support)
-AC_ARG_ENABLE([https],
-   [AS_HELP_STRING([--enable-https],
-               [enable HTTPS support (default is yes)])],
-   [enable_https=$enableval],
-   [enable_https="yes"])
-if test "$enable_https" = "yes"
-then
- if test "$gcrypt" = "true"
- then
-   AC_DEFINE([HTTPS_SUPPORT],[1],[include HTTPS support])
-   MHD_LIBDEPS="$LIBGCRYPT_LIBS"
-   AC_SUBST([ENABLE_HTTPS],[1])
- else
-   AC_DEFINE([HTTPS_SUPPORT],[0],[no libgcrypt])
-   enable_https="no (lacking libgcrypt)"
-   AC_SUBST([ENABLE_HTTPS],[0])
- fi
-else
- AC_DEFINE([HTTPS_SUPPORT],[0],[disable HTTPS support])
- AC_SUBST([ENABLE_HTTPS],[0])
-fi
-AC_MSG_RESULT($enable_https)
-
-AM_CONDITIONAL(ENABLE_HTTPS, test "$enable_https" = "yes")
+AC_DEFINE([HTTPS_SUPPORT],[0],[disable HTTPS support])
 
 MHD_LIB_LDFLAGS="-export-dynamic -no-undefined"
 
@@ -346,7 +316,6 @@ AC_MSG_NOTICE([Configuration Summary:
   Messages:          ${enable_messages}
   libgcrypt:         ${MSG_GCRYPT}
   libcurl (testing): ${MSG_CURL}
-  HTTPS support:     ${enable_https}
 ])
 
 if test "$enable_https" = "yes"

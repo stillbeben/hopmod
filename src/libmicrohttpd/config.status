@@ -809,18 +809,12 @@ s,@HAVE_ZZUF_TRUE@,|#_!!_#|,g
 s,@HAVE_ZZUF_FALSE@,|#_!!_#|#,g
 s,@HAVE_SOCAT_TRUE@,|#_!!_#|,g
 s,@HAVE_SOCAT_FALSE@,|#_!!_#|#,g
-s,@LIBGCRYPT_CONFIG@,|#_!!_#|/usr/local/bin/libgcrypt-config,g
-s,@LIBGCRYPT_CFLAGS@,|#_!!_#|-I/usr/local/include,g
-s,@LIBGCRYPT_LIBS@,|#_!!_#|-L/usr/local/lib -lgcrypt -lgpg-error,g
-s,@ENABLE_HTTPS@,|#_!!_#|1,g
-s,@ENABLE_HTTPS_TRUE@,|#_!!_#|,g
-s,@ENABLE_HTTPS_FALSE@,|#_!!_#|#,g
 s,@MHD_DEBUG_TLS_TRUE@,|#_!!_#|#,g
 s,@MHD_DEBUG_TLS_FALSE@,|#_!!_#|,g
 s,@USE_COVERAGE_TRUE@,|#_!!_#|#,g
 s,@USE_COVERAGE_FALSE@,|#_!!_#|,g
 s,@MHD_LIB_LDFLAGS@,|#_!!_#|-export-dynamic -no-undefined -export-symbols $(srcdir)/EXPORT.sym,g
-s,@MHD_LIBDEPS@,|#_!!_#|-L/usr/local/lib -lgcrypt -lgpg-error,g
+s,@MHD_LIBDEPS@,|#_!!_#|,g
 s,@EXT_LIB_PATH@,|#_!!_#|,g
 s,@EXT_LIBS@,|#_!!_#|,g
 s,@LIBOBJS@,|#_!!_#|,g
@@ -1154,7 +1148,7 @@ s,^\([	 #]*\)[^	 ]*\([	 ]*MHD_REQ_CURL_GNUTLS_VERSION\)[	 (].*,\1define\2 "2.2.3
 s,^\([	 #]*\)[^	 ]*\([	 ]*_FILE_OFFSET_BITS\)[	 (].*,\1define\2 64 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*HAVE_FSEEKO\)[	 (].*,\1define\2 1 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*MHD_GCRYPT_VERSION\)[	 (].*,\1define\2 "1:1.2.4" ,
-s,^\([	 #]*\)[^	 ]*\([	 ]*HTTPS_SUPPORT\)[	 (].*,\1define\2 1 ,
+s,^\([	 #]*\)[^	 ]*\([	 ]*HTTPS_SUPPORT\)[	 (].*,\1define\2 0 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*MHD_DEBUG_TLS\)[	 (].*,\1define\2 0 ,
 s,^\([	 #]*\)[^	 ]*\([	 ]*GNULIB_GC_RANDOM\)[	 (].*,\1define\2 1 ,
 s/ $//

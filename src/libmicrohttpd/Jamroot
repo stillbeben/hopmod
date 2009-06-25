@@ -4,101 +4,7 @@ project : source-location src ;
 alias headers : : : : 
     <include>.
     <include>src/include
-    <include>src/daemon
-    <include>src/daemon/https
-    <include>src/daemon/https/lgl
-    <include>src/daemon/https/minitasn1
-    <include>src/daemon/https/tls
-    <include>src/daemon/https/x509 ; 
-
-enable_https = 1 ;
-
-if $(enable_https) = 1 {
-
-    lib gcrypt : : <name>gcrypt ;
-    
-    lib lgl :
-        headers
-        daemon/https/lgl/gc-libgcrypt.c
-        : <link>static ;
-    
-    lib minitasn1 :
-        headers
-        daemon/https/minitasn1/coding.c
-        daemon/https/minitasn1/decoding.c
-        daemon/https/minitasn1/element.c
-        daemon/https/minitasn1/gstr.c
-        daemon/https/minitasn1/parser_aux.c
-        daemon/https/minitasn1/structure.c
-        : <link>static ;
-    
-    lib tls :
-        headers
-        daemon/https/tls/auth_cert.c
-        daemon/https/tls/auth_dh_common.c
-        daemon/https/tls/auth_dhe.c
-        daemon/https/tls/auth_rsa.c
-        daemon/https/tls/auth_rsa_export.c
-        daemon/https/tls/debug.c
-        daemon/https/tls/ext_cert_type.c
-        daemon/https/tls/ext_max_record.c
-        daemon/https/tls/ext_server_name.c
-        daemon/https/tls/gnutls_alert.c
-        daemon/https/tls/gnutls_algorithms.c
-        daemon/https/tls/gnutls_asn1_tab.c
-        daemon/https/tls/gnutls_auth.c
-        daemon/https/tls/gnutls_buffers.c
-        daemon/https/tls/gnutls_cert.c
-        daemon/https/tls/gnutls_cipher.c
-        daemon/https/tls/gnutls_cipher_int.c
-        daemon/https/tls/gnutls_constate.c
-        daemon/https/tls/gnutls_datum.c
-        daemon/https/tls/gnutls_dh.c
-        daemon/https/tls/gnutls_dh_primes.c
-        daemon/https/tls/gnutls_errors.c
-        daemon/https/tls/gnutls_extensions.c
-        daemon/https/tls/gnutls_global.c
-        daemon/https/tls/gnutls_handshake.c
-        daemon/https/tls/gnutls_hash_int.c
-        daemon/https/tls/gnutls_kx.c
-        daemon/https/tls/gnutls_mem.c
-        daemon/https/tls/gnutls_mpi.c
-        daemon/https/tls/gnutls_num.c
-        daemon/https/tls/gnutls_pk.c
-        daemon/https/tls/gnutls_priority.c
-        daemon/https/tls/gnutls_record.c
-        daemon/https/tls/gnutls_rsa_export.c
-        daemon/https/tls/gnutls_sig.c
-        daemon/https/tls/gnutls_state.c
-        daemon/https/tls/gnutls_str.c
-        daemon/https/tls/gnutls_supplemental.c
-        daemon/https/tls/gnutls_ui.c
-        daemon/https/tls/gnutls_x509.c
-        daemon/https/tls/memmem.c
-        daemon/https/tls/pkix_asn1_tab.c
-        daemon/https/tls/x509_b64.c
-        : <link>static ;
-    
-    lib x509 :
-        headers
-        daemon/https/x509/common.c
-        daemon/https/x509/extensions.c
-        daemon/https/x509/mpi.c
-        daemon/https/x509/x509.c
-        daemon/https/x509/x509_privkey.c
-        : <link>static ;
-    
-    alias https :
-        daemon/connection_https.c
-        gcrypt
-        lgl
-        minitasn1
-        tls
-        x509 ;
-    
-} else {
-    alias https : ;
-}
+    <include>src/daemon ;
 
 lib pthread : : <name>pthread ;
 
@@ -110,6 +16,5 @@ lib httpd :
     daemon/postprocessor.c
     daemon/reason_phrase.c
     daemon/response.c
-    headers
-    https
+    headers 
     pthread ;
