@@ -16,5 +16,5 @@ lib httpd :
     daemon/postprocessor.c
     daemon/reason_phrase.c
     daemon/response.c
-    headers 
+    headers
     pthread ;
