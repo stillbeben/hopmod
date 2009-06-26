@@ -223,7 +223,8 @@ function server.new_player_object(cn)
         var = function(obj, name, value, defvalue) return server.player_var(obj.cn, name, value, defvalue) end,
         pvar = function(obj, name, value, defvalue) return server.player_pvar(obj.cn, name, value, defvalue) end,
         hasvar = function(obj, name) return server.player_hasvar(obj.cn, name) end,
-        haspvar = function(obj, name) return server.player_haspvar(obj.cn, name) end
+        haspvar = function(obj, name) return server.player_haspvar(obj.cn, name) end,
+        pos = function(obj) return server.player_pos(obj.cn) end
     }
 end
 
@@ -292,8 +293,4 @@ end
 
 function server.valid_cn(cn)
     return server.player_id(tonumber(cn) or -1) ~= -1
-end
-
-function server.test()
-    return type(server.ALIVE)
 end

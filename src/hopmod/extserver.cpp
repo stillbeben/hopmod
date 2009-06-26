@@ -598,6 +598,27 @@ int player_bots(int cn)
     return ci->bots.length();
 }
 
+int player_pos(lua_State * L)
+{
+    if(lua_gettop(L) == 0) return luaL_error(L,"missing cn argument");
+    int cn = lua_tointeger(L,1);
+    vec pos = get_ci(cn)->state.o;
+    lua_pushnumber(L, pos.x);
+    lua_pushnumber(L, pos.y);
+    lua_pushnumber(L, pos.z);
+    return 3;
+}
+
+std::vector<float> player_pos(int cn)
+{
+    vec pos = get_ci(cn)->state.o;
+    std::vector<float> result(3);
+    result[0] = pos.x;
+    result[1] = pos.y;
+    result[2] = pos.z;
+    return result;
+}
+
 void unsetmaster()
 {
     if(currentmaster != -1)

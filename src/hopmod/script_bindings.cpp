@@ -73,6 +73,9 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<bool (int)>(server::player_isbot, FUNGU_OBJECT_ID("player_isbot"), env);
     script::bind_global_func<int (int)>(server::player_mapcrc, FUNGU_OBJECT_ID("player_mapcrc"), env);
     
+    script::bind_global_func<std::vector<float>(int)>((std::vector<float>(*)(int))server::player_pos, FUNGU_OBJECT_ID("player_pos"), env);
+    register_lua_function((int (*)(lua_State *))&server::player_pos, "player_pos");
+    
     script::bind_global_const((int)CS_ALIVE, FUNGU_OBJECT_ID("ALIVE"), env);
     script::bind_global_const((int)CS_DEAD, FUNGU_OBJECT_ID("DEAD"), env);
     script::bind_global_const((int)CS_SPAWNING, FUNGU_OBJECT_ID("SPAWNING"), env);

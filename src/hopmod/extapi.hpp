@@ -80,6 +80,8 @@ namespace server
     void player_spec(int);
     void player_unspec(int);
     int player_bots(int);
+    int player_pos(lua_State *);
+    std::vector<float> player_pos(int);
     void unsetmaster();
     void server_setmaster(int);
     void server_setadmin(int);
