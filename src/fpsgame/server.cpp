@@ -1620,16 +1620,19 @@ namespace server
                 return;
         }
         gs.explosivedamage += guns[gun].damage * (gs.quadmillis ? 4 : 1);
+        
         loopv(hits)
         {
             hitinfo &h = hits[i];
             clientinfo *target = getinfo(h.target);
             if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.dist<0 || h.dist>RL_DAMRAD) continue;
-
+            
             bool dup = false;
             loopj(i) if(hits[j].target==h.target) { dup = true; break; }
             if(dup) continue;
-
+            
+            gs.hits += (ci != target ? 1 : 0);
+            
             int damage = guns[gun].damage;
             if(gs.quadmillis) damage *= 4;        
             damage = int(damage*(1-h.dist/RL_DISTSCALE/RL_DAMRAD));
@@ -1655,6 +1658,9 @@ namespace server
                 int(to.x*DMF), int(to.y*DMF), int(to.z*DMF),
                 ci->ownernum);
         gs.shotdamage += guns[gun].damage*(gs.quadmillis ? 4 : 1)*(gun==GUN_SG ? SGRAYS : 1);
+        
+        gs.shots++;
+        
         switch(gun)
         {
             case GUN_RL: gs.rockets.add(id); break;
@@ -1670,6 +1676,9 @@ namespace server
 
                     totalrays += h.rays;
                     if(totalrays>maxrays) continue;
+                    
+                    gs.hits += (ci != target ? 1 : 0);
+                    
                     int damage = h.rays*guns[gun].damage;
                     if(gs.quadmillis) damage *= 4;
                     dodamage(target, ci, damage, gun, h.dir);
@@ -2365,9 +2374,6 @@ namespace server
                 if(cq)
                 {
                     cq->addevent(shot);
-                    
-                    cq->state.shots++;
-                    cq->state.hits += hits;
                 }
                 else delete shot;
                 break;
@@ -2393,9 +2399,6 @@ namespace server
                 if(cq)
                 {
                     cq->addevent(exp);
-                    
-                    cq->state.shots++;
-                    cq->state.hits += hits;
                 }
                 else delete exp;
                 break;
