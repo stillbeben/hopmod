@@ -1660,6 +1660,7 @@ namespace server
         gs.shotdamage += guns[gun].damage*(gs.quadmillis ? 4 : 1)*(gun==GUN_SG ? SGRAYS : 1);
         
         gs.shots++;
+        int old_hits = gs.hits; 
         
         switch(gun)
         {
@@ -1686,6 +1687,8 @@ namespace server
                 break;
             }
         }
+        
+        signal_shot(ci->clientnum, gun, gs.hits - old_hits);
     }
 
     void pickupevent::process(clientinfo *ci)

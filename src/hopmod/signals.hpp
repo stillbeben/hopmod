@@ -65,7 +65,7 @@ extern boost::signal<void (int)>                                    signal_botle
 extern boost::signal<void (int)>                                    signal_mapcrcfail;
 extern boost::signal<void (int,int)>                                signal_teamkill;
 extern boost::signal<void (int,int)>                                signal_frag;
-extern boost::signal<void ()>                                       signal_shoot;
+extern boost::signal<void (int,int,int)>                            signal_shot;
 
 // Game Events
 extern boost::signal<void ()>                                       signal_intermission;
