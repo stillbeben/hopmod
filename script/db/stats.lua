@@ -1,35 +1,41 @@
-require "sqlite3"
-dofile("./script/db/sqliteutils.lua")
 require "Json"
 
 local game = nil
 local stats = nil
 local evthandlers = {}
 local statsmod = {} -- namespace for stats functions
+local db, perr, insert_game, insert_team, insert_player, select_player_totals
+local domain_id
+local domain_name
+local using_sqlite = (server.stats_use_sqlite == 1)
+local using_json = (server.stats_use_json == 1)
 
 server.stats_db_absolute_filename = server.PWD .. "/" .. server.stats_db_filename
 
-local db = sqlite3.open(server.stats_db_filename)
-createMissingTables("./script/db/stats_schema.sql", db)
+if server.stats_debug == 1 then statsmod.db = db end
 
-if tonumber(server.stats_debug) == 1 then statsmod.db = db end
+if using_sqlite then
 
-local perr
-local insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, bots, finished) VALUES (:datetime, :duration, :mode, :map, :players, :bots, :finished)")
-if not insert_game then error(perr) end
+    require "sqlite3"
+    dofile("./script/db/sqliteutils.lua")
+    
+    db = sqlite3.open(server.stats_db_filename)
+    createMissingTables("./script/db/stats_schema.sql", db)
 
-local insert_team,perr = db:prepare("INSERT INTO teams (game_id, name, score, win, draw) VALUES (:gameid,:name,:score,:win,:draw)")
-if not insert_team then error(perr) end
+    insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, bots, finished) VALUES (:datetime, :duration, :mode, :map, :players, :bots, :finished)")
+    if not insert_game then error(perr) end
 
-local insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win, rank, botskill) 
- VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank, :botskill)]]
-if not insert_player then error(perr) end
+    insert_team,perr = db:prepare("INSERT INTO teams (game_id, name, score, win, draw) VALUES (:gameid,:name,:score,:win,:draw)")
+    if not insert_team then error(perr) end
 
-local select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
-if not select_player_totals then error(perr) end
+    insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win, rank, botskill) 
+        VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank, :botskill)]]
+    if not insert_player then error(perr) end
 
-local domain_id
-local domain_name
+    select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
+    if not select_player_totals then error(perr) end
+
+end
 
 function statsmod.setNewGame()
     game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map, finished = false}
@@ -166,12 +172,12 @@ function statsmod.commitStats()
     game.bots = bot_players
     game.duration = game.duration - server.timeleft
     
-    if tonumber(server.stats_use_json) == 1 then
+    if using_json 1 then
         statsmod.writeStatsToJsonFile()
         return
     end
     
-    if tonumber(server.stats_use_sqlite) == 0 then
+    if not using_sqlite then
         stats = nil
         return
     end
@@ -308,7 +314,7 @@ server.event_handler("mapchange", function()
 end)
 
 server.event_handler("shutdown", function()
-    db:close()
+    if db then db:close() end
 end)
 
 function server.playercmd_stats(cn, selection)
@@ -330,6 +336,12 @@ function server.playercmd_stats(cn, selection)
     if not selection then
         player_stats(cn, cn)
     elseif selection == "total" then
+    
+        if not using_sqlite then 
+            server.player_msg(cn, red("Not available."))
+            return
+        end
+        
         select_player_totals:bind{name = server.player_name(cn)}
         row = select_player_totals:first_row()
         if not row then
@@ -337,6 +349,7 @@ function server.playercmd_stats(cn, selection)
             return
         end
         server.player_msg(cn, string.format("Games: %s Frags: %s Deaths: %s Wins: %s Losses: %s",yellow(row.games),green(row.frags),red(row.deaths),green(row.wins),red(row.losses)))
+        
 	elseif server.valid_cn(selection) then
 		player_stats(cn, selection) 
    end
@@ -373,18 +386,25 @@ function statsmod.writeStatsToJsonFile()
     file:flush()
 end
 
-local find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
-if not find_names_by_ip then error(perr) end
 
-function server.find_names_by_ip(ip, exclude_name)
-    local names = {}
-    find_names_by_ip:bind{ipaddr=ip}
-    for row in find_names_by_ip:rows() do
-        if not exclude_name or exclude_name ~= row.name then
-            table.insert(names, row.name)
+if using_sqlite then
+
+    local find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
+    if not find_names_by_ip then error(perr) end
+
+    function server.find_names_by_ip(ip, exclude_name)
+        local names = {}
+        find_names_by_ip:bind{ipaddr=ip}
+        for row in find_names_by_ip:rows() do
+            if not exclude_name or exclude_name ~= row.name then
+                table.insert(names, row.name)
+            end
         end
+        return names
     end
-    return names
+    
+else
+    function server.find_names_by_ip() return nil end
 end
 
 function server.playercmd_showauth(cn)
