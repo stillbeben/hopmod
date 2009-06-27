@@ -247,7 +247,7 @@ namespace server
         bool active;
         int rank;
         bool using_reservedslot;
-
+        
         clientinfo() 
          : sv_text_hit(sv_text_hit_length),
            sv_sayteam_hit(sv_sayteam_hit_length),
@@ -429,6 +429,8 @@ namespace server
     stream *demotmp = NULL, *demorecord = NULL, *demoplayback = NULL;
     int demo_id = 0;
     int nextplayback = 0, demomillis, demoffset = 0;
+    
+    timer::time_diff_t timer_alarm_threshold = 1000000;
     
     struct servmode
     {
@@ -1763,6 +1765,8 @@ namespace server
 
     void serverupdate()
     {
+        timer serverupdate_time;
+        
         if(!gamepaused) gamemillis += curtime;
         
         if(m_demo) readdemo();
@@ -1815,6 +1819,9 @@ namespace server
         }
         
         update_hopmod();
+        
+        timer::time_diff_t e = serverupdate_time.usec_elapsed();
+        if(e >= timer_alarm_threshold) std::cout<<"serverupdate timing: "<<e<<" usecs."<<std::endl;
     }
 
     struct crcinfo 
@@ -2129,6 +2136,8 @@ namespace server
 
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
     {
+        timer parsepacket_time;
+        
         if(sender<0) return;
         char text[MAXTRANS];
         int type;
@@ -2828,6 +2837,9 @@ namespace server
                 break;
             }
         }
+        
+        timer::time_diff_t e = parsepacket_time.usec_elapsed();
+        if(e >= timer_alarm_threshold) std::cout<<"parsepacket timing: "<<e<<" usecs."<<std::endl;
     }
     
     int laninfoport() { return SAUERBRATEN_LANINFO_PORT; }

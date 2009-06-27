@@ -281,6 +281,8 @@ void reload_hopmod()
     init_hopmod();
     
     started();
+    
+    std::cout<<"-> Reloaded Hopmod."<<std::endl;
 }
 
 void update_hopmod()

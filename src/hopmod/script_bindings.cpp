@@ -207,6 +207,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(tx_packets, FUNGU_OBJECT_ID("tx_packets"), env);
     script::bind_global_var(rx_packets, FUNGU_OBJECT_ID("rx_packets"), env);
     
+    script::bind_global_var(server::timer_alarm_threshold, FUNGU_OBJECT_ID("timer_alarm_threshold"), env);
+    
     register_lua_function(&server::lua_genkeypair, "genkeypair");
     register_lua_function(&server::lua_genchallenge, "genchallenge");
     register_lua_function(&server::lua_checkchallenge, "checkchallenge");

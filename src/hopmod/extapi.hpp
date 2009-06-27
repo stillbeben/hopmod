@@ -3,6 +3,7 @@
 
 #include "cube.h"
 #include "lua.hpp"
+#include "utils.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
@@ -44,6 +45,8 @@ namespace server
     extern string authserver_hostname;
     
     extern bool broadcast_mapmodified;
+    
+    extern timer::time_diff_t timer_alarm_threshold;
     
     void init_hopmod();
     void reload_hopmod();

@@ -1,3 +1,5 @@
+#include "utils.hpp"
+
 #include <string>
 #include <sstream>
 #include <netdb.h>
@@ -46,3 +48,22 @@ std::string yellow(const std::string & msg){return concol(2, msg);}
 
 int secs(int ms){return ms * 1000;}
 int mins(int ms){return ms * 60000;}
+
+static unsigned long usec_diff(const timespec & t1, const timespec & t2)
+{
+    long secs = t2.tv_sec - t1.tv_sec;
+    if(secs > 0) return ((secs - 1) * 1000000) + (1000000000 - t1.tv_nsec + t2.tv_nsec)/1000;
+    else return (t2.tv_nsec - t1.tv_nsec)/1000;
+}
+
+timer::timer()
+{
+    clock_gettime(CLOCK_MONOTONIC, &m_start);
+}
+
+timer::time_diff_t timer::usec_elapsed()const
+{
+    timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return usec_diff(m_start, now);
+}
