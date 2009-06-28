@@ -92,6 +92,8 @@ struct restore_teamscore
 
 static void crash_handler(int signal)
 {
+    unlink_script_pipe();
+    
     int fd = open("log/restore", O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
     
     if(fd != -1)
@@ -153,13 +155,6 @@ static void crash_handler(int signal)
     
     if(totalmillis > 10000)
     {
-        /*sigset_t mask;
-        sigemptyset(&mask);
-        sigaddset(&mask, signal);
-        sigprocmask(SIG_UNBLOCK, &mask, NULL);
-        
-        execv(prog_argv[0], prog_argv);*/
-        
         //restart program from child process so a core dump is written for the failed parent process
         if(fork()!=0)
         {

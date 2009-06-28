@@ -178,3 +178,8 @@ void close_script_pipe()
     delete frm;
     frm = NULL;
 }
+
+void unlink_script_pipe()
+{
+    if(filename) unlink(filename);
+}

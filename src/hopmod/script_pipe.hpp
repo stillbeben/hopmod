@@ -7,5 +7,6 @@ void init_script_pipe();
 bool open_script_pipe(const char *,int,fungu::script::env &);
 void run_script_pipe_service(int);
 void close_script_pipe();
+void unlink_script_pipe();
 
 #endif
