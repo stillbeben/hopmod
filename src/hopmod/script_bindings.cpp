@@ -136,6 +136,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_ro_var(server::currentmaster, FUNGU_OBJECT_ID("master"), env);
     script::bind_global_ro_var(server::minremain, FUNGU_OBJECT_ID("timeleft"), env);
     script::bind_global_ro_var(totalmillis, FUNGU_OBJECT_ID("uptime"), env);
+    script::bind_global_ro_var(server::gamemillis, FUNGU_OBJECT_ID("gamemillis"), env);
     script::bind_global_var(maxclients, FUNGU_OBJECT_ID("maxplayers"), env);
     script::bind_global_var(serverip, FUNGU_OBJECT_ID("serverip"), env);
     script::bind_global_var(serverport, FUNGU_OBJECT_ID("serverport"), env);
