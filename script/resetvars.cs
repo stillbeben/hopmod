@@ -108,3 +108,5 @@ global shell_label "server"
 
 global use_kickspec 0
 global kickspec_maxtime (mins 30)
+
+global enable_ownage_messages 0

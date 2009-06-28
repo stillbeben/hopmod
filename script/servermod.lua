@@ -203,6 +203,10 @@ server.event_handler("started", function()
     end
     -- ]]
     
+    if server.enable_ownage_messages == 1 then
+        dofile("./script/ownage.lua")
+    end
+    
     server.reload_maprotation()
     
     if tonumber(server.playercount) == 0 then
