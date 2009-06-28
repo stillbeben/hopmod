@@ -196,6 +196,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(server::sv_switchname_hit_length, FUNGU_OBJECT_ID("flood_protect_switchname"), env);
     script::bind_global_var(server::sv_switchteam_hit_length, FUNGU_OBJECT_ID("flood_protect_switchteam"), env);
     script::bind_global_var(server::sv_kick_hit_length, FUNGU_OBJECT_ID("flood_protect_kick"), env);
+    script::bind_global_var(server::sv_remip_hit_length, FUNGU_OBJECT_ID("flood_protect_remip"), env);
+    script::bind_global_var(server::sv_newmap_hit_length, FUNGU_OBJECT_ID("flood_protect_newmap"), env);
     
     script::bind_global_var(server::broadcast_mapmodified, FUNGU_OBJECT_ID("broadcast_mapmodified"), env);
     

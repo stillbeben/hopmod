@@ -85,6 +85,8 @@ flood_protect_sayteam 1000
 flood_protect_mapvote 1000
 flood_protect_switchteam 1000
 flood_protect_switchname 1000
+flood_protect_remip 10000
+flood_protect_newmap 10000
 
 global teamkill_limit 7
 global teamkill_showlimit 1

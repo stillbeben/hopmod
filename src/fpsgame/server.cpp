@@ -243,6 +243,8 @@ namespace server
         freqlimit sv_switchname_hit;
         freqlimit sv_switchteam_hit;
         freqlimit sv_kick_hit;
+        freqlimit sv_remip_hit;
+        freqlimit sv_newmap_hit;
         std::string disconnect_reason;
         bool active;
         int rank;
@@ -254,7 +256,9 @@ namespace server
            sv_mapvote_hit(sv_mapvote_hit_length),
            sv_switchname_hit(sv_switchname_hit_length),
            sv_switchteam_hit(sv_switchteam_hit_length),
-           sv_kick_hit(sv_kick_hit_length)
+           sv_kick_hit(sv_kick_hit_length),
+           sv_remip_hit(sv_remip_hit_length),
+           sv_newmap_hit(sv_newmap_hit_length)
         { reset(); }
         
         ~clientinfo() { events.deletecontentsp(); }
@@ -2750,6 +2754,7 @@ namespace server
             {
                 int size = getint(p);
                 if(!ci->privilege && !ci->local && ci->state.state==CS_SPECTATOR) break;
+                if(ci->check_flooding(ci->sv_newmap_hit, "newmapping")) break;
                 if(size>=0)
                 {
                     smapname[0] = '\0';
@@ -2827,7 +2832,19 @@ namespace server
             #include "capture.h"
             #include "ctf.h"
             #undef PARSEMESSAGES
-
+            
+            case SV_REMIP:
+			{
+				if(ci && cq && (ci != cq || ci->state.state!=CS_SPECTATOR))
+                {
+					if( ci->check_flooding(ci->sv_remip_hit, "remipping") ) break;
+                    
+                    QUEUE_AI;
+                    QUEUE_MSG;
+				}
+				break;
+			}
+            
             default:
             {
                 int size = server::msgsizelookup(type);

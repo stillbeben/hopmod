@@ -6,6 +6,8 @@ int sv_mapvote_hit_length = 0;
 int sv_switchname_hit_length = 0;
 int sv_switchteam_hit_length = 0;
 int sv_kick_hit_length = 0;
+int sv_remip_hit_length = 0;
+int sv_newmap_hit_length = 0;
 
 static boost::signals::connection close_listenserver_slot;
 static bool reload = false;
