@@ -321,7 +321,7 @@ function server.playercmd_stats(cn, selection)
 
 	local function player_stats(cn, player) 
 		local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
-		server.player_msg(player,string.format("Name: %s Score: %s Frags: %s Deaths: %s Accuracy %s",
+		server.player_msg(cn, string.format("Name: %s Score: %s Frags: %s Deaths: %s Accuracy %s",
 			green(server.player_name(player)),
 			yellow(server.player_frags(player)),
 			green(frags),
