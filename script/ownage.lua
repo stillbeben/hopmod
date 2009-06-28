@@ -15,7 +15,23 @@ server.event_handler("frag", function(target_cn, actor_cn)
         
         actor_killingspree = (actor_killingspree or 0) + 1
         actor_vars.killingspree = actor_killingspree
-    
+        
+        if actor_vars.lastkill and server.gamemillis - actor_vars.lastkill < 2000 then
+            
+            local actor_multikills = (actor_vars.multikills or 0) + 1
+            actor_vars.multikills = actor_multikills
+            
+            if actor_multikills == 2 then
+                server.player_msg(actor_cn, yellow("You scored a ") .. orange("DOUBLE KILL!!"))
+            elseif actor_multikills == 3 then
+                server.player_msg(actor_cn, yellow("You scored a ") .. orange("TRIPLE KILL!!"))
+            elseif actor_multikills > 3 then
+                server.player_msg(actor_cn, yellow("You scored ") ..  orange(string.format("MULTPLE KILLS(%i)!!",actor_multikills)))
+            end
+        end
+        
+        actor_vars.lastkill = server.gamemillis
+        
     else
         actor_killingspree = 0
     end
