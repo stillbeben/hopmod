@@ -28,3 +28,9 @@ server.event_handler("frag", function(target_cn, actor_cn)
     end
     
 end)
+
+server.event_handler("suicide", function(cn)
+    
+    server.player_vars(cn).killingspree = 0
+    
+end)

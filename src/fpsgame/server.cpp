@@ -1601,6 +1601,7 @@ namespace server
         if(smode) smode->died(ci, NULL);
         gs.state = CS_DEAD;
         gs.respawn();
+        signal_suicide(ci->clientnum);
     }
 
 

@@ -51,6 +51,7 @@ boost::signal<void (int,int)> signal_endrecord;
 boost::signal<void (int)> signal_mapcrcfail;
 boost::signal<void (const char *,const char *)> signal_votepassed;
 boost::signal<void (int,int,int)> signal_shot;
+boost::signal<void (int)> signal_suicide;
 
 boost::signal<void ()> signal_rootserver_failedconnect;
 
@@ -145,6 +146,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_mapcrcfail, "mapcrcfail", normal_error_handler);
     slots.register_signal(signal_votepassed, "votepassed", normal_error_handler);
     slots.register_signal(signal_shot, "shot", normal_error_handler);
+    slots.register_signal(signal_suicide, "suicide", normal_error_handler);
 
     slots.register_signal(signal_rootserver_failedconnect, "failedrootconnect", normal_error_handler);
 
@@ -200,6 +202,7 @@ void disconnect_all_slots()
     signal_mapcrcfail.disconnect_all_slots();
     signal_votepassed.disconnect_all_slots();
     signal_shot.disconnect_all_slots();
+    signal_suicide.disconnect_all_slots();
     
     signal_rootserver_failedconnect.disconnect_all_slots();
 }
