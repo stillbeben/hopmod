@@ -172,7 +172,7 @@ function statsmod.commitStats()
     game.bots = bot_players
     game.duration = game.duration - server.timeleft
     
-    if using_json 1 then
+    if using_json then
         statsmod.writeStatsToJsonFile()
         return
     end

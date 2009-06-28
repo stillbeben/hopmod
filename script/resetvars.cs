@@ -14,6 +14,7 @@ global allow_modevote 1
 global mapvote_disallow_unknown_map 0
 
 global auth_db_filename "log/auth.sqlite"
+global auth_use_sqlite 1
 
 global record_player_stats 1
 global stats_db_filename "log/stats.sqlite"
