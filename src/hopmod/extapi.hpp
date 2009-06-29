@@ -32,6 +32,7 @@ namespace server
     extern int gamemillis;
     
     extern int mastermode;
+    extern int mastermode_owner;
     extern string next_gamemode;
     extern string next_mapname;
     extern int next_gametime;

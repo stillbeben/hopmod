@@ -628,8 +628,15 @@ void unsetmaster()
         master->sendprivtext(msg);
         
         master->privilege = 0;
-        mastermode = MM_OPEN;
-        allowedips.setsize(0);
+        
+        //FIXME code duplication alert: following code also in server::setmaster()
+        if(master->clientnum == mastermode_owner)
+        {
+            mastermode = MM_OPEN;
+            mastermode_owner = -1;
+            allowedips.setsize(0);
+        }
+        
         currentmaster = -1;
         masterupdate = true;
     }

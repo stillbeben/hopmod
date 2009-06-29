@@ -308,7 +308,7 @@ namespace server
             using_reservedslot = false;
             mapchange();
         }
-
+        
         int geteventmillis(int servmillis, int clientmillis)
         {
             if(!timesync || (events.empty() && state.waitexpired(servmillis)))
@@ -403,7 +403,7 @@ namespace server
     int interm = 0, minremain = 0;
     bool mapreload = false;
     enet_uint32 lastsend = 0;
-    int mastermode = MM_OPEN, mastermask = MM_PRIVSERV;
+    int mastermode = MM_OPEN, mastermask = MM_PRIVSERV, mastermode_owner = -1;
     int currentmaster = -1;
     bool masterupdate = false;
     string masterpass = "";
@@ -1008,9 +1008,15 @@ namespace server
             if(!ci->privilege) return;
             name = privname(ci->privilege);
             revokemaster(ci);
+            if(mastermode_owner == ci->clientnum)
+            {
+                mastermode = MM_OPEN;
+                mastermode_owner = -1;
+                allowedips.setsize(0);
+            }
         }
-        mastermode = MM_OPEN;
-        allowedips.setsize(0);
+        //mastermode = MM_OPEN;
+        //allowedips.setsize(0);
         string msg;
         if(val && authname) formatstring(msg)("%s claimed %s as '\fs\f5%s\fr'", colorname(ci), name, authname);
         else formatstring(msg)("%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
@@ -2633,6 +2639,7 @@ namespace server
                     {
                         signal_setmastermode(mastermodename(mastermode),mastermodename(mm));
                         mastermode = mm;
+                        mastermode_owner = ci->clientnum;
                         allowedips.setsize(0);
                         if(mm>=MM_PRIVATE)
                         {
