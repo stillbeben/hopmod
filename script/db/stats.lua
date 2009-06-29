@@ -317,7 +317,7 @@ server.event_handler("shutdown", function()
     if db then db:close() end
 end)
 
-function server.playercmd_stats(cn, selection)
+function server.playercmd_stats(cn, selection, subselection)
 
 	local function currentgame_stats(sendto, player) 
 
@@ -377,9 +377,16 @@ function server.playercmd_stats(cn, selection)
         total_stats(cn, cn)
         
 	elseif server.valid_cn(selection) then
-    
-		currentgame_stats(cn, selection)
         
+        if subselection == "total" then
+            total_stats(cn, selection)
+        else
+            currentgame_stats(cn, selection)
+        end
+        
+    else
+        
+        server.player_msg(cn, red("usage: #stats [cn] [total]"))
    end
 end
 
