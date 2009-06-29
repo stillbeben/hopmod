@@ -86,7 +86,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void (int)>(server::player_spec, FUNGU_OBJECT_ID("spec"), env);
     script::bind_global_func<void (int)>(server::player_unspec, FUNGU_OBJECT_ID("unspec"), env);
     script::bind_global_func<void ()>(server::unsetmaster, FUNGU_OBJECT_ID("unsetmaster"), env);
-    script::bind_global_func<void (int)>(server::server_setmaster, FUNGU_OBJECT_ID("setmaster"), env);
+    script::bind_global_func<bool (int)>(server::server_setmaster, FUNGU_OBJECT_ID("setmaster"), env);
     script::bind_global_func<void (int)>(server::server_setadmin, FUNGU_OBJECT_ID("setadmin"), env);
     script::bind_global_func<void (int)>(server::set_invadmin, FUNGU_OBJECT_ID("set_invadmin"), env);
     script::bind_global_func<void (int)>(server::unset_invadmin, FUNGU_OBJECT_ID("unset_invadmin"), env);
@@ -159,6 +159,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_var(server::allow_mm_veto, FUNGU_OBJECT_ID("allow_mm_veto"), env);
     script::bind_global_var(server::allow_mm_locked, FUNGU_OBJECT_ID("allow_mm_locked"), env);
     script::bind_global_var(server::allow_mm_private, FUNGU_OBJECT_ID("allow_mm_private"), env);
+    script::bind_global_var(server::allow_master, FUNGU_OBJECT_ID("allow_master"), env);
     
     script::bind_global_var(server::allow_item[I_SHELLS-I_SHELLS], FUNGU_OBJECT_ID("allow_shells"), env);
     script::bind_global_var(server::allow_item[I_BULLETS-I_SHELLS], FUNGU_OBJECT_ID("allow_bullets"), env);

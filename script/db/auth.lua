@@ -158,8 +158,12 @@ server.event_handler("auth", function(cn, id, name, domain, success)
             
         else
             if server.player_priv_code(cn) == 0 and tonumber(server.master) == -1 then
-                server.msg(string.format("%s claimed master as '%s'",server.player_name(cn),magenta(name)))
-                server.setmaster(cn)
+                
+                if server.setmaster(cn) then
+                    server.msg(string.format("%s claimed master as '%s'",server.player_name(cn),magenta(name)))
+                else
+                    server.player_msg(cn, red("Master is disabled."))
+                end
             end
         end
     end

@@ -635,7 +635,7 @@ void unsetmaster()
     }
 }
 
-void setpriv(int cn,int priv,bool hidden)
+void setpriv(int cn, int priv)
 {
     clientinfo * player = get_ci(cn);
     if(player->privilege == priv) return;
@@ -648,14 +648,16 @@ void setpriv(int cn,int priv,bool hidden)
     player->sendprivtext(msg);
 }
 
-void server_setmaster(int cn)
+bool server_setmaster(int cn)
 {
-    setpriv(cn, PRIV_MASTER, false);
+    if(!allow_master) return false;
+    setpriv(cn, PRIV_MASTER);
+    return true;
 }
 
 void server_setadmin(int cn)
 {
-    setpriv(cn, PRIV_ADMIN, false);
+    setpriv(cn, PRIV_ADMIN);
 }
 
 bool writebanlist(const char * filename)

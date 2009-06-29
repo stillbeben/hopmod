@@ -42,6 +42,7 @@ namespace server
     extern bool allow_mm_locked;
     extern bool allow_mm_private;
     extern bool allow_item[11];
+    extern bool allow_master;
     
     extern string authserver_hostname;
     
@@ -87,7 +88,7 @@ namespace server
     int player_pos(lua_State *);
     std::vector<float> player_pos(int);
     void unsetmaster();
-    void server_setmaster(int);
+    bool server_setmaster(int);
     void server_setadmin(int);
     void player_slay(int);
     bool player_changeteam(int,const char *);

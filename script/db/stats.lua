@@ -317,7 +317,7 @@ server.event_handler("shutdown", function()
     if db then db:close() end
 end)
 
-function server.playercmd_stats(cn, selection)
+function server.playercmd_stats(cn, selection, target_selection)
 
 	local function player_stats(cn, player) 
 		local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)

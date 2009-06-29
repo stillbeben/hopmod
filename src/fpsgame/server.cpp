@@ -382,8 +382,8 @@ namespace server
     bool allow_mm_veto = false;
     bool allow_mm_locked = false;
     bool allow_mm_private = false;
-    
     bool allow_item[11] = {true, true, true, true, true, true, true, true, true, true, true};
+    bool allow_master = true;
     
     string next_gamemode = "";
     string next_mapname = "";
@@ -965,13 +965,17 @@ namespace server
     {
         update_mastermask();
         
+        //FIXME this should really be an assertion check
         if(authname && !val) return;
+        
         const char *name = "";
         if(val)
         {
             bool haspass = masterpass[0] && checkpassword(ci, masterpass, pass);
             if(ci->privilege)
             {
+                //there is no server password or client is already admin and
+                //has password or client is master and has incorrect password
                 if(!masterpass[0] || haspass==(ci->privilege==PRIV_ADMIN)) return;
             }
             else if(ci->state.state==CS_SPECTATOR && !haspass && !authname && !ci->local) return;
@@ -982,13 +986,18 @@ namespace server
                 else if(existing->privilege >= PRIV_ADMIN) return;
             }
             if(haspass) ci->privilege = PRIV_ADMIN;
-            else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege && !ci->local)
+            else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege && !ci->local && allow_master)
             {
                 sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
                 return;
             }
             else
             {
+                if(!allow_master)
+                {
+                    sendf(ci->clientnum, 1, "ris", SV_SERVMSG, RED "Master is disabled.");
+                    return;
+                }
                 if(authname && currentmaster != -1) getinfo(currentmaster)->privilege = PRIV_NONE;
                 ci->privilege = PRIV_MASTER;
             }
@@ -1969,8 +1978,9 @@ namespace server
             if(smode) smode->leavegame(ci, true);
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
             savescore(ci);
+            
             sendf(-1, 1, "ri2", SV_CDIS, n);
-
+            
             clients.removeobj(ci);
             aiman::removeai(ci);
             
