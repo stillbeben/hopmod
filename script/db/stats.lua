@@ -317,41 +317,69 @@ server.event_handler("shutdown", function()
     if db then db:close() end
 end)
 
-function server.playercmd_stats(cn, selection, target_selection)
+function server.playercmd_stats(cn, selection)
 
-	local function player_stats(cn, player) 
+	local function currentgame_stats(sendto, player) 
+
 		local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
-		server.player_msg(cn, string.format("Name: %s Score: %s Frags: %s Deaths: %s Accuracy %s",
-			green(server.player_name(player)),
+        
+        server.player_msg(sendto, string.format("Current game stats for %s:", green(server.player_name(player))))
+        
+		server.player_msg(sendto, string.format("Score %s Frags %s Deaths %s Accuracy %s",
 			yellow(server.player_frags(player)),
 			green(frags),
 			red(server.player_deaths(player)),
-			yellow(server.player_accuracy(player).."%"))
-		)
+			yellow(server.player_accuracy(player).."%")))
+        
 		if server.gamemodeinfo.teams then
-			server.player_msg(cn,string.format("Teamkills: %s",red(server.player_teamkills(player))))
+			server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))
 		end
+        
 	end
     
-    if not selection then
-        player_stats(cn, cn)
-    elseif selection == "total" then
+    local function total_stats(sendto, player)
     
         if not using_sqlite then 
-            server.player_msg(cn, red("Not available."))
+            server.player_msg(sendto, red("Not available."))
             return
         end
         
         select_player_totals:bind{name = server.player_name(cn)}
         row = select_player_totals:first_row()
+        
         if not row then
-            server.player_msg(cn, "No stats found.")
+            server.player_msg(sendto, "No stats found.")
             return
         end
-        server.player_msg(cn, string.format("Games: %s Frags: %s Deaths: %s Wins: %s Losses: %s",yellow(row.games),green(row.frags),red(row.deaths),green(row.wins),red(row.losses)))
+        
+        server.player_msg(sendto, string.format("Total game stats for %s:", green(server.player_name(player))))
+        
+        local kpd = round(row.frags / row.deaths, 2)
+        local acc = round((row.hits / row.shots)*100)
+        --TODO colour kpd and acc green or red depending on how good the values are relative to avg values
+        
+        server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses: %s",
+            yellow(row.games),
+            green(row.frags),
+            red(row.deaths),
+            yellow(kpd),
+            yellow(acc .. "%"),
+            green(row.wins),
+            red(row.losses)))
+    end
+    
+    if not selection then
+    
+        currentgame_stats(cn, cn)
+        
+    elseif selection == "total" then
+        
+        total_stats(cn, cn)
         
 	elseif server.valid_cn(selection) then
-		player_stats(cn, selection) 
+    
+		currentgame_stats(cn, selection)
+        
    end
 end
 
