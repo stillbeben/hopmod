@@ -115,9 +115,6 @@ function statsmod.commitStats()
     
     if stats == nil then return end
     
-    local cpu_start = os.clock()
-    local real_start = os.time()
-    
     for i,cn in ipairs(server.players()) do
     
         local t = statsmod.updatePlayer(cn)
@@ -222,13 +219,6 @@ function statsmod.commitStats()
     end
     
     db:exec("COMMIT TRANSACTION")
-    
-    local cpu_time = os.clock() - cpu_start
-    local real_time = os.time() - real_start
-    
-    if real_time > 0 or cpu_time > 0.1 then
-        print(string.format("committed player stats to database: cpu %f secs, real %f secs.",cpu_time,real_time))
-    end
     
     stats = nil
 end
