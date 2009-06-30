@@ -1,6 +1,6 @@
 
 function createMissingTables(schemafilename, db)
-        
+    
     schemafile,err = io.open(schemafilename)
     if not schemafile then return nil,err end
     
@@ -18,6 +18,8 @@ function createMissingTables(schemafilename, db)
         
         local table_count,perr = search_for_table:first_row()
         if table_count.count == 0 then
+            
+            print(string.format("Updating database %s: adding %s %s.", db.filename, row.name, row.type))
             
             db:exec(row.sql)
             
@@ -43,6 +45,8 @@ function createMissingTables(schemafilename, db)
                             column_def = column_def .. " DEFAULT " .. table_column.dflt_value
                         end
                     end
+                    
+                    print(string.format("Updating %s table in database %s: adding %s column.", row.name, db.filename, table_column.name))
                     
                     db:exec(string.format("ALTER TABLE %s ADD COLUMN %s", row.name, column_def))
                     
