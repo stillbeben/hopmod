@@ -6,17 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/function.hpp"
-
 namespace fungu{
 namespace script{
 namespace corelib{
 
-namespace detail{
+namespace reflib{
 
 class reference:public env::object
 {
@@ -89,11 +83,11 @@ inline result_type define_ref(env::object::call_arguments & args,env::frame * aF
 
 void register_reference_functions(env & environment)
 {
-    static function<raw_function_type> define_ref_func(detail::define_ref);
+    static function<raw_function_type> define_ref_func(reflib::define_ref);
     environment.bind_global_object(&define_ref_func,FUNGU_OBJECT_ID("ref"));
     
     //TODO weak references
-    //static function<raw_function_type> define_weakref_func(detail::define_weakref);
+    //static function<raw_function_type> define_weakref_func(reflib::define_weakref);
     //environment.bind_global_object(&define_weakref_func,FUNGU_OBJECT_ID("weakref"));
 }
 

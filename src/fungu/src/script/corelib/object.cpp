@@ -6,19 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/table.hpp"
-#include "fungu/dynamic_cast_derived.hpp"
-#include "fungu/script/function.hpp"
-
 namespace fungu{
 namespace script{
 namespace corelib{
 
-namespace detail{
+namespace objectlib{
 
 inline result_type create_object(env::object::call_arguments & args,env::frame * aFrame)
 {
@@ -94,13 +86,13 @@ inline result_type add_object_member(env::object::call_arguments & args,env::fra
 
 void register_object_functions(env & environment)
 {
-    static function<raw_function_type> create_object_func(detail::create_object);
+    static function<raw_function_type> create_object_func(objectlib::create_object);
     environment.bind_global_object(&create_object_func,FUNGU_OBJECT_ID("object"));
     
-    static function<raw_function_type> erase_member_func(detail::erase_object_member);
+    static function<raw_function_type> erase_member_func(objectlib::erase_object_member);
     environment.bind_global_object(&erase_member_func,FUNGU_OBJECT_ID("erase-object-member"));
     
-    static function<raw_function_type> add_member_func(detail::add_object_member);
+    static function<raw_function_type> add_member_func(objectlib::add_object_member);
     environment.bind_global_object(&add_member_func,FUNGU_OBJECT_ID("add-object-member"));
 }
 

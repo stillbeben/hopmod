@@ -6,23 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-#include "fungu/script/function.hpp"
-#include "fungu/script/nullary_setter.hpp"
-#include "fungu/script/variable.hpp"
-#include "fungu/script/lexical_cast.hpp"
-#include "fungu/script/execute.hpp"
-#include "fungu/script/code_block.hpp"
-
 namespace fungu{
 namespace script{
 namespace corelib{
 
-namespace detail{
+namespace controlflow{
 
 inline int predicate(const_string code,env::frame * aScope)
 {
@@ -163,22 +151,22 @@ inline result_type and_(env::object::call_arguments & args,env::frame * aFrame)
 
 void register_controlflow_functions(env & environment)
 {
-    static function<raw_function_type> conditional_if_func(detail::if_);
+    static function<raw_function_type> conditional_if_func(controlflow::if_);
     environment.bind_global_object(&conditional_if_func,FUNGU_OBJECT_ID("if"));
     
-    static function<raw_function_type> conditional_ternary_func(detail::ternary);
+    static function<raw_function_type> conditional_ternary_func(controlflow::ternary);
     environment.bind_global_object(&conditional_ternary_func,FUNGU_OBJECT_ID("?"));
     
-    static function<raw_function_type> loop_while(detail::while_);
+    static function<raw_function_type> loop_while(controlflow::while_);
     environment.bind_global_object(&loop_while,FUNGU_OBJECT_ID("while"));
     
-    static function<raw_function_type> loop_times(detail::loop);
+    static function<raw_function_type> loop_times(controlflow::loop);
     environment.bind_global_object(&loop_times,FUNGU_OBJECT_ID("loop"));
     
-    static function<raw_function_type> or_(detail::or_);
+    static function<raw_function_type> or_(controlflow::or_);
     environment.bind_global_object(&or_,FUNGU_OBJECT_ID("||"));
     
-    static function<raw_function_type> and_(detail::and_);
+    static function<raw_function_type> and_(controlflow::and_);
     environment.bind_global_object(&and_,FUNGU_OBJECT_ID("&&"));
 }
 

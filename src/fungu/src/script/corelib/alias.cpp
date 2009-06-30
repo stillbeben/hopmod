@@ -6,28 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-
-#include "fungu/script/corelib/alias.hpp"
-
-#include "fungu/script/code_block.hpp"
-#include "fungu/script/variable.hpp"
-#include "fungu/script/constant.hpp"
-#include "fungu/script/function.hpp"
-#include "fungu/script/env_module.hpp"
-#include <list>
-#include <vector>
-#include <boost/shared_ptr.hpp>
-
 namespace fungu{
 namespace script{
 namespace corelib{
 
-namespace detail{
+namespace aliaslib{
 
 class alias:public env::object
 {
@@ -303,22 +286,22 @@ result_type params_scriptfun(env::object::call_arguments & args,env::frame * aFr
 
 void register_alias_functions(env & environment)
 {
-    static function<raw_function_type> define_alias_func(detail::define_alias);
+    static function<raw_function_type> define_alias_func(aliaslib::define_alias);
     environment.bind_global_object(&define_alias_func,FUNGU_OBJECT_ID("alias"));
     
-    static function<raw_function_type> push_alias_block_func(detail::push_alias_block);
+    static function<raw_function_type> push_alias_block_func(aliaslib::push_alias_block);
     environment.bind_global_object(&push_alias_block_func,FUNGU_OBJECT_ID("push"));
     
-    static function<raw_function_type> pop_alias_block_func(detail::pop_alias_block);
+    static function<raw_function_type> pop_alias_block_func(aliaslib::pop_alias_block);
     environment.bind_global_object(&pop_alias_block_func,FUNGU_OBJECT_ID("pop"));
     
-    environment.set_module_instance(new detail::module(&environment));
+    environment.set_module_instance(new aliaslib::module(&environment));
 }
 
 void unload_alias_functions(env & environment)
 {
-    detail::module * alias_globals = environment.get_module_instance<detail::module>();
-    environment.unset_module_instance<detail::module>();
+    aliaslib::module * alias_globals = environment.get_module_instance<aliaslib::module>();
+    environment.unset_module_instance<aliaslib::module>();
     delete alias_globals;
 }
 

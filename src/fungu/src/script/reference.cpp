@@ -6,8 +6,6 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#include "fungu/script/expression.hpp"
-
 namespace fungu{
 namespace script{
 

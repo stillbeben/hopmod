@@ -11,6 +11,16 @@
 #endif
 
 #include "fungu/script/env.hpp"
+#include "fungu/script/any_variable.hpp"
+
+#ifdef FUNGU_WITH_LUA
+#include "fungu/script/lua/push_value.hpp"
+#include "fungu/script/lua/arguments.hpp"
+#endif
+
+#include "env_frame.cpp"
+#include "env_object.cpp"
+#include "env_symbol.cpp"
 
 namespace fungu{
 namespace script{

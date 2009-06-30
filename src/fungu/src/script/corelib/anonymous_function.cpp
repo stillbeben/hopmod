@@ -6,26 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-
-#include "fungu/script/corelib/anonymous_function.hpp"
-
-#include "fungu/script/function.hpp"
-#include "fungu/script/code_block.hpp"
-#include "fungu/script/parse_array.hpp"
-#include "fungu/script/any_variable.hpp"
-
-#include <iostream>
-
 namespace fungu{
 namespace script{
 namespace corelib{
 
-namespace detail{
+namespace funclib{
 
 class anonymous_function:public env::object
 {
@@ -157,7 +142,7 @@ private:
 
 void register_anonfunc_functions(env & environment)
 {
-    static function<raw_function_type> define_anonfun_func(detail::anonymous_function::define_anonymous_function);
+    static function<raw_function_type> define_anonfun_func(funclib::anonymous_function::define_anonymous_function);
     environment.bind_global_object(&define_anonfun_func,FUNGU_OBJECT_ID("func"));
 }
 

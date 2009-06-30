@@ -6,21 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-#include "fungu/script/function.hpp"
-#include "fungu/script/variable.hpp"
-#include "fungu/script/any_variable.hpp"
-#include "fungu/script/table.hpp"
-
 namespace fungu{
 namespace script{
 namespace corelib{
-    
-namespace detail{
+
+namespace vectorlib{
 
 inline const_string at(const std::vector<const_string> & v, int i)
 {
@@ -128,19 +118,19 @@ bool is_member_of(const_string member, const std::vector<const_string> & v)
 
 void register_vector_functions(env & environment)
 {
-    static function<const_string (const std::vector<const_string> &,int)> at_func(detail::at);
+    static function<const_string (const std::vector<const_string> &,int)> at_func(vectorlib::at);
     environment.bind_global_object(&at_func, FUNGU_OBJECT_ID("at"));
     
-    static function<int (const std::vector<const_string> &)> listlen_func(detail::listlen);
+    static function<int (const std::vector<const_string> &)> listlen_func(vectorlib::listlen);
     environment.bind_global_object(&listlen_func, FUNGU_OBJECT_ID("listlen"));
     
-    static function<raw_function_type> foreach_func(boost::bind(detail::foreach,FUNGU_OBJECT_ID("arg1"),_1,_2));
+    static function<raw_function_type> foreach_func(boost::bind(vectorlib::foreach,FUNGU_OBJECT_ID("arg1"),_1,_2));
     environment.bind_global_object(&foreach_func, FUNGU_OBJECT_ID("foreach"));
     
-    static function<raw_function_type> looplist_func(detail::looplist);
+    static function<raw_function_type> looplist_func(vectorlib::looplist);
     environment.bind_global_object(&looplist_func, FUNGU_OBJECT_ID("looplist"));
     
-    static function<bool (const_string, const std::vector<const_string> &)> is_member_of_func(detail::is_member_of);
+    static function<bool (const_string, const std::vector<const_string> &)> is_member_of_func(vectorlib::is_member_of);
     environment.bind_global_object(&is_member_of_func, FUNGU_OBJECT_ID("member?"));
 }
 

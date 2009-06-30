@@ -6,13 +6,6 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/any.hpp"
-#include "fungu/script/lexical_cast.hpp"
-
 namespace fungu{
 namespace script{
 namespace lexical_cast_detail{

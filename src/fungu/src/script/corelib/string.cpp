@@ -6,19 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include <string.h>
-#include "fungu/script/env.hpp"
-#include "fungu/script/function.hpp"
-
 namespace fungu{
 namespace script{
 namespace corelib{
     
-namespace detail{
+namespace stringlib{
 
 inline int strcmp(const char * s1,const char * s2){return ::strcmp(s1,s2) == 0;}
 
@@ -145,35 +137,35 @@ std::string strreplace(const char * original, const char * oldsub, const char * 
 
 void register_string_functions(env & environment)
 {
-    static function<int (const char *,const char *)> strcmp_func(detail::strcmp);
+    static function<int (const char *,const char *)> strcmp_func(stringlib::strcmp);
     environment.bind_global_object(&strcmp_func, FUNGU_OBJECT_ID("strcmp"));
     environment.bind_global_object(&strcmp_func, FUNGU_OBJECT_ID("streq"));
     
-    static function<raw_function_type> format_func(detail::format);
+    static function<raw_function_type> format_func(stringlib::format);
     environment.bind_global_object(&format_func, FUNGU_OBJECT_ID("format"));
     
-    static function<raw_function_type> concat_func(detail::concat);
+    static function<raw_function_type> concat_func(stringlib::concat);
     environment.bind_global_object(&concat_func, FUNGU_OBJECT_ID("concat"));
     
-    static function<raw_function_type> concatword_func(detail::concatword);
+    static function<raw_function_type> concatword_func(stringlib::concatword);
     environment.bind_global_object(&concatword_func, FUNGU_OBJECT_ID("concatword"));
     
-    static function<int (const char *,const char *)> index_of_func(detail::index_of);
+    static function<int (const char *,const char *)> index_of_func(stringlib::index_of);
     environment.bind_global_object(&index_of_func, FUNGU_OBJECT_ID("indexof"));
     
-    static function<std::string (const std::string &,int,int)> substr_func(detail::substr);
+    static function<std::string (const std::string &,int,int)> substr_func(stringlib::substr);
     environment.bind_global_object(&substr_func, FUNGU_OBJECT_ID("substr"));
     
-    static function<std::vector<std::string> (const char *,const char *)> split_func(detail::split);
+    static function<std::vector<std::string> (const char *,const char *)> split_func(stringlib::split);
     environment.bind_global_object(&split_func, FUNGU_OBJECT_ID("split"));
     
-    static function<int (const char *,const char *)> strstr_func(detail::strstr);
+    static function<int (const char *,const char *)> strstr_func(stringlib::strstr);
     environment.bind_global_object(&strstr_func, FUNGU_OBJECT_ID("strstr"));
     
     static function<size_t (const char *)> strlen_func(strlen);
     environment.bind_global_object(&strlen_func, FUNGU_OBJECT_ID("strlen"));
     
-    static function<std::string (const char *,const char *,const char *)> strreplace_func(detail::strreplace);
+    static function<std::string (const char *,const char *,const char *)> strreplace_func(stringlib::strreplace);
     environment.bind_global_object(&strreplace_func, FUNGU_OBJECT_ID("strreplace"));
 }
 

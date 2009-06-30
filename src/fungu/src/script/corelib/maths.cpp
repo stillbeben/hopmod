@@ -6,23 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-#include "fungu/script/function.hpp"
-#include "fungu/script/execute.hpp"
-#include <stdlib.h> //abs, rand, srand
-#include <time.h>
-#include <math.h>
-#include <limits>
-
 namespace fungu{
 namespace script{
 namespace corelib{
 
-namespace detail{
+namespace mathlib{
 
 #define FUNGU_VARIADIC_BINARY_INT_FUNCTION(name,binfun) \
     inline result_type name(env::object::call_arguments & args,env::frame *) \
@@ -144,25 +132,25 @@ inline int random_number(int greatest, int lowest)
 
 void register_int_arithmetic_functions(env & environment)
 {
-    static function<raw_function_type> add_func(detail::addv);
+    static function<raw_function_type> add_func(mathlib::addv);
     environment.bind_global_object(&add_func,FUNGU_OBJECT_ID("+"));
     
-    static function<raw_function_type> sub_func(detail::subv);
+    static function<raw_function_type> sub_func(mathlib::subv);
     environment.bind_global_object(&sub_func,FUNGU_OBJECT_ID("-"));
     
-    static function<raw_function_type> mul_func(detail::mulv);
+    static function<raw_function_type> mul_func(mathlib::mulv);
     environment.bind_global_object(&mul_func,FUNGU_OBJECT_ID("*"));
     
-    static function<raw_function_type> div_func(detail::divv);
+    static function<raw_function_type> div_func(mathlib::divv);
     environment.bind_global_object(&div_func,FUNGU_OBJECT_ID("div"));
     
-    static function<int (int,int)> mod_func(detail::mod);
+    static function<int (int,int)> mod_func(mathlib::mod);
     environment.bind_global_object(&mod_func,FUNGU_OBJECT_ID("mod"));
     
-    static function<raw_function_type> min_func(detail::minv);
+    static function<raw_function_type> min_func(mathlib::minv);
     environment.bind_global_object(&min_func,FUNGU_OBJECT_ID("min"));
     
-    static function<raw_function_type> max_func(detail::maxv);
+    static function<raw_function_type> max_func(mathlib::maxv);
     environment.bind_global_object(&max_func,FUNGU_OBJECT_ID("max"));
     
     static function<int (int)> abs_func(abs);
@@ -171,25 +159,25 @@ void register_int_arithmetic_functions(env & environment)
 
 void register_int_relation_functions(env & environment)
 {
-    static function<raw_function_type> equal_to_func(detail::equal_to_v);
+    static function<raw_function_type> equal_to_func(mathlib::equal_to_v);
     environment.bind_global_object(&equal_to_func,FUNGU_OBJECT_ID("="));
     
-    static function<bool (int,int)> not_equal_to_func(detail::not_equal_to);
+    static function<bool (int,int)> not_equal_to_func(mathlib::not_equal_to);
     environment.bind_global_object(&not_equal_to_func,FUNGU_OBJECT_ID("!="));
     
-    static function<bool (int,int)> less_than_func(detail::less_than);
+    static function<bool (int,int)> less_than_func(mathlib::less_than);
     environment.bind_global_object(&less_than_func,FUNGU_OBJECT_ID("<"));
     
-    static function<bool (int,int)> less_than_or_equal_to_func(detail::less_than_or_equal_to);
+    static function<bool (int,int)> less_than_or_equal_to_func(mathlib::less_than_or_equal_to);
     environment.bind_global_object(&less_than_or_equal_to_func,FUNGU_OBJECT_ID("<="));
     
-    static function<bool (int,int)> greater_than_func(detail::greater_than);
+    static function<bool (int,int)> greater_than_func(mathlib::greater_than);
     environment.bind_global_object(&greater_than_func,FUNGU_OBJECT_ID(">"));
     
-    static function<bool (int,int)> greater_than_or_equal_to_func(detail::greater_than_or_equal_to);
+    static function<bool (int,int)> greater_than_or_equal_to_func(mathlib::greater_than_or_equal_to);
     environment.bind_global_object(&greater_than_or_equal_to_func,FUNGU_OBJECT_ID(">="));
     
-    static function<bool (int)> logical_not_func(detail::logical_not);
+    static function<bool (int)> logical_not_func(mathlib::logical_not);
     environment.bind_global_object(&logical_not_func,FUNGU_OBJECT_ID("!"));
 }
 
@@ -198,19 +186,19 @@ void register_float_arithmetic_functions(env & environment)
     static function<float (float,float)> fmod_func(fmodf);
     environment.bind_global_object(&fmod_func, FUNGU_OBJECT_ID("modf"));
     
-    static function<float (float,float)> fadd_func(detail::fadd);
+    static function<float (float,float)> fadd_func(mathlib::fadd);
     environment.bind_global_object(&fadd_func,FUNGU_OBJECT_ID("fadd"));
     environment.bind_global_object(&fadd_func,FUNGU_OBJECT_ID("+f"));
     
-    static function<float (float,float)> fsub_func(detail::fsub);
+    static function<float (float,float)> fsub_func(mathlib::fsub);
     environment.bind_global_object(&fsub_func,FUNGU_OBJECT_ID("fsub"));
     environment.bind_global_object(&fsub_func,FUNGU_OBJECT_ID("-f"));
     
-    static function<float (float,float)> fmul_func(detail::fmul);
+    static function<float (float,float)> fmul_func(mathlib::fmul);
     environment.bind_global_object(&fmul_func,FUNGU_OBJECT_ID("fmul"));
     environment.bind_global_object(&fmul_func,FUNGU_OBJECT_ID("*f"));
     
-    static function<float (float,float)> fdiv_func(detail::fdiv);
+    static function<float (float,float)> fdiv_func(mathlib::fdiv);
     environment.bind_global_object(&fdiv_func,FUNGU_OBJECT_ID("fdiv"));
     environment.bind_global_object(&fdiv_func,FUNGU_OBJECT_ID("divf"));
     
@@ -222,13 +210,13 @@ void register_float_arithmetic_functions(env & environment)
     environment.bind_global_object(&fmax_func,FUNGU_OBJECT_ID("fmax"));
     environment.bind_global_object(&fmax_func,FUNGU_OBJECT_ID("maxf"));
     
-    static function<float (float)> round_func(detail::round);
+    static function<float (float)> round_func(mathlib::round);
     environment.bind_global_object(&round_func,FUNGU_OBJECT_ID("round"));
     
-    static function<float (float)> ceil_func(detail::ceil);
+    static function<float (float)> ceil_func(mathlib::ceil);
     environment.bind_global_object(&ceil_func,FUNGU_OBJECT_ID("ceil"));
     
-    static function<float (float)> floor_func(detail::floor);
+    static function<float (float)> floor_func(mathlib::floor);
     environment.bind_global_object(&floor_func,FUNGU_OBJECT_ID("floor"));
     
     static function<float (float)> abs_func(fabsf);
@@ -238,43 +226,43 @@ void register_float_arithmetic_functions(env & environment)
 
 void register_float_relation_functions(env & environment)
 {
-    static function<bool (float,float)> equal_to_func(detail::floats_equal_to);
+    static function<bool (float,float)> equal_to_func(mathlib::floats_equal_to);
     environment.bind_global_object(&equal_to_func, FUNGU_OBJECT_ID("=f"));
         
-    static function<bool (float,float)> not_equal_to_func(detail::floats_not_equal_to);
+    static function<bool (float,float)> not_equal_to_func(mathlib::floats_not_equal_to);
     environment.bind_global_object(&not_equal_to_func,FUNGU_OBJECT_ID("!=f"));
     
-    static function<bool (int,int)> less_than_func(detail::floats_less_than);
+    static function<bool (int,int)> less_than_func(mathlib::floats_less_than);
     environment.bind_global_object(&less_than_func,FUNGU_OBJECT_ID("<f"));
     
-    static function<bool (int,int)> less_than_or_equal_to_func(detail::floats_less_than_or_equal_to);
+    static function<bool (int,int)> less_than_or_equal_to_func(mathlib::floats_less_than_or_equal_to);
     environment.bind_global_object(&less_than_or_equal_to_func,FUNGU_OBJECT_ID("<=f"));
     
-    static function<bool (int,int)> greater_than_func(detail::floats_greater_than);
+    static function<bool (int,int)> greater_than_func(mathlib::floats_greater_than);
     environment.bind_global_object(&greater_than_func,FUNGU_OBJECT_ID(">f"));
     
-    static function<bool (int,int)> greater_than_or_equal_to_func(detail::floats_greater_than_or_equal_to);
+    static function<bool (int,int)> greater_than_or_equal_to_func(mathlib::floats_greater_than_or_equal_to);
     environment.bind_global_object(&greater_than_or_equal_to_func,FUNGU_OBJECT_ID(">=f"));
 }
 
 void register_bitwise_functions(env & environment)
 {
-    static function<int (int,int)> blshift_func(detail::bitwise_lshift);
+    static function<int (int,int)> blshift_func(mathlib::bitwise_lshift);
     environment.bind_global_object(&blshift_func,FUNGU_OBJECT_ID("<<"));
     
-    static function<int (int,int)> brshift_func(detail::bitwise_rshift);
+    static function<int (int,int)> brshift_func(mathlib::bitwise_rshift);
     environment.bind_global_object(&brshift_func,FUNGU_OBJECT_ID(">>"));
     
-    static function<int (int)> bnot_func(detail::bitwise_not);
+    static function<int (int)> bnot_func(mathlib::bitwise_not);
     environment.bind_global_object(&bnot_func,FUNGU_OBJECT_ID("~"));
     
-    static function<int (int,int)> band_func(detail::bitwise_and);
+    static function<int (int,int)> band_func(mathlib::bitwise_and);
     environment.bind_global_object(&band_func,FUNGU_OBJECT_ID("&"));
     
-    static function<int (int,int)> bor_func(detail::bitwise_or);
+    static function<int (int,int)> bor_func(mathlib::bitwise_or);
     environment.bind_global_object(&bor_func,FUNGU_OBJECT_ID("|"));
     
-    static function<int (int,int)> bxor_func(detail::bitwise_xor);
+    static function<int (int,int)> bxor_func(mathlib::bitwise_xor);
     environment.bind_global_object(&bxor_func,FUNGU_OBJECT_ID("^"));
 }
 
@@ -291,7 +279,7 @@ void register_math_functions(env & e)
     srand(static_cast<unsigned int>(time(NULL)));
     static std::vector<any> random_number_defargs;
     random_number_defargs.push_back(0);
-    static function<int (int,int)> random_number_func(detail::random_number,&random_number_defargs);
+    static function<int (int,int)> random_number_func(mathlib::random_number,&random_number_defargs);
     e.bind_global_object(&random_number_func, FUNGU_OBJECT_ID("rnd"));
 }
 

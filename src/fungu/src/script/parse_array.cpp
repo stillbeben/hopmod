@@ -6,12 +6,6 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#include "fungu/script/expression.hpp"
-#include "fungu/script/lexical_cast.hpp"
-#include "fungu/script/parse_array.hpp"
-
-#include <vector>
-
 namespace fungu{
 namespace script{
 

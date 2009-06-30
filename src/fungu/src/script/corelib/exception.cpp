@@ -6,19 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-#include "fungu/script/function.hpp"
-#include "fungu/script/variable.hpp"
-
 namespace fungu{
 namespace script{
 namespace corelib{
     
-namespace detail{
+namespace exceptionlib{
 
 inline void _throw(const std::string & msg)
 {
@@ -100,10 +92,10 @@ inline result_type _try(env::object::call_arguments & args,env::frame * frame)
 
 void register_exception_functions(env & environment)
 {
-    static function<void (const std::string &)> throw_func(detail::_throw);
+    static function<void (const std::string &)> throw_func(exceptionlib::_throw);
     environment.bind_global_object(&throw_func, FUNGU_OBJECT_ID("throw"));
     
-    static function<raw_function_type> try_func(detail::_try);
+    static function<raw_function_type> try_func(exceptionlib::_try);
     environment.bind_global_object(&try_func, FUNGU_OBJECT_ID("try"));
 }
 

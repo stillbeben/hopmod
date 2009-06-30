@@ -6,45 +6,13 @@ project : requirements <include>include <define>FUNGU_WITH_LUA ;
 cpp-pch pch : include/fungu/script/pch.hpp /boost//headers /lua//headers : <include>include <define>FUNGU_WITH_LUA ;
 
 lib script :
-    src/script/construct.cpp
-    src/script/any.cpp
+    src/script/type.cpp
+    src/script/constructs.cpp
     src/script/env.cpp
-    src/script/env_object.cpp
-    src/script/env_symbol.cpp
-    src/script/env_frame.cpp
-    src/script/lexical_cast.cpp
-    src/script/expression.cpp
-    src/script/subexpression.cpp
-    src/script/word.cpp
-    src/script/symbol.cpp
-    src/script/reference.cpp
-    src/script/quote.cpp
-    src/script/block.cpp
-    src/script/macro.cpp
-    src/script/comment.cpp
-    src/script/parse_array.cpp
     src/script/execute.cpp
-    src/script/arguments_container.cpp
-    src/script/code_block.cpp
-    src/script/error.cpp
-    src/script/any_variable.cpp
-    src/script/table.cpp
-    src/script/eval_stream.cpp
-    src/script/corelib/alias.cpp
-    src/script/corelib/anonymous_function.cpp
-    src/script/corelib/controlflow.cpp
-    src/script/corelib/datetime.cpp
-    src/script/corelib/exception.cpp
-    src/script/corelib/exec.cpp
-    src/script/corelib/list.cpp
-    src/script/corelib/maths.cpp
-    src/script/corelib/object.cpp
-    src/script/corelib/reference.cpp
-    src/script/corelib/string.cpp
-    src/script/corelib/vector.cpp
-    src/script/lua/arguments.cpp
-    src/script/lua/lua_function.cpp
-    src/script/lua/object_wrapper.cpp
+    src/script/objects.cpp
+    src/script/corelib.cpp
+    src/script/lua.cpp
     /boost//headers
     /lua//headers
     pch

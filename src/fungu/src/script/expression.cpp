@@ -6,13 +6,6 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/expression.hpp"
-#include <boost/scope_exit.hpp>
-
 namespace fungu{
 namespace script{
 

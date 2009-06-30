@@ -6,22 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-#include "fungu/script/function.hpp"
-#include <time.h>
-#include <stdio.h>
-#include <assert.h>
-#include <string>
-
 namespace fungu{
 namespace script{
 namespace corelib{
 
-namespace detail{
+namespace datetimelib{
 
 inline time_t now()
 {
@@ -126,22 +115,22 @@ inline std::string fduration(int seconds)
 
 void register_datetime_functions(env & environment)
 {
-    static function <time_t ()> now_func(detail::now);
+    static function <time_t ()> now_func(datetimelib::now);
     environment.bind_global_object(&now_func, FUNGU_OBJECT_ID("now"));
     
-    static function <std::string (time_t)> psd_func((std::string (&)(time_t))detail::print_standard_date);
+    static function <std::string (time_t)> psd_func((std::string (&)(time_t))datetimelib::print_standard_date);
     environment.bind_global_object(&psd_func, FUNGU_OBJECT_ID("date"));
     
-    static function <std::string (time_t)> pst_func((std::string (&)(time_t))detail::print_standard_time);
+    static function <std::string (time_t)> pst_func((std::string (&)(time_t))datetimelib::print_standard_time);
     environment.bind_global_object(&pst_func, FUNGU_OBJECT_ID("time"));
     
-    static function <std::string (time_t)> psdt_func(detail::print_standard_datetime);
+    static function <std::string (time_t)> psdt_func(datetimelib::print_standard_datetime);
     environment.bind_global_object(&psdt_func, FUNGU_OBJECT_ID("datetime"));
     
-    static function <std::string (int)> duration_func(detail::duration);
+    static function <std::string (int)> duration_func(datetimelib::duration);
     environment.bind_global_object(&duration_func, FUNGU_OBJECT_ID("duration"));
     
-    static function <std::string (int)> fduration_func(detail::fduration);
+    static function <std::string (int)> fduration_func(datetimelib::fduration);
     environment.bind_global_object(&fduration_func, FUNGU_OBJECT_ID("fduration"));
 }
 

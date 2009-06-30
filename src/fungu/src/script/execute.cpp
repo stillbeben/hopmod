@@ -14,11 +14,17 @@
 #include "fungu/script/expression.hpp"
 #include "fungu/script/execute.hpp"
 #include "fungu/script/eval_stream.hpp"
+#include "fungu/script/error.hpp"
 #include "fungu/script/code_block.hpp"
 #include "fungu/script/constant.hpp"
 
 #include <stdio.h>
 #include <errno.h>
+#include <sstream>
+
+#include "code_block.cpp"
+#include "eval_stream.cpp"
+#include "error.cpp"
 
 namespace fungu{
 namespace script{

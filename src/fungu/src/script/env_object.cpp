@@ -6,17 +6,6 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-
-#ifdef FUNGU_WITH_LUA
-#include "fungu/script/lua/push_value.hpp"
-#include "fungu/script/lua/arguments.hpp"
-#endif
-
 namespace fungu{
 namespace script{
 

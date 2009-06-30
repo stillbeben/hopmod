@@ -6,20 +6,11 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/env.hpp"
-#include "fungu/script/function.hpp"
-#include "fungu/script/execute.hpp"
-#include "fungu/script/table.hpp"
-
 namespace fungu{
 namespace script{
 namespace corelib{
 
-namespace detail{
+namespace execlib{
 
 static inline table * get_file_ext_handlers_table()
 {
@@ -65,19 +56,19 @@ inline result_type exec_script(env::object::call_arguments & args,env::frame * a
 
 void register_exec_functions(env & environment)
 {
-    static function<raw_function_type> exec_func(detail::exec_script);
+    static function<raw_function_type> exec_func(execlib::exec_script);
     environment.bind_global_object(&exec_func,FUNGU_OBJECT_ID("exec"));
     
-    static function<raw_function_type> exec_cubescript_func(detail::exec_cubescript);
+    static function<raw_function_type> exec_cubescript_func(execlib::exec_cubescript);
     environment.bind_global_object(&exec_cubescript_func,FUNGU_OBJECT_ID("exec-cubescript"));
     
     #ifdef FUNGU_WITH_LUA
-    static function<raw_function_type> exec_lua_func(detail::exec_lua);
+    static function<raw_function_type> exec_lua_func(execlib::exec_lua);
     environment.bind_global_object(&exec_lua_func,FUNGU_OBJECT_ID("exec-lua"));
-    detail::get_file_ext_handlers_table()->assign("lua",exec_lua_func.get_shared_ptr());
+    execlib::get_file_ext_handlers_table()->assign("lua",exec_lua_func.get_shared_ptr());
     #endif
     
-    environment.bind_global_object(detail::get_file_ext_handlers_table(), FUNGU_OBJECT_ID("exec-handlers"));
+    environment.bind_global_object(execlib::get_file_ext_handlers_table(), FUNGU_OBJECT_ID("exec-handlers"));
 }
 
 } //namespace corelib

@@ -31,12 +31,6 @@
  *  DEALINGS IN THE SOFTWARE.
  */
 
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
-#endif
-
-#include "fungu/script/any.hpp"
-
 namespace fungu{
 namespace script{
 
