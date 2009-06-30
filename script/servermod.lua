@@ -147,8 +147,6 @@ server.event_handler("mapchange", function(map, mode)
     end
 end)
 
-server.event_handler("timeupdate", function(mins) return mins end)
-
 server.event_handler("started", function()
     
     dofile("./script/db/auth.lua")

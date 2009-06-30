@@ -23,18 +23,17 @@ struct proceed
     }
 };
 
-// used by the timeupdate event, should it be used by anything else, extend it with template parameter to set initial least value
-struct minvalue
+struct maxvalue
 {
     typedef int result_type;
     template<typename InputIterator>
     int operator()(InputIterator first, InputIterator last)const
     {
-        if(first == last) return -2;
-        int least = std::numeric_limits<int>::max();
+        if(first == last) return -1;
+        int greatest = -1;
         for(InputIterator it = first; it != last; ++it) 
-            least = std::min(least, *it);
-        return least;
+            greatest = std::max(greatest, *it);
+        return greatest;
     }
 };
 
@@ -71,7 +70,7 @@ extern boost::signal<void (int)>                                    signal_suici
 // Game Events
 extern boost::signal<void ()>                                       signal_intermission;
 extern boost::signal<void ()>                                       signal_finishedgame;
-extern boost::signal<int (int),minvalue>                            signal_timeupdate;
+extern boost::signal<int (int),maxvalue>                            signal_timeupdate;
 extern boost::signal<void (const char *,const char *)>              signal_mapchange;
 extern boost::signal<void ()>                                       signal_setnextgame;
 extern boost::signal<void ()>                                       signal_gamepaused;

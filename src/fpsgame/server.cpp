@@ -1539,12 +1539,6 @@ namespace server
             
             int newvalue = signal_timeupdate(minremain);
             
-            if(newvalue == -1)
-            {
-                gamelimit = gamemillis + (++minremain * 1000 * 60);
-                return;
-            }
-            
             if(newvalue != minremain && newvalue >= 0)
             {
                 gamelimit = gamemillis + (newvalue * 1000 * 60);
