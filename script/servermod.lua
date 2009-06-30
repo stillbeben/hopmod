@@ -3,6 +3,7 @@ dofile("./script/logging.lua")
 dofile("./script/maprotation.lua")
 dofile("./script/playercmd.lua")
 dofile("./script/versus.lua")
+dofile("./script/insta.lua")
 
 function sendServerBanner(cn)
 
