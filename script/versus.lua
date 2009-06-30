@@ -172,6 +172,7 @@ function server.playercmd_versus(cn, player1, player2, mode, map)
     server.unspec(player1)
     server.unspec(player2)
     server.mastermode = 2
+    server.mastermode_owner = -1
     server.pausegame(true)
     
     local countdown = 6
