@@ -399,6 +399,7 @@ namespace server
     int gamemode = 0;
     int gamemillis = 0, gamelimit = 0;
     bool gamepaused = false;
+    int pausegame_owner = -1;
     bool reassignteams = true;
     
     string serverdesc = "", serverpass = "";
@@ -938,6 +939,7 @@ namespace server
     
     void pausegame(bool val)
     {
+        pausegame_owner = -1;
         if(gamepaused==val) return;
         gamepaused = val;
         sendf(-1, 1, "rii", SV_PAUSEGAME, gamepaused ? 1 : 0);
@@ -1026,14 +1028,19 @@ namespace server
         if(val && authname) formatstring(msg)("%s claimed %s as '\fs\f5%s\fr'", colorname(ci), name, authname);
         else formatstring(msg)("%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
         sendservmsg(msg);
+        
+        if(gamepaused && currentmaster == pausegame_owner) pausegame(false);
+        
         currentmaster = val ? ci->clientnum : -1;
         masterupdate = true;
+        #if 0
         if(gamepaused)
         {
             int admins = 0;
             loopv(clients) if(clients[i]->privilege >= PRIV_ADMIN || clients[i]->local) admins++;
             if(!admins) pausegame(false);
         }
+        #endif
         
         signal_setmaster(ci->clientnum, name, val);
     }
@@ -1958,6 +1965,8 @@ namespace server
         
         return DISC_NONE;
     }
+    
+    void cleanup_masterstate(clientinfo *);
 
     void clientdisconnect(int n,int reason) 
     {
@@ -1979,7 +1988,12 @@ namespace server
         
         if(ci->connected)
         {
-            if(currentmaster == n) setmaster(ci, false);
+            if(ci->privilege)
+            {
+                if(currentmaster == n) setmaster(ci, false);
+                else cleanup_masterstate(ci);
+            }
+            
             if(smode) smode->leavegame(ci, true);
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
             savescore(ci);
@@ -2197,6 +2211,7 @@ namespace server
                 bool was_playing = restoredscore && ci->state.state != CS_SPECTATOR;
                 
                 if(mastermode>=MM_LOCKED && !was_playing) ci->state.state = CS_SPECTATOR;
+                else ci->state.state = CS_DEAD;
                 if(currentmaster>=0) masterupdate = true; //FIXME send SV_CURRENTMASTER packet directly to client
                 ci->state.lasttimeplayed = lastmillis;
 
@@ -2845,6 +2860,7 @@ namespace server
                 int val = getint(p);
                 if(ci->privilege<PRIV_ADMIN && !ci->local) break;
                 pausegame(val > 0);
+                pausegame_owner = ci->clientnum;
                 break;
             }
 

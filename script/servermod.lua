@@ -218,8 +218,3 @@ server.event_handler("started", function()
     
     server.log_status("-> Successfully loaded Hopmod")
 end)
-
-
-function server.testprop()
-    server.mastermode = 2
-end

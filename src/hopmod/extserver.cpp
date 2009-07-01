@@ -530,20 +530,6 @@ int player_authreq(int cn){return get_ci(cn)->authreq;}
 int player_rank(int cn){return get_ci(cn)->rank;}
 bool player_isbot(int cn){return get_ci(cn)->state.aitype != AI_NONE;}
 
-void set_invadmin(int cn)
-{
-    clientinfo * ci = get_ci(cn);
-    ci->privilege = PRIV_ADMIN;
-    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_ADMIN);
-}
-
-void unset_invadmin(int cn)
-{
-    clientinfo * ci = get_ci(cn);
-    ci->privilege = PRIV_NONE;
-    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_NONE);
-}
-
 int player_mapcrc(int cn){return get_ci(cn)->mapcrc;}
 
 void changemap(const char * map,const char * mode = "",int mins = -1)
@@ -618,6 +604,22 @@ std::vector<float> player_pos(int cn)
     return result;
 }
 
+void cleanup_masterstate(clientinfo * master)
+{
+    int cn = master->clientnum;
+    
+    if(cn == mastermode_owner)
+    {
+        mastermode = MM_OPEN;
+        mastermode_owner = -1;
+        allowedips.setsize(0);
+    }
+    
+    if(gamepaused && cn == pausegame_owner) pausegame(false);
+    
+    if(master->state.state==CS_SPECTATOR) aiman::removeai(master);
+}
+
 void unsetmaster()
 {
     if(currentmaster != -1)
@@ -628,30 +630,27 @@ void unsetmaster()
         master->sendprivtext(msg);
         
         master->privilege = 0;
-        
-        //FIXME code duplication alert: following code also in server::setmaster()
-        if(master->clientnum == mastermode_owner)
-        {
-            mastermode = MM_OPEN;
-            mastermode_owner = -1;
-            allowedips.setsize(0);
-        }
-        
         currentmaster = -1;
         masterupdate = true;
+        
+        cleanup_masterstate(master);
     }
 }
 
 void setpriv(int cn, int priv)
 {
     clientinfo * player = get_ci(cn);
-    if(player->privilege == priv) return;
+    if(player->privilege == priv || priv == PRIV_NONE) return;
+    
     unsetmaster();
+    
+    const char * change = (priv > player->privilege ? "raied" : "lowered");
+    
     player->privilege = priv;
     currentmaster = cn;
     masterupdate = true;
     
-    defformatstring(msg)("The server has raised your privilege to %s.", privname(priv));
+    defformatstring(msg)("The server has %s your privilege to %s.", change, privname(priv));
     player->sendprivtext(msg);
 }
 
@@ -665,6 +664,24 @@ bool server_setmaster(int cn)
 void server_setadmin(int cn)
 {
     setpriv(cn, PRIV_ADMIN);
+}
+
+void set_invadmin(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    ci->privilege = PRIV_ADMIN;
+    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_ADMIN);
+}
+
+void unset_invadmin(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    if(ci->privilege != PRIV_ADMIN || cn == currentmaster) return;
+    
+    ci->privilege = PRIV_NONE;
+    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_NONE);
+    
+    cleanup_masterstate(ci);
 }
 
 bool writebanlist(const char * filename)
