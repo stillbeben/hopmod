@@ -18,6 +18,8 @@ local suspended = false
 
 local evthandlers = {}
 
+local uinstallHandlers -- function
+
 local function onActive(cn)
     
     if cn == player1_cn then 
@@ -83,17 +85,13 @@ local function onConnect(cn)
     local id = server.player_id(cn)
     
     if id == player1_id then 
-    
         player1_cn = cn
         player1_ready = false
-        server.unspec(cn)
     end
     
     if id == player2_id then
-    
         player2_cn = cn
         player2_ready = false
-        server.unspec(cn)
     end
 end
 
@@ -126,11 +124,9 @@ local function installHandlers()
     
 end
 
-local function uninstallHandlers()
-
+uninstallHandlers = function()
     for i,handlerId in ipairs(evthandlers) do server.cancel_handler(handlerId) end
     evthandlers = {}
-    
 end
 
 function server.playercmd_versus(cn, player1, player2, mode, map)
