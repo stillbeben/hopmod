@@ -1093,6 +1093,11 @@ void script_set_mastermode(int value)
 {
     mastermode = value;
     mastermode_owner = -1;
+    allowedips.setsize(0);
+    if(mastermode >= MM_PRIVATE)
+    {
+        loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
+    }
 }
 
 #endif
