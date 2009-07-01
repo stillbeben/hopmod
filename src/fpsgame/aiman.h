@@ -239,7 +239,7 @@ namespace aiman
         if(!boti) sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "failed to create or assign bot");
         else signal_addbot(ci->clientnum, skill, boti->clientnum);
 	}
-
+    
 	void reqdel(clientinfo *ci)
 	{
         if(!ci->local && !ci->privilege) return;

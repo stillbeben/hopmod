@@ -710,10 +710,12 @@ void unsetban(const char * addrstr)
     bannedips.unset_ban(addr);
 }
 
-void delbot(int cn)
+int addbot(int skill)
 {
-    clientinfo * ci = get_ci(cn);
-    aiman::reqdel(ci);
+    clientinfo * owner = aiman::addai(skill, -1);
+    if(!owner) return -1;
+    signal_addbot(-1, skill, owner->clientnum);
+    return owner->clientnum;
 }
 
 void enable_master_auth(bool enable)

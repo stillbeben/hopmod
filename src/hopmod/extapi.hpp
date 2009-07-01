@@ -20,6 +20,7 @@ namespace server
     {
         extern int botlimit;
         extern bool botbalance;
+        extern bool deleteai();
     }
     
     extern string serverdesc;
@@ -121,7 +122,8 @@ namespace server
     bool loadbanlist(const char * filename);
     void addpermban(const char * addr);
     void unsetban(const char * addr);
-    void delbot(int);
+    int addbot(int);
+    int delbot();
     void enable_master_auth(bool);
     bool using_master_auth();
     void update_mastermask();

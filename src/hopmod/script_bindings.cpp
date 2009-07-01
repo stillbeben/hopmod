@@ -125,7 +125,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void ()>(server::clearbans, FUNGU_OBJECT_ID("clearbans"), env);
     script::bind_global_func<void ()>(start_restarter, FUNGU_OBJECT_ID("activate_restarter"), env);
     script::bind_global_func<void ()>(stop_restarter, FUNGU_OBJECT_ID("deactivate_restarter"), env);
-    script::bind_global_func<void (int)>(server::delbot, FUNGU_OBJECT_ID("delbot"), env);
+    script::bind_global_func<int (int)>(server::addbot, FUNGU_OBJECT_ID("addbot"), env);
+    script::bind_global_func<bool ()>(server::aiman::deleteai, FUNGU_OBJECT_ID("delbot"), env);
     script::bind_global_func<int ()>(server::recorddemo, FUNGU_OBJECT_ID("recorddemo"), env);
     script::bind_global_func<void ()>(server::enddemorecord, FUNGU_OBJECT_ID("stopdemo"), env);
     script::bind_global_func<void (const char *)>(server::add_allowed_ip, FUNGU_OBJECT_ID("allow_ip"), env);

@@ -135,8 +135,10 @@ end)
 server.event_handler("gamepaused", function() log("game is paused") end)
 server.event_handler("gameresumed", function() log("game is resumed") end)
 
-server.event_handler("addbot", function(cn,skill)
-    log(string.format("%s(%i) added a bot (skill %i)",server.player_name(cn), cn, skill))
+server.event_handler("addbot", function(cn,skill,owner)
+    local addedby = "server"
+    if cn ~= -1 then addedby = server.player_name(cn) .. string.format("(%i)", cn) end
+    log(string.format("%s added a bot (skill %i)", addedby, skill))
 end)
 
 server.event_handler("delbot", function(cn)
