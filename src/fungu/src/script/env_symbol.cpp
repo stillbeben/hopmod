@@ -43,7 +43,13 @@ env::symbol_local * env::symbol::push_local_object(object * obj, const frame * f
 
 void env::symbol::set_global_object(object * obj)
 {
+    assert(obj != NULL);
     m_global = env::object::shared_ptr(obj);
+}
+
+void env::symbol::unset_global_object()
+{
+    m_global = env::object::shared_ptr();
 }
 
 env::object * env::symbol::lookup_object(const frame * frm)const

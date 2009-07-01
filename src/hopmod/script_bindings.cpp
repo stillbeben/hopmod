@@ -249,4 +249,6 @@ void register_server_script_bindings(script::env & env)
         script::bind_global_const((const char *)cwd, FUNGU_OBJECT_ID("PWD"), env);
     
     script::bind_global_const(getuid(), FUNGU_OBJECT_ID("UID"), env);
+    
+    script::bind_global_func<void (const char *)>(unset_global, FUNGU_OBJECT_ID("unset_global"), env);
 }

@@ -15,6 +15,7 @@ public:
     ~symbol();
     symbol_local * push_local_object(object *, const frame *);
     void set_global_object(object *);
+    void unset_global_object();
     object * lookup_object(const frame *)const;
 private:
     symbol(const symbol &);

@@ -256,3 +256,9 @@ int parse_list(lua_State * L)
     
     return 1;
 }
+
+void unset_global(const char * name)
+{
+    script::env::symbol * symbol = env->lookup_symbol(const_string(name,name + strlen(name) - 1));
+    if(symbol) symbol->unset_global_object();
+}
