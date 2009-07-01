@@ -13,6 +13,7 @@
 #include "variable.hpp"
 #include "any_variable.hpp"
 #include "function.hpp"
+#include "property.hpp"
 
 namespace fungu{
 namespace script{
@@ -72,6 +73,14 @@ inline void bind_global_func(Functor fun, const_string id, env & environ,const s
     function<Signature> * function_obj = new function<Signature>(fun, default_args);
     function_obj->set_adopted();
     environ.bind_global_object(function_obj, id);
+}
+
+template<typename T, typename GetterFunction, typename SetterFunction>
+inline void bind_global_property(GetterFunction getter, SetterFunction setter, const_string id, env & environ)
+{
+    property<T> * object = new property<T>(getter, setter);
+    object->set_adopted();
+    environ.bind_global_object(object, id);
 }
 
 } //namespace script
