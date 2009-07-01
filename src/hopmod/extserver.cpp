@@ -1072,4 +1072,10 @@ void calc_player_ranks()
     return calc_player_ranks(NULL);
 }
 
+void script_set_mastermode(int value)
+{
+    mastermode = value;
+    mastermode_owner = -1;
+}
+
 #endif

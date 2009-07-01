@@ -130,7 +130,8 @@ namespace server
     int recorddemo();
     void enddemorecord();
     void calc_player_ranks();
-
+    void script_set_mastermode(int);
+    
     std::vector<int> cs_player_list();
     std::vector<int> cs_spec_list();
     std::vector<int> cs_bot_list();

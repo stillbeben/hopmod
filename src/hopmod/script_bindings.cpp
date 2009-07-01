@@ -185,7 +185,9 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<const char * (const char *)>(ip_to_country, FUNGU_OBJECT_ID("ip_to_country"), env);
     script::bind_global_func<const char * (const char *)>(ip_to_country_code, FUNGU_OBJECT_ID("ip_to_country_code"), env);
     
-    script::bind_global_var(server::mastermode, FUNGU_OBJECT_ID("mastermode"), env);//TODO change to managed var
+    script::bind_global_property<int>(
+        boost::bind(script::property<int>::generic_getter, server::mastermode),
+        server::script_set_mastermode, FUNGU_OBJECT_ID("mastermode"), env);
     script::bind_global_var(server::mastermode_owner, FUNGU_OBJECT_ID("mastermode_owner"), env);
     script::bind_global_const((int)MM_OPEN, FUNGU_OBJECT_ID("MM_OPEN"), env);
     script::bind_global_const((int)MM_VETO, FUNGU_OBJECT_ID("MM_VETO"), env);
