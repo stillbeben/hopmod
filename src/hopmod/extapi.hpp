@@ -44,12 +44,11 @@ namespace server
     extern bool allow_mm_private;
     extern bool allow_item[11];
     extern bool allow_master;
-    
     extern string authserver_hostname;
-    
     extern bool broadcast_mapmodified;
-    
     extern timer::time_diff_t timer_alarm_threshold;
+    
+    extern bool enable_extinfo;
     
     void init_hopmod();
     void reload_hopmod();

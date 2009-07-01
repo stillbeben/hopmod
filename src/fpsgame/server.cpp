@@ -419,6 +419,8 @@ namespace server
 
     bool broadcast_mapmodified = true;
     
+    bool enable_extinfo = true;
+    
     struct demofile
     {
         string info;
@@ -2883,6 +2885,7 @@ namespace server
     {
         if(!getint(req))
         {
+            if(!enable_extinfo) return;
             extserverinforeply(req, p);
             return;
         }
