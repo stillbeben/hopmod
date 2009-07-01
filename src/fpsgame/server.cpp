@@ -178,7 +178,8 @@ namespace server
         int maxhealth, frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, shots;
         int timeplayed;
         float effectiveness;
-
+        int state;
+        
         void save(gamestate &gs)
         {
             maxhealth = gs.maxhealth;
@@ -194,6 +195,7 @@ namespace server
             effectiveness = gs.effectiveness;
             hits = gs.hits;
             shots = gs.shots;
+            state = gs.state;
         }
 
         void restore(gamestate &gs)
@@ -212,6 +214,7 @@ namespace server
             gs.effectiveness = effectiveness;
             gs.hits = hits;
             gs.shots = shots;
+            gs.state = state;
         }
     };
 
@@ -2190,15 +2193,18 @@ namespace server
                 clients.add(ci);
 
                 ci->connected = true;
-                if(mastermode>=MM_LOCKED) ci->state.state = CS_SPECTATOR;
-                if(currentmaster>=0) masterupdate = true;
+                bool restoredscore = restorescore(ci);
+                bool was_playing = restoredscore && ci->state.state != CS_SPECTATOR;
+                
+                if(mastermode>=MM_LOCKED && !was_playing) ci->state.state = CS_SPECTATOR;
+                if(currentmaster>=0) masterupdate = true; //FIXME send SV_CURRENTMASTER packet directly to client
                 ci->state.lasttimeplayed = lastmillis;
 
                 const char *worst = m_teammode ? chooseworstteam(text, ci) : NULL;
                 copystring(ci->team, worst ? worst : "good", MAXTEAMLEN+1);
 
                 sendwelcome(ci);
-                if(restorescore(ci)) sendresume(ci);
+                if(restoredscore) sendresume(ci);
                 sendinitclient(ci);
 
                 aiman::addclient(ci);
