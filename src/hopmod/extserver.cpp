@@ -1100,4 +1100,9 @@ void script_set_mastermode(int value)
     }
 }
 
+void add_allowed_ip(const char * ip)
+{
+    allowedips.add(inet_addr(ip));
+}
+
 #endif
