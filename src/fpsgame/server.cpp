@@ -2654,7 +2654,7 @@ namespace server
                 {
                     if((ci->privilege>=PRIV_ADMIN || ci->local) || (mastermask&(1<<mm)))
                     {
-                        signal_setmastermode(mastermodename(mastermode),mastermodename(mm));
+                        if(signal_setmastermode(mastermodename(mastermode),mastermodename(mm))==-1) break;
                         mastermode = mm;
                         mastermode_owner = ci->clientnum;
                         allowedips.setsize(0);

@@ -35,7 +35,7 @@ boost::signal<int (int,const char *,const char *), proceed> signal_mapvote;
 boost::signal<void ()> signal_setnextgame;
 boost::signal<void ()> signal_gamepaused;
 boost::signal<void ()> signal_gameresumed;
-boost::signal<void (const char *,const char *)> signal_setmastermode;
+boost::signal<int (const char *,const char *),proceed> signal_setmastermode;
 boost::signal<void (int,int)> signal_spectator;
 boost::signal<void (int,const char *,int)> signal_setmaster;
 boost::signal<void (int,int)> signal_teamkill;
