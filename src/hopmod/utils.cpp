@@ -67,3 +67,4 @@ timer::time_diff_t timer::usec_elapsed()const
     clock_gettime(CLOCK_MONOTONIC, &now);
     return usec_diff(m_start, now);
 }
+

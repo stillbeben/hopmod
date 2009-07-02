@@ -859,10 +859,10 @@ int team_draw(const char * team)
     return true;
 }
 
-int recorddemo()
+int recorddemo(const char * filename)
 {
     if(demorecord) return demo_id;
-    else return setupdemorecord(false);
+    else return setupdemorecord(false, filename);
 }
 
 int lua_gamemodeinfo(lua_State * L)

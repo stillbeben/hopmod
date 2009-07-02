@@ -15,6 +15,7 @@ using namespace fungu;
 
 static std::vector<script::any> player_kick_defargs;
 static std::vector<script::any> changemap_defargs;
+static std::vector<script::any> recorddemo_defargs;
 
 static void setup_default_arguments()
 {
@@ -26,6 +27,9 @@ static void setup_default_arguments()
     changemap_defargs.clear();
     changemap_defargs.push_back(const_string());
     changemap_defargs.push_back(-1);
+    
+    recorddemo_defargs.clear();
+    recorddemo_defargs.push_back(std::string(""));
 }
 
 void register_server_script_bindings(script::env & env)
@@ -127,7 +131,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<void ()>(stop_restarter, FUNGU_OBJECT_ID("deactivate_restarter"), env);
     script::bind_global_func<int (int)>(server::addbot, FUNGU_OBJECT_ID("addbot"), env);
     script::bind_global_func<bool ()>(server::aiman::deleteai, FUNGU_OBJECT_ID("delbot"), env);
-    script::bind_global_func<int ()>(server::recorddemo, FUNGU_OBJECT_ID("recorddemo"), env);
+    script::bind_global_func<int (const char *)>(server::recorddemo, FUNGU_OBJECT_ID("recorddemo"), env, &recorddemo_defargs);
     script::bind_global_func<void ()>(server::enddemorecord, FUNGU_OBJECT_ID("stopdemo"), env);
     script::bind_global_func<void (const char *)>(server::add_allowed_ip, FUNGU_OBJECT_ID("allow_ip"), env);
     

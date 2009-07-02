@@ -129,7 +129,7 @@ namespace server
     void update_mastermask();
     const char * gamemodename();
     int lua_gamemodeinfo(lua_State *);
-    int recorddemo();
+    int recorddemo(const char *);
     void enddemorecord();
     void calc_player_ranks();
     void script_set_mastermode(int);
