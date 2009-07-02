@@ -31,6 +31,7 @@ namespace server
     extern int minremain;
     extern bool reassignteams;
     extern int gamemillis;
+    extern int gamelimit;
     
     extern int mastermode;
     extern int mastermode_owner;

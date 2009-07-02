@@ -42,7 +42,7 @@ auth = {}
 auth.authserver_offline = false
 
 server.event_handler("authreq", function(cn, name, domain)
-  
+
     local req_id = server.player_authreq(cn)
     auth_request[req_id] = {}
     local req = auth_request[req_id]
@@ -90,6 +90,8 @@ server.event_handler("authreq", function(cn, name, domain)
         else
             user_row = row.users[name]
         end
+        
+        
         
         if user_row then
             
