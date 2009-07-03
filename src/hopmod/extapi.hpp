@@ -162,6 +162,9 @@ namespace server
     void authchallenged(uint id, const char *val);
     
     void restart_now();
+    
+    void suicide(int);
+    
 } //namespace server
 
 #endif

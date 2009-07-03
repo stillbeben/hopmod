@@ -1107,4 +1107,9 @@ void add_allowed_ip(const char * ip)
     allowedips.add(inet_addr(ip));
 }
 
+void suicide(int cn)
+{
+    suicide(get_ci(cn));
+}
+
 #endif

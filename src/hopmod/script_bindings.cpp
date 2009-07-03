@@ -70,6 +70,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_global_func<int (int)>(server::player_timeplayed, FUNGU_OBJECT_ID("player_timeplayed"), env);
     script::bind_global_func<int (int)>(server::player_win, FUNGU_OBJECT_ID("player_win"), env);
     script::bind_global_func<void (int)>(server::player_slay, FUNGU_OBJECT_ID("player_slay"), env);
+    script::bind_global_func<void (int)>((void (*)(int))server::suicide, FUNGU_OBJECT_ID("player_suicide"), env);
     script::bind_global_func<bool (int,const char *)>(server::player_changeteam, FUNGU_OBJECT_ID("changeteam"), env);
     script::bind_global_func<int (int)>(server::player_bots, FUNGU_OBJECT_ID("player_bots"), env);
     script::bind_global_func<int (int)>(server::player_authreq, FUNGU_OBJECT_ID("player_authreq"), env);
