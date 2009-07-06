@@ -31,7 +31,8 @@ server.event_handler("frag", function(target_cn, actor_cn)
         end
         
         actor_vars.lastkill = server.gamemillis
-        
+        actor_vars.multikills = 0
+    
     else
         actor_killingspree = 0
     end
