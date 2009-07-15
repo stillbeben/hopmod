@@ -1,5 +1,5 @@
 /*
- * The Fungu Scripting Engine Library
+ * The Fungu Scripting Engine
  *
  * (C) Copyright 2008 Graham Daws
  * (C) Copyright 2005 Christopher Diggins

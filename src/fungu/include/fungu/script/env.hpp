@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -13,18 +13,15 @@
 #include "any.hpp"
 #include "lexical_cast.hpp"
 #include "result_type.hpp"
-#include "arguments_container.hpp"
+#include "callargs.hpp"
 
 #include <boost/unordered_map.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/function.hpp>
-#include <stack>
 
 #ifdef FUNGU_WITH_LUA
 extern "C"{
 #include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
 }
 #endif
 
@@ -189,14 +186,8 @@ public:
         return module_count++;
     }
     
-    void push_arg(any);
-    any & top_arg();
-    void pop_arg();
-    int get_arg_count()const;
 private:
     boost::unordered_map<const_string, symbol *> m_symbol;
-    
-    std::stack<any> m_arg;
     
     const source_context * m_source_ctx;
     int m_recursion_limit;

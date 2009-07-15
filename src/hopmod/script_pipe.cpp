@@ -77,7 +77,7 @@ bool open_script_pipe(const char * filename, int mode, script::env & server_env)
     scriptexec = new script::eval_stream(frm);
     script_context = new script::file_source_context(filename);
     
-    script::bind_global_var(pending_idle_timeout,"script_pipe_pending_idle_timeout",server_env);
+    script::bind_var(pending_idle_timeout,"script_pipe_pending_idle_timeout",server_env);
     
     pending_close = false;
     

@@ -150,8 +150,8 @@ void register_signals(script::env & env)
 
     slots.register_signal(signal_rootserver_failedconnect, "failedrootconnect", normal_error_handler);
 
-    script::bind_global_func<int (const std::string &,script::any)>(cubescript_event_handler_function, FUNGU_OBJECT_ID("event_handler"), env);
-    script::bind_global_func<void (int)>(destroy_slot, FUNGU_OBJECT_ID("cancel_handler"), env);
+    script::bind_freefunc(cubescript_event_handler_function, "event_handler", env);
+    script::bind_freefunc(destroy_slot, "cancel_handler", env);
     
     register_lua_function(lua_event_handler_function,"event_handler");
 }

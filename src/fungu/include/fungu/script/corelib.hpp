@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -8,21 +8,24 @@
 #ifndef FUNGU_SCRIPT_CORELIB_HPP
 #define FUNGU_SCRIPT_CORELIB_HPP
 
-#include "corelib/maths.hpp"
-#include "corelib/alias.hpp"
-#include "corelib/controlflow.hpp"
-#include "corelib/exec.hpp"
-#include "corelib/list.hpp"
-#include "corelib/anonymous_function.hpp"
-#include "corelib/reference.hpp"
-#include "corelib/object.hpp"
-#include "corelib/string.hpp"
-#include "corelib/vector.hpp"
-#include "corelib/datetime.hpp"
-#include "corelib/exception.hpp"
-
 namespace fungu{
 namespace script{
+
+namespace corelib{
+void register_alias_functions(env &);
+void unload_alias_functions(env &);
+void register_anonfunc_functions(env &);
+void register_controlflow_functions(env &);
+void register_datetime_functions(env &);
+void register_exception_functions(env &);
+void register_exec_functions(env &);
+void register_list_functions(env &);
+void register_math_functions(env &);
+void register_object_functions(env &);
+void register_reference_functions(env &);
+void register_string_functions(env &);
+void register_vector_functions(env &);
+} //namespace corelib
 
 inline void load_corelib(env & environment)
 {

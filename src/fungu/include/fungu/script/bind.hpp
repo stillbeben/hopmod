@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -15,43 +15,45 @@
 #include "function.hpp"
 #include "property.hpp"
 
+#include <boost/type_traits/remove_pointer.hpp>
+
 namespace fungu{
 namespace script{
 
 template<typename T>
-inline void bind_global_const(const T & value, const_string id, env & environ)
+inline void bind_const(const T & value, const char * id, env & environ)
 {
     constant<T> * constant_obj = new constant<T>(value);
     constant_obj->set_adopted();
-    environ.bind_global_object(constant_obj, id);
+    environ.bind_global_object(constant_obj, const_string::literal(id));
 }
 
-inline void bind_global_const(const char * value,const_string id, env & environ)
+inline void bind_const(const char * value, const char * id, env & environ)
 {
     constant<const char *> * cstr_obj = new constant<const char *>(value);
     cstr_obj->set_adopted();
-    environ.bind_global_object(cstr_obj, id);
+    environ.bind_global_object(cstr_obj, const_string::literal(id));
 }
 
 template<typename T>
-inline void bind_global_var(T & ref, const_string id, env & environ)
+inline void bind_var(T & ref, const char * id, env & environ)
 {
     variable<T> * variable_obj = new variable<T>(ref);
     variable_obj->set_adopted();
-    environ.bind_global_object(variable_obj, id);
+    environ.bind_global_object(variable_obj, const_string::literal(id));
 }
 
 template<typename T>
-inline void bind_global_ro_var(T & ref, const_string id, env & environ)
+inline void bind_ro_var(T & ref, const char * id, env & environ)
 {
     lockable_variable<T> * varobj = new lockable_variable<T>(ref);
     varobj->set_adopted();
     varobj->lock_write(true);
-    environ.bind_global_object(varobj, id);
+    environ.bind_global_object(varobj, const_string::literal(id));
 }
 
 template<typename T>
-inline void bind_global_wo_var(T & ref, const_string id, env & environ)
+inline void bind_wo_var(T & ref, const char * id, env & environ)
 {
     lockable_variable<T> * varobj = new lockable_variable<T>(ref);
     varobj->set_adopted();
@@ -60,27 +62,36 @@ inline void bind_global_wo_var(T & ref, const_string id, env & environ)
 }
 
 template<typename T,typename Functor>
-inline void bind_global_funvar(Functor fun, const_string id,env & environ)
+inline void bind_funvar(Functor fun, const char * id,env & environ)
 {
     function_variable<T> * varobj = new function_variable<T>(fun);
     varobj->set_adopted();
-    environ.bind_global_object(varobj, id);
+    environ.bind_global_object(varobj, const_string::literal(id));
 }
 
 template<typename Signature,typename Functor>
-inline void bind_global_func(Functor fun, const_string id, env & environ,const std::vector<any> * default_args = NULL)
+inline void bind_func(Functor fun, const char * id, env & environ,const std::vector<any> * default_args = NULL)
 {
     function<Signature> * function_obj = new function<Signature>(fun, default_args);
     function_obj->set_adopted();
-    environ.bind_global_object(function_obj, id);
+    environ.bind_global_object(function_obj, const_string::literal(id));
+}
+
+template<typename Signature>
+inline void bind_freefunc(Signature fun, const char * id, env & environ, const std::vector<any> * default_args = NULL)
+{
+    typedef typename boost::remove_pointer<Signature>::type FunctionType;
+    function<FunctionType> * function_obj = new function<FunctionType>(fun, default_args);
+    function_obj->set_adopted();
+    environ.bind_global_object(function_obj, const_string::literal(id));
 }
 
 template<typename T, typename GetterFunction, typename SetterFunction>
-inline void bind_global_property(GetterFunction getter, SetterFunction setter, const_string id, env & environ)
+inline void bind_property(GetterFunction getter, SetterFunction setter, const char * id, env & environ)
 {
     property<T> * object = new property<T>(getter, setter);
     object->set_adopted();
-    environ.bind_global_object(object, id);
+    environ.bind_global_object(object, const_string::literal(id));
 }
 
 } //namespace script

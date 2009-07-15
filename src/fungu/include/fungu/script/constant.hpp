@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -9,7 +9,7 @@
 #define FUNGU_SCRIPT_CONSTANT_HPP
 
 #include "env.hpp"
-#include "call_serializer.hpp"
+#include "callargs_serializer.hpp"
 
 #ifdef FUNGU_WITH_LUA
 #include "lua/push_value.hpp"

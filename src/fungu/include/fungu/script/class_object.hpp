@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -18,33 +18,19 @@ class class_object : public env::object
 {
 public:
     class_object(Class * object)
-     :m_object(object),
-      m_interface(class_interface<Class>::get_declarator())
+     :m_object(object)
     {
         
     }
     
-    class_object(Class * object,class_interface<Class> & interface)
-     :m_object(object),m_interface(interface)
+    result_type call(call_arguments & args, frame * frm)
     {
-        
-    }
-    
-    result_type call(call_arguments & args,frame * aScope)
-    {
-        if(args.empty()) throw error(NOT_ENOUGH_ARGUMENTS);
-        const_string methodname=args.front();
+        const_string methodName = args.safe_front().to_string();
         args.pop_front();
-        return m_interface.call_method(m_object,methodname,args,aScope);
-    }
-    
-    result_type value()
-    {
-        throw error(NO_VALUE);
+        return class_interface<Class>::get_declarator().call_method(m_object, methodName, args, frm);
     }
 private:
     Class * m_object;
-    class_interface<Class> & m_interface;
 };
 
 } //namespace script

@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -187,7 +187,7 @@ result_type expression::eval(env::frame * frame)
         
         subject_arg = m_first_construct;
         
-        arguments_container args(m_arguments);
+        callargs args(m_arguments);
         result_type result = opobj->call(args, frame);
         
         return result;

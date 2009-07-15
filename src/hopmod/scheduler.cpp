@@ -62,7 +62,7 @@ int run_cubescript_code(script::code_block code,script::env * e)
 
 script::result_type sched_cubescript_code(bool repeat,script::env::object::call_arguments & args,script::env::frame * frame)
 {
-    script::call_serializer cs(args,frame);
+    script::callargs_serializer cs(args,frame);
     
     int countdown = cs.deserialize(args.front(),type_tag<int>());
     args.pop_front();
@@ -81,7 +81,7 @@ int run_lua_code(script::env::object::shared_ptr func,script::env * e)
     {
         script::env::frame frame(e);
         std::vector<script::any> args;
-        script::arguments_container empty(args);
+        script::callargs empty(args);
         return script::lexical_cast<int>(func->call(empty,&frame));
     }
     catch(script::error err)

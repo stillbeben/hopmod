@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -24,7 +24,7 @@ inline int predicate(code_block & cb,env::frame * aScope)
 
 result_type if_(env::object::call_arguments & args, env::frame * frame)
 {
-    call_serializer cs(args,frame);
+    callargs_serializer cs(args,frame);
     
     if(args.size() < 2) throw error(NOT_ENOUGH_ARGUMENTS);
     
@@ -49,7 +49,7 @@ result_type if_(env::object::call_arguments & args, env::frame * frame)
 
 result_type ternary(env::object::call_arguments & args, env::frame * frame)
 {
-    call_serializer cs(args,frame);
+    callargs_serializer cs(args,frame);
     
     code_block cond = cs.deserialize(args.front(),type_tag<code_block>());
     args.pop_front();

@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -17,7 +17,7 @@
 class object
 {
 public:
-    typedef arguments_container call_arguments;
+    typedef callargs call_arguments;
     typedef env::frame frame;
     typedef boost::intrusive_ptr<object> shared_ptr;
     

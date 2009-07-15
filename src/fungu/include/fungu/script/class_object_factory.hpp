@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -14,7 +14,7 @@
 namespace fungu{
 namespace script{
 
-class class_object_factory:public env::object
+class class_object_factory
 {
 public:
     class constructor
@@ -28,49 +28,40 @@ public:
     class default_constructor:public constructor
     {
     public:
-        env::object * create(call_arguments & args)
+        env::object * create(call_arguments &)
         {
-            if(args.size()) throw error(TOO_MANY_ARGUMENTS);
             ClassType * newobj = new ClassType;
             return new class_object<ClassType>(newobj);
         }
     };
     
-    void register_class(const_string className,constructor * classCtor)
+    void register_class(const_string className, constructor * classCtor)
     {
         m_classes[className] = classCtor;
     }
     
-    result_type call(call_arguments & args,frame * aScope)
+    template<typename Class>
+    void register_class(const_string className)
     {
-        if(args.empty()) 
-            throw error(NOT_ENOUGH_ARGUMENTS);
-        const_string className = lexical_cast<const_string>(args.front());
-        args.pop_front();
-        
-        if(args.empty()) 
-            throw error(NOT_ENOUGH_ARGUMENTS);
-        const_string instanceName =lexical_cast<const_string>(args.front());
-        args.pop_front();
-        
-        class_map::iterator it = m_classes.find(className);
-        if(it == m_classes.end()) 
-            throw error(OPERATION_ERROR,boost::make_tuple("class not found"));
-        
-        aScope->bind_object(it->second->create(args),instanceName.copy())
-            .adopt_object();
-        
-        return const_string();
+        register_class(className, get_default_constructor<Class>());
     }
     
-    result_type value()
+    env::object * create_object(const_string className, call_arguments & args)
     {
-        throw error(NO_VALUE);
+        class_map::const_iterator it = m_classes.find(className);
+        if(it == m_classes.end()) return NULL;
+        env::object * obj = it->second->create(args);
+        return obj;
     }
 private:
-    typedef std::map<const_string,
-        constructor *,
-        const_string::less_than_comparator> class_map;
+    template<typename Class>
+    static default_constructor<Class> * get_default_constructor()
+    {
+        static default_constructor<Class> ctor;
+        return &ctor;
+    }
+    
+    typedef std::map<const_string, constructor *, const_string::less_than_comparator> class_map;
     class_map m_classes;
 };
 

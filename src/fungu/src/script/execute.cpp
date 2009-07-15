@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -9,6 +9,8 @@
 #ifdef BOOST_BUILD_PCH_ENABLED
 #include "fungu/script/pch.hpp"
 #endif
+
+#include "fungu/stringutils.hpp"
 
 #include "fungu/script/env.hpp"
 #include "fungu/script/expression.hpp"

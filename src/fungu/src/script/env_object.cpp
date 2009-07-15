@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -40,15 +40,32 @@ int env::object::call(lua_State * L)
     env * environment = reinterpret_cast<env *>(lua_touserdata(L, -1));
     if(!environment) return luaL_error(L, "missing 'fungu_script_env' field in lua registry");
     
-    arguments_container callargs(args);
+    callargs callargs(args);
     frame callframe(environment);
     
-    result_type result = call(callargs, &callframe);
-    if(result.empty()) return 0;
-    else
+    try
     {
-        lua_pushstring(L, result.to_string().copy().c_str());
-        return 1;
+        result_type result = call(callargs, &callframe);
+        if(result.empty()) return 0;
+        else
+        {
+            lua_pushstring(L, result.to_string().copy().c_str());
+            return 1;
+        }
+    }
+    catch(missing_args)
+    {
+        return luaL_error(L, "missing arguments");
+    }
+    catch(error err)
+    {
+        return luaL_error(L, "%s", err.get_error_message().c_str());
+    }
+    catch(error_trace * errinfo)
+    {
+        std::string msg = errinfo->get_error().get_error_message();
+        delete errinfo;
+        return luaL_error(L, "%s", msg.c_str());
     }
 }
 

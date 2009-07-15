@@ -26,7 +26,7 @@ bool eval_player_command(int cn,const char * cmdline, const std::vector<std::str
         if(cmdobj)
         {
             std::vector<fungu::script::any> args;
-            fungu::script::arguments_container callargs(args);
+            fungu::script::callargs callargs(args);
             
             callargs.push_back(cn);
             

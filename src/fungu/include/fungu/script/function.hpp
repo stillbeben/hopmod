@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -11,7 +11,7 @@
 #include "env.hpp"
 #include "../dynamic_caller.hpp"
 #include "../dynamic_call.hpp"
-#include "call_serializer.hpp"
+#include "callargs_serializer.hpp"
 
 #ifdef FUNGU_WITH_LUA
 #include "lua/arguments.hpp"
@@ -32,14 +32,15 @@ class function:public env::object
 public:
     template<typename Functor>
     function(Functor aFunctor)
-     :m_function(aFunctor),m_default_args(NULL)
+     :m_function(aFunctor), m_default_args(NULL)
     {
         
     }
     
     template<typename Functor>
-    function(Functor fun,const std::vector<any> * default_args)
-     :m_function(fun),m_default_args(default_args)
+    function(Functor fun, const std::vector<any> * default_args)
+     :m_function(fun), 
+      m_default_args(default_args)
     {
         
     }
@@ -49,8 +50,9 @@ public:
         return FUNCTION_OBJECT;
     }
     
-    result_type call(call_arguments & call_args,frame * aFrame)
+    result_type call(call_arguments & call_args, frame * aFrame)
     {
+        // Fill in missing arguments with default values
         if(call_args.size() < boost::function_traits<Signature>::arity && 
             m_default_args && 
             call_args.size() + m_default_args->size() >= boost::function_traits<Signature>::arity)
@@ -60,10 +62,10 @@ public:
                 if(--skip < 0) call_args.push_back(*it);
         }
         
-        call_serializer serializer(call_args,aFrame);
+        callargs_serializer serializer(call_args, aFrame);
         try
         {
-            return dynamic_call<Signature>(m_function,call_args,serializer);
+            return dynamic_call<Signature>(m_function, call_args, serializer);
         }
         catch(missing_args)
         {
@@ -74,10 +76,10 @@ public:
     #ifdef FUNGU_WITH_LUA
     int call(lua_State * L)
     {
-        lua::arguments args(L,m_default_args,boost::function_traits<Signature>::arity);
+        lua::arguments args(L, m_default_args, boost::function_traits<Signature>::arity);
         try
         {
-            return dynamic_call<Signature>(m_function,args,args);
+            return dynamic_call<Signature>(m_function, args, args);
         }
         catch(missing_args)
         {
@@ -100,7 +102,7 @@ private:
     const std::vector<any> * m_default_args;
 };
 
-typedef result_type (raw_function_type)(env::object::call_arguments &,env::frame *);
+typedef result_type (raw_function_type)(env::object::call_arguments &, env::frame *);
 
 template<>
 class function<raw_function_type>:public env::object
@@ -108,7 +110,7 @@ class function<raw_function_type>:public env::object
 public:
     template<typename Functor> function(Functor aFunctor):m_function(aFunctor){}
     
-    result_type call(call_arguments & call_args,frame * aScope)
+    result_type call(call_arguments & call_args, frame * aScope)
     {
         return m_function(call_args,aScope);
     }

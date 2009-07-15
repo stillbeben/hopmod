@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -8,17 +8,15 @@
 #ifndef FUNGU_SCRIPT_SCRIPT_FUNCTION_HPP
 #define FUNGU_SCRIPT_SCRIPT_FUNCTION_HPP
 
-#include "arguments_container.hpp"
-#include "call_serializer.hpp"
+#include "callargs.hpp"
+#include "callargs_serializer.hpp"
 #include "../generic_script_function.hpp"
-#include <boost/function.hpp>
-#include <vector>
 
 namespace fungu{
 namespace script{
 
 template<typename Signature>
-class script_function:public generic_script_function<Signature, std::vector<result_type>, call_serializer, error>
+class script_function:public generic_script_function<Signature, std::vector<result_type>, callargs_serializer, error>
 {
 public:
     typedef any (* error_handler_function)(error_trace *);
@@ -38,7 +36,7 @@ protected:
         try
         {
             env::frame callframe(m_env);
-            arguments_container callargs(*args);
+            callargs callargs(*args);
             
             result = m_object->call(callargs, &callframe);
         }

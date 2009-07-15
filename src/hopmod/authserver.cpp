@@ -615,20 +615,20 @@ int main(int argc, char **argv)
     
     script::env & e = get_script_env();
     
-    script::bind_global_var<int>(port, FUNGU_OBJECT_ID("serverport"), e);
-    script::bind_global_var<string>(ip, FUNGU_OBJECT_ID("serverip"), e);
+    script::bind_var(port, "serverport", e);
+    script::bind_var(ip, "serverip", e);
     
-    script::bind_global_var<string>(rootserver_hostname, FUNGU_OBJECT_ID("rootserver"), e);
-    script::bind_global_var<int>(rootserver_port, FUNGU_OBJECT_ID("rootserver_port"), e);
+    script::bind_var(rootserver_hostname, "rootserver", e);
+    script::bind_var(rootserver_port, "rootserver_port", e);
     
-    script::bind_global_func<void (const char *,const char *,const char *)>(adduser, FUNGU_OBJECT_ID("adduser"), e);
-    script::bind_global_func<void (const char *,const char *)>(deleteuser, FUNGU_OBJECT_ID("deleteuser"), e);
-    script::bind_global_func<void ()>(clearusers, FUNGU_OBJECT_ID("clearusers"), e);
+    script::bind_freefunc(adduser, "adduser", e);
+    script::bind_freefunc(deleteuser, "deleteuser", e);
+    script::bind_freefunc(clearusers, "clearusers", e);
     
-    script::bind_global_func<void (const char *)>(log_status, FUNGU_OBJECT_ID("log"), e);
-    script::bind_global_func<void (const char *)>(log_error, FUNGU_OBJECT_ID("logerror"), e);
+    script::bind_freefunc(log_status, "log", e);
+    script::bind_freefunc(log_error, "logerror", e);
     
-    script::bind_global_func<void ()>(_shutdown, FUNGU_OBJECT_ID("shutdown"), e);
+    script::bind_freefunc(_shutdown, "shutdown", e);
     
     register_signals(e);
     

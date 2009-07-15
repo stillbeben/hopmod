@@ -183,25 +183,10 @@ server.event_handler("started", function()
         dofile("./script/resize_server.lua")
     end
     
-    -- [[ Kick spectators for spectating too long during normal mastermodes, written by ]Zombie[
-    if tonumber(server.use_kickspec) == 1 then
-        
-        local function checkSpecTimes()
-            for a,cn in ipairs(server.spectators()) do
-                if (((server.player_connection_time(cn) - server.player_timeplayed(cn)) * 1000) > tonumber(server.kickspec_maxtime)) then
-                    server.kick(cn,"1","server","spec-time too high")
-                end
-            end
-        end
-        
-        -- check spec times every 10 minutes
-        server.interval(600000, function()
-            local mm = server.mastermode
-            if mm == 0 or mm == 1 then checkSpecTimes() end
-        end)
-    end
-    -- ]]
-    
+    if server.use_kickspec == 1 then
+        dofile("./script/kickspec.lua")
+    end 
+
     if server.enable_ownage_messages == 1 then
         dofile("./script/ownage.lua")
     end
@@ -215,6 +200,6 @@ server.event_handler("started", function()
     server.loadbanlist(server.banlist_file)
 
     server.load_geoip_database(server.geoip_db_file)
-    
+
     server.log_status("-> Successfully loaded Hopmod")
 end)

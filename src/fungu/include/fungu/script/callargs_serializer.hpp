@@ -1,12 +1,12 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
-#ifndef FUNGU_SCRIPT_CALL_SERIALIZER_HPP
-#define FUNGU_SCRIPT_CALL_SERIALIZER_HPP
+#ifndef FUNGU_SCRIPT_CALLARGS_SERIALIZER_HPP
+#define FUNGU_SCRIPT_CALLARGS_SERIALIZER_HPP
 
 #include "env.hpp"
 #include "error.hpp"
@@ -22,19 +22,19 @@
 namespace fungu{
 namespace script{
 
-class call_serializer
+class callargs_serializer
 {
 public:
     typedef result_type return_type;
     typedef env::object::call_arguments::value_type serialized_argument_type;
     
-    call_serializer()
+    callargs_serializer()
      :m_argv(*(env::object::call_arguments *)NULL), m_frame(NULL)
     {
         
     }
     
-    call_serializer(env::object::call_arguments & argv,env::frame * frame)
+    callargs_serializer(env::object::call_arguments & argv,env::frame * frame)
      :m_argv(argv),m_frame(frame)
     {
         

@@ -1,12 +1,12 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
-#ifndef FUNGU_SCRIPT_ARGUMENTS_CONTAINER_HPP
-#define FUNGU_SCRIPT_ARGUMENTS_CONTAINER_HPP
+#ifndef FUNGU_SCRIPT_CALLARGS_HPP
+#define FUNGU_SCRIPT_CALLARGS_HPP
 
 #include "any.hpp"
 #include "result_type.hpp"
@@ -18,14 +18,14 @@ namespace script{
 /**
     
 */
-class arguments_container
+class callargs
 {
 public:
     typedef result_type value_type;
     typedef value_type & reference;
     typedef const value_type & const_reference;
 
-    arguments_container(std::vector<value_type> &);
+    callargs(std::vector<value_type> &);
     
     void push_back(const value_type &);
 

@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -16,6 +16,9 @@
 #include <istream>
 #include <boost/functional/hash.hpp>
 #include <typeinfo>
+
+#define FUNGU_LITERAL_STRING(str) str,str+sizeof(str)-2
+#define FUNGU_EMPTY_STRING "\0"+1,"\0"
 
 namespace fungu{
 
@@ -154,6 +157,11 @@ public:
         m_lastc = addr(m_copy,0) + (src.m_lastc - addr(src.m_copy,0));
     }
     
+    static basic_const_string<T> literal(const T * literalString)
+    {
+        return basic_const_string<T>(literalString, literalString + std::char_traits<T>::length(literalString) - 1);
+    }
+    
     const_iterator begin()const{return m_firstc;}
     const_iterator end()const{return m_lastc+1;}
     
@@ -274,9 +282,6 @@ private:
 
 typedef basic_const_string<char> const_string;
 
-#define FUNGU_LITERAL_STRING(str) str,str+sizeof(str)-2
-#define FUNGU_EMPTY_STRING "\0"+1,"\0"
-
 template<typename T>
 std::string & operator+=(std::string & dst,const basic_const_string<T> & src)
 {
@@ -305,46 +310,6 @@ std::istream & operator>>(std::istream & src,basic_const_string<T> & dst)
     dst = basic_const_string<T>(str);
     src.clear();
     return src;
-}
-
-/**
-    @brief Trim newline characters from end of string.
-*/
-inline std::string * trim_newlines(std::string * str)
-{
-    std::size_t len=str->length();
-    if(len)
-    {
-        std::string::iterator erase_first=str->end();
-
-        char last=(*str)[len-1];
-        if(last=='\n')
-        {
-            --erase_first;
-            if(len > 1 && (*str)[len-2]=='\r') --erase_first;
-        }
-        else if(last=='\r') --erase_first;
-        
-        if(erase_first!=str->end())
-        {
-            str->erase(erase_first,str->end());
-            trim_newlines(str);
-        }
-    }
-    
-    return str;
-}
-
-inline bool scan_newline(const char ** readptr)
-{
-    if(**readptr == '\r' && *((*readptr)+1)=='\n')
-        *readptr += 2;
-    else
-        if(**readptr == '\n')
-            (*readptr)++;
-        else
-            return false;
-    return true;
 }
 
 template<typename T>

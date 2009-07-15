@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -29,7 +29,7 @@ result_type foreach_member(env::object::call_arguments & args,env::frame * frame
     env::object::shared_ptr obj = any_cast<env::object::shared_ptr>(args.front());
     args.pop_front();
     
-    call_serializer cs(args,frame);
+    callargs_serializer cs(args,frame);
     code_block cb = cs.deserialize(args.front(), type_tag<code_block>());
     args.pop_front();
     
@@ -71,7 +71,7 @@ result_type foreach(const_string varname, env::object::call_arguments & args,env
     if(args.front().get_type() == typeid(env::object::shared_ptr)) 
         return foreach_member(args,frame);
     
-    call_serializer cs(args,frame);
+    callargs_serializer cs(args,frame);
     
     std::vector<const_string> v = cs.deserialize(args.front(), type_tag<std::vector<const_string> >());
     args.pop_front();

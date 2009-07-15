@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -97,28 +97,6 @@ void env::set_lua_state(lua_State * state)
     m_lua_state = state;
 }
 #endif
-
-void env::push_arg(any value)
-{
-    m_arg.push(value);
-}
-
-any & env::top_arg()
-{
-    assert(m_arg.empty()==false);
-    return m_arg.top();
-}
-
-void env::pop_arg()
-{
-    assert(m_arg.empty()==false);
-    m_arg.pop();
-}
-
-int env::get_arg_count()const
-{
-    return m_arg.size();
-}
 
 } //namespace script
 } //namespace fungu

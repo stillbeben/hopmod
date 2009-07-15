@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -108,7 +108,7 @@ private:
     typedef boost::function<int (env::object::shared_ptr,env *)> slot_connect_function;
     std::map<const_string,slot_connect_function> m_signal_connectors;
     
-    typedef detail::base_script_function<std::vector<result_type>, call_serializer, error> base_script_function;
+    typedef detail::base_script_function<std::vector<result_type>, callargs_serializer, error> base_script_function;
     typedef std::vector<std::pair<base_script_function *,boost::signals::connection> > slot_vector;
     slot_vector m_slots;
     

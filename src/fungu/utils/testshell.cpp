@@ -6,6 +6,11 @@
 #include <fungu/script.hpp>
 #include <boost/bind.hpp>
 
+#include <fungu/script/class_interface.hpp>
+#include <fungu/script/class_object.hpp>
+
+#include <fungu/dynamic_method_call.hpp>
+
 using namespace fungu;
 static script::env environment;
 

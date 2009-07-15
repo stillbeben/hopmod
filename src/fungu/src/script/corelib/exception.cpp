@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -26,7 +26,7 @@ inline void rethrow(T e)
 inline result_type _try(env::object::call_arguments & args,env::frame * frame)
 {
     if(args.size() < 2) throw error(NOT_ENOUGH_ARGUMENTS,boost::make_tuple(1));
-    call_serializer cs(args,frame);
+    callargs_serializer cs(args,frame);
     
     code_block trycode = cs.deserialize(args.front(), type_tag<code_block>());
     args.pop_front();

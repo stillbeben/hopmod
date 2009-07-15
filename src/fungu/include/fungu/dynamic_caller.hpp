@@ -1,5 +1,5 @@
 /*   
- *   The Fungu Scripting Engine Library
+ *   The Fungu Scripting Engine
  *   
  *   Copyright (c) 2008-2009 Graham Daws.
  *
@@ -8,8 +8,8 @@
 #ifndef FUNGU_DYNAMIC_CALLER_HPP
 #define FUNGU_DYNAMIC_CALLER_HPP
 
-#include "member_function_traits.hpp"
 #include "type_tag.hpp"
+#include "dynamic_typedefs.hpp"
 
 #include <exception>
 #include <boost/function.hpp>
@@ -17,24 +17,8 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/at.hpp>
 #include <boost/bind.hpp>
-#include <boost/bind/make_adaptable.hpp>
 
 namespace fungu{
-
-#ifndef HAS_MISSING_ARGS_CLASS
-#define HAS_MISSING_ARGS_CLASS
-class missing_args:public std::exception
-{
-public:
-    missing_args(int given,int needed)throw()
-     :m_given(given),m_needed(needed){}
-    ~missing_args()throw(){}
-    const char * what()const throw(){return "";}
-private:
-    int m_given;
-    int m_needed;
-};
-#endif
 
 namespace detail{
 
@@ -361,42 +345,6 @@ public:
     {
         
     }
-};
-
-/**
-    
-*/
-template<typename Class,typename Signature>
-class dynamic_method_caller:public detail::get_dynamic_caller_class<Signature>
-{
-public:
-    template<typename Functor>
-    dynamic_method_caller(Functor function)
-     :detail::get_dynamic_caller_class<Signature>(boost::bind(function,boost::ref(m_this)))
-    {
-        
-    }
-    
-    template<typename ArgumentContainer,typename Serializer>
-    typename ArgumentContainer::value_type operator()(Class * object, ArgumentContainer & arguments, Serializer & serializer)
-    {
-        Class * prev_this = m_this;
-        m_this = object;
-        typename ArgumentContainer::value_type result;
-        try
-        {
-            result = detail::get_dynamic_caller_class<Signature>::operator()(arguments,serializer);
-        }
-        catch(...)
-        {
-            m_this = prev_this;
-            throw;
-        }
-        m_this = prev_this;
-        return result;
-    }
-private:
-    Class * m_this;
 };
 
 } //end of namespace fungu
