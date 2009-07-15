@@ -78,6 +78,11 @@ extern boost::signal<void ()>                                       signal_gamer
 extern boost::signal<void (int,const char *)>                       signal_beginrecord;
 extern boost::signal<void (int,int)>                                signal_endrecord;
 extern boost::signal<void (const char *,const char *)>              signal_votepassed;
+extern boost::signal<void (int)>                                    signal_takeflag;
+extern boost::signal<void (int)>                                    signal_dropflag;
+extern boost::signal<void (int)>                                    signal_scoreflag;
+extern boost::signal<void (int)>                                    signal_returnflag;
+
 #endif
 
 // Generic Server Events

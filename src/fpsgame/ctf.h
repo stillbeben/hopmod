@@ -198,6 +198,7 @@ struct ctfclientmode : clientmode
         {
             ivec o(vec(ci->state.o).mul(DMF));
             sendf(-1, 1, "ri6", SV_DROPFLAG, ci->clientnum, i, o.x, o.y, o.z);
+            signal_dropflag(ci->clientnum);
             dropflag(i, o.tovec().div(DMF), lastmillis);
         }
     }
@@ -228,6 +229,7 @@ struct ctfclientmode : clientmode
         ci->state.flags++;
         int team = ctfteamflag(ci->team), score = addscore(team, 1);
         sendf(-1, 1, "ri6", SV_SCOREFLAG, ci->clientnum, relay, goal, team, score);
+        signal_scoreflag(ci->clientnum);
         if(score >= FLAGLIMIT) startintermission();
     }
 
@@ -242,6 +244,7 @@ struct ctfclientmode : clientmode
             loopvj(flags) if(flags[j].owner==ci->clientnum) return;
             ownflag(i, ci->clientnum);
             sendf(-1, 1, "ri3", SV_TAKEFLAG, ci->clientnum, i);
+            signal_takeflag(ci->clientnum);
         }
         else if(m_protect)
         {
@@ -251,6 +254,7 @@ struct ctfclientmode : clientmode
         {
             returnflag(i);
             sendf(-1, 1, "ri3", SV_RETURNFLAG, ci->clientnum, i);
+            signal_returnflag(ci->clientnum);
         }
         else
         {

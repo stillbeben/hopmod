@@ -52,6 +52,10 @@ boost::signal<void (int)> signal_mapcrcfail;
 boost::signal<void (const char *,const char *)> signal_votepassed;
 boost::signal<void (int,int,int)> signal_shot;
 boost::signal<void (int)> signal_suicide;
+boost::signal<void (int)> signal_takeflag;
+boost::signal<void (int)> signal_dropflag;
+boost::signal<void (int)> signal_scoreflag;
+boost::signal<void (int)> signal_returnflag;
 
 boost::signal<void ()> signal_rootserver_failedconnect;
 
@@ -147,7 +151,11 @@ void register_signals(script::env & env)
     slots.register_signal(signal_votepassed, "votepassed", normal_error_handler);
     slots.register_signal(signal_shot, "shot", normal_error_handler);
     slots.register_signal(signal_suicide, "suicide", normal_error_handler);
-
+    slots.register_signal(signal_takeflag, "takeflag", normal_error_handler);
+    slots.register_signal(signal_dropflag, "dropflag", normal_error_handler);
+    slots.register_signal(signal_scoreflag, "scoreflag", normal_error_handler);
+    slots.register_signal(signal_returnflag, "returnflag", normal_error_handler);
+    
     slots.register_signal(signal_rootserver_failedconnect, "failedrootconnect", normal_error_handler);
 
     script::bind_freefunc(cubescript_event_handler_function, "event_handler", env);
@@ -203,6 +211,10 @@ void disconnect_all_slots()
     signal_votepassed.disconnect_all_slots();
     signal_shot.disconnect_all_slots();
     signal_suicide.disconnect_all_slots();
+    signal_takeflag.disconnect_all_slots();
+    signal_dropflag.disconnect_all_slots();
+    signal_scoreflag.disconnect_all_slots();
+    signal_returnflag.disconnect_all_slots();
     
     signal_rootserver_failedconnect.disconnect_all_slots();
 }
