@@ -3,6 +3,8 @@
 
 #include "cube.h"
 #include <signal.h>
+#include <event.h>
+#include <iostream>
 
 static void shutdown_from_signal(int i)
 {
@@ -176,6 +178,15 @@ size_t bsend = 0, brec = 0;
 size_t tx_packets = 0 , rx_packets = 0, tx_bytes = 0, rx_bytes = 0;
 int laststatus = 0; 
 ENetSocket pongsock = ENET_SOCKET_NULL, lansock = ENET_SOCKET_NULL;
+
+event serverhost_input_event;
+event pongsock_input_event;
+event lansock_input_event;
+event mastersock_input_event;
+event mastersock_output_event;
+event update_event;
+event registermaster_event;
+event netstats_event;
 
 void cleanupserver()
 {
@@ -399,7 +410,13 @@ void disconnectmaster()
     masterout.setsizenodelete(0);
     masterin.setsizenodelete(0);
     masteroutpos = masterinpos = 0;
+    
+    event_del(&mastersock_input_event);
+    event_del(&mastersock_output_event);
 }
+
+void mastersock_io_handler(int fd, short e, void * arg);
+void flushmasteroutput();
 
 ENetSocket connectmaster()
 {
@@ -428,6 +445,12 @@ ENetSocket connectmaster()
     }
     
     enet_socket_set_option(sock, ENET_SOCKOPT_NONBLOCK, 1);
+    
+    event_set(&mastersock_input_event, sock, EV_READ | EV_PERSIST, &mastersock_io_handler, NULL);
+    event_add(&mastersock_input_event, NULL);
+    
+    event_set(&mastersock_output_event, sock, EV_WRITE, &mastersock_io_handler, NULL);
+
     return sock;
 }
 
@@ -438,8 +461,10 @@ bool requestmaster(const char *req)
         mastersock = connectmaster();
         if(mastersock == ENET_SOCKET_NULL) return false;
     }
-
+    
     masterout.put(req, strlen(req));
+    flushmasteroutput();
+    
     return true;
 }
 
@@ -518,6 +543,16 @@ void flushmasterinput()
     else disconnectmaster();
 }
 
+void mastersock_io_handler(int fd, short e, void * arg)
+{
+    bool read = e & EV_READ;
+    bool write = e & EV_WRITE;
+    if(!(read || write)) return;    
+    if(read) flushmasterinput();
+    flushmasteroutput();
+    if(!masterout.empty()) event_add(&mastersock_output_event, NULL);
+}
+
 static ENetAddress pongaddr;
 
 void sendserverinforeply(ucharbuf &p)
@@ -582,100 +617,98 @@ void updatemasterserver()
     requestmasterf("regserv %d\n", serverport);
 }
 
-void serverslice(bool dedicated, uint timeout)   // main server update, called from main loop in sp, or from below in dedicated server
+void update_server(int fd, short e, void * arg)
 {
+    timeval to;
+    to.tv_sec = 0;
+    to.tv_usec = 5000;
+    evtimer_add(&update_event, &to);
+    
     localclients = nonlocalclients = 0;
     loopv(clients) switch(clients[i]->type)
     {
         case ST_LOCAL: localclients++; break;
         case ST_TCPIP: nonlocalclients++; break;
     }
-
-    if(!serverhost) 
-    {
-        server::serverupdate();
-        server::sendpackets();
-        return;
-    }
-       
-    // below is network only
-
-    if(dedicated) 
-    {
-        int millis = (int)enet_time_get();
-        curtime = millis - totalmillis;
-        lastmillis = totalmillis = millis;
-    }
-    server::serverupdate();
-
-    flushmasteroutput();
-    checkserversockets();
-
-    if(totalmillis-lastupdatemaster>60*60*1000)       // send alive signal to masterserver every hour of uptime
-    {
-        updatemasterserver();
-        lastupdatemaster = totalmillis;
-    }
     
-    if(totalmillis-laststatus>60*1000)   // display bandwidth stats, useful for server ops
-    {
-        laststatus = totalmillis;     
-        if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
-        bsend = brec = 0;
-    }
+    int millis = (int)enet_time_get();
+    curtime = millis - totalmillis;
+    lastmillis = totalmillis = millis;
+    
+    server::serverupdate();
+}
 
-    ENetEvent event;
-    bool serviced = false;
-    while(!serviced)
+void serverhost_process_event(ENetEvent & event)
+{
+    switch(event.type)
     {
-        if(enet_host_check_events(serverhost, &event) <= 0)
+        case ENET_EVENT_TYPE_CONNECT:
         {
-            if(enet_host_service(serverhost, &event, timeout) <= 0) break;
-            serviced = true;
+            client &c = addclient();
+            c.type = ST_TCPIP;
+            c.peer = event.peer;
+            c.peer->data = &c;
+            char hn[1024];
+            copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
+            printf("client connected (%s)\n", c.hostname);
+            int reason = server::clientconnect(c.num, c.peer->address.host);
+            if(!reason) nonlocalclients++;
+            else disconnect_client(c.num, reason);
+            break;
         }
-        switch(event.type)
+        case ENET_EVENT_TYPE_RECEIVE:
         {
-            case ENET_EVENT_TYPE_CONNECT:
-            {
-                client &c = addclient();
-                c.type = ST_TCPIP;
-                c.peer = event.peer;
-                c.peer->data = &c;
-                char hn[1024];
-                copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
-                printf("client connected (%s)\n", c.hostname);
-                int reason = server::clientconnect(c.num, c.peer->address.host);
-                if(!reason) nonlocalclients++;
-                else disconnect_client(c.num, reason);
-                break;
-            }
-            case ENET_EVENT_TYPE_RECEIVE:
-            {
-                brec += event.packet->dataLength;
-                rx_bytes += event.packet->dataLength;
-                rx_packets++;
-                client *c = (client *)event.peer->data;
-                if(c) process(event.packet, c->num, event.channelID);
-                if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
-                break;
-            }
-            case ENET_EVENT_TYPE_DISCONNECT: 
-            {
-                client *c = (client *)event.peer->data;
-                if(!c) break;
-                server::clientdisconnect(c->num,DISC_NONE);
-                nonlocalclients--;
-                c->type = ST_EMPTY;
-                event.peer->data = NULL;
-                server::deleteclientinfo(c->info);
-                c->info = NULL;
-                break;
-            }
-            default:
-                break;
+            brec += event.packet->dataLength;
+            rx_bytes += event.packet->dataLength;
+            rx_packets++;
+            client *c = (client *)event.peer->data;
+            if(c) process(event.packet, c->num, event.channelID);
+            if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
+            break;
         }
+        case ENET_EVENT_TYPE_DISCONNECT: 
+        {
+            client *c = (client *)event.peer->data;
+            if(!c) break;
+            server::clientdisconnect(c->num,DISC_NONE);
+            nonlocalclients--;
+            c->type = ST_EMPTY;
+            event.peer->data = NULL;
+            server::deleteclientinfo(c->info);
+            c->info = NULL;
+            break;
+        }
+        default:
+            break;
     }
-    if(server::sendpackets()) enet_host_flush(serverhost);
+}
+
+void serverhost_input(int fd, short e, void * arg)
+{
+    if(!(e & EV_READ)) return;
+    
+    ENetEvent event;
+    while(enet_host_service(serverhost, &event, 0)==1)
+        serverhost_process_event(event);
+    
+    if(server::sendpackets()) enet_host_flush(serverhost); //treat EWOULDBLOCK as packet loss
+}
+
+void serverinfo_input(int fd, short e, void * arg)
+{
+    if(!(e & EV_READ)) return;
+   
+    ENetBuffer buf;
+    uchar pong[MAXTRANS];
+    
+    buf.data = pong;
+    buf.dataLength = sizeof(pong);
+    int len = enet_socket_receive(fd, &pongaddr, &buf, 1);
+    if(len < 0) return;
+    
+    ucharbuf req(pong, len), p(pong, sizeof(pong));
+    p.len += len;
+    server::serverinforeply(req, p);
 }
 
 #ifndef STANDALONE
@@ -707,6 +740,29 @@ void localconnect()
 }
 #endif
 
+void registermaster_event_handler(int,short,void *)
+{
+    updatemasterserver();
+    
+    timeval one_hr;
+    one_hr.tv_sec = 3600;
+    one_hr.tv_usec = 0;
+    
+    event_add(&registermaster_event, &one_hr);
+}
+
+void netstats_event_handler(int,short,void *)
+{
+    if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
+    bsend = brec = 0;
+    
+    timeval one_min;
+    one_min.tv_sec = 60;
+    one_min.tv_usec = 0;
+    
+    event_add(&registermaster_event, &one_min);
+}
+
 void rundedicatedserver()
 {
     #ifdef WIN32
@@ -719,7 +775,35 @@ void rundedicatedserver()
     fflush(stdout);
     fflush(stderr);
 
-    for(;;) serverslice(true, 5);
+    timeval five_ms;
+    five_ms.tv_sec = 0;
+    five_ms.tv_usec = 5000;
+    
+    evtimer_set(&update_event, &update_server, NULL);
+    evtimer_add(&update_event, &five_ms);
+    
+    timeval one_hr;
+    one_hr.tv_sec = 3600;
+    one_hr.tv_usec = 0;
+    
+    evtimer_set(&registermaster_event, &registermaster_event_handler, NULL);
+    event_add(&registermaster_event, &one_hr);
+    
+    timeval one_min;
+    one_min.tv_sec = 60;
+    one_min.tv_usec = 0;
+    
+    evtimer_set(&netstats_event, &netstats_event_handler, NULL);
+    event_add(&netstats_event, &one_min);
+    
+    bool cont = true;
+    while(cont)
+    {
+        switch(event_dispatch())
+        {
+            default: cont = false;
+        }
+    }
 }
 
 bool servererror(bool dedicated, const char *desc)
@@ -759,11 +843,25 @@ bool setuplistenserver(bool dedicated)
     }
     if(lansock == ENET_SOCKET_NULL) conoutf(CON_WARN, "WARNING: could not create LAN server info socket");
     else enet_socket_set_option(lansock, ENET_SOCKOPT_NONBLOCK, 1);
+    
+    event_set(&serverhost_input_event, serverhost->socket, EV_READ | EV_PERSIST, &serverhost_input, NULL);
+    event_add(&serverhost_input_event, NULL);
+    event_priority_set(&serverhost_input_event, 1);
+    
+    event_set(&pongsock_input_event, pongsock, EV_READ | EV_PERSIST, &serverinfo_input, NULL);
+    event_add(&pongsock_input_event, NULL);
+    
+    event_set(&lansock_input_event, lansock, EV_READ | EV_PERSIST, &serverinfo_input, NULL);
+    event_add(&lansock_input_event, NULL);
+    
     return true;
 }
 
 void initserver(bool listen, bool dedicated)
 {
+    event_init();
+    event_priority_init(10);
+    
     struct sigaction terminate_action;
     sigemptyset(&terminate_action.sa_mask);
     terminate_action.sa_handler = shutdown_from_signal;
@@ -774,7 +872,7 @@ void initserver(bool listen, bool dedicated)
     copystring(mastername, server::defaultmaster());
     
     server::serverinit();
-  
+    
     if(listen) setuplistenserver(dedicated);
 
     if(listen)

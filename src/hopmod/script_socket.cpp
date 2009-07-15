@@ -37,7 +37,7 @@ void init_script_socket()
 bool open_script_socket(unsigned short port, const char * _password)
 {
     if(s_daemon) return false;
-    
+
     s_daemon = MHD_start_daemon(MHD_USE_DEBUG | MHD_USE_PEDANTIC_CHECKS, 
         port,
         http_accept,NULL,
@@ -106,6 +106,8 @@ int execute_request(const std::string & request,std::string & response)
 
 int http_accept(void *, const struct sockaddr * addr, socklen_t addrlen)
 {
+    std::cout<<"http_accept"<<std::endl;
+    
     #if 0
     sockaddr_in * peer_addr = (sockaddr_in *)addr;
     char * ip = inet_ntoa(peer_addr->sin_addr);
@@ -124,7 +126,6 @@ int http_access(void *, MHD_Connection * connection, const char * url,
     const char * method, const char * version, const char * upload_data,
     size_t * upload_data_size, void ** con_cls)
 {
-    
     const MHD_ConnectionInfo * conninfo = MHD_get_connection_info(connection, MHD_CONNECTION_INFO_CLIENT_ADDRESS);
     if(htonl(conninfo->client_addr->sin_addr.s_addr) != INADDR_LOOPBACK)
     {
