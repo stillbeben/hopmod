@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <sstream>
+#include <boost/scope_exit.hpp>
 
 #include "code_block.cpp"
 #include "eval_stream.cpp"
@@ -35,8 +36,6 @@ namespace execute_detail{
 
 typedef script::eval_stream file_eval_stream;
 
-inline void file_eval(expression * expr,env::frame * frame){expr->eval(frame);}
-
 } //namespace execute_detail
 
 int execute_file(const char * filename, env & environment)
@@ -48,17 +47,19 @@ int execute_file(const char * filename, env & environment)
     const source_context * prev_context = environment.get_source_context();
     environment.set_source_context(&file_context);
     
-    env::frame file_frame(&environment);
-
-    #define COMMON_CLEANUP \
+    BOOST_SCOPE_EXIT((&environment)(&prev_context)(&file_stream))
+    {
         environment.set_source_context(prev_context); \
         fclose(file_stream);
+    } BOOST_SCOPE_EXIT_END
     
+    env::frame file_frame(&environment);
+
     constant<const char *> filename_const(filename);
     filename_const.set_temporary();
     file_frame.bind_object(&filename_const, FUNGU_OBJECT_ID("FILENAME"));
     
-    execute_detail::file_eval_stream reader(&file_frame, &execute_detail::file_eval);
+    execute_detail::file_eval_stream reader(&file_frame);
     
     char tmpbuf[1024];
     int line = 1;
@@ -67,32 +68,14 @@ int execute_file(const char * filename, env & environment)
     {
         if(!fgets(tmpbuf, sizeof(tmpbuf), file_stream)) continue;
         
-        try
-        {
-            reader.feed(tmpbuf, strlen(tmpbuf)+feof(file_stream));
-        }
-        catch(error_trace *)
-        {
-            COMMON_CLEANUP;
-            throw;
-        }
-        catch(error_exception)
-        {
-            COMMON_CLEANUP;
-            throw;
-        }
+        reader.feed(tmpbuf, strlen(tmpbuf)+feof(file_stream));
         
         file_context.set_line_number(++line);
     }
     
-    if(reader.is_parsing_expression())
-    {
-        COMMON_CLEANUP;
-        throw error(UNEXPECTED_EOF);
-    }
+    if(reader.is_parsing_expression()) throw error(UNEXPECTED_EOF);
     
     int code = feof(file_stream) ? 0 : errno;
-    COMMON_CLEANUP;
     return code;
 }
 

@@ -6,11 +6,6 @@
 #include <fungu/script.hpp>
 #include <boost/bind.hpp>
 
-#include <fungu/script/class_interface.hpp>
-#include <fungu/script/class_object.hpp>
-
-#include <fungu/dynamic_method_call.hpp>
-
 using namespace fungu;
 static script::env environment;
 
@@ -25,7 +20,7 @@ void print_script_error(const script::error_trace * errinfo)
     std::cerr<<std::endl;
 }
 
-void evaluator(script::expression * expr,script::env::frame * frame)
+void evaluator(script::expression * expr,script::env::frame * frame, void *)
 {
     if(!expr->is_empty_expression())
     {
@@ -49,7 +44,7 @@ int main(int argc,char ** argv)
     const char * line = NULL;
     
     script::env::frame frame(&environment);
-    script::eval_stream reader(&frame, &evaluator);
+    script::eval_stream reader(&frame, &evaluator, NULL);
     
     script::file_source_context source("stdin");
     source.set_line_number(1);

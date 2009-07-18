@@ -191,14 +191,16 @@ result_type alias::call(call_arguments & args,env::frame * frm)
     module * alias_globals = frm->get_env()->get_module_instance<module>();
     assert(alias_globals);
     
-    #define ALIAS_APPLY_CLEANUP \
-        m_recursion_depth--; \
-        alias_globals->set_numargs(last_numargs); \
-        for(int i = 1; i<= argc; i++) alias_globals->pop_arg(i, frm);
-    
     int last_numargs = alias_globals->get_numargs();
     alias_globals->set_numargs(args.size());
     int argc = args.size();
+    
+    BOOST_SCOPE_EXIT((&m_recursion_depth)(last_numargs)(&alias_globals)(argc)(&frm))
+    {
+        m_recursion_depth--;
+        alias_globals->set_numargs(last_numargs);
+        for(int i = 1; i<= argc; i++) alias_globals->pop_arg(i, frm);
+    } BOOST_SCOPE_EXIT_END
     
     int argn = 1;
     while(!args.empty())
@@ -212,24 +214,15 @@ result_type alias::call(call_arguments & args,env::frame * frm)
     code_block & block = *m_blocks.front();
     block.compile(frm);
     
-    try
+    for(code_block::iterator i = m_blocks.front()->begin();
+        i != m_blocks.front()->end(); ++i)
     {
-        for(code_block::iterator i = m_blocks.front()->begin();
-            i != m_blocks.front()->end() && !frm->has_expired(); ++i)
-        {
-            implicit_result = i->eval(frm);
-        }
-    }
-    catch(...)
-    {
-        ALIAS_APPLY_CLEANUP
-        throw;
+        implicit_result = i->eval(frm);
+        if(frm->has_expired()) break;
     }
     
     block.destroy_compilation();
-    
-    ALIAS_APPLY_CLEANUP
-    
+
     if(!frm->get_result_value().empty()) return frm->get_result_value();
     else return implicit_result;
 }

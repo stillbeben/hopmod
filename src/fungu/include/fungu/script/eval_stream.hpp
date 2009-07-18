@@ -9,49 +9,36 @@
 #define FUNGU_SCRIPT_EVAL_STREAM_HPP
 
 #include "env.hpp"
-#include <boost/function.hpp>
+#include "expression.hpp"
 
 namespace fungu{
 namespace script{
-
-class expression;
-class base_expression;
 
 /**
     
 */
 class eval_stream
 {
-    static const std::size_t InitialBufSize = 4096;
+    static const std::size_t InitialBufSize = 512; //enough space to store the code for a single base expression
 public:
-    template<typename EvalFunction>
-    eval_stream(env::frame * frame,EvalFunction evaluator)
-     :m_evaluator(evaluator),
-      m_expression(new base_expression),
-      m_scope(frame),
-      m_parsing(false),
-      m_buffer_use(&m_first_buffer[0]),
-      m_dynbuf_size(0)
-    {
-        reset_buffer();
-    }
-    eval_stream(env::frame *);
+    typedef void (* evaluation_function)(expression *, env::frame *, void *);
+    eval_stream(env::frame *, evaluation_function evaluator = NULL, void * evaluator_closure = NULL);
     ~eval_stream();
-    void feed(const void * data,std::size_t length);
+    void feed(const void * data, std::size_t bytesLength);
     bool is_parsing_expression()const;
     void reset();
 private:
+    bool would_overflow_buffer(std::size_t)const;
+    void expand_buffer(std::size_t);
     bool using_dynamic_buffer()const;
-    bool is_buffer_overflow(std::size_t length)const;
     void reset_buffer();
-    void expand_buffer(std::size_t length);
-
     void reset_expression();
-
-    boost::function<void (expression *,env::frame *)> m_evaluator;
     
-    expression * m_expression;
-    env::frame * m_scope;
+    evaluation_function m_evaluator;
+    void * m_evaluator_closure;
+    
+    base_expression m_expression;
+    env::frame * m_frame;
     bool m_parsing;
     
     char * m_buffer_use;

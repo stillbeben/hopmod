@@ -138,7 +138,7 @@ result_type expression::eval(env::frame * frame)
     environment->set_source_context(m_source_ctx);
     
     expression * _this = this;
-    BOOST_SCOPE_EXIT( (_this)(environment)(prev_ctx) )
+    BOOST_SCOPE_EXIT((&_this)(&environment)(&prev_ctx))
     {
         _this->reset_placeholders();
         environment->set_source_context(prev_ctx);

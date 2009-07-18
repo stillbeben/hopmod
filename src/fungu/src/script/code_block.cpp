@@ -54,10 +54,10 @@ code_block code_block::temporary_source(const_string source,const source_context
     return tmp;
 }
 
-code_block & code_block::compile(env::frame * aScope)
+code_block & code_block::compile(env::frame * frm)
 {
-    const source_context * last_context = aScope->get_env()->get_source_context();
-    aScope->get_env()->set_source_context(m_source_ctx);
+    const source_context * last_context = frm->get_env()->get_source_context();
+    frm->get_env()->set_source_context(m_source_ctx);
     int first_line = m_source_ctx->get_line_number();
     
     expression * current = new base_expression;
@@ -65,30 +65,19 @@ code_block & code_block::compile(env::frame * aScope)
     
     const_string::const_iterator readptr = m_source.begin();
     
-    #define COMPILE_CLEANUP \
-        aScope->get_env()->set_source_context(last_context); \
-        m_source_ctx->set_line_number(first_line); \
+    BOOST_SCOPE_EXIT((&frm)(&last_context)(&m_source_ctx)(&first_line)(&current))
+    {
+        frm->get_env()->set_source_context(last_context);
+        m_source_ctx->set_line_number(first_line);
         delete current;
+    } BOOST_SCOPE_EXIT_END
     
     while(readptr != m_source.end())
     {
-        try
+        if(current->parse(&readptr, m_source.end()-1, frm) != PARSE_COMPLETE)
         {
-            if(current->parse(&readptr, m_source.end()-1, aScope) != PARSE_COMPLETE)
-            {
-                const char * lf = "\n";
-                current->parse(&lf,lf,aScope);
-            }
-        }
-        catch(error_trace *)
-        {
-            COMPILE_CLEANUP;
-            throw;
-        }
-        catch(error_exception)
-        {
-            COMPILE_CLEANUP;
-            throw;
+            const char * lf = "\n";
+            current->parse(&lf,lf,frm);
         }
         
         if(!current->is_empty_expression())
@@ -105,8 +94,6 @@ code_block & code_block::compile(env::frame * aScope)
         
         current = new base_expression;
     }
-    
-    COMPILE_CLEANUP;
     
     return *this;
 }
@@ -131,18 +118,16 @@ code_block::iterator code_block::end()
     return iterator(NULL);
 }
 
-result_type code_block::eval_each_expression(env::frame * aScope)
+result_type code_block::eval_each_expression(env::frame * frm)
 {
     result_type last_result;
-    for(construct * e = m_first_expression.get(); 
-        e && !aScope->has_expired(); 
-        e = e->get_next_sibling() )
+    for(construct * e = m_first_expression.get(); e; e = e->get_next_sibling() )
     {
-        last_result = e->eval(aScope);
+        last_result = e->eval(frm);
+        if(frm->has_expired()) break;
     }
-    if(!aScope->get_result_value().empty())
-        last_result = aScope->get_result_value();
-    return last_result;
+    if(!frm->get_result_value().empty()) return frm->get_result_value();
+    else return last_result;
 }
 
 result_type code_block::value()const

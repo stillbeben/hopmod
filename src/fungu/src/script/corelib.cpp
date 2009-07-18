@@ -25,6 +25,7 @@
 #include "fungu/dynamic_cast_derived.hpp"
 
 #include <boost/shared_ptr.hpp>
+#include <boost/scope_exit.hpp>
 #include <string>
 #include <list>
 #include <vector>
