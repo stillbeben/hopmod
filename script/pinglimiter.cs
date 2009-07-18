@@ -1,4 +1,5 @@
 
+
 interval $ping_limiter_tick [
     
     if (> $playercount 2) [

@@ -51,6 +51,7 @@ namespace server
     extern timer::time_diff_t timer_alarm_threshold;
     
     extern bool enable_extinfo;
+    extern bool kick_bannedip_group;
     
     void init_hopmod();
     void reload_hopmod();

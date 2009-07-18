@@ -112,7 +112,6 @@ void register_signals(script::env & env)
     signal_shutdown.connect(&cleanup, boost::signals::at_front);
     
     slots.register_signal(signal_started, "started", normal_error_handler);
-    slots.register_signal(signal_shutdown,"shutdown",normal_error_handler, boost::signals::at_front);
     slots.register_signal(signal_reloadhopmod, "reloadhopmod", normal_error_handler);
     
     slots.register_signal(signal_connect,"connect",normal_error_handler);

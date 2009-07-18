@@ -12,6 +12,8 @@ int sv_newmap_hit_length = 0;
 static boost::signals::connection close_listenserver_slot;
 static bool reload = false;
 
+bool kick_bannedip_group = true;
+
 string authserver_hostname = "";
 
 void authserver_reactor(masterserver_client & client, const char * reply, int argc, const char * const * argv)
@@ -344,16 +346,29 @@ static int execute_kick(void * vinfoptr)
     }
     ci->disconnect_reason = full_reason;
     
-    allowedips.removeobj(getclientip(ci->clientnum));
-    netmask addr(getclientip(ci->clientnum));
-    if(info->time == -1) bannedips.set_permanent_ban(addr);
-    else bantimes.set_ban(addr,info->time);
+    uint ip = getclientip(ci->clientnum);
+    
+    allowedips.removeobj(ip);
+    
+    netmask addrmask(ip);
+    if(info->time > 0) bantimes.set_ban(addrmask, info->time);
+    else if(info->time == -1) bannedips.set_permanent_ban(addrmask);
     
     signal_kick(info->cn, info->time, info->admin, info->reason);
     
     disconnect_client(info->cn, DISC_KICK);
     
+    if(kick_bannedip_group && info->time > 0)
+    {
+        loopv(clients)
+        {
+            if(getclientip(clients[i]->clientnum) == ip) 
+                kick(clients[i]->clientnum, 0, info->admin, "banned ip"); 
+        }
+    }
+    
     delete info;
+    
     return 0;
 }
 
