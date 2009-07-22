@@ -3,7 +3,7 @@ local killingspree_message = {}
 killingspree_message[5] = "\f2%s is on a \f6KILLING SPREE!!"
 killingspree_message[10] = "\f2%s is on a \f6RAMPAGE!!"
 killingspree_message[15] = "\f2%s is \f6DOMINATING!!"
-killingspree_message[20] = "f2%s is \f6UNSTOPPABLE!!"
+killingspree_message[20] = "\f2%s is \f6UNSTOPPABLE!!"
 killingspree_message[30] = "\f2%s is \f6GODLIKE!!"
 
 server.event_handler("frag", function(target_cn, actor_cn)
