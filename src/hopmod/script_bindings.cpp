@@ -262,4 +262,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_const(getuid(), "UID", env);
     
     script::bind_freefunc(unset_global, "unset_global", env);
+    
+    script::bind_var(command_prefix, "command_prefix", env);
+    script::bind_var(using_command_prefix, "use_command_prefix", env);
 }

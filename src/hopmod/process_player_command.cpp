@@ -3,6 +3,9 @@
 #include "hopmod.hpp"
 #include "player_command.hpp"
 
+bool using_command_prefix = true;
+char command_prefix = '#';
+
 bool eval_player_command(int cn,const char * cmdline, const std::vector<std::string> & arguments,fungu::script::env & env)
 {
     if(arguments.empty()) return false;
@@ -49,7 +52,7 @@ bool eval_player_command(int cn,const char * cmdline, const std::vector<std::str
                 server::player_msg(cn, RED "Command Error!");
             }
         }
-        else server::player_msg(cn, RED "Command not found.");
+        else if(using_command_prefix) server::player_msg(cn, RED "Command not found.");
     }
     
     return true;
@@ -57,8 +60,8 @@ bool eval_player_command(int cn,const char * cmdline, const std::vector<std::str
 
 bool process_player_command(int cn,const char * cmdline)
 {
-    if(cmdline[0]!='#') return false;
-    std::vector<std::string> args = parse_player_command_line(cmdline+1);
+    if(using_command_prefix && cmdline[0] != command_prefix) return false;
+    std::vector<std::string> args = parse_player_command_line(cmdline + (using_command_prefix ? 1 : 0));
     eval_player_command(cn,cmdline,args, get_script_env());
     return true;
 }

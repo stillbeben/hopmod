@@ -202,4 +202,8 @@ server.event_handler("started", function()
     server.load_geoip_database(server.geoip_db_file)
 
     server.log_status("-> Successfully loaded Hopmod")
+    
+    auth.add_domain_handler("player.hop.servegame.org", function(cn, name)
+        server.msg(string.format("%s(%i) authed",name,cn))
+    end)
 end)

@@ -61,6 +61,12 @@ rescue Errno::EPIPE
     puts "Attempting to reconnect..."
     start_shell(hostname, port)
 
+rescue Errno::ECONNRESET
+    puts "Error: connection reset."
+    sleep 1
+    puts "Attempting to reconnect"
+    start_shell(hostname, port)
+    
 rescue IOError => e
     puts "Error: #{$!}"
 
