@@ -152,6 +152,10 @@ server.event_handler("started", function()
     
     dofile("./script/db/auth.lua")
     
+    if server.fileExists("./conf/auth") then
+        server.execCubeScriptFile("./conf/auth")
+    end
+    
     dofile("./script/db/stats.lua")
     
     if tonumber(server.use_name_reservation) == 1 then

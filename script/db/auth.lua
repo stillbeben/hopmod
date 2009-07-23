@@ -291,8 +291,8 @@ function auth.add_domain_handler(domain, handler)
 end
 
 function auth.cancel_domain_handler(domain, index)
-    if not handlers[domain] then error("domain not found")
-    handlers[domain][index] = nil
+    if not auth_domain_handlers[domain] then error("domain not found") end
+    auth_domain_handlers[domain][index] = nil
 end
 
 function auth.has_request_pending(cn, domain_name)

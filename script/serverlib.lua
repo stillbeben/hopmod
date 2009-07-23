@@ -1,3 +1,4 @@
+dofile("./script/utils.lua")
 dofile("./script/preloading.lua")
 dofile("./script/playervars.lua")
 
