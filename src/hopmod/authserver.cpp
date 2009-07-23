@@ -12,6 +12,9 @@
 #include <signal.h>
 #include <iostream>
 
+#include <boost/unordered_map.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include <fungu/script.hpp>
 using namespace fungu;
 
@@ -27,45 +30,93 @@ using namespace fungu;
 #define DEFAULT_SERVER_PORT 28787
 #define DELEGATE_CONCURRENT_REQUEST_LIMIT 65535
 
-struct userinfo
+static bool debug = false;
+
+class key;
+
+class challenge
 {
-    char *name;
-    char *domain;
-    void *pubkey;
+friend class key;
+public:
+    ~challenge()
+    {
+        freechallenge(m_answer);
+    }
+    
+    const char * get_challenge()const
+    {
+        return m_challenge.getbuf();
+    }
+    
+    bool expected_answer(const char * foreign)const
+    {
+        return checkchallenge(foreign, m_answer);
+    }
+private:
+    challenge(){}
+    challenge(const challenge &){}
+    vector<char> m_challenge;
+    void * m_answer;
 };
 
-hashtable<char *, userinfo> users;
-hashtable<char *, hashtable<char *, userinfo *> > domains;
-
-void adduser(const char *name, const char * domain, const char *pubkey)
+class key
 {
-    char * namecopy = newstring(name);
-    userinfo &u = users[namecopy];
-    u.name = namecopy;
-    u.domain = NULL;
-    u.pubkey = parsepubkey(pubkey);
-    
-    if(domain && domain[0])
+public:
+    key(const char * stringform)
     {
-        u.domain = newstring(domain);
-        domains[u.domain][namecopy] = &u;
+        m_key = parsepubkey(stringform);
     }
+    
+    ~key()
+    {
+        if(m_key) freepubkey(m_key);
+    }
+    
+    challenge * create_challenge(const void * seed, size_t seedsize)const
+    {
+        challenge * chal = new challenge;
+        chal->m_answer = genchallenge(m_key, seed, seedsize, chal->m_challenge);
+        return chal;
+    }
+private:
+    key(const key &){}
+    void * m_key;
+};
+
+typedef boost::unordered_map<std::string, boost::shared_ptr<key> > users_map;
+typedef boost::unordered_map<std::string, users_map> domains_map;
+static domains_map users;
+
+void adduser(const char * username, const char * domain, const char *pubkey)
+{
+    if(!domain) domain = "";
+    users[domain][username] = boost::shared_ptr<key>(new key(pubkey));
+    if(debug) std::cout<<"Adding user "<<username<<"@"<<(domain[0] ? domain : "<none>")<<std::endl;
 }
 
-void deleteuser(const char * name,const char * domain)
+void deleteuser(const char * name, const char * domain)
 {
-    char * namecopy = newstring(name);
-    char * domaincopy = newstring(domain);
+    domains_map::iterator domainIt = users.find(domain);
     
-    users.remove(namecopy);
-    if(domain && domain[0]) domains[domaincopy].remove(namecopy);
+    if(domainIt == users.end())
+    {
+        std::cerr<<"Error in removing user: domain '"<<domain<<"' not found."<<std::endl;
+        return;
+    }
+    
+    if(domainIt->second.erase(name) == 0)
+    {
+        std::cerr<<"Error in removing user: user '"<<name<<"' not found."<<std::endl;
+        return;
+    }
+    
+    if(debug) std::cout<<"Removing user "<<name<<"@"<<(domain ? domain : "<none>")<<std::endl;
 }
 
 void clearusers()
 {
-    enumerate(users, userinfo, u, { delete[] u.name; delete [] u.domain; freepubkey(u.pubkey); });
     users.clear();
-    domains.clear();
+    if(debug) std::cout<<"Cleared all users"<<std::endl;
 }
 
 struct client;
@@ -74,10 +125,21 @@ struct authreq
 {
     enet_uint32 reqtime; 
     uint id;
-    void *answer;
+    challenge * authchal;
     bool delegated;
     int rootserver_id;
     client * c;
+    
+    authreq()
+     :authchal(NULL)
+    {
+        
+    }
+    
+    ~authreq()
+    {
+        delete authchal;
+    }
 };
 
 struct client
@@ -214,7 +276,6 @@ bool delegate_reqauth(client &c, uint id, char *name, char * domain)
     if(c.authreqs.length() >= AUTH_LIMIT)
     {
         outputf(c, "failauth %u\n", c.authreqs[0].id);
-        freechallenge(c.authreqs[0].answer);
         c.authreqs.remove(0);
     }
     
@@ -339,8 +400,7 @@ void purgeauths(client &c)
         if(ENET_TIME_DIFFERENCE(servtime, c.authreqs[i].reqtime) >= AUTH_TIME) 
         {
             outputf(c, "failauth %u\n", c.authreqs[i].id);
-            if(!c.authreqs[i].delegated) freechallenge(c.authreqs[i].answer);
-            else rootserver_id[c.authreqs[i].rootserver_id] = NULL;
+            if(c.authreqs[i].delegated) rootserver_id[c.authreqs[i].rootserver_id] = NULL;
             expired = i + 1;
         }
         else break;
@@ -348,8 +408,10 @@ void purgeauths(client &c)
     if(expired > 0) c.authreqs.remove(0, expired);
 }
 
-void reqauth(client &c, uint id, char *name, char * domain)
+void reqauth(client & c, uint id, char * name, char * domain)
 {
+    if(!domain) domain = "";
+    
     purgeauths(c);
     
     time_t t = time(NULL);
@@ -359,44 +421,31 @@ void reqauth(client &c, uint id, char *name, char * domain)
         char *newline = strchr(ct, '\n');
         if(newline) *newline = '\0'; 
     }
+    
     string ip;
     if(enet_address_get_host_ip(&c.address, ip, sizeof(ip)) < 0) copystring(ip, "-");
-    conoutf("%s: attempting \"%s\" as %u from %s", ct ? ct : "-", name, id, ip);
+    conoutf("%s: attempting \"%s\"@\"%s\" as %u from %s", ct ? ct : "-", name, domain, id, ip);
     
-    userinfo * u = NULL;
-    bool using_domain = domain[0];
+    bool found = false;
+    domains_map::const_iterator domainIt = users.find(domain);
+    users_map::const_iterator userIt;
     
-    if(using_domain)
+    if(domainIt != users.end())
     {
-        hashtable<char *, userinfo *> * d = domains.access(domain);
-        if(!d)
-        {
-            delegate_reqauth(c, id, name, domain);
-            return;
-        }
-        
-        u = *(d->access(name));
-        if(!u)
-        {
-            delegate_reqauth(c, id, name, domain);
-            return;
-        }
-    }
-    else
-    {
-        u = users.access(name);
-        if(!u)
-        {
-            delegate_reqauth(c, id, name, domain);
-            return;
-        }
+        userIt = domainIt->second.find(name);
+        if(userIt != domainIt->second.end()) found = true;
     }
     
     if(c.authreqs.length() >= AUTH_LIMIT)
     {
         outputf(c, "failauth %u\n", c.authreqs[0].id);
-        freechallenge(c.authreqs[0].answer);
         c.authreqs.remove(0);
+    }
+    
+    if(!found)
+    {
+        delegate_reqauth(c, id, name, domain);
+        return;
     }
     
     authreq &a = c.authreqs.add();
@@ -404,11 +453,9 @@ void reqauth(client &c, uint id, char *name, char * domain)
     a.id = id;
     a.delegated = false;
     uint seed[3] = { starttime, servtime, randomMT() };
-    static vector<char> buf;
-    buf.setsizenodelete(0);
-    a.answer = genchallenge(u->pubkey, seed, sizeof(seed), buf);
+    a.authchal = userIt->second->create_challenge(seed, sizeof(seed));
     
-    outputf(c, "chalauth %u %s\n", id, buf.getbuf());
+    outputf(c, "chalauth %u %s\n", id, a.authchal->get_challenge());
 }
 
 void confauth(client &c, uint id, const char *val)
@@ -438,7 +485,7 @@ void confauth(client &c, uint id, const char *val)
         }
         else
         {
-            if(checkchallenge(val, c.authreqs[i].answer))
+            if(c.authreqs[i].authchal->expected_answer(val))
             {
                 outputf(c, "succauth %u\n", id);
                 conoutf("succeeded %u from %s", id, ip);
@@ -448,7 +495,6 @@ void confauth(client &c, uint id, const char *val)
                 outputf(c, "failauth %u\n", id);
                 conoutf("failed %u from %s", id, ip);
             }
-            freechallenge(c.authreqs[i].answer);
             c.authreqs.remove(i--);
         }
         return;
@@ -629,6 +675,8 @@ int main(int argc, char **argv)
     script::bind_freefunc(log_error, "logerror", e);
     
     script::bind_freefunc(_shutdown, "shutdown", e);
+    
+    script::bind_var(debug, "debug", e);
     
     register_signals(e);
     
