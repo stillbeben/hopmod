@@ -276,14 +276,23 @@ server.load_users = auth.load_users
 function auth.add_domain_handler(domain, handler)
     
     local handlers = auth_domain_handlers[domain]
+    local index
     
     if handlers then
-        handlers[#handlers+1] = handler
+        index = #handlers + 1
+        handlers[index] = handler
     else
+        index = 1
         auth_domain_handlers[domain] = {}
-        auth_domain_handlers[domain][1] = handler
+        auth_domain_handlers[domain][index] = handler
     end
     
+    return index
+end
+
+function auth.cancel_domain_handler(domain, index)
+    if not handlers[domain] then error("domain not found")
+    handlers[domain][index] = nil
 end
 
 function auth.has_request_pending(cn, domain_name)
