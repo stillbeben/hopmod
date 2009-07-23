@@ -989,7 +989,7 @@ int lua_freechalanswer(lua_State * L)
     return 0;
 }
 
-bool delegateauth(int cn)
+bool delegateauth(int cn, const char * domain)
 {
     clientinfo * ci = get_ci(cn);
     
@@ -1002,12 +1002,12 @@ bool delegateauth(int cn)
         return false;
     }
     
-    char * args[3];
+    const char * args[3];
     defformatstring(id)("%i", ci->authreq);
     
     args[0] = id;
     args[1] = ci->authname;
-    args[2] = NULL;
+    args[2] = (domain[0] == '\0' ? NULL : domain);
     
     authserver.send_request("reqauth", args);
     

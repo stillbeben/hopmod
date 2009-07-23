@@ -151,7 +151,7 @@ namespace server
     int lua_checkchallenge(lua_State *);
     int lua_freechalanswer(lua_State *);
     
-    bool delegateauth(int);
+    bool delegateauth(int,const char *);
     bool relayauthanswer(int,const char *);
     void sendauthchallenge(int,const char *);
     void sendauthreq(int, const char *);

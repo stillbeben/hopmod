@@ -69,7 +69,7 @@ server.event_handler("authreq", function(cn, name, domain)
     
         req.delegated = true
         
-        if not server.delegateauth(cn) then
+        if not server.delegateauth(cn, req.domain or "") then
             
             auth.cleanup_request(cn, req_id)
             auth.authserver_offline = true
