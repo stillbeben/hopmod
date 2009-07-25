@@ -29,6 +29,7 @@ namespace server
     extern string masterpass;
     extern int currentmaster;
     extern int minremain;
+    extern int interm;
     extern bool reassignteams;
     extern int gamemillis;
     extern int gamelimit;
