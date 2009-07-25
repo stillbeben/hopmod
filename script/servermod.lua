@@ -207,7 +207,4 @@ server.event_handler("started", function()
 
     server.log_status("-> Successfully loaded Hopmod")
     
-    auth.add_domain_handler("player.hop.servegame.org", function(cn, name)
-        server.msg(string.format("%s(%i) authed",name,cn))
-    end)
 end)

@@ -1002,12 +1002,13 @@ bool delegateauth(int cn, const char * domain)
         return false;
     }
     
-    const char * args[3];
+    const char * args[4];
     defformatstring(id)("%i", ci->authreq);
     
     args[0] = id;
     args[1] = ci->authname;
     args[2] = (domain[0] == '\0' ? NULL : domain);
+    args[3] = NULL;
     
     authserver.send_request("reqauth", args);
     
