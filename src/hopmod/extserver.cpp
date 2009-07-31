@@ -659,7 +659,7 @@ void setpriv(int cn, int priv)
     
     unsetmaster();
     
-    const char * change = (priv > player->privilege ? "raied" : "lowered");
+    const char * change = (priv > player->privilege ? "raised" : "lowered");
     
     player->privilege = priv;
     currentmaster = cn;
