@@ -78,6 +78,7 @@ server.event_handler("setnextgame",function()
     
 end)
 
+-- #nextmap
 if server.enable_nextmap_command == 1 then
     function server.playercmd_nextmap(cn)
 	if tonumber(server.use_server_maprotation) == 1 then

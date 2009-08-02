@@ -1,3 +1,5 @@
+-- #duel <mode> (<cn1> <cn2> [<team1> <team2>] | <team1> <team2>) [<map> [forcemap]] [<time>] [nosd]
+
 local running = false
 
 local player1_cn = nil

@@ -1,3 +1,5 @@
+-- #getcn "<playername>"
+
 function server.playercmd_getcn(getcn_cn,pname)
     if not pname then
 	server.player_msg(getcn_cn,red("#getcn \"<playername>\""))

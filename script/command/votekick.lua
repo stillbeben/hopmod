@@ -1,3 +1,5 @@
+-- #votekick <cn>|"<name>"
+
 server.event_handler("started",function()
     local varvk = {}
     server.event_handler("connect",function(cn)

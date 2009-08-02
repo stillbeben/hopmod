@@ -331,6 +331,8 @@ server.event_handler("shutdown", function()
     if db then db:close() end
 end)
 
+
+-- #stats [<cn>] [total]
 if server.enable_stats_command == 1 then
     function server.playercmd_stats(cn, selection, subselection)
 	local function calcrank(cn,option)
@@ -617,33 +619,6 @@ if using_sqlite then
     
 else
     function server.find_names_by_ip() return nil end
-end
-
-if server.enable_showauth_command == 1 then
-    function server.playercmd_showauth(showauth_cn,showauth_tcn)
-	if not showauth_tcn then
-	    server.player_msg(showauth_cn,red("#showauth <cn>"))
-	elseif not server.valid_cn(showauth_tcn) then
-	    server.player_msg(showauth_cn,red("cn is not valid"))
-	else
-	    local authname = server.player_pvars(showauth_tcn).auth_name
-	    if authname then
-    		server.player_msg(showauth_cn,server.player_name(showauth_tcn) .. " " .. magenta("(" .. showauth_tcn ..")") .. " is verified as " .. authname .. "@" .. server.stats_auth_domain)
-	    end
-	end
-    end
-end
-
-if server.enable_shownonauth_command == 1 then
-    function server.playercmd_shownonauth(shownonauth_cn)
-	return mastercmd(function()
-	    for a,b in ipairs(server.players()) do
-    		if not server.player_pvars(b).auth_name then
-        	    server.player_msg(shownonauth_cn,green(server.player_name(b)) .. " " .. magenta("(" .. b ..")") .. " is not verified")
-        	end
-	    end
-	end,shownonauth_cn)
-    end
 end
 
 if tonumber(server.stats_debug) == 1 then return statsmod end

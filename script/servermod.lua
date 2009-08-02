@@ -221,8 +221,8 @@ server.event_handler("started", function()
         dofile("./script/allow.only.public.mastermodes.lua")
     elseif server.allow_only_nonpublic_mastermodes == 1 then
 	dofile("./script/allow.only.nonpublic.mastermodes.lua")
-    elseif server.disallow_only_private_mastermode == 1 then
-        dofile("./script/disallow.only.private.mastermode.lua")
+    elseif server.disallow_private_mastermode == 1 then
+        dofile("./script/disallow.private.mastermode.lua")
     end
     
     if server.use_change_mode_when_empty == 1 then
@@ -235,11 +235,11 @@ server.event_handler("started", function()
     end
     
     if server.use_live_server_stats == 1 then
-        dofile("./script/zombie_print.stats.lua")
+        dofile("./script/print.stats.lua")
     end
     
     if server.use_live_server_single_stats == 1 then
-        dofile("./script/zombie_print.single.stats.lua")
+        dofile("./script/print.single.stats.lua")
     end
     
     if server.use_resize_mastermode == 1 then

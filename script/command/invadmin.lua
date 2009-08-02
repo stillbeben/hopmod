@@ -1,3 +1,5 @@
+-- #invadmin
+
 local function invadmin_domainhandler(cn,name)
     server.set_invadmin(cn)
     server.player_msg(cn,"(" .. green("Info") .. ")  You claim invisible admin.")

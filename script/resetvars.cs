@@ -35,7 +35,7 @@ global exp_stats_total_rank 0
 global use_name_reservation 0
 global enable_auth_command 0
 global enable_showauth_command 0
-global enable_shownonauth_command 0
+global enable_shownonauths_command 0
 global name_reservation_domain ""
 global reserved_name_expire (mins 3600)
 global use_tag_reservation 0
@@ -130,7 +130,7 @@ global default_maptime (mins 10)
 
 global change_default_mastermode 0
 global default_mastermode 2
-global disallow_only_private_mastermode 0
+global disallow_private_mastermode 0
 global allow_only_public_mastermodes 0
 global allow_only_nonpublic_mastermodes 0
 
@@ -150,7 +150,6 @@ global resize_mastermode locked
 global use_teambalncer 0
 global use_teambalancer_bot 0
 global use_teambalancer_xonx 0
-
 
 
 global enable_cheater_command 0

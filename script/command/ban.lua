@@ -1,3 +1,5 @@
+-- #ban [all] <cn> [<time> [m|h]] ["<reason>"]
+
 function server.playercmd_ban(ban_cn,arg1,arg2,arg3,arg4,arg5)
     return mastercmd(function()
         local all = 0

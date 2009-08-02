@@ -1,3 +1,5 @@
+-- #motd "<text>"
+
 function server.playercmd_motd(cn, text)
     return admincmd(function()
         if not text then

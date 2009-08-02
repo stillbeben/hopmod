@@ -1,4 +1,3 @@
--- change
 local function sdmode(sdmode_cn,sdmode_option)
     player_score = {}
     sudden_death = "false"
@@ -48,6 +47,7 @@ server.event_handler("mapchange", function (map, mode)
     sudden_death = "false"
 end)
 
+-- #nosd
 if server.enable_nosd_command == 1 then
     if server.enable_sd_command == 0 then
         server.log("WARNING: #nosd available, but not #sd")
@@ -59,6 +59,7 @@ if server.enable_nosd_command == 1 then
     end
 end
 
+-- #sd
 if server.enable_sd_command == 1 then
     if server.enable_nosd_command == 0 then
         server.log("WARNING: #sd available, but not #nosd")

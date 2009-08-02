@@ -1,3 +1,5 @@
+-- #versus <cn1> <cn2> <map> <mode>
+
 -- 1on1 (versus) script 
 -- Version: 0.1
 -- (c) 2009 Thomas

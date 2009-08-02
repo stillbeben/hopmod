@@ -1,3 +1,5 @@
+-- #kick [all] <cn> ["<reason>"]
+
 function server.playercmd_kick(kick_cn,arg1,arg2,arg3)
     return mastercmd(function()
         local all = 0
@@ -32,7 +34,7 @@ function server.playercmd_kick(kick_cn,arg1,arg2,arg3)
 	if all == 1 then
             server.kick_bannedip_group = 1
         end
-        server.kick(cn,0,server.player_name(kick_cn),reason)
+        server.kick(cn,1,server.player_name(kick_cn),reason)
         if all == 1 then
             server.kick_bannedip_group = 0
         end

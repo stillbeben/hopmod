@@ -1,3 +1,5 @@
+-- #admin
+
 local function admin_domainhandler(cn,name)
     server.setadmin(cn)
     server.msg(server.player_name(cn) .. " claimed admin as '" .. magenta(name) .. "'")

@@ -1,3 +1,5 @@
+-- #changemap [<mode>] [<map>] [<time>]
+
 function server.playercmd_changemap(changemap_cn,arg1,arg2,arg3)
     changemap_map = "random"
     changemap_mode = tostring(server.gamemode)

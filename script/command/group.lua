@@ -1,3 +1,5 @@
+-- #group [all] <tag> [<team>]
+
 function server.playercmd_group(cn,arg1,arg2,arg3)
     return mastercmd(function()
         if not server.gamemodeinfo.teams and server.reassignteams == 1 then

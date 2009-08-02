@@ -1,3 +1,5 @@
+-- #mute <cn>
+
 function server.playercmd_mute(mute_cn,mute_tcn)
     return mastercmd(function()
         if not mute_tcn then

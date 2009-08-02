@@ -1,3 +1,5 @@
+-- #unmute <cn>
+
 function server.playercmd_unmute(unmute_cn,unmute_tcn)
     return mastercmd(function()
         if not unmute_tcn then

@@ -1,3 +1,5 @@
+-- #master <domain>
+
 local master_domains = table_unique(server.parse_list(server["master_domains"]))
 
 local function master_domainhandler(cn,name)

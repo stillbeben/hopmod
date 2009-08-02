@@ -1,3 +1,5 @@
+-- #playermsg <cn> "<text>"
+
 function server.playercmd_playermsg(playermsg_cn,playermsg_tcn,playermsg_text)
     return mastercmd(function()
 	if not playermsg_tcn then

@@ -1,3 +1,5 @@
+-- #givemaster <cn>
+
 function server.playercmd_givemaster(cn, target)
     return mastercmd(function ()
         if server.player_id(target) == -1 then

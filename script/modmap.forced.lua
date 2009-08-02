@@ -43,7 +43,7 @@ server.event_handler("spectator",function(modmap_spectator_cn,modmap_spectator_j
 end)
 
 
--- admin-cmd: #unfspec <cn>
+-- #unfspec <cn>
 if server.enable_unfspec_command == 1 then
     function server.playercmd_unfspec(unfspec_cn,unfspec_tcn)
 	local function unfspec_error_msg(unfspec_error_msg_cn)

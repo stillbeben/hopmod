@@ -1,3 +1,5 @@
+-- #lpc
+
 -- [[ Player command written by Thomas
 
 function server.playercmd_lpc(cn) -- list player countrys

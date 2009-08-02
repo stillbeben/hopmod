@@ -1,3 +1,5 @@
+-- #cw <team1> <team2> <mode> <map> [<time>]
+
 local function cw_teamsize(cw_teamsize_teamname)
     cw_teamsize_i = 0
     for a,cn in ipairs(server.team_players(cw_teamsize_teamname)) do

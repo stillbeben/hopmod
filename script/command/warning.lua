@@ -1,3 +1,5 @@
+-- #warning [<cn>] "<text>"
+
 function server.playercmd_warning(warning_cn,warning_tcn,warning_text)
     return mastercmd(function()
 	if not warning_tcn then

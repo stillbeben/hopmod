@@ -1,3 +1,5 @@
+-- #uptime
+
 -- [[ Player command written by Thomas
 
 function server.playercmd_uptime(cn)

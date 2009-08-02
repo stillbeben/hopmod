@@ -213,6 +213,7 @@ if server.enable_auth_command == 1 then
     end
 end
 
+-- #showauth <cn>
 if server.enable_showauth_command == 1 then
     function server.playercmd_showauth(showauth_cn,showauth_tcn)
         if not showauth_tcn then
@@ -228,14 +229,15 @@ if server.enable_showauth_command == 1 then
     end
 end
 
-if server.enable_shownonauth_command == 1 then
-    function server.playercmd_shownonauth(shownonauth_cn)
+-- #shownonauths
+if server.enable_shownonauths_command == 1 then
+    function server.playercmd_shownonauths(shownonauths_cn)
         return mastercmd(function()
             for a,b in ipairs(server.players()) do
 		if not server.player_pvars(b).auth_name then
-                    server.player_msg(shownonauth_cn,green(server.player_name(b)) .. " " .. magenta("(" .. b ..")") .. " is not verified")
+                    server.player_msg(shownonauths_cn,green(server.player_name(b)) .. " " .. magenta("(" .. b ..")") .. " is not verified")
                 end
             end
-        end,shownonauth_cn)
+        end,shownonauths_cn)
     end
 end

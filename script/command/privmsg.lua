@@ -1,6 +1,8 @@
+-- #privmsg <cn> "<text>"
+
 function server.playercmd_privmsg(privmsg_cn,privmsg_tcn,privmsg_text)
     if not privmsg_tcn then
-	server.player_msg(privmsg_cn,red("#privmsg <cn> <text>"))
+	server.player_msg(privmsg_cn,red("#privmsg <cn> \"<text>\""))
     elseif not privmsg_text then
         server.player_msg(privmsg_cn,red("text is missing"))
     elseif not server.valid_cn(privmsg_tcn) then

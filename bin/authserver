@@ -47,7 +47,7 @@ case "$1" in
         tail -c +$ERROR_START log/autherror.log
         cat log/authstatus.log
         
-        execOnServer "exec conf/authserver.users"
+        execOnServer "exec bin/authserver.users"
 ;;
     'stop')
         execOnServer shutdown

@@ -1,3 +1,5 @@
+-- #maxclients <number>
+
 -- [[ Player command written by Thomas
 
 function server.playercmd_maxclients(cn, arg1)

@@ -1,3 +1,5 @@
+-- #addbot [<low>] [<high>]
+
 function server.playercmd_addbot(cn,arg1,arg2)
     local function error(cn)
 	server.player_msg(cn,red("#addbot [<low>] [<high>]"))

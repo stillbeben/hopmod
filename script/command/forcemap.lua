@@ -1,3 +1,5 @@
+-- #forcemap [<mode>] [<map>] [<time>]
+
 function server.playercmd_forcemap(forcemap_cn,forcemap_arg1,forcemap_arg2,forcemap_arg3)
     forcemap_map = "random"
     forcemap_mode = tostring(server.gamemode)

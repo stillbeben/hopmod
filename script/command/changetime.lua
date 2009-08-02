@@ -1,3 +1,5 @@
+-- #changetime <time>
+
 function server.playercmd_changetime(changetime_cn,changetime_time)
     return admincmd(function()
 	local time = tonumber(changetime_time)

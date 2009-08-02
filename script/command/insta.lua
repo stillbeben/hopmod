@@ -1,3 +1,7 @@
+-- #insta <map> <cn1> <cn2>
+-- #effic <map> <cn1> <cn2>
+
+
 -- 1on1 (versus) script
 -- Version: 0.1
 -- (c) 2009 Thomas

@@ -1,3 +1,5 @@
+-- #cheater <cn>|"<name>"
+
 server.event_handler("started",function()
     if server.cheater_ad_timer ~= 0 then
 	server.interval(server.cheater_ad_timer,function()

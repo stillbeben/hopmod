@@ -1,3 +1,5 @@
+-- #1on1 <cn1> <cn2> <mode> <map> [<maptime>]
+
 function server.playercmd_1on1(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_mode,oneonone_map,oneonone_maptime)
     return mastercmd(function()
 	if not oneonone_cn1 then

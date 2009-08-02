@@ -1,3 +1,5 @@
+-- #changeteam [<cn>] [<team>]
+
 function server.playercmd_changeteam(changeteam_cn,arg1,arg2)
     local function other_team(other_team_cn)
 	if server.player_team(other_team_cn) == "evil" then

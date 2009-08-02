@@ -1,3 +1,5 @@
+-- #players
+
 -- [[ Player command written by Thomas
 
 function server.playercmd_players(cn_client) -- list players + player stats
