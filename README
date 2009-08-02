@@ -1,0 +1,7 @@
+== changes and adds for hopmod ==
+
+it doesn't include hopmod...
+
+donwload hopmod
+add the content of bin/ conf/ log/ to the hopmod-installation
+and replace the script/-directory completely
