@@ -2,6 +2,6 @@
 
 it doesn't include hopmod...
 
-donwload hopmod
-add the content of bin/ conf/ log/ to the hopmod-installation
-and replace the script/-directory completely
+download hopmod,
+add the content of bin/, conf/ and log/ to the hopmod-installation
+and replace script/ completely

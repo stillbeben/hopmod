@@ -381,7 +381,7 @@ if server.enable_stats_command == 1 then
 		
 		tab = {}
 		return 0
-	    elseif server.exp_stats_total_rank == 1 then
+	    else
 		rank = 1
 		if server.stats_record_only_authnames == 1 then
 		    for a in db:cols("SELECT id FROM playertotals ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
@@ -495,7 +495,6 @@ if server.enable_stats_command == 1 then
 	    else
 		kpd = colorkpd(round((frags / deaths),2))
 	    end
-	    
 	    server.player_msg(sendto, string.format("Current game stats for %s:", green(server.player_name(player))))
 	    server.player_msg(sendto, string.format("Score %s Frags %s Deaths %s Kpd %s Accuracy %s Rank %s",
 		yellow(server.player_frags(player)),
@@ -528,16 +527,30 @@ if server.enable_stats_command == 1 then
             server.player_msg(sendto, string.format("Total game stats for %s:", green(server.player_name(player))))
 	    local kpd = round(row.frags / row.deaths, 2)
 	    local acc = round((row.hits / row.shots)*100)
-	    server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s Rank %s",
-		yellow(row.games),
-        	green(row.frags),
-        	red(row.deaths),
-        	colorkpd(kpd,"total"),
-        	coloracc(acc,"total"),
-        	green(row.wins),
-        	red(row.losses),
-        	blue(calcrank(player,"total"))))
+	    if server.exp_stats_total_rank == 1 then
+		server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s Rank %s",
+		    yellow(row.games),
+        	    green(row.frags),
+        	    red(row.deaths),
+        	    colorkpd(kpd,"total"),
+        	    coloracc(acc,"total"),
+        	    green(row.wins),
+        	    red(row.losses),
+        	    blue(calcrank(player,"total"))))
+        	end
+    	    else
+    		server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s",
+		    yellow(row.games),
+        	    green(row.frags),
+        	    red(row.deaths),
+        	    colorkpd(kpd,"total"),
+        	    coloracc(acc,"total"),
+        	    green(row.wins),
+        	    red(row.losses)))
+        	end
+    	    end
 	end
+	
         if not selection then
             currentgame_stats(cn, cn)
         elseif selection == "total" then
@@ -606,7 +619,6 @@ else
     function server.find_names_by_ip() return nil end
 end
 
--- change
 if server.enable_showauth_command == 1 then
     function server.playercmd_showauth(showauth_cn,showauth_tcn)
 	if not showauth_tcn then
@@ -621,8 +633,7 @@ if server.enable_showauth_command == 1 then
 	end
     end
 end
---
--- add
+
 if server.enable_shownonauth_command == 1 then
     function server.playercmd_shownonauth(shownonauth_cn)
 	return mastercmd(function()
@@ -634,6 +645,5 @@ if server.enable_shownonauth_command == 1 then
 	end,shownonauth_cn)
     end
 end
---
 
 if tonumber(server.stats_debug) == 1 then return statsmod end
