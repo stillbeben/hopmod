@@ -28,10 +28,11 @@ server.event_handler("frag", function(target_cn, actor_cn)
             elseif actor_multikills > 3 then
                 server.player_msg(actor_cn, yellow("You scored ") ..  orange(string.format("MULTPLE KILLS(%i)!!",actor_multikills)))
             end
+        else
+	    actor_vars.multikills = 0
         end
         
         actor_vars.lastkill = server.gamemillis
-        actor_vars.multikills = 0
     
     else
         actor_killingspree = 0
