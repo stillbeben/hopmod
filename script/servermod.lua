@@ -246,6 +246,10 @@ server.event_handler("started", function()
         dofile("./script/resize.dep.on.mastermode.lua")
     end
     
+    if server.use_cd_weapon_reload_time == 1 then
+        dofile("./script/cd.weapon.reload.time.lua")
+    end
+    
     server.reload_maprotation()
     
     if tonumber(server.playercount) == 0 then

@@ -151,6 +151,7 @@ global use_teambalncer 0
 global use_teambalancer_bot 0
 global use_teambalancer_xonx 0
 
+global use_cd_weapon_reload_time 0
 
 global enable_cheater_command 0
 global cheater_ad_timer (mins 3)
