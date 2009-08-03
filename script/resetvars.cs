@@ -136,9 +136,6 @@ global allow_only_nonpublic_mastermodes 0
 
 global use_change_mode_when_empty 0
 
-global use_modmap 1
-global enable_unfspec_command 1
-
 global use_live_server_stats 1
 global use_live_server_single_stats 0
 
@@ -151,9 +148,13 @@ global use_teambalncer 0
 global use_teambalancer_bot 0
 global use_teambalancer_xonx 0
 
+global use_modmap 0
+
 global use_cd_weapon_reload_time 0
 global use_cd_accuracy 0
-global cd_accuracy_limit 80
+global cd_accuracy_limit 85
+global use_cd_modmap 0
+global enable_unfspec_command 0
 
 global enable_cheater_command 0
 global cheater_ad_timer (mins 3)

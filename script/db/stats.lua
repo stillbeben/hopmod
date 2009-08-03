@@ -305,10 +305,6 @@ local function installHandlers()
             t.auth_name = name
             
             server.player_msg(cn, "You are logged in as " .. magenta(name) .. ".")
-            
-	    if server.stats_record_only_authnames == 1 then
-		statsmod.addPlayer(cn)
-	    end
         end)
     end
     
@@ -382,26 +378,32 @@ if server.enable_stats_command == 1 then
 		end
 		
 		tab = {}
-		return 0
 	    else
 		rank = 1
+		local spname = nil
 		if server.stats_record_only_authnames == 1 then
-		    for a in db:cols("SELECT id FROM playertotals ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
-			if a == cn then
+		    spname = server.player_pvars(cn).stats_auth_name
+		    for a in db:cols("SELECT name FROM playertotals ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
+			if a == spname then
 			    return rank
 			end
 			rank = rank + 1
 		    end
 		else
-		    for a in db:cols("SELECT id FROM playertotals WHERE name!=\"unnamed\" AND name!=\"bot\" ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
-			if a == cn then
+		    if (server.stats_overwrite_name_with_authname == 1) and (server.player_pvars(cn).stats_auth_name) then
+			spname = server.player_pvars(cn).stats_auth_name
+		    else
+			spname = server.player_name(cn)
+		    end
+		    for a in db:cols("SELECT name FROM playertotals WHERE name!='unnamed' AND name!='bot' ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
+		    	if a == spname then
 			    return rank
 			end
 			rank = rank + 1
 		    end
 		end
-		return 0
 	    end
+	    return 0
 	end
 	
 	local function calcavgacc(option)
@@ -517,7 +519,7 @@ if server.enable_stats_command == 1 then
     	    end
 	    local player_name = server.player_name(player)
 	    local auth_name = server.player_pvars(player).auth_name
-	    if auth_name and server.stats_overwrite_name_with_authname == 1 then
+	    if auth_name and ((server.stats_overwrite_name_with_authname == 1) or (server.stats_record_only_authnames == 1)) then
 		player_name = auth_name
 	    end
 	    select_player_totals:bind{name = player_name}

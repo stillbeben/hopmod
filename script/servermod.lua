@@ -230,8 +230,7 @@ server.event_handler("started", function()
     end
     
     if server.use_modmap == 1 then
---      dofile("./script/modmap.lua")
-        dofile("./script/modmap.forced.lua")
+        dofile("./script/modmap.lua")
     end
     
     if server.use_live_server_stats == 1 then
@@ -252,6 +251,10 @@ server.event_handler("started", function()
     
     if server.use_cd_accuracy == 1 then
         dofile("./script/cd.accuracy.lua")
+    end
+    
+    if server.use_cd_modmap == 1 then
+        dofile("./script/cd.modmap.lua")
     end
     
     server.reload_maprotation()
