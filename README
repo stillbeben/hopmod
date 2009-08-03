@@ -4,4 +4,4 @@ it doesn't include hopmod...
 
 download hopmod,
 add the content of bin/, conf/ and log/ to the hopmod-installation
-and replace script/ completely
+and replace script/ completely - but don't remove script/packages/

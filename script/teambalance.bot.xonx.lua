@@ -65,7 +65,9 @@ end
 -- addbot
 local function teambalance_addbot()
     server.addbot(-1)
-    server.msg("(" .. green("Info") .. ")  " .. orange("random skilled bot has joined"))
+    if teambalance_send_info == 1 then
+	server.msg("(" .. green("Info") .. ")  " .. orange("random skilled bot has joined"))
+    end
 end
 
 -- delbot and del all bots
@@ -190,6 +192,7 @@ local function teambalance_check_mode(teambalance_check_mode_mode)
 end
 
 function teambalance_enabler()
+    teambalance_send_info = 1
     teambalance_flag_cn1 = -1
     teambalance_flag_cn2 = -1
     server.botbalance = 1
@@ -220,7 +223,7 @@ function teambalance_enabler()
 	local teambalance_chteamrequest = server.event_handler("chteamrequest",teambalance_chteamrequest_event)
 	local teambalance_text = server.event_handler("text",teambalance_text_event)
 	local teambalance_intermission = server.event_handler("intermission",function()
-	        teambalance_disabler()
+	        teambalance_send_info = 0
 	    end)
 	local teambalance_takeflag = server.event_handler("takeflag",teambalance_takeflag_event)
 	local teambalance_dropflag = server.event_handler("dropflag",teambalance_dropflag_event)
@@ -244,6 +247,7 @@ function teambalance_enabler()
 end
 
 function teambalance_disabler()
+    teambalance_send_info = 0
     if teambalance_events_active == 1 then
 	teambalance_events_active = 0
 	
@@ -284,5 +288,6 @@ end)
 teambalance_events_active = 0
 teambalance_flag_cn1 = -1
 teambalance_flag_cn2 = -1
+teambalance_send_info = 1
 teambalance_botbalance_isactive = tonumber(server.botbalance)
 teambalance_enabler()

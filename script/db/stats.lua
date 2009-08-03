@@ -539,7 +539,6 @@ if server.enable_stats_command == 1 then
         	    green(row.wins),
         	    red(row.losses),
         	    blue(calcrank(player,"total"))))
-        	end
     	    else
     		server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s",
 		    yellow(row.games),
@@ -549,7 +548,6 @@ if server.enable_stats_command == 1 then
         	    coloracc(acc,"total"),
         	    green(row.wins),
         	    red(row.losses)))
-        	end
     	    end
 	end
 	

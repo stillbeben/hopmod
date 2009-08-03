@@ -250,6 +250,10 @@ server.event_handler("started", function()
         dofile("./script/cd.weapon.reload.time.lua")
     end
     
+    if server.use_cd_accuracy == 1 then
+        dofile("./script/cd.accuracy.lua")
+    end
+    
     server.reload_maprotation()
     
     if tonumber(server.playercount) == 0 then

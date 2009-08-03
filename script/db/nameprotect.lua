@@ -223,7 +223,7 @@ if server.enable_showauth_command == 1 then
         else
             local authname = server.player_pvars(showauth_tcn).auth_name
             if authname then
-                server.player_msg(showauth_cn,server.player_name(showauth_tcn) .. " " .. magenta("(" .. showauth_tcn ..")") .. " is verified as " .. authname ..
+                server.player_msg(showauth_cn,server.player_name(showauth_tcn) .. " " .. magenta("(" .. showauth_tcn ..")") .. " is verified as " .. authname .. "@" .. server.stats_auth_domain)
             end
         end
     end

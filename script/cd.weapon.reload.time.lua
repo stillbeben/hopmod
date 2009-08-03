@@ -19,7 +19,7 @@ server.event_handler("shot",function(cn,gun,hits)
 	reload_limit = 495
     end
     if server.player_vars(cn).cdr_last_shot and ((server.gamemillis - server.player_vars(cn).cdr_last_shot) < reload_limit) then
-	server.log(server.player_name(cn) .. "'s weapon reload time is too low. [cn: " .. cn .. " | weapon: " .. gun .. "]")
+	server.log("WARNING: " .. server.player_name(cn) .. "'s weapon reload time is too low. [cn: " .. cn .. " | weapon: " .. gun .. " | ip: " .. server.player_ip(cn) .. "]")
     end
     server.player_vars(cn).cdr_last_shot = server.gamemillis
     server.player_vars(cn).cdr_last_weapon = gun

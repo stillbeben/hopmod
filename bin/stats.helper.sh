@@ -4,7 +4,7 @@
 # conf
 v_tmp=$(mktemp /tmp/hopmod_stats.XXXXXX)
 
-f_statsdb=../log/stats.sqlite
+f_statsdb=$(pwd)/log/stats.sqlite
 
 c_sqlite="nice -n 9 sqlite3"
 ###############################################################################

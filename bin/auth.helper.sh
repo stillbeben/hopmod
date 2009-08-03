@@ -6,15 +6,15 @@ v_tmp=$(mktemp /tmp/hopmod_auth.XXXXXX)
 
 v_default_domain=
 
-d_authserver=../
+d_authserver=$(pwd)
 
-f_authdb=../log/auth.sqlite
+f_authdb=$d_authserver/log/auth.sqlite
 f_authserveruserfile=$d_authserver/bin/authserver.users
 f_authuserfile=$d_authserver/bin/auth.users
 f_authtagfile=$d_authserver/bin/auth.tags
 f_authdomainfile=$d_authserver/bin/auth.domains
 
-f_scripthelper=./auth.helper.sh
+f_scripthelper=$d_authserver/bin/auth.helper.sh
 
 c_sqlite="nice -n 9 sqlite3"
 ###############################################################################
