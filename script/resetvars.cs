@@ -36,7 +36,7 @@ global ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
     kalking1 dock turbine fanatic_quake oddworld wake5 aard3c curvedm
     fragplaza pgdm kffa neondevastation hog2 memento neonpanic lostinspace
     DM_BS1 shindou sdm1 shinmei1 stemple powerplant phosgene oasis island
-    metl4 ruby frozen ksauer1 killfactory corruption deathtek aqueducts orbe]
+    metl4 ruby frozen ksauer1 killfactory corruption deathtek aqueducts orbe arabic]
 
 global insta_maps [complex douze ot academy metl2 metl3 nmp8 tartech kalking1
     dock turbine fanatic_quake oddworld wake5 aard3c curvedm kffa
@@ -45,8 +45,8 @@ global insta_maps [complex douze ot academy metl2 metl3 nmp8 tartech kalking1
 global capture_maps [urban_c nevil_c fb_capture nmp9 c_valley lostinspace fc3
     face-capture nmp4 nmp8 hallo monastery ph-capture hades fc4 relic frostbyte
     venice river_c paradigm corruption asteroids ogrosupply reissen akroseum
-    duomo capture_night c_egypt tejen dust2 campo killcore3 damnation serenity
-    cwcastle]
+    duomo capture_night c_egypt tejen dust2 campo killcore3 damnation arabic 
+    serenity cwcastle]
 
 global ctf_maps [hallo reissen face-capture flagstone shipwreck urban_c dust2
     berlin_wall akroseum valhalla damnation mach2 redemption tejen europium
@@ -69,7 +69,7 @@ global small_maps [complex douze ot academy metl2 metl3 nmp8 tartech dock
     sdm1 shinmei1 island metl4 frozen]
 
 global big_maps [refuge kalking1 fanatic_quake lostinspace DM_BS1 shindou
-    stemple powerplant killfactory corruption deathtek aqueducts orbe]
+    stemple powerplant killfactory corruption deathtek aqueducts orbe arabic]
 
 global use_best_map_size 0
 global small_gamesize 5
