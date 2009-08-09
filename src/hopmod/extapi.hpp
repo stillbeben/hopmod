@@ -33,6 +33,7 @@ namespace server
     extern bool reassignteams;
     extern int gamemillis;
     extern int gamelimit;
+    extern bool gamepaused;
     
     extern int mastermode;
     extern int mastermode_owner;

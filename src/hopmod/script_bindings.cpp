@@ -120,6 +120,7 @@ void register_server_script_bindings(script::env & env)
     //server-oriented functions and variables
     script::bind_freefunc(server::reload_hopmod, "reloadscripts", env);
     script::bind_freefunc(server::pausegame,"pausegame",env);
+    script::bind_ro_var(server::gamepaused, "paused", env);
     script::bind_freefunc(server::sendservmsg, "msg", env);
     script::bind_freefunc(server::shutdown, "shutdown", env);
     script::bind_freefunc(server::restart_now, "restart_now", env);
