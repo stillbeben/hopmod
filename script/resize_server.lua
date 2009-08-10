@@ -8,7 +8,8 @@ local output_limit = calcOutput(server.maxplayers, 0)
 local function readjustCapacity()
 
     local sc = server.speccount
-    local pc = server.playercount - sc
+    local adminslots = server.reservedslots_occupied
+    local pc = server.playercount - sc - adminslots
     local extra = -1
     
     while calcOutput(pc + (extra + 1), sc) <= output_limit do 
