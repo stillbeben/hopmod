@@ -42,6 +42,7 @@ namespace server
     extern int next_gametime;
     
     extern int reservedslots;
+    extern int reservedslots_use;
     
     extern bool allow_mm_veto;
     extern bool allow_mm_locked;

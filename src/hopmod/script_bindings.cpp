@@ -185,6 +185,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::allow_item[I_YELLOWARMOUR-I_SHELLS], "allow_yellowarmour", env);
     script::bind_var(server::allow_item[I_QUAD-I_SHELLS], "allow_quad", env);
     script::bind_var(server::reservedslots, "reservedslots", env);
+    script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
     
     //script_socket functions
     script::bind_freefunc(script_socket_supported, "script_socket_supported?", env);
