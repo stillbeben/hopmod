@@ -395,7 +395,7 @@ namespace server
     int next_gametime = -1;
 
     int reservedslots = 0;
-    int reservedslots_added_maxclients = 0;
+    int reservedslots_use = 0;
     
     bool notgotitems = true;        // true when map has changed and waiting for clients to send item
     int gamemode = 0;
@@ -2011,8 +2011,8 @@ namespace server
             clients.removeobj(ci);
             aiman::removeai(ci);
             
-            maxclients -= reservedslots_added_maxclients > 0;
-            reservedslots_added_maxclients -= reservedslots_added_maxclients > 0; 
+            maxclients -= reservedslots_use > 0;
+            reservedslots_use -= reservedslots_use > 0;
             reservedslots += ci->using_reservedslot;
             
             signal_disconnect(n, disc_reason_msg);
@@ -2039,7 +2039,7 @@ namespace server
         {
             if(clientcount >= maxclients)
             {
-                reservedslots_added_maxclients++;
+                reservedslots_use++;
                 maxclients++;
             }
             reservedslots--;
