@@ -13,6 +13,7 @@ void shutdown_scripting();
 fungu::script::env & get_script_env();
 std::string get_script_error_message(fungu::script::error_trace * errinfo);
 void report_script_error(fungu::script::error_trace *);
+void report_script_error(const char *);
 void register_lua_function(lua_CFunction,const char *);
 
 #endif

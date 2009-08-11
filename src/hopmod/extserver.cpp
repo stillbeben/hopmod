@@ -248,6 +248,8 @@ void init_hopmod()
     
     init_script_socket();
     
+    register_lnetlib();
+    
     try
     {
         fungu::script::execute_file(STARTUP_SCRIPT, get_script_env());
