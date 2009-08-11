@@ -41,27 +41,38 @@ global reserved_name_expire (mins 3600)
 global use_tag_reservation 0
 
 global use_server_maprotation 1
+global use_server_random_maprotation 1
+global use_server_random_moderotation 1
 global enable_nextmap_command 1
 
 global ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
     kalking1 dock turbine fanatic_quake oddworld wake5 aard3c curvedm
     fragplaza pgdm kffa neondevastation hog2 memento neonpanic lostinspace
     DM_BS1 shindou sdm1 shinmei1 stemple powerplant phosgene oasis island
-    metl4 ruby frozen ksauer1 killfactory corruption deathtek aqueducts orbe]
+    metl4 ruby frozen ksauer1 killfactory corruption deathtek aqueducts orbe
+    arabic roughinery shadowed torment konkuri-to moonlite darkdeath
+    fanatic_castle_trap orion nmp10 katrez_d thor frostbyte ogrosupply kmap5
+    thetowers guacamole tejen hades paradigm mechanic wdcd]
 
-global insta_maps [complex douze ot academy metl2 metl3 nmp8 tartech kalking1
-    dock turbine fanatic_quake oddworld wake5 aard3c curvedm kffa
-    neondevastation hog2 neonpanic sdm1]
+global insta_maps &ffa_maps
+
+global small_maps [complex douze ot academy metl2 metl3 nmp8 tartech dock
+    turbine oddworld aard3c kffa neondevastation hog2 memento neonpanic
+    sdm1 shinmei1 island metl4 frozen]
+
+global big_maps [refuge kalking1 fanatic_quake lostinspace DM_BS1 shindou
+    stemple powerplant killfactory corruption deathtek aqueducts orbe arabic]
 
 global capture_maps [urban_c nevil_c fb_capture nmp9 c_valley lostinspace fc3
     face-capture nmp4 nmp8 hallo monastery ph-capture hades fc4 relic frostbyte
     venice river_c paradigm corruption asteroids ogrosupply reissen akroseum
-    duomo capture_night c_egypt tejen dust2 campo killcore3 damnation serenity
-    cwcastle]
+    duomo capture_night c_egypt tejen dust2 campo killcore3 damnation arabic
+    serenity cwcastle]
 
 global ctf_maps [hallo reissen face-capture flagstone shipwreck urban_c dust2
     berlin_wall akroseum valhalla damnation mach2 redemption tejen europium
-    capture_night l_ctf forge campo wdcd sacrifice core_transfer recovery]
+    capture_night l_ctf forge campo wdcd sacrifice core_transfer recovery
+    frostbyte]
 
 global "teamplay_maps" &ffa_maps
 global "efficiency_maps" &ffa_maps
@@ -75,16 +86,47 @@ global "insta ctf_maps" &ctf_maps
 global "protect_maps" &ctf_maps
 global "insta protect_maps" &ctf_maps
 
-global small_maps [complex douze ot academy metl2 metl3 nmp8 tartech dock
-    turbine oddworld aard3c kffa neondevastation hog2 memento neonpanic
-    sdm1 shinmei1 island metl4 frozen]
-
-global big_maps [refuge kalking1 fanatic_quake lostinspace DM_BS1 shindou
-    stemple powerplant killfactory corruption deathtek aqueducts orbe]
-
 global game_modes [instagib efficiency tactics ffa
     "instagib team" "efficiency team" "tactics team" teamplay
     "insta ctf" ctf "insta protect" protect capture "regen capture"]
+
+
+global def_ctf_maps [hallo reissen flagstone face-capture shipwreck dust2
+    urban_c berlin_wall akroseum valhalla damnation mach2 redemption tejen
+    europium capture_night l_ctf forge campo wdcd sacrifice core_transfer
+    recovery]
+
+global def_capture_maps [urban_c nevil_c fb_capture nmp9 c_valley lostinspace
+    fc3 face-capture nmp4 nmp8 hallo monastery ph-capture hades fc4 relic
+    frostbyte venice paradigm corruption asteriods ogrosupply reissen akroseum
+    duomo capture_night c_egypt tejen dust2 campo killcore3 damnation arabic
+    cwcastle river_c serenity]
+
+global def_ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
+    kalking1 dock turbine fanatic_quake oddworld wake5 aard3c curvedm fragplaza
+    pgdm kffa neondevastation hog2 memento neonpanic lostinspace DM_BS1 shindou
+    sdm1 shinmei1 stemple powerplant phosgene oasis island metl4 ruby frozen
+    ksauer1 killfactory corruption deathtek aqueducts orbe roughinery shadowed
+    torment konkuri-to moonlite darkdeath fanatic_castle_trap orion nmp10 katrez_d
+    thor frostbyte ogrosupply kmap5 thetowers guacamole tejen hades paradigm mechanic
+    wdcd]
+
+global "def_teamplay_maps" &def_ffa_maps
+global "def_efficiency_maps" &def_ffa_maps
+global "def_efficiency team_maps" &def_ffa_maps
+global "def_tactics_maps" &def_ffa_maps
+global "def_tactics team_maps" &def_ffa_maps
+global "def_instagib_maps" &def_ffa_maps
+global "def_instagib team_maps" &def_ffa_maps
+global "def_regen capture_maps" &def_capture_maps
+global "def_insta ctf_maps" &def_ctf_maps
+global "def_protect_maps" &def_ctf_maps
+global "def_insta protect_maps" &def_ctf_maps
+
+global def_game_modes [instagib efficiency tactics ffa
+    "instagib team" "efficiency team" "tactics team" teamplay
+    "insta ctf" ctf "insta protect" protect capture "regen capture"]
+
 
 global use_best_map_size 0
 global small_gamesize 5
@@ -130,21 +172,24 @@ global default_maptime (mins 10)
 
 global change_default_mastermode 0
 global default_mastermode 2
+
 global disallow_private_mastermode 0
 global allow_only_public_mastermodes 0
 global allow_only_nonpublic_mastermodes 0
 
 global use_change_mode_when_empty 0
 
-global use_live_server_stats 1
+global use_live_server_stats 0
 global use_live_server_single_stats 0
+global admin_output 0
 
 global resize_totalmaxplayers 7
 global resize_totalminplayers 1
+
 global use_resize_mastermode 1
 global resize_mastermode locked
 
-global use_teambalncer 0
+global use_teambalancer 0
 global use_teambalancer_bot 0
 global use_teambalancer_xonx 0
 
@@ -155,6 +200,11 @@ global use_cd_accuracy 0
 global cd_accuracy_limit 85
 global use_cd_modmap 0
 global enable_unfspec_command 0
+global use_cd_chainsaw_hack 1
+
+global use_spec_inactives 0
+global spec_inactives_check_time (mins 1)
+global spec_inactives_time (mins 1)
 
 global enable_cheater_command 0
 global cheater_ad_timer (mins 3)
@@ -168,6 +218,7 @@ global enable_reload_command 0
 
 global enable_1on1_command 0
 global enable_duel_command 0
+global enable_effic_command 0
 global enable_insta_command 0
 global enable_versus_command 0
 
@@ -208,6 +259,7 @@ global enable_motd_command 0
 
 global enable_msg_command 0
 global enable_warning_command 0
+global warnings_limit 3
 
 global enable_mute_command 0
 global enable_unmute_command 0

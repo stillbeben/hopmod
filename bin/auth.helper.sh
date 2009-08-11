@@ -368,7 +368,9 @@ p_chuser_key() {
     	    p_genkeypair
     	    v_pubkey=
 	    v_pubkey=$(cat "$v_tmp".pubkey)
-    	    $($c_sqlite "$f_authdb" "UPDATE users SET pubkey=\"$v_pubkey\" WHERE domain_id==\"$v_domainid\" AND name==\"$1\";")
+	    v_privkey=
+	    v_privkey=$(cat "$v_tmp".privkey)
+	    $($c_sqlite "$f_authdb" "UPDATE users SET pubkey=\"$v_pubkey\" WHERE domain_id==\"$v_domainid\" AND name==\"$1\";")
     	    v_tagid=
     	    v_tagid=$($c_sqlite "$f_authdb" "SELECT clan_id FROM users WHERE name==\"$1\" AND domain_id==\"$v_domainid\";")
     	    if [ -n "$v_tagid" ]; then
@@ -389,6 +391,7 @@ p_chuser_key() {
             echo "adduser \"$1\" \"$2\" \"$v_pubkey\"" > "$d_authserver/authexec"
         fi
     fi
+echo "authkey \"$1\" \"$v_privkey\" \"$2\""
     p_clean
     return 0
 }

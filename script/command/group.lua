@@ -25,7 +25,6 @@ function server.playercmd_group(cn,arg1,arg2,arg3)
             for j,cn in ipairs(server.spectators()) do
                 if string.find(server.player_name(cn),tag) then
                     server.unspec(cn)
-                    server.changeteam(cn,team)
                 end
             end
         else
@@ -36,9 +35,9 @@ function server.playercmd_group(cn,arg1,arg2,arg3)
         	team = tag
             end
         end
-        for i, cn in ipairs(server.players()) do
-            if string.find(server.player_name(cn),tag) then
-                server.changeteam(cn,team)
+	for p in server.gplayers() do
+            if string.find(p:name(),tag) then
+                server.changeteam(p.cn,team)
             end
         end
     end,cn)

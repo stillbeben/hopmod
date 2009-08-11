@@ -57,7 +57,11 @@ if server.enable_cw_command == 1 then
     end
 end
 if server.enable_duel_command == 1 then
-    dofile("./script/command/duel.lua")
+    if server.enable_suddendeath == 1 then
+	dofile("./script/command/duel.lua")
+    else
+	server.log("ERROR: suddendeath-mode is required - #duel is not available")
+    end
 end
 if server.enable_forcemap_command == 1 then
     dofile("./script/command/forcemap.lua")
@@ -74,8 +78,16 @@ end
 if server.enable_info_command == 1 then
     dofile("./script/command/info.lua")
 end
-if server.enable_insta_command == 1 then
-    dofile("./script/command/insta.lua")
+if (server.enable_insta_command == 1) or (server.enable_effic_command == 1) then
+    if server.enable_suddendeath == 1 then
+	dofile("./script/command/insta.lua")
+    else
+	if server.enable_insta_command == 1 then
+	    server.log("ERROR: suddendeath-mode is required - #insta is not available")
+	else
+	    server.log("ERROR: suddendeath-mode is required - #effic is not available")
+	end
+    end
 end
 if server.enable_invadmin_command == 1 then
     dofile("./script/command/invadmin.lua")
@@ -180,7 +192,11 @@ if server.enable_uptime_command == 1 then
     dofile("./script/command/uptime.lua")
 end
 if server.enable_versus_command == 1 then
-    dofile("./script/command/versus.lua")
+    if server.enable_suddendeath == 1 then
+	dofile("./script/command/versus.lua")
+    else
+	server.log("ERROR: suddendeath-mode is required - #versus is not available")
+    end
 end
 if server.enable_votekick_command == 1 then
     dofile("./script/command/votekick.lua")

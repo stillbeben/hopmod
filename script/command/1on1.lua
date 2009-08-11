@@ -15,7 +15,7 @@ function server.playercmd_1on1(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_mo
 	    server.player_msg(oneonone_cn,red("map is missing"))
 	    return
 	end
-	if not ( ( oneonone_cn1 >= "0" and oneonone_cn1 <= "999" ) and ( oneonone_cn2 >= "0" and oneonone_cn2 <= "999" ) ) then
+	if not ( server.valid_cn(oneonone_cn1) and server.valid_cn(oneonone_cn2) ) then
 	    server.player_msg(oneonone_cn,red("a cn is not a number"))
 	    return
 	end

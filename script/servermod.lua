@@ -56,8 +56,9 @@ function onText(cn,text)
 end
 
 function onMapVote(cn,map,mode)
-    
-    if server.player_priv_code(cn) == 2 then return end -- admin player
+    if server.player_priv_code(cn) == 2 then
+        return
+    end
     
     if tonumber(server.allow_mapvote) <= 0 then
         server.player_msg(cn, red() .. "Map voting is disabled.")
@@ -199,7 +200,9 @@ server.event_handler("started", function()
         dofile("./script/suddendeath.lua")
     end
     
-    dofile("./script/random.map.lua")
+    if server.use_spec_inactives == 1 then
+	dofile("./script/spec.inactives.lua")
+    end
     
     if server.use_teambalancer == 1 then
         dofile("./script/teambalance.lua")
@@ -230,7 +233,7 @@ server.event_handler("started", function()
     end
     
     if server.use_modmap == 1 then
-        dofile("./script/modmap.lua")
+	dofile("./script/modmap.lua")
     end
     
     if server.use_live_server_stats == 1 then
@@ -254,7 +257,11 @@ server.event_handler("started", function()
     end
     
     if server.use_cd_modmap == 1 then
-        dofile("./script/cd.modmap.lua")
+	dofile("./script/cd.modmap.lua")
+    end
+    
+    if server.use_cd_chainsaw_hack == 1 then
+	dofile("./script/cd.chainsaw.hack.lua")
     end
     
     server.reload_maprotation()

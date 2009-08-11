@@ -12,29 +12,33 @@ local using_json = (server.stats_use_json == 1)
 
 server.stats_db_absolute_filename = server.PWD .. "/" .. server.stats_db_filename
 
-if server.stats_debug == 1 then statsmod.db = db end
+if server.stats_debug == 1 then
+    statsmod.db = db
+end
 
 if using_sqlite then
-
     require "sqlite3"
     dofile("./script/db/sqliteutils.lua")
     
     db = sqlite3.open(server.stats_db_filename)
     createMissingTables("./script/db/stats_schema.sql", db)
-
+    
     insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, bots, finished) VALUES (:datetime, :duration, :mode, :map, :players, :bots, :finished)")
-    if not insert_game then error(perr) end
-
+    if not insert_game then
+	error(perr)
+    end
     insert_team,perr = db:prepare("INSERT INTO teams (game_id, name, score, win, draw) VALUES (:gameid,:name,:score,:win,:draw)")
-    if not insert_team then error(perr) end
-
-    insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win, rank, botskill) 
-        VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank, :botskill)]]
-    if not insert_player then error(perr) end
-
+    if not insert_team then
+	error(perr)
+    end
+    insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win, rank, botskill) VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank, :botskill)]]
+    if not insert_player then
+	error(perr)
+    end
     select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
-    if not select_player_totals then error(perr) end
-
+    if not select_player_totals then
+	error(perr)
+    end
 end
 
 function statsmod.setNewGame()
@@ -45,20 +49,27 @@ end
 
 function statsmod.getPlayerTable(player_id)
     player_id = tonumber(player_id)
-    if stats[player_id] then return stats[player_id] end
+    if stats[player_id] then
+	return stats[player_id]
+    end
     stats[player_id] = {team_id = 0, score = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, win = false, rank = 0, country = "", botskill = 0}
     return stats[player_id]
 end
 
 function statsmod.updatePlayer(cn)
-    
-    if server.player_pvars(cn).stats_block then return {} end
+    if server.player_pvars(cn).stats_block then
+	return {}
+    end
     
     local player_id = server.player_id(cn)
-    if stats == nil or player_id == -1 then return {} end
+    if stats == nil or player_id == -1 then
+	return {}
+    end
     
     local t = statsmod.getPlayerTable(player_id)
-    if not t then return {} end
+    if not t then
+	return {}
+    end
     
     t.name = server.player_name(cn)
     t.team = server.player_team(cn)
@@ -89,35 +100,30 @@ function statsmod.updatePlayer(cn)
 end
 
 function statsmod.addPlayer(cn)
-
     local t = statsmod.updatePlayer(cn)
+    
     t.playing = true
     
     local human = not server.player_isbot(cn)
-    
     if human and domain_id then
-        
         local pvars = server.player_pvars(cn)
-
         if pvars.stats_auth_name then
             t.auth_name = pvars.stats_auth_name
         else
-            
             auth.sendauthreq(cn, domain_name)
-            
         end
     end
-    
     return t
 end
 
 function statsmod.commitStats()
-    
-    if stats == nil then return end
+    if stats == nil then
+	return
+    end
     
     for i,cn in ipairs(server.players()) do
 	if server.stats_record_only_authnames == 1 then
-	    if server.player_pvars(cn).auth_name then
+	    if server.player_pvars(cn).stats_auth_name then
 		local t = statsmod.updatePlayer(cn)
     		if t.playing then
     		    t.finished = true
@@ -125,10 +131,10 @@ function statsmod.commitStats()
     		t.win = server.player_win(cn)
     		t.rank = server.player_rank(cn)
 		if server.stats_tell_auth_name == 1 then
-            	    server.player_msg(cn, string.format("Saving your stats as %s[@%s]", t.auth_name, domain_name))
+            	    server.player_msg(cn, string.format("Saving your stats as %s[@%s]", server.player_pvars(cn).stats_auth_name, domain_name))
         	end
 		t.player_name = t.name -- save the original name
-        	t.name = t.auth_name
+        	t.name = server.player_pvars(cn).stats_auth_name
     	    end
 	else
 	    local t = statsmod.updatePlayer(cn)
@@ -148,7 +154,7 @@ function statsmod.commitStats()
     	    end
     	end
     end
-
+    
     for i,cn in ipairs(server.bots()) do
         local t = statsmod.updatePlayer(cn)
         if t.playing and game.finished then t.finished = true end
@@ -159,10 +165,8 @@ function statsmod.commitStats()
     local unique_players = 0 -- human players
     local ipcount = {}
     for id,player in pairs(stats) do
-    
         if player.botskill == 0 then
             human_players = human_players + 1
-            
             if not ipcount[player.ipaddrlong] then
                 ipcount[player.ipaddrlong] = true
                 unique_players = unique_players + 1
@@ -170,9 +174,8 @@ function statsmod.commitStats()
         else
             bot_players = bot_players + 1
         end
-        
     end
-
+    
     if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
         stats = nil
         return
@@ -200,7 +203,6 @@ function statsmod.commitStats()
     
     if server.gamemodeinfo.teams then
         for i,teamname in ipairs(server.teams()) do
-            
             team = {}
             team.gameid = game_id
             team.name = teamname
@@ -226,7 +228,7 @@ function statsmod.commitStats()
     
     for id,player in pairs(stats) do
 	if server.stats_record_only_authnames == 1 then
-	    if player.auth_name then
+	    if player.stats_auth_name then
 		player.gameid = game_id
     		insert_player:bind(player)
     		insert_player:exec()
@@ -239,42 +241,31 @@ function statsmod.commitStats()
     end
     
     db:exec("COMMIT TRANSACTION")
-    
     stats = nil
 end
 
 local function installHandlers()
-
     local connect = server.event_handler("active", statsmod.addPlayer)
-    
     local disconnect = server.event_handler("disconnect", function(cn) 
         statsmod.updatePlayer(cn).playing = false
         server.player_unsetpvar(cn,"stats_auth_name")
     end)
-    
     local addbot = server.event_handler("addbot", function(cn, skill, botcn)
         statsmod.addPlayer(botcn).botskill = skill
     end)
-    
     local botleft = server.event_handler("botleft", function(botcn)
         statsmod.updatePlayer(botcn).playing = false
     end)
-    
     local intermission = server.event_handler("intermission", function()
         game.finished = true
         statsmod.commitStats()
     end)
-    
     local finishedgame = server.event_handler("finishedgame", statsmod.commitStats)
     local mapchange = server.event_handler("mapchange", statsmod.setNewGame)
-    
     local _rename = server.event_handler("rename", function(cn)
-    
         server.player_pvars(cn).stats_auth_name = server.player_vars(cn).stats_auth_name
         statsmod.addPlayer(cn)
-        
     end)
-    
     local renaming = server.event_handler("renaming", function(cn) 
         statsmod.updatePlayer(cn).playing = false
     end)
@@ -290,24 +281,21 @@ local function installHandlers()
     table.insert(evthandlers, renaming)
     
     if tonumber(server.stats_use_auth) == 1 then
-    
         local domId = auth.get_domain_id(server.stats_auth_domain)
         if not domId then error(string.format("stats auth domain '%s' not found",server.stats_auth_domain)) end
         domain_id = domId
         domain_name = server.stats_auth_domain
-        
+    
         auth.add_domain_handler(domain_name, function(cn, name)
-        
             server.player_pvars(cn).stats_auth_name = name
             server.player_vars(cn).stats_auth_name = name
-            
+    
             local t = statsmod.getPlayerTable(server.player_id(cn))
             t.auth_name = name
             
             server.player_msg(cn, "You are logged in as " .. magenta(name) .. ".")
         end)
     end
-    
 end
 
 local function uninstallHandlers()
@@ -326,7 +314,6 @@ end)
 server.event_handler("shutdown", function()
     if db then db:close() end
 end)
-
 
 -- #stats [<cn>] [total]
 if server.enable_stats_command == 1 then
@@ -429,9 +416,12 @@ if server.enable_stats_command == 1 then
 	    local count = 0
 	    local pcount = 0
 	    if not option then
-		local pcount = tonumber(server.playercount)
+		pcount = tonumber(server.playercount)
 		for a,b in ipairs(server.players()) do
-		    count = count + round(server.player_frags(b) / server.player_deaths(b), 2)
+		    local deaths = server.player_deaths(b)
+		    if deaths ~= 0 then
+			count = count + round(server.player_frags(b) / deaths, 2)
+		    end
 		end
 	    else
 		for a,b in db:cols("SELECT frags,deaths FROM playertotals") do
@@ -518,7 +508,7 @@ if server.enable_stats_command == 1 then
         	return
     	    end
 	    local player_name = server.player_name(player)
-	    local auth_name = server.player_pvars(player).auth_name
+	    local auth_name = server.player_pvars(player).stats_auth_name
 	    if auth_name and ((server.stats_overwrite_name_with_authname == 1) or (server.stats_record_only_authnames == 1)) then
 		player_name = auth_name
 	    end
@@ -531,7 +521,7 @@ if server.enable_stats_command == 1 then
             server.player_msg(sendto, string.format("Total game stats for %s:", green(server.player_name(player))))
 	    local kpd = round(row.frags / row.deaths, 2)
 	    local acc = round((row.hits / row.shots)*100)
-	    if server.exp_stats_total_rank == 1 then
+	    if server.exp_stats_total_rank == 1 and auth_name then
 		server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s Rank %s",
 		    yellow(row.games),
         	    green(row.frags),
@@ -570,7 +560,6 @@ if server.enable_stats_command == 1 then
 end
 
 function statsmod.writeStatsToJsonFile()
-
     local d = os.date("%0e%b%Y_%H:%M")
     local filename = string.format("log/game/%s_%s.json",d, game.map)
     
@@ -581,11 +570,8 @@ function statsmod.writeStatsToJsonFile()
     root.players = map_to_array(stats)
     
     if server.gamemodeinfo.teams then
-        
         root.teams = {}
-        
         for i,teamname in ipairs(server.teams()) do
-            
             team = {}
             team.name = teamname
             team.score = server.team_score(teamname)
@@ -600,12 +586,10 @@ function statsmod.writeStatsToJsonFile()
     file:flush()
 end
 
-
 if using_sqlite then
-
     local find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
     if not find_names_by_ip then error(perr) end
-
+    
     function server.find_names_by_ip(ip, exclude_name)
         local names = {}
         find_names_by_ip:bind{ipaddr=ip}
@@ -616,9 +600,12 @@ if using_sqlite then
         end
         return names
     end
-    
 else
-    function server.find_names_by_ip() return nil end
+    function server.find_names_by_ip()
+	return nil
+    end
 end
 
-if tonumber(server.stats_debug) == 1 then return statsmod end
+if tonumber(server.stats_debug) == 1 then
+    return statsmod
+end

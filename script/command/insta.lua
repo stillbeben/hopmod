@@ -209,12 +209,16 @@ function uninstallHandlers()
 
 end
 
-function server.playercmd_insta(cn, map, player1, player2)
+if server.enable_insta_command == 1 then
+    function server.playercmd_insta(cn, map, player1, player2)
         ESL(cn, map, player1, player2, "instagib")
+    end
 end
 
-function server.playercmd_effic(cn, map, player1, player2)
+if server.enable_effic_command == 1 then
+    function server.playercmd_effic(cn, map, player1, player2)
         ESL(cn, map, player1, player2, "efficiency")
+    end
 end
 
 

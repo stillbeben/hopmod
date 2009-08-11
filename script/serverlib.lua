@@ -41,7 +41,7 @@ function format_filesize(bytes)
     end
 end
 
-function format_duration(seconds)
+function server.format_duration(seconds)
     local hours = math.floor(seconds / 3600)
     seconds = seconds - (hours * 3600)
     local mins = math.floor(seconds / 60)
@@ -283,7 +283,7 @@ function server.printserverstatus(filename,filemode)
             if server.master == cn then priv = "*" .. priv end
             
             local player_row = string.format("%i %i %i %s %s %s %s %s %s",
-               p.cn, p:lag(), p:ping(), p:ip(), country, p:name(), format_duration(p:connection_time()), p:status(), priv)
+               p.cn, p:lag(), p:ping(), p:ip(), country, p:name(), server.format_duration(p:connection_time()), p:status(), priv)
             
             player_rows = player_rows .. player_row .. "\n"
             
@@ -339,3 +339,38 @@ function server.find_cn(cn,name)
     end
     return
 end
+
+local function random_init()
+    local rand_non_null_value = (tonumber(server.serverport) - (tonumber(server.gamelimit) * tonumber(server.maxplayers))) + tonumber(server.serverport)
+    math.randomseed(math.abs(((os.time() * os.time()) / rand_non_null_value) + (os.time() * os.clock())))
+end
+
+function server.random_map(random_map_mode,random_map_small)
+    if not random_map_small then
+        random_map_small = 1
+    end
+    
+    local random_map_list = {}
+    local parse = server.parse_list
+    if random_map_small == 1 and ( random_map_mode == "ffa" or random_map_mode == "teamplay" or random_map_mode == "efficiency" or random_map_mode == "efficiency team" or random_map_mode == "tactics" or random_map_mode == "tactics team" or random_map_mode == "instagib" or random_map_mode == "instagib team" ) then
+        random_map_list = table_unique(parse(server.small_maps))
+    else
+        random_map_list = table_unique(parse(server[random_map_mode .. "_maps"]))
+    end
+    if not random_map_list then
+        return nil
+    end
+    
+    return random_map_list[math.random(#random_map_list)]
+end
+
+function server.random_mode()
+    local random_mode_list = table_unique(server.parse_list(server["game_modes"]))
+    if not random_mode_list then
+        return nil
+    end
+    
+    return random_mode_list[math.random(#random_mode_list)]
+end
+
+random_init()
