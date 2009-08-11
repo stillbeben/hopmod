@@ -4,6 +4,8 @@
 
 #include "scripting.hpp"
 #include "scoped_setting.hpp"
+#include "signals.hpp"
+
 #include <fungu/script/lua/object_wrapper.hpp>
 #include <fungu/script/lua/lua_function.hpp>
 #include <fungu/dynamic_cast_derived.hpp>
@@ -79,6 +81,8 @@ void init_scripting()
 
 void shutdown_scripting()
 {
+    signal_shutdown_scripting();
+    
     assert(env->get_lua_state());
     lua_State * L = env->get_lua_state();
     env->set_lua_state(NULL);
@@ -213,6 +217,11 @@ std::string get_script_error_message(script::error_trace * errinfo)
 void report_script_error(script::error_trace * errinfo)
 {
     std::cerr<<get_script_error_message(errinfo)<<std::endl;
+}
+
+void report_script_error(const char * message)
+{
+    std::cerr<<"Error: "<<message<<std::endl;
 }
 
 void register_lua_function(lua_CFunction func,const char * name)

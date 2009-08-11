@@ -83,6 +83,7 @@ extern boost::signal<void (const char *,const char *)>              signal_votep
 // Generic Server Events
 extern boost::signal<void ()> signal_started;
 extern boost::signal<void ()> signal_shutdown;
+extern boost::signal<void ()> signal_shutdown_scripting;
 extern boost::signal<void ()> signal_reloadhopmod;
 
 #ifdef HOPMOD_AUTHSERVER_EVENTS

@@ -14,6 +14,7 @@ static script::slot_factory slots;
 
 boost::signal<void ()> signal_started;
 boost::signal<void ()> signal_shutdown;
+boost::signal<void ()> signal_shutdown_scripting;
 boost::signal<void ()> signal_reloadhopmod;
 
 boost::signal<void (int)> signal_connect;
@@ -109,6 +110,7 @@ void register_signals(script::env & env)
     
     slots.register_signal(signal_started, "started", normal_error_handler);
     slots.register_signal(signal_shutdown,"shutdown",normal_error_handler, boost::signals::at_front);
+    slots.register_signal(signal_shutdown_scripting, "shutdown_scripting", normal_error_handler);
     slots.register_signal(signal_reloadhopmod, "reloadhopmod", normal_error_handler);
     
     slots.register_signal(signal_connect,"connect",normal_error_handler);
@@ -165,6 +167,7 @@ void disconnect_all_slots()
 {
     signal_started.disconnect_all_slots();
     signal_shutdown.disconnect_all_slots();
+    signal_shutdown_scripting.disconnect_all_slots();
     signal_reloadhopmod.disconnect_all_slots();
     
     signal_connect.disconnect_all_slots();
