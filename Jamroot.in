@@ -87,6 +87,7 @@ exe sauer_server :
     src/hopmod/playerid.cpp
     src/hopmod/restarter.cpp
     src/hopmod/utils.cpp
+    src/hopmod/lnetlib.cpp
     sauertools
     serverscripting
     scriptpipe
@@ -94,6 +95,7 @@ exe sauer_server :
     enet
     geoip
     /boost//headers
+    /boost//system
     /libmicrohttpd//httpd
     rt
     event
