@@ -131,10 +131,10 @@ function statsmod.commitStats()
     		t.win = server.player_win(cn)
     		t.rank = server.player_rank(cn)
 		if server.stats_tell_auth_name == 1 then
-            	    server.player_msg(cn, string.format("Saving your stats as %s[@%s]", server.player_pvars(cn).stats_auth_name, domain_name))
+            	    server.player_msg(cn, string.format("Saving your stats as %s[@%s]", t.auth_name, domain_name))
         	end
 		t.player_name = t.name -- save the original name
-        	t.name = server.player_pvars(cn).stats_auth_name
+        	t.name = t.auth_name
     	    end
 	else
 	    local t = statsmod.updatePlayer(cn)

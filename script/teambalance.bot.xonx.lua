@@ -274,13 +274,13 @@ server.event_handler("setmastermode",function(old,teambalance_setmastermode_new)
     end
 end)
 
--- server.event_handler("mapchange",function(map,teambalance_mapchange_mode)
---     if tonumber(server.mastermode) == 0 then
--- 	teambalance_check_mode(teambalance_mapchange_mode)
---     else
--- 	teambalance_disabler()
---     end
--- end)
+server.event_handler("mapchange",function(map,teambalance_mapchange_mode)
+    if tonumber(server.mastermode) == 0 then
+	teambalance_check_mode(teambalance_mapchange_mode)
+    else
+	teambalance_disabler()
+    end
+end)
 
 
 -- on start

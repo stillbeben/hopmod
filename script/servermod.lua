@@ -63,11 +63,21 @@ function onMapVote(cn,map,mode)
     if tonumber(server.allow_mapvote) <= 0 then
         server.player_msg(cn, red() .. "Map voting is disabled.")
         return -1
+    elseif (tonumber(server.allow_modevote) <= 0) and (mode ~= server.gamemode) then
+        server.player_msg(cn, red() .. "Server only accepts votes for " .. server.gamemode .. " mode.")
+	return -1
     else
-        if mode ~= server.gamemode and tonumber(server.allow_modevote) <= 0 then
-            server.player_msg(cn, red() .. "Server only accepts votes for " .. server.gamemode .. " mode.")
-            return -1
-        end
+        local isfound = 0
+        for a,b in ipairs(table_unique(server.parse_list(server["modes"]))) do
+            if mode == b then
+	        isfound = 1
+                break
+	    end
+	end
+        if isfound == 0 then
+            server.player_msg(cn,red("Server doesn't accept votes for " .. mode))
+	    return -1
+	end
     end
     
     if tonumber(server.mapvote_disallow_unknown_map) == 1 then

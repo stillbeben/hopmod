@@ -374,3 +374,9 @@ function server.random_mode()
 end
 
 random_init()
+server.sleep((math.random(60,1800) * 1000),function()
+    random_init()
+    server.sleep((math.random(60,1800) * 1000),function()
+	random_init()
+    end)
+end)

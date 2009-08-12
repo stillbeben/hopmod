@@ -54,14 +54,21 @@ global ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
     fanatic_castle_trap orion nmp10 katrez_d thor frostbyte ogrosupply kmap5
     thetowers guacamole tejen hades paradigm mechanic wdcd]
 
+global small_ffa_maps [complex douze ot academy metl2 metl3 tartech fanatic_quake
+    turbine oddworld aard3c kffa neondevastation hog2 memento neonpanic sdm1
+    shinmei1 island metl4 frozen darkdeath orion nmp10 torment]
+
+global big_ffa_maps [refuge kalking1 dock lostinspace DM_BS1 shindou wake5
+    fragplaza pgdm frostbyte stemple powerplant killfactory corruption deathtek
+    aqueducts orbe arabic ogrosupply curvedm ruby shadowed konkuri-to moonlite
+    fanatic_castle_trap tejen katrez_d kmap5 thor thetowers hades paradigm
+    mechanic wdcd nmp8 phosgene oasis ksauer1 roughinery guacamole]
+
 global insta_maps &ffa_maps
 
-global small_maps [complex douze ot academy metl2 metl3 nmp8 tartech dock
-    turbine oddworld aard3c kffa neondevastation hog2 memento neonpanic
-    sdm1 shinmei1 island metl4 frozen]
+global small_insta_maps &small_ffa_maps
 
-global big_maps [refuge kalking1 fanatic_quake lostinspace DM_BS1 shindou
-    stemple powerplant killfactory corruption deathtek aqueducts orbe arabic]
+global big_insta_maps &big_ffa_maps
 
 global capture_maps [urban_c nevil_c fb_capture nmp9 c_valley lostinspace fc3
     face-capture nmp4 nmp8 hallo monastery ph-capture hades fc4 relic frostbyte
@@ -69,27 +76,73 @@ global capture_maps [urban_c nevil_c fb_capture nmp9 c_valley lostinspace fc3
     duomo capture_night c_egypt tejen dust2 campo killcore3 damnation arabic
     serenity cwcastle]
 
+global small_capture_maps &capture_maps
+
 global ctf_maps [hallo reissen face-capture flagstone shipwreck urban_c dust2
     berlin_wall akroseum valhalla damnation mach2 redemption tejen europium
     capture_night l_ctf forge campo wdcd sacrifice core_transfer recovery
     frostbyte]
 
+global small_ctf_maps [reissen face-capture damnation tejen capture_night l_ctf
+    forge campo wdcd recovery]
+
 global "teamplay_maps" &ffa_maps
+
+global small_teamplay_maps &small_ffa_maps
+
 global "efficiency_maps" &ffa_maps
+
+global small_efficiency_maps &small_ffa_maps
+
+global big_efficiency_maps &big_ffa_maps
+
 global "efficiency team_maps" &ffa_maps
+
+global "small_efficiency team_maps" &small_ffa_maps
+
 global "tactics_maps" &ffa_maps
+
+global small_tactics_maps &small_ffa_maps
+
+global big_tactics_maps &big_ffa_maps
+
 global "tactics team_maps" &ffa_maps
+
+global "small_tactics team_maps" &small_ffa_maps
+
 global "instagib_maps" &insta_maps
+
+global small_instagib_maps &small_insta_maps
+
+global big_instagib_maps &big_insta_maps
+
 global "instagib team_maps" &insta_maps
+
+global "small_instagib team_maps" &small_insta_maps
+
 global "regen capture_maps" &capture_maps
+
+global "small_regen capture_maps" &small_capture_maps
+
 global "insta ctf_maps" &ctf_maps
+
+global "small_insta ctf_maps" &small_ctf_maps
+
 global "protect_maps" &ctf_maps
+
+global small_protect_maps &small_ctf_maps
+
 global "insta protect_maps" &ctf_maps
+
+global "small_insta protect_maps" &small_ctf_maps
 
 global game_modes [instagib efficiency tactics ffa
     "instagib team" "efficiency team" "tactics team" teamplay
     "insta ctf" ctf "insta protect" protect capture "regen capture"]
 
+global modes [instagib efficiency tactics ffa
+    "instagib team" "efficiency team" "tactics team" teamplay
+    "insta ctf" ctf "insta protect" protect capture "regen capture" "coop edit"]
 
 global def_ctf_maps [hallo reissen flagstone face-capture shipwreck dust2
     urban_c berlin_wall akroseum valhalla damnation mach2 redemption tejen
@@ -123,13 +176,17 @@ global "def_insta ctf_maps" &def_ctf_maps
 global "def_protect_maps" &def_ctf_maps
 global "def_insta protect_maps" &def_ctf_maps
 
-global def_game_modes [instagib efficiency tactics ffa
-    "instagib team" "efficiency team" "tactics team" teamplay
-    "insta ctf" ctf "insta protect" protect capture "regen capture"]
+global def_game_modes [ffa teamplay instagib "instagib team" efficiency
+    "efficiency team" tactics "tactics team" capture "regen capture" ctf
+    "insta ctf" protect "insta protect"]
 
+global def_modes [ffa "coop edit" teamplay instagib "instagib team" efficiency
+    "efficiency team" tactics "tactics team" capture "regen capture" ctf
+    "insta ctf" protect "insta protect"]
 
 global use_best_map_size 0
 global small_gamesize 5
+global small_teamgamesize 5
 
 global first_map "complex"
 global first_gamemode "ffa"

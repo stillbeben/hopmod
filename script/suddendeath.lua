@@ -16,7 +16,6 @@ end
 
 local function sd_frag_event(tcn,acn)
     sd_frag_scoreflag_event_helper()
-server.msg("blab")
 end
 
 local function sd_scoreflag_event(cn)
@@ -72,19 +71,16 @@ local function sd_finishedgame_event()
 end
 
 local function sd_enabler(sd_enabler_option)
-server.msg("blib")
     if not sd_enabler_option then
 	return (-1)
     end
     if sudden_death_events_active == 0 then
-server.msg("blib")
 	sudden_death_events_active = 1
 	
 	local event_frag = nil
 	local event_scoreflag = nil
 	sudden_death_events = {}
 	if (sd_enabler_option == 0) or (sd_enabler_option == 3) then
-server.msg("blib")
 	    event_frag = server.event_handler("frag",sd_frag_event)
 	    table.insert(sudden_death_events,event_frag)
 	elseif sd_enabler_option == 1 then
@@ -93,7 +89,6 @@ server.msg("blib")
 	    event_scoreflag = server.event_handler("scoreflag",sd_scoreflag_event)
 	    table.insert(sudden_death_events,event_scoreflag)
 	end
-server.msg("blib")
 	local event_finishedgame = server.event_handler("finishedgame",sd_finishedgame_event)
 	table.insert(sudden_death_events,event_finishedgame)
     end
@@ -105,11 +100,9 @@ local function sd_timeupdate_event(sd_timeupdate_event_mins)
     if sd_timeupdate_event_mins == 1 then
         server.sleep(58000,function()
 	    local gmode = tostring(server.gamemode)
-server.msg(gmode)
 	    local break_first = 0
 	    local draw = 1
 	    if gmode == "regen capture" or gmode == "capture" then
-server.msg("blobs")
 		for index,name in ipairs(server.teams()) do
 		    local tscore = server.team_score(name)
 		    for i,n in ipairs(server.teams()) do
@@ -150,7 +143,6 @@ server.msg("blobs")
 		    sd_enabler(2)
 		end
 	    elseif gmode == "teamplay" or gmode == "tactics team" or gmode == "instagib team" or gmode == "efficiency team" then
-server.msg("blob")
 		for index,name in ipairs(server.teams()) do
 		    local tscore = server.team_score(name)
 		    for i,n in ipairs(server.teams()) do
@@ -188,7 +180,6 @@ server.msg("blob")
 		end
 		if draw == 1 then
 		    server.msg(red("--[ Sudden Death. Next Frag Wins!"))
-server.msg(blue("mod"))
 		    sd_enabler(0)
 		end
 	    end

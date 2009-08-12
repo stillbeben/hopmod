@@ -3,9 +3,11 @@ local gamecount = 0
 local maps = {}
 local def_maps = {}
 local modes = nil
-local sizedmaps = {}
+local maps_small = {}
+local maps_big = {}
 local bestmapsize = 0
 local smallgamesize = 0
+local smallteamgamesize = 0
 
 function server.reload_maprotation()
 
@@ -26,10 +28,29 @@ function server.reload_maprotation()
     maps["protect"] = table_unique(parse(server["protect_maps"]))
     maps["insta protect"] = table_unique(parse(server["insta protect_maps"]))
     
-    sizedmaps.big_maps = table_unique(parse(server.big_maps))
-    sizedmaps.small_maps = table_unique(parse(server.small_maps))
+    maps_big["ffa"] = table_unique(parse(server["big_ffa_maps"]))
+    maps_big["efficiency"] = table_unique(parse(server["big_efficiency_maps"]))
+    maps_big["tactics"] = table_unique(parse(server["big_tactics_maps"]))
+    maps_big["instagib"] = table_unique(parse(server["big_instagib_maps"]))
+    
+    maps_small["ffa"] = table_unique(parse(server["small_ffa_maps"]))
+    maps_small["teamplay"] = table_unique(parse(server["small_teamplay_maps"]))
+    maps_small["efficiency"] = table_unique(parse(server["small_efficiency_maps"]))
+    maps_small["efficiency team"] = table_unique(parse(server["small_efficiency team_maps"]))
+    maps_small["tactics"] = table_unique(parse(server["small_tactics_maps"]))
+    maps_small["tactics team"] = table_unique(parse(server["small_tactics team_maps"]))
+    maps_small["instagib"] = table_unique(parse(server["small_instagib_maps"]))
+    maps_small["instagib team"] = table_unique(parse(server["small_instagib team_maps"]))
+    maps_small["capture"] = table_unique(parse(server["small_capture_maps"]))
+    maps_small["regen capture"] = table_unique(parse(server["small_regen capture_maps"]))
+    maps_small["ctf"] = table_unique(parse(server["small_ctf_maps"]))
+    maps_small["insta ctf"] = table_unique(parse(server["small_insta ctf_maps"]))
+    maps_small["protect"] = table_unique(parse(server["small_protect_maps"]))
+    maps_small["insta protect"] = table_unique(parse(server["small_insta protect_maps"]))
+    
     bestmapsize = server.use_best_map_size
     smallgamesize = server.small_gamesize
+    smallteamgamesize = server.small_teamgamesize
     
     def_maps["ffa"] = table_unique(parse(server["def_ffa_maps"]))
     def_maps["templay"] = table_unique(parse(server["def_teamplay_maps"]))
@@ -52,12 +73,12 @@ end
 local function nextmap(gmode,i)
     maplist = maps[gmode]
     
-    if bestmapsize and not server.gamemodeinfo.teams then
-        if tonumber(server.playercount) <= smallgamesize then
-            maplist = sizedmaps.small_maps
-        else
-            maplist = sizedmaps.big_maps
-        end
+    if bestmapsize == 1 then
+	if tonumber(server.playercount) <= smallgamesize then
+    	    maplist = maps_small[gmode]
+    	elseif tonumber(server.gamemodeinfo.teams) == 0 then
+	    maplist = maps_big[gmode]
+	end
     end
     
     if not maplist then
