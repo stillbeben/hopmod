@@ -4,9 +4,11 @@ using namespace boost::asio;
 #include "main_io_service.hpp"
 #include "scripting.hpp"
 
-static const char * TCP_ACCEPTOR_MT = "netlib_tcp_acceptor";
-static const char * TCP_BASIC_SOCKET_MT = "netlib_tcp_basic_socket";
-static const char * TCP_CLIENT_SOCKET_MT = "netlib_tcp_client_socket";
+#include <iostream>
+
+static const char * TCP_ACCEPTOR_MT = "lnetlib_tcp_acceptor";
+static const char * TCP_BASIC_SOCKET_MT = "lnetlib_tcp_basic_socket";
+static const char * TCP_CLIENT_SOCKET_MT = "lnetlib_tcp_client_socket";
 
 static lua_State * lua;
 static io_service * main_io;
@@ -229,25 +231,19 @@ void async_read_until_handler(int functionRef, boost::asio::streambuf * buf, con
     lua_rawgeti(lua, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua, LUA_REGISTRYINDEX, functionRef);
     
-    std::string output;
-    std::istream writer(buf);
-    writer >> output;
-    
     if(!error)
     {
-        lua_pushstring(lua, output.c_str());
-        
-        if(lua_pcall(lua, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(lua, -1));
+        lua_pushstring(lua, boost::asio::buffer_cast<const char *>(*buf->data().begin()));
+        lua_pushnil(lua);
     }
     else
     {
         lua_pushnil(lua);
         lua_pushstring(lua, error.message().c_str());
-        
-        if(lua_pcall(lua, 2, 0, 0) != 0)
-            report_script_error(lua_tostring(lua, -1));
     }
+    
+    if(lua_pcall(lua, 2, 0, 0) != 0)
+        report_script_error(lua_tostring(lua, -1));
     
     delete buf;
 }
@@ -255,10 +251,11 @@ void async_read_until_handler(int functionRef, boost::asio::streambuf * buf, con
 int socket_async_read_until(lua_State * L)
 {
     ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
-    
+
     const char * delim = luaL_checkstring(L, 2);
     
     luaL_checktype(L, 3, LUA_TFUNCTION);
+    lua_pushvalue(L, 3);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
     boost::asio::streambuf * readbuf = new boost::asio::streambuf;
@@ -392,6 +389,7 @@ void create_client_socket_metatable(lua_State * L)
     lua_setmetatable(L, -2);
     
     static luaL_Reg funcs[] = {
+        {"__gc", socket_gc},
         {"async_connect", client_async_connect},
         {NULL, NULL}
     };
