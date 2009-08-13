@@ -360,3 +360,11 @@ end)
 server.event_handler("mapchange", function (map, mode)
 	sudden_death = "false"
 end)
+
+if server.enable_versus_command == 1 then
+    dofile("./script/command/versus.lua")
+end
+
+if server.enable_insta_command == 1 then
+    dofile("./script/command/insta.lua")
+end

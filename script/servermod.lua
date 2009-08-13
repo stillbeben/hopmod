@@ -2,8 +2,6 @@ dofile("./script/serverlib.lua")
 dofile("./script/logging.lua")
 dofile("./script/maprotation.lua")
 dofile("./script/playercmd.lua")
-dofile("./script/versus.lua")
-dofile("./script/insta.lua")
 
 function sendServerBanner(cn)
 
@@ -26,10 +24,10 @@ end
 function onConnect(cn)
 
     local country = server.ip_to_country(server.player_ip(cn))
+    
     if #country > 0 then
         server.msg(string.format("%s connected from %s.",green(server.player_name(cn)), green(country)))
     end
-    
 end
 
 function onDisconnect(cn)
@@ -39,7 +37,6 @@ function onDisconnect(cn)
     if server.playercount == 0 and tonumber(server.firstgame_on_empty) == 1 then
         server.changemap(server.first_map, server.first_gamemode, -1)
     end
-    
 end
 
 function onText(cn,text)
