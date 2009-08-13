@@ -1,7 +1,10 @@
 #ifndef HOPMOD_SCRIPTING_HPP
 #define HOPMOD_SCRIPTING_HPP
 
-#include "lua.hpp"
+extern "C"{
+    #include <lua.h>
+}
+
 #include <fungu/script.hpp>
 
 #define CUBESCRIPT_EXTENSION ".csl"

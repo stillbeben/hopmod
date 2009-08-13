@@ -2,9 +2,7 @@
 #include "pch.hpp"
 #endif
 
-#include "script_socket.hpp"
-#include "signals.hpp"
-#include "scripting.hpp"
+#include "hopmod.hpp"
 #include "crypto.hpp"
 
 #ifndef WITHOUT_MICROHTTPD

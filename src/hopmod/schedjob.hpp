@@ -1,6 +1,0 @@
-#ifndef HOPMOD_SCHEDJOB_HPP
-#define HOPMOD_SCHEDJOB_HPP
-
-
-
-#endif

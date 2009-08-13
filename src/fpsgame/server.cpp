@@ -1,5 +1,6 @@
 #include "game.h"
 #include "hopmod.hpp"
+#include <arpa/inet.h> //inet_ntoa
 
 namespace game
 {         

@@ -2,9 +2,8 @@
 #include "pch.hpp"
 #endif
 
-#include "script_pipe.hpp"
-#include "scripting.hpp"
-#include "signals.hpp"
+#include "hopmod.hpp"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>

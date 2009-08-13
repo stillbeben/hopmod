@@ -2,13 +2,9 @@
 #include "pch.hpp"
 #endif
 
-#include "scheduler.hpp"
+#include "hopmod.hpp"
 #include "schedule_service.hpp"
-#include "scripting.hpp"
-#include "signals.hpp"
-
 #include <fungu/script/lua/lua_function.hpp>
-
 using namespace fungu;
 
 static schedule_service scheduler;

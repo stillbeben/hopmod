@@ -2,8 +2,14 @@
 #define HOPMOD_EXTAPI_HPP
 
 #include "cube.h"
-#include "lua.hpp"
 #include "utils.hpp"
+
+extern "C"{
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
 #include <string>
 #include <vector>
 #include <iostream>
@@ -169,6 +175,17 @@ namespace server
     
     void suicide(int);
     
+    
+    // Flood protection vars
+    extern int sv_text_hit_length;
+    extern int sv_sayteam_hit_length;
+    extern int sv_mapvote_hit_length;
+    extern int sv_switchname_hit_length;
+    extern int sv_switchteam_hit_length;
+    extern int sv_kick_hit_length;
+    extern int sv_remip_hit_length;
+    extern int sv_newmap_hit_length;
+
 } //namespace server
 
 #endif
