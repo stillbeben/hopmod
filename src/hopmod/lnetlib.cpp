@@ -97,16 +97,16 @@ void async_accept_handler(int luaFunctionCbRef, int socketRef, boost::system::er
     lua_rawgeti(lua, LUA_REGISTRYINDEX, socketRef);
     luaL_unref(lua, LUA_REGISTRYINDEX, socketRef);
     
-    if(!error)
-    {
-        if(lua_pcall(lua, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(lua, -1));
-    }
-    else
+    if(error)
     {
         lua_pop(lua, 1); //socket object
         lua_pushstring(lua, error.message().c_str());
         
+        if(lua_pcall(lua, 2, 0, 0) != 0)
+            report_script_error(lua_tostring(lua, -1));
+    }
+    else
+    {
         if(lua_pcall(lua, 1, 0, 0) != 0)
             report_script_error(lua_tostring(lua, -1));
     }
