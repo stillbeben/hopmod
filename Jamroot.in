@@ -7,8 +7,6 @@ use-project /fungu : src/fungu ;
 use-project /lua-sqlite3 : src/lua-sqlite3 ;
 use-project /libmicrohttpd : src/libmicrohttpd ;
 
-build-project src/lua-socket ;
-
 lib enet :
     src/enet/host.c
     src/enet/list.c
