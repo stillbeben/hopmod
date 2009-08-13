@@ -156,6 +156,10 @@ server.event_handler("started", function()
         server.execCubeScriptFile("./conf/auth")
     end
     
+    if server.fileExists("./conf/bans") then
+        server.execCubeScriptFile("./conf/bans")
+    end
+    
     dofile("./script/db/stats.lua")
     
     if tonumber(server.use_name_reservation) == 1 then
@@ -201,8 +205,6 @@ server.event_handler("started", function()
         server.changemap(server.first_map,server.first_gamemode,-1)
     end
     
-    server.loadbanlist(server.banlist_file)
-
     server.load_geoip_database(server.geoip_db_file)
 
     server.log_status("-> Successfully loaded Hopmod")

@@ -80,7 +80,6 @@ exe sauer_server :
     src/hopmod/process_player_command.cpp
     src/hopmod/scheduler.cpp
     src/hopmod/geoip.cpp
-    src/hopmod/banlist.cpp
     src/hopmod/playerid.cpp
     src/hopmod/restarter.cpp
     src/hopmod/utils.cpp

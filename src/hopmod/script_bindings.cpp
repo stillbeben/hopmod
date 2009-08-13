@@ -126,8 +126,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::restart_now, "restart_now", env);
     script::bind_freefunc(server::changetime, "changetime", env);
     script::bind_freefunc(server::changemap,"changemap", env, &changemap_defargs);
-    script::bind_freefunc(server::writebanlist, "writebanlist", env);
-    script::bind_freefunc(server::loadbanlist, "loadbanlist", env);
     script::bind_freefunc(server::addpermban, "permban", env);
     script::bind_freefunc(server::unsetban, "unsetban", env);
     script::bind_freefunc(server::clearbans, "clearbans", env);

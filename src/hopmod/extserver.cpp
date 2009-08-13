@@ -699,16 +699,6 @@ void unset_invadmin(int cn)
     cleanup_masterstate(ci);
 }
 
-bool writebanlist(const char * filename)
-{
-    return write_banlist(&bannedips, filename);
-}
-
-bool loadbanlist(const char * filename)
-{
-    return load_banlist(filename, &bannedips);
-}
-
 void addpermban(const char * addrstr)
 {
     netmask addr;

@@ -7,7 +7,6 @@
 #include "signals.hpp"
 #include "banned_networks.hpp"
 #include "timedbans_service.hpp"
-#include "banlist.hpp"
 #include "utils.hpp"
 #include "masterserver_client.hpp"
 
