@@ -111,15 +111,7 @@ exe sauer_authserver :
 lib ncurses : : <name>ncurses ;
 lib readline : : <name>readline ;
 
-exe testshell :
-    src/fungu/utils/testshell.cpp
-    /boost//headers
-    /fungu//script
-    /lua//lua
-    ncurses
-    readline ;
-
-install dist : sauer_server sauer_authserver keygen testshell /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
+install dist : sauer_server sauer_authserver keygen /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 
 install lua-packages :
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;
