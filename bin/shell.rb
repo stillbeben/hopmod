@@ -15,6 +15,12 @@ def execute_command(http, command)
     return res.read_body
 end
 
+def reconnect(hostname, port)
+    sleep 1
+    puts "Attempting to reconnect..."
+    start_shell(hostname, port)
+end
+
 def start_shell(hostname, port)
     
     Net::HTTP.version_1_2
@@ -42,10 +48,8 @@ def start_shell(hostname, port)
 
 rescue EOFError
     puts "Error: lost connection with remote host."
-    sleep 1
-    puts "Attempting to reconnect..."
-    start_shell(hostname, port)
-    
+    reconnect(hostname, port)
+        
 rescue Errno::ECONNREFUSED
     puts "Error: connection refused."
     
@@ -57,15 +61,11 @@ rescue Errno::EINVAL
 
 rescue Errno::EPIPE
     puts "Error: server has shutdown."
-    sleep 1
-    puts "Attempting to reconnect..."
-    start_shell(hostname, port)
+    reconnect(hostname, port)
 
 rescue Errno::ECONNRESET
     puts "Error: connection reset."
-    sleep 1
-    puts "Attempting to reconnect"
-    start_shell(hostname, port)
+    reconnect(hostname, port)
     
 rescue IOError => e
     puts "Error: #{$!}"
