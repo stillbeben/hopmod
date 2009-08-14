@@ -368,3 +368,7 @@ end
 if server.enable_insta_command == 1 then
     dofile("./script/command/insta.lua")
 end
+
+if server.enable_cheater_command == 1 then
+    server.execCubeScriptFile("./script/command/cheatercmd.cs")
+end

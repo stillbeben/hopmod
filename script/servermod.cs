@@ -7,7 +7,6 @@ global execCubeScriptFile &exec-cubescript
 
 event_handler "started" (func [] [
     if $enable_ping_limiter [exec script/pinglimiter.cs]
-    if $enable_cheater_command [exec script/cheatercmd.cs]
     
     if $enable_eval_command [
         global playercmd_eval (func [cn code] [
