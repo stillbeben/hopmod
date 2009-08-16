@@ -1,4 +1,4 @@
-#include "geoip.hpp"
+#include "hopmod.hpp"
 #ifndef WITHOUT_GEOIP
 #include <GeoIP.h>
 
