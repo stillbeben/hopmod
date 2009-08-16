@@ -47,16 +47,4 @@ lib lua :
     dl
     : <link>shared : : <include>src ;
 
-lib readline : : <name>readline ;
-lib ncurses : : <name>ncurses ;
-lib history : : <name>history ;
-
-exe luashell :
-    lua.c
-    lua
-    readline
-    ncurses
-    history
-    : <define>LUA_USE_LINUX ;
-
 alias headers : : : : <include>src ;

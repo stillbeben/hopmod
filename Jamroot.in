@@ -108,10 +108,7 @@ exe sauer_authserver :
     enet
     : <define>STANDALONE <define>HOPMOD_AUTHSERVER_EVENTS ;
 
-lib ncurses : : <name>ncurses ;
-lib readline : : <name>readline ;
-
-install dist : sauer_server sauer_authserver keygen /lua//luashell /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
+install dist : sauer_server sauer_authserver keygen /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 
 install lua-packages :
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;
