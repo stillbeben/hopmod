@@ -1,9 +1,15 @@
 #!/bin/sh
+# Hopmod Game Server Control Script
 
 export PATH="$PATH:./bin:."
 export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:bin"
 export LUA_PATH="$LUA_PATH;script/package/?.lua"
 export LUA_CPATH="$LUA_CPATH;bin/lib?.so"
+
+if [[ ! -d bin || ! -d log || ! -d conf || ! -d script || ! -d share ]]; then
+    echo "You are missing required directories. Are you sure you are running this script from the top-level directory of your Hopmod installation?"
+    exit 1
+fi
 
 execOnServer(){
     if [ -p serverexec ] 
@@ -24,7 +30,7 @@ case "$1" in
         # enable core dump
         ulimit -c unlimited
         
-        # cleanup and initiation
+        # cleanup and intialization
         rm -f log/status.log
         touch log/status.log
         touch log/error.log
@@ -49,7 +55,7 @@ case "$1" in
         tail -c +$ERROR_START log/error.log
         cat log/status.log
         
-        #TODO start up a shell
+        #TODO start up a shell when a specified command line option is set
 ;;
     'restart')
         execOnServer restart
@@ -62,9 +68,6 @@ case "$1" in
 ;;
     'stop_ircbot')
         execOnServer stop_ircbot
-;;
-    'script_tests')
-        bin/lunit -i bin/luashell script/db/test/stats_testsuite.lua
 ;;
     'status')
         out=`tty`
