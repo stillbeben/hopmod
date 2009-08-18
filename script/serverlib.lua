@@ -1,5 +1,4 @@
 dofile("./script/utils.lua")
-dofile("./script/preloading.lua")
 dofile("./script/playervars.lua")
 
 -- Copied from http://lua-users.org/wiki/SimpleRound
