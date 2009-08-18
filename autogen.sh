@@ -1,5 +1,5 @@
 #!/bin/sh
 
 aclocal
-automake -a --foreign
+automake -a 2>/dev/null
 autoconf
