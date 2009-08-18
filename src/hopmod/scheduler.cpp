@@ -95,12 +95,10 @@ int run_lua_code(script::env::object::shared_ptr func,script::env * e)
 
 int sched_lua_code(bool repeat,lua_State * L)
 {
-    int argc = lua_gettop(L);
-    if(argc < 2) return luaL_error(L,"missing arguments");
-    if(!lua_isnumber(L,1)) return luaL_argerror(L,1,"expecting integer type");
-    int countdown = lua_tointeger(L,1);
-    if(lua_type(L,2) != LUA_TFUNCTION) return luaL_argerror(L,2,"expecting function type");
-    lua_pushvalue(L,2);
+    int countdown = luaL_checkint(L, 1);
+    
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+    lua_pushvalue(L, 2);
     
     script::env::object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
     luaFunctionObject->set_adopted();

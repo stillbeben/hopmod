@@ -155,11 +155,6 @@ namespace server
 
     bool selectnextgame();
     
-    int lua_genkeypair(lua_State *);
-    int lua_genchallenge(lua_State *);
-    int lua_checkchallenge(lua_State *);
-    int lua_freechalanswer(lua_State *);
-    
     bool delegateauth(int,const char *);
     bool relayauthanswer(int,const char *);
     void sendauthchallenge(int,const char *);

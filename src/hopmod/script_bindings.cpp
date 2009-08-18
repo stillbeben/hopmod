@@ -35,8 +35,7 @@ void register_server_script_bindings(script::env & env)
 {
     setup_default_arguments();
     
-    //player-oriented functions
-    
+    // Player-oriented functions
     script::bind_freefunc(server::player_msg, "player_msg", env);
     script::bind_freefunc(process_player_command, "process_player_command", env);
     script::bind_freefunc(server::kick, "kick", env, &player_kick_defargs);
@@ -106,7 +105,7 @@ void register_server_script_bindings(script::env & env)
     
     register_lua_function(&server::lua_gamemodeinfo, "gengamemodeinfo");
     
-    //team-oriented functions
+    // Team-oriented functions
     script::bind_freefunc(server::team_msg,"team_msg", env);
     script::bind_freefunc(server::get_teams, "teams", env);
     register_lua_function(&server::lua_team_list, "teams");
@@ -116,7 +115,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::get_team_players, "team_players", env);
     register_lua_function(&server::lua_team_players, "team_players");
     
-    //server-oriented functions and variables
+    // Server-oriented functions and variables
     script::bind_freefunc(server::reload_hopmod, "reloadscripts", env);
     script::bind_freefunc(server::pausegame,"pausegame",env);
     script::bind_ro_var(server::gamepaused, "paused", env);
@@ -184,12 +183,20 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::reservedslots, "reservedslots", env);
     script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
     
-    //script_socket functions
+    // Auth functions
+    script::bind_freefunc(server::delegateauth, "delegateauth", env);
+    script::bind_freefunc(server::relayauthanswer, "relayauthanswer", env);
+    script::bind_freefunc(server::sendauthreq, "sendauthreq", env);
+    script::bind_freefunc(server::sendauthchallenge, "sendauthchallenge", env);
+    script::bind_freefunc(server::signal_auth_success, "signal_auth_success", env);
+    script::bind_freefunc(server::signal_auth_failure, "signal_auth_failure", env);
+    
+    // script_socket functions
     script::bind_freefunc(script_socket_supported, "script_socket_supported?", env);
     script::bind_freefunc(open_script_socket, "script_socket_server", env);
     script::bind_freefunc(close_script_socket, "close_script_socket_server", env);
     
-    //geoip functions
+    // Geoip functions
     script::bind_freefunc(geoip_supported, "geoip_supported?", env);
     script::bind_freefunc(load_geoip_database, "load_geoip_database", env);
     script::bind_freefunc(ip_to_country, "ip_to_country", env);
@@ -217,9 +224,6 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_var(server::broadcast_mapmodified, "broadcast_mapmodified", env);
     
-    //utility
-    script::bind_freefunc(resolve_hostname, "gethostbyname", env);
-    
     script::bind_var(tx_bytes, "tx_bytes", env);
     script::bind_var(rx_bytes, "rx_bytes", env);
     script::bind_var(tx_packets, "tx_packets", env);
@@ -229,16 +233,25 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_var(server::enable_extinfo, "enable_extinfo", env);
     
-    register_lua_function(&server::lua_genkeypair, "genkeypair");
-    register_lua_function(&server::lua_genchallenge, "genchallenge");
-    register_lua_function(&server::lua_checkchallenge, "checkchallenge");
-    register_lua_function(&server::lua_freechalanswer, "freechalanswer");
-    script::bind_freefunc(server::delegateauth, "delegateauth", env);
-    script::bind_freefunc(server::relayauthanswer, "relayauthanswer", env);
-    script::bind_freefunc(server::sendauthreq, "sendauthreq", env);
-    script::bind_freefunc(server::sendauthchallenge, "sendauthchallenge", env);
-    script::bind_freefunc(server::signal_auth_success, "signal_auth_success", env);
-    script::bind_freefunc(server::signal_auth_failure, "signal_auth_failure", env);
+    static char cwd[1024];
+    if(getcwd(cwd,sizeof(cwd)))
+        script::bind_const((const char *)cwd, "PWD", env);
+    
+    script::bind_const(getuid(), "UID", env); //FIXME user id is not constant
+    
+    script::bind_var(command_prefix, "command_prefix", env);
+    script::bind_var(using_command_prefix, "use_command_prefix", env);
+    
+    // Utility Functions
+    
+    script::bind_freefunc(unset_global, "unset_global", env);
+    
+    script::bind_freefunc(resolve_hostname, "gethostbyname", env);
+    
+    register_lua_function(&lua::crypto::genkeypair, "genkeypair");
+    register_lua_function(&lua::crypto::genchallenge, "genchallenge");
+    register_lua_function(&lua::crypto::checkchallenge, "checkchallenge");
+    register_lua_function(&lua::crypto::freechalanswer, "freechalanswer");
     
     script::bind_freefunc(concol, "concol", env);
     script::bind_freefunc(green, "green", env);
@@ -254,15 +267,4 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_freefunc(mins, "mins", env);
     script::bind_freefunc(secs, "secs", env);
-    
-    static char cwd[1024];
-    if(getcwd(cwd,sizeof(cwd)))
-        script::bind_const((const char *)cwd, "PWD", env);
-    
-    script::bind_const(getuid(), "UID", env);
-    
-    script::bind_freefunc(unset_global, "unset_global", env);
-    
-    script::bind_var(command_prefix, "command_prefix", env);
-    script::bind_var(using_command_prefix, "use_command_prefix", env);
 }

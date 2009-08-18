@@ -1,3 +1,6 @@
+/*
+    This file is included from and is a part of "fpsgame/server.cpp".
+*/
 #ifdef INCLUDE_EXTSERVER_CPP
 
 int sv_text_hit_length = 0;
@@ -600,8 +603,7 @@ int player_bots(int cn)
 
 int player_pos(lua_State * L)
 {
-    if(lua_gettop(L) == 0) return luaL_error(L,"missing cn argument");
-    int cn = lua_tointeger(L,1);
+    int cn = luaL_checkint(L,1);
     vec pos = get_ci(cn)->state.o;
     lua_pushnumber(L, pos.x);
     lua_pushnumber(L, pos.y);
@@ -826,9 +828,7 @@ std::vector<int> get_team_players(const char * team)
 
 int lua_team_players(lua_State * L)
 {
-    int argc = lua_gettop(L);
-    if(argc < 1) return luaL_error(L,"missing team name argument");
-    std::vector<int> players = get_team_players(lua_tostring(L,1));
+    std::vector<int> players = get_team_players(luaL_checkstring(L,1));
     lua_newtable(L);
     int count = 0;
     for(std::vector<int>::iterator it = players.begin(); it != players.end(); ++it)
@@ -837,6 +837,7 @@ int lua_team_players(lua_State * L)
         lua_pushinteger(L, *it);
         lua_settable(L, -3);
     }
+    
     return 1;
 }
 
@@ -874,22 +875,41 @@ int lua_gamemodeinfo(lua_State * L)
 {
     lua_newtable(L);
     
-    #define INFO_FIELD(m, name) \
-        lua_pushboolean(L, m); \
-        lua_setfield(L, -2, name) 
-    INFO_FIELD(m_noitems, "noitems");
-    INFO_FIELD(m_noammo, "noammo");
-    INFO_FIELD(m_insta, "insta");
-    INFO_FIELD(m_tactics, "tactics");
-    INFO_FIELD(m_efficiency, "efficiency");
-    INFO_FIELD(m_capture, "capture");
-    INFO_FIELD(m_regencapture, "regencapture");
-    INFO_FIELD(m_ctf, "ctf");
-    INFO_FIELD(m_protect, "protect");
-    INFO_FIELD(m_teammode, "teams");
-    INFO_FIELD(m_overtime, "overtime");
-    INFO_FIELD(m_timed, "timed");
-    #undef INFO_FIELD
+    lua_pushboolean(L, m_noitems);
+    lua_setfield(L, -2, "noitems");
+    
+    lua_pushboolean(L, m_noammo);
+    lua_setfield(L, -2, "noammo");
+    
+    lua_pushboolean(L, m_insta);
+    lua_setfield(L, -2, "insta");
+    
+    lua_pushboolean(L, m_tactics);
+    lua_setfield(L, -2, "tactics");
+    
+    lua_pushboolean(L, m_efficiency);
+    lua_setfield(L, -2, "efficiency");
+    
+    lua_pushboolean(L, m_capture);
+    lua_setfield(L, -2, "capture");
+    
+    lua_pushboolean(L, m_regencapture);
+    lua_setfield(L, -2, "regencapture");
+    
+    lua_pushboolean(L, m_ctf);
+    lua_setfield(L, -2, "ctf");
+    
+    lua_pushboolean(L, m_protect);
+    lua_setfield(L, -2, "protect");
+    
+    lua_pushboolean(L, m_teammode);
+    lua_setfield(L, -2, "teams");
+    
+    lua_pushboolean(L, m_overtime);
+    lua_setfield(L, -2, "overtime");
+    
+    lua_pushboolean(L, m_timed);
+    lua_setfield(L, -2, "timed");
     
     return 1;
 }
@@ -916,67 +936,6 @@ bool selectnextgame()
         }
         return true;
     }else return false;
-}
-
-int lua_genkeypair(lua_State * L)
-{
-    vector<char> privkeyout, pubkeyout;
-    uint seed[3] = { rx_bytes, totalmillis, randomMT() };
-    genprivkey(seed,sizeof(seed), privkeyout, pubkeyout);
-    
-    lua_pushstring(L, privkeyout.getbuf());
-    lua_pushstring(L, pubkeyout.getbuf());
-    
-    return 2;
-}
-
-int lua_genchallenge(lua_State * L)
-{
-    int argc = lua_gettop(L);
-    if(argc < 1) return luaL_error(L, "missing key argument");
-    const char * pubkeystr = lua_tostring(L, 1);
-    if(!pubkeystr || !pubkeystr[0]) return luaL_error(L,"expected non-empty string");
-    void * pubkey = parsepubkey(pubkeystr);
-    
-    uint seed[3] = { rx_bytes, totalmillis, randomMT() };
-    
-    static vector<char> challenge;
-    challenge.setsizenodelete(0);
-    
-    void * answer = genchallenge(pubkey, seed, sizeof(seed), challenge);
-    
-    lua_pushlightuserdata(L, answer);
-    lua_pushstring(L, challenge.getbuf());
-    
-    freepubkey(pubkey);
-    return 2;
-}
-
-int lua_checkchallenge(lua_State * L)
-{
-    int argc = lua_gettop(L);
-    if(argc < 1) return luaL_error(L, "missing answer argument");
-    if(argc < 2) return luaL_error(L, "missing compare argument");
-    
-    const char * answer = lua_tostring(L, 1);
-    if(!answer) return luaL_argerror(L, 1, "not a valid string");
-    
-    void * correct = lua_touserdata(L, 2);
-    if(!correct) return luaL_argerror(L, 2, "not valid pointer");
-    
-    int check = checkchallenge(answer, correct);
-    lua_pushboolean(L, check);
-    return 1;
-}
-
-int lua_freechalanswer(lua_State * L)
-{
-    int argc = lua_gettop(L);
-    if(argc < 1) return 0;
-    void * ptr = lua_touserdata(L,1);
-    if(!ptr) return luaL_argerror(L,1, "not pointer value");
-    freechallenge(ptr);
-    return 0;
 }
 
 bool delegateauth(int cn, const char * domain)

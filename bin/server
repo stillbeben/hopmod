@@ -6,7 +6,8 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:bin"
 export LUA_PATH="$LUA_PATH;script/package/?.lua"
 export LUA_CPATH="$LUA_CPATH;bin/lib?.so"
 
-if [[ ! -d bin || ! -d log || ! -d conf || ! -d script || ! -d share ]]; then
+if [[ ! -d bin || ! -d log || ! -d conf || ! -d script ]]
+then
     echo "You are missing required directories. Are you sure you are running this script from the top-level directory of your Hopmod installation?"
     exit 1
 fi

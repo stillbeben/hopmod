@@ -31,4 +31,16 @@ private:
     timespec m_start;
 };
 
+namespace lua{
+namespace crypto{
+
+int genkeypair(lua_State *);
+int genchallenge(lua_State *);
+int checkchallenge(lua_State *);
+int freechalanswer(lua_State *);
+
+} //namespace crypto
+} //namespace lua
+
+
 #endif

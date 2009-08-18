@@ -26,8 +26,8 @@ function server.reload_maprotation()
     
     sizedmaps.big_maps = table_unique(parse(server.big_maps))
     sizedmaps.small_maps = table_unique(parse(server.small_maps))
-    bestmapsize = tonumber(server.use_best_map_size)
-    smallgamesize = tonumber(server.small_gamesize)
+    bestmapsize = server.use_best_map_size
+    smallgamesize = server.small_gamesize
 end
 
 local function nextmap(gmode,i)
@@ -85,7 +85,7 @@ function server.playercmd_nextmap(cn)
         if nm then
             server.player_msg(cn, "The next map is " .. green(nm) .. ".")
             
-            if bestmapsize and not gamemodeinfo.teams then
+            if bestmapsize == 1 and not gamemodeinfo.teams then
                 server.player_msg(cn, "Note: The next map will be determined on the number of players still connected at the end of this game.")
                 return
             end

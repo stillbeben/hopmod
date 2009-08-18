@@ -1,3 +1,4 @@
+#include "hopmod.hpp"
 #include "utils.hpp"
 
 #include <string>
@@ -13,9 +14,12 @@ in_addr to_in_addr(in_addr_t x)
     return r;
 }
 
+/*
+    To be deprecated (use net.async_resolve once reactor branch is merged to ng)
+*/
 std::string resolve_hostname(const char * hostname)
 {
-    hostent * result=gethostbyname(hostname);
+    hostent * result = gethostbyname(hostname);
     if( result && 
         result->h_addrtype==AF_INET && 
         result->h_length==4 && 
@@ -68,3 +72,58 @@ timer::time_diff_t timer::usec_elapsed()const
     return usec_diff(m_start, now);
 }
 
+namespace lua{
+namespace crypto{
+
+int genkeypair(lua_State * L)
+{
+    vector<char> privkeyout, pubkeyout;
+    uint seed[3] = { rx_bytes, totalmillis, randomMT() };
+    genprivkey(seed,sizeof(seed), privkeyout, pubkeyout);
+    
+    lua_pushstring(L, privkeyout.getbuf());
+    lua_pushstring(L, pubkeyout.getbuf());
+    
+    return 2;
+}
+
+int genchallenge(lua_State * L)
+{
+    const char * pubkeystr = luaL_checkstring(L, 1);
+    void * pubkey = parsepubkey(pubkeystr);
+    
+    uint seed[3] = { rx_bytes, totalmillis, randomMT() };
+    
+    static vector<char> challenge;
+    challenge.setsizenodelete(0);
+    
+    void * answer = genchallenge(pubkey, seed, sizeof(seed), challenge);
+    
+    lua_pushlightuserdata(L, answer);
+    lua_pushstring(L, challenge.getbuf());
+    
+    freepubkey(pubkey);
+    
+    return 2;
+}
+
+int checkchallenge(lua_State * L)
+{
+    const char * answer = luaL_checkstring(L, 1);
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+    void * correct = lua_touserdata(L, 2);
+    int check = ::checkchallenge(answer, correct);
+    lua_pushboolean(L, check);
+    return 1;
+}
+
+int freechalanswer(lua_State * L)
+{
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    void * ptr = lua_touserdata(L,1);
+    freechallenge(ptr);
+    return 0;
+}
+
+} //namespace crypto
+} //namespace lua

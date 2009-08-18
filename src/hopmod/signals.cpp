@@ -70,35 +70,43 @@ static script::any normal_error_handler(script::error_trace * errinfo)
     return script::any::null_value();
 }
 
-static int lua_event_handler_function(lua_State * L)
+/*
+    Register function as an event handler
+*/
+static int lua_event_handler(lua_State * L)
 {
-    int argc = lua_gettop(L);
-    if(argc < 2) return luaL_error(L,"missing arguments");
-    const char * name = lua_tostring(L,1);
-    if(!name) return luaL_argerror(L, 1,"expecting string type for name");
-    if(lua_type(L,2) != LUA_TFUNCTION) return luaL_argerror(L,2,"expecting function type for handler");
-    lua_pushvalue(L,2);
+    const char * name = luaL_checkstring(L, 1);
+    
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+    lua_pushvalue(L, 2);
     
     script::env::object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
     luaFunctionObject->set_adopted();
 
     int handle = slots.create_slot(name, luaFunctionObject, env);
     lua_pushinteger(L, handle);
+    
     return 1;
 }
 
-static int cubescript_event_handler_function(const std::string & name, script::any obj)
+/*
+    Register function as an event handler
+*/
+static int cubescript_event_handler(const std::string & name, script::any obj)
 {
     if(obj.get_type() != typeid(script::env::object::shared_ptr)) throw script::error(script::BAD_CAST);
     return slots.create_slot(name, script::any_cast<script::env::object::shared_ptr>(obj), env);
 }
 
-void destroy_slot(int handle)
+/*
+    Cancel event handler
+*/
+static void destroy_slot(int handle)
 {
     slots.destroy_slot(handle);
 }
 
-void cleanup()
+static void cleanup()
 {
     slots.clear();
     slots.deallocate_destroyed_slots();
@@ -133,7 +141,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_setnextgame, "setnextgame", normal_error_handler);
     slots.register_signal(signal_gamepaused, "gamepaused", normal_error_handler);
     slots.register_signal(signal_gameresumed, "gameresumed", normal_error_handler);
-    slots.register_signal(signal_setmastermode, "setmastermode", normal_error_handler);
+    slots.register_signal(signal_setmastermode, "setmastermode", proceed_error_handler);
     slots.register_signal(signal_spectator, "spectator", normal_error_handler);
     slots.register_signal(signal_setmaster, "setmaster", normal_error_handler);
     slots.register_signal(signal_teamkill, "teamkill", normal_error_handler);
@@ -157,10 +165,10 @@ void register_signals(script::env & env)
     
     slots.register_signal(signal_rootserver_failedconnect, "failedrootconnect", normal_error_handler);
 
-    script::bind_freefunc(cubescript_event_handler_function, "event_handler", env);
+    script::bind_freefunc(cubescript_event_handler, "event_handler", env);
     script::bind_freefunc(destroy_slot, "cancel_handler", env);
     
-    register_lua_function(lua_event_handler_function,"event_handler");
+    register_lua_function(lua_event_handler,"event_handler");
 }
 
 void cleanup_dead_slots()
