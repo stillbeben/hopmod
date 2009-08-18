@@ -420,7 +420,7 @@ void disconnectmaster()
     masteroutpos = masterinpos = 0;
 }
 
-void masterserver_client_input_handler(boost::system::error_code s, const size_t s);
+void masterserver_client_input_handler(boost::system::error_code, const size_t);
 void flushmasteroutput();
 
 ENetSocket connectmaster()

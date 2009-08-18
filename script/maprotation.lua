@@ -26,8 +26,8 @@ function server.reload_maprotation()
     
     sizedmaps.big_maps = table_unique(parse(server.big_maps))
     sizedmaps.small_maps = table_unique(parse(server.small_maps))
-    bestmapsize = tonumber(server.use_best_map_size)
-    smallgamesize = tonumber(server.small_gamesize)
+    bestmapsize = server.use_best_map_size
+    smallgamesize = server.small_gamesize
 end
 
 local function nextmap(gmode,i)

@@ -258,11 +258,14 @@ void async_send_handler(int functionRef, int stringRef, const boost::system::err
         report_script_error(lua_tostring(lua, -1));
 }
 
+int socket_async_send_buffer(lua_State *);
+
 int socket_async_send(lua_State * L)
 {
     ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
     
-    if(lua_type(L, 2) != LUA_TSTRING) return luaL_argerror(L, 2, "expected string");
+    if(lua_type(L, 2) != LUA_TSTRING) return socket_async_send_buffer(L);
+    
     luaL_checktype(L, 3, LUA_TFUNCTION);
     
     size_t stringlen;
@@ -368,7 +371,7 @@ int socket_async_read(lua_State * L)
     return 0;
 }
 
-void async_write_handler(int functionRef, const boost::system::error_code error, const size_t written)
+void async_send_buffer_handler(int functionRef, const boost::system::error_code error, const size_t written)
 {
     lua_rawgeti(lua, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua, LUA_REGISTRYINDEX, functionRef);
@@ -385,7 +388,7 @@ void async_write_handler(int functionRef, const boost::system::error_code error,
         report_script_error(lua_tostring(lua, -1));
 }
 
-int socket_async_write(lua_State * L)
+int socket_async_send_buffer(lua_State * L)
 {
     ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
     lnetlib_buffer * buf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
@@ -395,7 +398,7 @@ int socket_async_write(lua_State * L)
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
     size_t writesize = buf->produced - buf->consumed;
-    socket->async_send(buffer(buf->consumed, writesize), boost::bind(async_write_handler, functionRef, _1, _2));
+    socket->async_send(buffer(buf->consumed, writesize), boost::bind(async_send_buffer_handler, functionRef, _1, _2));
     buf->consumed += writesize;
     
     return 0;
@@ -527,7 +530,6 @@ void create_basic_socket_metatable(lua_State * L)
         {"async_send", socket_async_send},
         {"async_read_until", socket_async_read_until},
         {"async_read", socket_async_read},
-        {"async_write", socket_async_write},
         {"local_endpoint", socket_local_endpoint},
         {"remote_endpoint", socket_remote_endpoint},
         {"cancel", socket_cancel},
