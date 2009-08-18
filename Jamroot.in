@@ -38,8 +38,6 @@ if $(without_geoip) = 1 {
     lib geoip : : <name>GeoIP ;
 }
 
-build-project src/hopmod/test ;
-
 cpp-pch pch : src/hopmod/pch.hpp /fungu//script : <include>src/shared <include>src/enet/include <define>STANDALONE ;
 
 lib sauertools :
