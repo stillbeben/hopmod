@@ -1,4 +1,3 @@
-
 local gamevars = {}
 local pvars = {}
 

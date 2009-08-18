@@ -2,8 +2,7 @@
 #include "pch.hpp"
 #endif
 
-#include "signals.hpp"
-#include "scripting.hpp"
+#include "hopmod.hpp"
 
 #include <fungu/script/slot_factory.hpp>
 #include <fungu/script/lua/lua_function.hpp>

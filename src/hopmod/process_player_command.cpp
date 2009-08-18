@@ -1,7 +1,6 @@
 #include "cube.h"
 #include "tools.h"
 #include "hopmod.hpp"
-#include "player_command.hpp"
 
 bool using_command_prefix = true;
 char command_prefix = '#';

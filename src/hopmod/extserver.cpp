@@ -252,7 +252,7 @@ void init_hopmod()
     
     try
     {
-        fungu::script::execute_file(STARTUP_SCRIPT, get_script_env());
+        fungu::script::execute_file("conf/server.conf", get_script_env());
     }
     catch(fungu::script::error_trace * error)
     {

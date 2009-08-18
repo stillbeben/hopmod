@@ -5,7 +5,6 @@
 #include "cube.h"
 #include "game.h"
 #include "hopmod.hpp"
-#include "player_command.hpp"
 #include "extapi.hpp"
 #include "string_var.hpp"
 #include <fungu/script.hpp>

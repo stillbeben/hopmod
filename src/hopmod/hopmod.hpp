@@ -1,9 +1,14 @@
 #ifndef HOPMOD_HPP
 #define HOPMOD_HPP
 
+extern "C"{
+    #include <lua.h>
+}
+
+#include <fungu/script.hpp>
+
 #include "extapi.hpp"
 #include "freqlimit.hpp"
-#include "scripting.hpp"
 #include "signals.hpp"
 #include "banned_networks.hpp"
 #include "timedbans_service.hpp"
@@ -16,7 +21,14 @@ bool load_geoip_database(const char *);
 const char * ip_to_country(const char *);
 const char * ip_to_country_code(const char *);
 
-#include "env_fwd.hpp"
+// Scripting functions
+void init_scripting();
+void shutdown_scripting();
+fungu::script::env & get_script_env();
+std::string get_script_error_message(fungu::script::error_trace * errinfo);
+void report_script_error(fungu::script::error_trace *);
+void register_lua_function(lua_CFunction,const char *);
+void unset_global(const char *);
 
 // Script Pipe Functions
 void init_script_pipe();
@@ -45,6 +57,16 @@ void init_scheduler();
 void update_scheduler(int);
 void cancel_all_scheduled();
 void sched_callback(int (*)(void *),void *);
+
+#include <vector>
+#include <string>
+
+// Player command functions and variables
+std::vector<std::string> parse_player_command_line(const char *);
+bool eval_player_command(int,const char *,const std::vector<std::string> &,fungu::script::env &);
+bool process_player_command(int,const char *);
+extern char command_prefix;
+extern bool using_command_prefix;
 
 // Text Colouring Macros
 #define GREEN "\f0"
