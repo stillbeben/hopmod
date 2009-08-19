@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <string.h>
 
 std::vector<std::string> parse_player_command_line(const char * cmdline)
 {
