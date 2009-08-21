@@ -31,9 +31,10 @@ function server.reload_maprotation()
 end
 
 local function nextmap(gmode,i)
-    maplist = maps[gmode]
+
+    local maplist = maps[gmode]
     
-    if bestmapsize and not gamemodeinfo.teams then
+    if bestmapsize == 1 and not gamemodeinfo.teams then
         if tonumber(server.playercount) <= smallgamesize then
             maplist = sizedmaps.small_maps
         else
@@ -41,8 +42,9 @@ local function nextmap(gmode,i)
         end
     end
     
-    if not maplist then return nil end
-    local nm = maplist[(i % #maplist)+1]
+    if not maplist or #maplist < 2 then return nil end
+    
+    local nm = maplist[(i % #maplist) + 1]
     if nm == server.map then return nextmap(gmode,i+1) end
     return nm
 end
