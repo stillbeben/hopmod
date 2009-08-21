@@ -271,7 +271,7 @@ int parse_list(lua_State * L)
     
     lua_newtable(L);
     int i = 1;
-    for(std::vector<const_string>::const_iterator it = elements.begin(); it != elements.end(); it++)
+    for(std::vector<const_string>::const_iterator it = elements.begin(); it != elements.end(); it++, i++)
     {
         lua_pushinteger(L, i);
         lua_pushlstring(L, it->begin(), it->length());
