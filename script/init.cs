@@ -5,4 +5,4 @@ exec "script/resetvars.cs"
 exec "script/servermod.lua"
 exec "script/servermod.cs"
 
-exec "conf/server.conf"
+execIfFound "conf/server.conf"
