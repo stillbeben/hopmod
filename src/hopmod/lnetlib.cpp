@@ -1,3 +1,7 @@
+/*
+    A Lua Network Library module developed for Hopmod
+    Copyright (C) 2009 Graham Daws
+*/
 #include "lnetlib.hpp"
 #include <boost/asio.hpp>
 using namespace boost::asio;
@@ -5,24 +9,43 @@ using namespace boost::asio;
 #include "scripting.hpp"
 #include <netinet/in.h> //byte ordering functions
 
+#include <iostream>
+
 struct lnetlib_buffer
 {
     char * start;
     char * end;
     char * produced;
     char * consumed;
+    
+    size_t get_read_left()const
+    {
+        return produced - consumed;
+    }
+    
+    size_t get_write_left()const
+    {
+        return end - produced;
+    }
+    
+    size_t get_size()const
+    {
+        return end - start;
+    }
 };
 
 static const char * TCP_ACCEPTOR_MT = "lnetlib_tcp_acceptor";
-static const char * TCP_BASIC_SOCKET_MT = "lnetlib_tcp_basic_socket";
+static const char * BASIC_TCP_SOCKET_MT = "lnetlib_basic_tcp_socket";
 static const char * TCP_CLIENT_SOCKET_MT = "lnetlib_tcp_client_socket";
 static const char * BUFFER_MT = "lnetlib_buffer";
+static const char * UDP_SOCKET_MT = "lnetlib_udp_socket";
 
 static lua_State * lua;
 static io_service * main_io;
 
 void * lua_aux_checkobject(lua_State * L, int narg, const char * tname)
 {
+    luaL_checktype(L, narg, LUA_TUSERDATA);
     luaL_getmetatable(L, tname);
     lua_getmetatable(L, narg);
     
@@ -39,6 +62,24 @@ void * lua_aux_checkobject(lua_State * L, int narg, const char * tname)
     
     luaL_argerror(L, narg, "incompatible type");
     return NULL;
+}
+
+template<typename EndpointType>
+void push_endpoint(lua_State * L, const EndpointType & endpoint)
+{
+    lua_newtable(L);
+    
+    lua_pushinteger(L, endpoint.port());
+    lua_setfield(L, -2, "port");
+    
+    lua_pushstring(L, endpoint.address().to_string().c_str());
+    lua_setfield(L, -2, "ip");
+    
+    if(endpoint.address().is_v4())
+    {
+        lua_pushinteger(L, endpoint.address().to_v4().to_ulong());
+        lua_setfield(L, -2, "iplong");
+    }
 }
 
 void resolve_handler(int luaFunctionCbRef, const boost::system::error_code ec, ip::tcp::resolver::iterator it)
@@ -124,7 +165,7 @@ int acceptor_async_accept(lua_State * L)
     ip::tcp::acceptor * acceptor = reinterpret_cast<ip::tcp::acceptor *>(luaL_checkudata(L, 1, TCP_ACCEPTOR_MT));
     
     ip::tcp::socket * socket = new (lua_newuserdata(L, sizeof(ip::tcp::socket))) ip::tcp::socket(*main_io);
-    luaL_getmetatable(L, TCP_BASIC_SOCKET_MT);
+    luaL_getmetatable(L, BASIC_TCP_SOCKET_MT);
     lua_setmetatable(L, -2);
     int socketRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
@@ -232,13 +273,13 @@ void create_acceptor_metatable(lua_State * L)
 
 int socket_gc(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT))->~basic_stream_socket<ip::tcp>();
+    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->~basic_stream_socket<ip::tcp>();
     return 0;
 }
 
 int socket_close(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT))->close();
+    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->close();
     return 0;
 }
 
@@ -262,10 +303,10 @@ int socket_async_send_buffer(lua_State *);
 
 int socket_async_send(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
+    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     
     if(lua_type(L, 2) != LUA_TSTRING) return socket_async_send_buffer(L);
-    
+
     luaL_checktype(L, 3, LUA_TFUNCTION);
     
     size_t stringlen;
@@ -303,7 +344,7 @@ void async_read_until_handler(int functionRef, boost::asio::streambuf * buf, con
 
 int socket_async_read_until(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
+    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
 
     const char * delim = luaL_checkstring(L, 2);
     
@@ -318,60 +359,7 @@ int socket_async_read_until(lua_State * L)
     return 0;
 }
 
-void async_read_handler(int functionRef, int bufferRef, const boost::system::error_code error, const size_t readsize)
-{
-    lua_rawgeti(lua, LUA_REGISTRYINDEX, functionRef);
-    luaL_unref(lua, LUA_REGISTRYINDEX, functionRef);
-    
-    int nargs = 1;
-    
-    if(error)
-    {
-        lua_pushnil(lua);
-        lua_pushstring(lua, error.message().c_str());
-        nargs = 2;
-    }
-    else
-    {
-        lua_rawgeti(lua, LUA_REGISTRYINDEX, bufferRef);
-        luaL_unref(lua, LUA_REGISTRYINDEX, bufferRef);
-        
-        lnetlib_buffer * rbuf = reinterpret_cast<lnetlib_buffer *>(lua_touserdata(lua, -1));
-        rbuf->produced += readsize;
-    }
-    
-    if(lua_pcall(lua, nargs, 0, 0) != 0)
-        report_script_error(lua_tostring(lua, -1));
-}
-
-int socket_async_read(lua_State * L)
-{
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
-    int reqreadsize = luaL_checkinteger(L, 2);
-    
-    luaL_checktype(L, 3, LUA_TFUNCTION);
-    lua_pushvalue(L, 3);
-    int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
-    
-    void * bufalloc = lua_newuserdata(L, reqreadsize + (sizeof(unsigned int)*4));
-    luaL_getmetatable(L, BUFFER_MT);
-    lua_setmetatable(L, -2);
-    int bufferRef = luaL_ref(L, LUA_REGISTRYINDEX);
-    
-    lnetlib_buffer * rbuf = reinterpret_cast<lnetlib_buffer *>(bufalloc);
-    rbuf->start = reinterpret_cast<char *>(rbuf) + (sizeof(unsigned int)*4);
-    rbuf->end = rbuf->start + reqreadsize;
-    rbuf->produced = rbuf->start;
-    rbuf->consumed = rbuf->start;
-    
-    assert(reinterpret_cast<unsigned int>(rbuf) % sizeof(unsigned int) == 0);//check for correct memory alignment
-    
-    socket->async_receive(buffer(rbuf->start, reqreadsize), boost::bind(async_read_handler, functionRef, bufferRef, _1, _2));
-    
-    return 0;
-}
-
-void async_send_buffer_handler(int functionRef, const boost::system::error_code error, const size_t written)
+void async_read_handler(int functionRef, lnetlib_buffer * rbuf, int bufferRef, const boost::system::error_code error, const size_t readsize)
 {
     lua_rawgeti(lua, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua, LUA_REGISTRYINDEX, functionRef);
@@ -383,23 +371,85 @@ void async_send_buffer_handler(int functionRef, const boost::system::error_code 
         lua_pushstring(lua, error.message().c_str());
         nargs = 1;
     }
+    else rbuf->produced += readsize;
     
     if(lua_pcall(lua, nargs, 0, 0) != 0)
         report_script_error(lua_tostring(lua, -1));
+    
+    luaL_unref(lua, LUA_REGISTRYINDEX, bufferRef);
+}
+
+int socket_async_read(lua_State * L)
+{
+    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    lnetlib_buffer * rbuf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
+    
+    lua_pushvalue(L, 2);
+    int bufferRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    size_t reqreadsize = rbuf->get_write_left();
+    
+    int function_arg_index = 3;
+    
+    if(lua_type(L, 3) == LUA_TNUMBER)
+    {
+        reqreadsize = lua_tointeger(L, 3);
+        if(reqreadsize > rbuf->get_write_left()) luaL_argerror(L, 3, "would cause overflow");
+        function_arg_index = 4;
+    }
+    
+    luaL_checktype(L, function_arg_index, LUA_TFUNCTION);
+    lua_pushvalue(L, function_arg_index);
+    int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    socket->async_receive(buffer(rbuf->start, reqreadsize), boost::bind(async_read_handler, functionRef, rbuf, bufferRef, _1, _2));
+    
+    return 0;
+}
+
+void async_send_buffer_handler(int functionRef, lnetlib_buffer * buf, int bufferRef, const boost::system::error_code error, const size_t written)
+{
+    lua_rawgeti(lua, LUA_REGISTRYINDEX, functionRef);
+    luaL_unref(lua, LUA_REGISTRYINDEX, functionRef);
+    
+    int nargs = 0;
+    
+    if(error)
+    {
+        lua_pushstring(lua, error.message().c_str());
+        nargs = 1;
+    }
+    else buf->consumed += written;
+    
+    if(lua_pcall(lua, nargs, 0, 0) != 0)
+        report_script_error(lua_tostring(lua, -1));
+    
+    luaL_unref(lua, LUA_REGISTRYINDEX, bufferRef);
 }
 
 int socket_async_send_buffer(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
+    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     lnetlib_buffer * buf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
     
-    luaL_checktype(L, 3, LUA_TFUNCTION);
-    lua_pushvalue(L, 3);
+    lua_pushvalue(L, 2);
+    int bufferRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    size_t writesize = buf->get_read_left();
+    
+    int function_arg_index = 3;
+    
+    if(lua_type(L, 3) == LUA_TNUMBER)
+    {
+        writesize = lua_tointeger(L, 3);
+        function_arg_index = 4;
+    }
+    
+    luaL_checktype(L, function_arg_index, LUA_TFUNCTION);
+    lua_pushvalue(L, function_arg_index);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    size_t writesize = buf->produced - buf->consumed;
-    socket->async_send(buffer(buf->consumed, writesize), boost::bind(async_send_buffer_handler, functionRef, _1, _2));
-    buf->consumed += writesize;
+    socket->async_send(buffer(buf->consumed, writesize), boost::bind(async_send_buffer_handler, functionRef, buf, bufferRef, _1, _2));
     
     return 0;
 }
@@ -413,26 +463,14 @@ int return_endpoint(lua_State * L, const boost::asio::ip::tcp::endpoint & endpoi
         return 2;
     }
     
-    lua_newtable(L);
+    push_endpoint(L, endpoint);
     
-    lua_pushinteger(L, endpoint.port());
-    lua_setfield(L, -2, "port");
-    
-    lua_pushstring(L, endpoint.address().to_string().c_str());
-    lua_setfield(L, -2, "ip");
-    
-    if(endpoint.address().is_v4())
-    {
-        lua_pushinteger(L, endpoint.address().to_v4().to_ulong());
-        lua_setfield(L, -2, "iplong");
-    }
-
     return 1;
 }
 
 int socket_local_endpoint(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
+    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     
     boost::system::error_code error;
     boost::asio::ip::tcp::endpoint endpoint = socket->local_endpoint(error);
@@ -442,7 +480,7 @@ int socket_local_endpoint(lua_State * L)
 
 int socket_remote_endpoint(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
+    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     
     boost::system::error_code error;
     boost::asio::ip::tcp::endpoint endpoint = socket->remote_endpoint(error);
@@ -452,31 +490,31 @@ int socket_remote_endpoint(lua_State * L)
 
 int socket_cancel(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT))->cancel();
+    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->cancel();
     return 0;
 }
 
 int socket_shutdown_send(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_send);
+    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_send);
     return 0;
 }
 
 int socket_shutdown_receive(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_receive);
+    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_receive);
     return 0;
 }
 
 int socket_shutdown(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_both);
+    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_both);
     return 0;
 }
 
 int socket_set_option(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
+    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     const char * optname = luaL_checkstring(L, 2);
     
     if(!strcmp(optname, "keep_alive"))
@@ -495,7 +533,7 @@ int socket_set_option(lua_State * L)
 
 int socket_get_option(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_BASIC_SOCKET_MT));
+    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     const char * optname = luaL_checkstring(L, 2);
     
     if(!strcmp(optname, "keep_alive"))
@@ -520,7 +558,7 @@ int socket_get_option(lua_State * L)
 
 void create_basic_socket_metatable(lua_State * L)
 {
-    luaL_newmetatable(L, TCP_BASIC_SOCKET_MT);
+    luaL_newmetatable(L, BASIC_TCP_SOCKET_MT);
     lua_pushvalue(L, -1);
     lua_setfield(L, -1, "__index");
     
@@ -544,6 +582,218 @@ void create_basic_socket_metatable(lua_State * L)
     luaL_register(L, NULL, funcs);
 }
 
+int udp_socket_gc(lua_State * L)
+{
+    reinterpret_cast<ip::udp::socket *>(lua_aux_checkobject(L, 1, UDP_SOCKET_MT))->~basic_datagram_socket<ip::udp>();
+    return 0;
+}
+
+int udp_socket_close(lua_State * L)
+{
+    reinterpret_cast<ip::udp::socket *>(lua_aux_checkobject(L, 1, UDP_SOCKET_MT))->close();
+    return 0;
+}
+
+int udp_socket_cancel(lua_State * L)
+{
+    reinterpret_cast<ip::udp::socket *>(lua_aux_checkobject(L, 1, UDP_SOCKET_MT))->cancel();
+    return 0;
+}
+
+int udp_socket_bind(lua_State * L)
+{
+    ip::udp::socket * socket = reinterpret_cast<ip::udp::socket *>(lua_aux_checkobject(L, 1, UDP_SOCKET_MT));
+    
+    const char * ip = luaL_checkstring(L, 2);
+    int port = luaL_checkint(L, 3);
+    
+    ip::udp::endpoint server_ep(ip::address_v4::from_string(ip), port);
+    
+    socket->open(server_ep.protocol());
+    
+    boost::system::error_code error;
+    socket->bind(server_ep, error);
+    
+    if(error)
+    {
+        lua_pushstring(L, error.message().c_str());
+        return 1;
+    }
+    else return 0;
+}
+
+void async_read_from_handler(int functionRef, lnetlib_buffer * rbuf, int bufferRef, ip::udp::endpoint * endpoint, const boost::system::error_code error, size_t readsize)
+{
+    lua_rawgeti(lua, LUA_REGISTRYINDEX, functionRef);
+    luaL_unref(lua, LUA_REGISTRYINDEX, functionRef);
+    
+    int nargs = 1;
+    
+    if(error)
+    {
+        lua_pushnil(lua);
+        lua_pushstring(lua, error.message().c_str());
+        nargs = 2;
+    }
+    else
+    {
+        push_endpoint(lua, *endpoint);
+        delete endpoint;
+        
+        rbuf->produced += readsize;
+    }
+    
+    if(lua_pcall(lua, nargs, 0, 0) != 0)
+        report_script_error(lua_tostring(lua, -1));
+    
+    luaL_unref(lua, LUA_REGISTRYINDEX, bufferRef);
+}
+
+int async_read_from(lua_State * L)
+{
+    ip::udp::socket * socket = reinterpret_cast<ip::udp::socket *>(lua_aux_checkobject(L, 1, UDP_SOCKET_MT));
+    lnetlib_buffer * rbuf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
+    
+    lua_pushvalue(L, 2);
+    int bufferRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    size_t reqreadsize = rbuf->get_write_left();
+    
+    int function_arg_index = 3;
+    
+    if(lua_type(L, 3) == LUA_TNUMBER)
+    {
+        reqreadsize = lua_tointeger(L, 3);
+        if(reqreadsize > rbuf->get_write_left()) luaL_argerror(L, 3, "would cause overflow");
+        function_arg_index = 4;
+    }
+    
+    luaL_checktype(L, function_arg_index, LUA_TFUNCTION);
+    lua_pushvalue(L, function_arg_index);
+    int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    ip::udp::endpoint * endpoint = new ip::udp::endpoint;
+    
+    socket->async_receive_from(buffer(rbuf->start, reqreadsize), *endpoint, boost::bind(async_read_from_handler, functionRef, rbuf, bufferRef, endpoint, _1, _2));
+    
+    return 0;
+}
+
+int async_send_to(lua_State * L)
+{
+    ip::udp::socket * socket = reinterpret_cast<ip::udp::socket *>(lua_aux_checkobject(L, 1, UDP_SOCKET_MT));
+    lnetlib_buffer * buf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
+    
+    lua_pushvalue(L, 2);
+    int bufferRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    size_t writesize = buf->get_read_left();
+    
+    int endpoint_arg_index = 3;
+    int function_arg_index = 4;
+    
+    if(lua_type(L, 3) == LUA_TNUMBER)
+    {
+        writesize = lua_tointeger(L, 3);
+        endpoint_arg_index = 4;
+        function_arg_index = 5;
+    }
+
+    luaL_checktype(L, endpoint_arg_index, LUA_TTABLE);
+    
+    lua_getfield(L, endpoint_arg_index, "ip");
+    if(lua_type(L, -1) != LUA_TSTRING) return luaL_argerror(L, endpoint_arg_index, "invalid ip for endpoint argument");
+    const char * ip = lua_tostring(L, -1);
+    lua_pop(L, 1);
+    
+    lua_getfield(L, endpoint_arg_index, "port");
+    if(!lua_isnumber(L, -1)) return luaL_argerror(L, endpoint_arg_index, "invalid port for endpoint argument");
+    int port = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    
+    ip::udp::endpoint endpoint;
+    
+    try
+    {
+        endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::address::from_string(ip), port);
+    }
+    catch(const boost::system::system_error & error)
+    {
+        return luaL_argerror(L, endpoint_arg_index, error.code().message().c_str());
+    }
+    
+    luaL_checktype(L, function_arg_index, LUA_TFUNCTION);
+    lua_pushvalue(L, function_arg_index);
+    int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    socket->async_send_to(buffer(buf->consumed, writesize), endpoint, boost::bind(async_send_buffer_handler, functionRef, buf, bufferRef, _1, _2));
+    
+    return 0;
+}
+
+int udp_set_option(lua_State * L)
+{
+    ip::udp::socket * socket = reinterpret_cast<ip::udp::socket *>(luaL_checkudata(L, 1, UDP_SOCKET_MT));
+    const char * optname = luaL_checkstring(L, 2);
+    
+    if(!strcmp(optname, "linger"))
+    {
+        boost::asio::socket_base::linger option(luaL_checkint(L, 3), luaL_checkint(L, 4));
+        socket->set_option(option);
+    }
+    else if(!strcmp(optname, "broadcast"))
+    {
+        boost::asio::socket_base::broadcast option(luaL_checkint(L, 3));
+        socket->set_option(option);
+    }
+    
+    return 0;
+}
+
+int udp_get_option(lua_State * L)
+{
+    ip::udp::socket * socket = reinterpret_cast<ip::udp::socket *>(luaL_checkudata(L, 1, UDP_SOCKET_MT));
+    const char * optname = luaL_checkstring(L, 2);
+    
+    if(!strcmp(optname, "linger"))
+    {
+        boost::asio::socket_base::enable_connection_aborted option;
+        socket->get_option(option);
+        lua_pushboolean(L, option.value());
+        return 1;
+    }
+    else if(!strcmp(optname, "broadcast"))
+    {
+        boost::asio::socket_base::broadcast option;
+        socket->get_option(option);
+        lua_pushboolean(L, option.value());
+        return 1;
+    }
+    
+    return 0;
+}
+
+void create_udp_socket_metatable(lua_State * L)
+{
+    luaL_newmetatable(L, UDP_SOCKET_MT);
+    lua_pushvalue(L, -1);
+    lua_setfield(L, -1, "__index");
+    
+    static luaL_Reg funcs[] = {
+        {"__gc", udp_socket_gc},
+        {"close", udp_socket_close},
+        {"cancel", udp_socket_cancel},
+        {"bind", udp_socket_bind},
+        {"async_read_from", async_read_from},
+        {"async_send_to", async_send_to},
+        {"set_option", udp_set_option},
+        {"get_option", udp_get_option},
+        {NULL, NULL}
+    };
+    
+    luaL_register(L, NULL, funcs);
+}
+
 int create_tcp_client(lua_State * L)
 {
     ip::tcp::socket * socket = new (lua_newuserdata(L, sizeof(ip::tcp::socket))) ip::tcp::socket(*main_io);
@@ -555,6 +805,16 @@ int create_tcp_client(lua_State * L)
     socket->open(ip::tcp::v4());
     
     // Return user-data object
+    return 1;
+}
+
+int create_udp_socket(lua_State * L)
+{
+    ip::udp::socket * socket = new (lua_newuserdata(L, sizeof(ip::udp::socket))) ip::udp::socket(*main_io);
+    
+    luaL_getmetatable(L, UDP_SOCKET_MT);
+    lua_setmetatable(L, -2);
+    
     return 1;
 }
 
@@ -609,7 +869,7 @@ void create_client_socket_metatable(lua_State * L)
 {
     luaL_newmetatable(L, TCP_CLIENT_SOCKET_MT);
     
-    luaL_getmetatable(L, TCP_BASIC_SOCKET_MT);
+    luaL_getmetatable(L, BASIC_TCP_SOCKET_MT);
     lua_setmetatable(L, -2);
     
     static luaL_Reg funcs[] = {
@@ -634,21 +894,21 @@ int buffer_to_string(lua_State * L)
 int buffer_size(lua_State * L)
 {
     lnetlib_buffer * buf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 1, BUFFER_MT));
-    lua_pushinteger(L, buf->end - buf->start);
+    lua_pushinteger(L, buf->get_size());
     return 1;
 }
 
 int buffer_read_left(lua_State * L)
 {
     lnetlib_buffer * buf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 1, BUFFER_MT));
-    lua_pushinteger(L, buf->produced - buf->consumed);
+    lua_pushinteger(L, buf->get_read_left());
     return 1;
 }
 
 int buffer_write_left(lua_State * L)
 {
     lnetlib_buffer * buf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 1, BUFFER_MT));
-    lua_pushinteger(L, buf->end - buf->produced);
+    lua_pushinteger(L, buf->get_write_left());
     return 1;
 }
 
@@ -822,13 +1082,16 @@ void register_lnetlib()
     
     create_acceptor_metatable(lua);
     create_basic_socket_metatable(lua);
+    
     create_client_socket_metatable(lua);
     create_buffer_metatable(lua);
+    create_udp_socket_metatable(lua);
     
     static luaL_Reg net_funcs[] = {
         {"async_resolve", async_resolve},
         {"tcp_acceptor", create_tcp_acceptor},
         {"tcp_client", create_tcp_client},
+        {"udp_socket", create_udp_socket},
         {"buffer", create_buffer},
         {NULL, NULL}
     };
