@@ -14,6 +14,17 @@ server.stats_db_absolute_filename = server.PWD .. "/" .. server.stats_db_filenam
 
 if server.stats_debug == 1 then statsmod.db = db end
 
+local function set_sqlite3_synchronous_pragma(db, value)
+    
+    local accepted = {[0] = true, [1] = true, [2] = true, ["OFF"] = true, ["NORMAL"] = true, ["FULL"] = true}
+    
+    if not accepted[value] then
+        error("Unrecognised value set for stats_sqlite_synchronous variable.")
+    end
+    
+    db:exec("PRAGMA synchronous = " .. value)
+end
+
 if using_sqlite then
 
     require "sqlite3"
@@ -22,6 +33,12 @@ if using_sqlite then
     db = sqlite3.open(server.stats_db_filename)
     createMissingTables("./script/db/stats_schema.sql", db)
 
+    if server.stats_sqlite_exclusive_locking == 1 then
+        db:exec("PRAGMA locking_mode=EXCLUSIVE")
+    end
+    
+    set_sqlite3_synchronous_pragma(db, server.stats_sqlite_synchronous)
+    
     insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, bots, finished) VALUES (:datetime, :duration, :mode, :map, :players, :bots, :finished)")
     if not insert_game then error(perr) end
 

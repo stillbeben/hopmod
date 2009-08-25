@@ -23,6 +23,8 @@ global stats_auth_domain ""
 global stats_tell_auth_name 0
 global stats_debug 0
 global stats_use_sqlite 1
+global stats_sqlite_exclusive_locking 0
+global stats_sqlite_synchronous 1
 global stats_use_json 0
 global stats_overwrite_name_with_authname 0
 
