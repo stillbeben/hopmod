@@ -66,23 +66,16 @@ end
 local function teambalance_addbot()
     server.addbot(-1)
     if teambalance_send_info == 1 then
-	server.msg("(" .. green("Info") .. ")  " .. orange("random skilled bot has joined"))
-	server.msg("(" .. green("Info") .. ")  " .. orange("balance the game to remove them"))
+        server.msg("(" .. green("Info") .. ")  " .. orange("random skilled bot has joined"))
+        server.msg("(" .. green("Info") .. ")  " .. orange("balance the game to remove them"))
     end
 end
 
 -- delbot and del all bots
 local function teambalance_delbot(option)
     if not option then
-	local tmp = 127 + tonumber(server.botcount)
-	if not ( tmp == teambalance_flag_cn1 or tmp == teambalance_flag_cn2 ) then
-	    server.delbot()
-	    server.log("server removed bot")
-	else
-	    server.sleep(1500,function()
-		teambalance_delbot()
-	    end)
-	end
+	server.delbot()
+	server.log("server removed bot")
     else
 	while tonumber(server.botcount) > 0 do
 	    teambalance_delbot()
@@ -160,26 +153,6 @@ local function teambalance_text_event(teambalance_text_cn,teambalance_text_text)
     end
 end
 
-local function teambalance_dropflag_event(teambalance_dropflag_cn)
-    if teambalance_flag_cn1 == tonumber(teambalance_dropflag_cn) then
-	teambalance_flag_cn1 = -1
-    else
-	teambalance_flag_cn2 = -1
-    end
-end
-
-local function teambalance_takeflag_event(teambalance_takeflag_cn)
-    if teambalance_flag_cn1 == -1 then
-	teambalance_flag_cn1 = tonumber(teambalance_takeflag_cn)
-    else
-	teambalance_flag_cn2 = tonumber(teambalance_takeflag_cn)
-    end
-end
-
-local function teambalance_disconnect_event(teambalance_disconnect_cn)
-    teambalance_dropflag_event(teambalance_disconnect_cn)
-    teambalance_balance_checker(10000)
-end
 
 -- enable/disable teambalancer
 --
@@ -192,12 +165,9 @@ local function teambalance_check_mode(teambalance_check_mode_mode)
 end
 
 function teambalance_enabler()
-    teambalance_send_info = 1
-    teambalance_flag_cn1 = -1
-    teambalance_flag_cn2 = -1
+	teambalance_send_info = 1
     server.botbalance = 0
     teambalance_delbot("all")
-    
     local flag = 0
     for a,cn in ipairs(server.players()) do
 	local pteam = server.player_team(cn)
@@ -213,20 +183,18 @@ function teambalance_enabler()
     end
     
     if teambalance_events_active == 0 then
-	teambalance_events_active = 1
-	
 	local teambalance_connect = server.event_handler("connect",function(cn)
 		teambalance_balance_checker()
 	    end)
-	local teambalance_disconnect = server.event_handler("disconnect",teambalance_disconnect_event)
+	local teambalance_disconnect = server.event_handler("disconnect",function(cn)
+		teambalance_balance_checker(10000)
+	    end)
 	local teambalance_spectator = server.event_handler("spectator",teambalance_spectator_event)
 	local teambalance_chteamrequest = server.event_handler("chteamrequest",teambalance_chteamrequest_event)
 	local teambalance_text = server.event_handler("text",teambalance_text_event)
 	local teambalance_intermission = server.event_handler("intermission",function()
-	        teambalance_send_info = 0
+			teambalance_send_info = 0
 	    end)
-	local teambalance_takeflag = server.event_handler("takeflag",teambalance_takeflag_event)
-	local teambalance_dropflag = server.event_handler("dropflag",teambalance_dropflag_event)
 	
 	teambalance_events = {}
 	table.insert(teambalance_events,teambalance_connect)
@@ -236,29 +204,23 @@ function teambalance_enabler()
 	table.insert(teambalance_events,teambalance_text)
 	table.insert(teambalance_events,teambalance_intermission)
 	
-	local gmode = tostring(server.gamemode)
-	if gmode == "insta ctf" or gmode == "insta protect" or gmode == "ctf" or gmode == "protect" then
-	    table.insert(teambalance_events,teambalance_takeflag)
-	    table.insert(teambalance_events,teambalance_dropflag)
-	end
+	teambalance_events_active = 1
     end
     
     teambalance_balance_checker(10000)
 end
 
 function teambalance_disabler()
-    teambalance_send_info = 0
+	teambalance_send_info = 0
     if teambalance_events_active == 1 then
-	teambalance_events_active = 0
-	
 	for i,handlerId in ipairs(teambalance_events) do
 	    server.cancel_handler(handlerId)
 	end
 	teambalance_events = {}
+	
+	teambalance_events_active = 0
     end
     
-    teambalance_flag_cn1 = -1
-    teambalance_flag_cn2 = -1
     teambalance_delbot("all")
     server.botbalance = teambalance_botbalance_isactive
 end
@@ -286,8 +248,6 @@ end)
 -- on start
 --
 teambalance_events_active = 0
-teambalance_flag_cn1 = -1
-teambalance_flag_cn2 = -1
 teambalance_send_info = 1
 teambalance_botbalance_isactive = tonumber(server.botbalance)
 teambalance_enabler()

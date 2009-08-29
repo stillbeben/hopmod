@@ -1,4 +1,4 @@
--- #resize <number>
+-- #resize [<number>]
 
 function server.playercmd_resize(resize_cn,resize_size)
     return admincmd(function()

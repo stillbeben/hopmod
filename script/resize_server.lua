@@ -4,6 +4,7 @@ local function calcOutput(players, specs)
 end
 
 local output_limit = calcOutput(server.maxplayers, 0)
+local output_limit_max = calcOutput(server.resize_totalmaxplayers, 0)
 
 local function readjustCapacity()
 
@@ -24,7 +25,7 @@ local function readjustCapacity()
 end
 
 local function isOverCapacity()
-    return calcOutput(server.playercount, server.speccount) > output_limit
+    return calcOutput(server.playercount, server.speccount) > output_limit_max
 end
 
 server.event_handler("spectator", function(cn, value)

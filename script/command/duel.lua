@@ -1,5 +1,3 @@
--- #duel <mode> (<cn1> <cn2> [<team1> <team2>] | <team1> <team2>) [<map> [forcemap]] [<time>] [nosd]
-
 local running = false
 
 local player1_cn = nil
@@ -381,6 +379,7 @@ function uninstallHandlers()
 end
 
 
+-- #duel <mode> (<player1> <player2> [<team1> <team2>]|<team1> <team2>) [<map> [forcemap]] [<map.time>] [nosd]
 function server.playercmd_duel(cn,mode,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
      if running then
 	if server.player_priv_code(cn) < 1 then

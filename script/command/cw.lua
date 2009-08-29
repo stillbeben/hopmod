@@ -52,18 +52,12 @@ function server.playercmd_cw(cw_cn,cw_team1,cw_team2,cw_mode,cw_map,cw_maptime)
             server.player_msg(cw_cn,red("gamemode isn't known"))
             return
         end
-	
-	used_teambalancer = 0
-        if tonumber(server.use_teambalancer) == 1 then
-            used_teambalancer = 1
-            server.use_teamblancer = 0
-        end
-        
+		
         server.mastermode = 2
         
         if cw_lmode == "insta ctf" or cw_lmode == "ctf" or cw_lmode == "insta protect" or cw_lmode == "protect" then
-    	    server.playercmd_group(cw_cn,cw_lteam1,"e")
-    	    server.playercmd_group(cw_cn,cw_lteam2,"g")
+    	    server.playercmd_group(cw_cn,cw_lteam1,"evil")
+    	    server.playercmd_group(cw_cn,cw_lteam2,"good")
     	else
     	    server.playercmd_group(cw_cn,cw_lteam1)
     	    server.playercmd_group(cw_cn,cw_lteam2)
@@ -84,18 +78,17 @@ function server.playercmd_cw(cw_cn,cw_team1,cw_team2,cw_mode,cw_map,cw_maptime)
     	                    server.msg("Game will start in 1 second...")
     	                    server.msg(string.format("map will change to: %s (%s)",green(cw_lmap),green(cw_lmode)))
     	                    server.sleep(1500,function()
-    	                        cw_player_counter = tonumber(server.playercount)
+    	                        cw_player_counter = tonumber(server.playercount) - tonumber(server.speccount)
     	                        server.changemap(cw_lmap,cw_lmode,-1)
-    	                        if server.player_priv_code(cw_cn) == 2 then
-    	                    	    server.pausegame(true)
-    	                    	    cw_active = server.event_handler("active",function(cn)
-    	                    		cw_player_counter = cw_player_counter - 1
-    	                    		if cw_player_counter == 0 then
-    	                    		    server.pausegame(false)
-    	                    		    server.cancel_handler(cw_active)
-    	                    		end
-    	                    	    end)
-    	                    	end
+  	                    	    server.pausegame(true)
+  	                    	    cw_active = server.event_handler("active",function(cn)
+  	                    		cw_player_counter = cw_player_counter - 1
+  	                    		if cw_player_counter == 0 then
+  	                    		    server.pausegame(false)
+  	                    		    server.msg(green("Good luck and have fun!"))
+  	                    		    server.cancel_handler(cw_active)
+  	                    		end
+                    	  		end)
     	                        
     				if cw_lmode == "insta ctf" or cw_lmode == "ctf" or cw_lmode == "insta protect" or cw_lmode == "protect" then
     				    server.playercmd_group(cw_cn,cw_lteam1,"e")
@@ -111,12 +104,11 @@ function server.playercmd_cw(cw_cn,cw_team1,cw_team2,cw_mode,cw_map,cw_maptime)
     	                    	end
     	                    	
     				server.msg("[Start demo recording]")
-    				server.recorddemo(1)
-                                server.msg(orange("Start the fight now!"))
-				server.msg(green("Good luck and have fun!"))
-				cw_reteam_disabled = 1
+    				server.recorddemo("log/demo/" .. cw_team1 .. ".vs." .. cw_team2 .. "." .. cw_mode .. "." .. cw_map .. ".dmo")
+					server.msg(orange("Start the fight now!"))
+				cw_reteam_disabled = 0
 				cw_reteam = server.event_handler("reteam",function(cn,old,new)
-				    if cw_reteam_disabled == 1 then
+				    if cw_reteam_disabled == 0 then
 					cw_reteam_cn = cn
 					cw_reteam_old = old
 					cw_reteam_active = 1
@@ -136,17 +128,15 @@ function server.playercmd_cw(cw_cn,cw_team1,cw_team2,cw_mode,cw_map,cw_maptime)
 				        cw_disconnect_lteam1 = cw_lteam1
 				        cw_disconnect_lteam2 = cw_lteam2
 				    end
-				    if not ( cw_teamsize(cw_disconnect_lteam1) == cw_teamsize(cw_disconnect_lteam2) ) then
+				    if not (server.player_status_code(cn) == 5) then
+--				    if not ( cw_teamsize(cw_disconnect_lteam1) == cw_teamsize(cw_disconnect_lteam2) ) then
+				        server.pausegame(true)
 				        server.msg(" ")
-				        if server.player_priv_code(cw_cn) == 2 then
-				            server.pausegame(true)
-				            server.msg(orange("One player has disconnected - game is paused..."))
-				        else
-				            server.msg(orange("One player has disconnected..."))
-				        end
+				        server.msg(orange("One player has disconnected - game is paused..."))
 				        server.msg(" ")
+				        cw_reteam_disabled = 1
 				        server.sleep(240000,function()
-				            cw_reteam_disabled = 1
+				            cw_reteam_disabled = 0
 				        end)
 				    end
 				end)
@@ -197,20 +187,15 @@ function server.playercmd_cw(cw_cn,cw_team1,cw_team2,cw_mode,cw_map,cw_maptime)
                                 	cw_ld = 0
     	                            end
     	                            server.stopdemo()
+    	                            cw_reteam_disabled = 1
                             	    server.cancel_handler(cw_reteam)
     	                            server.cancel_handler(cw_disconnect)
-    	                            cw_reteam_disabled = 0
     	                            server.sleep(8000,function()
-    	                                server.playercmd_group(cw_cn,cw_lteam1,"e")
-    	                                server.playercmd_group(cw_cn,cw_lteam2,"g")
-    	                            end)
-    	                            server.sleep(20000,function()
-    	                                if used_teambalancer == 1 then
-    	                            	    server.use_teambalancer = 1
-    	                                    used_teambalancer = 0
-    	                                end
+    	                                server.playercmd_group(cw_cn,cw_lteam1,"evil")
+    	                                server.playercmd_group(cw_cn,cw_lteam2,"good")
     	                            end)
 --    	                            server.mastermode = 1
+									server.cancel_handler(cw_active)
     	                    	    server.cancel_handler(cw_intermission)
 				end)
     	                    end)

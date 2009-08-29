@@ -12,6 +12,7 @@ local function statsprinter_name()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 
 -- print mastermode
@@ -23,7 +24,8 @@ local function statsprinter_mastermode(new)
     file:write("<font face=\"verdana\" size=1>" .. new .. "</font>\n")
     file:write("</body>\n")
     file:write("</html>\n")
-    file:flush()    
+    file:flush()
+    file:close()
 end
 
 -- print host [ip port]
@@ -40,6 +42,7 @@ local function statsprinter_host()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 	
 -- print playercount [players/maxplayers]
@@ -52,6 +55,7 @@ local function statsprinter_playercount()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 
 -- print playerlist
@@ -82,6 +86,7 @@ local function statsprinter_players()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 
 -- print playerlist [admin-version]
@@ -136,6 +141,7 @@ local function statsprinter_players_admin()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 
 -- print spectators
@@ -157,6 +163,7 @@ local function statsprinter_players_spec()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 
 -- print spectators [admin-version]
@@ -190,6 +197,7 @@ local function statsprinter_players_spec_admin()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 
 -- print gamemode
@@ -202,6 +210,7 @@ local function statsprinter_mode()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 
 -- print map
@@ -214,6 +223,7 @@ local function statsprinter_map()
     file:write("</body>\n")
     file:write("</html>\n")
     file:flush()
+    file:close()
 end
 
 local function statsprinter(job,option)

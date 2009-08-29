@@ -6,5 +6,4 @@
 == install ==
 
 > download and build hopmod
-> add/ replace the content of "bin/", "conf"/ and "log/"
-> replace "script/" completely - but don't remove "script/packages/"
+> add/ replace the content of "bin/", "conf/", "log/" and "script/"

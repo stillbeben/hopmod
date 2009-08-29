@@ -16,6 +16,16 @@ if server.stats_debug == 1 then
     statsmod.db = db
 end
 
+local function set_sqlite3_synchronous_pragma(db, value)
+    local accepted = {[0] = true, [1] = true, [2] = true, ["OFF"] = true, ["NORMAL"] = true, ["FULL"] = true}
+    
+    if not accepted[value] then
+        error("Unrecognised value set for stats_sqlite_synchronous variable.")
+    end
+    
+    db:exec("PRAGMA synchronous = " .. value)
+end
+
 if using_sqlite then
     require "sqlite3"
     dofile("./script/db/sqliteutils.lua")
@@ -23,21 +33,30 @@ if using_sqlite then
     db = sqlite3.open(server.stats_db_filename)
     createMissingTables("./script/db/stats_schema.sql", db)
     
+    if server.stats_sqlite_exclusive_locking == 1 then
+        db:exec("PRAGMA locking_mode=EXCLUSIVE")
+    end
+    
+    set_sqlite3_synchronous_pragma(db, server.stats_sqlite_synchronous)
+    
     insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, bots, finished) VALUES (:datetime, :duration, :mode, :map, :players, :bots, :finished)")
     if not insert_game then
-	error(perr)
+        error(perr)
     end
+    
     insert_team,perr = db:prepare("INSERT INTO teams (game_id, name, score, win, draw) VALUES (:gameid,:name,:score,:win,:draw)")
     if not insert_team then
-	error(perr)
+        error(perr)
     end
+    
     insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win, rank, botskill) VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank, :botskill)]]
     if not insert_player then
-	error(perr)
+        error(perr)
     end
+    
     select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
     if not select_player_totals then
-	error(perr)
+        error(perr)
     end
 end
 
@@ -48,27 +67,27 @@ function statsmod.setNewGame()
 end
 
 function statsmod.getPlayerTable(player_id)
-    player_id = tonumber(player_id)
-    if stats[player_id] then
-	return stats[player_id]
+    player_id = player_id
+    
+    if not stats[player_id] then
+        stats[player_id] = {team_id = 0, score = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, win = false, rank = 0, country = "", botskill = 0}
     end
-    stats[player_id] = {team_id = 0, score = 0, frags = 0, deaths = 0, suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, timeplayed = 0, finished = false, win = false, rank = 0, country = "", botskill = 0}
     return stats[player_id]
 end
 
 function statsmod.updatePlayer(cn)
     if server.player_pvars(cn).stats_block then
-	return {}
+        return {}
     end
     
     local player_id = server.player_id(cn)
-    if stats == nil or player_id == -1 then
-	return {}
+    if stats == nil or player_id < 0 then
+        return {}
     end
     
     local t = statsmod.getPlayerTable(player_id)
     if not t then
-	return {}
+        return {}
     end
     
     t.name = server.player_name(cn)
@@ -76,7 +95,7 @@ function statsmod.updatePlayer(cn)
     t.ipaddr = server.player_ip(cn)
     t.ipaddrlong = server.player_iplong(cn)
     t.country = server.ip_to_country_code(server.player_ip(cn))
-
+    
     local frags = server.player_frags(cn)
     local suicides = server.player_suicides(cn)
     local teamkills = server.player_teamkills(cn)
@@ -122,42 +141,24 @@ function statsmod.commitStats()
     end
     
     for i,cn in ipairs(server.players()) do
-	if server.stats_record_only_authnames == 1 then
-	    if server.player_pvars(cn).stats_auth_name then
-		local t = statsmod.updatePlayer(cn)
-    		if t.playing then
-    		    t.finished = true
-    		end
-    		t.win = server.player_win(cn)
-    		t.rank = server.player_rank(cn)
-		if server.stats_tell_auth_name == 1 then
-            	    server.player_msg(cn, string.format("Saving your stats as %s[@%s]", t.auth_name, domain_name))
-        	end
-		t.player_name = t.name -- save the original name
-        	t.name = t.auth_name
-    	    end
-	else
-	    local t = statsmod.updatePlayer(cn)
-    	    if t.playing then
-    		t.finished = true
-    	    end
-    	    t.win = server.player_win(cn)
-    	    t.rank = server.player_rank(cn)
-    	    if domain_name and t.auth_name then
-        	if server.stats_tell_auth_name == 1 then
-            	    server.player_msg(cn, string.format("Saving your stats as %s[@%s]", t.auth_name, domain_name))
-        	end
-        	if server.stats_overwrite_name_with_authname == 1 then
-            	    t.player_name = t.name -- save the original name
-            	    t.name = t.auth_name
-        	end
-    	    end
-    	end
+        local t = statsmod.updatePlayer(cn)
+        if t.playing then
+            t.finished = true
+        end
+        t.win = server.player_win(cn)
+        t.rank = server.player_rank(cn)
+        if domain_name and t.auth_name then
+            if server.stats_tell_auth_name == 1 then
+                server.player_msg(cn, string.format("Saving your stats as %s[@%s]", t.auth_name, domain_name))
+            end
+        end
     end
     
     for i,cn in ipairs(server.bots()) do
         local t = statsmod.updatePlayer(cn)
-        if t.playing and game.finished then t.finished = true end
+        if t.playing and game.finished then
+	    t.finished = true
+	end
     end
     
     local human_players = 0
@@ -165,7 +166,7 @@ function statsmod.commitStats()
     local unique_players = 0 -- human players
     local ipcount = {}
     for id,player in pairs(stats) do
-        if player.botskill == 0 then
+	if player.botskill == 0 then
             human_players = human_players + 1
             if not ipcount[player.ipaddrlong] then
                 ipcount[player.ipaddrlong] = true
@@ -176,14 +177,14 @@ function statsmod.commitStats()
         end
     end
     
+    game.players = human_players
+    game.bots = bot_players
+    game.duration = game.duration - server.timeleft
+    
     if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
         stats = nil
         return
     end
-    
-    game.players = human_players
-    game.bots = bot_players
-    game.duration = game.duration - server.timeleft
     
     if using_json then
         statsmod.writeStatsToJsonFile()
@@ -191,8 +192,8 @@ function statsmod.commitStats()
     end
     
     if not using_sqlite then
-        stats = nil
-        return
+	stats = nil
+	return
     end
     
     db:exec("BEGIN TRANSACTION")
@@ -202,7 +203,7 @@ function statsmod.commitStats()
     local game_id = db:last_insert_rowid()
     
     if server.gamemodeinfo.teams then
-        for i,teamname in ipairs(server.teams()) do
+	for i,teamname in ipairs(server.teams()) do
             team = {}
             team.gameid = game_id
             team.name = teamname
@@ -216,28 +217,41 @@ function statsmod.commitStats()
             local team_id = db:last_insert_rowid()
             local team_name = team.name
             
-            --for i2,teamplayer in ipairs(server.team_players(teamname)) do
-            --    statsmod.getPlayerTable(server.player_id(teamplayer)).team_id = team_id
-            --end
+--	    for i2,teamplayer in ipairs(server.team_players(teamname)) do
+--		statsmod.getPlayerTable(server.player_id(teamplayer)).team_id = team_id
+--	    end
             
             for id,player in pairs(stats) do
-                if player.team == team_name then player.team_id = team_id end
+                if player.team == team_name then
+		    player.team_id = team_id
+		end
             end
         end
     end
     
     for id,player in pairs(stats) do
-	if server.stats_record_only_authnames == 1 then
-	    if player.stats_auth_name then
-		player.gameid = game_id
-    		insert_player:bind(player)
-    		insert_player:exec()
+        if server.stats_record_only_authnames == 1 then
+            if player.auth_name then
+                player.player_name = player.name -- save the original name
+                player.name = player.auth_name
+                
+                player.gameid = game_id
+                
+                insert_player:bind(player)
+                insert_player:exec()
+            end
+        else
+    	    if server.stats_overwrite_name_with_authname == 1 then
+    		if player.auth_name then
+		    player.player_name = t.name -- save the original name
+		    player.name = t.auth_name
+        	end
     	    end
-    	else
-    	    player.gameid = game_id
-    	    insert_player:bind(player)
-    	    insert_player:exec()
-    	end
+            player.gameid = game_id
+            
+            insert_player:bind(player)
+            insert_player:exec()
+        end
     end
     
     db:exec("COMMIT TRANSACTION")
@@ -246,29 +260,29 @@ end
 
 local function installHandlers()
     local connect = server.event_handler("active", statsmod.addPlayer)
-    local disconnect = server.event_handler("disconnect", function(cn) 
-        statsmod.updatePlayer(cn).playing = false
-        server.player_unsetpvar(cn,"stats_auth_name")
-    end)
+    local disconnect = server.event_handler("disconnect", function(cn)
+	    statsmod.updatePlayer(cn).playing = false
+	    server.player_unsetpvar(cn,"stats_auth_name")
+        end)
     local addbot = server.event_handler("addbot", function(cn, skill, botcn)
-        statsmod.addPlayer(botcn).botskill = skill
-    end)
+            statsmod.addPlayer(botcn).botskill = skill
+        end)
     local botleft = server.event_handler("botleft", function(botcn)
-        statsmod.updatePlayer(botcn).playing = false
-    end)
+	    statsmod.updatePlayer(botcn).playing = false
+        end)
     local intermission = server.event_handler("intermission", function()
-        game.finished = true
-        statsmod.commitStats()
-    end)
+            game.finished = true
+	    statsmod.commitStats()
+        end)
     local finishedgame = server.event_handler("finishedgame", statsmod.commitStats)
     local mapchange = server.event_handler("mapchange", statsmod.setNewGame)
     local _rename = server.event_handler("rename", function(cn)
-        server.player_pvars(cn).stats_auth_name = server.player_vars(cn).stats_auth_name
-        statsmod.addPlayer(cn)
-    end)
+	    server.player_unsetpvar(cn,"stats_auth_name")
+	    statsmod.addPlayer(cn)
+        end)
     local renaming = server.event_handler("renaming", function(cn) 
-        statsmod.updatePlayer(cn).playing = false
-    end)
+            statsmod.updatePlayer(cn).playing = false
+        end)
     
     table.insert(evthandlers, connect)
     table.insert(evthandlers, disconnect)
@@ -280,16 +294,16 @@ local function installHandlers()
     table.insert(evthandlers, _rename)
     table.insert(evthandlers, renaming)
     
-    if tonumber(server.stats_use_auth) == 1 then
+    if server.stats_use_auth == 1 then
         local domId = auth.get_domain_id(server.stats_auth_domain)
         if not domId then error(string.format("stats auth domain '%s' not found",server.stats_auth_domain)) end
-        domain_id = domId
-        domain_name = server.stats_auth_domain
-    
-        auth.add_domain_handler(domain_name, function(cn, name)
+            domain_id = domId
+	    domain_name = server.stats_auth_domain
+        
+            auth.add_domain_handler(domain_name, function(cn, name)
             server.player_pvars(cn).stats_auth_name = name
             server.player_vars(cn).stats_auth_name = name
-    
+            
             local t = statsmod.getPlayerTable(server.player_id(cn))
             t.auth_name = name
             
@@ -299,262 +313,274 @@ local function installHandlers()
 end
 
 local function uninstallHandlers()
-    for i,handlerId in ipairs(evthandlers) do server.cancel_handler(handlerId) end
+    for i,handlerId in ipairs(evthandlers) do
+	server.cancel_handler(handlerId)
+    end
     evthandlers = {}
 end
 
 server.event_handler("mapchange", function()
-    if tonumber(server.record_player_stats) == 1 then
-        if #evthandlers == 0 then installHandlers() end
+    if server.record_player_stats == 1 then
+        if #evthandlers == 0 then
+	    installHandlers()
+	end
     else
-        if #evthandlers > 0 then uninstallHandlers() end
+        if #evthandlers > 0 then
+	    uninstallHandlers()
+	end
     end
 end)
 
 server.event_handler("shutdown", function()
-    if db then db:close() end
+    if db then
+	db:close()
+    end
 end)
 
 -- #stats [<cn>] [total]
 if server.enable_stats_command == 1 then
     function server.playercmd_stats(cn, selection, subselection)
-	local function calcrank(cn,option)
-	    if not option then
-		tab = {}
-		local function qsort_part(l,r)
-		    local q = math.random(l,r)
-		    local x = server.player_frags(tab[q])
-		    local tmp = tab[q]
-		    tab[q] = tab[r]
-		    tab[r] = tmp
-		    local i = l - 1
-		    local j = l
-		    while (j <= (r - 1)) do
-			if x <= server.player_frags(tab[j]) then
-			    i = i + 1
-			    local tmp = tab[i]
-			    tab[i] = tab[j]
-			    tab[j] = tmp
-			end
-	    		j = j + 1
-		    end
-		    tmp = tab[(i + 1)]
-		    tab[(i + 1)] = tab[r]
-		    tab[r] = tmp
-		    return (i + 1)
-		end
-		local function qsort(l,r)
-		    if ( l >= r ) then
-			return
-		    end
-		    local q = qsort_part(l,r)
-		    qsort(l,(q - 1))
-		    qsort((q + 1),r)
-		end
-		
-		for a,b in ipairs(server.players()) do
-		    table.insert(tab,b)
-		end
-		qsort(1,tonumber(server.playercount))
-		
-		for a,b in ipairs(tab) do
-		    if b == cn then
-			tab = {}
-			return a
-		    end
-		end
-		
-		tab = {}
-	    else
-		rank = 1
-		local spname = nil
-		if server.stats_record_only_authnames == 1 then
-		    spname = server.player_pvars(cn).stats_auth_name
-		    for a in db:cols("SELECT name FROM playertotals ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
-			if a == spname then
-			    return rank
-			end
+        local function calcrank(cn,option)
+        if not option then
+            tab = {}
+            
+            local function qsort_part(l,r)
+        	local q = math.random(l,r)
+        	local x = server.player_frags(tab[q])
+        	local tmp = tab[q]
+        	tab[q] = tab[r]
+                tab[r] = tmp
+                local i = l - 1
+                local j = l
+                while (j <= (r - 1)) do
+                    if x <= server.player_frags(tab[j]) then
+                        i = i + 1
+                	local tmp = tab[i]
+                        tab[i] = tab[j]
+                        tab[j] = tmp
+                    end
+                    j = j + 1
+                end
+        	tmp = tab[(i + 1)]
+                tab[(i + 1)] = tab[r]
+                tab[r] = tmp
+                return (i + 1)
+            end
+            
+            local function qsort(l,r)
+                if ( l >= r ) then
+                    return
+                end
+                local q = qsort_part(l,r)
+                qsort(l,(q - 1))
+                qsort((q + 1),r)
+            end
+	    
+	    for a,b in ipairs(server.players()) do
+                if not (server.player_status_code(b) == 5) then
+                    table.insert(tab,b)
+                end
+            end
+            qsort(1,(tonumber(server.playercount) - tonumber(server.speccount)))
+            
+            for a,b in ipairs(tab) do
+                if b == cn then
+                    tab = {}
+                    return a
+                end
+            end
+            
+            tab = {}
+        else
+	    rank = 1
+            local spname = nil
+                if server.stats_record_only_authnames == 1 then
+                    spname = server.player_pvars(cn).stats_auth_name
+                    for a in db:cols("SELECT name FROM playertotals ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
+                        if a == spname then
+                            return rank
+                        end
 			rank = rank + 1
-		    end
-		else
-		    if (server.stats_overwrite_name_with_authname == 1) and (server.player_pvars(cn).stats_auth_name) then
-			spname = server.player_pvars(cn).stats_auth_name
-		    else
-			spname = server.player_name(cn)
-		    end
-		    for a in db:cols("SELECT name FROM playertotals WHERE name!='unnamed' AND name!='bot' ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
-		    	if a == spname then
-			    return rank
-			end
-			rank = rank + 1
-		    end
+                    end
+                else
+                    if (server.stats_overwrite_name_with_authname == 1) and (server.player_pvars(cn).stats_auth_name) then
+                        spname = server.player_pvars(cn).stats_auth_name
+                    else
+                        spname = server.player_name(cn)
+                    end
+                    for a in db:cols("SELECT name FROM playertotals WHERE name!='unnamed' AND name!='bot' ORDER BY frags DESC,deaths ASC,max_frags DESC,teamkills ASC,suicides ASC, hits DESC, shots ASC, games ASC, timeplayed ASC, wins DESC, losses ASC") do
+                        if a == spname then
+                            return rank
+                        end
+                        rank = rank + 1
+                    end
 		end
-	    end
-	    return 0
-	end
-	
-	local function calcavgacc(option)
-	    local count = 0
-	    local pcount = 0
-	    if not option then
-		pcount = tonumber(server.playercount)
-		for a,b in ipairs(server.players()) do
-		    count = count + server.player_accuracy(b)
-		end
-	    else
-		for a,b in db:cols("SELECT hits,shots FROM playertotals") do
-		    if b ~= 0 then
-			count = count + round((a / b) * 100)
-		    end
-		    pcount = pcount + 1
-		end
-	    end
-	    return round(count / pcount)
-	end
+            end
+            return 0
+        end
+        
+        local function calcavgacc(option)
+            local count = 0
+            local pcount = 0
+            if not option then
+                pcount = tonumber(server.playercount)
+                for a,b in ipairs(server.players()) do
+                    count = count + server.player_accuracy(b)
+                end
+            else
+                for a,b in db:cols("SELECT hits,shots FROM playertotals") do
+                    if b ~= 0 then
+                        count = count + round((a / b) * 100)
+                    end
+                    pcount = pcount + 1
+                end
+            end
+            return round(count / pcount)
+        end
 	
 	local function calcavgkpd(option)
-	    local count = 0
-	    local pcount = 0
-	    if not option then
-		pcount = tonumber(server.playercount)
-		for a,b in ipairs(server.players()) do
-		    local deaths = server.player_deaths(b)
-		    if deaths ~= 0 then
-			count = count + round(server.player_frags(b) / deaths, 2)
-		    end
-		end
-	    else
-		for a,b in db:cols("SELECT frags,deaths FROM playertotals") do
-		    if b ~= 0 then
-			count = count + round((a / b),4)
-		    end
-		    pcount = pcount + 1
-		end
-    	    end
-	    return round((count / pcount),2)
-	end
-	
-	local function coloracc(acc,option)
-	    if acc == 0 then
-		return red(acc .. "%")
-	    end
-	    local cacc = yellow(acc .. "%")
-	    local avgacc = nil
-	    if server.exp_stats_total_acc == 1 then
-		if not option then
-		    avgacc = calcavgacc()
-    		else
-		    avgacc = calcavgacc("total")
-		end
-	    else
-		return cacc
-    	    end
-    	    if acc < avgacc then
-    		cacc = red(acc .. "%")
-    	    elseif acc > avgacc then
-    		cacc = green(acc .. "%")
-    	    end
-    	    return cacc
-	end
-	
+            local count = 0
+            local pcount = 0
+            if not option then
+                pcount = tonumber(server.playercount)
+                for a,b in ipairs(server.players()) do
+                    local deaths = server.player_deaths(b)
+                    if deaths ~= 0 then
+                        count = count + round(server.player_frags(b) / deaths, 2)
+                    end
+                end
+            else
+                for a,b in db:cols("SELECT frags,deaths FROM playertotals") do
+                    if b ~= 0 then
+                        count = count + round((a / b),4)
+                    end
+                    pcount = pcount + 1
+                end
+            end
+            return round((count / pcount),2)
+        end
+        
+        local function coloracc(acc,option)
+            if acc == 0 then
+                return red(acc .. "%")
+            end
+            local cacc = yellow(acc .. "%")
+            local avgacc = nil
+            if server.exp_stats_total_acc == 1 then
+                if not option then
+                    avgacc = calcavgacc()
+                else
+                    avgacc = calcavgacc("total")
+                end
+            else
+                return cacc
+            end
+            if acc < avgacc then
+                cacc = red(acc .. "%")
+            elseif acc > avgacc then
+                cacc = green(acc .. "%")
+            end
+            return cacc
+        end
+        
 	local function colorkpd(kpd,option)
-	    if kpd == 0 then
-		return red(kpd)
-	    end
-	    local ckpd = yellow(kpd)
-	    local avgkpd = nil
-	    if server.exp_stats_total_kpd == 1 then
-		if not option then
-		    avgkpd = calcavgkpd()
-		else
-    		    avgkpd = calcavgkpd("total")
-    		end
-    	    else
-    		avgkpd = 1
-    	    end
-    	    if kpd < avgkpd then
-    		ckpd = red(kpd)
-    	    elseif kpd > avgkpd then
-    		ckpd = green(kpd)
-    	    end
-    	    return ckpd
-	end
-	
-	local function currentgame_stats(sendto, player) 
-	    local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
-	    local deaths = server.player_deaths(player)
-	    local kpd = nil
-	    if deaths == 0 then
-		kpd = red("0")
-	    else
-		kpd = colorkpd(round((frags / deaths),2))
-	    end
-	    server.player_msg(sendto, string.format("Current game stats for %s:", green(server.player_name(player))))
-	    server.player_msg(sendto, string.format("Score %s Frags %s Deaths %s Kpd %s Accuracy %s Rank %s",
-		yellow(server.player_frags(player)),
-		green(frags),
-		red(deaths),
-		kpd,
-		coloracc(server.player_accuracy(player)),
-		blue(calcrank(player))))
-	    if server.gamemodeinfo.teams then
-		server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))
-	    end
-	end
-	
-	local function total_stats(sendto, player)
-	    if not using_sqlite then 
-        	server.player_msg(sendto, red("Not available."))
-        	return
-    	    end
-	    local player_name = server.player_name(player)
-	    local auth_name = server.player_pvars(player).stats_auth_name
-	    if auth_name and ((server.stats_overwrite_name_with_authname == 1) or (server.stats_record_only_authnames == 1)) then
-		player_name = auth_name
-	    end
-	    select_player_totals:bind{name = player_name}
-	    row = select_player_totals:first_row()
-	    if not row then
-        	server.player_msg(sendto, "No stats found.")
-        	return
-	    end
+            if kpd == 0 then
+                return red(kpd)
+            end
+            local ckpd = yellow(kpd)
+            local avgkpd = nil
+            if server.exp_stats_total_kpd == 1 then
+                if not option then
+                    avgkpd = calcavgkpd()
+                else
+                    avgkpd = calcavgkpd("total")
+                end
+            else
+                avgkpd = 1
+            end
+            if kpd < avgkpd then
+                ckpd = red(kpd)
+            elseif kpd > avgkpd then
+                ckpd = green(kpd)
+            end
+            return ckpd
+        end
+        
+        local function currentgame_stats(sendto, player)
+            local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
+            local deaths = server.player_deaths(player)
+            local kpd = nil
+            if deaths == 0 then
+                kpd = red("0")
+            else
+                kpd = colorkpd(round((frags / deaths),2))
+            end
+            server.player_msg(sendto, string.format("Current game stats for %s:", green(server.player_name(player))))
+            server.player_msg(sendto, string.format("Score %s Frags %s Deaths %s Kpd %s Accuracy %s Rank %s",
+		    yellow(server.player_frags(player)),
+		    green(frags),
+		    red(deaths),
+                    kpd,
+                    coloracc(server.player_accuracy(player)),
+                    blue(calcrank(player))))
+            if server.gamemodeinfo.teams then
+                server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))
+            end
+        end
+        
+        local function total_stats(sendto, player)
+            if not using_sqlite then
+                server.player_msg(sendto, red("Not available."))
+                return
+            end
+            local player_name = server.player_name(player)
+            local auth_name = server.player_pvars(player).stats_auth_name
+            if auth_name and ((server.stats_overwrite_name_with_authname == 1) or (server.stats_record_only_authnames == 1)) then
+                player_name = auth_name
+            end
+            select_player_totals:bind{name = player_name}
+            row = select_player_totals:first_row()
+            if not row then
+                server.player_msg(sendto, "No stats found.")
+                return
+            end
             server.player_msg(sendto, string.format("Total game stats for %s:", green(server.player_name(player))))
-	    local kpd = round(row.frags / row.deaths, 2)
-	    local acc = round((row.hits / row.shots)*100)
-	    if server.exp_stats_total_rank == 1 and auth_name then
-		server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s Rank %s",
-		    yellow(row.games),
-        	    green(row.frags),
-        	    red(row.deaths),
-        	    colorkpd(kpd,"total"),
-        	    coloracc(acc,"total"),
-        	    green(row.wins),
-        	    red(row.losses),
-        	    blue(calcrank(player,"total"))))
-    	    else
-    		server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s",
-		    yellow(row.games),
-        	    green(row.frags),
-        	    red(row.deaths),
-        	    colorkpd(kpd,"total"),
-        	    coloracc(acc,"total"),
-        	    green(row.wins),
-        	    red(row.losses)))
-    	    end
-	end
+            local kpd = round(row.frags / row.deaths, 2)
+            local acc = round((row.hits / row.shots)*100)
+            if server.exp_stats_total_rank == 1 and auth_name then
+                server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s Rank %s",
+                        yellow(row.games),
+                        green(row.frags),
+                        red(row.deaths),
+                        colorkpd(kpd,"total"),
+                        coloracc(acc,"total"),
+                        green(row.wins),
+                        red(row.losses),
+                        blue(calcrank(player,"total"))))
+            else
+                server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses %s",
+                        yellow(row.games),
+                        green(row.frags),
+                        red(row.deaths),
+                        colorkpd(kpd,"total"),
+                        coloracc(acc,"total"),
+                        green(row.wins),
+                        red(row.losses)))
+            end
+        end
 	
-        if not selection then
-            currentgame_stats(cn, cn)
-        elseif selection == "total" then
-            total_stats(cn, cn)
-    	elseif server.valid_cn(selection) then
-            if subselection == "total" then
-		total_stats(cn, selection)
+	if not selection then
+	    currentgame_stats(cn, cn)
+	elseif selection == "total" then
+	    total_stats(cn, cn)
+	elseif server.valid_cn(selection) then
+	    if subselection == "total" then
+	        total_stats(cn, selection)
 	    else
-		currentgame_stats(cn, selection)
+	        currentgame_stats(cn, selection)
 	    end
-        else
-            server.player_msg(cn, red("usage: #stats [cn] [total]"))
+	else
+	    server.player_msg(cn, red("usage: #stats [cn] [total]"))
 	end
     end
 end
@@ -588,7 +614,9 @@ end
 
 if using_sqlite then
     local find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
-    if not find_names_by_ip then error(perr) end
+    if not find_names_by_ip then
+	error(perr)
+    end
     
     function server.find_names_by_ip(ip, exclude_name)
         local names = {}
@@ -602,7 +630,7 @@ if using_sqlite then
     end
 else
     function server.find_names_by_ip()
-	return nil
+        return nil
     end
 end
 
