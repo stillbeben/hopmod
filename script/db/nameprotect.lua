@@ -231,14 +231,14 @@ if server.enable_showauth_command == 1 then
         if showauth_tcn then
     	    if not server.valid_cn(showauth_tcn) then
     		server.player_msg(showauth_cn,red("cn is not valid"))
+    		return
     	    else
         	lcn = showauth_tcn
     	    end
-        else
-            local authname = server.player_pvars(showauth_tcn).auth_name
-	    if authname then
-		server.player_msg(showauth_cn,green(server.player_name(showauth_tcn)) .. magenta("(" .. showauth_tcn ..")") .. " is verified as " .. authname)
-	    end
+        end
+        local authname = server.player_pvars(lcn).auth_name
+	if authname then
+	    server.player_msg(showauth_cn,green(server.player_name(lcn)) .. magenta("(" .. lcn ..")") .. " is verified as " .. authname)
 	end
     end
 end

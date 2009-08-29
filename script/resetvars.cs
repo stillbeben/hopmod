@@ -27,12 +27,17 @@ global stats_sqlite_exclusive_locking 0
 global stats_sqlite_synchronous 1
 global stats_use_json 0
 global stats_overwrite_name_with_authname 0
+global stats_record_only_authnames 0
 global enable_stats_command 0
+global exp_stats_total_kpd 0
+global exp_stats_total_acc 0
+global exp_stats_total_rank 0
 global enable_showauth_command 0
 global enable_showauths_command 0
 global enable_shownonauths_command 0
 
 global use_name_reservation 0
+global use_tag_reservation 0
 global name_reservation_domain ""
 global reserved_name_expire (mins 3600)
 
@@ -221,6 +226,7 @@ global cd_accuracy_limit 0
 
 global use_cd_chainsawhack 0
 
+global resize_totalminplayers 1
 global resize_totalmaxplayers 7
 global use_resize_mastermode 0
 global resize_mastermode locked

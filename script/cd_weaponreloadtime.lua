@@ -6,22 +6,22 @@ server.event_handler("shot",function(cn,gun,hits)
     	    server.player_vars(cn).cdr_last_shot = nil
   	end
   	if gun == 2 then
-    	    reload_limit = 70
+    	    reload_limit = 80
 	elseif gun == 0 then
-	    reload_limit = 220
+	    reload_limit = 230
 	elseif gun == 6 then
-	    reload_limit = 340
+	    reload_limit = 350
 	elseif gun == 5 then
-	    reload_limit = 470
+	    reload_limit = 480
 	elseif gun == 3 then
-	    reload_limit = 770
+	    reload_limit = 780
 	elseif gun == 1 then
-	    reload_limit = 1370
+	    reload_limit = 1380
 	elseif gun == 4 then
-	    reload_limit = 1450
+	    reload_limit = 1460
 	end
   	if server.player_vars(cn).cdr_last_shot and ((gametime - server.player_vars(cn).cdr_last_shot) < reload_limit) then
-    	    server.log("WARNING: " .. server.player_name(cn) .. "(" .. cn .. ")'s weapon reload time is too low. [weapon: " .. gun .. " | ip: " .. server.player_ip(cn) .. "]")
+    	    server.log("WARNING: " .. server.player_name(cn) .. "(" .. cn .. ")'s weapon reload time is too low.  [pj: " .. server.player_lag(cn) .. " | ping: " .. server.player_ping(cn) .. " | weapon: " .. gun .. " | ip: " .. server.player_ip(cn) .. "]")
   	end
   	server.player_vars(cn).cdr_last_shot = gametime
   	server.player_vars(cn).cdr_last_weapon = gun

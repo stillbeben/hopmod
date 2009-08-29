@@ -40,7 +40,7 @@ function onDisconnect(cn)
     	else
     	    local lmode = server.first_gamemode
     	    local lmap = server.first_map
-    	    if (server.ranom_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
+    	    if (server.random_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
     		lmode = server.random_mode()
     		lmap = server.random_map(lmode,1)
     		server.changemap(lmap,lmode,-1)
@@ -156,8 +156,8 @@ server.event_handler("started", function()
     
     dofile("./script/playercmd.lua")
     
-    if server.fileExists("./conf/bans") then
-        server.execCubeScriptFile("./conf/bans")
+    if server.fileExists(server.banlist_file) then
+        dofile("./" .. server.banlist_file)
     end
     
     dofile("./script/db/stats.lua")
@@ -272,7 +272,7 @@ server.event_handler("started", function()
     if tonumber(server.playercount) == 0 then
 	local lmode = server.first_gamemode
     	local lmap = server.first_map
-    	if (server.ranom_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
+    	if (server.random_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
     	    lmode = server.random_mode()
     	    lmap = server.random_map(lmode,1)
     	    server.changemap(lmap,lmode,-1)
