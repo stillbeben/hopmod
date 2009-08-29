@@ -77,3 +77,20 @@ server.event_handler("rename", function(cn)
 
     checkPlayerName(cn)
 end)
+
+if server.enable_auth_command == 1 then
+    function server.playercmd_auth(cn)
+	auth.sendauthreq(cn,domain_name)
+    end
+end
+
+if server.enable_showauth_command == 1 then
+    function server.playercmd_showauth(cn)
+        local pvars = server.player_pvars(cn)
+        if pvars.stats_auth_name then
+            local playername = server.player_name(cn) .. " " .. magenta("(" .. tostring(cn) ..")")
+    	    local fullauthname = pvars.stats_auth_name .. "@" .. domain_name
+            server.msg(string.format("%s is verified as %s", playername, fullauthname))
+        end
+    end
+end

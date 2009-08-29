@@ -48,6 +48,8 @@ function format_duration(seconds)
     return string.format("%02i:%02i:%02i",hours,mins,seconds)
 end
 
+server.format_duration = format_duration
+
 function map_to_array(map)
     local result = {}
     for i,v in pairs(map) do
@@ -249,9 +251,12 @@ function server.gplayers()
     return next_player, pv, nil
 end
 
-function server.printserverstatus(filename)
-
-    local out = io.open(filename, "a+")
+function server.printserverstatus(filename,filemode)
+    if not filemode then
+	filemode = "a+"
+    end
+    
+    local out = io.open(filename, filemode)
     
     local status_rows = "PLAYERS MAP MODE MASTER HOST PORT DESCRIPTION\n"
     local host = server.serverip
@@ -294,4 +299,90 @@ end
 
 function server.valid_cn(cn)
     return server.player_id(tonumber(cn) or -1) ~= -1
+end
+
+function server.teamsize(teamsize_teamname)
+    local a = 0
+    for i,cn in ipairs(server.team_players(teamsize_teamname)) do
+        a = a + 1
+    end
+    return a
+end
+
+function server.find_cn(cn,name)
+    if not name then
+	return -1
+    end
+    local tcn = nil
+    local tcn_count = 0
+    for a,b in ipairs(server.players()) do
+	if server.player_name(b) == name then
+	    tcn = b
+	    tcn_count = tcn_count + 1
+	end
+    end
+    if tcn_count == 1 then
+	return tcn
+    elseif tcn_count == 0 then
+	server.player_msg(cn,red("no player found"))
+	local count = 0
+	for a,b in ipairs(server.players()) do
+	    local pname = server.player_name(b)
+	    if string.find(pname,name) then
+		if count == 0 then
+		    server.player_msg(cn,orange("matching players are:"))
+		end
+		server.player_msg(cn,green(pname) .. " with cn: " .. green(b))
+		count = count + 1
+	    end
+	end
+    elseif tcn_count > 1 then
+	server.player_msg(cn,red("more than one player found"))
+	for a,b in ipairs(server.players()) do
+	    local pname = server.player_name(b)
+	    if pname == name then
+		server.player_msg(cn,green(pname) .. " has cn: " .. green(b))
+	    end
+	end
+    end
+    return
+end
+
+local function random_init()
+    local rand_non_null_value = (tonumber(server.serverport) * (tonumber(server.gamelimit) + tonumber(server.maxplayers))) + tonumber(server.serverport)
+    math.randomseed(math.abs(((os.time() * (os.clock() * 10000)) / rand_non_null_value) + (os.time() * os.time())))
+end
+random_init()
+server.sleep((math.random(60,1800) * 1000),function()
+    random_init()
+    server.sleep((math.random(60,1800) * 1000),function()
+      random_init()
+    end)
+end)
+
+function server.random_map(random_map_mode,random_map_small)
+    if not random_map_small then
+        random_map_small = 1
+    end
+    local random_map_list = {}
+    local parse = server.parse_list
+    if random_map_small == 1 and ( random_map_mode == "ffa" or random_map_mode == "teamplay" or random_map_mode == "efficiency" or random_map_mode == "efficiency team" or random_map_mode == "tactics" or random_map_mode == "tactics team" or random_map_mode == "instagib" or random_map_mode == "instagib team" ) then
+        random_map_list = table_unique(parse(server["small_" .. random_map_mode .. "_maps"]))
+    else
+        random_map_list = table_unique(parse(server[random_map_mode .. "_maps"]))
+    end
+    if not random_map_list then
+        return nil
+    end
+    
+    return random_map_list[math.random(#random_map_list)]
+end
+
+function server.random_mode()
+    local random_mode_list = table_unique(server.parse_list(server["game_modes"]))
+    if not random_mode_list then
+        return nil
+    end
+    
+    return random_mode_list[math.random(#random_mode_list)]
 end

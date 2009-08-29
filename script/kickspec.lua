@@ -1,8 +1,8 @@
 --[[--------------------------------------------------------------------------
 
-    A script to kick spectators who reach the spectate time limit.
-
-    Written by ]Zombie[
+    A script to kick spectators
+    who reach the spectate time limit and the server is full
+    
 --]]--------------------------------------------------------------------------
 
 --
@@ -58,6 +58,23 @@ local function kickspec_finishedgame_event()
     end
 end
 
+local function kickspec_connect(kickspec_cn)
+    if tonumber(server.playercount) < tonumber(server.maxplayers) then
+	kickspec_check_enabled = 0
+    else
+	kickspec_check_enabled = 1
+    end
+end
+
+local function kickspec_disconnect(kickspec_cn)
+    kickspec_clearmem(kickspec_cn)
+    if tonumber(server.playercount) < tonumber(server.maxplayers) then
+	kickspec_check_enabled = 0
+    else
+	kickspec_check_enabled = 1
+    end
+end
+
 --
 -- enable/ disable events
 --
@@ -67,11 +84,13 @@ function kickspec_enabler()
         kickspec_spectators[cn] = 0
     end
 
-    local kickspec_disconnect = server.event_handler("disconnect",kickspec_clearmem)
+    local kickspec_connect = server.event_handler("disconnect",kickspec_connect)
+    local kickspec_disconnect = server.event_handler("disconnect",kickspec_disconnect)
     local kickspec_spectator = server.event_handler("spectator",kickspec_spectator_event)
     local kickspec_finishedgame = server.event_handler("finishedgame",kickspec_finishedgame_event)
 
     kickspec_events = {}
+    table.insert(kickspec_events,kickspec_connect)
     table.insert(kickspec_events,kickspec_disconnect)
     table.insert(kickspec_events,kickspec_spectator)
     table.insert(kickspec_events,kickspec_finishedgame)

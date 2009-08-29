@@ -2,7 +2,6 @@
 dofile("./script/serverlib.lua")
 dofile("./script/logging.lua")
 dofile("./script/maprotation.lua")
-dofile("./script/playercmd.lua")
 
 function sendServerBanner(cn)
 
@@ -35,8 +34,24 @@ function onDisconnect(cn)
 
     server.player_unsetpvar(cn,"shown_banner")
     
-    if server.playercount == 0 and tonumber(server.firstgame_on_empty) == 1 then
-        server.changemap(server.first_map, server.first_gamemode, -1)
+    if tonumber(server.playercount) == 0 then
+	if server.firstgame_on_empty == 1 then
+    	    server.changemap(server.first_map, server.first_gamemode, -1)
+    	else
+    	    local lmode = server.first_gamemode
+    	    local lmap = server.first_map
+    	    if (server.ranom_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
+    		lmode = server.random_mode()
+    		lmap = server.random_map(lmode,1)
+    		server.changemap(lmap,lmode,-1)
+    	    elseif server.random_mode_on_empty == 1 then
+    		lmode = server.random_mode()
+		server.changemap(lmap,lmode,-1)
+	    elseif server.random_map_on_empty == 1 then
+		lmap = server.random_map(lmode,1)
+		server.changemap(lmap,lmode,-1)
+	    end
+	end
     end
 end
 
@@ -55,21 +70,31 @@ function onText(cn,text)
 end
 
 function onMapVote(cn,map,mode)
+    if server.player_priv_code(cn) == 2 then
+	return
+    end
     
-    if server.player_priv_code(cn) == 2 then return end -- admin player
-    
-    if tonumber(server.allow_mapvote) <= 0 then
+    if server.allow_mapvote <= 0 then
         server.player_msg(cn, red() .. "Map voting is disabled.")
         return -1
-    else
-        if mode ~= server.gamemode and tonumber(server.allow_modevote) <= 0 then
-            server.player_msg(cn, red() .. "Server only accepts votes for " .. server.gamemode .. " mode.")
+    elseif (server.allow_modevote <= 0) and (mode ~= server.gamemode) then
+        server.player_msg(cn, red() .. "Server only accepts votes for " .. server.gamemode .. " mode.")
+        return -1
+    elseif not ((server.disallow_coopedit == 0) and (mode == "coop edit")) then
+        local isfound = 0
+        for a,b in ipairs(table_unique(server.parse_list(server["game_modes"]))) do
+            if mode == b then
+                isfound = 1
+                break
+            end
+        end
+        if isfound == 0 then
+            server.player_msg(cn,red("Server doesn't accept votes for " .. mode))
             return -1
         end
     end
     
-    if tonumber(server.mapvote_disallow_unknown_map) == 1 then
-        
+    if (server.mapvote_disallow_unknown_map == 1) and not (mode == "coop edit") then
         local globalFound = server.is_known_map(map)
         local localFound = server.is_known_map(map, mode)
         
@@ -81,20 +106,20 @@ function onMapVote(cn,map,mode)
         if not localFound then
             server.player_msg(cn, red()  .. "\"" .. map .. "\" is not a map you can play in " .. mode .. ".")
             return -1
-        end
-        
+	end
     end
-    
 end
+
+
 
 function onTeamkill(actor, victim)
     
-    local teamkill_limit = tonumber(server.teamkill_limit)
+    local teamkill_limit = server.teamkill_limit
     if teamkill_limit == -1 then return end
     
     if not server.player_var(actor,"shown_teamkill_warning") then
         
-        if tonumber(server.teamkill_showlimit) == 1 then
+        if server.teamkill_showlimit == 1 then
             server.player_msg(actor,"This server will not tolerate more than " .. teamkill_limit .. " team kills per game.")
         else
             server.player_msg(actor,"This server enforces a team kill limit, and so you need to play more carefully. You have been warned.")
@@ -121,7 +146,7 @@ server.event_handler("shutdown",function() server.log_status("Server shutting do
 
 server.event_handler("mapchange", function(map, mode)
     
-    if mode == "coop edit" and server.using_master_auth() and tonumber(server.disable_masterauth_in_coopedit) == 1 then
+    if mode == "coop edit" and server.using_master_auth() and server.disable_masterauth_in_coopedit == 1 then
         
         server.use_master_auth(false)
         
@@ -154,29 +179,31 @@ server.event_handler("started", function()
         server.execCubeScriptFile("./conf/auth")
     end
     
+    dofile("./script/playercmd.lua")
+    
     if server.fileExists("./conf/bans") then
         server.execCubeScriptFile("./conf/bans")
     end
     
     dofile("./script/db/stats.lua")
     
-    if tonumber(server.use_name_reservation) == 1 then
+    if server.use_name_reservation == 1 then
         dofile("./script/db/nameprotect.lua")
     end
     
-    if tonumber(server.use_script_socket_server) == 1 then
+    if server.use_script_socket_server == 1 then
         if not server["script_socket_supported?"]() then
             server.log_status("Cannot run script_socket server as it's not supported (couldn't detect libmicrohttpd as being installed at build time).")
         end
         server.script_socket_server(server.script_socket_port, server.script_socket_password)
     end
     
-    if tonumber(server.use_irc_bot) == 1 then
+    if server.use_irc_bot == 1 then
         os.execute("bin/server start_ircbot")
         server.event_handler("shutdown", function() server.stop_ircbot() end)
     end
     
-    if tonumber(server.teamkill_showlimit) == 1 then
+    if server.teamkill_showlimit == 1 then
         server.playercmd_teamkills = function(cn)
             local tks = server.player_teamkills(cn)
             local noun = "teamkill"
@@ -185,7 +212,7 @@ server.event_handler("started", function()
         end
     end
     
-    if tonumber(server.enable_dynamic_maxclients) == 1 then
+    if server.enable_dynamic_maxclients == 1 then
         dofile("./script/resize_server.lua")
     end
     
@@ -195,6 +222,38 @@ server.event_handler("started", function()
 
     if server.enable_ownage_messages == 1 then
         dofile("./script/ownage.lua")
+    end
+    
+    if server.enable_suddendeath == 1 then
+        dofile("./script/suddendeath.lua")
+    end
+    
+    if server.change_default_maptime == 1 then
+	dofile("./script/change_default_maptime.lua")
+    end
+    
+    if server.use_spec_inactives == 1 then
+	dofile("./script/spec.inactives.lua")
+    end
+    
+    if server.enable_ping_limiter == 1 then
+        dofile("./script/pinglimiter.lua")
+    end
+    
+    if server.use_cd_modmap == 1 then
+        dofile("./script/cd_modmap.lua")
+    end
+    
+    if server.use_cd_accuracy == 1 then
+        dofile("./script/cd_accuracy.lua")
+    end
+    
+    if server.use_cd_chainsawhack == 1 then
+        dofile("./script/cd_chainsawhack.lua")
+    end
+    
+    if server.use_resize_mastermode == 1 then
+        dofile("./script/resize_server_mastermode.lua")
     end
     
     server.reload_maprotation()

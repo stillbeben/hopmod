@@ -1,6 +1,7 @@
 #!/bin/sh
 
 bin/env.sh
+export PATH="$PATH:./bin:."
 
 execOnServer(){
     if [ -p authexec ] 
@@ -45,6 +46,11 @@ case "$1" in
         
         tail -c +$ERROR_START log/autherror.log
         cat log/authstatus.log
+        
+        if [ -r bin/authserver.users ]
+        then
+    	    execOnServer "exec bin/authserver.users"
+    	fi
 ;;
     'stop')
         execOnServer shutdown

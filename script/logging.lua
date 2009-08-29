@@ -55,7 +55,7 @@ server.event_handler("disconnect", function (cn,reason)
     local reason_tag = ""
     if reason ~= "normal" then reason_tag = " because: " .. reason end
     
-    log(string.format("%s(%i) disconnected%s, time %s",server.player_name(cn),cn,reason_tag,format_duration(server.player_connection_time(cn))))
+    log(string.format("%s(%i) disconnected%s, time %s",server.player_name(cn),cn,reason_tag,server.format_duration(server.player_connection_time(cn))))
 end)
 
 server.event_handler("kick", function(cn, bantime, admin, reason)
@@ -154,7 +154,7 @@ server.event_handler("endrecord", function(id, size)
 end)
 
 server.event_handler("mapcrcfail", function(cn) 
-    log(string.format("%s(%i) has a modified map (%s %i)",server.player_name(cn),cn, server.map, server.player_mapcrc(cn)))
+    log(string.format("%s(%i) has a modified map (%s %i). [ip: %s]",server.player_name(cn),cn, server.map, server.player_mapcrc(cn), server.player_ip(cn)))
     log_usednames(cn)
 end)
 

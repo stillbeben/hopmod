@@ -6,8 +6,7 @@ export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:bin"
 export LUA_PATH="$LUA_PATH;script/package/?.lua"
 export LUA_CPATH="$LUA_CPATH;bin/lib?.so"
 
-if [[ ! -d bin || ! -d log || ! -d conf || ! -d script ]]
-then
+if [[ ! -d bin || ! -d log || ! -d conf || ! -d script ]]; then
     echo "You are missing required directories. Are you sure you are running this script from the top-level directory of your Hopmod installation?"
     exit 1
 fi
@@ -71,9 +70,13 @@ case "$1" in
         execOnServer stop_ircbot
 ;;
     'status')
-        out=`tty`
-        execOnServer "printserverstatus [$out]"
-        sleep 1
+	if [ -z "$2" ]; then
+	    out=`tty`
+	else
+	    out="$2"
+	fi
+	execOnServer "printserverstatus [$out]"
+	sleep 1
 ;;
     *)
         $0 start

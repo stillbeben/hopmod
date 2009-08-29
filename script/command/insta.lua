@@ -1,32 +1,27 @@
+-- #insta <map> <cn1> <cn2>
+-- #effic <map> <cn1> <cn2>
+
+
 -- 1on1 (versus) script
 -- Version: 0.1
 -- (c) 2009 Thomas
 -- #versus cn1 cn2 mode map
 
 
-local sudden_death = false
-local sudden_death_enabled = false
-
 local running = false
 
 local player1_cn = nil
 local player1_id = nil
 local player1_ready = false
-local player1_name = nil
 
 local player2_cn = nil
 local player2_id = nil
 local player2_ready = false
-local player2_name = nil
 
 local gamecount = 0
 local suspended = false
 
-local match_master = nil
-
 local evthandlers = {}
-
-local uninstallHandlers
 
 local function onActive(cn)
 
@@ -35,9 +30,8 @@ local function onActive(cn)
     if id == player1_id then
 
         player1_ready = true
-    end
-    
-    if id == player2_id then
+
+    elseif id == player2_id then
 
         player2_ready = true
 
@@ -58,12 +52,13 @@ local function onActive(cn)
 
         if countdown == 0 then
         suspended = false
-        server.player_suicide(cn)
         server.pausegame(false)
             return -1
         end
 
     end)
+
+
 
 
         else
@@ -81,17 +76,12 @@ local function onMapchange(map, mode)
 
     if gamecount > 1 then
         running = false
-        sudden_death = false
-        sudden_death_enabled = false
-        server.mastermode = 0
-        server.servername = server_name
-        server.unsetmaster()
         uninstallHandlers()
         return
     end
 
     server.pausegame(true)
-    server.recorddemo("log/demo/ESL_" .. player1_name .. "_V_" .. player2_name .. "_" .. map)
+    server.recorddemo("log/demo/" .. player1_name .. "_V_" .. player2_name .. "_" .. mode .. "_" .. map .. ".dmo")
 
     server.msg(orange("--[ Starting Demo Recording"))
     server.msg(orange("--[ Waiting until all Players loaded the Map."))
@@ -102,15 +92,20 @@ local function onIntermission()
 
     if server.player_frags(player1_cn) > server.player_frags(player2_cn) then
 
-        server.msg(green("--[ 1on1 Game ended - (" .. blue(server.player_name(player1_cn)) .. ") won the Game!"))
+        server.msg(green("--[ 1on1 Game ended - (" .. green(server.player_name(player1_cn)) .. ") won the Game!"))
 
     elseif server.player_frags(player1_cn) < server.player_frags(player2_cn) then
 
-        server.msg(green("--[ 1on1 Game ended - (" .. blue(server.player_name(player2_cn)) .. ") won the Game!"))
+        server.msg(green("--[ 1on1 Game ended - (" .. green(server.player_name(player2_cn)) .. ") won the Game!"))
     else
         server.msg("--[ 1on1 Game ended - No Winner!")
     end
 
+    running = false
+    sudden_death = false
+    sudden_death_enabled = false
+    server.mastermode = 0
+    server.unsetmaster()
 end
 
 
@@ -207,18 +202,28 @@ local function installHandlers()
 
 end
 
-uninstallHandlers = function()
-    
-    for i,handlerId in ipairs(evthandlers) do 
-        server.cancel_handler(handlerId) 
-    end
+function uninstallHandlers()
+
+    for i,handlerId in ipairs(evthandlers) do server.cancel_handler(handlerId) end
     evthandlers = {}
 
 end
 
-function server.playercmd_insta(cn, map, player1, player2)
+if server.enable_insta_command == 1 then
+    function server.playercmd_insta(cn, map, player1, player2)
+        ESL(cn, map, player1, player2, "instagib")
+    end
+end
 
-    if running then
+if server.enable_effic_command == 1 then
+    function server.playercmd_effic(cn, map, player1, player2)
+        ESL(cn, map, player1, player2, "efficiency")
+    end
+end
+
+
+function ESL(cn, map, player1, player2, mode)
+ if running then
         if server.player_priv_code(cn) < 1 then
                 if server.player_priv_code(player1_cn) > 0 or server.player_priv_code(player2_cn) > 0 then
                          server.player_msg(cn, red("Permission denied"))
@@ -247,17 +252,16 @@ function server.playercmd_insta(cn, map, player1, player2)
         return
     end
 
-    --if player1 == player2 then
-    ---    server.player_msg(cn, red("player 1 and player 2 have the same CN."))
-    --   return
-    --end
-    uninstallHandlers()
+    if player1 == player2 then
+        server.player_msg(cn, red("player 1 and player 2 have the same CN."))
+       return
+    end
+
     player_score = {}
     running = true
     gamecount = 0
     sudden_death_enabled = true
     sudden_death = false
-    local mode = "instagib"
     match_master = server.player_id(cn)
     player1_cn = tonumber(player1)
     player2_cn = tonumber(player2)
@@ -265,8 +269,6 @@ function server.playercmd_insta(cn, map, player1, player2)
     player2_id = server.player_id(player2)
     player1_name = server.player_name(player1)
     player2_name = server.player_name(player2)
-    server_name = server.servername
-    server.servername = server_name .. " (" .. player1_name .. " vs " .. player2_name .. ")"
 
 -- FIXME Used for setting master if someone other then player runs script
 --    if not cn == player1_cn and not cn == player2_cn then
@@ -278,9 +280,12 @@ function server.playercmd_insta(cn, map, player1, player2)
 
     installHandlers()
 
-    server.msg(green("--[ 1on1 - " .. red(server.player_name(player1)) .. " against " .. blue(server.player_name(player2)) .. " mode: " .. orange(mode)  .. " map: " .. orange(map) ))
-    server.msg(green("--[ 1on1 - " .. red(server.player_name(player1)) .. " against " .. blue(server.player_name(player2)) .. " mode: " .. orange(mode)  .. " map: " .. orange(map) ))
-    server.msg(green("--[ 1on1 - " .. red(server.player_name(player1)) .. " against " .. blue(server.player_name(player2)) .. " mode: " .. orange(mode)  .. " map: " .. orange(map) ))
+    server.msg(green("--[ 1on1 - " .. red(server.player_name(player1)) .. " against " .. blue(server.player_name(player2)) .. " mode: " .. orange(mode)
+.. " map: " .. orange(map) ))
+    server.msg(green("--[ 1on1 - " .. red(server.player_name(player1)) .. " against " .. blue(server.player_name(player2)) .. " mode: " .. orange(mode)
+.. " map: " .. orange(map) ))
+    server.msg(green("--[ 1on1 - " .. red(server.player_name(player1)) .. " against " .. blue(server.player_name(player2)) .. " mode: " .. orange(mode)
+.. " map: " .. orange(map) ))
 
     server.specall()
     server.unspec(player1)
@@ -303,5 +308,5 @@ function server.playercmd_insta(cn, map, player1, player2)
         end
 
     end)
-
 end
+
