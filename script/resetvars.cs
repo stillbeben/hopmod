@@ -218,6 +218,7 @@ global cd_accuracy_limit 0
 
 global use_cd_chainsawhack 0
 
+global resize_totalminplayers 1
 global resize_totalmaxplayers 7
 global use_resize_mastermode 0
 global resize_mastermode locked

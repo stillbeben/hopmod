@@ -27,6 +27,7 @@ function mastercmd(...)
     return func(unpack(arg))
 end
 
+
 if server.enable_info_command == 1 then
     dofile("./script/command/info.lua")
 end
