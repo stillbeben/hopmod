@@ -1,5 +1,5 @@
 local function cd_chainsaw_hack_warning(cd_chainsaw_hack_warning_cn)
-    server.log("WARNING: " .. server.player_name(cd_chainsaw_hack_warning_cn) .. "(" .. cd_chainsaw_hack_warning_cn .. ") uses a chainsaw hack.  [ip: " .. server.player_ip(cd_chainsaw_hack_warning_cn) .. "]")
+    server.log("WARNING: " .. server.player_name(cd_chainsaw_hack_warning_cn) .. "(" .. cd_chainsaw_hack_warning_cn .. ") uses a chainsaw hack.  [pj: " .. server.player_lag(cd_chainsaw_hack_warning_cn) .. " | ping: " .. server.player_ping(cd_chainsaw_hack_warning_cn) .. " | ip: " .. server.player_ip(cd_chainsaw_hack_warning_cn) .. "]")
 end
 
 server.event_handler("frag",function(tcn,acn)
