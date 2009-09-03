@@ -17,6 +17,7 @@ using namespace fungu;
 
 #include <sstream>
 #include <iostream>
+#include <time.h>
 
 static void create_server_namespace(lua_State *);
 static void bind_object_to_lua(const_string, script::env::object *);
@@ -222,9 +223,15 @@ std::string get_script_error_message(script::error_trace * errinfo)
     std::stringstream out;
     script::error error = errinfo->get_error();
     error.get_error_message();
-    out<<"Error";
-    if(source) out<<" in "<<source->get_location()<<":"<<source->get_line_number();
-    out<<": "<<error.get_error_message();
+    
+    char timestamp[32];
+    time_t now = time(NULL);
+    strftime(timestamp, sizeof(timestamp), "[%a %d %b %X] ", localtime(&now));
+    
+    out<<timestamp;
+    if(source) out<<source->get_location()<<":"<<source->get_line_number()<<": ";
+    out<<error.get_error_message();
+    
     delete errinfo;
     return out.str();
 }
