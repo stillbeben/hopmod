@@ -112,35 +112,12 @@ end
 
 
 
-function onTeamkill(actor, victim)
-    
-    local teamkill_limit = server.teamkill_limit
-    if teamkill_limit == -1 then return end
-    
-    if not server.player_var(actor,"shown_teamkill_warning") then
-        
-        if server.teamkill_showlimit == 1 then
-            server.player_msg(actor,"This server will not tolerate more than " .. teamkill_limit .. " team kills per game.")
-        else
-            server.player_msg(actor,"This server enforces a team kill limit, and so you need to play more carefully. You have been warned.")
-        end
-        
-        server.player_var(actor,"shown_teamkill_warning",true)
-    end
-    
-    if server.player_teamkills(actor) > teamkill_limit then
-        server.kick(actor,1800,"server","teamkilling")
-    end
-    
-end
-
 server.event_handler("connect",onConnect)
 server.event_handler("disconnect", onDisconnect)
 server.event_handler("active", sendServerBanner)
 server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
 server.event_handler("text",onText)
 server.event_handler("sayteam", onText)
-server.event_handler("teamkill", onTeamkill)
 server.event_handler("mapvote", onMapVote)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
@@ -181,7 +158,7 @@ server.event_handler("started", function()
     
     dofile("./script/playercmd.lua")
     
-    if server.fileExists("./conf/bans") then
+    if server.fileExists(server.banlist_file) then
         dofile("./" .. server.banlist_file)
     end
     
@@ -201,6 +178,10 @@ server.event_handler("started", function()
     if server.use_irc_bot == 1 then
         os.execute("bin/server start_ircbot")
         server.event_handler("shutdown", function() server.stop_ircbot() end)
+    end
+    
+    if server.enable_teamkill_limiter == 1 then
+	dofile("./script/teamkilllimiter.lua")
     end
     
     if server.teamkill_showlimit == 1 then

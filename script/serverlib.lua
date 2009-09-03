@@ -295,6 +295,7 @@ function server.printserverstatus(filename,filemode)
     end
     
     out:flush()
+    out:close()
 end
 
 function server.valid_cn(cn)

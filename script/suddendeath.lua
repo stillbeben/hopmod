@@ -227,7 +227,7 @@ if server.enable_nosd_command == 1 then
     function server.playercmd_nosd(nosd_cn)
 	return admincmd(function()
             server.sdmode(nosd_cn,0)
-        server.msg(orange("--[ Sudden Death Mode Disabled. There may be ties"))
+	    server.msg(orange("--[ Sudden Death Mode Disabled. There may be ties"))
         end,nosd_cn)
     end
 end

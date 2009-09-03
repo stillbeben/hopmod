@@ -65,7 +65,7 @@ server.event_handler("frag", function(target_cn, actor_cn)
     if (target_vars.is_killingspree == 1) and (target_vars.killingspree > 14) then
 	server.msg(string.format("\f2%s was stopped by \f6%s!!",server.player_name(target_cn),server.player_name(actor_cn)))
     end
-    target_vars(target_cn).is_killingspree = 0
+    target_vars.is_killingspree = 0
     target_vars.killingspree = 0
 end)
 

@@ -1,4 +1,5 @@
 -- #votekick <cn>|"<name>"
+-- [[ based on a player command written by Thomas ]] --
 
 local varvk = {}
 
