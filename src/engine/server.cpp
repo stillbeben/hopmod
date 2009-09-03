@@ -3,6 +3,7 @@
 
 #include "cube.h"
 #include <signal.h>
+#include <iostream>
 
 static void shutdown_from_signal(int i)
 {
@@ -741,6 +742,8 @@ bool setuplistenserver(bool dedicated)
     serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), 0, uprate);
     if(!serverhost) return servererror(dedicated, "could not create server host");
     loopi(maxclients) serverhost->peers[i].data = NULL;
+    const char * _serverip = serverip[0] == '\0' ? "0.0.0.0" : serverip;
+    std::cout<<"Game server socket listening on UDP "<<_serverip<<":"<<serverport<<std::endl;
     address.port = server::serverinfoport(serverport > 0 ? serverport : -1);
     pongsock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
     if(pongsock != ENET_SOCKET_NULL && enet_socket_bind(pongsock, &address) < 0)
@@ -750,6 +753,7 @@ bool setuplistenserver(bool dedicated)
     }
     if(pongsock == ENET_SOCKET_NULL) return servererror(dedicated, "could not create server info socket");
     else enet_socket_set_option(pongsock, ENET_SOCKOPT_NONBLOCK, 1);
+    std::cout<<"Game info socket listening on UDP "<<_serverip<<":"<<address.port<<std::endl;
     address.port = server::laninfoport();
     lansock = enet_socket_create(ENET_SOCKET_TYPE_DATAGRAM);
     if(lansock != ENET_SOCKET_NULL && (enet_socket_set_option(lansock, ENET_SOCKOPT_REUSEADDR, 1) < 0 || enet_socket_bind(lansock, &address) < 0))
