@@ -1077,4 +1077,9 @@ void suicide(int cn)
     suicide(get_ci(cn));
 }
 
+bool compare_admin_password(const char * x)
+{
+    return !strcmp(x, masterpass);
+}
+
 #endif

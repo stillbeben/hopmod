@@ -139,6 +139,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_ro_var(server::smapname, "map", env);
     script::bind_var(server::serverpass, "server_password", env);
     script::bind_wo_var(server::masterpass, "admin_password", env);
+    script::bind_freefunc(server::compare_admin_password, "check_admin_password", env);
     script::bind_ro_var(server::currentmaster, "master", env);
     script::bind_ro_var(server::minremain, "timeleft", env);
     script::bind_var(server::interm, "intermission", env);

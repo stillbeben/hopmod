@@ -145,6 +145,7 @@ namespace server
     void calc_player_ranks();
     void script_set_mastermode(int);
     void add_allowed_ip(const char *);
+    bool compare_admin_password(const char *);
     
     std::vector<int> cs_player_list();
     std::vector<int> cs_spec_list();
