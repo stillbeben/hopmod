@@ -378,7 +378,7 @@ if server.enable_stats_command == 1 then
 	    
 	    for a,b in ipairs(server.players()) do
                 if not (server.player_status_code(b) == 5) then
-                    table.insert(tab,b)
+                    table.insert(tab,tonumber(b))
                 end
             end
             qsort(1,(tonumber(server.playercount) - tonumber(server.speccount)))
@@ -522,7 +522,7 @@ if server.enable_stats_command == 1 then
 		    red(deaths),
                     kpd,
                     coloracc(server.player_accuracy(player)),
-                    blue(calcrank(player))))
+                    blue(calcrank(tonumber(player)))))
             if server.gamemodeinfo.teams then
                 server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))
             end

@@ -43,8 +43,8 @@ auth.add_domain_handler(domain_name, function(cn, name)
     
     local pvars = server.player_pvars(cn)
     local vars = server.player_vars(cn)
-    
-    if pvars.nameprotect_wanted_authname and pvars.nameprotect_authname and pvars.nameprotect_wanted_authname ~= name then
+
+    if pvars.nameprotect_wanted_authname and pvars.nameprotect_authname and string.lower(pvars.nameprotect_wanted_authname) ~= string.lower(name) then
 	server.player_msg(cn,"You authenticated as " .. green(name) .. " but the " .. red("server was expecting you to auth as ") .. green(pvars.nameprotect_authname)  .. ". You have about " .. orange("10 seconds to rename"))
         return
     end
@@ -62,7 +62,7 @@ end)
 
 local function isPlayerVerified(cn)
     local pvars = server.player_pvars(cn)
-    return pvars.name_verified and pvars.reserved_name == server.player_pvars(cn).nameprotect_authname and tonumber(server.uptime) < pvars.reserved_name_expire
+    return pvars.name_verified and string.lower(pvars.reserved_name) == string.lower(server.player_pvars(cn).nameprotect_authname) and tonumber(server.uptime) < pvars.reserved_name_expire
 end
 
 local function getTagIdOfTagFront(tag)
@@ -104,6 +104,13 @@ local function nameInClan(name,domain_id,tag_id)
     end
 end
 
+local function get_user_name(name,domain_id)
+    for real_name in db:cols("SELECT name FROM users WHERE domain_id = '" .. domain_id .. "' and lower(name) = '" .. string.lower(name) .. "'") do
+	return real_name
+    end
+    return nil
+end
+
 local function checkPlayerName(cn)
     local function check_name(cn)
 	auth.sendauthreq(cn, domain_name)
@@ -128,7 +135,7 @@ local function checkPlayerName(cn)
             if sid ~= server.player_sessionid(cn) or pid ~= server.player_id(cn) then
         	return
 	    end
-            if server.player_name(cn) == playername then
+            if string.lower(server.player_name(cn)) == string.lower(playername) then
                 server.kick(cn, 0, "server", "using reserved tag")
             end
         end)
@@ -136,24 +143,24 @@ local function checkPlayerName(cn)
     
     local playername = server.player_name(cn)
     
-    if auth.found_name(playername,domain_id) and not isPlayerVerified(cn) then
-        server.player_pvars(cn).nameprotect_wanted_authname = playername
-        server.player_pvars(cn).nameprotect_authname = playername
+    if auth.found_name_insensitive(playername,domain_id) and not isPlayerVerified(cn) then
+        server.player_pvars(cn).nameprotect_wanted_authname = get_user_name(playername,domain_id)
+        server.player_pvars(cn).nameprotect_authname = get_user_name(playername,domain_id)
         check_name(cn)
     elseif server.use_tag_reservation == 1 then
         local name_length = #playername
         for tag_front in db:cols("SELECT tag_front FROM tags WHERE place = 1") do
-            if string.find(playername,tag_front) then
+            if string.find(string.lower(playername),string.lower(tag_front)) then
                 local tag_id = getTagIdOfTagFront(tag_front)
                 local tag_front_length = #tag_front
-                if string.sub(playername,1,tag_front_length) == tag_front then
+                if string.lower(string.sub(playername,1,tag_front_length)) == string.lower(tag_front) then
                     local lplayername = string.sub(playername,(tag_front_length + 1),name_length)
-                    if ( not isPlayerVerified(cn) or ( isPlayerVerified(cn) and server.player_pvars(cn).reserved_name ~= lplayername )) and not nameInClan(lplayername,domain_id,tag_id) then
+                    if ( not isPlayerVerified(cn) or ( isPlayerVerified(cn) and string.lower(server.player_pvars(cn).reserved_name) ~= string.lower(lplayername) )) and not nameInClan(lplayername,domain_id,tag_id) then
                         check_tag(cn,playername)
                         return
-		    elseif not isPlayerVerified(cn) or server.player_pvars(cn).reserved_name ~= lplayername then
-                        server.player_pvars(cn).nameprotect_wanted_authname = lplayername
-                        server.player_pvars(cn).nameprotect_authname = lplayername
+		    elseif not isPlayerVerified(cn) or string.lower(server.player_pvars(cn).reserved_name) ~= string.lower(lplayername) then
+                        server.player_pvars(cn).nameprotect_wanted_authname = get_user_name(lplayername,domain_id)
+                        server.player_pvars(cn).nameprotect_authname = get_user_name(lplayername,domain_id)
                         check_name(cn)
                         return
                     end
@@ -161,17 +168,17 @@ local function checkPlayerName(cn)
             end
         end
         for tag_back in db:cols("SELECT tag_back FROM tags WHERE place = 0") do
-            if string.find(playername,tag_back) then
+            if string.find(string.lower(playername),string.lower(tag_back)) then
 		local tag_id = getTagIdOfTagBack(tag_back)
                 local tag_back_length = #tag_back
-		if string.sub(playername,((name_length - tag_back_length) + 1),name_length) == tag_back then
+		if string.lower(string.sub(playername,((name_length - tag_back_length) + 1),name_length)) == string.lower(tag_back) then
                     local lplayername = string.sub(playername,1,(name_length - tag_back_length))
-                    if ( not isPlayerVerified(cn) or ( isPlayerVerified(cn) and server.player_pvars(cn).reserved_name ~= lplayername )) and not nameInClan(lplayername,domain_id,tag_id) then
+                    if ( not isPlayerVerified(cn) or ( isPlayerVerified(cn) and string.lower(server.player_pvars(cn).reserved_name) ~= string.lower(lplayername) )) and not nameInClan(lplayername,domain_id,tag_id) then
                         check_tag(cn,playername)
                 	return
-                    elseif not isPlayerVerified(cn) or server.player_pvars(cn).reserved_name ~= lplayername then
-                        server.player_pvars(cn).nameprotect_wanted_authname = lplayername
-                        server.player_pvars(cn).nameprotect_authname = lplayername
+                    elseif not isPlayerVerified(cn) or string.lower(server.player_pvars(cn).reserved_name) ~= string.lower(lplayername) then
+                        server.player_pvars(cn).nameprotect_wanted_authname = get_user_name(lplayername,domain_id)
+                        server.player_pvars(cn).nameprotect_authname = get_user_name(lplayername,domain_id)
                         check_name(cn)
                         return
                     end
@@ -179,20 +186,20 @@ local function checkPlayerName(cn)
             end
         end
         for tag_front,tag_back in db:cols("SELECT tag_front,tag_back FROM tags WHERE place = 2") do
-            if string.find(playername,tag_front) and string.find(playername,tag_back) then
+            if string.find(string.lower(playername),string.lower(tag_front)) and string.find(string.lower(playername),string.lower(tag_back)) then
                 local tag_id = getTagIdOfTagBoth(tag_front,tag_back)
                 local tag_front_length = #tag_front
                 local tag_back_length = #tag_back
-                if (string.sub(playername,1,tag_front_length) == tag_front) and (string.sub(playername,((name_length - tag_back_length) + 1),name_length) == tag_back) then
+                if (string.lower(string.sub(playername,1,tag_front_length)) == string.lower(tag_front)) and (string.lower(string.sub(playername,((name_length - tag_back_length) + 1),name_length)) == string.lower(tag_back)) then
                     local tmp = string.sub(playername,(tag_front_length + 1),name_length)
                     local tmp_length = #tmp
                     local lplayername = string.sub(tmp,1,(tmp_length - tag_back_length))
-                    if ( not isPlayerVerified(cn) or ( isPlayerVerified(cn) and server.player_pvars(cn).reserved_name ~= lplayername )) and not nameInClan(lplayername,domain_id,tag_id) then
+                    if ( not isPlayerVerified(cn) or ( isPlayerVerified(cn) and string.lower(server.player_pvars(cn).reserved_name) ~= string.lower(lplayername) )) and not nameInClan(lplayername,domain_id,tag_id) then
                         check_tag(cn,playername)
                         return
-                    elseif not isPlayerVerified(cn) or server.player_pvars(cn).reserved_name ~= lplayername then
-                        server.player_pvars(cn).nameprotect_wanted_authname = lplayername
-                        server.player_pvars(cn).nameprotect_authname = lplayername
+                    elseif not isPlayerVerified(cn) or string.lower(server.player_pvars(cn).reserved_name) ~= string.lower(lplayername) then
+                        server.player_pvars(cn).nameprotect_wanted_authname = get_user_name(lplayername,domain_id)
+                        server.player_pvars(cn).nameprotect_authname = get_user_name(lplayername,domain_id)
                         check_name(cn)
                         return
                     end

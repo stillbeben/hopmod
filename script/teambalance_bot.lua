@@ -145,7 +145,7 @@ local function teambalance_text_event(teambalance_text_cn,teambalance_text_text)
 	text_fteam = fuller_team()
 	if server.player_team(teambalance_text_cn) == text_fteam then
 	    if ( server.player_status(teambalance_text_cn) == "dead" ) and ( string.match(teambalance_text_text,"balance") or string.match(teambalance_text_text,"BALANCE") ) then
-		server.changeteam(teambalance_text_cn,otherteam(text_fteam))
+		server.changeteam(teambalance_text_cn,other_team(text_fteam))
 		server.player_msg(teambalance_text_cn,"(" .. green("Info") .. ")  " .. orange("you switched the team for balance"))
 	    end
 	end

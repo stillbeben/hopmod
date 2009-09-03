@@ -2,7 +2,7 @@
 
 global motd "Running Hopmod"
 
-global banlist_file "conf/bans"
+global banlist_file "conf/bans.lua"
 global geoip_db_file "share/GeoIP.dat"
 
 global use_script_socket_server 1
@@ -28,10 +28,12 @@ global stats_sqlite_synchronous 1
 global stats_use_json 0
 global stats_overwrite_name_with_authname 0
 global stats_record_only_authnames 0
+
 global enable_stats_command 0
 global exp_stats_total_kpd 0
 global exp_stats_total_acc 0
 global exp_stats_total_rank 0
+
 global enable_showauth_command 0
 global enable_showauths_command 0
 global enable_shownonauths_command 0
@@ -59,13 +61,13 @@ global ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
 
 global small_ffa_maps [complex douze ot academy metl2 metl3 tartech fanatic_quake
     turbine oddworld aard3c kffa neondevastation hog2 memento neonpanic sdm1
-    shinmei1 island metl4 frozen darkdeath orion nmp10 torment]
+    shinmei1 island metl4 frozen orion nmp10 torment]
 
 global big_ffa_maps [refuge kalking1 dock lostinspace DM_BS1 shindou wake5
     fragplaza pgdm frostbyte stemple powerplant killfactory corruption deathtek
     aqueducts orbe arabic ogrosupply curvedm ruby shadowed konkuri-to moonlite
     fanatic_castle_trap tejen katrez_d kmap5 thor thetowers hades paradigm
-    mechanic wdcd nmp8 phosgene oasis ksauer1 roughinery guacamole]
+    mechanic wdcd nmp8 phosgene oasis ksauer1 roughinery guacamole darkdeath]
 
 global insta_maps &ffa_maps
 
@@ -117,6 +119,7 @@ global "small_instagib team_maps" &small_insta_maps
 
 global "regen capture_maps" &capture_maps
 global "small_regen capture_maps" &small_capture_maps
+
 global "insta ctf_maps" &ctf_maps
 global "small_insta ctf_maps" &small_ctf_maps
 
@@ -188,7 +191,10 @@ flood_protect_newmap 10000
 
 global enable_teamkill_limiter 1
 global teamkill_limit 7
+global teamkill_bantime (mins 30)
+global teamkill_show_public 0
 global teamkill_showlimit 1
+global exp_teamkill_limiter 0
 
 global enable_ping_limiter 1
 global ping_limiter_tick 25000
@@ -228,6 +234,7 @@ global use_cd_chainsawhack 0
 
 global resize_totalminplayers 1
 global resize_totalmaxplayers 7
+
 global use_resize_mastermode 0
 global resize_mastermode locked
 
@@ -255,47 +262,107 @@ global enable_votekick_command 0
 global votekick_ad_timer (mins 4)
 
 global enable_eval_command 0
+
 global enable_info_command 0
+
 global enable_specall_command 0
+global specall_command_master 0
+
 global enable_unspecall_command 0
+global unspecall_command_master 0
+
 global enable_maxclients_command 0
+global maxclients_command_master 0
+
 global enable_uptime_command 0
+
 global enable_reload_command 0
+global reload_command_master 0
+
 global enable_changetime_command 0
+global changetime_command_master 0
+
 global enable_lpc_command 0
+
 global enable_players_command 0
+
 global enable_names_command 0
+
 global enable_pause_command 0
+global pause_command_master 0
+
 global enable_resume_command 0
+global resume_command_master 0
+
 global enable_motd_command 0
+global motd_command_master 0
+
 global enable_group_command 0
+global group_command_master 0
+
 global enable_givemaster_command 0
+global givemaster_command_master 0
+
 global enable_mute_command 0
+global mute_command_master 0
+
 global enable_unmute_command 0
+global unmute_command_master 0
+
 global enable_ban_command 0
+
 global enable_kick_command 0
+
 global enable_persist_command 0
+global persist_command_master 0
+
 global enable_versus_command 0
+
 global enable_insta_command 0
+
 global enable_1on1_command 0
+global oneonone_command_master 0
+
 global enable_effic_command 0
+
 global enable_warning_command 0
 global warnings_limit 3
+global warning_bantime (mins 60)
+global warning_command_master 0
+
 global enable_getcn_command 0
+
 global enable_addbot_command 0
+global enable_getcn_command 0
+
 global master_domains []
 global enable_master_command 0
+
 global admin_domain ""
 global enable_admin_command 0
+
 global invadmin_domain ""
 global enable_invadmin_command 0
+
 global enable_msg_command 0
+global msg_command_master 0
+
 global enable_playermsg_command 0
+global playermsg_command_master 0
+
 global enable_privmsg_command 0
+
 global enable_auth_command 0
+
 global enable_forcemap_command 0
 global enable_changemap_command 0
+
 global enable_changeteam_command 0
+
 global enable_cw_command 0
+global cw_command_master 0
+
 global enable_duel_command 0
+
 global enable_resize_command 0
+global resize_command_master 0

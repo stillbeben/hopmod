@@ -65,22 +65,13 @@ local function statsprinter_players()
     file:write("<html>\n")
     file:write("<body text=\"#ffffff\">\n")
     file:write("<table>\n")
-    local gm = tostring(server.gamemode)
-    if not ( gm == "instagib" or gm == "tactics" or gm == "ffa" or gm == "efficiency" ) then
-	file:write("<tr><td width=\"50%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"25%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"25%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>team</i></font></td></tr>\n")
-    else
-	file:write("<tr><td width=\"75%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"25%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td></tr>\n")
-    end
+    file:write("<tr><td width=\"75%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"25%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td></tr>\n")
     for p in server.gplayers() do
 	local country = server.ip_to_country_code(p:ip())
 	if #country == 0 then
 	    country = "??"
 	end
-	if not ( gm == "instagib" or gm == "tactics" or gm == "ffa" or gm == "efficiency" ) then
-	    file:write("<tr><td width=\"50%\"><font face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"25%\"><font face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"25%\"><font face=\"verdana\" size=1>" .. p:team() .. "</font></td></tr>\n")
-	else
-	    file:write("<tr><td width=\"75%\"><font face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"25%\"><font face=\"verdana\" size=1>" .. country .. "</font></td></tr>\n")
-	end
+	file:write("<tr><td width=\"75%\"><font face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"25%\"><font face=\"verdana\" size=1>" .. country .. "</font></td></tr>\n")
     end
     file:write("</table>\n")
     file:write("</body>\n")
@@ -96,45 +87,24 @@ local function statsprinter_players_admin()
     file:write("<html>\n")
     file:write("<body text=\"#ffffff\">\n")
     file:write("<table>\n")
-    local gm = tostring(server.gamemode)
-    if server.gamemodeinfo.teams then
-	if server.use_name_reservation == 1 then
-	    file:write("<tr><td width=\"18%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"18%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>auth.name</i></font></td><td width=\"6%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"6%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>team</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>played.time</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
-	else
-	    file:write("<tr><td width=\"24%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>team</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>played.time</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
-	end
+    if server.use_name_reservation == 1 then
+        file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>auth.name</i></font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"10%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
     else
-	if server.use_name_reservation == 1 then
-	    file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>auth.name</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>played.time</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
-	else
-	    file:write("<tr><td width=\"26%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"9%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"9%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>played.time</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
-	end
+        file:write("<tr><td width=\"40%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"10%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
     end
     for p in server.gplayers() do
 	local country = server.ip_to_country_code(p:ip())
 	if #country == 0 then
 	    country = "??"
 	end
-	if server.gamemodeinfo.teams then
-	    if server.use_name_reservation == 1 then
-		if server.player_pvars(p.cn).reserved_name then
-		    file:write("<tr><td width=\"18%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"18%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_pvars(p.cn).reserved_name .. "</font></td><td width=\"6%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"6%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:team() .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:timeplayed()) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
-		else
-		    file:write("<tr><td width=\"18%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"18%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>%</font></td><td width=\"6%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"6%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:team() .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:timeplayed()) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
-		end
+	if server.use_name_reservation == 1 then
+	    if server.player_pvars(p.cn).reserved_name then
+	        file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_pvars(p.cn).reserved_name .. "</font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"10%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
 	    else
-		file:write("<tr><td width=\"24%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:team() .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:timeplayed()) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
+	        file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>%</font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"10%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
 	    end
 	else
-	    if server.use_name_reservation == 1 then
-		if server.player_pvars(p.cn).reserved_name then
-		    file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_pvars(p.cn).reserved_name .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:timeplayed()) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
-		else
-		    file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>%</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:timeplayed()) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
-		end
-	    else
-		file:write("<tr><td width=\"26%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"9%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"9%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:timeplayed()) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
-	    end
+	    file:write("<tr><td width=\"40%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:name() .. "</font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p.cn .. "</font></td><td width=\"5%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:ip() .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(p:connection_time()) .. "</font></td><td width=\"10%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. p:priv() .. "</font></td></tr>\n")
 	end
     end
     file:write("</table>\n")
@@ -174,9 +144,9 @@ local function statsprinter_players_spec_admin()
     file:write("<body text=\"#ffffff\">\n")
     file:write("<table>\n")
     if server.use_name_reservation == 1 then
-        file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>auth.name</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>played.time</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
+        file:write("<tr><td width=\"22%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"22%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>auth.name</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
     else
-        file:write("<tr><td width=\"26%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"9%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"9%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>played.time</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
+        file:write("<tr><td width=\"44%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>name</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>cn</i></font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>co</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>ip</i></font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>time</i></font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1><i>priv</i></font></td></tr>\n")
     end
     for q,cn in ipairs(server.spectators()) do
 	local country = server.ip_to_country_code(server.player_ip(cn))
@@ -185,12 +155,12 @@ local function statsprinter_players_spec_admin()
 	end
 	if server.use_name_reservation == 1 then
 	    if server.player_pvars(cn).reserved_name then
-		file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_name(cn) .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_pvars(cn).reserved_name .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. cn .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_ip(cn) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_timeplayed(cn)) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_connection_time(cn)) .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_priv(cn) .. "</font></td></tr>\n")
+		file:write("<tr><td width=\"22%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_name(cn) .. "</font></td><td width=\"22%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_pvars(cn).reserved_name .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. cn .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_ip(cn) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_connection_time(cn)) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_priv(cn) .. "</font></td></tr>\n")
 	    else
-		file:write("<tr><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_name(cn) .. "</font></td><td width=\"20%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>%</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. cn .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_ip(cn) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_timeplayed(cn)) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_connection_time(cn)) .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_priv(cn) .. "</font></td></tr>\n")
+		file:write("<tr><td width=\"22%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_name(cn) .. "</font></td><td width=\"22%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>%</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. cn .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_ip(cn) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_connection_time(cn)) .. "</font></td><td width=\"12%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_priv(cn) .. "</font></td></tr>\n")
 	    end
 	else
-	    file:write("<tr><td width=\"26%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_name(cn) .. "</font></td><td width=\"9%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. cn .. "</font></td><td width=\"9%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_ip(cn) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_timeplayed(cn)) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_connection_time(cn)) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_priv(cn) .. "</font></td></tr>\n")
+	    file:write("<tr><td width=\"44%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_name(cn) .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. cn .. "</font></td><td width=\"8%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. country .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_ip(cn) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.format_duration(server.player_connection_time(cn)) .. "</font></td><td width=\"14%\"><font color=\"#c0c0c0\" face=\"verdana\" size=1>" .. server.player_priv(cn) .. "</font></td></tr>\n")
 	end
     end
     file:write("</table>\n")
@@ -281,8 +251,6 @@ server.sleep(1000,function()
     statsprinter("mastermode")
 end)
 
--- rewrite mode, map at mapchange
--- additionaly, rewrite mastermode, when server goes empty
 server.event_handler("mapchange",function(map,mode)
     statsprinter("mode")
     statsprinter("map")
@@ -294,30 +262,55 @@ server.event_handler("mapchange",function(map,mode)
     end
 end)
 
--- rewrite playercount, players, spectators at connect
 server.event_handler("active",function(cn)
     statsprinter("players")
     statsprinter("players","active")
     statsprinter("players","spec")
 end)
 
--- rewrite playercount, players, spectators at disconnect
 server.event_handler("disconnect",function(cn)
     statsprinter("players")
     statsprinter("players","active")
     statsprinter("players","spec")
 end)
 
--- rewrite players, spectators at join/leave spectators
 server.event_handler("spectator",function(cn,joined)
     statsprinter("players")
     statsprinter("players","active")
     statsprinter("players","spec")
 end)
 
--- rewrite mastermode at mastermode-change
 server.event_handler("setmastermode",function(old,new)
     statsprinter("mastermode",new)
+end)
+
+server.event_handler("rename",function(cn,oldname,newname)
+    if server.player_status_code(cn) == 5 then
+	statsprinter("players","spec")
+    else
+	statsprinter("players","active")
+    end
+end)
+
+server.event_handler("setmaster",function(cn,priv,success)
+    statsprinter("mastermode")
+    if success == 1 then
+	if server.player_status_code(cn) == 5 then
+	    statsprinter("players","spec")
+	else
+	    statsprinter("players","active")
+	end
+    end
+end)
+
+server.event_handler("auth",function(cn,name,domain,success)
+    if success == 1 then
+	if server.player_status_code(cn) == 5 then
+	    statsprinter("players","spec")
+	else
+	    statsprinter("players","active")
+	end
+    end
 end)
 
 -- clear files at shutdown

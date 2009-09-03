@@ -247,14 +247,6 @@ server.event_handler("started", function()
         dofile("./script/change_default_mastermode.lua")
     end
     
-    if server.use_live_server_stats == 1 then
-        dofile("./script/print_server_stats.lua")
-    end
-    
-    if server.use_live_server_single_stats == 1 then
-        dofile("./script/print_single_server_stats.lua")
-    end
-    
     if server.use_teambalancer == 1 then
         dofile("./script/teambalance.lua")
     elseif server.use_teambalancer_bot == 1 then
@@ -285,6 +277,14 @@ server.event_handler("started", function()
 	else
 	    server.changemap(server.first_map, server.first_gamemode, -1)
     	end
+    end
+    
+    if server.use_live_server_stats == 1 then
+        dofile("./script/print_server_stats.lua")
+    end
+    
+    if server.use_live_server_single_stats == 1 then
+        dofile("./script/print_single_server_stats.lua")
     end
     
     server.load_geoip_database(server.geoip_db_file)

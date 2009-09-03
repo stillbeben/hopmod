@@ -381,6 +381,8 @@ end
 
 -- #duel <mode> (<player1> <player2> [<team1> <team2>]|<team1> <team2>) [<map> [forcemap]] [<map.time>] [nosd]
 function server.playercmd_duel(cn,mode,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
+    server.servername = orig_servername
+    
      if running then
 	if server.player_priv_code(cn) < 1 then
     	    if server.player_priv_code(player1_cn) > 0 or server.player_priv_code(player2_cn) > 0 then
