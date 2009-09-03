@@ -74,7 +74,8 @@ const_string    lexical_cast(const char * src,type_tag<const_string>);
 template<typename Source>
 inline const_string lexical_cast(const boost::intrusive_ptr<Source> & src,type_tag<const_string>)
 {
-    return boost::lexical_cast<std::string>(src);
+    //return boost::lexical_cast<std::string, const_string>(src);
+    throw error(NO_CAST);
 }
 
 // Lexical casting involving any type

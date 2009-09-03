@@ -50,23 +50,8 @@ public:
     
     bool is_string_constant()const;
     
-    /**
-        @brief Return formed expression.
-        
-        Reconstructs expression's source code.
-    */
     std::string form_source()const;
     
-    /**
-        @brief Check for empty empression.
-        
-        Returns true if the expression object contains no arguments (including
-        the operation argument).
-        
-        @internal The method is used in alias evaluation, for ingoring the 
-                  evaluation result of empty expressions when setting the
-                  implicit alias result.
-    */
     bool is_empty_expression()const;
 private:
     void add_child_construct(construct * child);

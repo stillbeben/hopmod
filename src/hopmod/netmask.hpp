@@ -87,7 +87,7 @@ public:
                 c = '\0';
             }
             
-            if(c != '\0' && c < '0' || c > '9') throw std::bad_cast();
+            if((c != '\0' && c < '0') || c > '9') throw std::bad_cast();
             
             *str_copy_p = c;
         }

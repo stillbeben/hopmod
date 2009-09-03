@@ -143,7 +143,8 @@ private:
 void register_anonfunc_functions(env & environment)
 {
     static function<raw_function_type> define_anonfun_func(funclib::anonymous_function::define_anonymous_function);
-    environment.bind_global_object(&define_anonfun_func,FUNGU_OBJECT_ID("func"));
+    environment.bind_global_object(&define_anonfun_func, FUNGU_OBJECT_ID("func"));
+    environment.bind_global_object(&define_anonfun_func, FUNGU_OBJECT_ID("function"));
 }
 
 } //namespace corelib

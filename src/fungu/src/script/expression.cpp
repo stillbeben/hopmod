@@ -130,13 +130,13 @@ parse_state expression::parse(source_iterator * first, source_iterator last, env
 result_type expression::eval(env::frame * frame)
 {
     env * environment = frame->get_env();
-    env::object * opobj;
-    
+    env::object * operation_object = NULL;
     const construct * subject_arg = m_first_construct;
     
     const source_context * prev_ctx = environment->get_source_context();
     environment->set_source_context(m_source_ctx);
     
+    // This block of code is run on function exit, it's being used because of the several exit points this method has.
     expression * _this = this;
     BOOST_SCOPE_EXIT((&_this)(&environment)(&prev_ctx))
     {
@@ -146,30 +146,39 @@ result_type expression::eval(env::frame * frame)
 
     try
     {
-        result_type arg1_result_type = m_first_construct->eval(frame);
+        // Resolve the operation object
         
-        if(m_operation_symbol) opobj = m_operation_symbol->lookup_object(frame);
+        result_type arg1_eval_result = m_first_construct->eval(frame);
+        
+        if(m_operation_symbol) operation_object = m_operation_symbol->lookup_object(frame);
         else
         {
-            m_operation_symbol = frame->get_env()->lookup_symbol(arg1_result_type.to_string());
-            if(m_operation_symbol) opobj = m_operation_symbol->lookup_object(frame);
+            m_operation_symbol = frame->get_env()->lookup_symbol(arg1_eval_result.to_string());
+            if(m_operation_symbol) operation_object = m_operation_symbol->lookup_object(frame);
             else
             {
-                if(arg1_result_type.get_type() == typeid(env::object::shared_ptr))
-                    opobj = any_cast<env::object::shared_ptr>(arg1_result_type).get();
-                else opobj = NULL;
+                if(arg1_eval_result.get_type() == typeid(env::object::shared_ptr))
+                    operation_object = any_cast<env::object::shared_ptr>(arg1_eval_result).get();
             }
         }
         
-        if(!opobj)
+        if(!operation_object)
         {
-            const_string opsym = arg1_result_type.to_string();
-            if(is_numeric(opsym)) return opsym;
-            else throw error(UNKNOWN_SYMBOL,boost::make_tuple(opsym.copy()));
+            const_string number = arg1_eval_result.to_string();
+            if(is_numeric(number)) return number;
+            else throw error(UNKNOWN_SYMBOL, boost::make_tuple(number.copy()));
         }
         
-        std::vector<result_type> vargs(m_placeholders.size());
-        std::vector<result_type>::iterator vargIter = vargs.begin();
+        // Evaluate arguments before calling the operation object
+        
+        std::vector<result_type> variable_args(m_placeholders.size());
+        std::vector<result_type>::iterator vargIter = variable_args.begin();
+        
+        // The reason we need to store argument eval results to a local vector
+        // is because of the case where an argument evaluation leads 
+        // re-evaluation of this expression, if we wrote straight to
+        // m_arguments the eval results for the previous arguments would be
+        // overwritten.
         
         for(construct * current = m_first_construct->get_next_sibling();
             current; current = current->get_next_sibling(), vargIter++ )
@@ -179,28 +188,25 @@ result_type expression::eval(env::frame * frame)
         }
         
         std::vector<unsigned char>::const_iterator phIter = m_placeholders.begin();
-        
-        for(vargIter = vargs.begin(); vargIter != vargs.end() ; ++vargIter, ++phIter)
+        for(vargIter = variable_args.begin(); vargIter != variable_args.end() ; ++vargIter, ++phIter)
         {
             m_arguments[*phIter] = *vargIter;
         }
+        variable_args.clear();
         
         subject_arg = m_first_construct;
         
         callargs args(m_arguments);
-        result_type result = opobj->call(args, frame);
         
-        return result;
+        return operation_object -> call(args, frame);
     }
     catch(const error & key)
     {
-        throw new error_trace(
-            key, subject_arg->form_source(), get_source_context());
+        throw new error_trace(key, subject_arg->form_source(), get_source_context());
     }
     catch(error_trace * head_info)
     {
-        throw new error_trace(
-            head_info, subject_arg->form_source(), get_source_context());
+        throw new error_trace(head_info, subject_arg->form_source(), get_source_context());
     }
 }
     
@@ -217,17 +223,27 @@ std::string expression::form_source()const
     construct * current = m_first_construct;
     while(current)
     {
-        if(multiple) source+=" ";
-        else multiple=true;
-        source+=current->form_source();
+        if(multiple) source += " ";
+        else multiple = true;
+        source += current->form_source();
         
         current = current->get_next_sibling();
     }
     
-    source+="\n";
+    source += "\n";
     return source;
 }
 
+/**
+    @brief Check for empty empression.
+    
+    Returns true if the expression contains no arguments (including
+    the operation argument).
+    
+    @internal The method is used in alias evaluation, for ingoring the 
+              evaluation result of empty expressions when setting the
+              implicit alias result.
+*/
 bool expression::is_empty_expression()const
 {
     return !m_first_construct;

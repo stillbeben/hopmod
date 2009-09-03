@@ -99,7 +99,7 @@ struct fxns
       new(reinterpret_cast<T*>(reinterpret_cast<void *>(dest))) T(*reinterpret_cast<T const*>(src));
     }
     static const_string to_string(void *const* src) {
-        return lexical_cast<const_string>(*reinterpret_cast<const T *>(src));
+        return fungu::script::lexical_cast<const_string,T>(*reinterpret_cast<const T *>(src));
     }
     static bool is_arithmetic()
     {
@@ -141,7 +141,7 @@ struct fxns<false>
       new(*reinterpret_cast<T**>(dest)) T(**reinterpret_cast<T* const*>(src));
     }
     static const_string to_string(void *const* src) {
-        return lexical_cast<const_string>(**reinterpret_cast<T * const *>(src));
+        return fungu::script::lexical_cast<const_string>(**reinterpret_cast<T * const *>(src));
     }
     static bool is_arithmetic() {
         return boost::is_arithmetic<T>::value;

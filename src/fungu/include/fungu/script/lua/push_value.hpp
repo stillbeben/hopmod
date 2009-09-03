@@ -25,7 +25,7 @@ namespace lua{
 template<typename T>
 void push_value(lua_State * L, const T & value)
 {
-    const_string value_str = lexical_cast<const_string>(value);
+    const_string value_str = fungu::script::lexical_cast<const_string, T>(value);
     lua_pushlstring(L, value_str.begin(), value_str.length());
 }
 

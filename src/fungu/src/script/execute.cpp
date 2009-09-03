@@ -61,16 +61,14 @@ int execute_file(const char * filename, env & environment)
     
     execute_detail::file_eval_stream reader(&file_frame);
     
-    char tmpbuf[1024];
-    int line = 1;
+    char line[1024];
+    int line_number = 1;
     
     while(!file_frame.has_expired() && !feof(file_stream) && !ferror(file_stream))
     {
-        if(!fgets(tmpbuf, sizeof(tmpbuf), file_stream)) continue;
-        
-        reader.feed(tmpbuf, strlen(tmpbuf)+feof(file_stream));
-        
-        file_context.set_line_number(++line);
+        if(!fgets(line, sizeof(line), file_stream)) continue;
+        reader.feed(line, strlen(line) + feof(file_stream));
+        file_context.set_line_number(++line_number);
     }
     
     if(reader.is_parsing_expression()) throw error(UNEXPECTED_EOF);
@@ -82,7 +80,7 @@ int execute_file(const char * filename, env & environment)
 void throw_if_error(int errcode)
 {
     if(errcode)
-        throw error(OPERATION_ERROR,boost::make_tuple(std::string(strerror(errcode))));
+        throw error(OPERATION_ERROR, boost::make_tuple(std::string(strerror(errcode))));
 }
 
 result_type execute_text(const_string code,env::frame * parent_scope)
