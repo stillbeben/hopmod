@@ -1,17 +1,27 @@
 -- #invadmin
 
 local function invadmin_domainhandler(cn,name)
-    server.set_invadmin(cn)
-    server.player_msg(cn,"(" .. green("Info") .. ")  You claim invisible admin.")
+	f_setinv_admin(cn)
 end
 
-function server.playercmd_invadmin(cn)
-    if server.player_priv_code(cn) > 0 then
-        server.unset_invadmin(cn)
-    else
-        server.player_vars(cn).invadmin = server.invadmin_domain
-        auth.sendauthreq(cn,server.invadmin_domain)
-    end
+local function f_setinvadmin(cn)
+    server.set_invadmin(cn)
+    server.player_msg(cn,"(" .. green("Info") .. ") Your rights have been raised to invisible-admin.")
+end
+
+function server.playercmd_invadmin(cn, pw)
+	if pw then
+		if server.check_admin_password(pw) then
+			f_setinvadmin(cn)
+		end
+	else
+	    if server.player_priv_code(cn) > 0 then
+			server.unset_invadmin(cn)
+		else
+			server.player_vars(cn).invadmin = server.invadmin_domain
+			auth.sendauthreq(cn,server.invadmin_domain)
+		end
+	end
 end
 
 server.event_handler("started",function()
@@ -24,3 +34,7 @@ server.event_handler("started",function()
         end
     end)
 end)
+
+function server.playercmd_invadmin(cn)
+	server.check_admin_password
+end
