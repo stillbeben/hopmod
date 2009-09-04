@@ -22,12 +22,20 @@ function sendServerBanner(cn)
 end
 
 function onConnect(cn)
-
     local country = server.ip_to_country(server.player_ip(cn))
-    
-    if #country > 0 then
-        server.msg(string.format("%s connected from %s.",green(server.player_name(cn)), green(country)))
-    end
+ 	
+	if #country <= 0 then country = "unknown" end
+	    
+	local str_connect = string.format("%s connected from %s.", green(server.player_name(cn)), green(country))
+	local str_connect_admin = str_connect .. " (IP:" .. red(server.player_ip(cn)) .. ")"
+		
+	for index, cn in ipairs(server.players()) do
+		if server.player_priv_code(cn) == 2 then
+			server.player_msg(cn, str_connect_admin)
+		else
+			server.player_msg(cn, str_connect)
+		end
+	end   
 end
 
 function onDisconnect(cn)
