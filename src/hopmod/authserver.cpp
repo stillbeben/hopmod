@@ -440,6 +440,13 @@ void reqauth(client & c, uint id, char * name, char * domain)
     
     if(!found)
     {
+        if(domainIt != users.end())
+        {
+            outputf(c, "failauth %u\n", id);
+            conoutf("failed %u from %s", id, ip);
+            return;
+        }
+        
         delegate_reqauth(c, id, name, domain);
         return;
     }
