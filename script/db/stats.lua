@@ -51,7 +51,12 @@ if using_sqlite then
 
     select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
     if not select_player_totals then error(perr) end
-
+    
+    server.close_stats_db = function()
+        db:close()
+        db = nil
+    end
+    
 end
 
 function statsmod.setNewGame()

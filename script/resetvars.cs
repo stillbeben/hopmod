@@ -62,11 +62,16 @@ global big_ffa_maps [refuge kalking1 dock lostinspace DM_BS1 shindou wake5
     fanatic_castle_trap tejen katrez_d kmap5 thor thetowers hades paradigm
     mechanic wdcd nmp8 phosgene oasis ksauer1 roughinery guacamole]
 
-global insta_maps &ffa_maps
+global instagib_maps [complex douze ot academy metl2 metl3 nmp8 tartech kalking1
+    dock turbine fanatic_quake oddworld wake5 aard3c curvedm kffa
+    neondevastation hog2 neonpanic sdm1]
 
-global small_insta_maps &small_ffa_maps
+global small_instagib_maps [complex douze ot academy metl2 metl3 nmp8 tartech dock
+    turbine oddworld aard3c kffa neondevastation hog2 memento neonpanic
+    sdm1 shinmei1 island metl4 frozen]
 
-global big_insta_maps &big_ffa_maps
+global big_instagib_maps [refuge kalking1 fanatic_quake lostinspace DM_BS1 shindou
+    stemple powerplant killfactory corruption deathtek aqueducts orbe]
 
 global capture_maps [urban_c nevil_c fb_capture nmp9 c_valley lostinspace fc3
     face-capture nmp4 nmp8 hallo monastery ph-capture hades fc4 relic frostbyte
@@ -103,12 +108,8 @@ global big_tactics_maps &big_ffa_maps
 global "tactics team_maps" &ffa_maps
 global "small_tactics team_maps" &small_ffa_maps
 
-global "instagib_maps" &insta_maps
-global small_instagib_maps &small_insta_maps
-global big_instagib_maps &big_insta_maps
-
-global "instagib team_maps" &insta_maps
-global "small_instagib team_maps" &small_insta_maps
+global "instagib team_maps" &instagib_maps
+global "small_instagib team_maps" &small_instagib_maps
 
 global "regen capture_maps" &capture_maps
 global "small_regen capture_maps" &small_capture_maps

@@ -31,6 +31,16 @@ if using_sqlite then
 
     insert_domain, perr = db:prepare("INSERT INTO domains (name, local) VALUES (:name,:local)")
     if not insert_domain then error(perr) end
+    
+    server.event_handler("shutdown", function()
+        if db then db:close() end
+    end)
+    
+    server.close_auth_db = function()
+        db:close()
+        db = nil
+    end
+    
 else
     domains = {}
 end

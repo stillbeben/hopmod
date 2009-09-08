@@ -178,6 +178,8 @@
 			{
 				terminal_container.css({
 					'border' : 'none',
+                    'border-style' : 'inset',
+                    'border-width': '1px',
 					'background-color' : 'black',
 				});
 				terminal_form.css({

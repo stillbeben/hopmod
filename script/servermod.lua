@@ -170,7 +170,9 @@ server.event_handler("started", function()
         dofile("./" .. server.banlist_file)
     end
     
-    dofile("./script/db/stats.lua")
+    if server.record_player_stats == 1 then
+        dofile("./script/db/stats/init.lua")
+    end
     
     if server.use_name_reservation == 1 then
         dofile("./script/db/nameprotect.lua")
