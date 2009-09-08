@@ -149,6 +149,7 @@ public:
         
         return out.str();
     }
+    
 private:
     unsigned long m_prefix;
     unsigned long m_mask;

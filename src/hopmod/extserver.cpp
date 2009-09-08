@@ -1082,4 +1082,22 @@ bool compare_admin_password(const char * x)
     return !strcmp(x, masterpass);
 }
 
+std::vector<std::string> get_bans()
+{
+    std::vector<netmask> permbans = bannedips.get_permanent_bans();
+    std::vector<netmask> tmpbans = bannedips.get_temporary_bans();
+    std::vector<netmask> allbans;
+    
+    std::set_union(permbans.begin(), permbans.end(), tmpbans.begin(), tmpbans.end(), 
+        std::inserter(allbans, allbans.begin()));
+    
+    std::vector<std::string> result;
+    result.reserve(allbans.size());
+    
+    for(std::vector<netmask>::const_iterator it = allbans.begin(); it != allbans.end(); it++)
+        result.push_back(it->to_string());
+    
+    return result;
+}
+
 #endif

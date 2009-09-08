@@ -268,4 +268,6 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_freefunc(mins, "mins", env);
     script::bind_freefunc(secs, "secs", env);
+    
+    script::bind_freefunc(server::get_bans, "bans", env);
 }
