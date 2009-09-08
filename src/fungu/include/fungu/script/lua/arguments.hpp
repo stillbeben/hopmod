@@ -10,6 +10,7 @@
 
 #include "../../dynamic_call.hpp"
 #include "../any.hpp"
+#include "push_value.hpp"
 #include <vector>
 #include <cstddef>
 #include <assert.h>
@@ -61,6 +62,22 @@ public:
     value_type serialize(const std::string & str);
     value_type serialize(int n);
     value_type serialize(bool);
+    
+    template<typename T>
+    value_type serialize(const std::vector<T> & in)
+    {
+        lua_newtable(m_stack);
+        
+        int index = 1;
+        for(typename std::vector<T>::const_iterator it = in.begin(); it != in.end(); ++it)
+        {
+            lua_pushinteger(m_stack, index++);
+            push_value(m_stack, *it);
+            lua_settable(m_stack, -3);
+        }
+        
+        return 1;
+    }
     
     value_type get_void_value();
 private:
