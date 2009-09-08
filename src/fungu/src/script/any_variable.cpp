@@ -15,6 +15,11 @@ any_variable::any_variable()
     
 }
 
+any_variable::~any_variable()
+{
+    
+}
+
 env::object::object_type any_variable::get_object_type()const
 {
     if(m_procedure) 

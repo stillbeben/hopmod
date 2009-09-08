@@ -6,6 +6,8 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#include <iostream>
+
 namespace fungu{
 namespace script{
 
@@ -63,7 +65,12 @@ table::table(const json::object * source)
 
 table::table()
 {
-    m_members[".this"] = this->get_shared_ptr();
+    //m_members[".this"] = this->get_shared_ptr();
+}
+
+table::~table()
+{
+    //m_members[".this"].reset();
 }
 
 env::object::shared_ptr table::create()

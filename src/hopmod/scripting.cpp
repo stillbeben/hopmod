@@ -171,8 +171,9 @@ int server_interface_newindex(lua_State * L)
             {
                 scoped_setting<bool> setting(binding_object_to_cubescript, true);
                 script::any_variable * newvar = new script::any_variable;
-                newvar->set_adopted();
                 hangingObj = newvar;
+                newvar->set_adopted();
+                script::lua::get_argument_value(L);
                 newvar->assign(script::lua::get_argument_value(L));
                 env->bind_global_object(newvar, const_string(key));
                 hangingObj = NULL;

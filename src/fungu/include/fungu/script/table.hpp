@@ -20,6 +20,7 @@ class table:public env::object
 {
 public:
     table();
+    ~table();
     static shared_ptr create();
     result_type call(call_arguments & args,frame *);
     shared_ptr assign(const std::string & name,const any & data);

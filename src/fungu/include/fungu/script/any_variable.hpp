@@ -17,6 +17,7 @@ class any_variable:public env::object
 {
 public:
     any_variable();
+    ~any_variable();
     object_type get_object_type()const;
     void assign(const any & value);
     result_type call(call_arguments & args,env::frame * frame);    

@@ -55,6 +55,7 @@ expression::~expression()
 {
     delete m_parsing;
     delete m_first_construct;
+    delete m_source_ctx;
 }
     
 parse_state expression::parse(source_iterator * first, source_iterator last, env::frame * frame)

@@ -50,7 +50,7 @@ code_block code_block::temporary_source(const_string source,const source_context
 {
     code_block tmp(const_string(),NULL);
     tmp.m_source = source;
-    tmp.m_source_ctx = src_ctx ? src_ctx->clone() : new local_source_context;
+    //tmp.m_source_ctx = src_ctx ? src_ctx->clone() : new local_source_context;
     return tmp;
 }
 
