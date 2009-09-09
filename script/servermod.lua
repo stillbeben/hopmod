@@ -301,6 +301,10 @@ server.event_handler("started", function()
     player_command_alias("pmsg", "privmsg")
     player_command_alias("pm", "privmsg")
     
+    local eslmatch_commands = loadfile("./script/command/eslmatch.lua")()
+    player_command_function("insta", eslmatch_commands.insta_cmd)
+    player_command_function("effic", eslmatch_commands.effic_cmd)
+    
     log_unknown_player_commands()
     
     server.log_status("-> Successfully loaded Hopmod")

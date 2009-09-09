@@ -209,20 +209,10 @@ function uninstallHandlers()
 
 end
 
-if server.enable_insta_command == 1 then
-    function server.playercmd_insta(cn, map, player1, player2)
-        ESL(cn, map, player1, player2, "instagib")
-    end
-end
+local function ESL(cn, map, player1, player2, mode)
 
-if server.enable_effic_command == 1 then
-    function server.playercmd_effic(cn, map, player1, player2)
-        ESL(cn, map, player1, player2, "efficiency")
-    end
-end
-
-
-function ESL(cn, map, player1, player2, mode)
+    player1 = tonumber(player1)
+    player2 = tonumber(player2)
 
     if running then
         server.msg(red("--[ Master Cancelled the running versus match"))
@@ -243,10 +233,10 @@ function ESL(cn, map, player1, player2, mode)
         return
     end
 
-    if player1 == player2 then
-        server.player_msg(cn, red("player 1 and player 2 have the same CN."))
-       return
-    end
+    --if player1 == player2 then
+    --    server.player_msg(cn, red("player 1 and player 2 have the same CN."))
+    --   return
+    --end
 
     player_score = {}
     running = true
@@ -301,3 +291,7 @@ function ESL(cn, map, player1, player2, mode)
     end)
 end
 
+return {
+    insta_cmd = function(cn, map, player1, player2) ESL(cn, map, player1, player2, "instagib") end, 
+    effic_cmd = function(cn, map, player1, player2) ESL(cn, map, player1, player2, "efficiency") end
+}
