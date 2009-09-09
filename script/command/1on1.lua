@@ -2,7 +2,7 @@
 
 local cmd_oneonone = {}
 
-function cmd_oneonone.playercmd(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_mode,oneonone_map,oneonone_maptime)
+return function(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_mode,oneonone_map,oneonone_maptime)
     if not oneonone_cn1 then
         server.player_msg(oneonone_cn,red("a cn is missing"))
         return
@@ -153,16 +153,3 @@ function cmd_oneonone.playercmd(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_m
     end)
 end
 
-if server.oneonone_command_master == 1 then
-    function server.playercmd_1on1(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_mode,oneonone_map,oneonone_maptime)
-	return mastercmd(function()
-	    cmd_oneonone.playercmd(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_mode,oneonone_map,oneonone_maptime)
-	end,oneonone_cn)
-    end
-else
-    function server.playercmd_1on1(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_mode,oneonone_map,oneonone_maptime)
-	return admincmd(function()
-	    cmd_oneonone.playercmd(oneonone_cn,oneonone_cn1,oneonone_cn2,oneonone_mode,oneonone_map,oneonone_maptime)
-	end,oneonone_cn)
-    end
-end

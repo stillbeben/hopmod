@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Hopmod Game Server Control Script
 
 source bin/env.sh

@@ -129,12 +129,7 @@ uninstallHandlers = function()
     evthandlers = {}
 end
 
-function server.playercmd_versus(cn, player1, player2, mode, map)
-
-    if server.player_priv_code(cn) == 0 then
-        server.player_msg(cn, red("Permission denied"))
-        return 
-    end
+return function(cn, player1, player2, mode, map)
     
     if running then 
         server.player_msg(cn, red("Already running"))

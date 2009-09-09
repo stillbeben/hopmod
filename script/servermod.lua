@@ -2,6 +2,7 @@
 dofile("./script/serverlib.lua")
 dofile("./script/logging.lua")
 dofile("./script/maprotation.lua")
+dofile("./script/playercmd.lua")
 
 function sendServerBanner(cn)
 
@@ -67,8 +68,6 @@ function onText(cn,text)
     
     local block = 0
     
-    if server.process_player_command(cn,text) then block = -1 end
-    
     if block == 0 and server.player_pvar(cn,"mute") then
         server.player_msg(cn, red() .. "Your chat messages are being blocked.")
         block = -1
@@ -78,8 +77,9 @@ function onText(cn,text)
 end
 
 function onMapVote(cn,map,mode)
+
     if server.player_priv_code(cn) == 2 then
-	return
+        return
     end
     
     if server.allow_mapvote <= 0 then
@@ -117,8 +117,6 @@ function onMapVote(cn,map,mode)
 	end
     end
 end
-
-
 
 server.event_handler("connect",onConnect)
 server.event_handler("disconnect", onDisconnect)
@@ -164,8 +162,6 @@ server.event_handler("started", function()
         server.execCubeScriptFile("./conf/auth")
     end
     
-    dofile("./script/playercmd.lua")
-    
     if server.fileExists(server.banlist_file) then
         dofile("./" .. server.banlist_file)
     end
@@ -191,7 +187,7 @@ server.event_handler("started", function()
     end
     
     if server.enable_teamkill_limiter == 1 then
-	dofile("./script/teamkilllimiter.lua")
+        dofile("./script/teamkilllimiter.lua")
     end
     
     if server.teamkill_showlimit == 1 then
@@ -220,11 +216,11 @@ server.event_handler("started", function()
     end
     
     if server.change_default_maptime == 1 then
-	dofile("./script/change_default_maptime.lua")
+        dofile("./script/change_default_maptime.lua")
     end
     
     if server.use_spec_inactives == 1 then
-	dofile("./script/spec.inactives.lua")
+        dofile("./script/spec.inactives.lua")
     end
     
     if server.enable_ping_limiter == 1 then
@@ -268,7 +264,45 @@ server.event_handler("started", function()
     end
     
     server.load_geoip_database(server.geoip_db_file)
-
+    
+    player_command_script("info", "./script/command/info.lua")
+    player_command_script("specall", "./script/command/specall.lua", "master")
+    player_command_script("unspecall", "./script/command/unspecall.lua", "master")
+    player_command_script("maxclients", "./script/command/maxclients.lua", "admin")
+    player_command_script("uptime", "./script/command/uptime.lua")
+    player_command_script("reload", "./script/command/reload.lua", "admin")
+    player_command_script("changetime", "./script/command/changetime.lua", "admin")
+    player_command_alias("ctime", "changetime")
+    player_command_script("lpc", "./script/command/lpc.lua")
+    player_command_script("players", "./script/command/players.lua")
+    player_command_script("names", "./script/command/names.lua", "master")
+    player_command_script("votekick", "./script/command/votekick.lua")
+    player_command_script("pause", "./script/command/pause.lua", "admin")
+    player_command_script("resume", "./script/command/resume.lua", "admin")
+    player_command_script("motd", "./script/command/motd.lua", "admin")
+    player_command_script("group", "./script/command/group.lua", "admin")
+    player_command_script("givemaster", "./script/command/givemaster.lua", "master")
+    player_command_script("mute", "./script/command/mute.lua", "master")
+    player_command_script("unmute", "./script/command/unmute.lua", "master")
+    player_command_script("ban", "./script/command/ban.lua", "admin")
+    player_command_script("kick", "./script/command/kick.lua", "master")
+    player_command_script("persist", "./script/command/persist.lua", "admin")
+    player_command_script("versus", "./script/command/versus.lua")
+    player_command_script("1on1", "./script/command/1on1.lua")
+    player_command_script("cheater", "./script/command/cheater.lua")
+    player_command_script("warning", "./script/command/warning.lua")
+    player_command_script("getcn", "./script/command/getcn.lua")
+    player_command_script("addbot", "./script/command/addbot.lua")
+    player_command_script("admin", "./script/command/admin.lua")
+    player_command_script("master", "./script/command/master.lua")
+    player_command_script("msg", "./script/command/msg.lua", "admin")
+    player_command_script("playermsg", "./script/command/playermsg.lua", "master")
+    player_command_script("privmsg", "./script/command/privmsg.lua")
+    player_command_alias("pmsg", "privmsg")
+    player_command_alias("pm", "privmsg")
+    
+    log_unknown_player_commands()
+    
     server.log_status("-> Successfully loaded Hopmod")
     
 end)

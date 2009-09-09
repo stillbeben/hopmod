@@ -68,4 +68,4 @@ commandFunction = function(cn, selection, subselection)
 	end
 end
 
-return {initialize = initialize}
+return {initialize = initialize, command_function = commandFunction}

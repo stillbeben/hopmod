@@ -1,6 +1,6 @@
 -- #names <cn>
 
-function server.playercmd_names(cn, target_cn)
+return function(cn, target_cn)
     if server.valid_cn(target_cn) then
 	local db = sqlite3.open(server.stats_db_filename)
         local str = "Other names used by " .. server.player_name(target_cn) .. ": "

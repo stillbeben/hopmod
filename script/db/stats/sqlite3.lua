@@ -1,7 +1,7 @@
 require "sqlite3"
 dofile("./script/db/sqliteutils.lua")
 
-local db, perr, insert_game, insert_team, insert_player, select_player_totals
+local db, perr, insert_game, insert_team, insert_player, select_player_totals, find_names_by_ip
 
 local function set_sqlite3_synchronous_pragma(db, value)
     
@@ -39,6 +39,9 @@ local function open(settings)
 
     select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
     if not select_player_totals then error(perr) end
+    
+    find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
+    if not find_names_by_ip then error(perr) end
     
     server.stats_db_absolute_filename = server.PWD .. "/" .. settings.filename
     
@@ -99,4 +102,15 @@ local function player_totals(name)
     return row
 end
 
-return {open = open, commit_game = commit_game, player_totals = player_totals}
+local function find_names_by_ip(ip, exclude_name)
+    local names = {}
+    find_names_by_ip:bind{ipaddr=ip}
+    for row in find_names_by_ip:rows() do
+        if not exclude_name or exclude_name ~= row.name then
+            table.insert(names, row.name)
+        end
+    end
+    return names
+end
+
+return {open = open, commit_game = commit_game, player_totals = player_totals, find_names_by_ip = find_names_by_ip}

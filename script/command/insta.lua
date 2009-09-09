@@ -223,15 +223,6 @@ end
 
 
 function ESL(cn, map, player1, player2, mode)
- if running then
-        if server.player_priv_code(cn) < 1 then
-                if server.player_priv_code(player1_cn) > 0 or server.player_priv_code(player2_cn) > 0 then
-                         server.player_msg(cn, red("Permission denied"))
-                return
-                end
-        end
-    end
-
 
     if running then
         server.msg(red("--[ Master Cancelled the running versus match"))

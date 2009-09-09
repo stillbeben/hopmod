@@ -1,8 +1,6 @@
 -- #group [all] <tag> [<team>]
 
-local cmd_group = {}
-
-function cmd_group.playercmd(cn,arg1,arg2,arg3)
+return function(cn,arg1,arg2,arg3)
     if not server.gamemodeinfo.teams and server.reassignteams == 1 then
         return
     end
@@ -40,20 +38,5 @@ function cmd_group.playercmd(cn,arg1,arg2,arg3)
         if string.find(p:name(),tag) then
             server.changeteam(p.cn,team)
         end
-    end
-end
-
-
-if server.group_command_master == 1 then
-    function server.playercmd_group(cn,arg1,arg2,arg3)
-	return mastercmd(function()
-    	    cmd_group.playercmd(cn,arg1,arg2,arg3)
-	end,cn)
-    end
-else
-    function server.playercmd_group(cn,arg1,arg2,arg3)
-	return admincmd(function()
-    	    cmd_group.playercmd(cn,arg1,arg2,arg3)
-	end,cn)
     end
 end

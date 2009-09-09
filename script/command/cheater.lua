@@ -1,5 +1,6 @@
 -- #cheater <cn>|"<name>"
 
+-- TODO somehow cancel this handler when the command is disabled
 server.event_handler("started",function()
     if server.cheater_ad_timer ~= 0 then
 	server.interval(server.cheater_ad_timer,function()
@@ -10,7 +11,7 @@ server.event_handler("started",function()
     end
 end)
 
-function server.playercmd_cheater(cn,cheat)
+return function(cn, cheat)
     if not cheat then
 	server.player_msg(cn,red("#cheater (<cn>|\"<name>\")"))
     end

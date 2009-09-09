@@ -32,6 +32,14 @@ loadfile("./script/db/stats/core.lua")().initialize(backends,{
         auth_domain_name = server.stats_auth_domain
     })
 
-if server.enable_stats_command == 1 then
-    loadfile("./script/db/stats/playercmd.lua")().initialize(backends)
+-- Load and register the #stats player command
+local stats_command = loadfile("./script/db/stats/playercmd.lua")()
+stats_command.initialize(backends)
+player_command_function("stats", stats_command.command_function)
+
+-- 
+server.find_names_by_ip = backends.query.find_names_by_ip
+
+if not server.find_names_by_ip then 
+    server.find_names_by_ip = function() return nil end
 end
