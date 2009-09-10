@@ -1,4 +1,4 @@
-local pb_file = io.open("conf/bans","a+")
+local pb_file = io.open(server.banlist_file, "a+")
 
 local function permban(cn_ban, ip_ban)
     pb_file:write("permban " .. ip_ban .. "\n")
