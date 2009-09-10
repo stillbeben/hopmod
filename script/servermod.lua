@@ -163,7 +163,7 @@ server.event_handler("started", function()
     end
     
     if server.fileExists(server.banlist_file) then
-        dofile("./" .. server.banlist_file)
+        server.execCubeScriptFile(server.banlist_file)
     end
     
     if server.record_player_stats == 1 then
