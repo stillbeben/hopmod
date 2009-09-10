@@ -66,10 +66,12 @@ public:
     /**
         @brief Remove a network address from the ban set.
     */
-    void unset_ban(const netmask & ipmask)
+    int unset_ban(const netmask & ipmask)
     {
-        while(m_index.erase(ipmask));
+        int count = 0;
+        while(m_index.erase(ipmask)) count++;
         while(m_tmp_index.erase(ipmask));
+        return count;
     }
     
     /**

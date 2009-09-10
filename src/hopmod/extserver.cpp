@@ -709,12 +709,12 @@ void addpermban(const char * addrstr)
     bannedips.set_permanent_ban(addr);
 }
 
-void unsetban(const char * addrstr)
+int unsetban(const char * addrstr)
 {
     netmask addr;
     try{addr = netmask::make(addrstr);}
     catch(std::bad_cast){throw fungu::script::error(fungu::script::BAD_CAST);}
-    bannedips.unset_ban(addr);
+    return bannedips.unset_ban(addr);
 }
 
 int addbot(int skill)
