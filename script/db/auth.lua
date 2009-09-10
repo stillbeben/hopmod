@@ -288,6 +288,9 @@ server.load_users = auth.load_users
 
 function auth.add_domain_handler(domain, handler)
     
+    -- TODO print call stack trace to find out what keeps calling this func with nil domain
+    if not domain then return end
+    
     local handlers = auth_domain_handlers[domain]
     local index
     

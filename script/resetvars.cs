@@ -222,3 +222,8 @@ global resize_totalmaxplayers 7
 
 global use_resize_mastermode 0
 global resize_mastermode locked
+
+global cheater_ad_timer (mins 4)
+global votekick_ad_timer (mins 4)
+
+global master_domains []
