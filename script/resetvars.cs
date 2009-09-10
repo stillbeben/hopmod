@@ -28,10 +28,6 @@ global stats_sqlite_synchronous 1
 global stats_use_json 0
 global stats_overwrite_name_with_authname 0
 
-global enable_stats_command 0
-
-global enable_showauth_command 0
-
 global use_name_reservation 0
 global name_reservation_domain ""
 global reserved_name_expire (mins 3600)
@@ -39,7 +35,6 @@ global reserved_name_expire (mins 3600)
 global use_server_maprotation 1
 global use_server_random_maprotation 0
 global use_server_random_moderotation 0
-global enable_nextmap_command 0
 
 global disallow_coopedit 0
 
@@ -207,8 +202,6 @@ global kickspec_maxtime (mins 25)
 global enable_ownage_messages 0
 
 global enable_suddendeath 0
-global enable_sd_command 0
-global enable_nosd_command 0
 
 global change_default_maptime 0
 global default_maptime (mins 15)
@@ -218,7 +211,6 @@ global spec_inactives_check_time (mins 6)
 global spec_inactives_time (mins 5)
 
 global use_cd_modmap 0
-global enable_unfspec_command 0
 
 global use_cd_accuracy 0
 global cd_accuracy_limit 0
@@ -230,102 +222,3 @@ global resize_totalmaxplayers 7
 
 global use_resize_mastermode 0
 global resize_mastermode locked
-
-global enable_cheater_command 0
-global cheater_ad_timer (mins 4)
-
-global enable_votekick_command 0
-global votekick_ad_timer (mins 4)
-
-global enable_eval_command 0
-
-global enable_info_command 0
-
-global enable_specall_command 0
-global specall_command_master 0
-
-global enable_unspecall_command 0
-global unspecall_command_master 0
-
-global enable_maxclients_command 0
-global maxclients_command_master 0
-
-global enable_uptime_command 0
-
-global enable_reload_command 0
-global reload_command_master 0
-
-global enable_changetime_command 0
-global changetime_command_master 0
-
-global enable_lpc_command 0
-
-global enable_players_command 0
-
-global enable_names_command 0
-
-global enable_pause_command 0
-global pause_command_master 0
-
-global enable_resume_command 0
-global resume_command_master 0
-
-global enable_motd_command 0
-global motd_command_master 0
-
-global enable_group_command 0
-global group_command_master 0
-
-global enable_givemaster_command 0
-global givemaster_command_master 0
-
-global enable_mute_command 0
-global mute_command_master 0
-
-global enable_unmute_command 0
-global unmute_command_master 0
-
-global enable_ban_command 0
-
-global enable_kick_command 0
-
-global enable_persist_command 0
-global persist_command_master 0
-
-global enable_versus_command 0
-
-global enable_insta_command 0
-
-global enable_1on1_command 0
-global oneonone_command_master 0
-
-global enable_effic_command 0
-
-global enable_warning_command 0
-global warning_bantime (mins 60)
-global warnings_limit 3
-global warning_command_master 0
-
-global enable_getcn_command 0
-
-global enable_addbot_command 0
-global addbot_command_master 0
-
-global master_domains []
-global enable_master_command 0
-
-global admin_domain ""
-global enable_admin_command 0
-
-global invadmin_domain ""
-global enable_invadmin_command 0
-
-global enable_msg_command 0
-global msg_command_master 0
-
-global enable_playermsg_command 0
-global playermsg_command_master 0
-
-global enable_privmsg_command 0
-
-global enable_auth_command 0
