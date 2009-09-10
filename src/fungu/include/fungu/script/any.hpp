@@ -58,9 +58,6 @@ struct bad_any_cast: std::bad_cast
     const char* to;
 };
 
-namespace any_detail{struct empty;}
-template<typename Target> Target lexical_cast(const any_detail::empty &){return Target();}
-
 namespace any_detail {
 
 // function pointer table

@@ -113,6 +113,11 @@ const_string lexical_cast(const char * src,type_tag<const_string>)
     return const_string(src);
 }
 
+const_string lexical_cast(const any_detail::empty &, type_tag<const_string>)
+{
+    return const_string();
+}
+
 #if 0
 const_string lexical_cast(const json::object * src, type_tag<const_string>)
 {

@@ -70,6 +70,7 @@ unsigned short  lexical_cast(const const_string & src,type_tag<unsigned short>);
 const_string    lexical_cast(unsigned short src, type_tag<const_string>);
 const_string    lexical_cast(unsigned int src, type_tag<const_string>);
 const_string    lexical_cast(const char * src,type_tag<const_string>);
+const_string    lexical_cast(const any_detail::empty &, type_tag<const_string>);
 
 template<typename Source>
 inline const_string lexical_cast(const boost::intrusive_ptr<Source> & src,type_tag<const_string>)
