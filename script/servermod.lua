@@ -303,7 +303,8 @@ server.event_handler("started", function()
 	player_command_script("getbans", "./script/command/getbans.lua", "admin")
 	player_command_script("unban", "./script/command/unban.lua", "admin")
 	player_command_script("permban", "./script/command/permban.lua", "admin")
-
+    player_command_script("eval", "./script/command/eval.lua", "admin")
+    
     local eslmatch_commands = loadfile("./script/command/eslmatch.lua")()
     player_command_function("insta", eslmatch_commands.insta_cmd)
     player_command_function("effic", eslmatch_commands.effic_cmd)
