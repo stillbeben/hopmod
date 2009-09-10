@@ -150,53 +150,57 @@ server.event_handler("setnextgame",function()
     gamecount = gamecount + 1
 end)
 
-local function def_nextmap(gmode,cmap)
+local function def_nextmap(gmode, cmap)
+
     local mlist = def_maps[gmode]
     
     if not mlist then
-	return nil
+        return nil
     end
     
     local index = -1
     for i,name in ipairs(mlist) do
-	if name == cmap then
-	    index = i
-	    break
-	end
+        if name == cmap then
+            index = i
+            break
+        end
     end
     
     if index == -1 then
-	return nil
+        return nil
     end
     
     return mlist[(index % #mlist) + 1]
 end
 
--- #nextmap
-server.event_handler("started",function()
-    if server.enable_nextmap_command == 1 then
-	function server.playercmd_nextmap(cn)
-	    if server.use_server_maprotation == 1 then
-	  	if server.use_server_random_moderotation == 1 then
-		    server.player_msg(cn, "Note: The next mode will be chosen randomly at the end of this game, therefore the next map, too.")
-	  	elseif server.use_server_random_maprotation == 1 then
-		    server.player_msg(cn, "The next map will be chosen randomly at the end of this game.")
-	  	else
-		    local nm = nextmap(tostring(server.gamemode), gamecount)
-		    if nm then
-		  	server.player_msg(cn, "The next map is " .. green(nm) .. ".")
-		  	if bestmapsize == 1 and not server.gamemodeinfo.teams then
-			    server.player_msg(cn, "Note: The next map will be determined on the number of players still connected at the end of this game.")
-		  	end
-		    end
-	  	end
-	    else
-	  	local nm = def_nextmap(tostring(server.gamemode),tostring(server.map))
-	  	if nm then
-		    server.player_msg(cn, "The next map is " .. green(nm) .. ".")
-	  	end
-	    end
-	    return
-	end
+
+local function nextmap_command(cn)
+
+    if server.use_server_maprotation == 1 then
+    
+        if server.use_server_random_moderotation == 1 then
+            server.player_msg(cn, "Note: The next mode will be chosen randomly at the end of this game, therefore the next map, too.")
+        elseif server.use_server_random_maprotation == 1 then
+            server.player_msg(cn, "The next map will be chosen randomly at the end of this game.")
+        else
+            local nm = nextmap(tostring(server.gamemode), gamecount)
+            if nm then
+                server.player_msg(cn, "The next map is " .. green(nm) .. ".")
+                if bestmapsize == 1 and not server.gamemodeinfo.teams then
+                    server.player_msg(cn, "Note: The next map will be determined on the number of players still connected at the end of this game.")
+                end
+            end
+        end
+        
+    else
+    
+        local nm = def_nextmap(tostring(server.gamemode),tostring(server.map))
+        if nm then
+            server.player_msg(cn, "The next map is " .. green(nm) .. ".")
+        end
+        
     end
-end)
+    
+end
+
+player_command_function("nextmap", nextmap_command)

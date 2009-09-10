@@ -1,8 +1,8 @@
 
 dofile("./script/serverlib.lua")
 dofile("./script/logging.lua")
-dofile("./script/maprotation.lua")
 dofile("./script/playercmd.lua")
+dofile("./script/maprotation.lua")
 
 function sendServerBanner(cn)
 
