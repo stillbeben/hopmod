@@ -1,4 +1,14 @@
 
+require("sqlite3")
+require("io")
+require("string")
+
+local io = io
+local sqlite3 = sqlite3
+local string = string
+
+module("sqlite3utils")
+
 function createMissingTables(schemafilename, db)
     
     schemafile,err = io.open(schemafilename)

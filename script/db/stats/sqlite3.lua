@@ -1,5 +1,5 @@
 require "sqlite3"
-dofile("./script/db/sqliteutils.lua")
+require "sqlite3utils"
 
 local db, perr, insert_game, insert_team, insert_player, select_player_totals, find_names_by_ip
 
@@ -19,7 +19,7 @@ local function open(settings)
     db,perr = sqlite3.open(settings.filename)
     if not db then return nil, perr end
     
-    createMissingTables(settings.schemafile, db)
+    sqlite3utils.createMissingTables(settings.schemafile, db)
     
     if settings.exclusive_locking == 1 then
         db:exec("PRAGMA locking_mode=EXCLUSIVE")
