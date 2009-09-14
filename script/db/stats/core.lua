@@ -188,7 +188,7 @@ function internal.loadEventHandlers()
     end)
     
     local intermission = server.event_handler("intermission", function()
-        game.finished = true
+        if game then game.finished = true end
         internal.commit()
     end)
     
