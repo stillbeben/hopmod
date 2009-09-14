@@ -68,6 +68,7 @@ function server.reload_maprotation()
     def_maps["insta protect"] = table_unique(parse(server["def_insta protect_maps"]))
     
     modes = table_unique(parse(server["game_modes"]))
+
 end
 
 local function nextmap(gmode,i)

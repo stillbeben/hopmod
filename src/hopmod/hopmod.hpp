@@ -14,6 +14,7 @@ extern "C"{
 #include "timedbans_service.hpp"
 #include "utils.hpp"
 #include "masterserver_client.hpp"
+#include "lnetlib.hpp"
 
 #define GEOIP_NO_RESULT ""
 bool geoip_supported();
@@ -27,6 +28,7 @@ void shutdown_scripting();
 fungu::script::env & get_script_env();
 std::string get_script_error_message(fungu::script::error_trace * errinfo);
 void report_script_error(fungu::script::error_trace *);
+void report_script_error(const char *);
 void register_lua_function(lua_CFunction,const char *);
 void unset_global(const char *);
 

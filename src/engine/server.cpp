@@ -3,6 +3,8 @@
 
 #include "cube.h"
 #include <signal.h>
+#include <boost/asio.hpp>
+using namespace boost::asio;
 #include <iostream>
 
 static void shutdown_from_signal(int i)
@@ -177,6 +179,22 @@ size_t bsend = 0, brec = 0;
 size_t tx_packets = 0 , rx_packets = 0, tx_bytes = 0, rx_bytes = 0;
 int laststatus = 0; 
 ENetSocket pongsock = ENET_SOCKET_NULL, lansock = ENET_SOCKET_NULL;
+
+io_service main_io_service;
+
+io_service & get_main_io_service()
+{
+    return main_io_service;
+}
+
+ip::udp::socket serverhost_socket(main_io_service);
+ip::udp::socket info_socket(main_io_service);
+ip::udp::socket laninfo_socket(main_io_service);
+ip::tcp::socket masterserver_client_socket(main_io_service);
+
+deadline_timer update_timer(main_io_service);
+deadline_timer register_timer(main_io_service);
+deadline_timer netstats_timer(main_io_service);
 
 void cleanupserver()
 {
@@ -402,6 +420,9 @@ void disconnectmaster()
     masteroutpos = masterinpos = 0;
 }
 
+void masterserver_client_input_handler(boost::system::error_code, const size_t);
+void flushmasteroutput();
+
 ENetSocket connectmaster()
 {
     if(!mastername[0]) return ENET_SOCKET_NULL;
@@ -429,6 +450,10 @@ ENetSocket connectmaster()
     }
     
     enet_socket_set_option(sock, ENET_SOCKOPT_NONBLOCK, 1);
+    
+    masterserver_client_socket.assign(ip::tcp::v4(), sock);
+    masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_input_handler);
+    
     return sock;
 }
 
@@ -439,8 +464,10 @@ bool requestmaster(const char *req)
         mastersock = connectmaster();
         if(mastersock == ENET_SOCKET_NULL) return false;
     }
-
+    
     masterout.put(req, strlen(req));
+    flushmasteroutput();
+    
     return true;
 }
 
@@ -519,6 +546,28 @@ void flushmasterinput()
     else disconnectmaster();
 }
 
+void masterserver_client_output_handler(boost::system::error_code ec, const size_t);
+
+void masterserver_client_input_handler(boost::system::error_code ec, const size_t)
+{
+    if(!ec)
+    {
+        flushmasterinput();
+        flushmasteroutput();
+        if(!masterout.empty()) 
+            masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_output_handler);
+    }
+    
+    masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_input_handler);
+}
+
+void masterserver_client_output_handler(boost::system::error_code ec, const size_t)
+{
+    if(!ec) flushmasteroutput();
+    if(!masterout.empty()) 
+        masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_output_handler);
+}
+
 static ENetAddress pongaddr;
 
 void sendserverinforeply(ucharbuf &p)
@@ -583,100 +632,111 @@ void updatemasterserver()
     requestmasterf("regserv %d\n", serverport);
 }
 
-void serverslice(bool dedicated, uint timeout)   // main server update, called from main loop in sp, or from below in dedicated server
+void update_server(const boost::system::error_code & error)
 {
+    if(error) return;
+    
     localclients = nonlocalclients = 0;
     loopv(clients) switch(clients[i]->type)
     {
         case ST_LOCAL: localclients++; break;
         case ST_TCPIP: nonlocalclients++; break;
     }
-
-    if(!serverhost) 
-    {
-        server::serverupdate();
-        server::sendpackets();
-        return;
-    }
-       
-    // below is network only
-
-    if(dedicated) 
-    {
-        int millis = (int)enet_time_get();
-        curtime = millis - totalmillis;
-        lastmillis = totalmillis = millis;
-    }
+    
+    int millis = (int)enet_time_get();
+    curtime = millis - totalmillis;
+    lastmillis = totalmillis = millis;
+    
     server::serverupdate();
+    
+    update_timer.expires_from_now(boost::posix_time::milliseconds(5));
+    update_timer.async_wait(update_server);
+}
 
-    flushmasteroutput();
-    checkserversockets();
-
-    if(totalmillis-lastupdatemaster>60*60*1000)       // send alive signal to masterserver every hour of uptime
+void serverhost_process_event(ENetEvent & event)
+{
+    switch(event.type)
     {
-        updatemasterserver();
-        lastupdatemaster = totalmillis;
+        case ENET_EVENT_TYPE_CONNECT:
+        {
+            client &c = addclient();
+            c.type = ST_TCPIP;
+            c.peer = event.peer;
+            c.peer->data = &c;
+            char hn[1024];
+            copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
+            printf("client connected (%s)\n", c.hostname);
+            int reason = server::clientconnect(c.num, c.peer->address.host);
+            if(!reason) nonlocalclients++;
+            else disconnect_client(c.num, reason);
+            break;
+        }
+        case ENET_EVENT_TYPE_RECEIVE:
+        {
+            brec += event.packet->dataLength;
+            rx_bytes += event.packet->dataLength;
+            rx_packets++;
+            client *c = (client *)event.peer->data;
+            if(c) process(event.packet, c->num, event.channelID);
+            if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
+            break;
+        }
+        case ENET_EVENT_TYPE_DISCONNECT: 
+        {
+            client *c = (client *)event.peer->data;
+            if(!c) break;
+            server::clientdisconnect(c->num,DISC_NONE);
+            nonlocalclients--;
+            c->type = ST_EMPTY;
+            event.peer->data = NULL;
+            server::deleteclientinfo(c->info);
+            c->info = NULL;
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+void serverhost_input(boost::system::error_code ec,const size_t s)
+{
+    if(!ec)
+    {
+        ENetEvent event;
+        while(enet_host_service(serverhost, &event, 0) == 1)
+            serverhost_process_event(event);
+        
+        if(server::sendpackets()) enet_host_flush(serverhost); //treat EWOULDBLOCK as packet loss
     }
     
-    if(totalmillis-laststatus>60*1000)   // display bandwidth stats, useful for server ops
-    {
-        laststatus = totalmillis;     
-        if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
-        bsend = brec = 0;
-    }
+    serverhost_socket.async_receive(null_buffers(), serverhost_input);
+}
 
-    ENetEvent event;
-    bool serviced = false;
-    while(!serviced)
-    {
-        if(enet_host_check_events(serverhost, &event) <= 0)
-        {
-            if(enet_host_service(serverhost, &event, timeout) <= 0) break;
-            serviced = true;
-        }
-        switch(event.type)
-        {
-            case ENET_EVENT_TYPE_CONNECT:
-            {
-                client &c = addclient();
-                c.type = ST_TCPIP;
-                c.peer = event.peer;
-                c.peer->data = &c;
-                char hn[1024];
-                copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
-                printf("client connected (%s)\n", c.hostname);
-                int reason = server::clientconnect(c.num, c.peer->address.host);
-                if(!reason) nonlocalclients++;
-                else disconnect_client(c.num, reason);
-                break;
-            }
-            case ENET_EVENT_TYPE_RECEIVE:
-            {
-                brec += event.packet->dataLength;
-                rx_bytes += event.packet->dataLength;
-                rx_packets++;
-                client *c = (client *)event.peer->data;
-                if(c) process(event.packet, c->num, event.channelID);
-                if(event.packet->referenceCount==0) enet_packet_destroy(event.packet);
-                break;
-            }
-            case ENET_EVENT_TYPE_DISCONNECT: 
-            {
-                client *c = (client *)event.peer->data;
-                if(!c) break;
-                server::clientdisconnect(c->num,DISC_NONE);
-                nonlocalclients--;
-                c->type = ST_EMPTY;
-                event.peer->data = NULL;
-                server::deleteclientinfo(c->info);
-                c->info = NULL;
-                break;
-            }
-            default:
-                break;
-        }
-    }
-    if(server::sendpackets()) enet_host_flush(serverhost);
+void serverinfo_input(int fd)
+{
+    ENetBuffer buf;
+    uchar pong[MAXTRANS];
+    
+    buf.data = pong;
+    buf.dataLength = sizeof(pong);
+    int len = enet_socket_receive(fd, &pongaddr, &buf, 1);
+    if(len < 0) return;
+    
+    ucharbuf req(pong, len), p(pong, sizeof(pong));
+    p.len += len;
+    server::serverinforeply(req, p);
+}
+
+void info_input_handler(boost::system::error_code ec, const size_t s)
+{
+    if(!ec) serverinfo_input(pongsock);
+    info_socket.async_receive(null_buffers(), info_input_handler);
+}
+
+void laninfo_input_handler(boost::system::error_code ec, const size_t s)
+{
+    if(!ec) serverinfo_input(lansock);
+    laninfo_socket.async_receive(null_buffers(), laninfo_input_handler);
 }
 
 #ifndef STANDALONE
@@ -708,6 +768,27 @@ void localconnect()
 }
 #endif
 
+void registerserver_handler(const boost::system::error_code & ec)
+{
+    if(ec) return;
+    
+    updatemasterserver();
+    
+    register_timer.expires_from_now(boost::posix_time::hours(1));
+    register_timer.async_wait(registerserver_handler);
+}
+
+void netstats_handler(const boost::system::error_code & ec)
+{
+    if(ec) return;
+    
+    if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
+    bsend = brec = 0;
+    
+    netstats_timer.expires_from_now(boost::posix_time::minutes(1));
+    netstats_timer.async_wait(netstats_handler);
+}
+
 void rundedicatedserver()
 {
     #ifdef WIN32
@@ -719,8 +800,28 @@ void rundedicatedserver()
     printf("dedicated server started, waiting for clients...\n*READY*\n\n");
     fflush(stdout);
     fflush(stderr);
-
-    for(;;) serverslice(true, 5);
+    
+    update_timer.expires_from_now(boost::posix_time::milliseconds(5));
+    update_timer.async_wait(update_server);
+    
+    register_timer.expires_from_now(boost::posix_time::hours(1));
+    register_timer.async_wait(registerserver_handler);
+    
+    netstats_timer.expires_from_now(boost::posix_time::minutes(1));
+    netstats_timer.async_wait(netstats_handler);
+    
+    for(;;)
+    {
+        try
+        {
+            main_io_service.run();
+        }
+        catch(const boost::system::system_error & se)
+        {
+            std::cerr<<se.what()<<std::endl;
+            throw;
+        }
+    }
 }
 
 bool servererror(bool dedicated, const char *desc)
@@ -763,11 +864,21 @@ bool setuplistenserver(bool dedicated)
     }
     if(lansock == ENET_SOCKET_NULL) conoutf(CON_WARN, "WARNING: could not create LAN server info socket");
     else enet_socket_set_option(lansock, ENET_SOCKOPT_NONBLOCK, 1);
+    
+    serverhost_socket.assign(ip::udp::v4(), serverhost->socket);
+    serverhost_socket.async_receive(null_buffers(), serverhost_input);
+    
+    info_socket.assign(ip::udp::v4(), pongsock);
+    info_socket.async_receive(null_buffers(), info_input_handler);
+    
+    laninfo_socket.assign(ip::udp::v4(), lansock);
+    laninfo_socket.async_receive(null_buffers(), laninfo_input_handler);
+    
     return true;
 }
 
 void initserver(bool listen, bool dedicated)
-{
+{    
     struct sigaction terminate_action;
     sigemptyset(&terminate_action.sa_mask);
     terminate_action.sa_handler = shutdown_from_signal;
@@ -778,7 +889,7 @@ void initserver(bool listen, bool dedicated)
     copystring(mastername, server::defaultmaster());
     
     server::serverinit();
-  
+    
     if(listen) setuplistenserver(dedicated);
 
     if(listen)

@@ -7,7 +7,7 @@
 
 #include "hopmod.hpp"
 #include "scoped_setting.hpp"
-
+#include "signals.hpp"
 #include <fungu/script/lua/object_wrapper.hpp>
 #include <fungu/script/lua/lua_function.hpp>
 #include <fungu/dynamic_cast_derived.hpp>
@@ -97,6 +97,8 @@ static void create_server_namespace(lua_State * L)
 
 void shutdown_scripting()
 {
+    signal_shutdown_scripting();
+    
     assert(env->get_lua_state());
     lua_State * L = env->get_lua_state();
     env->set_lua_state(NULL);
@@ -217,6 +219,14 @@ void bind_object_to_lua(const_string id, script::env::object * obj)
     lua_pop(L, 1);
 }
 
+static std::string get_timestamp_string()
+{
+    char timestamp[32];
+    time_t now = time(NULL);
+    strftime(timestamp, sizeof(timestamp), "[%a %d %b %X] ", localtime(&now));
+    return timestamp;
+}
+
 std::string get_script_error_message(script::error_trace * errinfo)
 {
     const script::source_context * source = errinfo->get_root_info()->get_source_context();
@@ -224,11 +234,7 @@ std::string get_script_error_message(script::error_trace * errinfo)
     script::error error = errinfo->get_error();
     error.get_error_message();
     
-    char timestamp[32];
-    time_t now = time(NULL);
-    strftime(timestamp, sizeof(timestamp), "[%a %d %b %X] ", localtime(&now));
-    
-    out<<timestamp;
+    out<<get_timestamp_string();
     if(source) out<<source->get_location()<<":"<<source->get_line_number()<<": ";
     out<<error.get_error_message();
     
@@ -239,6 +245,11 @@ std::string get_script_error_message(script::error_trace * errinfo)
 void report_script_error(script::error_trace * errinfo)
 {
     std::cerr<<get_script_error_message(errinfo)<<std::endl;
+}
+
+void report_script_error(const char * msg)
+{
+    std::cerr<<get_timestamp_string()<<" "<<msg<<std::endl;
 }
 
 /*
