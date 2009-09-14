@@ -245,22 +245,24 @@ server.event_handler("started", function()
     
     server.reload_maprotation()
     
-    if tonumber(server.playercount) == 0 then
-	local lmode = server.first_gamemode
-	local lmap = server.first_map
-	if (server.random_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
-	    lmode = server.random_mode()
-	    lmap = server.random_map(lmode,1)
-	    server.changemap(lmap,lmode,-1)
-	elseif server.random_mode_on_empty == 1 then
-	    lmode = server.random_mode()
-	    server.changemap(lmap,lmode,-1)
-	elseif server.random_map_on_empty == 1 then
-	    lmap = server.random_map(lmode,1)
-	    server.changemap(lmap,lmode,-1)
-	else
-	    server.changemap(server.first_map, server.first_gamemode, -1)
-	end
+    if server.playercount == 0 then
+    
+        local lmode = server.first_gamemode
+        local lmap = server.first_map
+        
+        if (server.random_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
+            lmode = server.random_mode()
+            lmap = server.random_map(lmode,1)
+            server.changemap(lmap,lmode,-1)
+        elseif server.random_mode_on_empty == 1 then
+            lmode = server.random_mode()
+            server.changemap(lmap,lmode,-1)
+        elseif server.random_map_on_empty == 1 then
+            lmap = server.random_map(lmode,1)
+            server.changemap(lmap,lmode,-1)
+        else
+            server.changemap(server.first_map, server.first_gamemode, -1)
+        end
     end
     
     server.load_geoip_database(server.geoip_db_file)

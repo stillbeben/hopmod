@@ -48,6 +48,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_const((int)PRIV_MASTER, "PRIV_MASTER", env);
     script::bind_const((int)PRIV_ADMIN, "PRIV_ADMIN", env);
     script::bind_freefunc(server::player_id, "player_id", env);
+    script::bind_freefunc(clear_player_ids, "clear_player_ids", env);
     script::bind_freefunc(server::player_sessionid, "player_sessionid", env);
     script::bind_freefunc(server::player_ping, "player_ping", env);
     script::bind_freefunc(server::player_lag, "player_lag", env);
@@ -182,6 +183,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::allow_item[I_GREENARMOUR-I_SHELLS], "allow_greenarmour", env);
     script::bind_var(server::allow_item[I_YELLOWARMOUR-I_SHELLS], "allow_yellowarmour", env);
     script::bind_var(server::allow_item[I_QUAD-I_SHELLS], "allow_quad", env);
+    
     script::bind_var(server::reservedslots, "reservedslots", env);
     script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
     
@@ -271,4 +273,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(secs, "secs", env);
     
     script::bind_freefunc(parse_player_command_line, "parse_player_command", env);
+    
+    script::bind_property<unsigned int>(
+        boost::bind(script::property<unsigned int>::generic_getter, server::maintenance_frequency),
+        server::set_maintenance_frequency, "maintenance_frequency", env);
 }

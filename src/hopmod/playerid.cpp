@@ -1,25 +1,24 @@
-/*
-    
-*/
 #include <map>
 #include <string>
+#include <limits>
+#include <iostream>
 
-class playerid
+class global_player_id
 {
 public:
-    playerid()
+    global_player_id()
      :ip(0)
     {
         
     }
     
-    playerid(const std::string & n, unsigned long i)
+    global_player_id(const std::string & n, unsigned long i)
      :name(n), ip(i)
     {
         
     }
     
-    bool operator<(const playerid & x)const
+    bool operator<(const global_player_id & x)const
     {
         return ip < x.ip || ip == x.ip && name < x.name;
     }
@@ -28,17 +27,34 @@ public:
     unsigned long ip;
 };
 
-static std::map<playerid,int> id_map;
+typedef unsigned int local_player_id;
+static local_player_id next_id = 1;
+static const local_player_id max_id = std::numeric_limits<local_player_id>::max();
 
-int get_player_id(const char * name, unsigned long ip)
+typedef std::map<global_player_id, local_player_id> global_to_local_id_map;
+static global_to_local_id_map id_map;
+
+local_player_id get_player_id(const char * name, unsigned long ip)
 {
-    playerid id(name, ip);
-    std::map<playerid,int>::iterator it = id_map.find(id);
+    global_player_id gid(name, ip);
+    global_to_local_id_map::iterator it = id_map.find(gid);
+    
     if(it == id_map.end())
     {
-        int newid = id_map.size() + 1;
-        id_map[id] = newid;
-        return newid;
+        if(next_id == max_id)
+        {
+            std::cerr<<"Exhausted free player ID range. Server should be restarted."<<std::endl;
+            return max_id;
+        }
+        
+        local_player_id id = next_id++;
+        id_map[gid] = id;
+        return id;
     }
-    return it->second;
+    else return it->second;
+}
+
+void clear_player_ids()
+{
+    id_map.clear();
 }

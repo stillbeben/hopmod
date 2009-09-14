@@ -223,6 +223,8 @@ static void restore_server(const char * filename)
 
 void init_hopmod()
 {
+    set_maintenance_frequency(86400000);
+    
     struct sigaction crash_action;
     sigemptyset(&crash_action.sa_mask);
     crash_action.sa_handler = &crash_handler;
@@ -293,10 +295,17 @@ void update_hopmod()
     
     run_script_pipe_service(totalmillis);
     run_script_socket_service();
+    
     update_scheduler(totalmillis);
     cleanup_dead_slots();
     
     check_authserver();
+    
+    if(maintenance_frequency != 0 && totalmillis > maintenance_time && clients.empty())
+    {
+        signal_maintenance();
+        maintenance_time = totalmillis + maintenance_frequency;
+    }
 }
 
 void started()
@@ -1098,6 +1107,12 @@ std::vector<std::string> get_bans()
         result.push_back(it->to_string());
     
     return result;
+}
+
+void set_maintenance_frequency(unsigned int frequency)
+{
+    maintenance_frequency = frequency;
+    maintenance_time = totalmillis + frequency;
 }
 
 #endif

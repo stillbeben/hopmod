@@ -1,14 +1,20 @@
 local gamevars = {}
-local pvars = {}
+local permvars = {}
 
 local function accessvar(vartab, cn, name, value, defval)
     
-    vartab[server.player_id(cn)] = vartab[server.player_id(cn)] or {}
+    local id = server.player_id(cn)
+    
+    vartab[id] = vartab[id] or {}
     
     if value then -- set var
+    
         vartab[server.player_id(cn)][name] = value
+        
         return value
+        
     else -- get var
+    
         return vartab[server.player_id(cn)][name] or defval
     end
     
@@ -20,8 +26,12 @@ local function hasvar(vartab, cn, name)
 end
 
 local function unsetvar(vartab, cn, name)
-    vartab[server.player_id(cn)] = vartab[server.player_id(cn)] or {}
-    vartab[server.player_id(cn)][name] = nil
+    
+    local id = server.player_id(cn)
+    
+    vartab[id] = vartab[id] or {}
+    vartab[id][name] = nil
+    
 end
 
 function server.player_var(cn, name, value, defval)
@@ -29,7 +39,7 @@ function server.player_var(cn, name, value, defval)
 end
 
 function server.player_pvar(cn, name, value, defval)
-    return accessvar(pvars, cn, name, value, defval)
+    return accessvar(permvars, cn, name, value, defval)
 end
 
 function server.player_hasvar(cn, name)
@@ -37,7 +47,7 @@ function server.player_hasvar(cn, name)
 end
 
 function server.player_haspvar(cn, name)
-    return hasvar(pvars, cn, name)
+    return hasvar(permvars, cn, name)
 end
 
 function server.player_unsetvar(cn, name)
@@ -45,27 +55,41 @@ function server.player_unsetvar(cn, name)
 end
 
 function server.player_unsetpvar(cn, name)
-    return unsetvar(pvars, cn, name)
+    return unsetvar(permvars, cn, name)
 end
 
 server.event_handler("mapchange", function()
     gamevars = {}
 end)
 
+server.event_handler("maintenance", function()
+    permvars = {}
+    server.clear_player_ids()
+end)
+
 function server.player_vars(cn)
+
     local tab = gamevars[server.player_sessionid(cn)]
+    
     if not tab then
         tab = {}
         gamevars[server.player_sessionid(cn)] = tab
     end
+    
     return tab
+    
 end
 
 function server.player_pvars(cn)
-    local tab = pvars[server.player_id(cn)]
-    if not tab then
-        tab = {}
-        pvars[server.player_id(cn)] = tab
+
+    local id = server.player_id(cn)
+    local vars = permvars[id]
+    
+    if not vars then
+        vars = {}
+        permvars[id] = vars
     end
-    return tab
+
+    return vars
+    
 end

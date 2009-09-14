@@ -445,6 +445,9 @@ namespace server
     
     timer::time_diff_t timer_alarm_threshold = 1000000;
     
+    int maintenance_time = 0;
+    unsigned int maintenance_frequency = 0;
+    
     struct servmode
     {
         virtual ~servmode() {}

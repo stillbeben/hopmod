@@ -49,6 +49,7 @@ void start_restarter();
 void stop_restarter();
 
 int get_player_id(const char * name, unsigned long ip);
+void clear_player_ids();
 
 void register_server_script_bindings(fungu::script::env &);
 

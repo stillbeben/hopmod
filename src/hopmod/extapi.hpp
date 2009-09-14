@@ -171,7 +171,6 @@ namespace server
     
     void suicide(int);
     
-    
     // Flood protection vars
     extern int sv_text_hit_length;
     extern int sv_sayteam_hit_length;
@@ -183,6 +182,9 @@ namespace server
     extern int sv_newmap_hit_length;
     
     extern std::vector<std::string> get_bans();
+    
+    extern unsigned int maintenance_frequency;
+    void set_maintenance_frequency(unsigned int);
     
 } //namespace server
 
