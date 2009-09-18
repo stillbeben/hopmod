@@ -66,7 +66,6 @@ lib scriptpipe :
     : <link>static <include>src/shared <include>src/enet/include <define>STANDALONE ;
 
 lib rt : : <name>rt ;
-lib event : : <name>event ;
 
 exe sauer_server :
     src/engine/server.cpp
@@ -93,7 +92,6 @@ exe sauer_server :
     /boost//system
     /libmicrohttpd//httpd
     rt
-    event
     pch
     : <define>STANDALONE <define>HOPMOD_GAMESERVER_EVENTS <include>src/fpsgame <include>src/hopmod ;
 
