@@ -17,9 +17,10 @@ struct proceed
     template<typename InputIterator>
     int operator()(InputIterator first, InputIterator last)const
     {
+        int cancel = 0;
         for(InputIterator it = first; it != last; ++it)
-            if(*it == -1) return -1;
-        return 0;
+            if(*it == -1) cancel = -1;
+        return cancel;
     }
 };
 
