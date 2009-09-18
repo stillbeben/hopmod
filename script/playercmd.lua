@@ -3,18 +3,26 @@ player_commands = {}
 
 server.event_handler("text", function(cn, text)
     
-    -- check for normal chat message
-    if string.sub(text, 1, 1) ~= server.command_prefix and server.use_command_prefix == 1 then
-        return 0
-    end
-    
     local arguments = server.parse_player_command(text)
     
-    local command = player_commands[string.sub(arguments[1],2)]
+    if server.use_command_prefix == 1 then
+        
+        -- check for normal chat message
+        if string.sub(text, 1, 1) ~= server.command_prefix then
+            return 0
+        end
+        
+        arguments[1] = string.sub(arguments[1],2)
+    end
+    
+    local command = player_commands[arguments[1]]
     
     if not command then
-        server.process_player_command(cn, text)
-        return -1
+        if server.process_player_command(cn, text) then
+            return -1
+        else 
+            return 0
+        end
     end
     
     arguments[1] = cn
