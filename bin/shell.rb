@@ -15,13 +15,19 @@ def execute_command(http, command)
     return res.read_body
 end
 
-def reconnect(hostname, port)
+def reconnect(hostname, port, command)
+    
     sleep 1
     puts "Attempting to reconnect..."
-    start_shell(hostname, port)
+    
+    if command == "restart" || command == "restart_now"
+        command = nil
+    end
+    
+    start_shell(hostname, port, command)
 end
 
-def start_shell(hostname, port)
+def start_shell(hostname, port, command)
     
     Net::HTTP.version_1_2
     Net::HTTP.start(hostname, port){|http|
@@ -29,6 +35,11 @@ def start_shell(hostname, port)
         puts "Connected to #{hostname}:#{port}"
         
         label = execute_command(http, "try [get shell_label] [result \"server\"]")
+        
+        if command
+            puts "Sending command..."
+            puts execute_command(http, command)
+        end
         
         while true
             
@@ -48,8 +59,8 @@ def start_shell(hostname, port)
 
 rescue EOFError
     puts "Error: lost connection with remote host."
-    reconnect(hostname, port)
-        
+    reconnect(hostname, port, command)
+    
 rescue Errno::ECONNREFUSED
     puts "Error: connection refused."
     
@@ -61,11 +72,11 @@ rescue Errno::EINVAL
 
 rescue Errno::EPIPE
     puts "Error: server has shutdown."
-    reconnect(hostname, port)
+    reconnect(hostname, port, command)
 
 rescue Errno::ECONNRESET
     puts "Error: connection reset."
-    reconnect(hostname, port)
+    reconnect(hostname, port, command)
     
 rescue IOError => e
     puts "Error: #{$!}"
@@ -75,4 +86,4 @@ rescue Interrupt
     
 end
 
-start_shell(ARGV[0] || "127.0.0.1", ARGV[1] || 7894)
+start_shell(ARGV[0] || "127.0.0.1", ARGV[1] || 7894, nil)
