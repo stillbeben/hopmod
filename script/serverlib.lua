@@ -107,10 +107,6 @@ function server.cancel_restart()
     set_cancel_restart = true
 end
 
-function server.log_status(msg)
-    print(msg)
-end
-
 function server.mute(cn)
     server.player_pvar(cn, "mute", true)
 end

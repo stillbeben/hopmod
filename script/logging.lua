@@ -17,6 +17,10 @@ function server.log_error(msg)
     io.stderr:flush()
 end
 
+function server.log_status(msg)
+    print(msg)
+end
+
 local function log_usednames(cn)
 
     if server.find_names_by_ip then
