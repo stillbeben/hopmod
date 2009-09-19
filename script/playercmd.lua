@@ -115,7 +115,15 @@ local function get_new_command_table(name)
     return command
 end
 
+function player_command_filename(name)
+    return "./script/command/" .. name .. ".lua"
+end
+
 function player_command_script(name, filename, priv)
+    
+    if not filename then
+        filename = player_command_filename(name)
+    end
     
     local command = get_new_command_table(name)
     
@@ -176,4 +184,3 @@ function mastercmd(...)
     
     return func(unpack(arg))
 end
-
