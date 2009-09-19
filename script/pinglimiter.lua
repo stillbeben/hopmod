@@ -21,7 +21,7 @@ end
 server.interval(server.ping_limiter_tick,function()
 
     if not still_loaded then return -1 end
-    --if server.playercount < 3 then return end
+    if server.playercount < 3 then return end
     
     for player in server.gplayers() do
         

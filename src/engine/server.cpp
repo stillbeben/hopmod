@@ -198,12 +198,22 @@ deadline_timer netstats_timer(main_io_service);
 
 void cleanupserver()
 {
-    if(serverhost) enet_host_destroy(serverhost);
-    serverhost = NULL;
-
+    kicknonlocalclients(DISC_NONE);
+    
+    if(serverhost)
+    {
+        enet_host_flush(serverhost);
+        enet_host_destroy(serverhost);
+        serverhost = NULL;
+    }
+    
     if(pongsock != ENET_SOCKET_NULL) enet_socket_destroy(pongsock);
     if(lansock != ENET_SOCKET_NULL) enet_socket_destroy(lansock);
     pongsock = lansock = ENET_SOCKET_NULL;
+    
+    update_timer.cancel();
+    register_timer.cancel();
+    netstats_timer.cancel();
 }
 
 void process(ENetPacket *packet, int sender, int chan);
@@ -810,23 +820,19 @@ void rundedicatedserver()
     netstats_timer.expires_from_now(boost::posix_time::minutes(1));
     netstats_timer.async_wait(netstats_handler);
     
-    for(;;)
+    try
     {
-        try
-        {
-            main_io_service.run();
-        }
-        catch(const boost::system::system_error & se)
-        {
-            std::cerr<<se.what()<<std::endl;
-            throw;
-        }
+        main_io_service.run();
+    }
+    catch(const boost::system::system_error & se)
+    {
+        std::cerr<<se.what()<<std::endl;
+        throw;
     }
 }
 
 bool servererror(bool dedicated, const char *desc)
 {
-    cleanupserver(); 
     printf("servererror: %s\n", desc); 
     server::shutdown();
     return false;

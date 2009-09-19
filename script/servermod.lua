@@ -5,6 +5,8 @@ load_once("player_command")
 load_once("logging")
 load_once("maprotation")
 
+server.module("db/auth")
+
 function sendServerBanner(cn)
 
     if server.player_pvar(cn,"shown_banner") then return end
@@ -157,8 +159,6 @@ server.event_handler("mapchange", function(map, mode)
 end)
 
 server.event_handler("started", function()
-    
-    load_once("db/auth")
     
     if server.fileExists("./conf/auth") then
         server.execCubeScriptFile("./conf/auth")

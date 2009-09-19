@@ -245,7 +245,7 @@ void init_hopmod()
     
     register_signals(get_script_env());
     
-    close_listenserver_slot = signal_shutdown.connect(&flushserverhost);
+    close_listenserver_slot = signal_shutdown.connect(&cleanupserver);
     signal_shutdown.connect(&shutdown_scripting);
     
     init_scheduler();

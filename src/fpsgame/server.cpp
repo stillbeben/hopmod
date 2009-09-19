@@ -16,7 +16,7 @@ namespace game
 }
 
 extern ENetAddress masteraddress;
-extern void flushserverhost();
+extern void cleanupserver();
 
 namespace server
 {
