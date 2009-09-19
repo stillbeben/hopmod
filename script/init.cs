@@ -2,6 +2,7 @@
 # to exist. This is the first script to be executed by the game server.
 
 exec "./script/resetvars.cs"
+exec "./script/module.lua"
 exec "./script/serverlib.lua"
 exec "./script/servermod.lua"
 exec "./script/servermod.cs"

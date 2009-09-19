@@ -29,7 +29,7 @@ server.event_handler("text", function(cn, text)
     
     local privilege = server.player_priv_code(cn)
     
-    if not (command.enabled == true) then
+    if not (command.enabled == true) or not command._function then
         server.player_msg(cn, red("Command disabled."))
         return -1
     end

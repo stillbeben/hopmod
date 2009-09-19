@@ -168,14 +168,6 @@ server.event_handler("started", function()
         server.execCubeScriptFile(server.banlist_file)
     end
     
-    if server.record_player_stats == 1 then
-        load_once("db/stats/init")
-    end
-    
-    if server.use_name_reservation == 1 then
-        load_once("db/nameprotect")
-    end
-    
     if server.use_script_socket_server == 1 then
     
         if not server["script_socket_supported?"]() then
@@ -190,52 +182,8 @@ server.event_handler("started", function()
         server.event_handler("shutdown", function() server.stop_ircbot() end)
     end
     
-    if server.enable_teamkill_limiter == 1 then
-        load_once("teamkilllimiter")
-    end
-    
-    if server.enable_dynamic_maxclients == 1 then
-        load_once("resize_server")
-    end
-    
-    if server.use_kickspec == 1 then
-        load_once("kickspec")
-    end 
-
-    if server.enable_ownage_messages == 1 then
-        load_once("ownage")
-    end
-    
-    if server.enable_suddendeath == 1 then
-        load_once("suddendeath")
-    end
-    
     if server.change_default_maptime == 1 then
         load_once("change_default_maptime")
-    end
-    
-    if server.use_spec_inactives == 1 then
-        load_once("spec.inactives")
-    end
-    
-    if server.enable_ping_limiter == 1 then
-        load_once("pinglimiter")
-    end
-    
-    if server.use_cd_modmap == 1 then
-        load_once("cheatdetect/modmap")
-    end
-    
-    if server.use_cd_accuracy == 1 then
-        load_once("cheatdetect/accuracy")
-    end
-    
-    if server.use_cd_chainsawhack == 1 then
-        load_once("cheatdetect/chainsawhack.lua")
-    end
-    
-    if server.use_resize_mastermode == 1 then
-        load_once("resize_server_mastermode")
     end
     
     server.reload_maprotation()
