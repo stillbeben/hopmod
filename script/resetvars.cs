@@ -2,6 +2,8 @@
 
 global motd "Running Hopmod"
 
+global show_country_message 1
+
 global banlist_file "conf/bans"
 global geoip_db_file "share/GeoIP.dat"
 
@@ -16,7 +18,6 @@ global mapvote_disallow_unknown_map 0
 global auth_db_filename "log/auth.sqlite"
 global auth_use_sqlite 1
 
-global record_player_stats 1
 global stats_db_filename "log/stats.sqlite"
 global stats_use_auth 0
 global stats_auth_domain ""
@@ -34,7 +35,6 @@ global stats_mysql_database "sauerstats"
 global stats_mysql_username ""
 global stats_mysql_password ""
 
-global use_name_reservation 0
 global name_reservation_domain ""
 global reserved_name_expire (mins 3600)
 

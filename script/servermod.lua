@@ -18,7 +18,7 @@ function sendServerBanner(cn)
         -- cancel if not the same player from 1 second ago
         if sid ~= server.player_sessionid(cn) then return end
         
-        server.player_msg(cn, orange() .. server.servername)
+        server.player_msg(cn, orange(server.servername))
         server.player_msg(cn, server.motd)
         
         server.player_pvar(cn, "shown_banner", true)
@@ -27,44 +27,53 @@ end
 
 function onConnect(cn)
 
+    if server.player_status_code(cn) == server.SPECTATOR then
+        local sid = server.player_sessionid(cn)
+        server.sleep(10000, function()
+            if sid == server.player_sessionid(cn) then sendServerBanner(cn) end
+        end)
+    end
+    
     local country = server.ip_to_country(server.player_ip(cn))
  	
-	if #country <= 0 then country = "unknown" end
-	    
-	local str_connect = string.format("%s connected from %s.", green(server.player_name(cn)), green(country))
-	local str_connect_admin = str_connect .. " (IP:" .. red(server.player_ip(cn)) .. ")"
-		
-	for index, cn in ipairs(server.players()) do
-		if server.player_priv_code(cn) == 2 then
-			server.player_msg(cn, str_connect_admin)
-		else
-			server.player_msg(cn, str_connect)
-		end
-	end   
+    if server.show_country_message == 1 and #country > 0 then
+        
+        local str_connect = string.format("%s connected from %s.", green(server.player_name(cn)), green(country))
+        local str_connect_admin = str_connect .. " (IP:" .. red(server.player_ip(cn)) .. ")"
+        
+        for index, cn in ipairs(server.players()) do
+            if server.player_priv_code(cn) == 2 then
+                server.player_msg(cn, str_connect_admin)
+            else
+                server.player_msg(cn, str_connect)
+            end
+        end
+    end
+    
 end
 
 function onDisconnect(cn)
 
-    server.player_unsetpvar(cn,"shown_banner")
+    server.player_unsetpvar(cn, "shown_banner")
     
     if tonumber(server.playercount) == 0 then
-	if server.firstgame_on_empty == 1 then
-    	    server.changemap(server.first_map, server.first_gamemode, -1)
-    	else
-    	    local lmode = server.first_gamemode
-    	    local lmap = server.first_map
-    	    if (server.random_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
-    		lmode = server.random_mode()
-    		lmap = server.random_map(lmode,1)
-    		server.changemap(lmap,lmode,-1)
-    	    elseif server.random_mode_on_empty == 1 then
-    		lmode = server.random_mode()
-		server.changemap(lmap,lmode,-1)
-	    elseif server.random_map_on_empty == 1 then
-		lmap = server.random_map(lmode,1)
-		server.changemap(lmap,lmode,-1)
-	    end
-	end
+        if server.firstgame_on_empty == 1 then
+            server.changemap(server.first_map, server.first_gamemode, -1)
+        else
+            local lmode = server.first_gamemode
+            local lmap = server.first_map
+            if (server.random_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
+                lmode = server.random_mode()
+                lmap = server.random_map(lmode,1)
+                server.changemap(lmap,lmode,-1)
+            elseif server.random_mode_on_empty == 1 then
+                lmode = server.random_mode()
+                server.changemap(lmap,lmode,-1)
+            elseif server.random_map_on_empty == 1 then
+                lmap = server.random_map(lmode,1)
+                server.changemap(lmap,lmode,-1)
+            end
+        end
     end
 end
 
