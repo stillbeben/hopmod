@@ -3,6 +3,7 @@ load_once("playervars")
 load_once("logging")
 load_once("playercmd")
 load_once("maprotation")
+load_once("restart")
 
 function sendServerBanner(cn)
 
