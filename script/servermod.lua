@@ -1,8 +1,8 @@
 
-dofile("./script/serverlib.lua")
-dofile("./script/logging.lua")
-dofile("./script/playercmd.lua")
-dofile("./script/maprotation.lua")
+load_once("playervars")
+load_once("logging")
+load_once("playercmd")
+load_once("maprotation")
 
 function sendServerBanner(cn)
 
@@ -23,6 +23,7 @@ function sendServerBanner(cn)
 end
 
 function onConnect(cn)
+
     local country = server.ip_to_country(server.player_ip(cn))
  	
 	if #country <= 0 then country = "unknown" end
@@ -156,7 +157,7 @@ end)
 
 server.event_handler("started", function()
     
-    dofile("./script/db/auth.lua")
+    load_once("db/auth")
     
     if server.fileExists("./conf/auth") then
         server.execCubeScriptFile("./conf/auth")
@@ -167,17 +168,19 @@ server.event_handler("started", function()
     end
     
     if server.record_player_stats == 1 then
-        dofile("./script/db/stats/init.lua")
+        load_once("db/stats/init")
     end
     
     if server.use_name_reservation == 1 then
-        dofile("./script/db/nameprotect.lua")
+        load_once("db/nameprotect")
     end
     
     if server.use_script_socket_server == 1 then
+    
         if not server["script_socket_supported?"]() then
             server.log_status("Cannot run script_socket server as it's not supported (couldn't detect libmicrohttpd as being installed at build time).")
         end
+        
         server.script_socket_server(server.script_socket_port, server.script_socket_password)
     end
     
@@ -187,51 +190,51 @@ server.event_handler("started", function()
     end
     
     if server.enable_teamkill_limiter == 1 then
-        dofile("./script/teamkilllimiter.lua")
+        load_once("teamkilllimiter")
     end
     
     if server.enable_dynamic_maxclients == 1 then
-        dofile("./script/resize_server.lua")
+        load_once("resize_server")
     end
     
     if server.use_kickspec == 1 then
-        dofile("./script/kickspec.lua")
+        load_once("kickspec")
     end 
 
     if server.enable_ownage_messages == 1 then
-        dofile("./script/ownage.lua")
+        load_once("ownage")
     end
     
     if server.enable_suddendeath == 1 then
-        dofile("./script/suddendeath.lua")
+        load_once("suddendeath")
     end
     
     if server.change_default_maptime == 1 then
-        dofile("./script/change_default_maptime.lua")
+        load_once("change_default_maptime")
     end
     
     if server.use_spec_inactives == 1 then
-        dofile("./script/spec.inactives.lua")
+        load_once("spec.inactives")
     end
     
     if server.enable_ping_limiter == 1 then
-        dofile("./script/pinglimiter.lua")
+        load_once("pinglimiter")
     end
     
     if server.use_cd_modmap == 1 then
-        dofile("./script/cd_modmap.lua")
+        load_once("cd_modmap")
     end
     
     if server.use_cd_accuracy == 1 then
-        dofile("./script/cd_accuracy.lua")
+        load_once("cd_accuracy")
     end
     
     if server.use_cd_chainsawhack == 1 then
-        dofile("./script/cd_chainsawhack.lua")
+        load_once("cd_chainsawhack.lua")
     end
     
     if server.use_resize_mastermode == 1 then
-        dofile("./script/resize_server_mastermode.lua")
+        load_once("resize_server_mastermode")
     end
     
     server.reload_maprotation()

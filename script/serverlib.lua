@@ -1,5 +1,4 @@
 dofile("./script/utils.lua")
-dofile("./script/playervars.lua")
 
 -- Copied from http://lua-users.org/wiki/SimpleRound
 function round(num, idp)
@@ -412,3 +411,61 @@ function server.conditional_event_handler(event_name, condition_function, handle
     return id
     
 end
+
+script_extension_handlers = {
+    lua = dofile,
+    cs = server.execCubeScriptFile,
+    _default = server.execCubeScriptFile
+}
+
+script_paths = {
+    [1] = "%s",
+    [2] = "./script/%s",
+    [3] = "./script/%s.lua",
+    [4] = "./script/%s.cs",
+    [5] = "./conf/%s",
+    [6] = "./conf/%s.lua",
+    [7] = "./conf/%s.cs"
+}
+
+local function call(f) f() end
+
+call(function()
+
+    local loaded_scripts = {}
+    
+    function server.script(filename)
+        
+        for i, path in ipairs(script_paths) do
+            
+            local candidateFilename = string.format(path, filename)
+            
+            if server.fileExists(candidateFilename) then
+                filename = candidateFilename
+                break
+            end
+        end
+        
+        if loaded_scripts[filename] then
+            server.log_error(string.format("Already loaded script \"%s\".", filename))
+            return nil
+        end
+        
+        local extension = string.gmatch(filename, "%.(%a+)$")() or "_default"
+        local handler = script_extension_handlers[extension]
+        
+        if not handler then
+            error(string.format("Unrecognized file extension for script \"%s\".", filename))
+        end
+        
+        return handler(filename), filename
+    end
+    
+    function server.load_once(filename)
+        local retval, filename = server.script(filename)
+        loaded_scripts[filename] = true
+    end
+end)
+
+script = server.script
+load_once = server.load_once
