@@ -5,7 +5,7 @@ server.event_handler("text", function(cn, text)
     
     local arguments = server.parse_player_command(text)
     
-    if server.use_command_prefix == 1 then
+    if server.use_command_prefix == true then
         
         -- check for normal chat message
         if string.sub(text, 1, 1) ~= server.command_prefix then

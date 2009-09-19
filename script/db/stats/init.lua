@@ -1,6 +1,7 @@
 
 local using_sqlite = (server.stats_use_sqlite == 1)
 local using_json = (server.stats_use_json == 1)
+local using_mysql = (server.stats_use_mysql == 1)
 
 local backends = {}
 
@@ -22,9 +23,7 @@ if using_sqlite then
 end
 
 if using_json then
-    
-    backends.json = loadfile("./script/db/stats/json.lua")()
-    
+    backends.json = loadfile("./script/db/stats/json.lua")()    
 end
 
 loadfile("./script/db/stats/core.lua")().initialize(backends,{

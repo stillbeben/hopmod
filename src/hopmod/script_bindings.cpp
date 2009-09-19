@@ -277,4 +277,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_property<unsigned int>(
         boost::bind(script::property<unsigned int>::generic_getter, server::maintenance_frequency),
         server::set_maintenance_frequency, "maintenance_frequency", env);
+    
+    script::bind_freefunc(md5sum, "md5sum", env);
 }

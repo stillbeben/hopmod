@@ -1,5 +1,6 @@
 #include "hopmod.hpp"
 #include "utils.hpp"
+#include "md5.h"
 
 #include <string>
 #include <sstream>
@@ -128,4 +129,29 @@ int freechalanswer(lua_State * L)
 } //namespace crypto
 } //namespace lua
 
+static void to_hex(unsigned char c, char * output)
+{
+    static const char digits[] = "0123456789abcdef";
+    output[0] = digits[c / 16];
+    output[1] = digits[c % 16];
+    output[2] = '\0';
+}
 
+std::string md5sum(const std::string & input)
+{
+    MD5_CTX context;
+    MD5Init(&context);
+    
+    std::string output;
+    output.reserve(sizeof(context.digest)*2);
+    
+    MD5Update(&context, (unsigned char *)input.c_str(), input.length());
+    MD5Final(&context);
+    for(unsigned int i = 0; i < sizeof(context.digest); i++)
+    {
+        char hexnumber[3];
+        to_hex(context.digest[i], hexnumber);
+        output.append(hexnumber);
+    }
+    return output;
+}

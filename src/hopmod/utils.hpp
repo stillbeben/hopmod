@@ -42,5 +42,6 @@ int freechalanswer(lua_State *);
 } //namespace crypto
 } //namespace lua
 
+std::string md5sum(const std::string & input);
 
 #endif
