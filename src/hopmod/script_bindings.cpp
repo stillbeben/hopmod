@@ -279,4 +279,7 @@ void register_server_script_bindings(script::env & env)
         server::set_maintenance_frequency, "maintenance_frequency", env);
     
     script::bind_freefunc(md5sum, "md5sum", env);
+    
+    script::bind_freefunc(file_exists, "file_exists", env);
+    script::bind_freefunc(dir_exists, "dir_exists", env);
 }

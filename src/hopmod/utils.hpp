@@ -44,4 +44,7 @@ int freechalanswer(lua_State *);
 
 std::string md5sum(const std::string & input);
 
+bool file_exists(const char *);
+bool dir_exists(const char *);
+
 #endif

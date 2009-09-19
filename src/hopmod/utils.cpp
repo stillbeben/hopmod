@@ -7,6 +7,9 @@
 #include <netdb.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 in_addr to_in_addr(in_addr_t x)
 {
@@ -154,4 +157,18 @@ std::string md5sum(const std::string & input)
         output.append(hexnumber);
     }
     return output;
+}
+
+bool file_exists(const char * name)
+{
+    struct stat info;
+    if(stat(name, &info)==0) return !(info.st_mode & S_IFDIR);
+    else return false;
+}
+
+bool dir_exists(const char * name)
+{
+    struct stat info;
+    if(stat(name, &info)==0) return info.st_mode & S_IFDIR;
+    else return false;
 }
