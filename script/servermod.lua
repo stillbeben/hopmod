@@ -1,6 +1,6 @@
 load_once("restart")
 load_once("player_object")
-load_once("playervars")
+load_once("player_vars")
 load_once("logging")
 load_once("playercmd")
 load_once("maprotation")
