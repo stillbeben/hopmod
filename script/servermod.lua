@@ -190,15 +190,6 @@ server.event_handler("started", function()
         dofile("./script/teamkilllimiter.lua")
     end
     
-    if server.teamkill_showlimit == 1 then
-        server.playercmd_teamkills = function(cn)
-            local tks = server.player_teamkills(cn)
-            local noun = "teamkill"
-            if tks ~= 1 then noun = noun .. "s" end
-            server.player_msg(cn,string.format("%i %s.",tks,noun))
-        end
-    end
-    
     if server.enable_dynamic_maxclients == 1 then
         dofile("./script/resize_server.lua")
     end
