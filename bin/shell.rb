@@ -20,7 +20,7 @@ def reconnect(hostname, port, command)
     sleep 1
     puts "Attempting to reconnect..."
     
-    if command == "restart" || command == "restart_now"
+    if command == "restart" || command == "restart_now" || command == "reloadscripts"
         command = nil
     end
     
