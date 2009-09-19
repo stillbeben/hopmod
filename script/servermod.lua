@@ -222,15 +222,15 @@ server.event_handler("started", function()
     end
     
     if server.use_cd_modmap == 1 then
-        load_once("cd_modmap")
+        load_once("cheatdetect/modmap")
     end
     
     if server.use_cd_accuracy == 1 then
-        load_once("cd_accuracy")
+        load_once("cheatdetect/accuracy")
     end
     
     if server.use_cd_chainsawhack == 1 then
-        load_once("cd_chainsawhack.lua")
+        load_once("cheatdetect/chainsawhack.lua")
     end
     
     if server.use_resize_mastermode == 1 then
