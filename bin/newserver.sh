@@ -14,3 +14,4 @@ mkdir $DEST/log/game
 mkdir $DEST/log/demo
 
 cp conf/server.conf $DEST/conf/server.conf
+cp conf/maps.conf $DEST/conf/maps.conf
