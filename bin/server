@@ -75,6 +75,9 @@ case "$1" in
 	execOnServer "printserverstatus [$out]"
 	sleep 1
 ;;
+    'updateconf')
+        execOnServer "reloadscripts"
+;;
     *)
         $0 start
 esac
