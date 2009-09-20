@@ -640,6 +640,7 @@ void cleanup_masterstate(clientinfo * master)
     {
         mastermode = MM_OPEN;
         mastermode_owner = -1;
+        mastermode_mtime = totalmillis;
         allowedips.setsize(0);
     }
     
@@ -1071,6 +1072,7 @@ void script_set_mastermode(int value)
 {
     mastermode = value;
     mastermode_owner = -1;
+    mastermode_mtime = totalmillis;
     allowedips.setsize(0);
     if(mastermode >= MM_PRIVATE)
     {

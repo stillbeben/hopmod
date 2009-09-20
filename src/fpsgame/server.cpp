@@ -128,8 +128,9 @@ namespace server
         int frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, shots;
         int lasttimeplayed, timeplayed;
         float effectiveness;
-
-        gamestate() : state(CS_DEAD), editstate(CS_DEAD) {}
+        int disconnecttime;
+        
+        gamestate() : state(CS_DEAD), editstate(CS_DEAD), disconnecttime(0) {}
     
         bool isalive(int gamemillis)
         {
@@ -180,6 +181,7 @@ namespace server
         int timeplayed;
         float effectiveness;
         int state;
+        int disconnecttime;
         
         void save(gamestate &gs)
         {
@@ -197,6 +199,7 @@ namespace server
             hits = gs.hits;
             shots = gs.shots;
             state = gs.state;
+            disconnecttime = gs.disconnecttime;
         }
 
         void restore(gamestate &gs)
@@ -216,6 +219,7 @@ namespace server
             gs.hits = hits;
             gs.shots = shots;
             gs.state = state;
+            gs.disconnecttime = disconnecttime;
         }
     };
 
@@ -410,7 +414,7 @@ namespace server
     int interm = 0, minremain = 0;
     bool mapreload = false;
     enet_uint32 lastsend = 0;
-    int mastermode = MM_OPEN, mastermask = MM_PRIVSERV, mastermode_owner = -1;
+    int mastermode = MM_OPEN, mastermask = MM_PRIVSERV, mastermode_owner = -1, mastermode_mtime = 0;
     int currentmaster = -1;
     bool masterupdate = false;
     string masterpass = "";
@@ -1033,6 +1037,7 @@ namespace server
             {
                 mastermode = MM_OPEN;
                 mastermode_owner = -1;
+                mastermode_mtime = totalmillis;
                 allowedips.setsize(0);
             }
         }
@@ -2009,7 +2014,10 @@ namespace server
             }
             
             if(smode) smode->leavegame(ci, true);
-            ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed; 
+            
+            ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
+            ci->state.disconnecttime = totalmillis;
+            
             savescore(ci);
             
             sendf(-1, 1, "ri2", SV_CDIS, n);
@@ -2222,7 +2230,7 @@ namespace server
 
                 ci->connected = true;
                 bool restoredscore = restorescore(ci);
-                bool was_playing = restoredscore && ci->state.state != CS_SPECTATOR;
+                bool was_playing = restoredscore && ci->state.state != CS_SPECTATOR && ci->state.disconnecttime > mastermode_mtime;
                 
                 if(mastermode>=MM_LOCKED && !was_playing) ci->state.state = CS_SPECTATOR;
                 else ci->state.state = CS_DEAD;
@@ -2671,6 +2679,7 @@ namespace server
                         if(signal_setmastermode(mastermodename(mastermode),mastermodename(mm))==-1) break;
                         mastermode = mm;
                         mastermode_owner = ci->clientnum;
+                        mastermode_mtime = totalmillis;
                         allowedips.setsize(0);
                         if(mm>=MM_PRIVATE)
                         {
