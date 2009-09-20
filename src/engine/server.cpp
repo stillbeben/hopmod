@@ -420,11 +420,14 @@ int masteroutpos = 0, masterinpos = 0;
 
 void disconnectmaster()
 {
+    masterserver_client_socket.cancel();
+    masterserver_client_socket.close();
+    
     if(mastersock == ENET_SOCKET_NULL) return;
-
+    
     enet_socket_destroy(mastersock);
     mastersock = ENET_SOCKET_NULL;
-
+    
     masterout.setsizenodelete(0);
     masterin.setsizenodelete(0);
     masteroutpos = masterinpos = 0;
@@ -461,6 +464,7 @@ ENetSocket connectmaster()
     
     enet_socket_set_option(sock, ENET_SOCKOPT_NONBLOCK, 1);
     
+    masterserver_client_socket.close();
     masterserver_client_socket.assign(ip::tcp::v4(), sock);
     masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_input_handler);
     
@@ -564,18 +568,31 @@ void masterserver_client_input_handler(boost::system::error_code ec, const size_
     {
         flushmasterinput();
         flushmasteroutput();
+        
         if(!masterout.empty()) 
             masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_output_handler);
+        
+        masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_input_handler);
     }
-    
-    masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_input_handler);
+    else
+    {
+        disconnectmaster();
+    }
 }
 
 void masterserver_client_output_handler(boost::system::error_code ec, const size_t)
 {
-    if(!ec) flushmasteroutput();
-    if(!masterout.empty()) 
-        masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_output_handler);
+    if(!ec)
+    {
+        flushmasteroutput();
+        
+        if(!masterout.empty())
+            masterserver_client_socket.async_read_some(null_buffers(), masterserver_client_output_handler);
+    }
+    else
+    {
+        disconnectmaster();
+    }
 }
 
 static ENetAddress pongaddr;

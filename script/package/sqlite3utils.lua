@@ -6,6 +6,7 @@ require("string")
 local io = io
 local sqlite3 = sqlite3
 local string = string
+local print = print
 
 module("sqlite3utils")
 

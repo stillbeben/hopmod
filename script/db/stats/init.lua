@@ -26,6 +26,21 @@ if using_json then
     backends.json = loadfile("./script/db/stats/json.lua")()    
 end
 
+if using_mysql then
+    
+    backends.mysql = loadfile("./script/db/stats/mysql.lua")()
+    
+    backends.mysql.open({
+        hostname = server.stats_mysql_hostname,
+        port = server.stats_mysql_port,
+        username = server.stats_mysql_username,
+        password = server.stats_mysql_password,
+        database = server.stats_mysql_database,
+        schemafile = "./script/db/stats/mysql_schema.sql"
+    })
+    
+end
+
 loadfile("./script/db/stats/core.lua")().initialize(backends,{
         using_auth = server.stats_use_auth,
         auth_domain_name = server.stats_auth_domain
