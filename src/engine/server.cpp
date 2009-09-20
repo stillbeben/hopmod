@@ -420,7 +420,6 @@ int masteroutpos = 0, masterinpos = 0;
 
 void disconnectmaster()
 {
-    masterserver_client_socket.cancel();
     masterserver_client_socket.close();
     
     if(mastersock == ENET_SOCKET_NULL) return;

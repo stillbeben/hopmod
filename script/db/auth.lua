@@ -126,12 +126,14 @@ server.event_handler("authrep", function(cn, reqid, answer)
     end
     
     if req.delegated then
+    
         if not server.relayauthanswer(cn, answer) then
-            auth_request[req_id] = nil
+            auth.cleanup_request(cn, reqid)
             auth.authserver_offline = true
         else
             auth.authserver_offline = false
         end
+        
         return
     end
 
