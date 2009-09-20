@@ -78,6 +78,9 @@ case "$1" in
     'updateconf')
         execOnServer "reloadscripts"
 ;;
+    'password')
+        execOnServer "admin_password $2"
+;;
     *)
         $0 start
 esac
