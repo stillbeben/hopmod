@@ -1048,7 +1048,7 @@ int create_buffer(lua_State * L)
     rbuf->produced = rbuf->start;
     rbuf->consumed = rbuf->start;
     
-    assert(reinterpret_cast<unsigned int>(rbuf) % sizeof(unsigned int) == 0);//check for correct memory alignment
+    //assert(reinterpret_cast<unsigned int>(rbuf) % sizeof(unsigned int) == 0);//check for correct memory alignment
     
     return 1;
 }
