@@ -19,11 +19,11 @@ return function(warning_cn, warning_tcn, warning_text)
     
         local warns_count = (server.player_vars(warning_tcn).warnings_count or 1)
         
-        if warns_count <= server.warnings_limit then
+        if warns_count <= server.warning_limit then
         
             server.player_msg(warning_tcn," ")
             local msg = "Warning"
-            if warns_count == server.warnings_limit then
+            if warns_count == server.warning_limit then
                 msg = "Last Warning"
             end
             server.msg("(" .. red(msg) .. ")  " .. "(" .. green(server.player_name(warning_tcn)) .. ")  " .. orange(warning_text))

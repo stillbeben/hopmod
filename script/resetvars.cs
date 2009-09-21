@@ -234,3 +234,6 @@ global cheater_ad_timer (mins 4)
 global votekick_ad_timer (mins 4)
 
 global master_domains []
+
+warning_limit 2
+warning_bantime (mins 60)
