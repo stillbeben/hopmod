@@ -151,8 +151,10 @@ end
 
 function internal.loadAuthHandlers(domain)
     
-    local domain_dd = auth.get_domain_id(domain)
-    if not domain_id then error(string.format("players auth domain '%s' not found",server.stats_auth_domain)) end
+    domain_id = auth.get_domain_id(domain)
+    if not domain_id then error(string.format("players auth domain '%s' not found", domain)) end
+    
+    domain_name = domain
     
     local handler_id = auth.add_domain_handler(domain_name, function(cn, name)
         
