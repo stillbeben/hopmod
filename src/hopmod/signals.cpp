@@ -59,6 +59,67 @@ boost::signal<void (int)> signal_returnflag;
 boost::signal<void ()> signal_rootserver_failedconnect;
 boost::signal<void ()> signal_maintenance;
 
+static void destroy_slot(int handle);
+static int lua_event_handler(lua_State * L);
+
+class event_handler_object
+{
+    static const char * MT;
+public:
+    event_handler_object()
+    :handler_id(-1)
+    {
+        
+    }
+    
+    static int register_class(lua_State * L)
+    {
+        luaL_newmetatable(L, MT);
+        lua_pushvalue(L, -1);
+        
+        static luaL_Reg funcs[] = {
+            {"__gc", &event_handler_object::__gc},
+            {"cancel", &event_handler_object::cancel},
+            {NULL, NULL}
+        };
+        
+        luaL_register(L, NULL, funcs);
+        
+        lua_setfield(L, -1, "__index");
+        
+        return 0;
+    }
+    
+    static int create(lua_State * L)
+    {
+        event_handler_object * self = new (lua_newuserdata(L, sizeof(event_handler_object))) event_handler_object();
+        luaL_getmetatable(L, MT);
+        lua_setmetatable(L, -2);
+        
+        lua_event_handler(L);
+        self->handler_id = lua_tointeger(L, -1);
+        lua_pushvalue(L, -2); //FIXME assert -2 is the event handler object
+        return 1;
+    }
+    
+    static int __gc(lua_State * L)
+    {
+        cancel(L);
+        return 0;
+    }
+    
+    static int cancel(lua_State * L)
+    {
+        event_handler_object * self = reinterpret_cast<event_handler_object *>(luaL_checkudata(L, 1, MT));
+        destroy_slot(self->handler_id);
+        return 0;
+    }
+private:
+    int handler_id;
+};
+
+const char * event_handler_object::MT = "event_handler_object";
+
 static script::any proceed_error_handler(script::error_trace * errinfo)
 {
     report_script_error(errinfo);
@@ -172,6 +233,9 @@ void register_signals(script::env & env)
     script::bind_freefunc(destroy_slot, "cancel_handler", env);
     
     register_lua_function(lua_event_handler,"event_handler");
+    
+    event_handler_object::register_class(env.get_lua_state());
+    register_lua_function(event_handler_object::create, "event_handler_object");
 }
 
 void cleanup_dead_slots()
@@ -230,3 +294,4 @@ void disconnect_all_slots()
     
     signal_rootserver_failedconnect.disconnect_all_slots();
 }
+
