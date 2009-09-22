@@ -233,6 +233,7 @@ server.event_handler("started", function()
     player_command_script("privmsg")
     player_command_alias("pmsg", "privmsg")
     player_command_alias("pm", "privmsg")
+	player_command_script("invadmin")
     
     player_command_script("givemaster", nil, "master")
     player_command_script("mute",       nil, "master")
