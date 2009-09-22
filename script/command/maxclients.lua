@@ -2,14 +2,16 @@
 
 return function(cn, n)
     
-    if not n then
-        return nil, "missing argument"
-    end
-    
-    n = tonumber(n)
-    
-    if n >= server.playercount and n <= 128 then
-        server.maxplayers = arg1
-    end
+	if not n then
+		server.player_msg(cn,red("#maxclients <size>"))
+		return
+--		return false, "missing argument"
+	end
+
+	n = tonumber(n)
+
+	if n >= server.playercount and n <= 128 then
+		server.maxplayers = n
+	end
     
 end
