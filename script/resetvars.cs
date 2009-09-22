@@ -237,5 +237,5 @@ global master_domains []
 global admin_domain ""
 global invadmin_domain ""
 
-warning_limit 2
-warning_bantime (mins 60)
+global warning_limit 2
+global warning_bantime (mins 60)
