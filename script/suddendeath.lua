@@ -1,243 +1,283 @@
-local sudden_death = 0
-local sudden_death_events = {}
-local sudden_death_events_active = 0
-local sudden_death_ctl_events = {}
-local sudden_death_ctl_events_active = 0
+suddendeath = {}
+suddendeath.is_active = nil
 
-sudden_death_events_active = 0
-sudden_death_ctl_events_active = 0
 
-local function sd_frag_scoreflag_event_helper()
-    if sudden_death == 1 then
-        sudden_death = 0
-        server.changetime(10)
-    end
+function suddendeath.active_events_disable()
+
+	suddendeath.is_active = 0
+
+	if suddendeath.event_frag then
+		server.cancel_handler(suddendeath.event_frag)
+		suddendeath.event_frag = nil
+	end
+
+	if suddendeath.event_suicide then
+		server.cancel_handler(suddendeath.event_suicide)
+		suddendeath.event_suicide = nil
+	end
+
+	suddendeath.no_event = nil
+
+	if suddendeath.event_scoreflag then
+		server.cancel_handler(suddendeath.event_scoreflag)
+		suddendeath.event_scoreflag = nil
+	end
+
 end
 
-local function sd_frag_event(tcn,acn)
-    sd_frag_scoreflag_event_helper()
-end
 
-local function sd_scoreflag_event(cn)
-    sd_frag_scoreflag_event_helper()
-end
+function suddendeath.no_event()
 
-local function sd_no_event()
-    server.interval(2000,function()
-	if sudden_death == 1 then
-	    local break_first = 0
-	    local draw = 0
-	    for index,name in ipairs(server.teams()) do
-		local tscore = server.team_score(name)
-		for i,n in ipairs(server.teams()) do
-                    if not (name == n) then
-			if tscore == server.team_score(n) then
-			    draw = 1
-			    break_first = 1
-			    break
+	if suddendeath.is_active == 1 then
+		local break_first = 0
+		local draw = 0
+
+		for index,name in ipairs(server.teams()) do
+			local tscore = server.team_score(name)
+
+			for i,n in ipairs(server.teams()) do
+				if not (name == n) then
+					if tscore == server.team_score(n) then
+						draw = 1
+						break_first = 1
+						break
+					end
+				end
 			end
-		    end
+
+			if break_first == 1 then
+				break
+			end
 		end
-		if break_first == 1 then
-		    break
+
+		if draw == 0 then
+			suddendeath.is_active = 0
+			server.changetime(10)
+			return true
 		end
-	    end
-	    if draw == 0 then
-		sudden_death = 0
-		server.changetime(10)
+	end
+
+	if suddendeath.is_active == 0 then
+		return true
+	end
+
+	return false
+
+end
+
+
+function suddendeath.active_events_enable(option)
+
+	if not option then
 		return (-1)
-	    end
 	end
-	if sudden_death == 0 then
-    	    return (-1)
-    	end
-    end)
-end
 
-local function sd_disabler()
-    if sudden_death_events_active == 1 then
-	sudden_death_events_active = 0
-	
-	for a,b in ipairs(sudden_death_events) do
-	    server.cancel_handler(b)
+	if (option == 0) or (option == 3) then
+		if not suddendeath.event_frag then
+			server.msg(red("Sudden Death. Next Frag Wins!"))
+
+			suddendeath.event_frag = server.event_handler("frag",function(tcn,acn)
+
+				if suddendeath.is_active == 1 then
+					suddendeath.is_active = 0
+					server.changetime(10)
+				end
+
+			end)
+
+		end
+
+		if not suddendeath.event_suicide then
+
+			suddendeath.event_suicide = server.event_handler("suicide",function(cn)
+
+				if suddendeath.is_active == 1 then
+					suddendeath.is_active = 0
+					server.changetime(10)
+				end
+
+			end)
+
+		end
+	elseif option == 1 then
+		if not suddendeath.no_event then
+			server.msg(red("Sudden Death. Next Score Wins!"))
+			suddendeath.no_event = 1
+
+			server.interval(1000,function()
+
+				if suddendeath.no_event() then
+					return (-1)
+				end
+
+			end)
+
+		end
+	elseif option == 2 then
+		if not suddendeath.event_scoreflag then
+			server.msg(red("Sudden Death. Next Score Wins!"))
+
+			suddendeath.event_scoreflag = server.event_handler("scoreflag",function(cn)
+
+				if suddendeath.is_active == 1 then
+					suddendeath.is_active = 0
+					server.changetime(10)
+				end
+
+			end)
+
+		end
+	elseif option == 4 then
+		if not suddendeath.event_scoreflag then
+			server.msg(red("Sudden Death. Next Score Wins!"))
+
+			suddendeath.event_scoreflag = server.event_handler("scoreflag",function(cn)
+
+				if suddendeath.is_active == 1 then
+					suddendeath.is_active = 0
+					server.changetime(10)
+				end
+
+			end)
+
+		end
+
+		if not suddendeath.no_event then
+			suddendeath.no_event = 1
+
+			server.interval(1000,function()
+
+				if suddendeath.no_event() then
+					return (-1)
+				end
+
+			end)
+
+		end
 	end
-	sudden_death_events = {}
-    end
-    sudden_death = 0
+
+	suddendeath.is_active = 1
+
 end
 
-local function sd_finishedgame_event()
-    sd_disabler()
-end
 
-local function sd_enabler(sd_enabler_option)
-    if not sd_enabler_option then
-	return (-1)
-    end
-    if sudden_death_events_active == 0 then
-	sudden_death_events_active = 1
-	
-	local event_frag = nil
-	local event_scoreflag = nil
-	sudden_death_events = {}
-	if (sd_enabler_option == 0) or (sd_enabler_option == 3) then
-	    event_frag = server.event_handler("frag",sd_frag_event)
-	    table.insert(sudden_death_events,event_frag)
-	elseif sd_enabler_option == 1 then
-	    sd_no_event()
-	elseif sd_enabler_option == 2 then
-	    event_scoreflag = server.event_handler("scoreflag",sd_scoreflag_event)
-	    table.insert(sudden_death_events,event_scoreflag)
+function suddendeath.disable()
+
+	if suddendeath.event_timeupdate then
+		server.cancel_handler(suddendeath.event_timeupdate)
+		suddendeath.event_timeupdate = nil
 	end
-	local event_finishedgame = server.event_handler("finishedgame",sd_finishedgame_event)
-	table.insert(sudden_death_events,event_finishedgame)
-    end
-    sudden_death = 1
-end
 
-
-local function sd_timeupdate_event(sd_timeupdate_event_mins)
-    if sd_timeupdate_event_mins == 1 then
-        server.sleep(58000,function()
-	    local gmode = tostring(server.gamemode)
-	    local break_first = 0
-	    local draw = 1
-	    if gmode == "regen capture" or gmode == "capture" then
-		for index,name in ipairs(server.teams()) do
-		    local tscore = server.team_score(name)
-		    for i,n in ipairs(server.teams()) do
-                	if not (name == n) then
-			    if not (tscore == server.team_score(n)) then
-				draw = 0
-				break_first = 1
-				break
-			    end
-			end
-		    end
-		    if break_first == 1 then
-			break
-		    end
-		end
-		if draw == 1 then
-		    server.msg(red("--[ Sudden Death. Next Score Wins!"))
-		    sd_enabler(1)
-		end
-	    elseif gmode == "insta ctf" or gmode == "ctf" or gmode == "insta protect" or gmode == "protect" then
-		for index,name in ipairs(server.teams()) do
-		    local tscore = server.team_score(name)
-		    for i,n in ipairs(server.teams()) do
-			if not (name == n) then
-			    if not (tscore == server.team_score(n)) then
-				draw = 0
-				break_first = 1
-				break
-			    end
-			end
-		    end
-		    if break_first == 1 then
-			break
-		    end
-		end
-		if draw == 1 then
-		    server.msg(red("--[ Sudden Death. Next Score Wins!"))
-		    sd_enabler(2)
-		end
-	    elseif gmode == "teamplay" or gmode == "tactics team" or gmode == "instagib team" or gmode == "efficiency team" then
-		for index,name in ipairs(server.teams()) do
-		    local tscore = server.team_score(name)
-		    for i,n in ipairs(server.teams()) do
-			if not (name == n) then
-			    if not (tscore == server.team_score(n)) then
-				draw = 0
-				break_first = 1
-				break
-			    end
-			end
-		    end
-		    if break_first == 1 then
-			break
-		    end
-		end
-		if draw == 1 then
-		    server.msg(red("--[ Sudden Death. Next Frag Wins!"))
-		    sd_enabler(3)
-		end
-	    elseif gmode == "ffa" or gmode == "tactics" or gmode == "instagib" or gmode == "efficiency" then
-		for index,cn in ipairs(server.players()) do
-		    local pfrags = server.player_frags(cn)
-		    for i,c in ipairs(server.players()) do
-			if not (cn == c) then
-			    if not (pfrags == server.player_frags(c)) then
-				draw = 0
-				break_first = 1
-				break
-			    end
-			end
-		    end
-		    if break_first == 1 then
-			break
-		    end
-		end
-		if draw == 1 then
-		    server.msg(red("--[ Sudden Death. Next Frag Wins!"))
-		    sd_enabler(0)
-		end
-	    end
-        end)
-    end
-    if sudden_death == 1 then
-	return 1
-    else
-	return sd_timeupdate_event_mins
-    end
-end
-
-local function sd_ctl_disabler()
-    if sudden_death_ctl_events_active == 1 then
-	sudden_death_ctl_events_active = 0
-	
-	for a,b in ipairs(sudden_death_ctl_events) do
-	    server.cancel_handler(b)
+	if suddendeath.event_finishedgame then
+		server.cancel_handler(suddendeath.event_finishedgame)
+		suddendeath.event_finishedgame = nil
 	end
-	sudden_death_ctl_events = {}
-    end
-    sd_disabler()
+
+	suddendeath.active_events_disable()
+
 end
 
-local function sd_ctl_enabler()
-    if sudden_death_ctl_events_active == 0 then
-	sudden_death_ctl_events_active = 1
-	
-	sudden_death_ctl_events = {}
-	local event_timeupdate = server.event_handler("timeupdate",sd_timeupdate_event)
-	table.insert(sudden_death_ctl_events,event_timeupdate)
-    end
+
+function suddendeath.enable()
+
+	if not suddendeath.event_timeupdate then
+
+		suddendeath.checked_mode = 0
+
+		suddendeath.event_timeupdate = server.event_handler("timeupdate",function(mins)
+
+			if mins == 1 then
+
+				server.sleep(58000,function()
+
+					local gmode = tostring(server.gamemode)
+					local break_first = 0
+					local draw = 1
+
+					if suddendeath.checked_mode == 0 then
+						if gmode == "ffa" or gmode == "tactics" or gmode == "instagib" or gmode == "efficiency" then
+							for player in server.gplayers() do
+								local pfrags = player:frags()
+
+								for p in server.gplayers() do
+									if not (player.cn == p.cn) then
+										if not (pfrags == p:frags()) then
+											draw = 0
+											break_first = 1
+											break
+										end
+									end
+								end
+
+								if break_first == 1 then
+									break
+								end
+							end
+
+							if draw == 1 then
+								suddendeath.active_events_enable(0)
+							end
+						else
+							for index,name in ipairs(server.teams()) do
+								local tscore = server.team_score(name)
+
+								for i,n in ipairs(server.teams()) do
+									if not (name == n) then
+										if not (tscore == server.team_score(n)) then
+											draw = 0
+											break_first = 1
+											break
+										end
+									end
+								end
+
+								if break_first == 1 then
+									break
+								end
+							end
+
+							if draw == 1 then
+								if gmode == "regen capture" or gmode == "capture" then
+									suddendeath.active_events_enable(1)
+								elseif gmode == "insta ctf" or gmode == "ctf" then
+									suddendeath.active_events_enable(2)
+								elseif gmode == "insta protect" or gmode == "protect" then
+									suddendeath.active_events_enable(4)
+								elseif gmode == "teamplay" or gmode == "tactics team" or gmode == "instagib team" or gmode == "efficiency team" then
+									suddendeath.active_events_enable(3)
+								end
+							end
+						end
+
+						suddendeath.checked_mode = 1
+					end
+
+				end)
+
+			end
+
+			if suddendeath.is_active == 1 then
+                return 1
+			else
+				return mins
+			end
+
+		end)
+
+	end
+
+	if not suddendeath.event_finishedgame then
+
+		suddendeath.event_finishedgame = server.event_handler("finishedgame",function()
+
+--			suddendeath.active_events_disable()
+			suddendeath.disable()
+
+		end)
+
+	end
+
 end
 
-function server.sdmode(sdmode_cn,sdmode_option)
-    if sdmode_option == 1 then
-        sd_ctl_enabler()
-    else
-        sd_ctl_disabler()
-    end
-end
 
--- #nosd
-if server.enable_nosd_command == 1 then
-    function server.playercmd_nosd(nosd_cn)
-	return admincmd(function()
-            server.sdmode(nosd_cn,0)
-	    server.msg(orange("--[ Sudden Death Mode Disabled. There may be ties"))
-        end,nosd_cn)
-    end
-end
-
--- #sd
-if server.enable_sd_command == 1 then
-    function server.playercmd_sd(sd_cn)
-	return admincmd(function()
-            server.sdmode(sd_cn,1)
-            server.msg(orange("--[ Sudden Death Mode Enabled. There will be no ties"))
-        end,sd_cn)
-    end
-end
+return {unload = suddendeath.disable()}

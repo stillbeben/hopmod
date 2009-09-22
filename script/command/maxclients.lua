@@ -3,9 +3,7 @@
 return function(cn, n)
     
 	if not n then
-		server.player_msg(cn,red("#maxclients <size>"))
-		return
---		return false, "missing argument"
+		return false, "#maxclients <size>"
 	end
 
 	n = tonumber(n)
