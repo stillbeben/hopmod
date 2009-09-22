@@ -1,11 +1,11 @@
 
 -- Keep these messages at the top of the file so users can find them easily
 local killingspree_message = {}
-killingspree_message[5] = "\f2%s is on a \f6KILLING SPREE!!"
-killingspree_message[10] = "\f2%s is on a \f6RAMPAGE!!"
-killingspree_message[15] = "\f2%s is \f6DOMINATING!!"
-killingspree_message[20] = "\f2%s is \f6UNSTOPPABLE!!"
-killingspree_message[30] = "\f2%s is \f6GODLIKE!!"
+killingspree_message[5]  = yellow("%s is on a ") .. orange("KILLING SPREE!!")
+killingspree_message[10] = yellow("%s is on a ") .. orange("RAMPAGE!!")
+killingspree_message[15] = yellow("%s is ") .. orange("DOMINATING!!")
+killingspree_message[20] = yellow("%s is ") .. orange("UNSTOPPABLE!!")
+killingspree_message[30] = yellow("%s is ") .. orange("GODLIKE!!")
 
 local long_killingspree = 15
 local multikill_timelimit = 2000
@@ -13,14 +13,15 @@ local multikill_timelimit = 2000
 local first_frag = true
 
 local function send_first_frag_message(target, actor)
-    if not first_frag then return end
-    server.msg(string.format("\f2%s opened the \f6FIGHT!!", server.player_name(actor)))
+    if not first_frag or target == actor then return end
+    server.msg(string.format(yellow("%s made the ") .. orange("FIRST KILL!!"), server.player_name(actor)))
     first_frag = false
 end
 
 local function send_killingspree_message(target_cn, target_vars, actor_cn, actor_vars)
     
     local actor_killingspree = actor_vars.killingspree or 0
+    local target_killingspree = target_vars.killingspree or 0
     
     if actor_cn ~= target_cn then
         actor_killingspree = actor_killingspree + 1
@@ -34,7 +35,7 @@ local function send_killingspree_message(target_cn, target_vars, actor_cn, actor
         server.msg(string.format(killingspree_message[actor_killingspree], server.player_name(actor_cn)))
     end
     
-    if target_vars.killingspree >= long_killingspree then
+    if target_killingspree >= long_killingspree then
         server.msg(string.format("\f2%s was stopped by \f6%s!!", server.player_name(target_cn), server.player_name(actor_cn)))
     end
     
