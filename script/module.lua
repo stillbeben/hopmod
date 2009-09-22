@@ -93,8 +93,11 @@ function server.unload_module(name)
     if not control.unload then error(string.format("Module \"%s\" cannot be unloaded", name)) end
     
     control.unload()
+    
     loaded_modules[name] = nil
     loaded_scripts[control.filename] = nil
+    
+    collectgarbage()
 end
 
 server.event_handler("started", load_modules_now)

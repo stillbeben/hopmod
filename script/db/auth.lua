@@ -7,7 +7,7 @@ if using_sqlite then
 
     require "sqlite3"
     require "sqlite3utils"
-
+    
     db = sqlite3.open(server.auth_db_filename)
     sqlite3utils.createMissingTables("./script/db/auth_schema.sql", db)
     
@@ -348,3 +348,4 @@ end
 server.auth_add_user = auth.add_user
 server.auth_add_domain = auth.add_domain
 server.auth_is_domain_local = auth.is_domain_local
+server.auth_get_domain_id = auth.get_domain_id
