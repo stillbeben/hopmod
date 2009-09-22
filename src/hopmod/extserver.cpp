@@ -429,6 +429,47 @@ int player_sessionid(int cn)
 }
 
 const char * player_name(int cn){return get_ci(cn)->name;}
+
+std::string player_displayname(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    
+    std::string output;
+    output.reserve(MAXNAMELEN + 5);
+    
+    output = ci->name;
+    
+    bool is_bot = ci->state.aitype != AI_NONE;
+    bool duplicate = false;
+    
+    if(!is_bot)
+    {
+        loopv(clients)
+        {
+            if(clients[i]->clientnum == cn) continue;
+            if(!strcmp(clients[i]->name, ci->name))
+            {
+                duplicate = true;
+                break;
+            }
+        }
+    }
+    
+    if(is_bot || duplicate)
+    {
+        char open = (is_bot ? '[' : '(');
+        char close = (is_bot ? ']' : ')');
+        
+        output += "\fs" MAGENTA " ";
+        output += open;
+        output += boost::lexical_cast<std::string>(cn);
+        output += close;
+        output += "\fr";
+    }
+    
+    return output;
+}
+
 const char * player_team(int cn){return get_ci(cn)->team;}
 const char * player_ip(int cn){return get_ci(cn)->hostname();}
 int player_iplong(int cn){return getclientip(get_ci(cn)->clientnum);}

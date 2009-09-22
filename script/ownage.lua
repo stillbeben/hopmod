@@ -14,7 +14,7 @@ local first_frag = true
 
 local function send_first_frag_message(target, actor)
     if not first_frag or target == actor then return end
-    server.msg(string.format(yellow("%s made the ") .. orange("FIRST KILL!!"), server.player_name(actor)))
+    server.msg(string.format(yellow("%s made the ") .. orange("FIRST KILL!!"), server.player_displayname(actor)))
     first_frag = false
 end
 
@@ -32,11 +32,11 @@ local function send_killingspree_message(target_cn, target_vars, actor_cn, actor
     end
     
     if killingspree_message[actor_killingspree] then
-        server.msg(string.format(killingspree_message[actor_killingspree], server.player_name(actor_cn)))
+        server.msg(string.format(killingspree_message[actor_killingspree], server.player_displayname(actor_cn)))
     end
     
     if target_killingspree >= long_killingspree then
-        server.msg(string.format("\f2%s was stopped by \f6%s!!", server.player_name(target_cn), server.player_name(actor_cn)))
+        server.msg(string.format("\f2%s was stopped by \f6%s!!", server.player_displayname(target_cn), server.player_displayname(actor_cn)))
     end
     
     target_vars.killingspree = 0

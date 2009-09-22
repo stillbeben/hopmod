@@ -41,6 +41,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::kick, "kick", env, &player_kick_defargs);
     script::bind_var(server::kick_bannedip_group, "kick_bannedip_group", env);
     script::bind_freefunc(server::player_name, "player_name", env);
+    script::bind_freefunc(server::player_displayname, "player_displayname", env);
     script::bind_freefunc(server::player_team, "player_team", env);
     script::bind_freefunc(server::player_privilege, "player_priv", env);
     script::bind_freefunc(server::player_privilege_code, "player_priv_code", env);
