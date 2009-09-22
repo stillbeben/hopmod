@@ -189,6 +189,7 @@ global enable_teamkill_limiter 1
 global teamkill_limit 7
 global teamkill_bantime (mins 30)
 global teamkill_show_public 0
+global teamkill_show_public_minium_tks 0
 global teamkill_showlimit 1
 
 global enable_ping_limiter 1

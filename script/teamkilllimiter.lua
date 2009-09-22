@@ -13,11 +13,12 @@ function onTeamkill(actor, victim)
     	server.player_var(actor, "shown_teamkill_warning", true)
     end
     
-    if server.teamkill_show_public == 1 then
-        server.msg("(" .. green("Info") .. ")  " .. green(server.player_name(actor)) .. "(" .. magenta(actor) .. ") " .. orange("killed a teammate."))
-    end
-    
-    if server.player_teamkills(actor) > teamkill_limit then
+	local tks_actor = server.player_teamkills(actor)
+	if server.teamkill_show_public == 1 and (tks_actor >= server.teamkill_show_public_minium_tks) then
+		server.msg("(" .. green("Info") .. ")  " .. green(server.player_name(actor)) .. "(" .. magenta(actor) .. ") " .. orange("killed a teammate."))
+	end
+
+	if tks_actor > teamkill_limit then
         server.kick(actor,server.teamkill_bantime,"server","teamkilling")
     end
 end
