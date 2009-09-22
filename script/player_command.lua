@@ -1,6 +1,19 @@
 
 player_commands = {}
 
+local function send_command_error(cn, errmsg)
+            
+    local message = "Command error"
+    
+    if errmsg then
+        message = message .. ": " .. errmsg .. "."
+    else
+        message = message .. "!"
+    end
+    
+    server.player_msg(cn, red(message))
+end
+
 server.event_handler("text", function(cn, text)
     
     local arguments = server.parse_player_command(text)
@@ -39,19 +52,16 @@ server.event_handler("text", function(cn, text)
         return -1
     end
     
-    local success, errmsg = pcall(command._function, unpack(arguments))
+    local pcallret, success, errmsg = pcall(command._function, unpack(arguments))
+        
+    if pcallret == false then
+        -- success value is the error message returned by pcall
+        local message = success
+        send_command_error(cn, message)
+    end
     
     if success == false then
-        
-        local message = "Command error"
-        
-        if errmsg then
-            message = message .. ": " .. errmsg .. "."
-        else
-            message = message .. "!"
-        end
-        
-        server.player_msg(cn, red(message))
+        send_command_error(cn, errmsg)
     end
     
     return -1

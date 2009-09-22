@@ -36,7 +36,9 @@ if using_mysql then
         username = server.stats_mysql_username,
         password = server.stats_mysql_password,
         database = server.stats_mysql_database,
-        schemafile = "./script/db/stats/mysql_schema.sql"
+        schema = "./script/db/stats/mysql_schema.sql",
+        triggers = "./script/db/stats/mysql_triggers.sql",
+        install = server.stats_mysql_install == 1
     })
     
 end

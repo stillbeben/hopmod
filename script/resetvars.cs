@@ -34,6 +34,7 @@ global stats_mysql_port 3306
 global stats_mysql_database "sauerstats"
 global stats_mysql_username ""
 global stats_mysql_password ""
+global stats_mysql_install 0
 
 global name_reservation_domain ""
 global reserved_name_expire (mins 3600)
