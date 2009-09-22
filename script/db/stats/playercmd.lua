@@ -11,17 +11,20 @@ end
 
 commandFunction = function(cn, selection, subselection)
 
-	local function currentgame_stats(sendto, player) 
-	    local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
-    	    server.player_msg(sendto, string.format("Current game stats for %s:", green(server.player_name(player))))
-    	    server.player_msg(sendto, string.format("Score %s Frags %s Deaths %s Accuracy %s",
-		yellow(server.player_frags(player)),
-		green(frags),
-		red(server.player_deaths(player)),
-		yellow(server.player_accuracy(player).."%")))
-    	    if server.gamemodeinfo.teams then
-		server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))
-	    end
+	local function currentgame_stats(sendto, player)
+
+		local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
+
+		server.player_msg(sendto, string.format("Current game stats for %s:", green(server.player_name(player))))
+		server.player_msg(sendto, string.format("Score %s Frags %s Deaths %s Accuracy %s",
+			yellow(server.player_frags(player)),
+			green(frags),
+			red(server.player_deaths(player)),
+			yellow(server.player_acc(player) .. "%"))
+		)
+		if server.gamemodeinfo.teams then
+			server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))
+		end
 	end
 	
 	local function total_stats(sendto, player)

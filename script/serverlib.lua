@@ -337,3 +337,16 @@ function server.group_players(arg1,arg2,arg3)
 	end
 
 end
+
+
+function server.player_acc(cn)
+
+	local acc = 0
+	local shots = server.player_shots(cn)
+	if not (shots == 0) then
+		acc = round(server.player_hits(cn) / shots,2) * 100
+	end
+
+	return acc
+
+end

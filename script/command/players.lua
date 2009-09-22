@@ -5,13 +5,7 @@
 return function(cn)
 
 	for p in server.gplayers() do
-		local acc = 0
-		local shots = p:shots()
-		if not (shots == 0) then
-			acc = round(p:hits()/p:shots(),2)
-		end
-
-		server.player_msg(cn, "Name: " .. p:name() .. " Frags: " .. p:frags() .. " Deaths: " .. p:deaths() .. " Acc: " .. acc .. "%")
+		server.player_msg(cn, "Name: " .. p:name() .. " Frags: " .. p:frags() .. " Deaths: " .. p:deaths() .. " Acc: " .. server.player_acc(p.cn) .. "%")
 	end
 
 end

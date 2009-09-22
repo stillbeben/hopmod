@@ -36,7 +36,7 @@ server.interval(server.ping_limiter_tick,function()
                 player:kick(1, "server", "high ping")
                 player:pvars().ping_warnings = 0
             else
-                player:msg(green(player:name(b)) .. ", your " .. red("ping is too high") .. " for this server - it needs to be " .. orange("below " .. server.ping_limit .. " ms."))
+                player:msg(green(player:name()) .. ", your " .. red("ping is too high") .. " for this server - it needs to be " .. orange("below " .. server.ping_limit .. " ms."))
                 player:pvars().ping_warnings = warnings
             end
         end

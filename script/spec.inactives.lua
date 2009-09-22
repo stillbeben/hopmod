@@ -117,7 +117,7 @@ server.interval(server.spec_inactives_check_time,function()
 		return -1
 	end
 
-	if spec_inactives.check_active then
+	if spec_inactives.check_active == true then
 		for p in server.gplayers() do
 			local deathtime = p:vars().spec_inactives_deathtime
 

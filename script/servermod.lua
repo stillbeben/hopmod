@@ -39,7 +39,7 @@ function onConnect(cn)
     if server.show_country_message == 1 and #country > 0 then
         
         local str_connect = string.format("%s connected from %s.", green(server.player_name(cn)), green(country))
-        local str_connect_admin = str_connect .. " (IP:" .. red(server.player_ip(cn)) .. ")"
+        local str_connect_admin = str_connect .. " (IP: " .. red(server.player_ip(cn)) .. ")"
         
         for index, cn in ipairs(server.players()) do
             if server.player_priv_code(cn) == 2 then
