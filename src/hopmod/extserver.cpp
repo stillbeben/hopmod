@@ -259,7 +259,7 @@ void init_hopmod()
     
     try
     {
-        fungu::script::execute_file("script/init.cs", get_script_env());
+        fungu::script::execute_file("script/base/init.cs", get_script_env());
     }
     catch(fungu::script::error_trace * error)
     {

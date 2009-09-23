@@ -47,4 +47,3 @@ local eslmatch_commands = loadfile(player_command_filename("eslmatch"))()
 player_command_function("insta", eslmatch_commands.insta_cmd)
 player_command_function("effic", eslmatch_commands.effic_cmd)
 
-log_unknown_player_commands()

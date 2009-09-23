@@ -1,9 +1,9 @@
-load_once("restart")
-load_once("player_object")
-load_once("player_vars")
-load_once("player_command")
-load_once("logging")
-load_once("maprotation")
+load_once("base/restart")
+load_once("base/player/object_wrapper")
+load_once("base/player/global_vars")
+load_once("base/player/command")
+load_once("base/logging")
+load_once("base/maprotation")
 
 server.module("db/auth")
 
@@ -39,7 +39,7 @@ function onConnect(cn)
     if server.show_country_message == 1 and #country > 0 then
         
         local str_connect = string.format("%s connected from %s.", green(server.player_name(cn)), green(country))
-        local str_connect_admin = str_connect .. " (IP: " .. red(server.player_ip(cn)) .. ")"
+        local str_connect_admin = str_connect .. " (IP:" .. red(server.player_ip(cn)) .. ")"
         
         for index, cn in ipairs(server.players()) do
             if server.player_priv_code(cn) == 2 then
@@ -191,6 +191,10 @@ server.event_handler("started", function()
         server.event_handler("shutdown", function() server.stop_ircbot() end)
     end
     
+    if server.change_default_maptime == 1 then
+        load_once("change_default_maptime")
+    end
+    
     server.reload_maprotation()
     
     if server.playercount == 0 then
@@ -214,8 +218,10 @@ server.event_handler("started", function()
     end
     
     server.load_geoip_database(server.geoip_db_file)
-   
-	load_once("player_command_bindings")
+    
+    load_once("player_command_bindings")
+    
+    log_unknown_player_commands()
     
     server.log_status("-> Successfully loaded Hopmod")
     
