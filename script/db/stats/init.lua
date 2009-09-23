@@ -28,7 +28,7 @@ end
 
 if using_mysql then
     
-    backends.mysql = loadfile("./script/db/stats/mysql.lua")()
+    backends.mysql = dofile("./script/db/stats/mysql.lua")
     
     backends.mysql.open({
         hostname = server.stats_mysql_hostname,
