@@ -20,7 +20,7 @@ commandFunction = function(cn, selection, subselection)
 			yellow(server.player_frags(player)),
 			green(frags),
 			red(server.player_deaths(player)),
-			yellow(server.player_acc(player) .. "%"))
+			yellow(server.player_accuracy(player) .. "%"))
 		)
 		if server.gamemodeinfo.teams then
 			server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))

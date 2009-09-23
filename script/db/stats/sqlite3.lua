@@ -49,7 +49,7 @@ local function open(settings)
 end
 
 local function commit_game(game, players)
-    
+
     db:exec("BEGIN TRANSACTION")
     
     insert_game:bind(game)
