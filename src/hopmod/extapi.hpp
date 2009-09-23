@@ -90,6 +90,7 @@ namespace server
     int player_health(int);
     int player_gun(int);
     int player_hits(int);
+    int player_misses(int);
     int player_shots(int);
     int player_accuracy(int);
     int player_connection_time(int);

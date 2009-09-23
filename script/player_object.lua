@@ -27,6 +27,7 @@ function server.new_player_object(cn)
         health = function(obj) return server.player_health(obj.cn) end,
         gun = function(obj) return server.player_gun(obj.cn) end,
         hits = function(obj) return server.player_hits(obj.cn) end,
+        misses = function(obj) return server.player_misses(obj.cn) end,
         shots = function(obj) return server.player_shots(obj.cn) end,
         accuracy = function(obj) return server.player_accuracy(obj.cn) end,
         timeplayed = function(obj) return server.player_timeplayed(obj.cn) end,

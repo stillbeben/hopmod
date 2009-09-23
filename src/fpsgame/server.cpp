@@ -125,7 +125,7 @@ namespace server
         int lastdeath, lastspawn, lifesequence;
         int lastshot;
         projectilestate<8> rockets, grenades;
-        int frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, shots;
+        int frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, misses, shots;
         int lasttimeplayed, timeplayed;
         float effectiveness;
         int disconnecttime;
@@ -151,7 +151,7 @@ namespace server
 
             timeplayed = 0;
             effectiveness = 0;
-            frags = flags = deaths = suicides = teamkills = shotdamage = explosivedamage = damage = hits = shots = 0;
+            frags = flags = deaths = suicides = teamkills = shotdamage = explosivedamage = damage = hits = misses = shots = 0;
 
             respawn();
         }
@@ -177,7 +177,7 @@ namespace server
     {
         uint ip;
         string name;
-        int maxhealth, frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, shots;
+        int maxhealth, frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, misses, shots;
         int timeplayed;
         float effectiveness;
         int state;
@@ -197,6 +197,7 @@ namespace server
             timeplayed = gs.timeplayed;
             effectiveness = gs.effectiveness;
             hits = gs.hits;
+            misses = gs.misses;
             shots = gs.shots;
             state = gs.state;
             disconnecttime = gs.disconnecttime;
@@ -217,6 +218,7 @@ namespace server
             gs.timeplayed = timeplayed;
             gs.effectiveness = effectiveness;
             gs.hits = hits;
+            gs.misses = misses;
             gs.shots = shots;
             gs.state = state;
             gs.disconnecttime = disconnecttime;
@@ -1734,6 +1736,8 @@ namespace server
                 break;
             }
         }
+        
+        gs.misses += (gs.hits - old_hits == 0);
         
         signal_shot(ci->clientnum, gun, gs.hits - old_hits);
     }

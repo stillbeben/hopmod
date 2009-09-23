@@ -490,12 +490,13 @@ int player_maxhealth(int cn){return get_ci(cn)->state.maxhealth;}
 int player_health(int cn){return get_ci(cn)->state.health;}
 int player_gun(int cn){return get_ci(cn)->state.gunselect;}
 int player_hits(int cn){return get_ci(cn)->state.hits;}
+int player_misses(int cn){return get_ci(cn)->state.misses;}
 int player_shots(int cn){return get_ci(cn)->state.shots;}
 int player_accuracy(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    int hits = ci->state.hits;
     int shots = ci->state.shots;
+    int hits = shots - ci->state.misses;
     return static_cast<int>(roundf(static_cast<float>(hits)/std::max(shots,1)*100));
 }
 

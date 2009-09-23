@@ -67,6 +67,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::player_health, "player_health", env);
     script::bind_freefunc(server::player_gun, "player_gun", env);
     script::bind_freefunc(server::player_hits, "player_hits", env);
+    script::bind_freefunc(server::player_misses, "player_misses", env);
     script::bind_freefunc(server::player_shots, "player_shots", env);
     script::bind_freefunc(server::player_accuracy, "player_accuracy", env);
     script::bind_freefunc(server::player_timeplayed, "player_timeplayed", env);
