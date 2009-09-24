@@ -32,15 +32,15 @@ sub Message {
         { return "\x034NETSTAT\x03    Net stats for \x0312$1\x03: ping \x0312$2\x03 lag \x0312$3\x03" }
 	##### Bot Muting Functions #####
 	if ($line =~ /COMMAND BOTMUTE (.*)/)
-	{ sendtoirc($config->{irc_channel},"\x034BOTMUTE\x03       \x0312$1\x03 muted the IRC bot."); $mute_status = "1"; return;}
+	{ main::sendtoirc($main::config->{irc_channel},"\x034BOTMUTE\x03       \x0312$1\x03 muted the IRC bot."); $mute_status = "1"; return;}
         if ($line =~ /COMMAND BOTUNMUTE (.*)/)
-        { $mute_status = "0"; sendtoirc($config->{irc_channel},"\x039BOTUNMUTE\x03       \x0312$1\x03 unmuted the IRC bot."); return;}
+        { $mute_status = "0"; main::sendtoirc($main::config->{irc_channel},"\x039BOTUNMUTE\x03       \x0312$1\x03 unmuted the IRC bot."); return;}
 	##### Invisible Master ##### 
 	if ($line =~ /(\S*\([0-9]+\))(\(*.*\)*): #invadmin/)
 	{ return "\x039MASTER\x03       \x0312$1\x03 attempted to take invisible master."}
 	##### Cheater #####
 	if ($line =~ /CHEATER: (.*) (.*)/)
-	{ &sendtoirc($config->{irc_monitor_channel},"$1 reports: $2 is a Cheater, ADMINS please check this!"); return }
+	{ main::sendtoirc($main::config->{irc_channel},"$1 reports: $2 is a Cheater, ADMINS please check this!"); return}
 	##### 1on1 #####
 		if ($line =~ /#1on1 (.*)/)
 		{ return "\x039MATCH\x03       \x0312 The match starts now...\x03"}
@@ -53,7 +53,7 @@ sub Message {
 	{ return "\x039PING\x03    \x0312$1\x03 \x037was kicked for his high ping!\x03" }
 	##### ANNOUNCE #####
 	if ($line =~ /ANNOUNCE (\S*) (.*)/)
-	{ &sendtoirc($config->{irc_monitor_channel},"$1 says $2"); return }
+	{ main::sendtoirc($main::config->{irc_monitor_channel},"$1 says $2"); return }
 	##### CONNECT #####
 	if ($line =~ /(\S*\([0-9]+\))(\(.+\))\((.*)\) connected/)
 	{ return "\x039CONNECT\x03    \x0312$1\x03 \x037$3\x03" }
