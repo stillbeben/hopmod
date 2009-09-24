@@ -130,7 +130,7 @@ namespace server
         float effectiveness;
         int disconnecttime;
         
-        gamestate() : state(CS_DEAD), editstate(CS_DEAD), disconnecttime(0) {}
+        gamestate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), disconnecttime(0) {}
     
         bool isalive(int gamemillis)
         {
