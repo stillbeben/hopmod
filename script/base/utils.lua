@@ -202,43 +202,49 @@ function server.teamsize(teamsize_teamname)
     return a
 end
 
-function server.find_cn(cn,name)
+function server.name_to_cn(name)
+
     if not name then
-	return -1
+        return
     end
-    local tcn = nil
-    local tcn_count = 0
-    for a,b in ipairs(server.players()) do
-	if server.player_name(b) == name then
-	    tcn = b
-	    tcn_count = tcn_count + 1
-	end
+    
+    local name_matches = 0
+    local first_matching_cn
+    
+    for i,cn in pairs(server.players()) do
+    
+        if server.player_name(cn) == name then
+        
+            first_matching_cn = first_matching_cn or cn
+            name_matches = name_matches + 1
+            
+        end
+        
     end
-    if tcn_count == 1 then
-	return tcn
-    elseif tcn_count == 0 then
-	server.player_msg(cn,red("no player found"))
-	local count = 0
-	for a,b in ipairs(server.players()) do
-	    local pname = server.player_name(b)
-	    if string.find(pname,name) then
-		if count == 0 then
-		    server.player_msg(cn,orange("matching players are:"))
-		end
-		server.player_msg(cn,green(pname) .. " with cn: " .. green(b))
-		count = count + 1
-	    end
-	end
-    elseif tcn_count > 1 then
-	server.player_msg(cn,red("more than one player found"))
-	for a,b in ipairs(server.players()) do
-	    local pname = server.player_name(b)
-	    if pname == name then
-		server.player_msg(cn,green(pname) .. " has cn: " .. green(b))
-	    end
-	end
+    
+    if name_matches == 1 then
+    
+        return first_matching_cn
+        
+    elseif name_matches == 0 then
+    
+        local substring_matches = {}
+        
+        for i,cn in pairs(server.players()) do
+            
+            local candidate = server.player_name(cn)
+            
+            if string.find(candidate, name) then
+                table.insert(substring_matches, {name=candidate,cn=cn})
+            end
+        end
+        
+        return nil, substring_matches
+        
+    elseif name_matches > 1 then
+        return nil, name_matches
     end
-    return
+    
 end
 
 local function random_init()
