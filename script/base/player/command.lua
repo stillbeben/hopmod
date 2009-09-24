@@ -1,5 +1,5 @@
 
-player_commands = {}
+local player_commands = {}
 
 local function send_command_error(cn, errmsg)
             
@@ -68,13 +68,17 @@ server.event_handler("text", function(cn, text)
 end)
 
 local function create_command(name)
-    local command = {name = name, enabled = false, require_admin = false, require_master = false, _function = nil}
+    local command = {name = name, enabled = false, require_admin = false, require_master = false, _function = nil, control = {}}
     player_commands[name] = command
     return command
 end
 
+local function parse_command_list(commandlist)
+    return commandlist:split("[^ \n\t]+")
+end
+
 local function set_commands(commandlist, fields)
-    for i, cmdname in pairs(commandlist:split("[^ \n\t]+")) do
+    for i, cmdname in pairs(parse_command_list(commandlist)) do
         local command = player_commands[cmdname] or create_command(cmdname)
         
         for field_name, field_value in pairs(fields) do
@@ -83,12 +87,40 @@ local function set_commands(commandlist, fields)
     end
 end
 
+local function foreach_command(commandlist, fun)
+    for i, cmdname in pairs(parse_command_list(commandlist)) do
+        local command = player_commands[cmdname] or create_command(cmdname)
+        fun(command)
+    end
+end
+
 function server.enable_commands(commandlist)
-    return set_commands(commandlist, {enabled = true})
+    
+    set_commands(commandlist, {enabled = true})
+    
+    foreach_command(commandlist, function(command)
+        if command.control.reload and not command._function then
+            command._function, command.control = command.control.reload()
+        end
+    end)
+    
 end
 
 function server.disable_commands(commandlist)
-    return set_commands(commandlist, {enabled = false})
+
+    set_commands(commandlist, {enabled = false})
+    
+    foreach_command(commandlist, function(command)
+    
+        if command.control.unload then
+        
+            command.control.unload()
+            command._function = nil
+            
+        end
+        
+    end)
+
 end
 
 function server.admin_commands(commandlist)
@@ -143,7 +175,15 @@ function player_command_script(name, filename, priv)
     if not script then error(err) end
     
     command_info = command
-    command._function = script()
+    
+    command._function, command.control = script()
+    
+    command.control = command.control or {}
+    
+    if command.control.unload then 
+        command.control.reload = script 
+    end
+    
     command_info = nil
 end
 
