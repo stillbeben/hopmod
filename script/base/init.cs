@@ -10,7 +10,7 @@ global execIfFound (func [filename] [
 
 exec "./script/base/resetvars.cs"
 exec "./script/base/module.lua"
-exec "./script/base/serverlib.lua"
+exec "./script/base/utils.lua"
 exec "./script/base/init.lua"
 exec "./script/base/irc.csl"
 

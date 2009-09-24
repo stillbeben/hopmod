@@ -1,3 +1,26 @@
+--[[
+    
+    Monitor player statistics for the purpose of detecting and broadcasting
+    player achievements as one line messages. The idea for this feature was
+    seen and copied from Frogmod.
+    
+    Copyright (C) 2009 Graham Daws
+    
+    MAINTAINERS
+        Graham
+        
+    GUIDELINES
+        * Messages should use the same colour as gameplay messages (yellow)
+          with orange highlights
+        * Consider sending achievement message privately to the subject player
+        * Watch out for message flooding
+        
+    TODO
+        * Keep and update a killing spree frags record (send private message 
+          if they break their past record)
+        * Achievement for consecutive hits
+        * Report accuracy fluctuations
+]]
 
 -- Keep these messages at the top of the file so users can find them easily
 local killingspree_message = {}
@@ -28,7 +51,6 @@ local function send_killingspree_message(target_cn, target_vars, actor_cn, actor
         actor_vars.killingspree = actor_killingspree
     else
         actor_killingspree = 0
-        actor_vars.is_killingspree = 0
     end
     
     if killingspree_message[actor_killingspree] then
@@ -57,11 +79,17 @@ local function send_multikills_message(target_cn, target_vars, actor_cn, actor_v
         actor_vars.multikills = actor_multikills
         
         if actor_multikills == 2 then
+        
             server.player_msg(actor_cn, yellow("You scored a ") .. orange("DOUBLE KILL!!"))
+            
         elseif actor_multikills == 3 then
+        
             server.player_msg(actor_cn, yellow("You scored a ") .. orange("TRIPLE KILL!!"))
+            
         elseif actor_multikills > 3 then
-            server.player_msg(actor_cn, yellow("You scored ") ..  orange(string.format("MULTPLE KILLS(%i)!!",actor_multikills)))
+        
+            server.player_msg(actor_cn, yellow("You scored ") ..  orange(string.format("%i MULTPLE KILLS!!",actor_multikills)))
+            
         end
         
     else -- reset
@@ -73,7 +101,7 @@ local function send_multikills_message(target_cn, target_vars, actor_cn, actor_v
 end
 
 events.frag = server.event_handler_object("frag", function(target_cn, actor_cn)
-
+    
     send_first_frag_message(target_cn, actor_cn)
     
     local target_vars = server.player_vars(target_cn)
