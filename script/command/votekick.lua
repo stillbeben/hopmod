@@ -22,7 +22,7 @@ end)
 
 if server.votekick_ad_timer ~= 0 then
     server.interval(server.votekick_ad_timer, function()
-        if server.playercount) > 2 and tonumber(server.mastermode) == 0 then
+        if server.playercount > 2 and tonumber(server.mastermode) == 0 then
             server.msg("If you see a cheater type: " .. yellow("#votekick \"name\"") .. " or " .. yellow("#votekick cn"))
         end
     end)
@@ -75,13 +75,18 @@ return function(cn, kick_who)
         if not kick_who then
             
             if type(info) == "number" then -- Multiple name matches
+            
                 server.player_msg(cn, red(string.format("There are %i players here matching that name:", info)))
                 disambiguate_name_list(cn, kick_who)
+                
                 return
-            elseif -- Similar matches
+                
+            else -- Similar matches
                 
                 server.player_msg(cn, red("There are no players found matching that name, but here are some similar names:"))
+                
                 similar_name_list(cn, info)
+                
                 return
                 
             end
