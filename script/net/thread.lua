@@ -3,7 +3,7 @@ require("net")
 
 local function resolve(hostname)
     local co = coroutine.running()
-    net.async_resolve(hostname, function(ips) 
+    net.async_resolve(hostname, function(ips)
         coroutine.resume(co, ips)
     end)
     return coroutine.yield(co)

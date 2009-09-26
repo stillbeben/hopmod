@@ -68,9 +68,20 @@ server.event_handler("text", function(cn, text)
 end)
 
 local function create_command(name)
-    local command = {name = name, enabled = false, require_admin = false, require_master = false, _function = nil, control = {}}
+
+    local command = {
+        name = name,
+        enabled = false,
+        require_admin = false, 
+        require_master = false,
+        _function = nil,
+        control = {}
+    }
+    
     player_commands[name] = command
+    
     return command
+    
 end
 
 local function parse_command_list(commandlist)
@@ -78,6 +89,7 @@ local function parse_command_list(commandlist)
 end
 
 local function set_commands(commandlist, fields)
+
     for i, cmdname in pairs(parse_command_list(commandlist)) do
         local command = player_commands[cmdname] or create_command(cmdname)
         
@@ -85,13 +97,16 @@ local function set_commands(commandlist, fields)
             command[field_name] = field_value
         end
     end
+    
 end
 
 local function foreach_command(commandlist, fun)
+
     for i, cmdname in pairs(parse_command_list(commandlist)) do
         local command = player_commands[cmdname] or create_command(cmdname)
         fun(command)
     end
+    
 end
 
 function server.enable_commands(commandlist)
@@ -99,9 +114,7 @@ function server.enable_commands(commandlist)
     set_commands(commandlist, {enabled = true})
     
     foreach_command(commandlist, function(command)
-        if command.control.reload and not command._function then
-            command._function, command.control = command.control.reload()
-        end
+        if command.control.init then command.control.init(command) end
     end)
     
 end
@@ -111,16 +124,9 @@ function server.disable_commands(commandlist)
     set_commands(commandlist, {enabled = false})
     
     foreach_command(commandlist, function(command)
-    
-        if command.control.unload then
-        
-            command.control.unload()
-            command._function = nil
-            
-        end
-        
+        if command.control.unload then command.control.unload() end
     end)
-
+    
 end
 
 function server.admin_commands(commandlist)
@@ -176,12 +182,16 @@ function player_command_script(name, filename, priv)
     
     command_info = command
     
-    command._function, command.control = script()
+    command._function = script()
     
-    command.control = command.control or {}
-    
-    if command.control.unload then 
-        command.control.reload = script 
+    if type(command._function) == "table" then
+        
+        command.control = command._function
+        command._function = command.control.run
+        
+        if not command.control.unload or not command.control.init then
+            error(string.format("Player command script '%s' is missing a init or unload function.", filename))
+        end
     end
     
     command_info = nil
@@ -200,14 +210,17 @@ function player_command_alias(aliasname, sourcename)
 end
 
 function log_unknown_player_commands()
+
     for name, command in pairs(player_commands) do
         if not command._function then
             server.log_error(string.format("No function loaded for player command '%s'", name))
         end
     end
+    
 end
 
 function admincmd(...)
+
     local func = arg[1]
     local cn = arg[2]
     
@@ -222,6 +235,7 @@ function admincmd(...)
 end
 
 function mastercmd(...)
+
     local func = arg[1]
     local cn = arg[2]
     
