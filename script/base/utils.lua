@@ -95,13 +95,6 @@ function server.unspecall()
     for i,cn in ipairs(server.spectators()) do server.unspec(cn) end
 end
 
-function update_gamemodeinfo()
-    gamemodeinfo = server.gengamemodeinfo()
-    server.gamemodeinfo = gamemodeinfo
-end
-server.event_handler("mapchange", update_gamemodeinfo)
-update_gamemodeinfo()
-
 function server.console(admin,msg)
     server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))
 end

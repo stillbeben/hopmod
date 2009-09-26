@@ -140,6 +140,11 @@ server.event_handler("sayteam", onText)
 server.event_handler("mapvote", onMapVote)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
+local function update_gamemodeinfo()
+    gamemodeinfo = server.gengamemodeinfo()
+    server.gamemodeinfo = gamemodeinfo
+end
+
 server.event_handler("mapchange", function(map, mode)
     
     if mode == "coop edit" and server.using_master_auth() and server.disable_masterauth_in_coopedit == 1 then
@@ -165,7 +170,12 @@ server.event_handler("mapchange", function(map, mode)
         
         server.msg("Master is now available to the first player who types /setmaster 1")
     end
+    
+    update_gamemodeinfo()
+    
 end)
+
+update_gamemodeinfo()
 
 server.event_handler("started", function()
     
