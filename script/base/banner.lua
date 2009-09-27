@@ -1,5 +1,5 @@
 
-function sendServerBanner(cn)
+local function sendServerBanner(cn)
 
     if server.player_pvar(cn,"shown_banner") then return end
     
@@ -17,7 +17,7 @@ function sendServerBanner(cn)
     end)
 end
 
-function onConnect(cn)
+local function onConnect(cn)
     
     -- Workaround for: players who connect as spectators (can happen when server is locked) don't trigger active events
     if server.player_status_code(cn) == server.SPECTATOR then
@@ -45,7 +45,7 @@ function onConnect(cn)
     
 end
 
-function onDisconnect(cn)
+local function onDisconnect(cn)
     server.player_unsetpvar(cn, "shown_banner")
 end
 

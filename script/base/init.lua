@@ -81,7 +81,7 @@ server.event_handler("started", function()
     
     server.load_geoip_database(server.geoip_db_file)
     
-    load_once("player_command_bindings")
+    load_once("command/_bindings")
     log_unknown_player_commands()
     
     server.log_status("-> Successfully loaded Hopmod")
