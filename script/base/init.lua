@@ -3,9 +3,10 @@ load_once("base/player/object_wrapper")
 load_once("base/player/global_vars")
 load_once("base/player/command")
 load_once("base/logging")
-load_once("base/maprotation")
+load_once("base/maprotation") -- the reason this can be loaded now instead as a scheduled module is because of reload_maprotation is called from started event
 
 server.module("db/auth")
+server.module("base/mapvote")
 
 function sendServerBanner(cn)
 
@@ -70,56 +71,12 @@ function onText(cn,text)
     return block
 end
 
-function onMapVote(cn,map,mode)
-
-    -- Admin players are free from voting restrictions
-    if server.player_priv_code(cn) == server.ADMIN then
-        return
-    end
-    
-    if server.allow_mapvote <= 0 then
-        server.player_msg(cn, red() .. "Map voting is disabled.")
-        return -1
-    elseif (server.allow_modevote <= 0) and (mode ~= server.gamemode) then
-        server.player_msg(cn, red() .. "Server only accepts votes for " .. server.gamemode .. " mode.")
-        return -1
-    elseif not ((server.disallow_coopedit == 0) and (mode == "coop edit")) then
-        local isfound = 0
-        for a,b in ipairs(table_unique(server.parse_list(server["game_modes"]))) do
-            if mode == b then
-                isfound = 1
-                break
-            end
-        end
-        if isfound == 0 then
-            server.player_msg(cn,red("Server doesn't accept votes for " .. mode))
-            return -1
-        end
-    end
-    
-    if (server.mapvote_disallow_unknown_map == 1) and not (mode == "coop edit") then
-        local globalFound = server.is_known_map(map)
-        local localFound = server.is_known_map(map, mode)
-        
-        if not globalFound then
-            server.player_msg(cn, red() .. "\"" .. map .. "\" is an unknown map.")
-            return -1
-        end
-        
-        if not localFound then
-            server.player_msg(cn, red()  .. "\"" .. map .. "\" is not a map you can play in " .. mode .. ".")
-            return -1
-	end
-    end
-end
-
 server.event_handler("connect",onConnect)
 server.event_handler("disconnect", onDisconnect)
 server.event_handler("active", sendServerBanner)
 server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
 server.event_handler("text",onText)
 server.event_handler("sayteam", onText)
-server.event_handler("mapvote", onMapVote)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
 local function update_gamemodeinfo()
