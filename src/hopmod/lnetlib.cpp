@@ -3,14 +3,17 @@
     Copyright (C) 2009 Graham Daws
 */
 #include "lnetlib.hpp"
-#include <boost/asio.hpp>
-using namespace boost::asio;
 #include "main_io_service.hpp"
 #include "hopmod.hpp"
 #include <netinet/in.h> //byte ordering functions
 #include <unistd.h> //unlink()
-
 #include <iostream>
+#include <boost/asio.hpp>
+using namespace boost::asio;
+#include "buffered_socket.hpp"
+
+typedef buffered_input_socket<ip::tcp::socket> buffered_tcp_socket;
+typedef buffered_input_socket<local::stream_protocol::socket> buffered_local_socket;
 
 struct lnetlib_buffer
 {
@@ -168,7 +171,7 @@ int acceptor_async_accept(lua_State * L)
     luaL_checktype(L, 2, LUA_TFUNCTION);
     ip::tcp::acceptor * acceptor = reinterpret_cast<ip::tcp::acceptor *>(luaL_checkudata(L, 1, TCP_ACCEPTOR_MT));
     
-    ip::tcp::socket * socket = new (lua_newuserdata(L, sizeof(ip::tcp::socket))) ip::tcp::socket(*main_io);
+    buffered_tcp_socket * socket = new (lua_newuserdata(L, sizeof(buffered_tcp_socket))) buffered_tcp_socket(*main_io);
     luaL_getmetatable(L, BASIC_TCP_SOCKET_MT);
     lua_setmetatable(L, -2);
     int socketRef = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -277,13 +280,13 @@ void create_acceptor_metatable(lua_State * L)
 
 int socket_gc(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->~basic_stream_socket<ip::tcp>();
+    reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->~buffered_tcp_socket();
     return 0;
 }
 
 int socket_close(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->close();
+    reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->close();
     return 0;
 }
 
@@ -307,7 +310,7 @@ int socket_async_send_buffer(lua_State *);
 
 int socket_async_send(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     
     if(lua_type(L, 2) != LUA_TSTRING) return socket_async_send_buffer(L);
 
@@ -331,7 +334,8 @@ void async_read_until_handler(int functionRef, boost::asio::streambuf * buf, con
     
     if(!error)
     {
-        lua_pushstring(lua_state, boost::asio::buffer_cast<const char *>(*buf->data().begin()));
+        lua_pushlstring(lua_state, boost::asio::buffer_cast<const char *>(*buf->data().begin()), readlen);
+        buf->consume(readlen);
         lua_pushnil(lua_state);
     }
     else
@@ -342,13 +346,11 @@ void async_read_until_handler(int functionRef, boost::asio::streambuf * buf, con
     
     if(lua_pcall(lua_state, 2, 0, 0) != 0)
         report_script_error(lua_tostring(lua_state, -1));
-    
-    delete buf;
 }
 
 int socket_async_read_until(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
 
     const char * delim = luaL_checkstring(L, 2);
     
@@ -356,14 +358,12 @@ int socket_async_read_until(lua_State * L)
     lua_pushvalue(L, 3);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    boost::asio::streambuf * readbuf = new boost::asio::streambuf;
-    
-    boost::asio::async_read_until(*socket, *readbuf, delim, boost::bind(async_read_until_handler, functionRef, readbuf, _1, _2));
+    socket->async_read_until(delim, boost::bind(async_read_until_handler, functionRef, &socket->read_buffer(), _1, _2));
     
     return 0;
 }
 
-void async_read_handler(int functionRef, lnetlib_buffer * rbuf, int bufferRef, const boost::system::error_code error, const size_t readsize)
+void async_read_handler(int functionRef, streambuf * socketbuf, lnetlib_buffer * rbuf, int bufferRef, int reqreadsize, const boost::system::error_code error, const size_t readsize)
 {
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua_state, LUA_REGISTRYINDEX, functionRef);
@@ -375,7 +375,12 @@ void async_read_handler(int functionRef, lnetlib_buffer * rbuf, int bufferRef, c
         lua_pushstring(lua_state, error.message().c_str());
         nargs = 1;
     }
-    else rbuf->produced += readsize;
+    else
+    {
+        memcpy(rbuf->produced, buffer_cast<const void *>(socketbuf->data()), reqreadsize);
+        socketbuf->consume(reqreadsize);
+        rbuf->produced += reqreadsize;
+    }
     
     if(lua_pcall(lua_state, nargs, 0, 0) != 0)
         report_script_error(lua_tostring(lua_state, -1));
@@ -385,9 +390,10 @@ void async_read_handler(int functionRef, lnetlib_buffer * rbuf, int bufferRef, c
 
 int socket_async_read(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     lnetlib_buffer * rbuf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
     
+    // Create reference to buffer to keep it alive
     lua_pushvalue(L, 2);
     int bufferRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
@@ -406,7 +412,7 @@ int socket_async_read(lua_State * L)
     lua_pushvalue(L, function_arg_index);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    socket->async_receive(buffer(rbuf->start, reqreadsize), boost::bind(async_read_handler, functionRef, rbuf, bufferRef, _1, _2));
+    socket->async_read(reqreadsize, boost::bind(async_read_handler, functionRef, &socket->read_buffer(), rbuf, bufferRef, reqreadsize, _1, _2));
     
     return 0;
 }
@@ -433,7 +439,7 @@ void async_send_buffer_handler(int functionRef, lnetlib_buffer * buf, int buffer
 
 int socket_async_send_buffer(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     lnetlib_buffer * buf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
     
     lua_pushvalue(L, 2);
@@ -474,7 +480,7 @@ int return_endpoint(lua_State * L, const boost::asio::ip::tcp::endpoint & endpoi
 
 int socket_local_endpoint(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     
     boost::system::error_code error;
     boost::asio::ip::tcp::endpoint endpoint = socket->local_endpoint(error);
@@ -484,7 +490,7 @@ int socket_local_endpoint(lua_State * L)
 
 int socket_remote_endpoint(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     
     boost::system::error_code error;
     boost::asio::ip::tcp::endpoint endpoint = socket->remote_endpoint(error);
@@ -494,31 +500,31 @@ int socket_remote_endpoint(lua_State * L)
 
 int socket_cancel(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->cancel();
+    reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->cancel();
     return 0;
 }
 
 int socket_shutdown_send(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_send);
+    reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_send);
     return 0;
 }
 
 int socket_shutdown_receive(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_receive);
+    reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_receive);
     return 0;
 }
 
 int socket_shutdown(lua_State * L)
 {
-    reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_both);
+    reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_both);
     return 0;
 }
 
 int socket_set_option(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     const char * optname = luaL_checkstring(L, 2);
     
     if(!strcmp(optname, "keep_alive"))
@@ -537,7 +543,7 @@ int socket_set_option(lua_State * L)
 
 int socket_get_option(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT));
     const char * optname = luaL_checkstring(L, 2);
     
     if(!strcmp(optname, "keep_alive"))
@@ -800,7 +806,7 @@ void create_udp_socket_metatable(lua_State * L)
 
 int create_tcp_client(lua_State * L)
 {
-    ip::tcp::socket * socket = new (lua_newuserdata(L, sizeof(ip::tcp::socket))) ip::tcp::socket(*main_io);
+    buffered_tcp_socket * socket = new (lua_newuserdata(L, sizeof(buffered_tcp_socket))) buffered_tcp_socket(*main_io);
     
     // Setup metatable with __gc function set before bind() so the user-data object will be destroyed if the bind op fails.
     luaL_getmetatable(L, TCP_CLIENT_SOCKET_MT);
@@ -814,7 +820,7 @@ int create_tcp_client(lua_State * L)
 
 int create_udp_socket(lua_State * L)
 {
-    ip::udp::socket * socket = new (lua_newuserdata(L, sizeof(ip::udp::socket))) ip::udp::socket(*main_io);
+    new (lua_newuserdata(L, sizeof(ip::udp::socket))) ip::udp::socket(*main_io);
     
     luaL_getmetatable(L, UDP_SOCKET_MT);
     lua_setmetatable(L, -2);
@@ -841,7 +847,7 @@ void async_connect_handler(int functionRef, const boost::system::error_code erro
 
 int client_async_connect(lua_State * L)
 {
-    ip::tcp::socket * socket = reinterpret_cast<ip::tcp::socket *>(lua_aux_checkobject(L, 1, TCP_CLIENT_SOCKET_MT));
+    buffered_tcp_socket * socket = reinterpret_cast<buffered_tcp_socket *>(lua_aux_checkobject(L, 1, TCP_CLIENT_SOCKET_MT));
     
     const char * ip = luaL_checkstring(L, 2);
     int port = luaL_checkinteger(L, 3);
@@ -1038,12 +1044,12 @@ int create_buffer(lua_State * L)
     int size = luaL_checkint(L, 1);
     if(size <= 0) return luaL_argerror(L, 1, "invalid size");
     
-    void * bufalloc = lua_newuserdata(L, size + (sizeof(unsigned int)*4));
+    void * bufalloc = lua_newuserdata(L, size + sizeof(lnetlib_buffer));
     luaL_getmetatable(L, BUFFER_MT);
     lua_setmetatable(L, -2);
     
     lnetlib_buffer * rbuf = reinterpret_cast<lnetlib_buffer *>(bufalloc);
-    rbuf->start = reinterpret_cast<char *>(rbuf) + (sizeof(unsigned int)*4);
+    rbuf->start = reinterpret_cast<char *>(rbuf) + sizeof(lnetlib_buffer);
     rbuf->end = rbuf->start + size;
     rbuf->produced = rbuf->start;
     rbuf->consumed = rbuf->start;
@@ -1106,7 +1112,7 @@ int local_acceptor_async_accept(lua_State * L)
     luaL_checktype(L, 2, LUA_TFUNCTION);
     local::stream_protocol::acceptor * acceptor = reinterpret_cast<local::stream_protocol::acceptor *>(luaL_checkudata(L, 1, LOCAL_ACCEPTOR_MT));
     
-    local::stream_protocol::socket * socket = new (lua_newuserdata(L, sizeof(local::stream_protocol::socket))) local::stream_protocol::socket(*main_io);
+    buffered_local_socket * socket = new (lua_newuserdata(L, sizeof(buffered_local_socket))) buffered_local_socket(*main_io);
     luaL_getmetatable(L, LOCAL_SOCKET_MT);
     lua_setmetatable(L, -2);
     int socketRef = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -1163,43 +1169,43 @@ void create_local_acceptor_metatable(lua_State * L)
 
 int local_socket_gc(lua_State * L)
 {
-    reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->~basic_stream_socket<local::stream_protocol>();
+    reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->~buffered_local_socket();
     return 0;
 }
 
 int local_socket_close(lua_State * L)
 {
-    reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->close();
+    reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->close();
     return 0;
 }
 
 int local_socket_cancel(lua_State * L)
 {
-    reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->cancel();
+    reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->cancel();
     return 0;
 }
 
 int local_socket_shutdown_send(lua_State * L)
 {
-    reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local::stream_protocol::socket::shutdown_send);
+    reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(buffered_local_socket::shutdown_send);
     return 0;
 }
 
 int local_socket_shutdown_receive(lua_State * L)
 {
-    reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local::stream_protocol::socket::shutdown_receive);
+    reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(buffered_local_socket::shutdown_receive);
     return 0;
 }
 
 int local_socket_shutdown(lua_State * L)
 {
-    reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local::stream_protocol::socket::shutdown_both);
+    reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(buffered_local_socket::shutdown_both);
     return 0;
 }
 
 int local_socket_async_send_buffer(lua_State * L)
 {
-    local::stream_protocol::socket * socket = reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
+    buffered_local_socket * socket = reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
     lnetlib_buffer * buf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
     
     lua_pushvalue(L, 2);
@@ -1226,7 +1232,7 @@ int local_socket_async_send_buffer(lua_State * L)
 
 int local_socket_async_send(lua_State * L)
 {
-    local::stream_protocol::socket * socket = reinterpret_cast<local::stream_protocol::socket  *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
+    buffered_local_socket * socket = reinterpret_cast<buffered_local_socket  *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
     
     if(lua_type(L, 2) != LUA_TSTRING) return local_socket_async_send_buffer(L);
     
@@ -1245,7 +1251,7 @@ int local_socket_async_send(lua_State * L)
 
 int local_socket_async_read_until(lua_State * L)
 {
-    local::stream_protocol::socket * socket = reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
+    buffered_local_socket * socket = reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
 
     const char * delim = luaL_checkstring(L, 2);
     
@@ -1255,14 +1261,14 @@ int local_socket_async_read_until(lua_State * L)
     
     boost::asio::streambuf * readbuf = new boost::asio::streambuf;
     
-    boost::asio::async_read_until(*socket, *readbuf, delim, boost::bind(async_read_until_handler, functionRef, readbuf, _1, _2));
+    socket->async_read_until(delim, boost::bind(async_read_until_handler, functionRef, readbuf, _1, _2));
     
     return 0;
 }
 
 int local_socket_async_read(lua_State * L)
 {
-    local::stream_protocol::socket * socket = reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
+    buffered_local_socket * socket = reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
     lnetlib_buffer * rbuf = reinterpret_cast<lnetlib_buffer *>(luaL_checkudata(L, 2, BUFFER_MT));
     
     lua_pushvalue(L, 2);
@@ -1283,14 +1289,14 @@ int local_socket_async_read(lua_State * L)
     lua_pushvalue(L, function_arg_index);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    socket->async_receive(buffer(rbuf->start, reqreadsize), boost::bind(async_read_handler, functionRef, rbuf, bufferRef, _1, _2));
+    socket->async_read(reqreadsize, boost::bind(async_read_handler, functionRef, &socket->read_buffer(), rbuf, bufferRef, reqreadsize, _1, _2));
     
     return 0;
 }
 
 int local_socket_local_endpoint(lua_State * L)
 {
-    local::stream_protocol::socket * socket = reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
+    buffered_local_socket * socket = reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
     boost::system::error_code error;
     local::stream_protocol::endpoint endpoint = socket->local_endpoint(error);
     if(error) return 0;
@@ -1300,7 +1306,7 @@ int local_socket_local_endpoint(lua_State * L)
 
 int local_socket_remote_endpoint(lua_State * L)
 {
-    local::stream_protocol::socket * socket = reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
+    buffered_local_socket * socket = reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT));
     boost::system::error_code error;
     local::stream_protocol::endpoint endpoint = socket->remote_endpoint(error);
     if(error) return 0;
@@ -1334,7 +1340,7 @@ void create_local_socket_metatable(lua_State * L)
 
 int local_socket_client_async_connect(lua_State * L)
 {
-    local::stream_protocol::socket * socket = reinterpret_cast<local::stream_protocol::socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_CLIENT_MT));
+    buffered_local_socket * socket = reinterpret_cast<buffered_local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_CLIENT_MT));
     
     const char * path = luaL_checkstring(L, 2);
 
@@ -1382,7 +1388,7 @@ void create_local_socket_client_metatable(lua_State * L)
 
 int create_local_client(lua_State * L)
 {
-    local::stream_protocol::socket * socket = new (lua_newuserdata(L, sizeof(local::stream_protocol::socket))) local::stream_protocol::socket(*main_io);
+    new (lua_newuserdata(L, sizeof(buffered_local_socket))) buffered_local_socket(*main_io);
     
     // Setup metatable with __gc function set before bind() so the user-data object will be destroyed if the bind op fails.
     luaL_getmetatable(L, LOCAL_SOCKET_CLIENT_MT);

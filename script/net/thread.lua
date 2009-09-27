@@ -43,15 +43,23 @@ function net.thread(socket, threadFunction)
     
     if socket.async_read then
         
-        local function read(unused, readsize)
+        local function _read(unused, buffer, readsize)
             local co = coroutine.running()
-            socket.super:async_read(readsize, function(buffer, errmsg) 
+            
+            local function handler(buffer, errmsg)
                 coroutine.resume(co, buffer, errmsg)
-            end)
+            end
+            
+            if readsize then
+                socket:async_read(buffer, readsize, handler)
+            else
+                socket:async_read(buffer, handler)
+            end
+            
             return coroutine.yield(co)
         end
         
-        derivedSocket.read = read
+        derivedSocket.read = _read
     end
     
     if socket.async_send then
