@@ -128,10 +128,6 @@ global small_protect_maps &small_ctf_maps
 global "insta protect_maps" &ctf_maps
 global "small_insta protect_maps" &small_ctf_maps
 
-global game_modes [instagib efficiency tactics ffa
-    "instagib team" "efficiency team" "tactics team" teamplay
-    "insta ctf" ctf "insta protect" protect capture "regen capture"]
-
 global def_ctf_maps [hallo reissen flagstone face-capture shipwreck dust2
     urban_c berlin_wall akroseum valhalla damnation mach2 redemption tejen
     europium capture_night l_ctf forge campo wdcd sacrifice core_transfer
@@ -172,11 +168,8 @@ global use_best_map_size 0
 global small_gamesize 5
 global small_teamgamesize 5
 
-global first_map "complex"
-global first_gamemode "ffa"
-global firstgame_on_empty 0
-global random_map_on_empty 0
-global random_mode_on_empty 0
+global default_gamemode "ffa"
+global default_game_on_empty 0
 
 global use_irc_bot 0
 

@@ -55,26 +55,7 @@ end
 function onDisconnect(cn)
 
     server.player_unsetpvar(cn, "shown_banner")
-    
-    if tonumber(server.playercount) == 0 then
-        if server.firstgame_on_empty == 1 then
-            server.changemap(server.first_map, server.first_gamemode, -1)
-        else
-            local lmode = server.first_gamemode
-            local lmap = server.first_map
-            if (server.random_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
-                lmode = server.random_mode()
-                lmap = server.random_map(lmode,1)
-                server.changemap(lmap,lmode,-1)
-            elseif server.random_mode_on_empty == 1 then
-                lmode = server.random_mode()
-                server.changemap(lmap,lmode,-1)
-            elseif server.random_map_on_empty == 1 then
-                lmap = server.random_map(lmode,1)
-                server.changemap(lmap,lmode,-1)
-            end
-        end
-    end
+
 end
 
 function onText(cn,text)
@@ -91,7 +72,8 @@ end
 
 function onMapVote(cn,map,mode)
 
-    if server.player_priv_code(cn) == 2 then
+    -- Admin players are free from voting restrictions
+    if server.player_priv_code(cn) == server.ADMIN then
         return
     end
     
@@ -207,30 +189,9 @@ server.event_handler("started", function()
     
     server.reload_maprotation()
     
-    if server.playercount == 0 then
-    
-        local lmode = server.first_gamemode
-        local lmap = server.first_map
-        
-        if (server.random_mode_on_empty == 1) and (server.random_map_on_empty == 1) then
-            lmode = server.random_mode()
-            lmap = server.random_map(lmode,1)
-            server.changemap(lmap,lmode,-1)
-        elseif server.random_mode_on_empty == 1 then
-            lmode = server.random_mode()
-            server.changemap(lmap,lmode,-1)
-        elseif server.random_map_on_empty == 1 then
-            lmap = server.random_map(lmode,1)
-            server.changemap(lmap,lmode,-1)
-        else
-            server.changemap(server.first_map, server.first_gamemode, -1)
-        end
-    end
-    
     server.load_geoip_database(server.geoip_db_file)
     
     load_once("player_command_bindings")
-    
     log_unknown_player_commands()
     
     server.log_status("-> Successfully loaded Hopmod")

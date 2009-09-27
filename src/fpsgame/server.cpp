@@ -584,7 +584,6 @@ namespace server
         resetitems();
         
         init_hopmod();
-        selectnextgame();
         
         bantimes.update(totalmillis);
     }
