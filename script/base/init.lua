@@ -4,6 +4,7 @@ load_once("base/player/global_vars")
 load_once("base/player/command")
 load_once("base/logging")
 load_once("base/maprotation") -- the reason this can be loaded now instead as a scheduled module is because of reload_maprotation is called from started event
+load_once("base/mute")
 
 server.module("db/auth")
 server.module("base/mapvote")
@@ -59,24 +60,10 @@ function onDisconnect(cn)
 
 end
 
-function onText(cn,text)
-    
-    local block = 0
-    
-    if block == 0 and server.player_pvar(cn,"mute") then
-        server.player_msg(cn, red() .. "Your chat messages are being blocked.")
-        block = -1
-    end
-    
-    return block
-end
-
 server.event_handler("connect",onConnect)
 server.event_handler("disconnect", onDisconnect)
 server.event_handler("active", sendServerBanner)
 server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
-server.event_handler("text",onText)
-server.event_handler("sayteam", onText)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
 local function update_gamemodeinfo()

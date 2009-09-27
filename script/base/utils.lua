@@ -79,14 +79,6 @@ function yellow(text) return formatcol(2, text) end
 function magenta(text) return formatcol(5, text) end
 function blue(text) return formatcol(1, text) end
 
-function server.mute(cn)
-    server.player_pvar(cn, "mute", true)
-end
-
-function server.unmute(cn)
-    server.player_unsetpvar(cn, "mute")
-end
-
 function server.specall()
     for i,cn in ipairs(server.players()) do server.spec(cn) end
 end
