@@ -5,65 +5,11 @@ load_once("base/player/command")
 load_once("base/logging")
 load_once("base/maprotation") -- the reason this can be loaded now instead as a scheduled module is because of reload_maprotation is called from started event
 load_once("base/mute")
+load_once("base/banner")
 
 server.module("db/auth")
 server.module("base/mapvote")
 
-function sendServerBanner(cn)
-
-    if server.player_pvar(cn,"shown_banner") then return end
-    
-    local sid = server.player_sessionid(cn)
-    
-    server.sleep(1000,function()
-
-        -- cancel if not the same player from 1 second ago
-        if sid ~= server.player_sessionid(cn) then return end
-        
-        server.player_msg(cn, orange(server.servername))
-        server.player_msg(cn, server.motd)
-        
-        server.player_pvar(cn, "shown_banner", true)
-    end)
-end
-
-function onConnect(cn)
-
-    if server.player_status_code(cn) == server.SPECTATOR then
-        local sid = server.player_sessionid(cn)
-        server.sleep(10000, function()
-            if sid == server.player_sessionid(cn) then sendServerBanner(cn) end
-        end)
-    end
-    
-    local country = server.ip_to_country(server.player_ip(cn))
- 	
-    if server.show_country_message == 1 and #country > 0 then
-        
-        local str_connect = string.format("%s connected from %s.", green(server.player_name(cn)), green(country))
-        local str_connect_admin = str_connect .. " (IP:" .. red(server.player_ip(cn)) .. ")"
-        
-        for index, cn in ipairs(server.players()) do
-            if server.player_priv_code(cn) == 2 then
-                server.player_msg(cn, str_connect_admin)
-            else
-                server.player_msg(cn, str_connect)
-            end
-        end
-    end
-    
-end
-
-function onDisconnect(cn)
-
-    server.player_unsetpvar(cn, "shown_banner")
-
-end
-
-server.event_handler("connect",onConnect)
-server.event_handler("disconnect", onDisconnect)
-server.event_handler("active", sendServerBanner)
-server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 
 local function update_gamemodeinfo()
