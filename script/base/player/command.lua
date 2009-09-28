@@ -192,6 +192,12 @@ function player_command_script(name, filename, priv)
         if not command.control.unload or not command.control.init then
             error(string.format("Player command script '%s' is missing a init or unload function.", filename))
         end
+
+		if command_info.enabled == true then
+			command.control.init()
+		else
+			command.control.unload()
+		end
     end
     
     command_info = nil
