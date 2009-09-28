@@ -124,7 +124,13 @@ function server.disable_commands(commandlist)
     set_commands(commandlist, {enabled = false})
     
     foreach_command(commandlist, function(command)
-        if command.control.unload then command.control.unload() end
+
+        if command.control.unload then
+			command.control.unload()
+			
+			collectgarbage()
+		end
+
     end)
     
 end
