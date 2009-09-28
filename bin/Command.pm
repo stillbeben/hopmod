@@ -127,8 +127,8 @@ sub Process {
 		{ main::sendtoirc($channel,"\x03\x036IRC\x03         \x034-/RESTART SAUER/-\x03 $nick restarted the server process"); main::toserverpipe("restarter; shutdown");
 		return }
 ##### SHOWALIAS #####
-                if ( $command =~ / shownames ([0-9]+.*)/i )
-                { my $line = main::toserverpipe("names $1"); $topriv = $nick; return "SHOWNAMES","\x037$line\x03"}
+                if ( $command =~ / showaliases ([0-9]+.*)/i )
+                { my $line = main::toserverpipe("showaliases $1"); $topriv = $nick; return "ALIASES","\x037$line\x03"}
 		##### SCORE #####
                 if ( $command =~ / score/i )
                 { $topriv = $nick ; my $line = main::toserverpipe("score");
