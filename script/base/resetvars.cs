@@ -12,8 +12,25 @@ global script_socket_port 7894
 global script_socket_password ""
 
 global allow_mapvote 1
-global allow_modevote 1
 global mapvote_disallow_unknown_map 0
+
+global allowed_gamemodes [
+    "ffa"
+    "coop edit"
+    "teamplay"
+    "instagib"
+    "instagib team"
+    "efficiency"
+    "efficiency team"
+    "tactics"
+    "tactics teams"
+    "capture"
+    "regen capture"
+    "ctf"
+    "insta ctf"
+    "protect"
+    "insta protect"
+]
 
 global auth_db_filename "log/auth.sqlite"
 global auth_use_sqlite 1
@@ -42,8 +59,6 @@ global reserved_name_expire (mins 3600)
 global use_server_maprotation 1
 global use_server_random_maprotation 0
 global use_server_random_moderotation 0
-
-global disallow_coopedit 0
 
 global ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
 	kalking1 dock turbine fanatic_quake oddworld wake5 aard3c curvedm
