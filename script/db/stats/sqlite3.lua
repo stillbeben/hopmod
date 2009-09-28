@@ -102,7 +102,7 @@ local function player_totals(name)
     return row
 end
 
-local function find_names_by_ip(ip, exclude_name)
+local function findNamesByIP(ip, exclude_name)
     local names = {}
     find_names_by_ip:bind{ipaddr=ip}
     for row in find_names_by_ip:rows() do
@@ -113,4 +113,4 @@ local function find_names_by_ip(ip, exclude_name)
     return names
 end
 
-return {open = open, commit_game = commit_game, player_totals = player_totals, find_names_by_ip = find_names_by_ip}
+return {open = open, commit_game = commit_game, player_totals = player_totals, find_names_by_ip = findNamesByIP}

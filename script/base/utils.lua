@@ -298,3 +298,25 @@ function server.group_players(arg1,arg2,arg3)
 	end
     
 end
+
+function pack(...)
+    return arg
+end
+
+function catch_error(fun, ...)
+
+    local returnvals = pack(pcall(fun, unpack(arg)))
+    
+    if returnvals[1] == false then
+        server.log_error(returnvals[2])
+        return
+    end
+    
+    if returnvals then
+    
+        table.remove(returnvals, 1)
+    
+        return unpack(returnvals)
+    end
+    
+end
