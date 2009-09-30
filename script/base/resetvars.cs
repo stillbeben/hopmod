@@ -46,6 +46,7 @@ global stats_sqlite_synchronous 1
 global stats_use_json 0
 global stats_overwrite_name_with_authname 0
 global stats_use_mysql 0
+global stats_servername ""
 global stats_mysql_hostname "localhost"
 global stats_mysql_port 3306
 global stats_mysql_database "sauerstats"

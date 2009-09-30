@@ -186,11 +186,11 @@ function internal.commit()
     
     local teams = internal.construct_teams_table()
     
-    if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
-        game = nil
-        players = nil
-        return
-    end
+    --if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+    --    game = nil
+    --    players = nil
+    --    return
+    --end
     
     game.players = human_players
     game.bots = bot_players

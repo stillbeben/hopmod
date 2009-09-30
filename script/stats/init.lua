@@ -11,7 +11,7 @@ if using_sqlite then
     
     local is_open, err = backends.sqlite3.open({
         filename = server.stats_db_filename, 
-        schemafile = "./script/db/stats/schema.sql",
+        schemafile = "./script/stats/schema.sql",
         exclusive_locking = server.stats_sqlite_exclusive_locking,
         synchronous = server.stats_sqlite_synchronous})
         
@@ -38,7 +38,8 @@ if using_mysql then
         database = server.stats_mysql_database,
         schema = "./script/stats/mysql_schema.sql",
         triggers = "./script/stats/mysql_triggers.sql",
-        install = server.stats_mysql_install == 1
+        install = server.stats_mysql_install == 1,
+        servername = server.stats_servername
     })
     
 end
