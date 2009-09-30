@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS  `playertotals` (
   `suicides` mediumint(8) unsigned NOT NULL DEFAULT 0,
   `teamkills` mediumint(8) unsigned NOT NULL DEFAULT 0,
   `hits` int(10) unsigned NOT NULL DEFAULT 0,
+  `misses` int(10) unsigned NOT NULL DEFAULT 0,
   `shots` int(10) unsigned NOT NULL DEFAULT 0,
   `damage` int(10) unsigned NOT NULL DEFAULT 0,
   `damagewasted` int(10) unsigned NOT NULL DEFAULT 0,

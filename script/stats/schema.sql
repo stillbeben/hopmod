@@ -87,6 +87,7 @@ BEGIN
         suicides = suicides - old.suicides,
         teamkills = teamkills - old.teamkills,
         hits = hits - old.hits,
+        misses = misses - old.misses,
         shots = shots - old.shots,
         wins = wins - old.win,
         losses = losses - (old.win = 0),
