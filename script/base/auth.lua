@@ -9,7 +9,7 @@ if using_sqlite then
     require "sqlite3utils"
     
     db = sqlite3.open(server.auth_db_filename)
-    sqlite3utils.createMissingTables("./script/db/auth_schema.sql", db)
+    sqlite3utils.createMissingTables("./script/base/auth/schema.sql", db)
     
     search_for_domain,perr = db:prepare("SELECT * FROM domains WHERE name = :name")
     if not search_for_domain then error(perr) end

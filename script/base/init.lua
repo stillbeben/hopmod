@@ -7,7 +7,7 @@ load_once("base/maprotation") -- the reason this can be loaded now instead as a 
 load_once("base/mute")
 load_once("base/banner")
 
-server.module("db/auth")
+server.module("base/auth.lua")
 server.module("base/mapvote")
 
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
