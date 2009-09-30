@@ -7,7 +7,7 @@ local backends = {}
 
 if using_sqlite then
     
-    backends.sqlite3 = loadfile("./script/db/stats/sqlite3.lua")()
+    backends.sqlite3 = loadfile("./script/stats/sqlite3.lua")()
     
     local is_open, err = backends.sqlite3.open({
         filename = server.stats_db_filename, 
@@ -23,12 +23,12 @@ if using_sqlite then
 end
 
 if using_json then
-    backends.json = loadfile("./script/db/stats/json.lua")()    
+    backends.json = loadfile("./script/stats/json.lua")()    
 end
 
 if using_mysql then
     
-    backends.mysql = dofile("./script/db/stats/mysql.lua")
+    backends.mysql = dofile("./script/stats/mysql.lua")
     
     backends.mysql.open({
         hostname = server.stats_mysql_hostname,
@@ -36,20 +36,20 @@ if using_mysql then
         username = server.stats_mysql_username,
         password = server.stats_mysql_password,
         database = server.stats_mysql_database,
-        schema = "./script/db/stats/mysql_schema.sql",
-        triggers = "./script/db/stats/mysql_triggers.sql",
+        schema = "./script/stats/mysql_schema.sql",
+        triggers = "./script/stats/mysql_triggers.sql",
         install = server.stats_mysql_install == 1
     })
     
 end
 
-loadfile("./script/db/stats/core.lua")().initialize(backends,{
+loadfile("./script/stats/core.lua")().initialize(backends,{
         using_auth = server.stats_use_auth,
         auth_domain_name = server.stats_auth_domain
     })
 
 -- Load and register the #stats player command
-local stats_command = loadfile("./script/db/stats/playercmd.lua")()
+local stats_command = loadfile("./script/stats/playercmd.lua")()
 stats_command.initialize(backends)
 player_command_function("stats", stats_command.command_function)
 
