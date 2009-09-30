@@ -7,6 +7,7 @@ local io = io
 local sqlite3 = sqlite3
 local string = string
 local print = print
+local tostring = tostring
 
 module("sqlite3utils")
 
@@ -43,6 +44,7 @@ function createMissingTables(schemafilename, db)
             end
             
             for table_column in schema:rows(string.format("PRAGMA table_info(%s)", row.name)) do
+                
                 if not existing_cols[table_column.name] then
                     
                     local column_def = table_column.name .. " " .. table_column.type
@@ -67,4 +69,25 @@ function createMissingTables(schemafilename, db)
     end
     
     db:exec("COMMIT TRANSACTION")
+end
+
+function reinstallTriggers(schemafilename, db)
+    
+    schemafile,err = io.open(schemafilename)
+    if not schemafile then return nil,err end
+    
+    local schema = sqlite3.open_memory()
+    schema:exec("BEGIN TRANSACTION")
+    schema:exec(schemafile:read("*a"))
+    schema:exec("COMMIT TRANSACTION")
+    
+    db:exec("BEGIN TRANSACTION")
+    
+    for trigger in schema:rows("SELECT * FROM sqlite_master WHERE type = 'trigger'") do
+        db:exec("DROP TRIGGER IF EXISTS " .. trigger.name)
+        db:exec(trigger.sql)
+    end
+    
+    db:exec("COMMIT TRANSACTION")
+    
 end

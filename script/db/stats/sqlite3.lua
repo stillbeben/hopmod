@@ -21,6 +21,10 @@ local function open(settings)
     
     sqlite3utils.createMissingTables(settings.schemafile, db)
     
+    function server.stats_sqlite_reinstall_triggers()
+        sqlite3utils.reinstallTriggers(settings.schemafile, db)
+    end
+    
     if settings.exclusive_locking == 1 then
         db:exec("PRAGMA locking_mode=EXCLUSIVE")
     end
@@ -48,7 +52,7 @@ local function open(settings)
     return true
 end
 
-local function commit_game(game, players)
+local function commit_game(game, players, teams)
 
     db:exec("BEGIN TRANSACTION")
     
@@ -56,31 +60,19 @@ local function commit_game(game, players)
     insert_game:exec()
     local game_id = db:last_insert_rowid()
     
-    if server.gamemodeinfo.teams then
-    
-        for i, teamname in ipairs(server.teams()) do
-            
-            team = {}
-            team.gameid = game_id
-            team.name = teamname
-            team.score = server.team_score(teamname)
-            team.win = server.team_win(teamname)
-            team.draw = server.team_draw(teamname)
-            
-            insert_team:bind(team)
-            insert_team:exec()
-            
-            local team_id = db:last_insert_rowid()
-            local team_name = team.name
-            
-            --for i2,teamplayer in ipairs(server.team_players(teamname)) do
-            --    statsmod.getPlayerTable(server.player_id(teamplayer)).team_id = team_id
-            --end
-            
-            for id, player in pairs(players) do
-            
-                if player.team == team_name then player.team_id = team_id end
-            end
+    for i, team in ipairs(teams or {}) do
+        
+        team.gameid = game_id
+        
+        insert_team:bind(team)
+        insert_team:exec()
+        
+        local team_id = db:last_insert_rowid()
+        local team_name = team.name
+        
+        for id, player in pairs(players) do
+        
+            if player.team == team_name then player.team_id = team_id end
         end
     end
     
