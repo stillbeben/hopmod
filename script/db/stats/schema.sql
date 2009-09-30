@@ -1,5 +1,5 @@
 
-CREATE TABLE games (
+CREATE TABLE IF NOT EXISTS games (
     id                  INTEGER PRIMARY KEY,
     datetime            INTEGER DEFAULT 0,
     gamemode            TEXT DEFAULT "",
@@ -10,7 +10,7 @@ CREATE TABLE games (
     bots                INTEGER DEFAULT 0
 );
 
-CREATE TABLE teams (
+CREATE TABLE IF NOT EXISTS teams (
     id                  INTEGER PRIMARY KEY,
     game_id             INTEGER REFERENCES games(id),
     name                TEXT,
@@ -19,7 +19,7 @@ CREATE TABLE teams (
     draw                BOOLEAN DEFAULT 0
 );
 
-CREATE TABLE players (
+CREATE TABLE IF NOT EXISTS players (
     id                  INTEGER PRIMARY KEY,
     game_id             INTEGER REFERENCES games(id),
     team_id             INTEGER REFERENCES teams(id) DEFAULT 0,
@@ -32,6 +32,7 @@ CREATE TABLE players (
     suicides            INTEGER DEFAULT 0,
     teamkills           INTEGER DEFAULT 0,
     hits                INTEGER DEFAULT 0,
+    misses              INTEGER DEFAULT 0,
     shots               INTEGER DEFAULT 0,
     damage              INTEGER DEFAULT 0,
     damagewasted        INTEGER DEFAULT 0,
@@ -42,7 +43,7 @@ CREATE TABLE players (
     botskill            INTEGER DEFAULT 0
 );
 
-CREATE TABLE playertotals (
+CREATE TABLE IF NOT EXISTS playertotals (
     id                  INTEGER PRIMARY KEY,
     name                TEXT UNIQUE,
     ipaddr              TEXT,
@@ -55,6 +56,7 @@ CREATE TABLE playertotals (
     suicides            INTEGER DEFAULT 0,
     teamkills           INTEGER DEFAULT 0,
     hits                INTEGER DEFAULT 0,
+    misses              INTEGER DEFAULT 0,
     shots               INTEGER DEFAULT 0,
     damage              INTEGER DEFAULT 0,
     damagewasted        INTEGER DEFAULT 0,
@@ -65,18 +67,18 @@ CREATE TABLE playertotals (
     timeplayed          INTEGER DEFAULT 0
 );
 
-CREATE INDEX "player_name" ON players (name);
-CREATE INDEX "player_ipaddr" ON players (ipaddr);
-CREATE INDEX "game_id" ON players (game_id ASC);
-CREATE INDEX "playertotals_by_name" ON playertotals (name ASC);
+CREATE INDEX IF NOT EXISTS "player_name" ON players (name);
+CREATE INDEX IF NOT EXISTS "player_ipaddr" ON players (ipaddr);
+CREATE INDEX IF NOT EXISTS "game_id" ON players (game_id ASC);
+CREATE INDEX IF NOT EXISTS "playertotals_by_name" ON playertotals (name ASC);
 
-CREATE TRIGGER delete_game_trigger AFTER DELETE ON games
+CREATE TRIGGER IF NOT EXISTS delete_game_trigger AFTER DELETE ON games
 BEGIN
     DELETE FROM teams where game_id = old.id;
     DELETE FROM players where game_id = old.id;
 END;
 
-CREATE TRIGGER delete_player_trigger AFTER DELETE ON players
+CREATE TRIGGER IF NOT EXISTS delete_player_trigger AFTER DELETE ON players
 BEGIN
     UPDATE playertotals SET
         frags = frags - old.frags,
@@ -93,7 +95,7 @@ BEGIN
         WHERE name = old.name;
 END;
 
-CREATE TRIGGER update_playertotals_trigger AFTER INSERT ON players
+CREATE TRIGGER IF NOT EXISTS update_playertotals_trigger AFTER INSERT ON players
 BEGIN
     INSERT OR IGNORE INTO playertotals (name,first_game) VALUES (new.name,strftime('%s','now'));
     UPDATE playertotals SET 
@@ -106,6 +108,7 @@ BEGIN
         suicides = suicides + new.suicides,
         teamkills = teamkills + new.teamkills,
         hits = hits + new.hits,
+        misses = misses + new.misses,
         shots = shots + new.shots,
         damage = damage + new.damage,
         damagewasted = damagewasted + new.damagewasted,

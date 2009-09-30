@@ -1,3 +1,14 @@
+--[[
+    
+    Copyright (C) 2009 Graham Daws
+    
+    MAINTAINER
+        Graham
+        
+    GUIDELINES
+    
+    TODO
+]]
 
 local game = nil
 local players = nil
@@ -13,12 +24,32 @@ function internal.setNewGame()
 end
 
 function internal.getPlayerTable(player_id)
+
     player_id = tonumber(player_id)
-    if players[player_id] then return players[player_id] end
-    players[player_id] = {team_id = 0, score = 0, frags = 0, deaths = 0, 
-        suicides = 0, hits = 0, shots = 0, damage = 0, playing = true, 
-        timeplayed = 0, finished = false, win = false, rank = 0, 
-        country = "", botskill = 0}
+    
+    if players[player_id] then 
+        return players[player_id]
+    end
+    
+    players[player_id] = {
+        team_id     = 0,
+        score       = 0, 
+        frags       = 0, 
+        deaths      = 0, 
+        suicides    = 0, 
+        hits        = 0, 
+        misses      = 0,
+        shots       = 0, 
+        damage      = 0, 
+        playing     = true, 
+        timeplayed  = 0, 
+        finished    = false, 
+        win         = false, 
+        rank        = 0, 
+        country     = "", 
+        botskill    = 0
+    }
+    
     return players[player_id]
 end
 
@@ -52,6 +83,7 @@ function internal.updatePlayer(cn)
     t.suicides = suicides
     t.deaths = server.player_deaths(cn)
     t.hits = server.player_hits(cn)
+    t.misses = server.player_misses(cn)
     t.shots = server.player_shots(cn)
     t.damage = server.player_damage(cn)
     t.damagewasted = server.player_damagewasted(cn)
@@ -79,6 +111,26 @@ function internal.addPlayer(cn)
     end
     
     return t
+end
+
+function internal.construct_teams_table()
+    
+    if not server.gamemodeinfo.teams then return end
+    
+    local teams = {}
+    
+    for i, teamname in ipairs(server.teams()) do
+    
+        team = {}
+        team.name = teamname
+        team.score = server.team_score(teamname)
+        team.win = server.team_win(teamname)
+        team.draw = server.team_draw(teamname)
+        
+        table.insert(teams, team)
+    end
+    
+    return teams
 end
 
 function internal.commit()
@@ -132,6 +184,8 @@ function internal.commit()
         
     end
     
+    local teams = internal.construct_teams_table()
+    
     if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
         game = nil
         players = nil
@@ -146,7 +200,7 @@ function internal.commit()
     internal.backends.query = nil
     
     for i, backend in pairs(internal.backends) do
-        catch_error(backend.commit_game, game, players)
+        catch_error(backend.commit_game, game, players, teams)
     end
     
     internal.backends.query = query_backend
