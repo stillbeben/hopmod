@@ -9,7 +9,7 @@ if using_sqlite then
     
     backends.sqlite3 = loadfile("./script/stats/sqlite3.lua")()
     
-    local is_open, err = backends.sqlite3.open({
+    local is_open, err = catch_error(backends.sqlite3.open,{
         filename = server.stats_db_filename, 
         schemafile = "./script/stats/schema.sql",
         exclusive_locking = server.stats_sqlite_exclusive_locking,
@@ -23,14 +23,14 @@ if using_sqlite then
 end
 
 if using_json then
-    backends.json = loadfile("./script/stats/json.lua")()    
+    backends.json = catch_error(loadfile("./script/stats/json.lua"))    
 end
 
 if using_mysql then
     
     backends.mysql = dofile("./script/stats/mysql.lua")
     
-    backends.mysql.open({
+    catch_error(backends.mysql.open,{
         hostname = server.stats_mysql_hostname,
         port = server.stats_mysql_port,
         username = server.stats_mysql_username,

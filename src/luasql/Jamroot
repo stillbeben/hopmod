@@ -1,0 +1,14 @@
+
+project : source-location src ;
+
+lib mysqlclient : : <name>mysqlclient <search>/usr/local/mysql/lib ;
+lib z : : <name>z ;
+
+lib luasql_mysql : 
+    luasql.c
+    ls_mysql.c
+    mysqlclient
+    z 
+    : <include>/usr/local/mysql/include ;
+
+install dist : luasql_mysql : <location>../../bin ;
