@@ -1,15 +1,32 @@
--- #playermsg <cn> "<text>"
+--[[
+
+	A player command to send a message to a player
+
+]]
+
 
 return function(cn,tcn,text)
 
 	if not tcn then
-		server.player_msg(cn,red("#playermsg <cn> \"<text>\""))
-	elseif not text then
-		server.player_msg(cn,red("text is missing"))
-	elseif not server.valid_cn(tcn) then
-		server.player_msg(privmsg_cn,red("cn is not valid"))
-	else
-		server.player_msg(tcn,"(" .. green("PM") .. ")  (" .. green(server.player_name(cn)) .. "(" .. magenta(cn) .. ")): " .. text)
+
+		return false, "#playermsg (<cn>|\"<name>\") \"<text>\""
 	end
+
+	if not text then
+
+		return false, "text is missing"
+	end
+
+	if not server.valid_cn(tcn) then
+
+		tcn = server.name_to_cn_list_matches(cn,tcn)
+
+		if not tcn then
+
+			return
+		end
+	end
+
+	server.player_msg(tcn,"(" .. green("PM") .. ")  (" .. green(server.player_name(cn)) .. " (" .. magenta(cn) .. ")): " .. text)
 
 end 
