@@ -1,12 +1,27 @@
--- #mute <cn>
+--[[
 
-return function(mute_cn,mute_tcn)
-    if not mute_tcn then
-        server.player_msg(mute_cn,red("#mute <cn>"))
-    elseif not server.valid_cn(mute_tcn) then
-        return false, "CN is not valid"
-    else
-        server.mute(mute_tcn)
-    end
+	A player command to mute a player
+
+]]
+
+
+return function(cn,tcn)
+
+	if not tcn then
+
+		return false, "#mute <cn>|\"<name>\""
+	end
+
+	if not server.valid_cn(tcn) then
+
+		tcn = server.name_to_cn_list_matches(cn,tcn)
+
+		if not tcn then
+
+			return
+		end
+	end
+
+	server.mute(tcn)
+
 end
-
