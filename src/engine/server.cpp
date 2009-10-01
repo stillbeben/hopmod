@@ -830,8 +830,8 @@ void rundedicatedserver()
     update_timer.expires_from_now(boost::posix_time::milliseconds(5));
     update_timer.async_wait(update_server);
     
-    register_timer.expires_from_now(boost::posix_time::hours(1));
-    register_timer.async_wait(registerserver_handler);
+    //register_timer.expires_from_now(boost::posix_time::hours(1));
+    //register_timer.async_wait(registerserver_handler);
     
     netstats_timer.expires_from_now(boost::posix_time::minutes(1));
     netstats_timer.async_wait(netstats_handler);
@@ -916,7 +916,7 @@ void initserver(bool listen, bool dedicated)
 
     if(listen)
     {
-        updatemasterserver();
+        //updatemasterserver();
         if(dedicated) rundedicatedserver();
 #ifndef STANDALONE
         else conoutf("listen server started");

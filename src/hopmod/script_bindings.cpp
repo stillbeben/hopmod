@@ -153,9 +153,9 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(maxclients, "maxplayers", env);
     script::bind_var(serverip, "serverip", env);
     script::bind_var(serverport, "serverport", env);
-    script::bind_var(mastername, "masterserver", env);
+    //script::bind_var(mastername, "masterserver", env);
     script::bind_var(server::authserver_hostname, "authserver", env);
-    script::bind_var(allowupdatemaster, "updatemaster", env);
+    //script::bind_var(allowupdatemaster, "updatemaster", env);
     script::bind_var(server::next_gamemode, "next_mode", env);
     script::bind_var(server::next_mapname, "next_map", env);
     script::bind_var(server::next_gametime, "next_gametime", env);
