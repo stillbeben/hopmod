@@ -9,6 +9,7 @@ load_once("base/banner")
 
 server.module("base/auth.lua")
 server.module("base/mapvote")
+server.module("base/register_server")
 
 server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
 

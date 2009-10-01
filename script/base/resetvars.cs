@@ -253,3 +253,7 @@ global invadmin_domain ""
 
 global warning_limit 2
 global warning_bantime (mins 60)
+
+global updatemaster 1
+global masterserver "sauerbraten.org"
+global masterserverport 28787
