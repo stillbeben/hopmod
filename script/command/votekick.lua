@@ -1,126 +1,171 @@
 --[[
-    
-    A player command to allow all players to vote to kick other players
-    
-    Copyright (C) 2009 Thomas
-    
-    TODO
-        * Check required votes have been met when a player disconnects
-        * Hide vote message from master if the master is the one being voted for
-        * Support command unload
+
+	A player command to allow all players to vote to kick other players
+
+	Copyright (C) 2009 Thomas
+
 ]]
+
+
+local priv_master = server.PRIV_MASTER
+
+local events = {}
+local interval = {}
+interval.timer = server.votekick_ad_timer
 
 local votes = {}
 
-server.event_handler("connect", function(cn)
-    votes[cn] = {}
-end)
+local usage = "#votekick <cn>|\"<name>\""
 
-server.event_handler("disconnect", function(cn, reason)
-    votes[cn] = nil
-end)
 
-if server.votekick_ad_timer ~= 0 then
-    server.interval(server.votekick_ad_timer, function()
-        if server.playercount > 2 and tonumber(server.mastermode) == 0 then
-            server.msg("If you see a cheater type: " .. yellow("#votekick \"name\"") .. " or " .. yellow("#votekick cn"))
-        end
-    end)
+local function check_kick(cn)
+
+	local required_votes = round((server.playercount / 2), 0)
+
+	if votes[cn].votes >= required_votes then
+
+		server.kick(cn,3600,"server","votekick")
+		server.msg("Vote passed to kick player %s",green(server.display_name(cn)))
+	end
+
 end
 
-local function usage()
-    return "#votekick <CN> or <NAME>"
+
+local function check_player_on_disconnect(tcn,dcn)
+
+	if votes[tcn] then
+
+		if votes[tcn][dcn] then
+
+			votes[tcn][dcn] = nil
+			votes[tcn].votes = votes[tcn].votes - 1
+		end
+
+		check_kick(tcn)
+	end
+
 end
 
-local function disambiguate_name_list(cn, name)
-    
-    local message = ""
-    
-    for i,cn in pairs(server.players()) do
-        if name == server.player_name(cn) then
-            message = message .. string.format("%i %s\n", cn, name)
-        end
-    end
-    
-    server.player_msg(cn, message)
-    
+
+local function init()
+
+	votes = {}
+
+	events.disconnect = server.event_handler_object("disconnect", function(cn, reason)
+
+		if votes[cn] then
+
+			votes[cn] = nil
+
+		else
+
+			for p in server.aplayers() do
+
+				check_player_on_disconnect(p.cn)
+			end
+		end
+
+	end)
+
+	if not (interval.timer == 0) then
+
+		interval.active = true
+
+		server.interval(interval.timer,function()
+
+			if interval.active == false then
+
+				return -1
+			end
+
+			if server.playercount > 2 and tonumber(server.mastermode) == 0 then
+
+				server.msg("If you see a cheater type: " .. yellow("#votekick \"name\"") .. " or " .. yellow("#votekick CN") .. ".")
+			end
+
+		end)
+
+	end
+
 end
 
-local function similar_name_list(cn, names)
 
-    local message = ""
-    
-    for i, player in pairs(names) do
-        message = message .. string.format("%i %s\n", player.cn, player.name)
-    end
-    
-    server.player_msg(cn, message)
-    
+local function unload()
+
+	events = {}
+	interval.active = false
+
 end
 
-return function(cn, kick_who)
 
-    if server.playercount < 3 then
-        return false, "There aren't enough players here for votekick to work"
-    end
-        
-    if not kick_who then
-        return false, usage()
-    end
+local function run(cn,kick_who)
+
+	if server.playercount < 3 then
+
+		return false, "There aren't enough players here for votekick to work"
+	end
     
-    if not server.valid_cn(kick_who) then
-    
-        kick_who, info = server.name_to_cn(kick_who)
-        
-        if not kick_who then
-            
-            if type(info) == "number" then -- Multiple name matches
-            
-                server.player_msg(cn, red(string.format("There are %i players here matching that name:", info)))
-                disambiguate_name_list(cn, kick_who)
-                
-                return
-                
-            else -- Similar matches
-                
-                server.player_msg(cn, red("There are no players found matching that name, but here are some similar names:"))
-                
-                similar_name_list(cn, info)
-                
-                return
-                
-            end
-            
-            return false, usage()
-        end
-        
-    end
-    
-    if kick_who == cn then
-        return false, "You can't vote to kick yourself"
-    end
-    
-    if votes[kick_who][cn] then
-        return false, "You have already voted for this player to be kicked"
-    end
-    
-    votes[kick_who][cn] = true
-    
+	if not kick_who then
+
+		return false, usage
+	end
+
+	if not server.valid_cn(kick_who) then
+
+		kick_who = server.name_to_cn_list_matches(cn,kick_who)
+
+		if not kick_who then
+
+			return
+		end
+	end
+
+	kick_who = tonumber(kick_who)
+	cn = tonumber(cn)
+
+	if kick_who == cn then
+
+		return false, "You can't vote to kick yourself"
+	end
+
+	if not votes[kick_who] then
+
+		votes[kick_who] = {}
+	end
+
+	if votes[kick_who][cn] then
+
+		return false, "You have already voted for this player to be kicked"
+	end
+
+	votes[kick_who][cn] = true
     if not votes[kick_who].votes then
+
         votes[kick_who].votes = 0
     end
-    
     votes[kick_who].votes = votes[kick_who].votes + 1
-    
-    server.msg(green(server.player_displayname(cn)) .. " voted to kick " .. red(server.player_displayname(kick_who)))
-    
-    local required_votes = round((server.playercount / 2), 0)
-    server.msg("Votes: " .. votes[kick_who].votes .. " of " .. required_votes)
-    
-    if votes[kick_who].votes >= required_votes then
-        server.kick(kick_who, 3600, "server", "votekick")
-        server.msg("Vote passed to kick player %s", green(server.display_name(kick_who)))
-        votes[kick_who] = nil
-    end
-    
+
+	local required_votes = round((server.playercount / 2), 0)
+	local msg = green(server.player_displayname(cn)) .. " voted to kick " .. red(server.player_displayname(kick_who)) .. "\n" .. "Votes: " .. votes[kick_who].votes .. " of " .. required_votes
+
+	if server.player_priv_code(kick_who) == priv_master then
+
+		for p in server.aplayers() do
+
+			if not (p.cn == kick_who) then
+
+				p:msg(msg)
+			end
+		end
+
+	else
+
+		server.msg(msg)
+	end
+
+	check_kick(kick_who)
+
 end
+
+
+return {init = init,run = run,unload = unload}
