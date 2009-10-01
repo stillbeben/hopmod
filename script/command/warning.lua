@@ -1,37 +1,60 @@
--- #warning <cn> "<text>"
+--[[
 
-return function(warning_cn, warning_tcn, warning_text)
+	A player command to send a warning message
+	player get banned when limit is reached
 
-    if not warning_tcn then
-    
-        server.player_msg(warning_cn,red("#warning <cn> \"<text>\""))
-        return
-        
-    elseif not warning_text then
-    
-        server.player_msg(warning_cn,red("text is missing"))
-        
-    elseif not server.valid_cn(warning_tcn) then
-    
-        server.player_msg(warning_cn,red("cn is not valid"))
-        
-    else
-    
-        local warns_count = (server.player_vars(warning_tcn).warnings_count or 1)
-        
-        if warns_count <= server.warning_limit then
-        
-            server.player_msg(warning_tcn," ")
-            local msg = "Warning"
-            if warns_count == server.warning_limit then
-                msg = "Last Warning"
-            end
-            server.msg("(" .. red(msg) .. ")  " .. "(" .. green(server.player_name(warning_tcn)) .. ")  " .. orange(warning_text))
-            server.player_msg(warning_tcn," ")
-            server.player_vars(warning_tcn).warnings_count = warns_count + 1
-        else
-            server.kick(warning_tcn,server.warning_bantime,warning_cn,"")
-            server.player_vars(warning_tcn).warnings_count = nil
-        end
-    end
+]]
+
+
+local limit = server.warning_limit
+local bantime = round(server.warning_bantime / 1000,0)
+
+local usage = "warning (<cn>|\"<name>\") \"<text>\""
+
+
+return function(cn,tcn,text)
+
+	if not tcn then
+
+		return false, usage
+	end
+
+	if not text then
+
+		return false, usage
+	end
+
+	if not server.valid_cn(tcn) then
+
+		tcn = server.name_to_cn_list_matches(cn,tcn)
+
+		if not tcn then
+
+			return
+		end
+	end
+
+	local warn_count = (server.player_vars(tcn).warning_count or 1)
+
+	if warn_count <= limit then
+
+		local msg = "Warning"
+
+		if warn_count == limit then
+
+			msg = "Last " .. msg
+		end
+
+		server.player_msg(tcn," ")
+		server.msg("(" .. red(msg) .. ")  " .. "(" .. green(server.player_displayname(tcn)) .. ")  " .. orange(text))
+		server.player_msg(tcn," ")
+
+		server.player_vars(tcn).warning_count = warn_count + 1
+
+	else
+
+		server.kick(tcn,bantime,server.player_name(cn),"")
+		server.player_vars(tcn).warning_count = nil
+	end
+
 end

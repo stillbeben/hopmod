@@ -23,6 +23,7 @@ player_command_script("specall",    nil, "master")
 player_command_script("unspecall",  nil, "master")
 player_command_script("kick",       nil, "master")
 player_command_script("warning",    nil, "master")
+	player_command_alias("warn", "warning")
 player_command_script("addbot",     nil, "master")
 
 player_command_script("pause",      nil, "admin")
