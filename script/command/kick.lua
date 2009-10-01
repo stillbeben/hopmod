@@ -1,44 +1,70 @@
--- #kick [all] <cn> ["<reason>"]
+--[[
+
+	A player command to kick a player
+
+]]
+
 
 return function(cn,arg1,arg2,arg3)
 
 	local all = 0
-	local cn = nil
+	local lcn = nil
 	local reason = ""
 
 	if not arg1 then
-		server.player_msg(kick_cn,red("#kick <cn> [\"<reason>\"]"))
-		return
+
+		return false, "#kick <cn> [\"<reason>\"]"
+
 	elseif arg1 == "all" then
+
 		all = 1
+
 		if not arg2 then
-			server.player_msg(kick_cn,red("cn is missing"))
-			return
+
+			return false, "CN is missing"
+
 		elseif server.valid_cn(arg2) then
-			cn = arg2
+
+			lcn = arg2
 		else
-			server.player_msg(kick_cn,red("cn is not valid"))
-			return
+
+			return false, "CN is not valid"
 		end
 		if arg3 then
+
 			reason = arg3
 		end
+
 	elseif server.valid_cn(arg1) then
-		cn = arg1
+
+		lcn = arg1
+
 		if arg2 then
+
 			reason = arg2
 		end
+
 	else
-		server.player_msg(kick_cn,red("cn is not valid"))
-		return
+
+		return false, "CN is not valid"
 	end
 
-	if all == 1 then
-		server.kick_bannedip_group = 1
-	end
-	server.kick(cn,1,server.player_name(kick_cn),reason)
-	if all == 1 then
-		server.kick_bannedip_group = 0
+	if lcn == cn then
+
+		return false, "Don't kick yourself"
+	else
+
+		if all == 1 then
+
+			server.kick_bannedip_group = true
+		end
+
+		server.kick(lcn,1,server.player_name(cn),reason)
+
+		if all == 1 then
+
+			server.kick_bannedip_group = false
+		end
 	end
 
 end

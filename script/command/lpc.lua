@@ -1,9 +1,17 @@
--- [[ based on a player command written by Thomas ]] --
+--[[
+
+	A player command to list all players and their country
+
+	Copyright (C) 2009 Thomas
+
+]]
+
 
 return function(cn)
 
-    for p in server.gplayers() do
-		server.player_msg(cn, "Player: " .. green(p:name()) .. " Country: " ..  orange(server.ip_to_country(p:ip())))
+	for p in server.aplayers() do
+
+		server.player_msg(cn, "Player: " .. green(p:displayname()) .. " Country: " ..  orange(server.ip_to_country(p:ip())))
 	end
 
 end

@@ -1,9 +1,17 @@
--- #msg "<text>"
+--[[
 
-return function(msg_cn,msg_text)
-    if not msg_text then
-        server.player_msg(msg_cn, red("#msg \"<text>\""))
-    else
-        server.msg("(" .. green("Info") .. ")  " .. msg_text)
-    end
+	A player command to broadcast a message
+
+]]
+
+
+return function(cn,text)
+
+	if not text then
+
+		return false, "#msg \"<text>\""
+	end
+
+	server.msg("(" .. green("Info") .. ")  " .. text)
+
 end
