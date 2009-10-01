@@ -63,7 +63,8 @@ function server.new_player_object(cn)
     return object
 end
 
-function server.gplayers()
+
+function server.gplayers(option)
 
     local function next_player(plist, player)
        
@@ -78,7 +79,39 @@ function server.gplayers()
         
         return nplayer
     end
-    
-    local pv = server.players()
+
+
+	local pv = nil
+
+	if not option then
+
+		pv = server.players()
+
+	elseif option == "players" or option == "0" then
+
+		pv = server.players()
+
+	elseif option == "spectators" or option == "1" then
+
+		pv = server.spectators()
+
+	elseif option == "all" or option == "3" then
+
+		pv = server.all_players()
+	end
+
     return next_player, pv, nil
+end
+
+
+function server.splayers()
+
+	return server.gplayers("spectators")
+
+end
+
+function server.aplayers()
+
+	return server.gplayers("all")
+
 end
