@@ -193,12 +193,14 @@ function server.name_to_cn(name)
         return
     end
     
+	name = string.lower(name)
+
     local name_matches = 0
     local first_matching_cn
     
     for i,cn in pairs(server.players()) do
     
-        if server.player_name(cn) == name then
+        if string.lower(server.player_name(cn)) == name then
         
             first_matching_cn = first_matching_cn or cn
             name_matches = name_matches + 1
@@ -219,7 +221,7 @@ function server.name_to_cn(name)
             
             local candidate = server.player_name(cn)
             
-            if string.find(candidate, name) then
+            if string.find(string.lower(candidate), name) then
                 table.insert(substring_matches, {name=candidate,cn=cn})
             end
         end
@@ -230,6 +232,72 @@ function server.name_to_cn(name)
         return nil, name_matches
     end
     
+end
+
+function server.disambiguate_name_list(cn, name)
+
+	local message = ""
+
+	name = string.lower(name)
+
+	for p in server.gplayers() do
+		local pname = p:name()
+
+		if name == string.lower(pname) then
+			message = message .. string.format("%i %s\n", p.cn, pname)
+		end
+	end
+
+	server.player_msg(cn, message)
+
+end
+
+function server.similar_name_list(cn, names)
+
+	local message = ""
+
+	for i, player in pairs(names) do
+		message = message .. string.format("%i %s\n", player.cn, player.name)
+	end
+
+	server.player_msg(cn, message)
+
+end
+
+function server.name_to_cn_list_matches(cn,name)
+
+	local lcn, info = server.name_to_cn(name)
+
+	if not lcn then
+
+		if type(info) == "number" then  -- Multiple name matches
+
+			server.player_msg(cn, red(string.format("There are %i players here matching that name:", info)))
+			server.disambiguate_name_list(cn,name)
+
+			return nil
+
+		elseif #info == 0 then  -- no matches
+
+			server.player_msg(cn, red("There are no players found matching that name."))
+
+			return nil
+
+		else    -- Similar matches
+
+			server.player_msg(cn, red("There are no players found matching that name, but here are some similar names:"))
+			server.similar_name_list(cn, info)
+
+			return nil
+		end
+
+		return nil
+
+	else
+
+		return lcn
+	end
+
 end
 
 local event_conditions = { disconnect = {}}
@@ -319,4 +387,18 @@ function catch_error(fun, ...)
         return unpack(returnvals)
     end
     
+end
+
+
+function server.all_players()
+
+	local list = server.players()
+
+	for i,c in ipairs(server.spectators()) do
+
+		table.insert(list,c)
+	end
+
+	return list
+
 end
