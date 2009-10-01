@@ -1,19 +1,25 @@
-local function cd_chainsaw_hack_warning(cd_chainsaw_hack_warning_cn)
-    server.log("WARNING: " .. server.player_name(cd_chainsaw_hack_warning_cn) .. "(" .. cd_chainsaw_hack_warning_cn .. ") uses a chainsaw hack.  [pj: " .. server.player_lag(cd_chainsaw_hack_warning_cn) .. " | ping: " .. server.player_ping(cd_chainsaw_hack_warning_cn) .. " | ip: " .. server.player_ip(cd_chainsaw_hack_warning_cn) .. "]")
+local events = {}
+
+events.frag = server.event_handler_object("frag",function(tcn,acn)
+
+	local a_pos_x,a_pos_y,a_pos_z = server.player_pos(acn)
+	local t_pos_x,t_pos_y,t_pos_z = server.player_pos(tcn)
+	local weapon = server.player_gun(acn)
+
+	if weapon == 0 then
+		if (math.abs(a_pos_x - t_pos_x) > 24) or (math.abs(a_pos_y - t_pos_y) > 24) or (math.abs(a_pos_z - t_pos_z) > 24) then
+			server.log("WARNING: " .. server.player_name(acn) .. "(" .. acn .. ") uses a chainsaw hack.  [pj: " .. server.player_lag(acn) .. " | ping: " .. server.player_ping(acn) .. " | ip: " .. server.player_ip(acn) .. "]")
+		end
+	end
+
+end)
+
+
+local function disable()
+
+	events = nil
+
 end
 
-server.event_handler("frag",function(tcn,acn)
-    local weapon = server.player_gun(acn)
-    local a_pos_x,a_pos_y,a_pos_z = server.player_pos(acn)
-    local t_pos_x,t_pos_y,t_pos_z = server.player_pos(tcn)
-    
-    if weapon == 0 then
-	if math.abs(a_pos_x - t_pos_x) > 24 then
-	    cd_chainsaw_hack_warning(acn)
-	elseif math.abs(a_pos_y - t_pos_y) > 24 then
-	    cd_chainsaw_hack_warning(acn)
-	elseif math.abs(a_pos_z - t_pos_z) > 24 then
-	    cd_chainsaw_hack_warning(acn)
-	end
-    end
-end)
+
+return {unload = disable}
