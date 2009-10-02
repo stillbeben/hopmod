@@ -186,19 +186,16 @@ function internal.commit()
     
     local teams = internal.construct_teams_table()
     
-    --if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
-    --    game = nil
-    --    players = nil
-    --    return
-    --end
-    
     game.players = human_players
     game.bots = bot_players
-    game.duration = game.duration - server.timeleft
-    
-    local query_backend = internal.backends.query
-    internal.backends.query = nil
-    
+    game.duration = round(server.gamemillis / 60000)
+   
+    if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+        game = nil
+        players = nil
+        return
+    end
+
     for i, backend in pairs(internal.backends) do
         catch_error(backend.commit_game, game, players, teams)
     end
