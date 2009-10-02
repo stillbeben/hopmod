@@ -18,7 +18,7 @@ return function(cn,time)
 
 		server.changetime(((time*60)*1000))
 
-	else
+       else
 
 		return false, "max map.time is 13669"
 	end

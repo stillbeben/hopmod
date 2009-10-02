@@ -40,21 +40,15 @@ local function register_server(hostname, port, gameport, callback)
                         return
                     end
                     
-                    local arguments = line:split("[^ \n]+")
-                    
-                    if arguments[1] == "succreg" then
+                    local command, reason = line:match("([^ ]+)([ \n]*.*)\n")
+
+                    if command == "succreg" then
                         
                         complete(client, callback)
                         
-                    elseif arguments[1] == "failreg" then
-                        
-                        -- Learn more about regular expressions so I don't have to do stuff like this
-                        local failmsg = ""
-                        for i,v in ipairs(arguments) do
-                            if i > 1 then failmsg = failmsg .. v .. " " end
-                        end
-                        
-                        complete(client, callback, failmsg or "master server rejected registration")
+                    elseif command == "failreg" then
+                         
+                        complete(client, callback, reason or "master server rejected registration")
                         
                     else
                         
