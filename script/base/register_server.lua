@@ -10,55 +10,48 @@ end
 
 local function register_server(hostname, port, gameport, callback)
 
-    net.async_resolve(hostname, function(addresses)
+    local client = net.tcp_client()
+    
+    client:async_connect(hostname, port, function(errmsg)
         
-        if not addresses then
-            callback("could not resolve hostname " .. hostname)
-            return 
+        if errmsg then
+            complete(client, callback, errmsg)
+            return
         end
         
-        local client = net.tcp_client()
-        
-        client:async_connect(addresses[1], port, function(errmsg)
+        client:async_send(string.format("regserv %i\n", gameport), function(errmsg)
             
             if errmsg then
                 complete(client, callback, errmsg)
                 return
             end
             
-            client:async_send(string.format("regserv %i\n", gameport), function(errmsg)
+            client:async_read_until("\n", function(line, errmsg)
                 
-                if errmsg then
-                    complete(client, callback, errmsg)
+                if not line then
+                    complete(client, callback, errmsg or "failed to read reply from server")
                     return
                 end
                 
-                client:async_read_until("\n", function(line, errmsg)
-                    
-                    if not line then
-                        complete(client, callback, errmsg or "failed to read reply from server")
-                        return
-                    end
-                    
-                    local command, reason = line:match("([^ ]+)([ \n]*.*)\n")
+                local command, reason = line:match("([^ ]+)([ \n]*.*)\n")
 
-                    if command == "succreg" then
-                        
-                        complete(client, callback)
-                        
-                    elseif command == "failreg" then
-                         
-                        complete(client, callback, reason or "master server rejected registration")
-                        
-                    else
-                        
-                        complete(client, callback, "master server sent unknown reply")
-                    end
+                if command == "succreg" then
                     
-                end)
+                    complete(client, callback)
+                    
+                elseif command == "failreg" then
+                     
+                    complete(client, callback, reason or "master server rejected registration")
+                    
+                else
+                    
+                    complete(client, callback, "master server sent unknown reply")
+                end
+                
             end)
         end)
     end)
+    
 end
 
 local function update_now()
