@@ -57,9 +57,14 @@ end)
 server.event_handler("disconnect", function (cn,reason)
     
     local reason_tag = ""
-    if reason ~= "normal" then reason_tag = " because: " .. reason end
+    local ip = ""
     
-    log(string.format("%s(%i) disconnected%s, time %s",server.player_name(cn),cn,reason_tag,server.format_duration(server.player_connection_time(cn))))
+    if reason ~= "normal" then 
+        ip = "(" .. server.player_ip(cn) .. ")"
+        reason_tag = " because: " .. reason 
+    end
+    
+    log(string.format("%s(%i)%s disconnected%s, time %s", server.player_name(cn), cn, ip, reason_tag, server.format_duration(server.player_connection_time(cn))))
 end)
 
 server.event_handler("kick", function(cn, bantime, admin, reason)
