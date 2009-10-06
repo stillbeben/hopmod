@@ -8,11 +8,11 @@ namespace boost{
 namespace asio{
 
 template<typename SocketClass>
-class buffered_input_socket : public SocketClass
+class buffered_reading
 {
 public:
-    buffered_input_socket(boost::asio::io_service & service)
-        :SocketClass(service)
+    buffered_reading(SocketClass & socket)
+     :m_socket(socket)
     {
         
     }
@@ -20,41 +20,41 @@ public:
     template<typename ReadHandler>
     void async_read_until(char delim, ReadHandler handler)
     {
-        boost::asio::async_read_until(*this, m_read, delim, handler);
+        boost::asio::async_read_until(m_socket, m_buffer, delim, handler);
     }
     
     template<typename ReadHandler>
     void async_read_until(const std::string & delim, ReadHandler handler)
     {
-        boost::asio::async_read_until(*this, m_read, delim, handler);
+        boost::asio::async_read_until(m_socket, m_buffer, delim, handler);
     }
     
     template<typename ReadHandler>
     void async_read(const std::size_t readSize, ReadHandler handler)
     {
-        if(readSize < m_read.size())
+        if(readSize < m_buffer.size())
         {
-            SocketClass * super = this;
-            super->get_io_service().post(boost::bind(handler, boost::system::error_code(), readSize));
+            m_socket.get_io_service().post(boost::bind(handler, boost::system::error_code(), readSize));
         }
         else
         {
-            boost::asio::async_read(*this, m_read, boost::asio::transfer_at_least(readSize - m_read.size()), handler);
+            boost::asio::async_read(m_socket, m_buffer, boost::asio::transfer_at_least(readSize - m_buffer.size()), handler);
         }
     }
     
     const boost::asio::streambuf & read_buffer()const
     {
-        return m_read;
+        return m_buffer;
     }
     
     boost::asio::streambuf & read_buffer()
     {
-        return m_read;
+        return m_buffer;
     }
     
 private:
-    boost::asio::streambuf m_read;
+    SocketClass & m_socket;
+    boost::asio::streambuf m_buffer;
 };
 
 } //namespace asio
