@@ -196,6 +196,9 @@ function internal.commit()
         return
     end
 
+    local query_backend = internal.backends.query
+    internal.backends.query = nil
+    
     for i, backend in pairs(internal.backends) do
         catch_error(backend.commit_game, game, players, teams)
     end
