@@ -195,6 +195,7 @@ ip::tcp::socket masterserver_client_socket(main_io_service);
 deadline_timer update_timer(main_io_service);
 deadline_timer register_timer(main_io_service);
 deadline_timer netstats_timer(main_io_service);
+deadline_timer timeout_timer(main_io_service);
 
 void cleanupserver()
 {
@@ -214,6 +215,7 @@ void cleanupserver()
     update_timer.cancel();
     register_timer.cancel();
     netstats_timer.cancel();
+    timeout_timer.cancel();
 }
 
 void process(ENetPacket *packet, int sender, int chan);
@@ -724,17 +726,21 @@ void serverhost_process_event(ENetEvent & event)
     }
 }
 
-void serverhost_input(boost::system::error_code ec,const size_t s)
+void service_serverhost()
 {
-    if(!ec)
+    ENetEvent event;
+    while(enet_host_service(serverhost, &event, 0) == 1)
     {
-        ENetEvent event;
-        while(enet_host_service(serverhost, &event, 0) == 1)
-            serverhost_process_event(event);
-        
-        if(server::sendpackets()) enet_host_flush(serverhost); //treat EWOULDBLOCK as packet loss
+        serverhost_process_event(event);
     }
     
+    if(server::sendpackets()) enet_host_flush(serverhost); //treat EWOULDBLOCK as packet loss
+}
+
+void serverhost_input(boost::system::error_code error,const size_t s)
+{
+    if(error) return;
+    service_serverhost();
     serverhost_socket.async_receive(null_buffers(), serverhost_input);
 }
 
@@ -815,6 +821,14 @@ void netstats_handler(const boost::system::error_code & ec)
     netstats_timer.async_wait(netstats_handler);
 }
 
+void check_timeouts(const boost::system::error_code & ec)
+{
+    service_serverhost();
+    
+    timeout_timer.expires_from_now(boost::posix_time::seconds(15));
+    timeout_timer.async_wait(check_timeouts);
+}
+
 void rundedicatedserver()
 {
     #ifdef WIN32
@@ -835,6 +849,9 @@ void rundedicatedserver()
     
     netstats_timer.expires_from_now(boost::posix_time::minutes(1));
     netstats_timer.async_wait(netstats_handler);
+    
+    timeout_timer.expires_from_now(boost::posix_time::seconds(15));
+    timeout_timer.async_wait(check_timeouts);
     
     try
     {
