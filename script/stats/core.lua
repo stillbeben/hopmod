@@ -162,6 +162,8 @@ function internal.commit()
     for i, cn in ipairs(server.bots()) do
         local t = internal.updatePlayer(cn)
         if t.playing and game.finished then t.finished = true end
+        t.win = server.player_win(cn)
+        t.rank = server.player_rank(cn)
     end
     
     local human_players = 0
@@ -195,7 +197,7 @@ function internal.commit()
         players = nil
         return
     end
-
+    
     local query_backend = internal.backends.query
     internal.backends.query = nil
     
