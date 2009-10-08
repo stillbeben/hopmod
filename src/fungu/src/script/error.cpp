@@ -70,7 +70,12 @@ std::string error::get_error_message()const
         case NO_WRITE: return "cannot write";
         case NO_READ: return "cannot read";
         case PERMISSION_DENIED: return "permission denied";
-        case OPERATION_ERROR: return "function failure";
+        case OPERATION_ERROR:
+        {
+            boost::tuple<std::string> args = boost::any_cast<boost::tuple<std::string> >(m_args);
+            message<<boost::get<0>(args);
+            break;
+        }
         case HIT_RECURSION_LIMIT: return "hit the recursion limit";
         case MEMBER_ACCESS_CHAIN_LIMIT: return "too many members being accessed";
         case SCRIPT_THROW: 
