@@ -313,7 +313,7 @@ void update_hopmod()
 void started()
 {
     signal_started();
-    selectnextgame();
+    if(!smapname[0]) selectnextgame();
     
     if(access("log/restore", R_OK) == 0) restore_server("log/restore");
 }
