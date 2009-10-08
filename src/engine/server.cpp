@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <boost/asio.hpp>
 using namespace boost::asio;
+#include <enet/time.h>
 #include <iostream>
 
 static void shutdown_from_signal(int i)
@@ -195,7 +196,6 @@ ip::tcp::socket masterserver_client_socket(main_io_service);
 deadline_timer update_timer(main_io_service);
 deadline_timer register_timer(main_io_service);
 deadline_timer netstats_timer(main_io_service);
-deadline_timer timeout_timer(main_io_service);
 
 void cleanupserver()
 {
@@ -215,7 +215,6 @@ void cleanupserver()
     update_timer.cancel();
     register_timer.cancel();
     netstats_timer.cancel();
-    timeout_timer.cancel();
 }
 
 void process(ENetPacket *packet, int sender, int chan);
@@ -347,6 +346,17 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
     else sendclientpacket(packet, chan);
 #endif
     if(!packet->referenceCount) enet_packet_destroy(packet);
+}
+
+void disconnect_client_now(int n, int reason)
+{
+    if(clients[n]->type!=ST_TCPIP) return;
+    enet_peer_reset(clients[n]->peer);
+    server::clientdisconnect(n, reason);
+    clients[n]->type = ST_EMPTY;
+    clients[n]->peer->data = NULL;
+    server::deleteclientinfo(clients[n]->info);
+    clients[n]->info = NULL;
 }
 
 void disconnect_client(int n, int reason)
@@ -660,6 +670,76 @@ void updatemasterserver()
     requestmasterf("regserv %d\n", serverport);
 }
 
+static void check_peer_timeout(ENetHost * host, ENetPeer * peer)
+{
+    /*
+        Most of the code in this function was copied from enet/protocol.c
+    */
+    
+    ENetOutgoingCommand * outgoingCommand;
+    ENetListIterator currentCommand, insertPosition;
+
+    currentCommand = enet_list_begin (& peer -> sentReliableCommands);
+    insertPosition = enet_list_begin (& peer -> outgoingReliableCommands);
+
+    while (currentCommand != enet_list_end (& peer -> sentReliableCommands))
+    {
+       outgoingCommand = (ENetOutgoingCommand *) currentCommand;
+
+       currentCommand = enet_list_next (currentCommand);
+        
+       if (ENET_TIME_DIFFERENCE (host -> serviceTime, outgoingCommand -> sentTime) < outgoingCommand -> roundTripTimeout)
+         continue;
+
+       if (peer -> earliestTimeout == 0 ||
+           ENET_TIME_LESS (outgoingCommand -> sentTime, peer -> earliestTimeout))
+         peer -> earliestTimeout = outgoingCommand -> sentTime;
+
+       if (peer -> earliestTimeout != 0 &&
+             (ENET_TIME_DIFFERENCE (host -> serviceTime, peer -> earliestTimeout) >= ENET_PEER_TIMEOUT_MAXIMUM ||
+               (outgoingCommand -> roundTripTimeout >= outgoingCommand -> roundTripTimeoutLimit &&
+                 ENET_TIME_DIFFERENCE (host -> serviceTime, peer -> earliestTimeout) >= ENET_PEER_TIMEOUT_MINIMUM)))
+       {
+            client *c = (client *)peer->data;
+            disconnect_client_now(c->num, DISC_TIMEOUT);
+            return;
+       }
+
+       if (outgoingCommand -> packet != NULL)
+         peer -> reliableDataInTransit -= outgoingCommand -> fragmentLength;
+          
+       ++ peer -> packetsLost;
+
+       outgoingCommand -> roundTripTimeout *= 2;
+
+       enet_list_insert (insertPosition, enet_list_remove (& outgoingCommand -> outgoingCommandList));
+
+       if (currentCommand == enet_list_begin (& peer -> sentReliableCommands) &&
+           ! enet_list_empty (& peer -> sentReliableCommands))
+       {
+          outgoingCommand = (ENetOutgoingCommand *) currentCommand;
+
+          peer -> nextTimeout = outgoingCommand -> sentTime + outgoingCommand -> roundTripTimeout;
+       }
+    }
+}
+
+static void check_timeouts()
+{
+    enet_host_flush(serverhost); // called for the serviceTime update
+    
+    for(ENetPeer * currentPeer = serverhost->peers; 
+        currentPeer < &serverhost->peers[serverhost->peerCount]; 
+        currentPeer++)
+    {
+        if (currentPeer -> state == ENET_PEER_STATE_DISCONNECTED ||
+            currentPeer -> state == ENET_PEER_STATE_ZOMBIE)
+          continue;
+        
+        check_peer_timeout(serverhost, currentPeer);
+    }
+}
+
 void update_server(const boost::system::error_code & error)
 {
     if(error) return;
@@ -679,6 +759,8 @@ void update_server(const boost::system::error_code & error)
     
     update_timer.expires_from_now(boost::posix_time::milliseconds(5));
     update_timer.async_wait(update_server);
+    
+    check_timeouts();
 }
 
 void serverhost_process_event(ENetEvent & event)
@@ -821,14 +903,6 @@ void netstats_handler(const boost::system::error_code & ec)
     netstats_timer.async_wait(netstats_handler);
 }
 
-void check_timeouts(const boost::system::error_code & ec)
-{
-    service_serverhost();
-    
-    timeout_timer.expires_from_now(boost::posix_time::seconds(15));
-    timeout_timer.async_wait(check_timeouts);
-}
-
 void rundedicatedserver()
 {
     #ifdef WIN32
@@ -849,9 +923,6 @@ void rundedicatedserver()
     
     netstats_timer.expires_from_now(boost::posix_time::minutes(1));
     netstats_timer.async_wait(netstats_handler);
-    
-    timeout_timer.expires_from_now(boost::posix_time::seconds(15));
-    timeout_timer.async_wait(check_timeouts);
     
     try
     {
