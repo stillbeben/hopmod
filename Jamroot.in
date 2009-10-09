@@ -53,6 +53,7 @@ lib sauertools :
 lib serverscripting :
     src/hopmod/signals.cpp
     src/hopmod/scripting.cpp
+    src/hopmod/lua/crypto.cpp
     /lua//lua
     /boost//headers
     /boost//signals

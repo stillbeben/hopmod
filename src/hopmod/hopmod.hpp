@@ -15,6 +15,7 @@ extern "C"{
 #include "utils.hpp"
 #include "masterserver_client.hpp"
 #include "lnetlib.hpp"
+#include "lua/modules.hpp"
 
 #define GEOIP_NO_RESULT ""
 bool geoip_supported();

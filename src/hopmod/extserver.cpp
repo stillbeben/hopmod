@@ -256,6 +256,7 @@ void init_hopmod()
     init_script_socket();
     
     register_lnetlib();
+    lua::module::open_crypto(get_script_env().get_lua_state());
     
     try
     {
