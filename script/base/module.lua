@@ -19,20 +19,30 @@ local script_paths = {
     [7] = "./conf/%s.cs"
 }
 
-function server.script(filename)
+local function find_script(filename)
+    
+    local real_filename
     
     for i, path in ipairs(script_paths) do
         
         local candidateFilename = string.format(path, filename)
         
         if server.file_exists(candidateFilename) then
-            filename = candidateFilename
+            real_filename = candidateFilename
             break
         end
     end
     
+    return real_filename
+end
+
+server.find_script = find_script
+
+function server.script(filename)
+    
+    filename = find_script(filename) or filename
+    
     if loaded_scripts[filename] then
-        server.log_error(string.format("Already loaded script \"%s\".", filename))
         return nil
     end
     
