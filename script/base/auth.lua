@@ -143,7 +143,7 @@ server.event_handler("request_auth_challenge", function(cn, name, domain)
     
 end)
 
-server.event_handler("authrep", function(cn, reqid, answer)
+server.event_handler("auth_challenge_response", function(cn, reqid, answer)
 
     reqid = tonumber(reqid)
     local req = auth_request[reqid]
