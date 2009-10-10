@@ -134,7 +134,7 @@ server.event_handler("request_auth_challenge", function(cn, name, domain)
             
             local ans,chal = server.genchallenge(user_row.pubkey)
             req.answer = ans
-            server.sendauthchallenge(cn, chal)
+            server.send_auth_challenge_to_client(cn, chal)
             
         else
             server.signal_auth_failure(cn, req_id)

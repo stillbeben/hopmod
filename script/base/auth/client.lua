@@ -112,9 +112,9 @@ local function request_constructor(socket, id, name, domain)
     }
 end
 
-local function client_constructor(socket)
+local function client_constructor()
 
-    local next_request_id = 1
+    local socket = net.tcp_client()
     local pending_requests = {}
     
     local function read_error()
@@ -162,11 +162,12 @@ local function client_constructor(socket)
         socket:close()
     end
     
-    local function new_request(unused, name, domain)
+    local function new_request(unused, request_id, name, domain)
         
-        local object = request_constructor(socket, next_request_id, name, domain)
-        pending_requests[next_request_id] = object
-        next_request_id = next_request_id + 1
+        if pending_requests[request_id] then error("request_id collison") end
+        
+        local object = request_constructor(socket, request_id, name, domain)
+        pending_requests[request_id] = object
         
         return object
     end

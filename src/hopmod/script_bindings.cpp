@@ -191,10 +191,10 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::delegateauth, "delegateauth", env);
     script::bind_freefunc(server::relayauthanswer, "relayauthanswer", env);
     script::bind_freefunc(server::send_auth_request, "send_auth_request", env);
-    script::bind_freefunc(server::sendauthchallenge, "sendauthchallenge", env);
+    script::bind_freefunc(server::sendauthchallenge, "send_auth_challenge_to_client", env);
     script::bind_freefunc(server::signal_auth_success, "signal_auth_success", env);
     script::bind_freefunc(server::signal_auth_failure, "signal_auth_failure", env);
-    
+        
     // script_socket functions
     script::bind_freefunc(script_socket_supported, "script_socket_supported?", env);
     script::bind_freefunc(open_script_socket, "script_socket_server", env);
