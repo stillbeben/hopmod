@@ -78,7 +78,7 @@ auth_domain_handlers = {}
 auth = {}
 auth.authserver_offline = false
 
-server.event_handler("authreq", function(cn, name, domain)
+server.event_handler("request_auth_challenge", function(cn, name, domain)
 
     local req_id = server.player_authreq(cn)
     auth_request[req_id] = {}

@@ -211,7 +211,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_teamkill, "teamkill", normal_error_handler);
     slots.register_signal(signal_frag, "frag", normal_error_handler);
     slots.register_signal(signal_auth, "auth", normal_error_handler);
-    slots.register_signal(signal_authreq, "authreq", normal_error_handler);
+    slots.register_signal(signal_authreq, "request_auth_challenge", normal_error_handler);
     slots.register_signal(signal_authrep, "authrep", normal_error_handler);
     slots.register_signal(signal_addbot, "addbot", normal_error_handler);
     slots.register_signal(signal_delbot, "delbot", normal_error_handler);
