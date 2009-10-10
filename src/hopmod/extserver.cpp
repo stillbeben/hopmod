@@ -1007,7 +1007,7 @@ void sendauthchallenge(int cn, const char * challenge)
     sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, ci->authdomain, ci->authreq, challenge);
 }
 
-void sendauthreq(int cn, const char * domain)
+void send_auth_request(int cn, const char * domain)
 {
     clientinfo * ci = get_ci(cn);
     sendf(ci->clientnum, 1, "ris", SV_REQAUTH, domain);

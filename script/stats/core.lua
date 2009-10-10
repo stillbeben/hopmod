@@ -106,7 +106,7 @@ function internal.addPlayer(cn)
         if pvars.players_auth_name then
             t.auth_name = pvars.players_auth_name
         else
-            auth.sendauthreq(cn, domain_name)
+            auth.send_auth_request(cn, domain_name)
         end
     end
     

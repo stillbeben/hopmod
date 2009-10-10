@@ -60,7 +60,7 @@ local function run(cn,pw)
 	else
 
 		server.player_vars(cn).invadmin = invadmin_domain
-		auth.sendauthreq(cn,invadmin_domain)
+		auth.send_auth_request(cn,invadmin_domain)
 	end
 
 end

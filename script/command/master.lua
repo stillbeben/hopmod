@@ -57,7 +57,7 @@ local function run(cn,master_domain)
 			if master_domain == domain then
 
 				server.player_vars(cn).master = domain
-				auth.sendauthreq(cn,domain)
+				auth.send_auth_request(cn,domain)
 				break
 			end
 		end

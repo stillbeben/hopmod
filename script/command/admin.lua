@@ -46,7 +46,7 @@ local function run(cn)
     else
 
         server.player_vars(cn).admin = admin_domain
-        auth.sendauthreq(cn,admin_domain)
+        auth.send_auth_request(cn,admin_domain)
     end
 
 end

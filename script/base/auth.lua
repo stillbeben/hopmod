@@ -363,10 +363,10 @@ function auth.cleanup_request(cn, req_id)
     auth_request[req_id] = nil
 end
 
-function auth.sendauthreq(cn, domain_name)
+function auth.send_auth_request(cn, domain_name)
 
     if not auth.has_request_pending(cn, domain_name) then
-        server.sendauthreq(cn, domain_name)
+        server.send_auth_request(cn, domain_name)
         server.player_vars(cn).authreq_domain = domain_name -- not a full-proof way of detecting duplicates
     end
     

@@ -41,7 +41,7 @@ local function checkPlayerName(cn)
 
     if auth.found_name(playername, domain_id) and not isPlayerVerified(cn) then
     
-        auth.sendauthreq(cn, domain_name)
+        auth.send_auth_request(cn, domain_name)
         
         local sid = server.player_sessionid(cn)
         local pid = server.player_id(cn)
@@ -81,7 +81,7 @@ end)
 
 local function auth_command(cn)
 
-	auth.sendauthreq(cn,domain_name)
+	auth.send_auth_request(cn,domain_name)
 
 end
 

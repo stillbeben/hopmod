@@ -157,7 +157,7 @@ namespace server
     bool delegateauth(int,const char *);
     bool relayauthanswer(int,const char *);
     void sendauthchallenge(int,const char *);
-    void sendauthreq(int, const char *);
+    void send_auth_request(int, const char *);
     void signal_auth_success(int,int);
     void signal_auth_failure(int,int);
     
