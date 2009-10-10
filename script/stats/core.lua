@@ -14,8 +14,7 @@ local game = nil
 local players = nil
 local internal = {}
 
-local domain_id
-local domain_name
+local auth_domain
 
 function internal.setNewGame()
     game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map, finished = false}
@@ -99,14 +98,14 @@ function internal.addPlayer(cn)
     
     local human = not server.player_isbot(cn)
     
-    if human and domain_id then
+    if human and auth_domain then
         
         local pvars = server.player_pvars(cn)
 
         if pvars.players_auth_name then
             t.auth_name = pvars.players_auth_name
         else
-            auth.send_auth_request(cn, domain_name)
+            auth.send_auth_request(cn, auth_domain)
         end
     end
     
@@ -145,10 +144,10 @@ function internal.commit()
         t.win = server.player_win(cn)
         t.rank = server.player_rank(cn)
         
-        if domain_name and t.auth_name then
+        if auth_domain and t.auth_name then
             
             if server.stats_tell_auth_name == 1 then
-                server.player_msg(cn, string.format("Saving your stats as %s@%s", t.auth_name, domain_name))
+                server.player_msg(cn, string.format("Saving your stats as %s@%s", t.auth_name, auth_domain))
             end
             
             if server.stats_overwrite_name_with_authname == 1 then
@@ -212,13 +211,19 @@ function internal.commit()
 end
 
 function internal.loadAuthHandlers(domain)
+
+    local found_domain = auth.directory.get_domain(domain)
+
+    if not found_domain then
+        server.log_error("stats auth won't be supported: unknown domain " .. tostring(domain))
+        return
+    end
+
+    auth_domain = domain
     
-    domain_id = auth.get_domain_id(domain)
-    if not domain_id then error(string.format("players auth domain '%s' not found", domain)) end
-    
-    domain_name = domain
-    
-    local handler_id = auth.add_domain_handler(domain_name, function(cn, name)
+    local listener_id = auth.listener(auth_domain, function(cn, user_id, domain, status)
+        
+        if status ~= auth.request_status.SUCCESS then return end
         
         server.player_pvars(cn).stats_auth_name = name
         server.player_vars(cn).stats_auth_name = name
@@ -230,7 +235,7 @@ function internal.loadAuthHandlers(domain)
     end)
 
     function internal.unloadAuthHandlers()
-        auth.cancel_domain_handler(handler_id)
+        auth.cancel_listener(listener_id)
     end
 end
 
@@ -288,7 +293,7 @@ function internal.initialize(tableOfBackends, settings)
     internal.loadEventHandlers()
     
     if settings.using_auth == 1 then
-        internal.loadAuthHandlers(settings.auth_domain_name)
+        internal.loadAuthHandlers(settings.auth_domain)
     end
     
     internal.backends = tableOfBackends

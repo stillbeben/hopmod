@@ -116,8 +116,11 @@ local function client_constructor()
 
     local socket = net.tcp_client()
     local pending_requests = {}
+    local read_failed = false
     
     local function read_error()
+        
+        read_failed = true
         
         for i,request in pairs(pending_requests) do
             request:process_failure()
@@ -151,9 +154,11 @@ local function client_constructor()
     
     local function connect(unused, ip, port, callback)
         socket:async_connect(ip, port, function(errmsg)
+
             if not errmsg then
                 read_reply()
             end
+            
             callback(errmsg)
         end)
     end
@@ -172,10 +177,15 @@ local function client_constructor()
         return object
     end
     
+    local function has_failed()
+        return read_failed
+    end
+    
     return {
         connect = connect,
         disconnect = disconnect,
-        new_request = new_request
+        new_request = new_request,
+        has_failed = has_failed
     }
 end
 

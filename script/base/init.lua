@@ -7,7 +7,7 @@ load_once("base/maprotation") -- the reason this can be loaded now instead as a 
 load_once("base/mute")
 load_once("base/banner")
 
-server.module("base/auth.lua")
+server.module("base/auth/init")
 server.module("base/mapvote")
 server.module("base/register_server")
 

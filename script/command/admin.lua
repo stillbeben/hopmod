@@ -1,55 +1,24 @@
 --[[
 
-	A player command to raise privilege to admin
-
+	A player command to raise privilege to admin using auth
 ]]
 
+local admin_domain = server.admin_domain or ""
 
-local events = {}
-
-local admin_domain = server.admin_domain
-
-
-local function init()
-
-	events.domain_handler = auth.add_domain_handler(admin_domain, function(cn,name)
-
-		if server.player_vars(cn).admin and server.player_vars(cn).admin == admin_domain then
-
-			server.player_vars(cn).admin = nil
-			server.setadmin(cn)
-			server.msg(server.player_displayname(cn) .. " claimed admin as '" .. magenta(name) .. "'")
-		end
-
-	end)
-
-end
-
-
-local function unload()
-
-	if events.domain_handler then
-
-		auth.cancel_domain_handler(admin_domain,events.domain_handler)
-		events.domain_handler = nil
-	end
-
-end
-
+local function init() end
+local function unload() end
 
 local function run(cn)
 
-    if server.player_priv_code(cn) > 0 then
-
-        server.unsetmaster(cn)
-
-    else
-
-        server.player_vars(cn).admin = admin_domain
-        auth.send_auth_request(cn,admin_domain)
-    end
-
+    auth.send_request(cn, admin_domain, function(cn, user_id, domain, status)
+        
+        if status ~= auth.request_status.SUCCESS then return end
+    
+        server.setadmin(cn)
+        server.msg(server.player_displayname(cn) .. " claimed admin as '" .. magenta(user_id) .. "'")
+        
+    end)
+    
 end
-
 
 return {init = init,run = run,unload = unload}

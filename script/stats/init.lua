@@ -48,7 +48,7 @@ end
 
 loadfile("./script/stats/core.lua")().initialize(backends,{
         using_auth = server.stats_use_auth,
-        auth_domain_name = server.stats_auth_domain
+        auth_domain = server.stats_auth_domain
     })
 
 -- Load and register the #stats player command
