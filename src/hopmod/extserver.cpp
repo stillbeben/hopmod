@@ -12,9 +12,6 @@ int sv_kick_hit_length = 0;
 int sv_remip_hit_length = 0;
 int sv_newmap_hit_length = 0;
 
-static boost::signals::connection close_listenserver_slot;
-static bool reload = false;
-
 bool kick_bannedip_group = true;
 
 string authserver_hostname = "";
@@ -97,7 +94,7 @@ struct restore_teamscore
     int score;
 };
 
-static void crash_handler(int signal)
+void crash_handler(int signal)
 {
     unlink_script_pipe();
     
@@ -172,7 +169,7 @@ static void crash_handler(int signal)
 
 }
 
-static void restore_server(const char * filename)
+void restore_server(const char * filename)
 {
     int fd = open(filename, O_RDONLY, 0);
     if(fd == -1) return;
@@ -219,119 +216,6 @@ static void restore_server(const char * filename)
     
     close(fd);
     unlink(filename);
-}
-
-void init_hopmod()
-{
-    set_maintenance_frequency(86400000);
-    
-    struct sigaction crash_action;
-    sigemptyset(&crash_action.sa_mask);
-    crash_action.sa_handler = &crash_handler;
-    crash_action.sa_flags = SA_RESETHAND;
-    
-    sigaction(SIGILL, &crash_action, NULL);
-    sigaction(SIGABRT, &crash_action, NULL);
-    sigaction(SIGFPE, &crash_action, NULL);
-    sigaction(SIGBUS, &crash_action, NULL);
-    sigaction(SIGSEGV, &crash_action, NULL);
-    sigaction(SIGSYS, &crash_action, NULL);
-    
-    copystring(authserver_hostname, defaultmaster());
-    
-    init_scripting();
-    
-    register_server_script_bindings(get_script_env());
-    
-    register_signals(get_script_env());
-    
-    close_listenserver_slot = signal_shutdown.connect(&cleanupserver);
-    signal_shutdown.connect(&shutdown_scripting);
-    
-    init_scheduler();
-    
-    init_script_pipe();
-    open_script_pipe("serverexec",511,get_script_env());
-    
-    init_script_socket();
-    
-    register_lnetlib();
-    lua::module::open_crypto(get_script_env().get_lua_state());
-    
-    try
-    {
-        fungu::script::execute_file("script/base/init.cs", get_script_env());
-    }
-    catch(fungu::script::error_trace * error)
-    {
-        report_script_error(error);
-    }
-}
-
-void reload_hopmod()
-{
-    if(!reload)
-    {
-        reload = true;
-        return;
-    }
-    else reload = false;
-    
-    signal_reloadhopmod();
-    
-    close_listenserver_slot.block();
-    signal_shutdown();
-    close_listenserver_slot.unblock();
-    
-    disconnect_all_slots();
-    
-    init_hopmod();
-    
-    started();
-    
-    std::cout<<"-> Reloaded Hopmod."<<std::endl;
-}
-
-void update_hopmod()
-{
-    if(reload) reload_hopmod();
-    
-    run_script_pipe_service(totalmillis);
-    run_script_socket_service();
-    
-    update_scheduler(totalmillis);
-    cleanup_dead_slots();
-    
-    check_authserver();
-    
-    if(maintenance_frequency != 0 && totalmillis > maintenance_time && clients.empty())
-    {
-        signal_maintenance();
-        maintenance_time = totalmillis + maintenance_frequency;
-    }
-}
-
-void started()
-{
-    signal_started();
-    if(!smapname[0]) selectnextgame();
-    
-    if(access("log/restore", R_OK) == 0) restore_server("log/restore");
-}
-
-void shutdown()
-{
-    signal_shutdown();
-    stop_restarter();
-    exit(0);
-}
-
-void restart_now()
-{
-    sendservmsg("Server restarting...");
-    start_restarter();
-    signal_shutdown();
-    exit(0);
 }
 
 struct kickinfo
@@ -472,28 +356,97 @@ std::string player_displayname(int cn)
     return output;
 }
 
-const char * player_team(int cn){return get_ci(cn)->team;}
-const char * player_ip(int cn){return get_ci(cn)->hostname();}
-int player_iplong(int cn){return getclientip(get_ci(cn)->clientnum);}
-int player_status_code(int cn){return get_ci(cn)->state.state;}
-int player_ping(int cn){return get_ci(cn)->ping;}
-int player_lag(int cn){return get_ci(cn)->lag;}
-int player_frags(int cn){return get_ci(cn)->state.frags;}
-int player_deaths(int cn){return get_ci(cn)->state.deaths;}
-int player_suicides(int cn){return get_ci(cn)->state.suicides;}
-int player_teamkills(int cn){return get_ci(cn)->state.teamkills;}
-int player_damage(int cn){return get_ci(cn)->state.damage;}
+const char * player_team(int cn)
+{
+    return get_ci(cn)->team;
+}
+
+const char * player_ip(int cn)
+{
+    return get_ci(cn)->hostname();
+}
+
+int player_iplong(int cn)
+{
+    return getclientip(get_ci(cn)->clientnum);
+}
+
+int player_status_code(int cn)
+{
+    return get_ci(cn)->state.state;
+}
+
+int player_ping(int cn)
+{
+    return get_ci(cn)->ping;
+}
+
+int player_lag(int cn)
+{
+    return get_ci(cn)->lag;
+}
+
+int player_frags(int cn)
+{
+    return get_ci(cn)->state.frags;
+}
+
+int player_deaths(int cn)
+{
+    return get_ci(cn)->state.deaths;
+}
+
+int player_suicides(int cn)
+{
+    return get_ci(cn)->state.suicides;
+}
+
+int player_teamkills(int cn)
+{
+    return get_ci(cn)->state.teamkills;
+}
+
+int player_damage(int cn)
+{
+    return get_ci(cn)->state.damage;
+}
+
 int player_damagewasted(int cn)
 {
     clientinfo * ci = get_ci(cn);
     return ci->state.explosivedamage + ci->state.shotdamage - ci->state.damage;
 }
-int player_maxhealth(int cn){return get_ci(cn)->state.maxhealth;}
-int player_health(int cn){return get_ci(cn)->state.health;}
-int player_gun(int cn){return get_ci(cn)->state.gunselect;}
-int player_hits(int cn){return get_ci(cn)->state.hits;}
-int player_misses(int cn){return get_ci(cn)->state.misses;}
-int player_shots(int cn){return get_ci(cn)->state.shots;}
+
+int player_maxhealth(int cn)
+{
+    return get_ci(cn)->state.maxhealth;
+}
+
+int player_health(int cn)
+{
+    return get_ci(cn)->state.health;
+}
+
+int player_gun(int cn)
+{
+    return get_ci(cn)->state.gunselect;
+}
+
+int player_hits(int cn)
+{
+    return get_ci(cn)->state.hits;
+}
+
+int player_misses(int cn)
+{
+    return get_ci(cn)->state.misses;
+}
+
+int player_shots(int cn)
+{
+    return get_ci(cn)->state.shots;
+}
+
 int player_accuracy(int cn)
 {
     clientinfo * ci = get_ci(cn);
@@ -502,7 +455,10 @@ int player_accuracy(int cn)
     return static_cast<int>(roundf(static_cast<float>(hits)/std::max(shots,1)*100));
 }
 
-int player_privilege_code(int cn){return get_ci(cn)->privilege;}
+int player_privilege_code(int cn)
+{
+    return get_ci(cn)->privilege;
+}
 
 const char * player_privilege(int cn)
 {
@@ -1155,12 +1111,6 @@ std::vector<std::string> get_bans()
         result.push_back(it->to_string());
     
     return result;
-}
-
-void set_maintenance_frequency(unsigned int frequency)
-{
-    maintenance_frequency = frequency;
-    maintenance_time = totalmillis + frequency;
 }
 
 #endif

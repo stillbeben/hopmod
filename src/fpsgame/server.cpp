@@ -16,7 +16,6 @@ namespace game
 }
 
 extern ENetAddress masteraddress;
-extern void cleanupserver();
 
 namespace server
 {
@@ -451,9 +450,6 @@ namespace server
     
     timer::time_diff_t timer_alarm_threshold = 1000000;
     
-    int maintenance_time = 0;
-    unsigned int maintenance_frequency = 0;
-    
     struct servmode
     {
         virtual ~servmode() {}
@@ -594,7 +590,7 @@ namespace server
         loopv(clients) if(i!=exclude && (!nospec || clients[i]->state.state!=CS_SPECTATOR) && (!noai || clients[i]->state.aitype == AI_NONE)) n++;
         return n;
     }
-
+    
     bool duplicatename(clientinfo *ci, char *name)
     {
         if(!name) name = ci->name;
@@ -1844,7 +1840,7 @@ namespace server
         }
 
         loopv(connects) if(totalmillis-connects[i]->connectmillis>15000) disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
-
+        
         if(masterupdate) 
         { 
             clientinfo *m = currentmaster>=0 ? getinfo(currentmaster) : NULL;
@@ -1993,7 +1989,7 @@ namespace server
     void clientdisconnect(int n,int reason) 
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
-        
+
         const char * disc_reason_msg = "normal";
         if(reason != DISC_NONE)
         {

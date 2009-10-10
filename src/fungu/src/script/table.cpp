@@ -6,8 +6,6 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
-#include <iostream>
-
 namespace fungu{
 namespace script{
 
@@ -41,27 +39,6 @@ private:
     internal_iterator m_it;
     internal_iterator m_end;
 };
-    
-#if 0
-table::table(const json::object * source)
-{
-    if(source)
-    {
-        for(json::object::const_iterator it = source->begin();
-            it != source->end(); it++)
-        {
-            any_variable * a = new any_variable;
-            a->set_adopted();
-            if(it->second->get_type() == typeid(json::object))
-                a->assign(create(any_cast<json::object>(it->second.get())));
-            else a->assign(*it->second);
-            m_members[it->first] = a->get_shared_ptr();
-        }
-    }
-    
-    m_members[".this"] = this->get_shared_ptr();
-}
-#endif
 
 table::table()
 {
@@ -92,28 +69,6 @@ result_type table::call(call_arguments & args,frame *)
     }
     return obj->get_shared_ptr();
 }
-
-#if 0
-result_type table::value()
-{
-    std::stringstream output;
-    int shown = 0;
-    output<<"{";
-    for(map::const_iterator it = m_members.begin();
-        it != m_members.end(); ++it)
-    {
-        if(it->first[0]=='.') continue; //hidden member
-        output<<(!shown++ ? "" : ",")<<"\""<<it->first<<"\":";
-        const any & var = static_cast<any_variable *>(it->second.get())->get_any();
-        bool is_table = var.get_type() == typeid(shared_ptr) && 
-            typeid(*any_cast<shared_ptr>(var).get()) == typeid(table);
-        if(is_table) output<<any_cast<std::string>(any_cast<shared_ptr>(var)->value());
-        else output<<lexical_cast_detail::write_json_value(&var);
-    }
-    output<<"}";
-    return output.str();
-}
-#endif
 
 env::object::shared_ptr table::assign(const std::string & name,const any & data)
 {

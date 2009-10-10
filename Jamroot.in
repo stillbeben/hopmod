@@ -54,6 +54,7 @@ lib serverscripting :
     src/hopmod/signals.cpp
     src/hopmod/scripting.cpp
     src/hopmod/lua/crypto.cpp
+    src/hopmod/lua/net.cpp
     /lua//lua
     /boost//headers
     /boost//signals
@@ -71,6 +72,7 @@ lib rt : : <name>rt ;
 exe sauer_server :
     src/engine/server.cpp
     src/fpsgame/server.cpp
+    src/hopmod/startup.cpp
     src/hopmod/scripting.cpp
     src/hopmod/script_bindings.cpp
     src/hopmod/script_pipe.cpp
@@ -82,7 +84,6 @@ exe sauer_server :
     src/hopmod/playerid.cpp
     src/hopmod/restarter.cpp
     src/hopmod/utils.cpp
-    src/hopmod/lnetlib.cpp
     src/hopmod/md5.c
     sauertools
     serverscripting

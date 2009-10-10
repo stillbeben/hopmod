@@ -14,8 +14,12 @@ extern "C"{
 #include "timedbans_service.hpp"
 #include "utils.hpp"
 #include "masterserver_client.hpp"
-#include "lnetlib.hpp"
 #include "lua/modules.hpp"
+
+void init_hopmod();
+void reload_hopmod();
+void update_hopmod();
+void restart_now();
 
 #define GEOIP_NO_RESULT ""
 bool geoip_supported();
@@ -80,5 +84,8 @@ extern bool using_command_prefix;
 #define GREY "\f4"
 #define MAGENTA "\f5"
 #define ORANGE "\f6"
+
+extern unsigned int maintenance_frequency;
+void set_maintenance_frequency(unsigned int);
 
 #endif

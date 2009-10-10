@@ -15,8 +15,6 @@
 
 require "net"
 
-local function empty_function() end
-
 local function request_constructor(socket, id, name, domain)
     
     local completed = false

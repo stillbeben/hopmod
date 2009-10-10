@@ -1,7 +1,22 @@
 
 local using_sqlite = (server.auth_use_sqlite == 1)
-local db, perr, search_for_domain, select_local_domains, is_domain_local, search_for_user, select_domain_users, insert_user, insert_domain
+local db, perr
+
+-- Prepared SQL statements
+local   search_for_domain, 
+        select_local_domains, 
+        is_domain_local, 
+        search_for_user, 
+        select_domain_users, 
+        insert_user, 
+        insert_domain, 
+        select_server_by_id,
+        select_server_by_name,
+        search_for_server,
+        insert_server
+
 local domains -- only used when not using sqlite
+local servers
 
 if using_sqlite then
 
@@ -31,6 +46,18 @@ if using_sqlite then
 
     insert_domain, perr = db:prepare("INSERT INTO domains (name, local) VALUES (:name,:local)")
     if not insert_domain then error(perr) end
+    
+    select_server_by_id, perr = db:prepare("SELECT * FROM servers WHERE id = :id")
+    if not select_server_by_id then error(perr) end
+    
+    select_server_by_name, perr = db:prepare("SELECT * FROM servers WHERE servername = :servername")
+    if not select_server_by_name then error(perr) end
+    
+    search_for_server, perr = db:prepare("SELECT * FROM servers WHERE hostname = :hostname")
+    if not search_for_server then error(perr) end
+    
+    insert_server, perr = db:prepare("INSERT INTO servers (servername, hostname, port) VALUES (:servername, :hostname, :port)")
+    if not insert_server then error(perr) end
     
     server.event_handler("shutdown", function()
         if db then db:close() end
@@ -345,7 +372,7 @@ function auth.sendauthreq(cn, domain_name)
     
 end
 
-server.auth_add_user = auth.add_user
 server.auth_add_domain = auth.add_domain
+server.auth_add_user = auth.add_user
 server.auth_is_domain_local = auth.is_domain_local
 server.auth_get_domain_id = auth.get_domain_id

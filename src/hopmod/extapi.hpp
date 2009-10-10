@@ -62,10 +62,6 @@ namespace server
     extern bool enable_extinfo;
     extern bool kick_bannedip_group;
     
-    void init_hopmod();
-    void reload_hopmod();
-    void update_hopmod();
-    
     int player_sessionid(int);
     int player_id(int);
     void player_msg(int,const char *);
@@ -169,8 +165,6 @@ namespace server
     void authsucceeded(uint id);
     void authchallenged(uint id, const char *val);
     
-    void restart_now();
-    
     void suicide(int);
     
     // Flood protection vars
@@ -185,8 +179,13 @@ namespace server
     
     extern std::vector<std::string> get_bans();
     
-    extern unsigned int maintenance_frequency;
-    void set_maintenance_frequency(unsigned int);
+    void crash_handler(int signal);
+    
+    void restore_server(const char * filename);
+    
+    void check_authserver();
+    
+    void sendservmsg(const char *);
     
 } //namespace server
 

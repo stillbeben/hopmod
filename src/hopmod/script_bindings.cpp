@@ -119,12 +119,12 @@ void register_server_script_bindings(script::env & env)
     register_lua_function(&server::lua_team_players, "team_players");
     
     // Server-oriented functions and variables
-    script::bind_freefunc(server::reload_hopmod, "reloadscripts", env);
+    script::bind_freefunc(reload_hopmod, "reloadscripts", env);
     script::bind_freefunc(server::pausegame,"pausegame",env);
     script::bind_ro_var(server::gamepaused, "paused", env);
     script::bind_freefunc(server::sendservmsg, "msg", env);
     script::bind_freefunc(server::shutdown, "shutdown", env);
-    script::bind_freefunc(server::restart_now, "restart_now", env);
+    script::bind_freefunc(restart_now, "restart_now", env);
     script::bind_freefunc(server::changetime, "changetime", env);
     script::bind_freefunc(server::changemap,"changemap", env, &changemap_defargs);
     script::bind_freefunc(server::addpermban, "permban", env);
@@ -153,9 +153,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(maxclients, "maxplayers", env);
     script::bind_var(serverip, "serverip", env);
     script::bind_var(serverport, "serverport", env);
-    //script::bind_var(mastername, "masterserver", env);
     script::bind_var(server::authserver_hostname, "authserver", env);
-    //script::bind_var(allowupdatemaster, "updatemaster", env);
     script::bind_var(server::next_gamemode, "next_mode", env);
     script::bind_var(server::next_mapname, "next_map", env);
     script::bind_var(server::next_gametime, "next_gametime", env);
@@ -277,8 +275,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(parse_player_command_line, "parse_player_command", env);
     
     script::bind_property<unsigned int>(
-        boost::bind(script::property<unsigned int>::generic_getter, server::maintenance_frequency),
-        server::set_maintenance_frequency, "maintenance_frequency", env);
+        boost::bind(script::property<unsigned int>::generic_getter, maintenance_frequency),
+        set_maintenance_frequency, "maintenance_frequency", env);
     
     script::bind_freefunc(md5sum, "md5sum", env);
     

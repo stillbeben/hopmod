@@ -2,7 +2,6 @@
     A Lua Network Library module developed for Hopmod
     Copyright (C) 2009 Graham Daws
 */
-#include "lnetlib.hpp"
 #include "main_io_service.hpp"
 #include "hopmod.hpp"
 #include <netinet/in.h> //byte ordering functions
@@ -1437,10 +1436,12 @@ int create_local_client(lua_State * L)
     return 1;
 }
 
+namespace lua{
+namespace module{
 
-void register_lnetlib()
+void open_net(lua_State * L)
 {
-    lua_state = get_script_env().get_lua_state();
+    lua_state = L;
     main_io = &get_main_io_service();
     
     create_acceptor_metatable(lua_state);
@@ -1465,3 +1466,6 @@ void register_lnetlib()
     
     luaL_register(lua_state, "net", net_funcs);
 }
+
+} //namespace module
+} //namespace lua
