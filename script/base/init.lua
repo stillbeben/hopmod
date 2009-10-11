@@ -1,3 +1,7 @@
+
+package.path = package.path .. ";script/package/?.lua"
+package.cpath = package.cpath .. ";bin/lib?.so"
+
 load_once("base/restart")
 load_once("base/player/object_wrapper")
 load_once("base/player/global_vars")
