@@ -1,4 +1,6 @@
 
+require "crypto"
+
 auth = {} -- create table for auth namespace
 local internal = {} -- internal namespace to keep local functions in reference
 
@@ -163,7 +165,23 @@ server.event_handler("request_auth_challenge", function(cn, user_id, domain)
     end
     
     if not domain.server.remote then
-        server.log_error("local auth server unsupported")
+        
+        local user = domain:get_user(user_id)
+        
+        if not user then
+            call_listeners(cn, user_id, domain_id, auth.request_status.CHALLENGE_FAILED)
+            return
+        end
+        
+        local request = create_request(cn, user_id, domain)
+        
+        local key = crypto.ecc.key(user.public_key)
+        
+        request.local_request = {}
+        request.local_request.challenge = key:generate_challenge()
+        
+        server.send_auth_challenge_to_client(cn, request.local_request.challenge:to_string())
+        
         return
     end
     
@@ -185,6 +203,7 @@ server.event_handler("auth_challenge_response", function(cn, request_id, answer)
     end
     
     if request.remote_request then
+    
         request.remote_request:send_answer(answer, function(success)
             
             if not success then
@@ -194,8 +213,20 @@ server.event_handler("auth_challenge_response", function(cn, request_id, answer)
             
             request:complete(auth.request_status.SUCCESS)
         end)
+        
+    elseif request.local_request then
+        
+        local status
+        
+        if request.local_request.challenge:expected_answer(answer) then
+            status = auth.request_status.SUCCESS
+        else
+            status = auth.request_status.RESPONSE_FAILED
+        end
+        
+        request:complete(status)
     end
-    
+
 end)
 
 server.event_handler("connect", function(cn)
