@@ -11,12 +11,14 @@ local script_extension_handlers = {
 
 local script_paths = {
     [1] = "%s",
-    [2] = "./script/%s",
-    [3] = "./script/%s.lua",
-    [4] = "./script/%s.cs",
-    [5] = "./conf/%s",
-    [6] = "./conf/%s.lua",
-    [7] = "./conf/%s.cs"
+    [2] = "%s.lua",
+    [3] = "%s.cs",
+    [4] = "./script/%s",
+    [5] = "./script/%s.lua",
+    [6] = "./script/%s.cs",
+    [7] = "./conf/%s",
+    [8] = "./conf/%s.lua",
+    [9] = "./conf/%s.cs"
 }
 
 local function find_script(filename)
