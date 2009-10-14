@@ -28,14 +28,14 @@ local function call_listeners(cn, user_id, domain, status)
     local listeners = domain_listeners[domain] or {}
     
     for i, listener in ipairs(listeners) do
-        listener(cn, user_id, domain, status)
+        catch_error(listener, cn, user_id, domain, status)
     end
     
     -- Run-once/temporary listeners created for auth requests initiated by a server module
     listeners = clients[cn].listeners[domain] or {}
     
     for i, listener in ipairs(listeners) do
-        listener(cn, user_id, domain, status)
+        catch_error(listener, cn, user_id, domain, status)
     end
     
     clients[cn].listeners[domain] = nil
@@ -43,17 +43,17 @@ local function call_listeners(cn, user_id, domain, status)
 end
 
 local function complete_request(request, status)
-    
+
     if status == auth.request_status.SUCCESS then
         clients[request.cn].authed[request.domain.id] = request.user_id
     end
     
-    call_listeners(request.cn, request.user_id, request.domain.id, status)
-
     request.remote_request = nil
     
     requests[request.id] = nil
     clients[request.cn].requests[request.id] = nil
+    
+    call_listeners(request.cn, request.user_id, request.domain.id, status)
 end
 
 local request_object_methods = {
@@ -156,7 +156,7 @@ server.event_handler("request_auth_challenge", function(cn, user_id, domain)
         return
     end
     
-    clients[cn].has_key[domain] = true
+    clients[cn].has_key[domain_id] = true
     
     -- Check for previously successful auth challenge
     if clients[cn].authed[domain_id] == user_id then
