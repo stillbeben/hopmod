@@ -102,7 +102,6 @@ namespace server
     void server_setadmin(int);
     void player_slay(int);
     bool player_changeteam(int,const char *);
-    int player_authreq(int);
     int player_rank(int);
     bool player_isbot(int);
     void set_invadmin(int);

@@ -33,7 +33,6 @@ local methods = {
     slay = function(obj) return server.player_slay(obj.cn) end,
     changeteam = function(obj,newteam) return server.changeteam(obj.cn,newteam) end,
     bots = function(obj) return server.player_bots(obj.cn) end,
-    authreq = function(obj) return server.player_authreq(obj.cn) end,
     rank = function(obj) return server.player_rank(obj.cn) end,
     isbot = function(obj) return server.player_isbot(obj.cn) end,
     mapcrc = function(obj) return server.player_mapcrc(obj.cn) end,

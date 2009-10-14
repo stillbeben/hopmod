@@ -76,7 +76,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc((void (*)(int))server::suicide, "player_suicide", env);
     script::bind_freefunc(server::player_changeteam, "changeteam", env);
     script::bind_freefunc(server::player_bots, "player_bots", env);
-    script::bind_freefunc(server::player_authreq, "player_authreq", env);
     script::bind_freefunc(server::player_rank, "player_rank", env);
     script::bind_freefunc(server::player_isbot, "player_isbot", env);
     script::bind_freefunc(server::player_mapcrc, "player_mapcrc", env);
