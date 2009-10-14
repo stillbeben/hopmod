@@ -140,42 +140,6 @@ std::basic_string<typename CharIterator::value_type> write_string_literal(CharIt
     return out;
 }
 
-#if 0
-template<typename AnyType>
-std::string write_json_value(const AnyType * value)
-{
-    if(value->empty())
-        return "null";
-    else if(value->get_type() == typeid(bool))
-    {
-        if(any_cast<bool>(*value)) return "true";
-        else return "false";
-    }
-    else if(value->get_type() == typeid(std::string))
-    {
-        std::stringstream output;
-        std::string str = fungu::script::any_cast<std::string>(*value);
-        output<<"\""<<write_string_literal(str.begin(),str.end())<<"\"";
-        return output.str();
-    }
-    else if(value->get_type() == typeid(json::array))
-    {
-        const json::array & a = any_cast<json::array>(*value);
-        std::stringstream output;
-        output<<"[";
-        for(json::array::const_iterator it = a.begin(); it != a.end(); ++it)
-            output<<(it == a.begin() ? "" : ",")<<write_json_value((*it).get());
-        output<<"]";
-        return output.str();
-    }
-    else return value->to_string().copy();
-}
-
-const_string lexical_cast(const json::object * src, type_tag<const_string>);
-const_string lexical_cast(boost::shared_ptr<json::object> src,type_tag<const_string>);
-const_string lexical_cast(const json::object & src,type_tag<const_string>);
-#endif
-
 // printing array stuff (must be parsable by the functions in parse_array.hpp)
 
 std::string write_sequence_element(const std::string & value);
