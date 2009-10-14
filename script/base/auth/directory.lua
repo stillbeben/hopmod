@@ -68,3 +68,11 @@ auth.directory.server = add_server
 auth.directory.domain = add_domain
 auth.directory.user = add_user
 auth.directory.get_domain = get_domain
+
+function auth.directory.make_server_id(id)
+    if servers[id] then
+       return auth.directory.make_server_id(id .. "_") 
+    else 
+        return id
+    end
+end
