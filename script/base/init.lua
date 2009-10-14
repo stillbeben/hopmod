@@ -56,10 +56,6 @@ update_gamemodeinfo()
 
 server.event_handler("started", function()
     
-    if server.fileExists("./conf/auth") then
-        server.execCubeScriptFile("./conf/auth")
-    end
-    
     if server.fileExists(server.banlist_file) then
         server.execCubeScriptFile(server.banlist_file)
     end
