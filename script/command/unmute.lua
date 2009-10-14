@@ -7,8 +7,11 @@
 
 return function(cn,tcn)
 
-	if not tcn then
+    if not server.unmute then
+        return
+    end
 
+	if not tcn then
 		return false, "#unmute <cn>|\"<name>\""
 	end
 
@@ -17,11 +20,9 @@ return function(cn,tcn)
 		tcn = server.name_to_cn_list_matches(cn,tcn)
 
 		if not tcn then
-
 			return
 		end
 	end
 
 	server.unmute(tcn)
-
 end
