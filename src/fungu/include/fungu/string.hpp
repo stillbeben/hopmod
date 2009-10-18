@@ -11,7 +11,9 @@
 #include <assert.h>
 #include <math.h>
 #include <string>
+#include <string.h>
 #include <typeinfo>
+#include <limits>
 
 #define FUNGU_LITERAL_STRING(str) str,str+sizeof(str)-2
 #define FUNGU_EMPTY_STRING "\0"+1,"\0"
