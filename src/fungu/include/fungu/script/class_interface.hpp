@@ -24,7 +24,7 @@ private:
     {
     public:
         virtual ~method_caller_base(){}
-        virtual result_type call(Class *, env::object::call_arguments &, env::frame *)=0;
+        virtual any call(Class *, env_object::call_arguments &, env_frame *)=0;
     };
 public:
     template<typename MemberFunctionPointer>
@@ -39,7 +39,7 @@ public:
                 
             }
             
-            result_type call(Class * nativeObject, env::object::call_arguments & args, env::frame * frm)
+            any call(Class * nativeObject, env_object::call_arguments & args, env_frame * frm)
             {
                 callargs_serializer serializer(args, frm);
                 return dynamic_method_call<MemberFunctionPointer>(m_fun, nativeObject, args, serializer);
@@ -54,8 +54,8 @@ public:
         return *this;
     }
     
-    result_type call_method(Class * object, const_string methodName,
-        env::object::call_arguments & args, env::frame * frame)
+    any call_method(Class * object, const_string methodName,
+        env_object::call_arguments & args, env_frame * frame)
     {
         typename boost::unordered_map<const_string, boost::shared_ptr<method_caller_base> >::iterator it = m_members.find(methodName);
         if(it == m_members.end()) throw error(UNKNOWN_SYMBOL, boost::make_tuple(methodName.copy()));

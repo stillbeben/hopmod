@@ -22,7 +22,7 @@ expression::structure::structure()
     
 }
 
-parse_state expression::structure::parse(source_iterator * first,source_iterator last,env::frame * frame)
+parse_state expression::structure::parse(source_iterator * first,source_iterator last,env_frame * frame)
 {
     if(m_first == const_string::null_const_iterator())
         m_first = *first;
@@ -50,7 +50,7 @@ parse_state expression::structure::parse(source_iterator * first,source_iterator
     return PARSE_PARSING;
 }
 
-result_type expression::structure::eval(env::frame *)
+any expression::structure::eval(env_frame *)
 {
     return m_object;
 }

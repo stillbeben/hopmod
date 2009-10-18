@@ -9,13 +9,13 @@
 namespace fungu{
 namespace script{
 
-expression::comment::comment()
+comment::comment()
  :m_first(const_string::null_const_iterator())
 {
     
 }
 
-parse_state expression::comment::parse(source_iterator * first,source_iterator last,env::frame *)
+parse_state comment::parse(source_iterator * first,source_iterator last,env_frame *)
 {
     if(m_first == const_string::null_const_iterator())
         m_first = *first;
@@ -30,29 +30,29 @@ parse_state expression::comment::parse(source_iterator * first,source_iterator l
     return PARSE_PARSING;
 }
 
-result_type expression::comment::eval(env::frame *)
+any comment::eval(env_frame *)
 {
     return const_string();
 }
 
-bool expression::comment::is_eval_supported()const
+bool comment::is_eval_supported()const
 {
     return false;
 }
 
-bool expression::comment::is_string_constant()const
+bool comment::is_string_constant()const
 {
     return true;
 }
 
-std::string expression::comment::form_source()const
+std::string comment::form_source()const
 {
     assert(m_first != const_string::null_const_iterator());
     const_string source(m_first,m_last);
     return std::string(2,'/') + std::string(source.begin(),source.end());
 }
 
-bool expression::comment::is_terminator(const_string::value_type c)
+bool comment::is_terminator(const_string::value_type c)
 {
     return c == '\r' || c=='\n';
 }

@@ -20,25 +20,25 @@ any_variable::~any_variable()
     
 }
 
-env::object::object_type any_variable::get_object_type()const
+env_object::object_type any_variable::get_object_type()const
 {
     if(m_procedure) 
-        return any_cast<env::object::shared_ptr>(m_any)->get_object_type();
+        return any_cast<env_object::shared_ptr>(m_any)->get_object_type();
     else return DATA_OBJECT;
 }
 
 void any_variable::assign(const any & value)
 {
     m_any = value;
-    m_procedure = value.get_type() == typeid(env::object::shared_ptr);
+    m_procedure = value.get_type() == typeid(env_object::shared_ptr);
     if(!m_procedure && any_is_string(m_any))
         m_any = const_string(m_any.to_string().copy());
 }
 
-result_type any_variable::call(call_arguments & args,env::frame * frame)
+any any_variable::call(call_arguments & args,env_frame * frame)
 {
     if(m_procedure)
-        return any_cast<env::object::shared_ptr>(m_any)->call(args,frame);
+        return any_cast<env_object::shared_ptr>(m_any)->call(args,frame);
     else
     {
         assign(args.safe_front());
@@ -53,19 +53,19 @@ result_type any_variable::call(call_arguments & args,env::frame * frame)
 int any_variable::call(lua_State * L)
 {
     if(m_procedure)
-        return any_cast<env::object::shared_ptr>(m_any)->call(L);
+        return any_cast<env_object::shared_ptr>(m_any)->call(L);
     else return luaL_error(L, "not a function");
 }
 #endif
 
-result_type any_variable::value()
+any any_variable::value()
 {
     if(m_procedure)
-        return any_cast<env::object::shared_ptr>(m_any)->value();
+        return any_cast<env_object::shared_ptr>(m_any)->value();
     return m_any;
 }
 
-env::object * any_variable::lookup_member(const_string id)
+env_object * any_variable::lookup_member(const_string id)
 {
     if(m_procedure)
         return any_cast<shared_ptr>(m_any)->lookup_member(id);

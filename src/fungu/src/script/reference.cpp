@@ -10,7 +10,7 @@ namespace fungu{
 namespace script{
 
 template<typename Terms>
-result_type expression::reference<Terms>::eval(env::frame * frame)
+any expression::reference<Terms>::eval(env_frame * frame)
 {
     return symbol<Terms>::resolve_symbol(frame)->get_shared_ptr();
 }

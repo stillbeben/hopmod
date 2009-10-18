@@ -1,5 +1,10 @@
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "hopmod/pch.hpp"
+#endif
+
 #include "game.h"
 #include "hopmod.hpp"
+#include "hopmod/bans.hpp"
 #include <arpa/inet.h> //inet_ntoa
 
 namespace game
@@ -2095,7 +2100,6 @@ namespace server
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        signal_auth(ci->clientnum, id, ci->authname, ci->authdomain, false);
         ci->authreq = 0;
     }
 
@@ -2103,7 +2107,6 @@ namespace server
     {
         clientinfo *ci = findauth(id);
         if(!ci) return;
-        signal_auth(ci->clientnum, id, ci->authname, ci->authdomain, true);
         ci->authreq = 0;
     }
 
@@ -2134,7 +2137,6 @@ namespace server
         {
             if(!isxdigit(*s)) { *s = '\0'; break; }
         }
-        
         signal_authrep(ci->clientnum, id, val);
     }
 

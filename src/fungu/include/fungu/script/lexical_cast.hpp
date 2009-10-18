@@ -13,16 +13,18 @@
 #include "error.hpp"
 #include "any.hpp"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/type_traits.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/intrusive_ptr.hpp>
-
-#include <sstream>
+#include <vector>
+#include <deque>
 
 namespace fungu{
 namespace script{
+
+namespace any_detail{
+class empty;
+}
 
 namespace lexical_cast_detail{
 
@@ -75,7 +77,6 @@ const_string    lexical_cast(const any_detail::empty &, type_tag<const_string>);
 template<typename Source>
 inline const_string lexical_cast(const boost::intrusive_ptr<Source> & src,type_tag<const_string>)
 {
-    //return boost::lexical_cast<std::string, const_string>(src);
     throw error(NO_CAST);
 }
 
@@ -147,17 +148,21 @@ std::string write_sequence_element(const std::string & value);
 template<typename T>
 std::string write_sequence_element(const T & value)
 {
-    return boost::lexical_cast<std::string>(value);
+    return lexical_cast_detail::lexical_cast(value, type_tag<const_string>()).copy();
 }
 
 template<typename ForwardContainer>
 std::string write_sequence(const ForwardContainer & container)
 {
-    std::stringstream output;
+    std::string output;
     for(typename ForwardContainer::const_iterator it = container.begin();
-        it != container.end(); ++it)
-        output<<(it == container.begin() ? "" : " ")<<write_sequence_element(*it);
-    return output.str();
+        it != container.end(); 
+        ++it)
+    {
+        output.append(it == container.begin() ? "" : " ");
+        output.append(write_sequence_element(*it));
+    }
+    return output;
 }
 
 template<typename Source>

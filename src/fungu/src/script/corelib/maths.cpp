@@ -13,7 +13,7 @@ namespace corelib{
 namespace mathlib{
 
 #define FUNGU_VARIADIC_BINARY_INT_FUNCTION(name,binfun) \
-    inline result_type name(env::object::call_arguments & args,env::frame *) \
+    inline any name(env_object::call_arguments & args,env_frame *) \
     { \
         int operand[2]; \
     \

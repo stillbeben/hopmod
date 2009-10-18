@@ -19,13 +19,13 @@ namespace fungu{
 namespace script{
 namespace lua{
 
-class lua_function:public env::object
+class lua_function:public env_object
 {
 public:
     lua_function(lua_State *,int index, const char * name);
     lua_function(lua_State *); //function at top of stack
     ~lua_function();
-    result_type call(call_arguments & args,env::frame * aFrame);
+    any call(call_arguments & args,env_frame * aFrame);
     int call(lua_State * L);
     const source_context * get_source_context()const;
 private:

@@ -1,4 +1,10 @@
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "pch.hpp"
+#endif
+
 #include "hopmod.hpp"
+#include "lua/modules.hpp"
+#include <fungu/script/env.hpp>
 using namespace fungu;
 
 static boost::signals::connection close_listenserver_slot;
@@ -22,8 +28,6 @@ void init_hopmod()
     sigaction(SIGBUS, &crash_action, NULL);
     sigaction(SIGSEGV, &crash_action, NULL);
     sigaction(SIGSYS, &crash_action, NULL);
-    
-    copystring(server::authserver_hostname, server::defaultmaster());
     
     init_scripting();
     
@@ -76,9 +80,7 @@ void reload_hopmod()
     disconnect_all_slots();
     
     init_hopmod();
-    
     server::started();
-    
     std::cout<<"-> Reloaded Hopmod."<<std::endl;
 }
 
@@ -91,8 +93,6 @@ void update_hopmod()
     
     update_scheduler(totalmillis);
     cleanup_dead_slots();
-    
-    server::check_authserver();
     
     if(maintenance_frequency != 0 && totalmillis > maintenance_time && !hasnonlocalclients())
     {

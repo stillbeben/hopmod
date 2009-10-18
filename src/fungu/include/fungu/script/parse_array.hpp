@@ -11,13 +11,15 @@
 namespace fungu{
 namespace script{
 
+class env_frame;
+
 struct array_word_exit_terminals
 {
     static bool is_member(const_string::value_type c);
 };
 
 template<typename ForwardContainer,bool throw_exception>
-bool parse_array(const_string string, env::frame * frame, ForwardContainer & container);
+bool parse_array(const_string string, env_frame * frame, ForwardContainer & container);
 
 } //namespace script
 } //namespace fungu

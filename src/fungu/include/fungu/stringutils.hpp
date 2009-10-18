@@ -8,7 +8,11 @@
 #ifndef FUNGU_STRINGUTILS_HPP
 #define FUNGU_STRINGUTILS_HPP
 
+#include "string.hpp"
 #include <string>
+#include <boost/functional/hash.hpp>
+#include <ostream>
+#include <istream>
 
 namespace fungu{
 
@@ -51,7 +55,43 @@ inline bool scan_newline(const char ** readptr)
             return false;
     return true;
 }
-    
+
+template<typename T>
+size_t hash_value(basic_const_string<T> str)
+{
+    return boost::hash_range(str.begin(),str.end());
+}
+
+template<typename T>
+std::string & operator+=(std::string & dst,const basic_const_string<T> & src)
+{
+    dst.append(src.begin(),src.end());
+    return dst;
+}
+
+template<typename T>
+std::ostream & operator<<(std::ostream & dst,const basic_const_string<T> & src)
+{
+    dst.write(src.begin(),src.length());
+    return dst;
+}
+
+template<typename T>
+std::istream & operator>>(std::istream & src,basic_const_string<T> & dst)
+{
+    std::basic_string<T> str;
+    str.reserve(32);
+    while(src.good())
+    {
+        T e;
+        src.read(&e,sizeof(T));
+        if(src.good()) str.append(1,e);
+    }
+    dst = basic_const_string<T>(str);
+    src.clear();
+    return src;
+}
+
 } //namespace fungu
 
 #endif

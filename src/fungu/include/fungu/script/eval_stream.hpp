@@ -8,21 +8,19 @@
 #ifndef FUNGU_SCRIPT_EVAL_STREAM_HPP
 #define FUNGU_SCRIPT_EVAL_STREAM_HPP
 
-#include "env.hpp"
 #include "expression.hpp"
 
 namespace fungu{
 namespace script{
 
-/**
-    
-*/
+class env_frame;
+
 class eval_stream
 {
     static const std::size_t InitialBufSize = 512; //enough space to store the code for a single base expression
 public:
-    typedef void (* evaluation_function)(expression *, env::frame *, void *);
-    eval_stream(env::frame *, evaluation_function evaluator = NULL, void * evaluator_closure = NULL);
+    typedef void (* evaluation_function)(expression *, env_frame *, void *);
+    eval_stream(env_frame *, evaluation_function evaluator = NULL, void * evaluator_closure = NULL);
     ~eval_stream();
     void feed(const void * data, std::size_t bytesLength);
     bool is_parsing_expression()const;
@@ -38,7 +36,7 @@ private:
     void * m_evaluator_closure;
     
     base_expression m_expression;
-    env::frame * m_frame;
+    env_frame * m_frame;
     bool m_parsing;
     
     char * m_buffer_use;

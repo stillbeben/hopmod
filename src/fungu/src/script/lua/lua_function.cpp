@@ -34,14 +34,13 @@ lua_function::~lua_function()
     luaL_unref(m_lua, LUA_REGISTRYINDEX, m_ref);
 }
 
-result_type lua_function::call(call_arguments & args,env::frame * aFrame)
+any lua_function::call(call_arguments & args,env_frame * aFrame)
 {
     lua_State * L = aFrame->get_env()->get_lua_state();
     lua_rawgeti(L, LUA_REGISTRYINDEX, m_ref);
     int nargs = args.size();
     while(!args.empty())
     {
-        //lua_pushstring(L,args.front().to_string().copy().c_str());
         args.front().push_value(L);
         args.pop_front();
     }

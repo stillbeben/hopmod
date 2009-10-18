@@ -59,7 +59,7 @@ namespace server
     extern bool allow_mm_private;
     extern bool allow_item[11];
     extern bool allow_master;
-    extern string authserver_hostname;
+    
     extern bool broadcast_mapmodified;
     extern timer::time_diff_t timer_alarm_threshold;
     
@@ -157,17 +157,6 @@ namespace server
 
     bool selectnextgame();
     
-    bool delegateauth(int,const char *);
-    bool relayauthanswer(int,const char *);
-    void sendauthchallenge(int,int,const char *,const char *);
-    void send_auth_request(int, const char *);
-    void signal_auth_success(int,int);
-    void signal_auth_failure(int,int);
-    
-    void authfailed(uint id);
-    void authsucceeded(uint id);
-    void authchallenged(uint id, const char *val);
-    
     void suicide(int);
     
     // Flood protection vars
@@ -183,12 +172,12 @@ namespace server
     extern std::vector<std::string> get_bans();
     
     void crash_handler(int signal);
-    
     void restore_server(const char * filename);
     
-    void check_authserver();
-    
     void sendservmsg(const char *);
+    
+    void sendauthchallenge(int,int,const char *,const char *);
+    void send_auth_request(int, const char *);
     
 } //namespace server
 

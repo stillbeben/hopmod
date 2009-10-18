@@ -16,7 +16,7 @@ auth.listener("", function(cn, user_id, domain, status)
     
     local admin_present = server.master ~= -1 and server.player_priv_code(server.master) == server.PRIV_ADMIN
     
-    if server.player_priv_code(cn) == 0 and not admin_present and server.using_master_auth() then
+    if server.player_priv_code(cn) == 0 and not admin_present and server.use_master_auth == 1 then
         
         if server.setmaster(cn) then
             server.msg(string.format("%s claimed master as '%s'",server.player_name(cn),magenta(user_id)))

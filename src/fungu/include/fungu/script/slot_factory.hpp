@@ -41,7 +41,7 @@ public:
         m_signal_connectors[name] = boost::bind(&slot_factory::connect_slot<SignalType>, this, boost::ref(sig), error_handler, cp, _1, _2);
     }
     
-    int create_slot(const_string name, env::object::shared_ptr obj, env * environment)
+    int create_slot(const_string name, env_object::shared_ptr obj, env * environment)
     {
         std::map<const_string,slot_connect_function>::iterator it = m_signal_connectors.find(name);
         if(it == m_signal_connectors.end()) return -1;
@@ -71,7 +71,7 @@ private:
     int connect_slot(SignalType & sig,
         error_handler_function error_handler,
         boost::signals::connect_position cp,
-        env::object::shared_ptr obj,
+        env_object::shared_ptr obj,
         env * environment)
     {
         typedef typename make_function_signature<typename SignalType::slot_function_type>::type SignalSignature;
@@ -105,10 +105,10 @@ private:
         return handle;
     }
     
-    typedef boost::function<int (env::object::shared_ptr,env *)> slot_connect_function;
+    typedef boost::function<int (env_object::shared_ptr,env *)> slot_connect_function;
     std::map<const_string,slot_connect_function> m_signal_connectors;
     
-    typedef detail::base_script_function<std::vector<result_type>, callargs_serializer, error> base_script_function;
+    typedef detail::base_script_function<std::vector<any>, callargs_serializer, error> base_script_function;
     typedef std::vector<std::pair<base_script_function *,boost::signals::connection> > slot_vector;
     slot_vector m_slots;
     

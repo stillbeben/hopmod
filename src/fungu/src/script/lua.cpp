@@ -8,11 +8,18 @@
 
 #include "fungu/script/lua/arguments.hpp"
 #include "fungu/script/lua/lua_function.hpp"
-#include "fungu/script/table.hpp"
 #include "fungu/script/lua/object_wrapper.hpp"
+#include "fungu/script/callargs.hpp"
 
 #include <limits>
+
+extern "C"{
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
 
 #include "lua/arguments.cpp"
 #include "lua/lua_function.cpp"
 #include "lua/object_wrapper.cpp"
+#include "lua/push_value.cpp"

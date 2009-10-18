@@ -12,6 +12,7 @@ namespace fungu{
 namespace script{
 
 namespace corelib{
+
 void register_alias_functions(env &);
 void unload_alias_functions(env &);
 void register_anonfunc_functions(env &);
@@ -19,26 +20,21 @@ void register_controlflow_functions(env &);
 void register_datetime_functions(env &);
 void register_exception_functions(env &);
 void register_exec_functions(env &);
-void register_list_functions(env &);
 void register_math_functions(env &);
-void register_object_functions(env &);
-void register_reference_functions(env &);
 void register_string_functions(env &);
 void register_vector_functions(env &);
+
 } //namespace corelib
 
 inline void load_corelib(env & environment)
 {
-    script::env::frame::register_functions(environment);
+    script::env_frame::register_functions(environment);
     
     script::corelib::register_math_functions(environment);
     script::corelib::register_controlflow_functions(environment);
     script::corelib::register_alias_functions(environment);
-    script::corelib::register_reference_functions(environment);
     script::corelib::register_anonfunc_functions(environment);
-    script::corelib::register_list_functions(environment);
     script::corelib::register_exec_functions(environment);
-    script::corelib::register_object_functions(environment);
     script::corelib::register_string_functions(environment);
     script::corelib::register_vector_functions(environment);
     script::corelib::register_datetime_functions(environment);

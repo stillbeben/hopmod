@@ -9,14 +9,11 @@
 #define FUNGU_SCRIPT_ENV_HPP
 
 #include "../string.hpp"
-#include "error.hpp"
-#include "any.hpp"
-#include "lexical_cast.hpp"
-#include "result_type.hpp"
-#include "callargs.hpp"
+#include "env_symbol.hpp"
+#include "env_frame.hpp"
+#include "env_object.hpp"
 
 #include <boost/unordered_map.hpp>
-#include <boost/intrusive_ptr.hpp>
 #include <boost/function.hpp>
 
 #ifdef FUNGU_WITH_LUA
@@ -38,22 +35,10 @@ namespace script{
 class env
 {
 public:
-    typedef const_string object_id;
     static const int max_modules = 4;
     static const int recursion_limit = 1000;
     
-    class object;
-    class frame;
-    class symbol;
-    class symbol_local;
-    
-    #define FUNGU_CUBESCRIPT_ENV_NESTED_CLASS
-    #include "env_object.hpp"
-    #include "env_symbol.hpp"
-    #include "env_frame.hpp"
-    #undef FUNGU_CUBESCRIPT_ENV_NESTED_CLASS
-    
-    typedef boost::function2<void, const_string, object *> observer_function;
+    typedef boost::function2<void, const_string, env_object *> observer_function;
     
     env();
     
@@ -70,7 +55,7 @@ public:
         
         Returns NULL if a symbol is not found.
     */
-    symbol * lookup_symbol(object_id id)const;
+    env_symbol * lookup_symbol(const_string id)const;
     
     /**
         @brief Create a symbol object and register the name with the symbol
@@ -82,7 +67,7 @@ public:
         If the symbol entry already exists then creation of a new symbol object
         is bypassed and a pointer to the existing symbol object is returned.
     */
-    symbol * create_symbol(object_id id);
+    env_symbol * create_symbol(const_string id);
     
     /**
         @brief Create a global symbol binding.
@@ -93,7 +78,7 @@ public:
         The operation is always successful; an existing symbol binding with the
         same name is overridden.
     */
-    void bind_global_object(object * obj, object_id id);
+    void bind_global_object(env_object * obj, const_string id);
     
     /**
         @brief Search for a global symbol binding.
@@ -103,7 +88,7 @@ public:
         
         Returns NULL if the symbol is not found.
     */
-    object * lookup_global_object(object_id id)const;
+    env_object * lookup_global_object(const_string id)const;
     
     /**
         @brief Set associated source_context object.
@@ -123,7 +108,7 @@ public:
         bindings.
         
         @param new_function Observer function; something than can be called as new_function(id, object).
-        @return The old observer function as a boost::function2<void, const_string, object *> object.
+        @return The old observer function as a boost::function2<void, const_string, env_object *> object.
         
         The observer function is called from the bind_global_object method.
     */
@@ -187,7 +172,7 @@ public:
     }
     
 private:
-    boost::unordered_map<const_string, symbol *> m_symbol;
+    boost::unordered_map<const_string, env_symbol *> m_symbol;
     
     const source_context * m_source_ctx;
     int m_recursion_limit;
@@ -200,16 +185,6 @@ private:
     
     void * m_module[max_modules];
 };
-
-inline void intrusive_ptr_add_ref(env::object * obj)
-{
-    obj->add_ref();
-}
-
-inline void intrusive_ptr_release(env::object * obj)
-{
-    if(obj->unref().get_refcount()==0 && obj->is_adopted()) delete obj;
-}
 
 } //namespace script
 } //namespace fungu

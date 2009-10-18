@@ -4,8 +4,6 @@
 #include <time.h>
 #include <string>
 
-std::string resolve_hostname(const char *);
-
 std::string concol(int code, const std::string & msg);
 std::string green(const std::string & msg);
 std::string info(const std::string & msg);
@@ -31,18 +29,15 @@ private:
     timespec m_start;
 };
 
-namespace lua{
-namespace crypto{
-
-int genkeypair(lua_State *);
-int genchallenge(lua_State *);
-int checkchallenge(lua_State *);
-int freechalanswer(lua_State *);
-
-} //namespace crypto
-} //namespace lua
-
-std::string md5sum(const std::string & input);
+class freqlimit
+{
+public:
+    freqlimit(int length);
+    int next(int time);
+private:
+    int m_length;
+    int m_hit;
+};
 
 bool file_exists(const char *);
 bool dir_exists(const char *);

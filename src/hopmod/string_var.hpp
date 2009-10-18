@@ -2,14 +2,15 @@
 #define HOPMOD_STRING_VAR_HPP
 
 #include "cube.h"
-#include <fungu/script/env.hpp>
+#include <fungu/script/env_object.hpp>
 #include <fungu/script/variable.hpp>
+#include <string.h>
 
 namespace fungu{
 namespace script{
 
 template<>
-class variable<string>:public env::object
+class variable<string>:public env_object
 {
 public:
     variable(string & str)
@@ -27,12 +28,12 @@ public:
     {
         const_string tmp = value.to_string();
         std::size_t len = tmp.length();
-        if(len > MAXSTRLEN - 1) throw error(INVALID_VALUE,boost::make_tuple(std::string("string is too long")));
+        if(len > MAXSTRLEN - 1) throw error(INVALID_VALUE, boost::make_tuple(std::string("string is too long")));
         strncpy(m_string, tmp.begin(), len);
         m_string[len] = '\0';
     }
     
-    result_type call(call_arguments & args,env::frame *)
+    any call(call_arguments & args,env_frame *)
     {
         assign(args.safe_front());
         args.pop_front();
@@ -40,9 +41,9 @@ public:
         catch(error){return any::null_value();}
     }
     
-    result_type value()
+    any value()
     {
-        return const_string(m_string,m_string+strlen(m_string)-1);
+        return const_string(m_string, m_string + strlen(m_string) - 1);
     }
 private:
     string & m_string;

@@ -5,7 +5,20 @@
  *
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
-#ifdef FUNGU_CUBESCRIPT_ENV_NESTED_CLASS
+#ifndef FUNGU_SCRIPT_ENV_OBJECT_HPP
+#define FUNGU_SCRIPT_ENV_OBJECT_HPP
+
+#include "../string.hpp"
+#include <boost/intrusive_ptr.hpp>
+
+struct lua_State;
+
+namespace fungu{
+namespace script{
+
+class env_frame;
+class any;
+class callargs;
 
 /**
     @brief Environment object base class.
@@ -14,22 +27,22 @@
     with are types inherited from the object class. All the language operators
     are declared here as virtual functions for derived classes to override.
 */
-class object
+class env_object
 {
 public:
     typedef callargs call_arguments;
-    typedef env::frame frame;
-    typedef boost::intrusive_ptr<object> shared_ptr;
+    typedef env_frame frame;
+    typedef boost::intrusive_ptr<env_object> shared_ptr;
     
-    object();
-    virtual ~object();
+    env_object();
+    virtual ~env_object();
     
     class member_iterator
     {
     public:
         virtual ~member_iterator(){}
         virtual const_string get_name()const=0;
-        virtual object * get_object()const=0;
+        virtual env_object * get_object()const=0;
         virtual bool next()=0;
     };
 
@@ -53,14 +66,14 @@ public:
     /**
         @brief Function call (language operator).
     */
-    virtual result_type call(call_arguments &,frame *) = 0;
+    virtual any call(call_arguments &,frame *) = 0;
     
     /**
         @brief Get value of object (language operator).
         
         The base implementation returns a shared ptr to this object.
     */
-    virtual result_type value();
+    virtual any value();
     
     /**
         @brief Assign a value to the object (language operator).
@@ -74,7 +87,7 @@ public:
         
         The base implementation returns NULL.
     */
-    virtual object * lookup_member(const_string);
+    virtual env_object * lookup_member(const_string);
     
     /**
         @brief Get iterator for the first member object.
@@ -96,7 +109,7 @@ public:
     /**
         @brief Decrement object reference count.
     */
-    object & unref();
+    env_object & unref();
     
     /**
         @brief Get value of object reference count.
@@ -109,7 +122,7 @@ public:
         This method is for objects which are temporary and are stack
         allocated.
     */
-    object & set_temporary();
+    env_object & set_temporary();
     
     /**
         @brief Set object as adopted - meaning the last shared owner deletes the object.
@@ -129,7 +142,7 @@ public:
         
         TODO: Find a reliable way to detect if the object is located on the stack.
     */
-    object & set_adopted();
+    env_object & set_adopted();
     
     /**
         @brief Is the object a temporary?
@@ -149,7 +162,7 @@ public:
     */
     shared_ptr get_shared_ptr();
     
-    static shared_ptr get_shared_ptr(object * obj);
+    static shared_ptr get_shared_ptr(env_object * obj);
 private:
     unsigned int m_refcount;
     
@@ -160,5 +173,18 @@ private:
     };
     unsigned char m_flags;
 };
+
+inline void intrusive_ptr_add_ref(env_object * obj)
+{
+    obj->add_ref();
+}
+
+inline void intrusive_ptr_release(env_object * obj)
+{
+    if(obj->unref().get_refcount()==0 && obj->is_adopted()) delete obj;
+}
+
+} //namespace script
+} //namespace fungu
 
 #endif

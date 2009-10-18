@@ -1,27 +1,24 @@
 #ifndef HOPMOD_HPP
 #define HOPMOD_HPP
 
-extern "C"{
-    #include <lua.h>
-}
+struct lua_State;
 
-#include <fungu/script.hpp>
+namespace fungu{
+namespace script{
+class env;
+class error_trace;
+} //namespace script
+} //namespace fungu
 
 #include "extapi.hpp"
-#include "freqlimit.hpp"
 #include "signals.hpp"
-#include "banned_networks.hpp"
-#include "timedbans_service.hpp"
 #include "utils.hpp"
-#include "masterserver_client.hpp"
-#include "lua/modules.hpp"
 
 void init_hopmod();
 void reload_hopmod();
 void update_hopmod();
 void restart_now();
 
-#define GEOIP_NO_RESULT ""
 bool geoip_supported();
 bool load_geoip_database(const char *);
 const char * ip_to_country(const char *);

@@ -1,7 +1,7 @@
 #ifndef HOPMOD_SIGNALS_HPP
 #define HOPMOD_SIGNALS_HPP
 
-#include "env_fwd.hpp"
+namespace fungu{namespace script{class env;}}
 #include <boost/signal.hpp>
 #include <limits>
 
@@ -56,7 +56,6 @@ extern boost::signal<int (const char *,const char *), proceed>      signal_setma
 extern boost::signal<void (int,int)>                                signal_spectator;
 extern boost::signal<void (int,const char *,int)>                   signal_setmaster;
 extern boost::signal<void (int,int)>                                signal_teamkill;
-extern boost::signal<void (int,int,const char *,const char *,bool)> signal_auth;
 extern boost::signal<void (int,const char *,const char *)>          signal_authreq;
 extern boost::signal<void (int,int,const char *)>                   signal_authrep;
 extern boost::signal<void (int,int,int)>                            signal_addbot;

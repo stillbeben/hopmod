@@ -25,7 +25,7 @@ expression::word<Terms>::word(const_string w)
 }
 
 template<typename Terms>
-parse_state expression::word<Terms>::parse(source_iterator * first,source_iterator last,env::frame *)
+parse_state expression::word<Terms>::parse(source_iterator * first,source_iterator last,env_frame *)
 {
     if(m_first == const_string::null_const_iterator())
         m_first = *first;
@@ -43,7 +43,7 @@ parse_state expression::word<Terms>::parse(source_iterator * first,source_iterat
 }
 
 template<typename Terms>
-result_type expression::word<Terms>::eval(env::frame * frame)
+any expression::word<Terms>::eval(env_frame * frame)
 {
     assert(m_first != const_string::null_const_iterator());
     return const_string(m_first,m_last);

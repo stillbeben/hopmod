@@ -9,7 +9,6 @@
 #define FUNGU_SCRIPT_FUNCTION_HPP
 
 #include "env.hpp"
-#include "../dynamic_caller.hpp"
 #include "../dynamic_call.hpp"
 #include "callargs_serializer.hpp"
 
@@ -27,7 +26,7 @@ namespace script{
     @brief C++ function wrapper.
 */
 template<typename Signature>
-class function:public env::object
+class function:public env_object
 {
 public:
     template<typename Functor>
@@ -50,7 +49,7 @@ public:
         return FUNCTION_OBJECT;
     }
     
-    result_type call(call_arguments & call_args, frame * aFrame)
+    any call(call_arguments & call_args, frame * aFrame)
     {
         // Fill in missing arguments with default values
         if(call_args.size() < boost::function_traits<Signature>::arity && 
@@ -102,20 +101,20 @@ private:
     const std::vector<any> * m_default_args;
 };
 
-typedef result_type (raw_function_type)(env::object::call_arguments &, env::frame *);
+typedef any (raw_function_type)(env_object::call_arguments &, env_frame *);
 
 template<>
-class function<raw_function_type>:public env::object
+class function<raw_function_type>:public env_object
 {
 public:
     template<typename Functor> function(Functor aFunctor):m_function(aFunctor){}
     
-    result_type call(call_arguments & call_args, frame * aScope)
+    any call(call_arguments & call_args, frame * aScope)
     {
         return m_function(call_args,aScope);
     }
 private:
-    boost::function<result_type (env::object::call_arguments &,env::frame *)> m_function;
+    boost::function<any (env_object::call_arguments &,env_frame *)> m_function;
 };
 
 } //namespace script

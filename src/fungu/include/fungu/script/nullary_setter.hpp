@@ -16,7 +16,7 @@ namespace script{
 /**
     
 */
-class nullary_setter:public env::object
+class nullary_setter:public env_object
 {
 public:
     nullary_setter()
@@ -25,13 +25,13 @@ public:
         
     }
     
-    result_type call(call_arguments &,env::frame *)
+    any call(call_arguments &,env_frame *)
     {
         m_set = true;
         return any::null_value();
     }
     
-    result_type value()
+    any value()
     {
         return get_shared_ptr();
     }

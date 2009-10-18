@@ -21,7 +21,7 @@ bool array_word_exit_terminals::is_member(const_string::value_type c)
 }
 
 template<typename ForwardContainer,bool throw_exception>
-bool parse_array(const_string string, env::frame * frame, ForwardContainer & container)
+bool parse_array(const_string string, env_frame * frame, ForwardContainer & container)
 {
     construct * parsing = NULL;
     const_string::const_iterator current = string.begin();
@@ -37,17 +37,17 @@ bool parse_array(const_string string, env::frame * frame, ForwardContainer & con
         switch(*current)
         {
             case '[':
-                parsing = new expression::block; 
+                parsing = new block; 
                 current++;
                 termc = ']';
                 break;
             case '\"': 
-                parsing = new expression::quote;
+                parsing = new quote;
                 current++;
                 termc = '\"';
                 break;
             case '/': case '#':
-                parsing = new expression::comment;
+                parsing = new comment;
                 current++;
                 termc = '\n';
                 break;
@@ -55,7 +55,7 @@ bool parse_array(const_string string, env::frame * frame, ForwardContainer & con
                 if(throw_exception) throw error(UNEXPECTED_SYMBOL,boost::make_tuple('$'));
                 else return false;
             default:
-                parsing = new expression::word<array_word_exit_terminals>;
+                parsing = new word<array_word_exit_terminals>;
                 termc = 'w';
         }
         
@@ -96,7 +96,7 @@ bool parse_array(const_string string, env::frame * frame, ForwardContainer & con
     return true;
 }
 
-template bool parse_array<std::vector<const_string>, true>(const_string string, env::frame * frame, std::vector<const_string> & container);
+template bool parse_array<std::vector<const_string>, true>(const_string string, env_frame * frame, std::vector<const_string> & container);
 
 } //namespace script
 } //namespace fungu

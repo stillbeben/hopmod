@@ -21,14 +21,14 @@ public:
     {
     public:
         virtual ~constructor(){}
-        virtual env::object * create(call_arguments &)=0;
+        virtual env_object * create(call_arguments &)=0;
     };
     
     template<typename ClassType>
     class default_constructor:public constructor
     {
     public:
-        env::object * create(call_arguments &)
+        env_object * create(call_arguments &)
         {
             ClassType * newobj = new ClassType;
             return new class_object<ClassType>(newobj);
@@ -46,11 +46,11 @@ public:
         register_class(className, get_default_constructor<Class>());
     }
     
-    env::object * create_object(const_string className, call_arguments & args)
+    env_object * create_object(const_string className, call_arguments & args)
     {
         class_map::const_iterator it = m_classes.find(className);
         if(it == m_classes.end()) return NULL;
-        env::object * obj = it->second->create(args);
+        env_object * obj = it->second->create(args);
         return obj;
     }
 private:

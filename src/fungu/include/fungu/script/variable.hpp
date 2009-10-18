@@ -8,7 +8,7 @@
 #ifndef FUNGU_SCRIPT_VARIABLE_HPP
 #define FUNGU_SCRIPT_VARIABLE_HPP
 
-#include "env.hpp"
+#include "callargs.hpp"
 
 #ifdef FUNGU_WITH_LUA
 #include "lua/push_value.hpp"
@@ -20,11 +20,13 @@
 namespace fungu{
 namespace script{
 
+class env_frame;
+
 /**
     @brief C++ variable wrapper.
 */
 template<typename T>
-class variable:public env::object
+class variable:public env_object
 {
 public:
     variable(T & var)
@@ -52,7 +54,7 @@ public:
     /**
         @brief Assign new value and return it.
     */
-    result_type call(call_arguments & args,env::frame *)
+    any call(call_arguments & args, env_frame *)
     {
         m_var = args.safe_casted_front<T>();
         args.pop_front();
@@ -63,7 +65,7 @@ public:
     /**
         @brief Get value.
     */
-    result_type value()
+    any value()
     {
         return m_var;
     }
@@ -113,7 +115,7 @@ public:
         variable<T>::assign(value);
     }
     
-    result_type call(env::object::call_arguments & args,env::frame * frame)
+    any call(env_object::call_arguments & args,env_frame * frame)
     {
         if(m_perms & DENY_WRITE) throw error(NO_WRITE,boost::make_tuple());
         if(m_write_hook_func)
@@ -124,7 +126,7 @@ public:
         return variable<T>::call(args,frame);
     }
     
-    result_type value()
+    any value()
     {
         if(m_perms & DENY_READ) throw error(NO_READ,boost::make_tuple());
         return variable<T>::value();
@@ -200,13 +202,13 @@ public:
         variable<T>::assign(value);
     }
     
-    result_type call(env::object::call_arguments & args,env::frame * frame)
+    any call(env_object::call_arguments & args,env_frame * frame)
     {
         if(m_perms & DENY_WRITE) throw error(NO_WRITE,boost::make_tuple());
         return variable<T>::call(args,frame);
     }
     
-    result_type value()
+    any value()
     {
         if(m_perms & DENY_READ) throw error(NO_READ,boost::make_tuple());
         return variable<T>::value();
@@ -236,15 +238,15 @@ private:
     @brief Make wrapped C++ function appear as a read-only variable.
 */
 template<typename T>
-class function_variable:public env::object
+class function_variable:public env_object
 {
 public:
     template<typename Functor>
      function_variable(Functor func):m_func(func){}
     object_type get_object_type()const{return DATA_OBJECT;}
     void assign(const any & value){throw error(NO_WRITE);}
-    result_type call(env::object::call_arguments & args,env::frame * frame){throw error(NO_WRITE);}
-    result_type value(){return m_func();}
+    any call(env_object::call_arguments & args,env_frame * frame){throw error(NO_WRITE);}
+    any value(){return m_func();}
     #ifdef FUNGU_WITH_LUA
     void value(lua_State * L)
     {

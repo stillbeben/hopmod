@@ -9,10 +9,12 @@
 #define FUNGU_SCRIPT_CONSTRUCT_HPP
 
 #include "../string.hpp"
-#include "env.hpp"
 
 namespace fungu{
 namespace script{
+    
+class env_frame;
+class any;
 
 enum parse_state
 {
@@ -63,14 +65,14 @@ public:
         @param a_frame A pointer to an environment frame.
         @return parse state code
     */
-    virtual parse_state parse(source_iterator * read_ptr,source_iterator last_c,env::frame * a_frame)=0;
+    virtual parse_state parse(source_iterator * read_ptr,source_iterator last_c,env_frame * a_frame)=0;
     
     /**
         @brief Evaluate the construct to return a value.
         @param aFrame A pointer to an environment frame.
         @return anything
     */
-    virtual result_type eval(env::frame * aFrame)=0;
+    virtual any eval(env_frame * aFrame)=0;
     
     /**
         @brief Is eval method supported?

@@ -5,46 +5,57 @@
  *
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
-#ifdef FUNGU_CUBESCRIPT_ENV_NESTED_CLASS
+#ifndef FUNGU_SCRIPT_ENV_SYMBOL_HPP
+#define FUNGU_SCRIPT_ENV_SYMBOL_HPP
 
-class symbol
+#include "env_object.hpp"
+
+namespace fungu{
+namespace script{
+
+class env_symbol_local;
+
+class env_symbol
 {
-    friend class symbol_local;
+    friend class env_symbol_local;
 public:
-    symbol();
-    ~symbol();
-    symbol_local * push_local_object(object *, const frame *);
-    void set_global_object(object *);
+    env_symbol();
+    ~env_symbol();
+    env_symbol_local * push_local_object(env_object *, const env_frame *);
+    void set_global_object(env_object *);
     void unset_global_object();
-    object * lookup_object(const frame *)const;
+    env_object * lookup_object(const env_frame *)const;
 private:
-    symbol(const symbol &);
+    env_symbol(const env_symbol &);
     
-    symbol_local * m_local;
-    object::shared_ptr m_global;
+    env_symbol_local * m_local;
+    env_object::shared_ptr m_global;
 };
 
-class symbol_local
+class env_symbol_local
 {
 public:
-    symbol_local(symbol *, const frame *);
-    ~symbol_local();
+    env_symbol_local(env_symbol *, const env_frame *);
+    ~env_symbol_local();
     void attach();
     void detach();
-    void set_object(object *);
-    object * get_object()const;
-    object * lookup_object(const frame *)const;
-    const frame * get_frame()const;
-    symbol_local * get_next_frame_sibling()const;
+    void set_object(env_object *);
+    env_object * get_object()const;
+    env_object * lookup_object(const env_frame *)const;
+    const env_frame * get_frame()const;
+    env_symbol_local * get_next_frame_sibling()const;
 private:
-    symbol_local(const symbol_local &);
+    env_symbol_local(const env_symbol_local &);
     bool is_latest_attachment()const;
     
-    symbol * m_symbol;
-    symbol_local * m_super;
-    const frame * m_frame;
-    symbol_local * m_frame_sibling;
-    object::shared_ptr m_object;
+    env_symbol * m_symbol;
+    env_symbol_local * m_super;
+    const env_frame * m_frame;
+    env_symbol_local * m_frame_sibling;
+    env_object::shared_ptr m_object;
 };
+
+} //namespace script
+} //namespace fungu
 
 #endif

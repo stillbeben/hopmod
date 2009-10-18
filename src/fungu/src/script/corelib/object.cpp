@@ -12,7 +12,7 @@ namespace corelib{
 
 namespace objectlib{
 
-inline result_type create_object(env::object::call_arguments & args,env::frame * aFrame)
+inline any create_object(env_object::call_arguments & args,env_frame * aFrame)
 {
     #if 0
     boost::shared_ptr<json::object> initial_data;
@@ -31,16 +31,16 @@ inline result_type create_object(env::object::call_arguments & args,env::frame *
     return table::create();
 }
 
-inline result_type erase_object_member(env::object::call_arguments & args,env::frame * aFrame)
+inline any erase_object_member(env_object::call_arguments & args,env_frame * aFrame)
 {
     any object_arg = args.safe_front();
     args.pop_front();
     
-    env::object * basecasted = NULL;
+    env_object * basecasted = NULL;
     table * object;
     
-    if(object_arg.get_type() == typeid(env::object::shared_ptr))
-        basecasted = any_cast<env::object::shared_ptr>(object_arg).get();
+    if(object_arg.get_type() == typeid(env_object::shared_ptr))
+        basecasted = any_cast<env_object::shared_ptr>(object_arg).get();
     else
         basecasted = aFrame->lookup_required_object(object_arg.to_string());
     
@@ -53,16 +53,16 @@ inline result_type erase_object_member(env::object::call_arguments & args,env::f
     return (bool)object->erase_member(membername);
 }
 
-inline result_type add_object_member(env::object::call_arguments & args,env::frame * aFrame)
+inline any add_object_member(env_object::call_arguments & args,env_frame * aFrame)
 {
     any object_arg = args.safe_front();
     args.pop_front();
     
-    env::object * basecasted = NULL;
+    env_object * basecasted = NULL;
     table * object;
     
-    if(object_arg.get_type() == typeid(env::object::shared_ptr))
-        basecasted = any_cast<env::object::shared_ptr>(object_arg).get();
+    if(object_arg.get_type() == typeid(env_object::shared_ptr))
+        basecasted = any_cast<env_object::shared_ptr>(object_arg).get();
     else
         basecasted = aFrame->lookup_required_object(object_arg.to_string());
     

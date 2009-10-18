@@ -12,18 +12,20 @@
 
 #include <boost/scope_exit.hpp>
 #include <vector>
+#include <sstream>
 
-#include "fungu/script/construct.hpp"
 #include "fungu/script/expression.hpp"
-#include "fungu/script/lexical_cast.hpp"
+#include "fungu/script/core_constructs.hpp"
 #include "fungu/script/parse_array.hpp"
+#include "fungu/script/lexical_cast.hpp"
+#include "fungu/script/error.hpp"
+#include "fungu/script/callargs.hpp"
+#include "fungu/script/env_frame.hpp"
+#include "fungu/script/env_object.hpp"
 
 #include "construct.cpp"
 #include "expression.cpp"
 #include "subexpression.cpp"
-#include "word.cpp"
-#include "symbol.cpp"
-#include "reference.cpp"
 #include "quote.cpp"
 #include "block.cpp"
 #include "macro.cpp"

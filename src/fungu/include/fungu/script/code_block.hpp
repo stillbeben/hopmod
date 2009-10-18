@@ -8,40 +8,25 @@
 #ifndef FUNGU_SCRIPT_CODE_BLOCK_HPP
 #define FUNGU_SCRIPT_CODE_BLOCK_HPP
 
-#include "env.hpp"
-#include "expression.hpp"
-
+#include "script_fwd.hpp"
 #include <boost/shared_ptr.hpp>
 
 namespace fungu{
 namespace script{
-
-/**
     
-*/
 class code_block
 {
 public:
     class iterator
     {
     public:
-        iterator(expression * expr):m_expr(expr){}
-        inline expression * operator->(){return m_expr;}
-        inline expression & operator*(){return *m_expr;}
-        expression * get(){return m_expr;}
-        inline iterator & operator++()
-        {
-            m_expr = static_cast<expression *>(m_expr -> get_next_sibling());
-            return *this;
-        }
-        inline bool operator==(const iterator & comparison)const
-        {
-            return m_expr == comparison.m_expr;
-        }
-        inline bool operator!=(const iterator & comparison)const
-        {
-            return m_expr != comparison.m_expr;
-        }
+        iterator(expression * expr);
+        expression * operator->();
+        expression & operator*();
+        expression * get();
+        iterator & operator++();
+        bool operator==(const iterator & comparison)const;
+        bool operator!=(const iterator & comparison)const;
     private:
         expression * m_expr;
     };
@@ -62,19 +47,16 @@ public:
         Compiling the block of code means parsing and storing the allocated
         expression objects in a container.
     */
-    code_block & compile(env::frame * aScope);
+    code_block & compile(env_frame * aScope);
     bool should_compile();
     void destroy_compilation();
     
     iterator begin();
     iterator end();
     
-    result_type eval_each_expression(env::frame * aScope);
-    
-    /**
-        @brief Get untouched source code.
-    */
-    result_type value()const;
+    any eval_each_expression(env_frame * aScope);
+
+    any value()const;
     
     const source_context * get_source_context()const;
 private:

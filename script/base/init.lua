@@ -19,7 +19,7 @@ server.event_handler("shutdown",function() server.log_status("Server shutting do
 
 local function update_gamemodeinfo()
     gamemodeinfo = server.gengamemodeinfo()
-    server.gamemodeinfo = gamemodeinfo
+    --server.gamemodeinfo = gamemodeinfo
 end
 
 server.event_handler("mapchange", function(map, mode)
@@ -55,7 +55,7 @@ end)
 update_gamemodeinfo()
 
 server.event_handler("started", function()
-    
+
     if server.fileExists(server.banlist_file) then
         server.execCubeScriptFile(server.banlist_file)
     end

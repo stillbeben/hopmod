@@ -14,7 +14,7 @@ namespace stringlib{
 
 inline int strcmp(const char * s1,const char * s2){return ::strcmp(s1,s2) == 0;}
 
-inline result_type format(env::object::call_arguments & args,env::frame *)
+inline any format(env_object::call_arguments & args,env_frame *)
 {
     std::string result;
    
@@ -58,7 +58,7 @@ inline result_type format(env::object::call_arguments & args,env::frame *)
     return result;
 }
 
-inline result_type concat(env::object::call_arguments & args,env::frame *)
+inline any concat(env_object::call_arguments & args,env_frame *)
 {
     std::string result;
     while(!args.empty())
@@ -70,7 +70,7 @@ inline result_type concat(env::object::call_arguments & args,env::frame *)
     return result;
 }
 
-inline result_type concatword(env::object::call_arguments & args,env::frame *)
+inline any concatword(env_object::call_arguments & args,env_frame *)
 {
     std::string result;
     while(!args.empty())

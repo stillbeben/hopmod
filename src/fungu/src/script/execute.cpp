@@ -15,7 +15,6 @@
 #include "fungu/script/env.hpp"
 #include "fungu/script/expression.hpp"
 #include "fungu/script/execute.hpp"
-#include "fungu/script/eval_stream.hpp"
 #include "fungu/script/error.hpp"
 #include "fungu/script/code_block.hpp"
 #include "fungu/script/constant.hpp"
@@ -53,7 +52,7 @@ int execute_file(const char * filename, env & environment)
         fclose(file_stream);
     } BOOST_SCOPE_EXIT_END
     
-    env::frame file_frame(&environment);
+    env_frame file_frame(&environment);
 
     constant<const char *> filename_const(filename);
     filename_const.set_temporary();
@@ -83,7 +82,7 @@ void throw_if_error(int errcode)
         throw error(OPERATION_ERROR, boost::make_tuple(std::string(strerror(errcode))));
 }
 
-result_type execute_text(const_string code,env::frame * parent_scope)
+any execute_text(const_string code,env_frame * parent_scope)
 {
     return code_block::temporary_source(code,NULL)
         .compile(parent_scope).eval_each_expression(parent_scope);

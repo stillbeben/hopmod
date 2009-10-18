@@ -1,38 +1,47 @@
+#ifdef BOOST_BUILD_PCH_ENABLED
+#include "pch.hpp"
+#endif
+
 #include "cube.h"
 #include "tools.h"
 #include "hopmod.hpp"
 
+#include <fungu/script/env.hpp>
+#include <fungu/script/callargs.hpp>
+#include <fungu/script/error.hpp>
+using namespace fungu;
+
 bool using_command_prefix = true;
 char command_prefix = '#';
 
-bool eval_player_command(int cn,const char * cmdline, const std::vector<std::string> & arguments,fungu::script::env & env)
+bool eval_player_command(int cn,const char * cmdline, const std::vector<std::string> & arguments, script::env & env)
 {
     if(arguments.empty()) return false;
     
     defformatstring(cmdname)("playercmd_%s",arguments[0].c_str());
-    fungu::script::env::object * cmdobj = env.lookup_global_object(fungu::const_string(cmdname,cmdname+strlen(cmdname)-1));
+    script::env_object * cmdobj = env.lookup_global_object(const_string(cmdname,cmdname+strlen(cmdname)-1));
     if(cmdobj)
     {
-        std::vector<fungu::script::any> args;
-        fungu::script::callargs callargs(args);
+        std::vector<script::any> args;
+        script::callargs callargs(args);
         
         callargs.push_back(cn);
         
         for(std::vector<std::string>::const_iterator it = arguments.begin() + 1; it != arguments.end(); ++it)
-            callargs.push_back(fungu::const_string(it->c_str(),it->c_str()+it->length() - 1));
+            callargs.push_back(const_string(it->c_str(),it->c_str()+it->length() - 1));
         
         try{
-            fungu::script::env::frame frame(&env);
+            script::env_frame frame(&env);
             cmdobj->call(callargs, &frame);
         }
-        catch(fungu::script::error_trace * errinfo)
+        catch(script::error_trace * errinfo)
         {
             report_script_error(errinfo);
             server::player_msg(cn, RED "Command Error!");
         }
-        catch(fungu::script::error err)
+        catch(script::error err)
         {
-            report_script_error(new fungu::script::error_trace(err,"",
+            report_script_error(new script::error_trace(err,"",
                 (env.get_source_context() ? env.get_source_context()->clone() : NULL)));
             server::player_msg(cn, RED "Command Error!");
         }

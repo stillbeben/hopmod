@@ -12,21 +12,21 @@ namespace corelib{
 
 namespace aliaslib{
 
-class alias:public env::object
+class alias:public env_object
 {
 public:
     alias();
-    void push_block(const_string code,env::frame * aScope);
+    void push_block(const_string code,env_frame * aScope);
     bool pop_block();
-    result_type call(call_arguments & args,env::frame * frm);
-    result_type value();
+    any call(call_arguments & args,env_frame * frm);
+    any value();
     const source_context * get_source_context()const;
 private:
     std::list<boost::shared_ptr<code_block> > m_blocks;
     int m_recursion_depth;
 };
 
-static result_type params_scriptfun(env::object::call_arguments & args,env::frame * aFrame);
+static any params_scriptfun(env_object::call_arguments & args,env_frame * aFrame);
 
 class module:public env_module<module>
 {
@@ -35,11 +35,11 @@ public:
     ~module();
     int get_numargs()const;
     void set_numargs(int numargs);
-    void push_arg(int i, const_string value, env::frame * frm);
-    void pop_arg(int i, env::frame * frm);
+    void push_arg(int i, const_string value, env_frame * frm);
+    void pop_arg(int i, env_frame * frm);
     alias * get_arg_alias(int i,env * e);
 private:
-    std::vector<std::pair<env::symbol *,alias *> > m_arg;
+    std::vector<std::pair<env_symbol *,alias *> > m_arg;
 
     int m_numargs;
     variable<int> m_numargs_wrapper;
@@ -47,7 +47,7 @@ private:
     function<raw_function_type> m_params_func;
 };
 
-inline result_type define_alias(env::object::call_arguments & args,env::frame * aScope)
+inline any define_alias(env_object::call_arguments & args,env_frame * aScope)
 {
     const_string name = args.safe_casted_front<const_string>();
     args.pop_front();
@@ -65,7 +65,7 @@ inline result_type define_alias(env::object::call_arguments & args,env::frame * 
     return aAlias->value();
 }
 
-inline result_type push_alias_block(env::object::call_arguments & args,env::frame * aFrame)
+inline any push_alias_block(env_object::call_arguments & args,env_frame * aFrame)
 {
     const_string name = args.safe_casted_front<const_string>();
     args.pop_front();
@@ -81,7 +81,7 @@ inline result_type push_alias_block(env::object::call_arguments & args,env::fram
     return any::null_value();
 }
 
-inline result_type pop_alias_block(env::object::call_arguments & args,env::frame * aFrame)
+inline any pop_alias_block(env_object::call_arguments & args,env_frame * aFrame)
 {   
     const_string name = args.safe_casted_front<const_string>();
     args.pop_front();
@@ -104,7 +104,7 @@ module::module(env * e)
 
 module::~module()
 {
-    for(std::vector<std::pair<env::symbol *,alias *> >::iterator it = m_arg.begin(); 
+    for(std::vector<std::pair<env_symbol *,alias *> >::iterator it = m_arg.begin(); 
         it != m_arg.end(); ++it)
     {
         it->first->set_global_object(NULL);
@@ -124,12 +124,12 @@ void module::set_numargs(int numargs)
     m_numargs = numargs;
 }
     
-void module::push_arg(int i, const_string value, env::frame * frm)
+void module::push_arg(int i, const_string value, env_frame * frm)
 {
     get_arg_alias(i, frm->get_env())->push_block(value, frm);
 }
 
-void module::pop_arg(int i, env::frame * frm)
+void module::pop_arg(int i, env_frame * frm)
 {
     get_arg_alias(i, frm->get_env())->pop_block();
 }
@@ -140,14 +140,14 @@ alias * module::get_arg_alias(int i, env * e)
     
     assert(i <= (int)m_arg.size());
     
-    env::symbol * alias_sym;
+    env_symbol * alias_sym;
     alias * a;
     
     if(i == (int)m_arg.size())
     {
         a = new alias;
         alias_sym = e->create_symbol(std::string("arg") + lexical_cast<std::string>(i+1));
-        m_arg.push_back(std::pair<env::symbol *,alias *>(alias_sym, a));
+        m_arg.push_back(std::pair<env_symbol *,alias *>(alias_sym, a));
     }
     else
     {
@@ -167,7 +167,7 @@ alias::alias()
     
 }
     
-void alias::push_block(const_string code,env::frame * aScope)
+void alias::push_block(const_string code,env_frame * aScope)
 {
     m_blocks.push_front(
         boost::shared_ptr<code_block>(new code_block(code,aScope->get_env()->get_source_context()))
@@ -181,7 +181,7 @@ bool alias::pop_block()
     return true;
 }
     
-result_type alias::call(call_arguments & args,env::frame * frm)
+any alias::call(call_arguments & args,env_frame * frm)
 {
     if(++m_recursion_depth > env::recursion_limit)
         throw error(HIT_RECURSION_LIMIT,boost::make_tuple(env::recursion_limit));
@@ -209,7 +209,7 @@ result_type alias::call(call_arguments & args,env::frame * frm)
         args.pop_front();
     }
     
-    result_type implicit_result;
+    any implicit_result;
     
     code_block & block = *m_blocks.front();
     block.compile(frm);
@@ -227,7 +227,7 @@ result_type alias::call(call_arguments & args,env::frame * frm)
     else return implicit_result;
 }
 
-result_type alias::value()
+any alias::value()
 {
     if(m_blocks.empty()) return any::null_value();
     return m_blocks.front()->value();
@@ -238,30 +238,30 @@ const source_context * alias::get_source_context()const
     return m_blocks.front()->get_source_context();
 }
 
-result_type params_scriptfun(env::object::call_arguments & args,env::frame * aFrame)
+any params_scriptfun(env_object::call_arguments & args,env_frame * aFrame)
 {
     module * alias_globals = aFrame->get_env()->get_module_instance<module>();
     
-    class alias_ref:public env::object
+    class alias_ref:public env_object
     {
     public:
-        alias_ref(object * obj)
+        alias_ref(env_object * obj)
          :m_object(obj)
         {
             set_adopted();
         }
         
-        result_type call(call_arguments & args,frame * aFrame)
+        any call(call_arguments & args,frame * aFrame)
         {
             return m_object->call(args,aFrame);
         }
         
-        result_type value()
+        any value()
         {
             return m_object->value();
         }
     private:
-        object * m_object;
+        env_object * m_object;
     };
     
     int arg_index = 1;

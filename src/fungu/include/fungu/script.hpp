@@ -10,7 +10,6 @@
 
 #include "script/env.hpp"
 #include "script/expression.hpp"
-#include "script/eval_stream.hpp"
 #include "script/execute.hpp"
 #include "script/corelib.hpp"
 #include "script/bind.hpp"

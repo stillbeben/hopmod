@@ -9,12 +9,12 @@
 namespace fungu{
 namespace script{
 
-static void default_evaluator(expression * expr, env::frame * frm, void *)
+static void default_evaluator(expression * expr, env_frame * frm, void *)
 {
     expr->eval(frm);
 }
 
-eval_stream::eval_stream(env::frame * frm, evaluation_function evaluator, void * evaluator_closure)
+eval_stream::eval_stream(env_frame * frm, evaluation_function evaluator, void * evaluator_closure)
  :m_evaluator(evaluator),
   m_evaluator_closure(evaluator_closure),
   m_frame(frm),

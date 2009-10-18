@@ -114,7 +114,7 @@ end
 
 function internal.construct_teams_table()
     
-    if not server.gamemodeinfo.teams then return end
+    if not gamemodeinfo.teams then return end
     
     local teams = {}
     

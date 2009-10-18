@@ -9,16 +9,14 @@
 #define FUNGU_SCRIPT_EXPRESSION_HPP
 
 #include "construct.hpp"
-#include "error.hpp"
-
 #include <vector>
 
 namespace fungu{
 namespace script{
 
-/**
-    
-*/
+class env_symbol;
+class source_context;
+
 class expression:public construct
 {
 public:
@@ -27,26 +25,12 @@ public:
         static bool is_member(const_string::value_type c);
     };
     
-    #define FUNGU_CUBESCRIPT_EXPRESSION_NESTED_CLASS
-    #include "subexpression.hpp"
-    #include "word.hpp"
-    #include "symbol.hpp"
-    #include "reference.hpp"
-    #include "quote.hpp"
-    #include "block.hpp"
-    #include "comment.hpp"
-    #undef FUNGU_CUBESCRIPT_EXPRESSION_NESTED_CLASS
-    
-    typedef word<word_exit_terminals> expr_word;
-    typedef symbol<word_exit_terminals> expr_symbol;
-    typedef reference<word_exit_terminals> expr_reference;
-    
     expression();
     ~expression();
     
-    parse_state parse(source_iterator * first,source_iterator last,env::frame * frame);
+    parse_state parse(source_iterator * first,source_iterator last,env_frame * frame);
     
-    result_type eval(env::frame * frame);
+    any eval(env_frame * frame);
     
     bool is_string_constant()const;
     
@@ -56,10 +40,10 @@ public:
 private:
     void add_child_construct(construct * child);
     
-    bool is_alias_assignment(env::frame * frame)const;
-    void translate_alias_assignment(env::frame * frame);
+    bool is_alias_assignment(env_frame * frame)const;
+    void translate_alias_assignment(env_frame * frame);
     
-    void fill_constarg_vector(env::frame * frame);
+    void fill_constarg_vector(env_frame * frame);
     void reset_placeholders();
 public:
     source_context * get_source_context()const;
@@ -67,10 +51,10 @@ private:
     construct * m_parsing;
     construct * m_first_construct;
 
-    std::vector<result_type> m_arguments;
+    std::vector<any> m_arguments;
     std::vector<unsigned char> m_placeholders;
     
-    env::symbol * m_operation_symbol;
+    env_symbol * m_operation_symbol;
     
     // information for debugging
     unsigned short m_line;
@@ -80,7 +64,7 @@ private:
 class base_expression:public expression
 {
 public:
-    parse_state parse(source_iterator * first,source_iterator last,env::frame * frame);
+    parse_state parse(source_iterator * first,source_iterator last,env_frame * frame);
 };
 
 } //namespace script

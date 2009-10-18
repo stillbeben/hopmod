@@ -4,6 +4,7 @@
 
 #include "hopmod.hpp"
 
+#include <fungu/script.hpp>
 #include <fungu/script/slot_factory.hpp>
 #include <fungu/script/lua/lua_function.hpp>
 using namespace fungu;
@@ -40,7 +41,6 @@ boost::signal<void (int,int)> signal_spectator;
 boost::signal<void (int,const char *,int)> signal_setmaster;
 boost::signal<void (int,int)> signal_teamkill;
 boost::signal<void (int,int)> signal_frag;
-boost::signal<void (int,int, const char *,const char *,bool)> signal_auth;
 boost::signal<void (int,const char *,const char *)> signal_authreq;
 boost::signal<void (int,int,const char *)> signal_authrep;
 boost::signal<void (int,int,int)> signal_addbot;
@@ -142,7 +142,7 @@ static int lua_event_handler(lua_State * L)
     luaL_checktype(L, 2, LUA_TFUNCTION);
     lua_pushvalue(L, 2);
     
-    script::env::object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
+    script::env_object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
     luaFunctionObject->set_adopted();
 
     int handle = slots.create_slot(name, luaFunctionObject, env);
@@ -156,8 +156,8 @@ static int lua_event_handler(lua_State * L)
 */
 static int cubescript_event_handler(const std::string & name, script::any obj)
 {
-    if(obj.get_type() != typeid(script::env::object::shared_ptr)) throw script::error(script::BAD_CAST);
-    return slots.create_slot(name, script::any_cast<script::env::object::shared_ptr>(obj), env);
+    if(obj.get_type() != typeid(script::env_object::shared_ptr)) throw script::error(script::BAD_CAST);
+    return slots.create_slot(name, script::any_cast<script::env_object::shared_ptr>(obj), env);
 }
 
 /*
@@ -210,7 +210,6 @@ void register_signals(script::env & env)
     slots.register_signal(signal_setmaster, "setmaster", normal_error_handler);
     slots.register_signal(signal_teamkill, "teamkill", normal_error_handler);
     slots.register_signal(signal_frag, "frag", normal_error_handler);
-    slots.register_signal(signal_auth, "auth", normal_error_handler);
     slots.register_signal(signal_authreq, "request_auth_challenge", normal_error_handler);
     slots.register_signal(signal_authrep, "auth_challenge_response", normal_error_handler);
     slots.register_signal(signal_addbot, "addbot", normal_error_handler);
@@ -275,7 +274,6 @@ void disconnect_all_slots()
     signal_setmaster.disconnect_all_slots();
     signal_teamkill.disconnect_all_slots();
     signal_frag.disconnect_all_slots();
-    signal_auth.disconnect_all_slots();
     signal_authreq.disconnect_all_slots();
     signal_authrep.disconnect_all_slots();
     signal_addbot.disconnect_all_slots();

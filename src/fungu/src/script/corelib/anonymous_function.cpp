@@ -12,7 +12,7 @@ namespace corelib{
 
 namespace funclib{
 
-class anonymous_function:public env::object
+class anonymous_function:public env_object
 {
 public:
     anonymous_function(const std::vector<const_string> & params, const_string code, frame * aFrame)
@@ -24,8 +24,6 @@ public:
         m_params.reserve(params.size());
         for(std::vector<const_string>::const_iterator it = params.begin(); it != params.end(); ++it)
             m_params.push_back(aFrame->get_env()->create_symbol(*it));
-        
-        m_callee_symbol = aFrame->get_env()->create_symbol(FUNGU_OBJECT_ID("callee"));
     }
     
     ~anonymous_function()
@@ -33,7 +31,7 @@ public:
         
     }
     
-    result_type call(call_arguments & callargs, frame * aFrame)
+    any call(call_arguments & callargs, frame * aFrame)
     {
         if(++m_recursion_depth > env::recursion_limit)
             throw error(HIT_RECURSION_LIMIT,boost::make_tuple(env::recursion_limit));
@@ -43,10 +41,9 @@ public:
         std::vector<any_variable> arg(m_params.size());
         
         std::vector<any_variable>::iterator argIt = arg.begin();
-        std::vector<env::symbol *>::iterator paramIt = m_params.begin();
+        std::vector<env_symbol *>::iterator paramIt = m_params.begin();
         
         frame func_frame(aFrame->get_env());
-        func_frame.bind_object(get_shared_ptr().get(), m_callee_symbol);
         
         for(; paramIt != m_params.end(); ++argIt, ++paramIt)
         {
@@ -60,7 +57,7 @@ public:
         
         try
         {
-            result_type result = m_code.eval_each_expression(&func_frame);
+            any result = m_code.eval_each_expression(&func_frame);
             m_recursion_depth--;
             return result;
         }
@@ -71,36 +68,7 @@ public:
         }
     }
     
-    //TODO REMOVE
-    #ifdef FUNGU_WITH_LUA
-    int call(lua_State * L)
-    {
-        std::vector<any> args;
-        int nargs = lua_gettop(L);
-        for(int i = 1; i <= nargs; i++)
-        {
-            size_t len;
-            const char * argi = lua_tolstring(L, i, &len);
-            args.push_back(const_string(argi,argi+len-1));
-        }
-        
-        lua_getfield(L, LUA_REGISTRYINDEX, "fungu_script_env");
-        env * environment = reinterpret_cast<env *>(lua_touserdata(L, -1));
-        if(!environment) return luaL_error(L, "missing 'fungu_script_env' field in lua registry");
-        
-        env::frame callframe(environment);
-        call_arguments callargs(args);
-        result_type result = call(callargs, &callframe);
-        if(result.empty()) return 0;
-        else
-        {
-            lua_pushstring(L, result.to_string().copy().c_str());
-            return 1;
-        }
-    }
-    #endif
-    
-    result_type value()
+    any value()
     {
         return get_shared_ptr();
     }
@@ -110,7 +78,7 @@ public:
         return m_code.get_source_context();
     }
     
-    static result_type define_anonymous_function(call_arguments & args, frame * aFrame)
+    static any define_anonymous_function(call_arguments & args, frame * aFrame)
     {
         std::vector<const_string> params;
         parse_array<std::vector<const_string>,true>(
@@ -133,9 +101,8 @@ public:
     }
 private:
     code_block m_code;
-    std::vector<env::symbol *> m_params;
+    std::vector<env_symbol *> m_params;
     int m_recursion_depth;
-    env::symbol * m_callee_symbol;
 };
 
 } //namespace detail

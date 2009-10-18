@@ -138,5 +138,10 @@ any any::null_value()
     return any();
 }
 
+bool any_is_string(const any & var)
+{
+    return var.get_type() == typeid(const_string);
+}
+
 } //namespace script
 } //namespace fungu

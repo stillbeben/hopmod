@@ -9,9 +9,9 @@
 namespace fungu{
 namespace script{
 
-class table_iterator:public env::object::member_iterator
+class table_iterator:public env_object::member_iterator
 {
-    typedef std::map<std::string,env::object::shared_ptr>::const_iterator internal_iterator;
+    typedef std::map<std::string,env_object::shared_ptr>::const_iterator internal_iterator;
 public:
     table_iterator(internal_iterator it, internal_iterator end)
      :m_it(it),m_end(end)
@@ -24,7 +24,7 @@ public:
         return m_it->first;
     }
     
-    env::object * get_object()const
+    env_object * get_object()const
     {
         return m_it->second.get();
     }
@@ -50,16 +50,16 @@ table::~table()
     //m_members[".this"].reset();
 }
 
-env::object::shared_ptr table::create()
+env_object::shared_ptr table::create()
 {
     table * t = new table();
     t->set_adopted();
     return t->get_shared_ptr();
 }
 
-result_type table::call(call_arguments & args,frame *)
+any table::call(call_arguments & args,frame *)
 {
-    object::shared_ptr obj = this;
+    env_object::shared_ptr obj = this;
     while(!args.empty())
     {
         const_string member_id = args.casted_front<const_string>();
@@ -70,7 +70,7 @@ result_type table::call(call_arguments & args,frame *)
     return obj->get_shared_ptr();
 }
 
-env::object::shared_ptr table::assign(const std::string & name,const any & data)
+env_object::shared_ptr table::assign(const std::string & name,const any & data)
 {
     any_variable * anyvar = new any_variable;
     anyvar->set_adopted();
@@ -87,7 +87,7 @@ void table::assign(const any & source)
     m_members = source_table->m_members;
 }
 
-env::object * table::lookup_member(const_string id)
+env_object * table::lookup_member(const_string id)
 {
     map::iterator it = m_members.find(id.copy());
     if(it == m_members.end()) return NULL;
@@ -99,7 +99,7 @@ bool table::erase_member(const std::string & name)
     return m_members.erase(name);
 }
 
-env::object::member_iterator * table::first_member()const
+env_object::member_iterator * table::first_member()const
 {
     if(m_members.empty()) return NULL;
     return new table_iterator(m_members.begin(), m_members.end());

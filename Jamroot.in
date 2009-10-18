@@ -44,7 +44,6 @@ lib sauertools :
     src/shared/tools.cpp
     src/shared/stream.cpp
     src/shared/crypto.cpp
-    src/hopmod/masterserver_client.cpp
     : <include>src/shared <include>src/enet/include
     <define>STANDALONE
     <link>static
@@ -85,6 +84,8 @@ exe sauer_server :
     src/hopmod/restarter.cpp
     src/hopmod/utils.cpp
     src/hopmod/md5.c
+    src/hopmod/netmask.cpp
+    src/hopmod/bans.cpp
     sauertools
     serverscripting
     scriptpipe
@@ -103,15 +104,7 @@ exe keygen :
     z
     src/hopmod/keygen.cpp : <define>STANDALONE ;
 
-exe sauer_authserver :
-    src/hopmod/authserver.cpp
-    sauertools
-    serverscripting
-    scriptpipe
-    enet
-    : <define>STANDALONE <define>HOPMOD_AUTHSERVER_EVENTS ;
-
-install dist : sauer_server sauer_authserver keygen /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
+install dist : sauer_server keygen /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 
 install lua-packages :
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;

@@ -12,7 +12,14 @@
 
 #include "fungu/script/any.hpp"
 #include "fungu/script/callargs.hpp"
+#include "fungu/script/callargs_serializer.hpp"
 #include "fungu/script/lexical_cast.hpp"
+
+#include "fungu/script/env.hpp"
+#include "fungu/script/env_frame.hpp"
+
+#include <boost/lexical_cast.hpp>
+#include "fungu/stringutils.hpp"
 
 #include "any.cpp"
 #include "lexical_cast.cpp"

@@ -9,26 +9,26 @@
 namespace fungu{
 namespace script{
 
-env::object::object()
+env_object::env_object()
 :m_refcount(0),
  m_flags(0)
 {
     
 }
 
-env::object::~object()
+env_object::~env_object()
 {
-
+    
 }
 
-env::object::object_type env::object::get_object_type()const
+env_object::object_type env_object::get_object_type()const
 {
-    return env::object::UNCLASSIFIED_OBJECT;
+    return env_object::UNCLASSIFIED_OBJECT;
 }
 
 #ifdef FUNGU_WITH_LUA
 
-int env::object::call(lua_State * L)
+int env_object::call(lua_State * L)
 {
     int argc = lua_gettop(L);
     
@@ -45,7 +45,7 @@ int env::object::call(lua_State * L)
     
     try
     {
-        result_type result = call(callargs, &callframe);
+        any result = call(callargs, &callframe);
         if(result.empty()) return 0;
         else
         {
@@ -69,7 +69,7 @@ int env::object::call(lua_State * L)
     }
 }
 
-void env::object::value(lua_State * L)
+void env_object::value(lua_State * L)
 {
     //return lua::push_value(L, value().to_string());
     value().push_value(L);
@@ -77,73 +77,73 @@ void env::object::value(lua_State * L)
 
 #endif
 
-result_type env::object::value()
+any env_object::value()
 {
     return get_shared_ptr();
 }
 
-void env::object::assign(const any &)
+void env_object::assign(const any &)
 {
     throw error(NO_WRITE);
 }
 
-env::object * env::object::lookup_member(const_string id)
+env_object * env_object::lookup_member(const_string id)
 {
     return NULL;
 }
 
-env::object::member_iterator * env::object::first_member()const
+env_object::member_iterator * env_object::first_member()const
 {
     return NULL;
 }
 
-void env::object::add_ref()
+void env_object::add_ref()
 {
     m_refcount++;
 }
 
-env::object & env::object::unref()
+env_object & env_object::unref()
 {
     m_refcount--;
     return *this;
 }
 
-unsigned int env::object::get_refcount()const
+unsigned int env_object::get_refcount()const
 {
     return m_refcount;
 }
 
-env::object & env::object::set_temporary()
+env_object & env_object::set_temporary()
 {
     assert(m_refcount == 0);
     m_flags |= TEMPORARY_OBJECT;
     return *this;
 }
 
-env::object & env::object::set_adopted()
+env_object & env_object::set_adopted()
 {
     assert(!is_temporary());
     m_flags |= ADOPTED_OBJECT;
     return *this;
 }
 
-bool env::object::is_temporary()const
+bool env_object::is_temporary()const
 {
     return (m_flags & TEMPORARY_OBJECT);
 }
 
-bool env::object::is_adopted()const
+bool env_object::is_adopted()const
 {
     return (m_flags & ADOPTED_OBJECT);
 }
 
-env::object::shared_ptr env::object::get_shared_ptr()
+env_object::shared_ptr env_object::get_shared_ptr()
 {
     if(is_temporary()) throw error(UNSUPPORTED);//TODO specialised error code
     return shared_ptr(this);
 }
 
-env::object::shared_ptr env::object::get_shared_ptr(object * obj)
+env_object::shared_ptr env_object::get_shared_ptr(env_object * obj)
 {
     if(obj) return obj->get_shared_ptr();
     else return NULL;

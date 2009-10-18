@@ -14,7 +14,7 @@ template<typename ExitTerminals>
 class reference:public symbol<ExitTerminals>
 {
 public:
-    result_type eval(env::frame * frame);
+    any eval(env_frame * frame);
     std::string form_source()const;
 };
 

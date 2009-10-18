@@ -8,7 +8,6 @@
 #ifndef FUNGU_SCRIPT_CONSTANT_HPP
 #define FUNGU_SCRIPT_CONSTANT_HPP
 
-#include "env.hpp"
 #include "callargs_serializer.hpp"
 
 #ifdef FUNGU_WITH_LUA
@@ -18,11 +17,13 @@
 namespace fungu{
 namespace script{
 
+class env_object;
+
 /**
     @brief Constant value wrapper.
 */
 template<typename T>
-class constant:public env::object
+class constant:public env_object
 {
 public:
     constant(const T & value)
@@ -42,7 +43,7 @@ public:
     /**
         @brief Throws error(NO_WRITE).
     */
-    result_type call(call_arguments & args,env::frame *)
+    any call(call_arguments & args,env_frame *)
     {
         throw error(NO_WRITE);
     }
@@ -50,7 +51,7 @@ public:
     /**
         @brief Returns constant value. 
     */
-    result_type value()
+    any value()
     {
         return m_value;
     }

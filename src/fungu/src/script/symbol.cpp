@@ -19,7 +19,7 @@ expression::symbol<Terms>::symbol()
 }
 
 template<typename Terms>
-parse_state expression::symbol<Terms>::parse(source_iterator * first,source_iterator last,env::frame * frame)
+parse_state expression::symbol<Terms>::parse(source_iterator * first,source_iterator last,env_frame * frame)
 {
     if(m_first == const_string::null_const_iterator())
     {
@@ -47,7 +47,7 @@ parse_state expression::symbol<Terms>::parse(source_iterator * first,source_iter
 }
 
 template<typename Terms>
-result_type expression::symbol<Terms>::eval(env::frame * frame)
+any expression::symbol<Terms>::eval(env_frame * frame)
 {
     return resolve_symbol(frame)->value();
 }
@@ -78,7 +78,7 @@ const_string expression::symbol<Terms>::get_full_id()const
 }
 
 template<typename Terms>
-env::object * expression::symbol<Terms>::resolve_symbol(env::frame * frame)
+env_object * expression::symbol<Terms>::resolve_symbol(env_frame * frame)
 {
     assert_parsed();
     
@@ -87,7 +87,7 @@ env::object * expression::symbol<Terms>::resolve_symbol(env::frame * frame)
     m_symbol = (!m_symbol ? frame->get_env()->lookup_symbol(id) : m_symbol);
     if(!m_symbol) throw error(UNKNOWN_SYMBOL,boost::make_tuple(id.copy()));
     
-    env::object * obj = m_symbol->lookup_object(frame);
+    env_object * obj = m_symbol->lookup_object(frame);
     if(!obj) throw error(UNKNOWN_SYMBOL, boost::make_tuple(id.copy()));
     
     int members = get_memv_size();

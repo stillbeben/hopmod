@@ -16,12 +16,12 @@ namespace fungu{
 namespace script{
 
 template<typename Signature>
-class script_function:public generic_script_function<Signature, std::vector<result_type>, callargs_serializer, error>
+class script_function:public generic_script_function<Signature, std::vector<any>, callargs_serializer, error>
 {
 public:
     typedef any (* error_handler_function)(error_trace *);
     
-    script_function(env::object::shared_ptr object, env * environment, error_handler_function error_handler)
+    script_function(env_object::shared_ptr object, env * environment, error_handler_function error_handler)
      :m_object(object),
       m_env(environment),
       m_error_handler(error_handler)
@@ -29,13 +29,13 @@ public:
         
     }
 protected:
-    std::vector<result_type>::value_type call(std::vector<result_type> * args)
+    std::vector<any>::value_type call(std::vector<any> * args)
     {
-        result_type result;
+        any result;
 
         try
         {
-            env::frame callframe(m_env);
+            env_frame callframe(m_env);
             callargs callargs(*args);
             
             result = m_object->call(callargs, &callframe);
@@ -52,7 +52,7 @@ protected:
         return result;
     }
     
-    std::vector<result_type>::value_type error_handler(int arg, error err)
+    std::vector<any>::value_type error_handler(int arg, error err)
     {
         return m_error_handler(create_error_trace(err,NULL));
     }
@@ -63,7 +63,7 @@ private:
         return new error_trace(e,"",newCtx);
     }
     
-    env::object::shared_ptr m_object;
+    env_object::shared_ptr m_object;
     env * m_env;
     error_handler_function m_error_handler;
 };

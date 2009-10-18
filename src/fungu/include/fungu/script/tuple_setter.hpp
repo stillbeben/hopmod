@@ -15,7 +15,7 @@ namespace fungu{
 namespace script{
     
 template<typename Tuple>
-class tuple_setter:public env::object
+class tuple_setter:public env_object
 {
 public:
     tuple_setter()
@@ -24,13 +24,13 @@ public:
         
     }
     
-    result_type call(call_arguments & args,env::frame * aFrame)
+    any call(call_arguments & args,env_frame * aFrame)
     {
         read_next_element(args, m_tuple);
         return any::null_value();
     }
     
-    result_type value()
+    any value()
     {
         return get_shared_ptr();
     }

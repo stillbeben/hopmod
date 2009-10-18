@@ -157,10 +157,11 @@ any get_argument_value(lua_State * L)
             return const_string(lua_tostring(L,-1));
         case LUA_TFUNCTION:
         {
-            env::object * obj = new lua_function(L);
+            env_object * obj = new lua_function(L);
             obj->set_adopted();
             return obj->get_shared_ptr();
         }
+        #if 0
         case LUA_TTABLE:
         {
             table * outT = new table();
@@ -185,8 +186,9 @@ any get_argument_value(lua_State * L)
             outT->set_adopted();
             return outT->get_shared_ptr();
         }
+        #endif
         default:
-            throw error(NO_CAST);
+            return any::null_value();
     }
 }
 

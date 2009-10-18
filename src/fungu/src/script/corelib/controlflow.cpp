@@ -12,17 +12,17 @@ namespace corelib{
 
 namespace controlflow{
 
-inline int predicate(const_string code,env::frame * aScope)
+inline int predicate(const_string code,env_frame * aScope)
 {
     return lexical_cast<int>(execute_text(code,aScope));
 }
 
-inline int predicate(code_block & cb,env::frame * aScope)
+inline int predicate(code_block & cb,env_frame * aScope)
 {
     return lexical_cast<int>(cb.eval_each_expression(aScope));
 }
 
-result_type if_(env::object::call_arguments & args, env::frame * frame)
+any if_(env_object::call_arguments & args, env_frame * frame)
 {
     callargs_serializer cs(args,frame);
     
@@ -47,7 +47,7 @@ result_type if_(env::object::call_arguments & args, env::frame * frame)
     else return false_code.eval_each_expression(frame);
 }
 
-result_type ternary(env::object::call_arguments & args, env::frame * frame)
+any ternary(env_object::call_arguments & args, env_frame * frame)
 {
     callargs_serializer cs(args,frame);
     
@@ -63,9 +63,9 @@ result_type ternary(env::object::call_arguments & args, env::frame * frame)
     return (predicate(cond, frame) ? tc_value : fc_value);
 }
 
-result_type while_(env::object::call_arguments & args,env::frame * aScope)
+any while_(env_object::call_arguments & args,env_frame * aScope)
 {
-    env::frame while_scope(aScope);
+    env_frame while_scope(aScope);
     nullary_setter _continue;
     _continue.set_temporary();
     nullary_setter _break;
@@ -81,7 +81,7 @@ result_type while_(env::object::call_arguments & args,env::frame * aScope)
     code_block body(lexical_cast<const_string>(args.front())); args.pop_front();
     body.compile(&while_scope);
     
-    result_type while_body_result;
+    any while_body_result;
     
     while(predicate(condition,&while_scope) && 
          !while_scope.has_expired() && !_break.is_set())
@@ -97,9 +97,9 @@ result_type while_(env::object::call_arguments & args,env::frame * aScope)
     return while_body_result;
 }
 
-inline result_type loop(env::object::call_arguments & args,env::frame * aScope)
+inline any loop(env_object::call_arguments & args,env_frame * aScope)
 {
-    env::frame loop_frame(aScope);
+    env_frame loop_frame(aScope);
     
     unsigned int counter=0;
     variable<unsigned int> counter_var(counter);
@@ -117,7 +117,7 @@ inline result_type loop(env::object::call_arguments & args,env::frame * aScope)
     args.pop_front();
     body.compile(aScope);
     
-    result_type body_result;
+    any body_result;
     
     for(; counter < count_to && !aScope->has_expired(); ++counter) 
         body_result = body.eval_each_expression(&loop_frame);
@@ -125,7 +125,7 @@ inline result_type loop(env::object::call_arguments & args,env::frame * aScope)
     return body_result;
 }
 
-inline result_type or_(env::object::call_arguments & args,env::frame * aFrame)
+inline any or_(env_object::call_arguments & args,env_frame * aFrame)
 {
     bool retval = false;
     while(retval == false && !args.empty())
@@ -136,7 +136,7 @@ inline result_type or_(env::object::call_arguments & args,env::frame * aFrame)
     return retval;
 }
 
-inline result_type and_(env::object::call_arguments & args,env::frame * aFrame)
+inline any and_(env_object::call_arguments & args,env_frame * aFrame)
 {
     bool retval = true;
     while(retval == true && !args.empty())

@@ -257,3 +257,5 @@ global warning_bantime (mins 60)
 global updatemaster 1
 global masterserver "sauerbraten.org"
 global masterserverport 28787
+
+global use_master_auth 1

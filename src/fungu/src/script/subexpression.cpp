@@ -9,19 +9,19 @@
 namespace fungu{
 namespace script{
 
-expression::subexpression::subexpression()
+subexpression::subexpression()
  :m_parsing(NULL),m_first_expr(NULL)
 {
     
 }
 
-expression::subexpression::~subexpression()
+subexpression::~subexpression()
 {
     delete m_parsing;
     delete m_first_expr;
 }
 
-parse_state expression::subexpression::parse(source_iterator * first,source_iterator last,env::frame * frame)
+parse_state subexpression::parse(source_iterator * first,source_iterator last,env_frame * frame)
 {
     if(!m_parsing) m_parsing = new expression;
     
@@ -43,9 +43,9 @@ parse_state expression::subexpression::parse(source_iterator * first,source_iter
     return PARSE_COMPLETE;
 }
 
-result_type expression::subexpression::eval(env::frame * frame)
+any subexpression::eval(env_frame * frame)
 {
-    result_type result;
+    any result;
     construct * expr = m_first_expr;
     while(expr)
     {
@@ -55,12 +55,12 @@ result_type expression::subexpression::eval(env::frame * frame)
     return result;
 }
 
-bool expression::subexpression::is_string_constant()const
+bool subexpression::is_string_constant()const
 {
     return false;
 }
 
-std::string expression::subexpression::form_source()const
+std::string subexpression::form_source()const
 {
     std::string source = "(";
     bool multiple = false;

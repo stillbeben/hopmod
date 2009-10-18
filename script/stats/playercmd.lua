@@ -22,7 +22,7 @@ commandFunction = function(cn, selection, subselection)
 			red(server.player_deaths(player)),
 			yellow(server.player_accuracy(player) .. "%"))
 		)
-		if server.gamemodeinfo.teams then
+		if gamemodeinfo.teams then
 			server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))
 		end
 	end

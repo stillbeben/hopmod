@@ -24,16 +24,16 @@ inline int listlen(const std::vector<const_string> & v)
     return static_cast<int>(v.size());
 }
 
-result_type foreach_member(env::object::call_arguments & args,env::frame * frame)
+any foreach_member(env_object::call_arguments & args,env_frame * frame)
 {
-    env::object::shared_ptr obj = any_cast<env::object::shared_ptr>(args.front());
+    env_object::shared_ptr obj = any_cast<env_object::shared_ptr>(args.front());
     args.pop_front();
     
     callargs_serializer cs(args,frame);
     code_block cb = cs.deserialize(args.front(), type_tag<code_block>());
     args.pop_front();
     
-    env::frame inner_frame(frame);
+    env_frame inner_frame(frame);
     
     const_string name_arg;
     managed_variable<const_string> name_arg_var(name_arg);
@@ -45,8 +45,8 @@ result_type foreach_member(env::object::call_arguments & args,env::frame * frame
     value_arg.set_temporary();
     inner_frame.bind_object(&value_arg, FUNGU_OBJECT_ID("arg2"));
     
-    env::object::member_iterator * curmem = obj->first_member();
-    result_type result;
+    env_object::member_iterator * curmem = obj->first_member();
+    any result;
     
     while(curmem)
     {
@@ -64,11 +64,11 @@ result_type foreach_member(env::object::call_arguments & args,env::frame * frame
     return result;
 }
 
-result_type foreach(const_string varname, env::object::call_arguments & args,env::frame * frame)
+any foreach(const_string varname, env_object::call_arguments & args,env_frame * frame)
 {
     if(args.size() < 2) throw error(NOT_ENOUGH_ARGUMENTS,boost::make_tuple(2));
     
-    if(args.front().get_type() == typeid(env::object::shared_ptr)) 
+    if(args.front().get_type() == typeid(env_object::shared_ptr)) 
         return foreach_member(args,frame);
     
     callargs_serializer cs(args,frame);
@@ -79,9 +79,9 @@ result_type foreach(const_string varname, env::object::call_arguments & args,env
     code_block cb = cs.deserialize(args.front(), type_tag<code_block>());
     args.pop_front();
     
-    result_type result;
+    any result;
     
-    env::frame inner_frame(frame);
+    env_frame inner_frame(frame);
     
     const_string current_arg;
     managed_variable<const_string> current_arg_var(current_arg);
@@ -100,7 +100,7 @@ result_type foreach(const_string varname, env::object::call_arguments & args,env
     return result;
 }
 
-inline result_type looplist(env::object::call_arguments & args, env::frame * frame)
+inline any looplist(env_object::call_arguments & args, env_frame * frame)
 {
     const_string varname = args.safe_casted_front<const_string>();
     args.pop_front();

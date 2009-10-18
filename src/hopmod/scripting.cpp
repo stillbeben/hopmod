@@ -8,11 +8,13 @@
 #include "hopmod.hpp"
 #include "scoped_setting.hpp"
 #include "signals.hpp"
+#include <fungu/script.hpp>
 #include <fungu/script/lua/object_wrapper.hpp>
 #include <fungu/script/lua/lua_function.hpp>
 #include <fungu/dynamic_cast_derived.hpp>
 #include <fungu/script/variable.hpp>
 #include <fungu/script/parse_array.hpp>
+#include <fungu/script/any_variable.hpp>
 using namespace fungu;
 
 #include <sstream>
@@ -20,7 +22,7 @@ using namespace fungu;
 #include <time.h>
 
 static void create_server_namespace(lua_State *);
-static void bind_object_to_lua(const_string, script::env::object *);
+static void bind_object_to_lua(const_string, script::env_object *);
 static inline int server_interface_index(lua_State *);
 static inline int server_interface_newindex(lua_State *);
 static inline void push_server_table(lua_State *);
@@ -127,9 +129,9 @@ int server_interface_index(lua_State * L)
     
     lua_getfield(L, -1, key);
     
-    script::env::object * obj = script::lua::get_object(L, -1);
+    script::env_object * obj = script::lua::get_object(L, -1);
     
-    if(obj && obj->get_object_type() == script::env::object::DATA_OBJECT)
+    if(obj && obj->get_object_type() == script::env_object::DATA_OBJECT)
     {
         lua_pop(L, 1);
         obj->value(L); //push value of object onto lua stack
@@ -152,7 +154,7 @@ int server_interface_newindex(lua_State * L)
 
     if(binding_object_to_lua) return 0;
     
-    script::env::object * hangingObj = NULL; //object to delete if exception is thrown
+    script::env_object * hangingObj = NULL; //object to delete if exception is thrown
     
     try
     {
@@ -167,7 +169,7 @@ int server_interface_newindex(lua_State * L)
         else
         {
             lua_pushvalue(L, -2);
-            script::env::object * obj = env->lookup_global_object(key);
+            script::env_object * obj = env->lookup_global_object(key);
             if(obj) obj->assign(script::lua::get_argument_value(L));
             else
             {
@@ -208,7 +210,7 @@ void register_to_server_namespace(lua_State * L, lua_CFunction func, const char 
     lua_pop(L, 1);
 }
 
-void bind_object_to_lua(const_string id, script::env::object * obj)
+void bind_object_to_lua(const_string id, script::env_object * obj)
 {
     if(binding_object_to_cubescript) return;
     lua_State * L = env->get_lua_state();
@@ -279,7 +281,7 @@ int parse_list(lua_State * L)
     
     try
     {
-        script::env::frame callframe(env);
+        script::env_frame callframe(env);
         script::parse_array<std::vector<const_string>,true>(const_string(liststr,liststr + liststrlen -1), &callframe, elements);
     }
     catch(script::error err)
@@ -301,6 +303,6 @@ int parse_list(lua_State * L)
 
 void unset_global(const char * name)
 {
-    script::env::symbol * symbol = env->lookup_symbol(const_string(name, name + strlen(name) - 1));
+    script::env_symbol * symbol = env->lookup_symbol(const_string(name, name + strlen(name) - 1));
     if(symbol) symbol->unset_global_object();
 }

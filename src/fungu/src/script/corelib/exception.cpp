@@ -23,7 +23,7 @@ inline void rethrow(T e)
     throw e;
 }
 
-inline result_type _try(env::object::call_arguments & args,env::frame * frame)
+inline any _try(env_object::call_arguments & args,env_frame * frame)
 {
     if(args.size() < 2) throw error(NOT_ENOUGH_ARGUMENTS,boost::make_tuple(1));
     callargs_serializer cs(args,frame);
@@ -40,7 +40,7 @@ inline result_type _try(env::object::call_arguments & args,env::frame * frame)
     }
     catch(error_trace * errinfo)
     {
-        env::frame inner_frame(frame);
+        env_frame inner_frame(frame);
         
         function<void ()> rethrow_func(boost::bind(rethrow<error_trace *>,errinfo));
         rethrow_func.set_temporary();
@@ -59,13 +59,13 @@ inline result_type _try(env::object::call_arguments & args,env::frame * frame)
         error_message_var.lock_write(true);
         inner_frame.bind_object(&error_message_var,FUNGU_OBJECT_ID("errmsg"));
         
-        result_type result = catchcode.eval_each_expression(&inner_frame);
+        any result = catchcode.eval_each_expression(&inner_frame);
         delete errinfo;
         return result;
     }
     catch(error err)
     {
-        env::frame inner_frame(frame);
+        env_frame inner_frame(frame);
         
         function<void ()> rethrow_func(boost::bind(rethrow<error>,err));
         rethrow_func.set_temporary();

@@ -16,8 +16,8 @@ class word:public construct
 public:
     word();    
     word(const_string w);
-    parse_state parse(source_iterator * first,source_iterator last,env::frame *);
-    result_type eval(env::frame * frame);
+    parse_state parse(source_iterator * first,source_iterator last,env_frame *);
+    any eval(env_frame * frame);
     bool is_string_constant()const;
     std::string form_source()const;
 private:

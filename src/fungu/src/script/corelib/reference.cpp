@@ -12,7 +12,7 @@ namespace corelib{
 
 namespace reflib{
 
-class reference:public env::object
+class reference:public env_object
 {
 public:
     reference(object * object)
@@ -36,12 +36,12 @@ public:
         return m_object->get_object_type();
     }
     
-    result_type call(call_arguments & args,frame * aScope)
+    any call(call_arguments & args,frame * aScope)
     {
         return m_object->call(args,aScope);
     }
     
-    result_type value()
+    any value()
     {
         return m_object->value();
     }
@@ -59,12 +59,12 @@ private:
     shared_ptr m_object;
 };
 
-inline result_type define_ref(env::object::call_arguments & args,env::frame * aFrame)
+inline any define_ref(env_object::call_arguments & args,env_frame * aFrame)
 {
     const_string symbol_id = args.safe_casted_front<const_string>();
     args.pop_front();
     
-    env::object::shared_ptr obj = aFrame->lookup_required_object(symbol_id)->get_shared_ptr();
+    env_object::shared_ptr obj = aFrame->lookup_required_object(symbol_id)->get_shared_ptr();
     
     while(!args.empty())
     {

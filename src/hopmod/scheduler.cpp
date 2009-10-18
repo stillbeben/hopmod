@@ -5,9 +5,11 @@
 #include "hopmod.hpp"
 #include "main_io_service.hpp"
 #include "free_function_scheduler.hpp"
-#include <fungu/script/lua/lua_function.hpp>
 
+#include <fungu/script.hpp>
+#include <fungu/script/lua/lua_function.hpp>
 using namespace fungu;
+
 using namespace boost::asio;
 
 class scheduled_function_call
@@ -107,7 +109,7 @@ static free_function_scheduler free_scheduled;
 static int sched_free_lua_function(lua_State * L, bool);
 static inline int sched_free_lua_sleep(lua_State *);
 static inline int sched_free_lua_interval(lua_State *);
-static script::result_type sched_free_cs_function(bool, script::env::object::call_arguments &, script::env::frame *);
+static script::any sched_free_cs_function(bool, script::env_object::call_arguments &, script::env_frame *);
 
 namespace lua{
 
@@ -217,11 +219,11 @@ void cancel_free_scheduled()
     free_scheduled.cancel_all();
 }
 
-int call_lua_function(script::env::object::shared_ptr func, script::env * e)
+int call_lua_function(script::env_object::shared_ptr func, script::env * e)
 {
     try
     {
-        script::env::frame frame(e);
+        script::env_frame frame(e);
         std::vector<script::any> args;
         script::callargs empty(args);
         return script::lexical_cast<int>(func->call(empty,&frame));
@@ -245,7 +247,7 @@ int sched_free_lua_function(lua_State * L, bool repeat)
     luaL_checktype(L, 2, LUA_TFUNCTION);
     lua_pushvalue(L, 2);
     
-    script::env::object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
+    script::env_object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
     luaFunctionObject->set_adopted();
     
     free_scheduled.schedule(boost::bind(call_lua_function, luaFunctionObject, &get_script_env()), countdown, repeat);
@@ -265,7 +267,7 @@ int sched_free_lua_interval(lua_State * L)
 
 int call_cs_function(script::code_block code, script::env * e)
 {
-    script::env::frame frame(e);
+    script::env_frame frame(e);
     
     try
     {
@@ -283,7 +285,7 @@ int call_cs_function(script::code_block code, script::env * e)
     }
 }
 
-script::result_type sched_free_cs_function(bool repeat, script::env::object::call_arguments & args, script::env::frame * frame)
+script::any sched_free_cs_function(bool repeat, script::env_object::call_arguments & args, script::env_frame * frame)
 {
     script::callargs_serializer cs(args, frame);
     

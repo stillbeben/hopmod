@@ -9,13 +9,46 @@
 #define FUNGU_SCRIPT_ERROR_HPP
 
 #include "../string.hpp"
-#include "source_context.hpp"
 
 #include <boost/any.hpp>
 #include <boost/tuple/tuple.hpp>
 
 namespace fungu{
 namespace script{
+
+class source_context
+{
+public:
+    source_context();
+    virtual ~source_context();
+    virtual source_context * clone() const = 0;
+    virtual const char * get_uri_scheme() const = 0;
+    virtual std::string get_location() const = 0;
+    int get_line_number()const;
+    void set_line_number(int linenum);
+private:
+    int m_linenum;
+};
+
+class file_source_context:public source_context
+{
+public:
+    file_source_context(const std::string & filename);
+    source_context * clone()const;
+    const char * get_uri_scheme()const;
+    std::string get_location()const;
+private:
+    std::string m_filename;
+};
+
+class local_source_context:public source_context
+{
+public:
+    local_source_context();
+    source_context * clone()const;
+    const char * get_uri_scheme()const;
+    std::string get_location()const;
+};
 
 enum error_code
 {

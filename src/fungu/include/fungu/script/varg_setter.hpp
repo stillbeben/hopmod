@@ -13,7 +13,7 @@
 namespace fungu{
 namespace script{
 
-class varg_setter:public env::object
+class varg_setter:public env_object
 {
 public:
     varg_setter()
@@ -22,7 +22,7 @@ public:
         
     }
     
-    result_type call(call_arguments & args,env::frame * aFrame)
+    any call(call_arguments & args,env_frame * aFrame)
     {
         while(!args.empty())
         {
@@ -33,7 +33,7 @@ public:
         return any::null_value();
     }
     
-    result_type value()
+    any value()
     {
         return get_shared_ptr();
     }

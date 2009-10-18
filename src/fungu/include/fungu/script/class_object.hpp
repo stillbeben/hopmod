@@ -14,7 +14,7 @@ namespace fungu{
 namespace script{
 
 template<typename Class>
-class class_object : public env::object
+class class_object : public env_object
 {
 public:
     class_object(Class * object)
@@ -23,7 +23,7 @@ public:
         
     }
     
-    result_type call(call_arguments & args, frame * frm)
+    any call(call_arguments & args, frame * frm)
     {
         const_string methodName = args.safe_front().to_string();
         args.pop_front();

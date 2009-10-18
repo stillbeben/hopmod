@@ -23,13 +23,13 @@ public:
     
     }
     
-    parse_state parse(source_iterator * first,source_iterator last,env::frame * frame)
+    parse_state parse(source_iterator * first,source_iterator last,env_frame * frame)
     {
         assert(0);
         throw error(UNSUPPORTED);
     }
     
-    result_type eval(env::frame *)
+    any eval(env_frame *)
     {
         return m_value;
     }

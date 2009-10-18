@@ -9,6 +9,43 @@
 namespace fungu{
 namespace script{
 
+code_block::iterator::iterator(expression * expr)
+ :m_expr(expr)
+{
+
+}
+    
+expression * code_block::iterator::operator->()
+{
+    return m_expr;
+}
+
+expression & code_block::iterator::operator*()
+{
+    return *m_expr;
+}
+
+expression * code_block::iterator::get()
+{
+    return m_expr;
+}
+
+code_block::iterator & code_block::iterator::operator++()
+{
+    m_expr = static_cast<expression *>(m_expr -> get_next_sibling());
+    return *this;
+}
+
+bool code_block::iterator::operator==(const code_block::iterator & comparison)const
+{
+    return m_expr == comparison.m_expr;
+}
+
+bool code_block::iterator::operator!=(const code_block::iterator & comparison)const
+{
+    return m_expr != comparison.m_expr;
+}
+
 code_block::code_block()
  :m_source_ctx(NULL)
 {
@@ -54,7 +91,7 @@ code_block code_block::temporary_source(const_string source,const source_context
     return tmp;
 }
 
-code_block & code_block::compile(env::frame * frm)
+code_block & code_block::compile(env_frame * frm)
 {
     const source_context * last_context = frm->get_env()->get_source_context();
     frm->get_env()->set_source_context(m_source_ctx);
@@ -118,9 +155,9 @@ code_block::iterator code_block::end()
     return iterator(NULL);
 }
 
-result_type code_block::eval_each_expression(env::frame * frm)
+any code_block::eval_each_expression(env_frame * frm)
 {
-    result_type last_result;
+    any last_result;
     for(construct * e = m_first_expression.get(); e; e = e->get_next_sibling() )
     {
         last_result = e->eval(frm);
@@ -130,7 +167,7 @@ result_type code_block::eval_each_expression(env::frame * frm)
     else return last_result;
 }
 
-result_type code_block::value()const
+any code_block::value()const
 {
     return m_source;
 }

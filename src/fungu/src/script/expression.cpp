@@ -58,7 +58,7 @@ expression::~expression()
     delete m_source_ctx;
 }
     
-parse_state expression::parse(source_iterator * first, source_iterator last, env::frame * frame)
+parse_state expression::parse(source_iterator * first, source_iterator last, env_frame * frame)
 {
     if(!m_source_ctx)
     {
@@ -118,9 +118,9 @@ parse_state expression::parse(source_iterator * first, source_iterator last, env
         case '#':  m_parsing = new comment;              ++(*first); break;
         case ' ':
         case '\t':                                       ++(*first); break;
-        case '$':  m_parsing = new expr_symbol;          ++(*first); break;
-        case '&':  m_parsing = new expr_reference;       ++(*first); break;
-        default:   m_parsing = new expr_word;                        break;
+        case '$':  m_parsing = new symbol<word_exit_terminals>;          ++(*first); break;
+        case '&':  m_parsing = new reference<word_exit_terminals>;       ++(*first); break;
+        default:   m_parsing = new word<word_exit_terminals>;                        break;
     }
     
     if(*first > last) return PARSE_PARSING;
@@ -128,10 +128,10 @@ parse_state expression::parse(source_iterator * first, source_iterator last, env
     return parse(first,last,frame);
 }
 
-result_type expression::eval(env::frame * frame)
+any expression::eval(env_frame * frame)
 {
     env * environment = frame->get_env();
-    env::object * operation_object = NULL;
+    env_object * operation_object = NULL;
     const construct * subject_arg = m_first_construct;
     
     const source_context * prev_ctx = environment->get_source_context();
@@ -149,7 +149,7 @@ result_type expression::eval(env::frame * frame)
     {
         // Resolve the operation object
         
-        result_type arg1_eval_result = m_first_construct->eval(frame);
+        any arg1_eval_result = m_first_construct->eval(frame);
         
         if(m_operation_symbol) operation_object = m_operation_symbol->lookup_object(frame);
         else
@@ -158,8 +158,8 @@ result_type expression::eval(env::frame * frame)
             if(m_operation_symbol) operation_object = m_operation_symbol->lookup_object(frame);
             else
             {
-                if(arg1_eval_result.get_type() == typeid(env::object::shared_ptr))
-                    operation_object = any_cast<env::object::shared_ptr>(arg1_eval_result).get();
+                if(arg1_eval_result.get_type() == typeid(env_object::shared_ptr))
+                    operation_object = any_cast<env_object::shared_ptr>(arg1_eval_result).get();
             }
         }
         
@@ -172,8 +172,8 @@ result_type expression::eval(env::frame * frame)
         
         // Evaluate arguments before calling the operation object
         
-        std::vector<result_type> variable_args(m_placeholders.size());
-        std::vector<result_type>::iterator vargIter = variable_args.begin();
+        std::vector<any> variable_args(m_placeholders.size());
+        std::vector<any>::iterator vargIter = variable_args.begin();
         
         // The reason we need to store argument eval results to a local vector
         // is because of the case where an argument evaluation leads 
@@ -256,7 +256,7 @@ void expression::add_child_construct(construct * child)
     else m_first_construct->get_tail_sibling()->set_next_sibling(child);
 }
     
-bool expression::is_alias_assignment(env::frame * frame)const
+bool expression::is_alias_assignment(env_frame * frame)const
 {
     construct * arg1 = m_first_construct;
     if(!arg1) return false;
@@ -267,13 +267,13 @@ bool expression::is_alias_assignment(env::frame * frame)const
     return op->eval(frame).to_string() == const_string(FUNGU_LITERAL_STRING("="));
 }
 
-void expression::translate_alias_assignment(env::frame * frame)
+void expression::translate_alias_assignment(env_frame * frame)
 {
     construct * arg1 = m_first_construct;
     construct * op = arg1->get_next_sibling();
     construct * arg2 = op->get_next_sibling();
     
-    m_first_construct = new expr_word(const_string(FUNGU_LITERAL_STRING("alias")));
+    m_first_construct = new word<word_exit_terminals>(const_string(FUNGU_LITERAL_STRING("alias")));
     m_first_construct->set_next_sibling(arg1);
     arg1->set_next_sibling(arg2);
     
@@ -281,7 +281,7 @@ void expression::translate_alias_assignment(env::frame * frame)
     delete op;
 }
     
-void expression::fill_constarg_vector(env::frame * frame)
+void expression::fill_constarg_vector(env_frame * frame)
 {
     assert(m_first_construct);
     
@@ -292,7 +292,7 @@ void expression::fill_constarg_vector(env::frame * frame)
     {
         if(arg->is_string_constant())
         {
-            result_type argval = arg->eval(frame);
+            any argval = arg->eval(frame);
             
             if(argval.get_type() == typeid(const_string))
             {
@@ -338,7 +338,7 @@ void expression::reset_placeholders()
     }
 }
 
-parse_state base_expression::parse(source_iterator * first, source_iterator last, env::frame * frame)
+parse_state base_expression::parse(source_iterator * first, source_iterator last, env_frame * frame)
 {
     parse_state state = expression::parse(first,last,frame);
     

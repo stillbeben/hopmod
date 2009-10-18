@@ -35,7 +35,6 @@
 
 #include "../string.hpp"
 #include "dynamic_typecasting.hpp"
-#include "lexical_cast_fwd.hpp"
 
 #ifdef FUNGU_WITH_LUA
 #include "lua/push_value.hpp"
@@ -49,6 +48,9 @@
 
 namespace fungu{
 namespace script{
+
+template<typename Target,typename Source>
+Target lexical_cast(const Source &);  //Forward declaration
 
 struct bad_any_cast: std::bad_cast
 {
@@ -309,27 +311,7 @@ T const& any_cast(any const& this_){
     return *ptr;
 }
 
-inline bool any_is_string(const any & var)
-{
-    return var.get_type() == typeid(const_string);
-}
-
-#if 0 //was used in json/tinyjson.hpp
-struct any_traits
-{
-    typedef any any_type;
-    typedef bad_any_cast exception_type;
-    
-    template<typename TargetType>
-    static TargetType * cast(any_type * obj){return any_cast<TargetType>(obj);}
-    
-    template<typename TargetType>
-    static TargetType const* cast(const any_type * obj) {return cast<TargetType>(const_cast<any_type*>(obj));}
-    
-    template<typename TargetType>
-    static const TargetType & cast(const any_type & obj){return *cast<TargetType>(const_cast<any_type*>(&obj));}
-};
-#endif
+bool any_is_string(const any &);
 
 } //namespace script
 } //namespace fungu

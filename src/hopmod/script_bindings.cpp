@@ -79,9 +79,10 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::player_rank, "player_rank", env);
     script::bind_freefunc(server::player_isbot, "player_isbot", env);
     script::bind_freefunc(server::player_mapcrc, "player_mapcrc", env);
-    
     script::bind_freefunc((std::vector<float>(*)(int))server::player_pos, "player_pos", env);
     register_lua_function((int (*)(lua_State *))&server::player_pos, "player_pos");
+    script::bind_freefunc(server::send_auth_request, "send_auth_request", env);
+    script::bind_freefunc(server::sendauthchallenge, "send_auth_challenge_to_client", env);
     
     script::bind_const((int)CS_ALIVE, "ALIVE", env);
     script::bind_const((int)CS_DEAD, "DEAD", env);
@@ -152,7 +153,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(maxclients, "maxplayers", env);
     script::bind_var(serverip, "serverip", env);
     script::bind_var(serverport, "serverport", env);
-    script::bind_var(server::authserver_hostname, "authserver", env);
     script::bind_var(server::next_gamemode, "next_mode", env);
     script::bind_var(server::next_mapname, "next_map", env);
     script::bind_var(server::next_gametime, "next_gametime", env);
@@ -162,8 +162,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_funvar<int>(server::getbotcount, "botcount", env);
     script::bind_var(server::aiman::botlimit, "botlimit", env);
     script::bind_var(server::aiman::botbalance, "botbalance", env);
-    script::bind_freefunc(server::enable_master_auth, "use_master_auth", env);
-    script::bind_freefunc(server::using_master_auth, "using_master_auth", env);
     script::bind_funvar<const char *>(server::gamemodename, "gamemode", env);
     
     script::bind_var(server::allow_mm_veto, "allow_mm_veto", env);
@@ -186,14 +184,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::reservedslots, "reservedslots", env);
     script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
     
-    // Auth functions
-    script::bind_freefunc(server::delegateauth, "delegateauth", env);
-    script::bind_freefunc(server::relayauthanswer, "relayauthanswer", env);
-    script::bind_freefunc(server::send_auth_request, "send_auth_request", env);
-    script::bind_freefunc(server::sendauthchallenge, "send_auth_challenge_to_client", env);
-    script::bind_freefunc(server::signal_auth_success, "signal_auth_success", env);
-    script::bind_freefunc(server::signal_auth_failure, "signal_auth_failure", env);
-        
     // script_socket functions
     script::bind_freefunc(script_socket_supported, "script_socket_supported?", env);
     script::bind_freefunc(open_script_socket, "script_socket_server", env);
@@ -249,13 +239,6 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_freefunc(unset_global, "unset_global", env);
     
-    script::bind_freefunc(resolve_hostname, "gethostbyname", env);
-    
-    register_lua_function(&lua::crypto::genkeypair, "genkeypair");
-    register_lua_function(&lua::crypto::genchallenge, "genchallenge");
-    register_lua_function(&lua::crypto::checkchallenge, "checkchallenge");
-    register_lua_function(&lua::crypto::freechalanswer, "freechalanswer");
-    
     script::bind_freefunc(concol, "concol", env);
     script::bind_freefunc(green, "green", env);
     script::bind_freefunc(info, "info", env);
@@ -276,8 +259,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_property<unsigned int>(
         boost::bind(script::property<unsigned int>::generic_getter, maintenance_frequency),
         set_maintenance_frequency, "maintenance_frequency", env);
-    
-    script::bind_freefunc(md5sum, "md5sum", env);
     
     script::bind_freefunc(file_exists, "file_exists", env);
     script::bind_freefunc(dir_exists, "dir_exists", env);

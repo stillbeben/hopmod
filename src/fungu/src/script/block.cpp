@@ -9,21 +9,21 @@
 namespace fungu{
 namespace script{
 
-expression::block::block()
+block::block()
  :m_first(const_string::null_const_iterator()),
   m_nested(0)
 {
     
 }
 
-expression::block::~block()
+block::~block()
 {
     for(std::vector<boost::tuple<source_iterator,source_iterator,macro *> >::iterator it = m_macros.begin();
     it != m_macros.end(); ++it) delete boost::get<2>(*it);
     m_macros.clear();
 }
 
-parse_state expression::block::parse(source_iterator * first,source_iterator last,env::frame * frame)
+parse_state block::parse(source_iterator * first,source_iterator last,env_frame * frame)
 {
     if(m_first == const_string::null_const_iterator())
         m_first = *first;
@@ -69,7 +69,7 @@ parse_state expression::block::parse(source_iterator * first,source_iterator las
     return PARSE_PARSING;
 }
 
-result_type expression::block::eval(env::frame * frame)
+any block::eval(env_frame * frame)
 {
     assert(m_first != const_string::null_const_iterator());
     if(is_string_constant())
@@ -97,12 +97,12 @@ result_type expression::block::eval(env::frame * frame)
     }
 }
 
-bool expression::block::is_string_constant()const
+bool block::is_string_constant()const
 {
     return m_macros.empty();
 }
 
-std::string expression::block::form_source()const
+std::string block::form_source()const
 {
     assert(m_first != const_string::null_const_iterator());
     return std::string(1,'[') + const_string(m_first,m_last).copy() + std::string(1,']');

@@ -9,13 +9,13 @@
 namespace fungu{
 namespace script{
 
-expression::quote::quote()
+quote::quote()
  :m_escaped(false)
 {
     
 }
 
-parse_state expression::quote::parse(source_iterator * first,source_iterator last,env::frame *)
+parse_state quote::parse(source_iterator * first,source_iterator last,env_frame *)
 {
     for(; *first <= last; ++(*first))
     {
@@ -60,17 +60,17 @@ parse_state expression::quote::parse(source_iterator * first,source_iterator las
     return PARSE_PARSING;
 }
 
-result_type expression::quote::eval(env::frame *)
+any quote::eval(env_frame *)
 {
     return const_string(m_string);
 }
 
-bool expression::quote::is_string_constant()const
+bool quote::is_string_constant()const
 {
     return true;
 }
 
-std::string expression::quote::form_source()const
+std::string quote::form_source()const
 {
     std::stringstream out;
     out<<"\""<<lexical_cast_detail::write_string_literal(m_string.begin(), m_string.end())<<"\"";

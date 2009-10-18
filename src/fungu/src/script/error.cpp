@@ -144,5 +144,67 @@ const source_context * error_trace::get_source_context()const
     return m_source_ctx;
 }
 
+source_context::source_context()
+ :m_linenum(0)
+{
+
+}
+    
+source_context::~source_context()
+{
+    
+}
+
+int source_context::get_line_number()const
+{
+    return m_linenum;
+}
+
+void source_context::set_line_number(int linenum)
+{
+    m_linenum = linenum;
+}
+
+file_source_context::file_source_context(const std::string & filename)
+ :m_filename(filename)
+{
+    
+}
+
+source_context * file_source_context::clone()const
+{
+    return new file_source_context(*this);
+}
+
+const char * file_source_context::get_uri_scheme()const
+{
+    return "file";
+}
+
+std::string file_source_context::get_location()const
+{
+    return m_filename;
+}
+
+local_source_context::local_source_context()
+{
+    set_line_number(1);
+}
+
+source_context * local_source_context::clone()const
+{
+    return new local_source_context(*this);
+}
+
+const char * local_source_context::get_uri_scheme()const
+{
+    return "local";
+}
+
+std::string local_source_context::get_location()const
+{
+    return "";
+}
+
 } //namespace script
 } //namespace fungu

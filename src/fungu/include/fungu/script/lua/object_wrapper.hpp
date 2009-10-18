@@ -8,23 +8,22 @@
 #ifndef FUNGU_SCRIPT_LUA_OBJECT_WRAPPER_HPP
 #define FUNGU_SCRIPT_LUA_OBJECT_WRAPPER_HPP
 
-#include "../env.hpp"
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
+struct lua_State;
 
 namespace fungu{
 namespace script{
+
+class env_object;
+
 namespace lua{
 
-void push_object(lua_State * L, env::object *obj);
-void register_object(lua_State * L, int index,env::object * obj, const char * name);
-void register_object(lua_State * L, env::object * obj, const char * name);
+void push_object(lua_State * L, env_object *obj);
 
-env::object * get_object(lua_State *,int index,const char * name);
-env::object * get_object(lua_State *,int index);
+void register_object(lua_State * L, int index, env_object * obj, const char * name);
+void register_object(lua_State * L, env_object * obj, const char * name);
+
+env_object * get_object(lua_State *, int index, const char * name);
+env_object * get_object(lua_State *, int index);
 
 } //namespace lua
 } //namespace script

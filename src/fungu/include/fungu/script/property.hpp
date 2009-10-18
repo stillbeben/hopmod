@@ -8,13 +8,13 @@
 #ifndef FUNGU_SCRIPT_PROPRETY_HPP
 #define FUNGU_SCRIPT_PROPERTY_HPP
 
-#include "env.hpp"
+#include "env_object.hpp"
 
 namespace fungu{
 namespace script{
 
 template<typename T>
-class property:public env::object
+class property:public env_object
 {
 public:
     template<typename GetterFunction, typename SetterFunction>
@@ -35,13 +35,13 @@ public:
         m_set(lexical_cast<T>(value));
     }
     
-    result_type call(call_arguments & args,env::frame *)
+    any call(call_arguments & args,env_frame *)
     {
         assign(args.safe_front());
         return any();
     }
     
-    result_type value()
+    any value()
     {
         return m_get();
     }

@@ -10,7 +10,10 @@
 #include "fungu/script/pch.hpp"
 #endif
 
+#include "fungu/stringutils.hpp"
+
 #include "fungu/script/env.hpp"
+#include "fungu/script/callargs.hpp"
 #include "fungu/script/any_variable.hpp"
 
 #ifdef FUNGU_WITH_LUA
@@ -35,22 +38,22 @@ env::env()
 
 env::~env()
 {
-    for(boost::unordered_map<const_string, symbol *>::iterator it = m_symbol.begin();
+    for(boost::unordered_map<const_string, env_symbol *>::iterator it = m_symbol.begin();
         it != m_symbol.end(); ++it) delete it->second;
 }
 
-env::symbol * env::lookup_symbol(env::object_id id)const
+env_symbol * env::lookup_symbol(const_string id)const
 {
-    boost::unordered_map<const_string, symbol *>::const_iterator it = m_symbol.find(id);
+    boost::unordered_map<const_string, env_symbol *>::const_iterator it = m_symbol.find(id);
     if(it == m_symbol.end()) return NULL;
     return it->second;
 }
 
-env::symbol * env::create_symbol(env::object_id id)
+env_symbol * env::create_symbol(const_string id)
 {
-    std::pair<boost::unordered_map<const_string, env::symbol *>::iterator, bool> insert_status = m_symbol.insert(std::pair<const_string,env::symbol *>(id,NULL));
+    std::pair<boost::unordered_map<const_string, env_symbol *>::iterator, bool> insert_status = m_symbol.insert(std::pair<const_string,env_symbol *>(id,NULL));
     if(insert_status.second == false) return insert_status.first->second;
-    symbol * newSymbol = new symbol;
+    env_symbol * newSymbol = new env_symbol;
     insert_status.first->second = newSymbol;
     return newSymbol;
 }
@@ -65,16 +68,16 @@ const source_context * env::get_source_context() const
     return m_source_ctx;
 }
 
-void env::bind_global_object(env::object * obj, env::object_id id)
+void env::bind_global_object(env_object * obj, const_string id)
 {
-    env::symbol * sym = create_symbol(id);
+    env_symbol * sym = create_symbol(id);
     sym->set_global_object(obj);
     if(m_bind_observer) m_bind_observer(id, obj);
 }
 
-env::object * env::lookup_global_object(env::object_id id)const
+env_object * env::lookup_global_object(const_string id)const
 {
-    env::symbol * sym = lookup_symbol(id);
+    env_symbol * sym = lookup_symbol(id);
     if(!sym) return NULL;
     return sym->lookup_object(NULL);
 }

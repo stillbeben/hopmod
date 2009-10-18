@@ -12,8 +12,6 @@
 
 #include "fungu/script/env.hpp"
 #include "fungu/script/code_block.hpp"
-#include "fungu/script/variable.hpp"
-#include "fungu/script/constant.hpp"
 #include "fungu/script/function.hpp"
 #include "fungu/script/env_module.hpp"
 #include "fungu/script/parse_array.hpp"
@@ -21,7 +19,7 @@
 #include "fungu/script/nullary_setter.hpp"
 #include "fungu/script/lexical_cast.hpp"
 #include "fungu/script/execute.hpp"
-#include "fungu/script/table.hpp"
+#include "fungu/script/variable.hpp"
 #include "fungu/dynamic_cast_derived.hpp"
 
 #include <boost/shared_ptr.hpp>
@@ -43,9 +41,6 @@
 #include "corelib/datetime.cpp"
 #include "corelib/exception.cpp"
 #include "corelib/exec.cpp"
-#include "corelib/list.cpp"
 #include "corelib/maths.cpp"
-#include "corelib/object.cpp"
-#include "corelib/reference.cpp"
 #include "corelib/string.cpp"
 #include "corelib/vector.cpp"

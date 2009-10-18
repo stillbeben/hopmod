@@ -11,8 +11,8 @@ class structure:public construct
 {
 public:
     structure();
-    parse_state parse(source_iterator * first,source_iterator last,env::frame * frame);
-    result_type eval(env::frame *);
+    parse_state parse(source_iterator * first,source_iterator last,env_frame * frame);
+    any eval(env_frame *);
     bool is_string_constant()const;
     std::string form_source()const;
 private:

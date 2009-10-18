@@ -12,13 +12,7 @@ namespace corelib{
 
 namespace execlib{
 
-static inline table * get_file_ext_handlers_table()
-{
-    static table file_ext_handlers;
-    return &file_ext_handlers;
-}
-
-inline result_type exec_cubescript(env::object::call_arguments & args,env::frame * aFrame)
+inline any exec_cubescript(env_object::call_arguments & args,env_frame * aFrame)
 {
     const_string filename = args.safe_casted_front<const_string>();
     args.pop_front();
@@ -27,7 +21,7 @@ inline result_type exec_cubescript(env::object::call_arguments & args,env::frame
 }
 
 #ifdef FUNGU_WITH_LUA
-inline result_type exec_lua(env::object::call_arguments & args,env::frame * aFrame)
+inline any exec_lua(env_object::call_arguments & args,env_frame * aFrame)
 {
     const_string filename = args.safe_casted_front<const_string>();
     args.pop_front();
@@ -44,12 +38,21 @@ inline const_string get_filename_extension(const_string filename)
     return const_string();
 }
 
-inline result_type exec_script(env::object::call_arguments & args,env::frame * aFrame)
+inline any exec_script(env_object::call_arguments & args,env_frame * aFrame)
 {
     const_string filename = args.safe_casted_front<const_string>();
-    env::object * handler = get_file_ext_handlers_table()->lookup_member(get_filename_extension(filename));
-    if(handler) return handler->call(args, aFrame);
-    else return exec_cubescript(args, aFrame);
+    const_string ext = get_filename_extension(filename);
+    
+    #ifdef FUNGU_WITH_LUA
+    if(ext == fungu::const_string(FUNGU_LITERAL_STRING("lua")))
+    {
+        return exec_lua(args, aFrame);
+    }
+    else
+    #endif
+    {
+        return exec_cubescript(args, aFrame);
+    }
 }
 
 } //namespace detail
@@ -57,18 +60,15 @@ inline result_type exec_script(env::object::call_arguments & args,env::frame * a
 void register_exec_functions(env & environment)
 {
     static function<raw_function_type> exec_func(execlib::exec_script);
-    environment.bind_global_object(&exec_func,FUNGU_OBJECT_ID("exec"));
+    environment.bind_global_object(&exec_func, FUNGU_OBJECT_ID("exec"));
     
     static function<raw_function_type> exec_cubescript_func(execlib::exec_cubescript);
-    environment.bind_global_object(&exec_cubescript_func,FUNGU_OBJECT_ID("exec-cubescript"));
+    environment.bind_global_object(&exec_cubescript_func, FUNGU_OBJECT_ID("exec-cubescript"));
     
     #ifdef FUNGU_WITH_LUA
     static function<raw_function_type> exec_lua_func(execlib::exec_lua);
-    environment.bind_global_object(&exec_lua_func,FUNGU_OBJECT_ID("exec-lua"));
-    execlib::get_file_ext_handlers_table()->assign("lua",exec_lua_func.get_shared_ptr());
+    environment.bind_global_object(&exec_lua_func, FUNGU_OBJECT_ID("exec-lua"));
     #endif
-    
-    environment.bind_global_object(execlib::get_file_ext_handlers_table(), FUNGU_OBJECT_ID("exec-handlers"));
 }
 
 } //namespace corelib

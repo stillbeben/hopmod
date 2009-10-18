@@ -13,12 +13,13 @@
 #include <assert.h>
 #include <iostream>
 
+#include <fungu/script.hpp>
 using namespace fungu;
 
 static const char * filename = NULL;
 static int fd = -1;
 static script::env * env = NULL;
-static script::env::frame * frm = NULL;
+static script::env_frame * frm = NULL;
 static script::eval_stream * scriptexec = NULL;
 static script::file_source_context * script_context = NULL;
 static int pending_idle_time = 0;
@@ -71,7 +72,7 @@ bool open_script_pipe(const char * filename, int mode, script::env & server_env)
     
     ::filename = filename;
     ::env = &server_env;
-    frm = new script::env::frame(::env);
+    frm = new script::env_frame(::env);
     
     scriptexec = new script::eval_stream(frm);
     script_context = new script::file_source_context(filename);

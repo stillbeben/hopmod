@@ -15,14 +15,14 @@ class symbol:public construct
 {
 public:
     symbol();
-    parse_state parse(source_iterator * first,source_iterator last,env::frame * frame);
-    result_type eval(env::frame * frame);
+    parse_state parse(source_iterator * first,source_iterator last,env_frame * frame);
+    any eval(env_frame * frame);
     bool is_string_constant()const;
     std::string form_source()const;
 protected:
     void assert_parsed()const;
     const_string get_full_id()const;
-    env::object * resolve_symbol(env::frame * frame);
+    env_object * resolve_symbol(env_frame * frame);
 private:
     source_iterator * get_memv_tail();
     int get_memv_size()const;

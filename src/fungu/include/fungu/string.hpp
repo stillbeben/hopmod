@@ -11,10 +11,6 @@
 #include <assert.h>
 #include <math.h>
 #include <string>
-#include <string.h>
-#include <ostream>
-#include <istream>
-#include <boost/functional/hash.hpp>
 #include <typeinfo>
 
 #define FUNGU_LITERAL_STRING(str) str,str+sizeof(str)-2
@@ -281,42 +277,6 @@ private:
 };
 
 typedef basic_const_string<char> const_string;
-
-template<typename T>
-std::string & operator+=(std::string & dst,const basic_const_string<T> & src)
-{
-    dst.append(src.begin(),src.end());
-    return dst;
-}
-
-template<typename T>
-std::ostream & operator<<(std::ostream & dst,const basic_const_string<T> & src)
-{
-    dst.write(src.begin(),src.length());
-    return dst;
-}
-
-template<typename T>
-std::istream & operator>>(std::istream & src,basic_const_string<T> & dst)
-{
-    std::basic_string<T> str;
-    str.reserve(32);
-    while(src.good())
-    {
-        T e;
-        src.read(&e,sizeof(T));
-        if(src.good()) str.append(1,e);
-    }
-    dst = basic_const_string<T>(str);
-    src.clear();
-    return src;
-}
-
-template<typename T>
-size_t hash_value(basic_const_string<T> str)
-{
-    return boost::hash_range(str.begin(),str.end());
-}
 
 } //namespace fungu
 

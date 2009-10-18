@@ -11,6 +11,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include <fungu/script.hpp>
+#include <fungu/stringutils.hpp>
 using namespace fungu;
 
 static MHD_Daemon * s_daemon = NULL;
@@ -83,7 +85,7 @@ int execute_request(const std::string & request,std::string & response)
     
     try
     {
-        script::env::frame frame(&get_script_env());
+        script::env_frame frame(&get_script_env());
         output<<script::execute_text(request, &frame).to_string();
         status = 200;
     }

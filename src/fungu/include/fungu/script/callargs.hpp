@@ -9,7 +9,7 @@
 #define FUNGU_SCRIPT_CALLARGS_HPP
 
 #include "any.hpp"
-#include "result_type.hpp"
+#include "lexical_cast.hpp"
 #include <vector>
 
 namespace fungu{
@@ -21,7 +21,7 @@ namespace script{
 class callargs
 {
 public:
-    typedef result_type value_type;
+    typedef any value_type;
     typedef value_type & reference;
     typedef const value_type & const_reference;
 
