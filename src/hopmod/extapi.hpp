@@ -20,6 +20,10 @@ extern "C"{
 #include <fcntl.h>
 #include <errno.h>
 
+#include <fungu/script/error.hpp>
+#include <fungu/script/lexical_cast.hpp>
+#include <boost/lexical_cast.hpp>
+
 namespace server
 {
     namespace aiman
@@ -155,7 +159,7 @@ namespace server
     
     bool delegateauth(int,const char *);
     bool relayauthanswer(int,const char *);
-    void sendauthchallenge(int,const char *);
+    void sendauthchallenge(int,int,const char *,const char *);
     void send_auth_request(int, const char *);
     void signal_auth_success(int,int);
     void signal_auth_failure(int,int);

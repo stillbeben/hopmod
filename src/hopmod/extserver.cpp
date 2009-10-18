@@ -999,10 +999,10 @@ bool relayauthanswer(int cn, const char * ans)
     return true;
 }
 
-void sendauthchallenge(int cn, const char * challenge)
+void sendauthchallenge(int cn, int id, const char * domain, const char * challenge)
 {
     clientinfo * ci = get_ci(cn);
-    sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, ci->authdomain, ci->authreq, challenge);
+    sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, domain, id, challenge);
 }
 
 void send_auth_request(int cn, const char * domain)

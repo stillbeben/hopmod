@@ -139,7 +139,7 @@ function internal.send_request(cn, user_id, domain)
             return
         end
         
-        server.send_auth_challenge_to_client(cn, remote_request:get_challenge())
+        server.send_auth_challenge_to_client(cn, request.id, request.domain.id, remote_request:get_challenge())
         
     end)
     
@@ -180,7 +180,7 @@ server.event_handler("request_auth_challenge", function(cn, user_id, domain)
         request.local_request = {}
         request.local_request.challenge = key:generate_challenge()
         
-        server.send_auth_challenge_to_client(cn, request.local_request.challenge:to_string())
+        server.send_auth_challenge_to_client(cn, request.id, request.domain.id, request.local_request.challenge:to_string())
         
         return
     end
