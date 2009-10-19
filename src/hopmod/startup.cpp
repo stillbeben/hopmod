@@ -17,6 +17,8 @@ void init_hopmod()
 {
     set_maintenance_frequency(86400000);
     
+    server::enable_setmaster_autoapprove(false);
+    
     struct sigaction crash_action;
     sigemptyset(&crash_action.sa_mask);
     crash_action.sa_handler = &server::crash_handler;
@@ -51,7 +53,7 @@ void init_hopmod()
     
     lua::module::open_net(L);
     lua::module::open_crypto(L);
-    
+
     try
     {
         fungu::script::execute_file("script/base/init.cs", get_script_env());

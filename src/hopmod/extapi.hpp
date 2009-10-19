@@ -179,6 +179,8 @@ namespace server
     void sendauthchallenge(int,int,const char *,const char *);
     void send_auth_request(int, const char *);
     
+    void enable_setmaster_autoapprove(bool);
+    
 } //namespace server
 
 #endif
