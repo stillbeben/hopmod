@@ -20,7 +20,7 @@ local function readjustCapacity()
         extra = extra - ((pc + extra)%2)
     end
     
-    server.maxplayers = pc + extra + sc
+    server.maxplayers = pc + extra + sc + adminslots
 end
 
 local function isOverCapacity()
