@@ -19,11 +19,6 @@ void reload_hopmod();
 void update_hopmod();
 void restart_now();
 
-bool geoip_supported();
-bool load_geoip_database(const char *);
-const char * ip_to_country(const char *);
-const char * ip_to_country_code(const char *);
-
 // Scripting functions
 void init_scripting();
 void shutdown_scripting();

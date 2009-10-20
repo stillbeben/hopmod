@@ -10,6 +10,8 @@
     TODO
 ]]
 
+require "geoip"
+
 local game = nil
 local players = nil
 local internal = {}
@@ -66,7 +68,7 @@ function internal.updatePlayer(cn)
     t.team = server.player_team(cn)
     t.ipaddr = server.player_ip(cn)
     t.ipaddrlong = server.player_iplong(cn)
-    t.country = server.ip_to_country_code(server.player_ip(cn))
+    t.country = geoip.ip_to_country_code(server.player_ip(cn))
 
     local frags = server.player_frags(cn)
     local suicides = server.player_suicides(cn)

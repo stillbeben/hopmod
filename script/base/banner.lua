@@ -1,4 +1,6 @@
 
+require "geoip"
+
 local function sendServerBanner(cn)
 
     if server.player_pvar(cn,"shown_banner") then return end
@@ -27,7 +29,7 @@ local function onConnect(cn)
         end)
     end
     
-    local country = server.ip_to_country(server.player_ip(cn))
+    local country = geoip.ip_to_country(server.player_ip(cn))
  	
     if server.show_country_message == 1 and #country > 0 then
         

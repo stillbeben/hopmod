@@ -1,4 +1,6 @@
 
+require "geoip"
+
 local logfile = io.open("log/server.log","a+")
 
 function log(msg)
@@ -48,7 +50,7 @@ end)
 server.event_handler("connect", function (cn)
 
     local ip = server.player_ip(cn)
-    local country = server.ip_to_country(ip)
+    local country = geoip.ip_to_country(ip)
     
     log(string.format("%s(%i)(%s)(%s) connected",server.player_name(cn),cn,ip,country))
 

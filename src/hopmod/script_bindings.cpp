@@ -189,12 +189,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(open_script_socket, "script_socket_server", env);
     script::bind_freefunc(close_script_socket, "close_script_socket_server", env);
     
-    // Geoip functions
-    script::bind_freefunc(geoip_supported, "geoip_supported?", env);
-    script::bind_freefunc(load_geoip_database, "load_geoip_database", env);
-    script::bind_freefunc(ip_to_country, "ip_to_country", env);
-    script::bind_freefunc(ip_to_country_code, "ip_to_country_code", env);
-    
     script::bind_property<int>(
         boost::bind(script::property<int>::generic_getter, server::mastermode),
         server::script_set_mastermode, "mastermode", env);
