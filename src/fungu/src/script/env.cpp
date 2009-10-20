@@ -31,7 +31,7 @@ namespace script{
 const int env::recursion_limit;
 
 env::env()
-  :m_source_ctx(NULL)
+  :m_source_ctx(new local_source_context)
 {
     for(int i = 0; i<env::max_modules; i++) m_module[i] = NULL;
 }

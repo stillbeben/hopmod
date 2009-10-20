@@ -53,7 +53,8 @@ void init_hopmod()
     
     lua::module::open_net(L);
     lua::module::open_crypto(L);
-
+    lua::module::open_cubescript(L);
+    
     try
     {
         fungu::script::execute_file("script/base/init.cs", get_script_env());

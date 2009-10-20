@@ -34,9 +34,9 @@ public:
     
     bool is_string_constant()const;
     
-    std::string form_source()const;
-    
     bool is_empty_expression()const;
+    
+    std::string form_source()const;
 private:
     void add_child_construct(construct * child);
     
@@ -65,6 +65,7 @@ class base_expression:public expression
 {
 public:
     parse_state parse(source_iterator * first,source_iterator last,env_frame * frame);
+    std::string form_source()const;
 };
 
 } //namespace script

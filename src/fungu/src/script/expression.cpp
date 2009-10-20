@@ -216,25 +216,6 @@ bool expression::is_string_constant()const
     return false;
 }
 
-std::string expression::form_source()const
-{
-    std::string source;
-    bool multiple=false;
-    
-    construct * current = m_first_construct;
-    while(current)
-    {
-        if(multiple) source += " ";
-        else multiple = true;
-        source += current->form_source();
-        
-        current = current->get_next_sibling();
-    }
-    
-    source += "\n";
-    return source;
-}
-
 /**
     @brief Check for empty empression.
     
@@ -338,6 +319,30 @@ void expression::reset_placeholders()
     }
 }
 
+std::string expression::form_source()const
+{
+    std::string source;
+    
+    construct * operation = m_first_construct;
+    source += operation->form_source();
+    
+    construct * current = operation->get_next_sibling();
+    
+    for(unsigned int i = 0, j = 0; i < m_arguments.size(); i++)
+    {
+        source += " ";
+        if(j < m_placeholders.size() && m_placeholders[j] == i)
+        {
+            source += current->form_source();
+            current = current->get_next_sibling();
+            j++;
+        }
+        else source += m_arguments[i].to_string().copy();
+    }
+    
+    return source;
+}
+
 parse_state base_expression::parse(source_iterator * first, source_iterator last, env_frame * frame)
 {
     parse_state state = expression::parse(first,last,frame);
@@ -351,6 +356,14 @@ parse_state base_expression::parse(source_iterator * first, source_iterator last
     }
     
     return state;
+}
+
+std::string base_expression::form_source()const
+{
+    std::string source;
+    source = expression::form_source();
+    source += "\n";
+    return source;
 }
 
 } //namespace script

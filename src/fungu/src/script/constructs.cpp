@@ -13,6 +13,7 @@
 #include <boost/scope_exit.hpp>
 #include <vector>
 #include <sstream>
+#include <iostream>
 
 #include "fungu/script/expression.hpp"
 #include "fungu/script/core_constructs.hpp"
@@ -27,7 +28,7 @@
 #include "expression.cpp"
 #include "subexpression.cpp"
 #include "quote.cpp"
+#include "comment.cpp"
 #include "block.cpp"
 #include "macro.cpp"
-#include "comment.cpp"
 #include "parse_array.cpp"

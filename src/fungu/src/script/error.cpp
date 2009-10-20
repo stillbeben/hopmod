@@ -49,7 +49,7 @@ std::string error::get_error_message()const
         case TOO_MANY_ARGUMENTS: return "too many arguments were given";
         case MAXARGS: return "exceeded the script engine's argument list size limit";
         case BAD_CAST: return "value could not be type casted";
-        case NO_CAST: return "type has no supported representation";
+        case NO_CAST: return "value cannot be displayed";
         case INVALID_TYPE: return "object of the wrong type was given";
         case INVALID_VALUE:
         {

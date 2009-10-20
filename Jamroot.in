@@ -54,6 +54,7 @@ lib serverscripting :
     src/hopmod/scripting.cpp
     src/hopmod/lua/crypto.cpp
     src/hopmod/lua/net.cpp
+    src/hopmod/lua/cubescript.cpp
     /lua//lua
     /boost//headers
     /boost//signals

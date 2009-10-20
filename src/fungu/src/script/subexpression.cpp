@@ -69,10 +69,9 @@ std::string subexpression::form_source()const
     while(expr)
     {
         if(multiple) source += ";";
-        else multiple = true;
+        multiple = true;
         
         std::string exprsrc = expr->form_source();
-        exprsrc.erase(exprsrc.end()-1);
         source += exprsrc;
         
         expr = expr->get_next_sibling();
