@@ -92,7 +92,10 @@ exe sauer_server :
     /libmicrohttpd//httpd
     rt
     pch
-    : <define>STANDALONE <define>HOPMOD_GAMESERVER_EVENTS <include>src/fpsgame <include>src/hopmod ;
+    : <define>STANDALONE 
+      <define>HOPMOD_GAMESERVER_EVENTS
+      <include>src/fpsgame
+      <include>src/hopmod ;
 
 exe keygen :
     sauertools

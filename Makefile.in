@@ -2,7 +2,7 @@ BJAM=bin/bjam
 USER_CONFIG="--user-config=user-config.jam"
 
 all: .dummy
-	@$(BJAM) release $(USER_CONFIG)
+	@$(BJAM) release optimization=off $(USER_CONFIG)
 
 debug: .dummy
 	@$(BJAM) debug $(USER_CONFIG)

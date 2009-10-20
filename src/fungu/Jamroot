@@ -19,6 +19,6 @@ lib script :
     /boost//headers
     /lua//headers
     pch
-    : <link>static : : <define>FUNGU_WITH_LUA <include>include ;
+    : <link>static <optimization>off : : <define>FUNGU_WITH_LUA <include>include ;
 
 #build-project test ;
