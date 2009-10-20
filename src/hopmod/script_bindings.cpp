@@ -257,5 +257,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(file_exists, "file_exists", env);
     script::bind_freefunc(dir_exists, "dir_exists", env);
     
-    script::bind_freefunc(server::enable_setmaster_autoapprove, "allow_setmaster", env);
+    script::bind_property<bool>(
+        server::get_setmaster_autoapprove, server::enable_setmaster_autoapprove, "allow_setmaster", env);
 }

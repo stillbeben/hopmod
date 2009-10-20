@@ -180,6 +180,7 @@ namespace server
     void send_auth_request(int, const char *);
     
     void enable_setmaster_autoapprove(bool);
+    bool get_setmaster_autoapprove();
     
 } //namespace server
 

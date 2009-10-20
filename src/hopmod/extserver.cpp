@@ -989,4 +989,9 @@ void enable_setmaster_autoapprove(bool enable)
     mastermask = (!enable ? mastermask & ~MM_AUTOAPPROVE : mastermask | MM_AUTOAPPROVE);
 }
 
+bool get_setmaster_autoapprove()
+{
+    return mastermask & MM_AUTOAPPROVE;
+}
+
 #endif
