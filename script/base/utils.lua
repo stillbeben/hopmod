@@ -128,9 +128,10 @@ function tabulate(text)
     return output
 end
 
-function server.printserverstatus(filename,filemode)
+function server.printserverstatus(filename, filemode)
+
     if not filemode then
-	filemode = "a+"
+        filemode = "a+"
     end
     
     local out = io.open(filename, filemode)
@@ -139,7 +140,7 @@ function server.printserverstatus(filename,filemode)
     local host = server.serverip
     if #host == 0 then host="<ANY>" end
     local mm = server.mastermode
-    local desc = server.servername -- TODO replace whitespaces with underscores
+    local desc = string.gsub(server.servername, " ", "_")
     if #desc == 0 then desc = "<EMPTY>" end
     
     status_rows = status_rows .. string.format("%i/%i %s %s %i %s %i %s", server.playercount, server.maxplayers, server.map, server.gamemode, mm, host, server.serverport, desc)
@@ -147,13 +148,14 @@ function server.printserverstatus(filename,filemode)
     out:write(tabulate(status_rows))
     out:write("\n")
     
+
     if server.playercount > 0 then
     
         local player_rows = "CN LAG PING IP CO NAME TIME STATE PRIV\n"
         
-        for p in server.gplayers() do
+        for p in server.gplayers("all") do
             
-            local country = server.ip_to_country_code(p:ip())
+            local country = geoip.ip_to_country_code(p:ip())
             if #country == 0 then country = "?" end
             
             local priv = p:priv()
@@ -168,7 +170,6 @@ function server.printserverstatus(filename,filemode)
         
         out:write("\n")
         out:write(tabulate(player_rows))
-        
     end
     
     out:flush()
@@ -395,12 +396,10 @@ function server.all_players()
 	local list = server.players()
 
 	for i,c in ipairs(server.spectators()) do
-
-		table.insert(list,c)
+        table.insert(list,c)
 	end
 
 	return list
-
 end
 
 function validate_table(subject_table, schema)
