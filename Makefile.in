@@ -7,6 +7,9 @@ all: .dummy
 debug: .dummy
 	@$(BJAM) debug $(USER_CONFIG)
 
+authserver: .dummy
+	@$(BJAM) sauer_authserver $(USER_CONFIG)
+
 clean: .dummy
 	@$(BJAM) clean $(USER_CONFIG)
 

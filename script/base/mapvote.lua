@@ -13,7 +13,6 @@
 
 local deny_mapvote = (server.allow_mapvote == 0)
 local deny_modevote = (server.allow_modevote == 0)
-local deny_coopedit = (server.disallow_coopedit == 1)
 local deny_unknown_map = (server.mapvote_disallow_unknown_map == 1)
 local allowed_modes = table_unique(server.parse_list(server["allowed_gamemodes"]))
 

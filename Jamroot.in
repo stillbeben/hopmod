@@ -101,6 +101,16 @@ exe keygen :
     sauertools
     z
     src/hopmod/keygen.cpp : <define>STANDALONE ;
+    
+exe sauer_authserver :
+    src/hopmod/authserver.cpp
+    sauertools
+    serverscripting
+    scriptpipe
+    enet
+    : <define>STANDALONE <define>HOPMOD_AUTHSERVER_EVENTS ;
+
+explicit sauer_authserver ;
 
 install dist : sauer_server keygen /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
 

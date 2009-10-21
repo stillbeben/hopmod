@@ -24,7 +24,6 @@ using namespace fungu;
 #define KEEPALIVE_TIME (65*60*1000)
 #define SERVER_LIMIT (10*1024)
 #define DEFAULT_SERVER_PORT 28787
-#define DELEGATE_CONCURRENT_REQUEST_LIMIT 65535
 
 static bool debug = false;
 
@@ -122,8 +121,6 @@ struct authreq
     enet_uint32 reqtime; 
     uint id;
     challenge * authchal;
-    bool delegated;
-    int rootserver_id;
     client * c;
     
     authreq()
@@ -159,144 +156,6 @@ ENetSocket serversocket = ENET_SOCKET_NULL;
 
 time_t starttime;
 enet_uint32 servtime = 0;
-
-string rootserver_hostname = "sauerbraten.org";
-int rootserver_port = DEFAULT_SERVER_PORT;
-void rootserver_input(masterserver_client & client, const char * reply, int argc, const char * const * argv);
-masterserver_client rootserver(rootserver_input);
-authreq * rootserver_id[DELEGATE_CONCURRENT_REQUEST_LIMIT];
-
-bool use_rootserver(){return rootserver_hostname[0];}
-
-void initialize_rootserver()
-{
-    authreq ** first = &rootserver_id[0];
-    authreq ** last = &rootserver_id[DELEGATE_CONCURRENT_REQUEST_LIMIT-1];
-    for(; first <= last; first++) *first = NULL;
-}
-
-int get_free_rootserver_id()
-{
-    authreq ** first = &rootserver_id[0];
-    authreq ** last = &rootserver_id[DELEGATE_CONCURRENT_REQUEST_LIMIT-1];
-    for(; first <= last; first++) if(!*first) return first - &rootserver_id[0]; 
-    return -1;
-}
-
-void rootserver_input(masterserver_client & client, const char * reply, int argc, const char * const * argv)
-{
-    if(argc == 0) return;
-    
-    uint id = static_cast<uint>(atoi(argv[0]));
-    bool finished_request = true;
-    
-    if(id > DELEGATE_CONCURRENT_REQUEST_LIMIT || !rootserver_id[id])
-    {
-        std::cerr<<"Root server replied with an invalid root-id ("<<id<<")"<<std::endl;
-        return;
-    }
-    
-    authreq * req = rootserver_id[id];
-    
-    if(strcmp(reply, "chalauth") == 0)
-    {
-        if(argc > 1) 
-        {
-            outputf(*req->c, "chalauth %u %s\n", req->id, argv[1]);
-            finished_request = false;
-            std::cout<<"Forwarded challenge to user (auth id "<<req->id<<")"<<std::endl;
-        }
-    }
-    else if(strcmp(reply, "succauth") == 0) outputf(*req->c, "succauth %u\n", req->id);
-    else if(strcmp(reply, "failauth") == 0) outputf(*req->c, "failauth %u\n", req->id);
-    
-    if(finished_request)
-    {
-        rootserver_id[id] = NULL;
-        
-        loopv(req->c->authreqs) 
-            if(req->c->authreqs[i].id == req->id)
-            {
-                req->c->authreqs.remove(i--);
-                break;
-            }
-    }
-}
-
-bool connect_to_rootserver()
-{
-    ENetAddress address;
-    if(enet_address_set_host(&address, rootserver_hostname) < 0)
-    {
-        std::cerr<<"Could not resolve hostname "<<rootserver_hostname<<" for auth server connection."<<std::endl;
-        signal_rootserver_failedconnect();
-        return false;
-    }
-    
-    address.port = rootserver_port;
-    
-    if(rootserver.connect(address) == false)
-    {
-        std::cerr<<"Unable to connect to auth server at "<<rootserver_hostname<<":"<<DEFAULT_SERVER_PORT<<std::endl;
-        signal_rootserver_failedconnect();
-        return false;
-    }
-    
-    return true;
-}
-
-bool delegate_reqauth(client &c, uint id, char *name, char * domain)
-{    
-    bool using_domain = domain[0];
-    
-    if(!use_rootserver())
-    {
-        outputf(c, "failauth %u\n", id);
-        return false;
-    }
-    
-    if(rootserver.is_connected() == false && connect_to_rootserver() == false)
-    {
-        outputf(c, "failauth %u\n", id);
-        return false;
-    }
-    
-    int rsid = get_free_rootserver_id();
-    if(rsid == -1)
-    {
-        std::cerr<<"Auth request failed for "<<name<<"@"<<(using_domain ? domain : "sauerbraten.org")<<" because there are too many concurrent requests to the root server."<<std::endl;
-        outputf(c, "failauth %u\n", id);
-        return false;
-    }
-    
-    if(c.authreqs.length() >= AUTH_LIMIT)
-    {
-        outputf(c, "failauth %u\n", c.authreqs[0].id);
-        c.authreqs.remove(0);
-    }
-    
-    authreq &a = c.authreqs.add();
-    a.reqtime = servtime;
-    a.id = id;
-    a.delegated = true;
-    a.rootserver_id = rsid;
-    a.c = &c;
-    
-    rootserver_id[rsid] = &a;
-    
-    char * reqargs[4];
-    defformatstring(authid)("%i", rsid);
-    reqargs[0] = authid;
-    reqargs[1] = name;
-    reqargs[2] = using_domain ? domain : NULL;
-    reqargs[3] = NULL;
-    
-    rootserver.send_request("reqauth", reqargs);
-    
-    std::cout<<"Forwarded request to root server (auth-id "<<id<<" root-id "<<rsid<<")"<<std::endl;
-    
-    return true;
-}
 
 void fatal(const char *fmt, ...)
 {
@@ -396,7 +255,6 @@ void purgeauths(client &c)
         if(ENET_TIME_DIFFERENCE(servtime, c.authreqs[i].reqtime) >= AUTH_TIME) 
         {
             outputf(c, "failauth %u\n", c.authreqs[i].id);
-            if(c.authreqs[i].delegated) rootserver_id[c.authreqs[i].rootserver_id] = NULL;
             expired = i + 1;
         }
         else break;
@@ -440,22 +298,14 @@ void reqauth(client & c, uint id, char * name, char * domain)
     
     if(!found)
     {
-        if(domainIt != users.end())
-        {
-            outputf(c, "failauth %u\n", id);
-            conoutf("failed %u from %s", id, ip);
-            return;
-        }
-        
-        delegate_reqauth(c, id, name, domain);
-        
+        outputf(c, "failauth %u\n", id);
+        conoutf("failed %u from %s", id, ip);
         return;
     }
     
     authreq &a = c.authreqs.add();
     a.reqtime = servtime;
     a.id = id;
-    a.delegated = false;
     uint seed[3] = { starttime, servtime, randomMT() };
     a.authchal = userIt->second->create_challenge(seed, sizeof(seed));
     
@@ -471,36 +321,18 @@ void confauth(client &c, uint id, const char *val)
         string ip;
         if(enet_address_get_host_ip(&c.address, ip, sizeof(ip)) < 0) copystring(ip, "-");
         
-        if(c.authreqs[i].delegated)
+        if(c.authreqs[i].authchal->expected_answer(val))
         {
-            if(rootserver.is_connected() == false && connect_to_rootserver() == false)
-            {
-                outputf(c, "failauth %u\n", id);
-                return;
-            }
-            
-            const char * reqargs[3];
-            defformatstring(authid)("%i", c.authreqs[i].rootserver_id);
-            reqargs[0] = authid;
-            reqargs[1] = val;
-            reqargs[2] = NULL;
-            
-            rootserver.send_request("confauth", reqargs);
+            outputf(c, "succauth %u\n", id);
+            conoutf("succeeded %u from %s", id, ip);
         }
-        else
+        else 
         {
-            if(c.authreqs[i].authchal->expected_answer(val))
-            {
-                outputf(c, "succauth %u\n", id);
-                conoutf("succeeded %u from %s", id, ip);
-            }
-            else 
-            {
-                outputf(c, "failauth %u\n", id);
-                conoutf("failed %u from %s", id, ip);
-            }
-            c.authreqs.remove(i--);
+            outputf(c, "failauth %u\n", id);
+            conoutf("failed %u from %s", id, ip);
         }
+        c.authreqs.remove(i--);
+        
         return;
     }
     outputf(c, "failauth %u\n", id);
@@ -541,20 +373,12 @@ bool checkclientinput(client &c)
 ENetSocketSet readset, writeset;
 
 void checkclients()
-{
-    bool check_rootserver = rootserver.is_connected();
-    
+{    
     ENetSocketSet readset, writeset;
     ENetSocket maxsock = serversocket;
     ENET_SOCKETSET_EMPTY(readset);
     ENET_SOCKETSET_EMPTY(writeset);
     ENET_SOCKETSET_ADD(readset, serversocket);
-    
-    if(check_rootserver)
-    {
-        maxsock = rootserver.get_socket_descriptor();
-        ENET_SOCKETSET_ADD(readset, maxsock);
-    }
     
     loopv(clients)
     {
@@ -587,12 +411,6 @@ void checkclients()
             c->lastinput = servtime;
             clients.add(c);
         }
-    }
-    
-    if(check_rootserver)
-    {
-        if(ENET_SOCKETSET_CHECK(readset, rootserver.get_socket_descriptor()))
-            rootserver.flush_input();
     }
     
     loopv(clients)
@@ -656,7 +474,7 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &terminate_action, NULL);
     sigaction(SIGTERM, &terminate_action, NULL);
     
-    const char * confname = "conf/authserver.conf";
+    const char * confname = "script/base/auth/server_init.lua";
     
     int port = DEFAULT_SERVER_PORT;
     string ip = "";
@@ -667,9 +485,6 @@ int main(int argc, char **argv)
     
     script::bind_var(port, "serverport", e);
     script::bind_var(ip, "serverip", e);
-    
-    script::bind_var(rootserver_hostname, "rootserver", e);
-    script::bind_var(rootserver_port, "rootserver_port", e);
     
     script::bind_freefunc(adduser, "adduser", e);
     script::bind_freefunc(deleteuser, "deleteuser", e);
@@ -707,12 +522,7 @@ int main(int argc, char **argv)
     {
         servtime = enet_time_get();
         checkclients();
-        
-        if(rootserver.is_connected() && rootserver.has_queued_output())
-            rootserver.flush_output();
-        
         run_script_pipe_service(servtime);
-        
         cleanup_dead_slots();
     }
     
