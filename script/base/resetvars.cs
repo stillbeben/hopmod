@@ -32,9 +32,6 @@ global allowed_gamemodes [
     "insta protect"
 ]
 
-global auth_db_filename "log/auth.sqlite"
-global auth_use_sqlite 1
-
 global stats_db_filename "log/stats.sqlite"
 global stats_use_auth 0
 global stats_auth_domain ""
@@ -53,9 +50,6 @@ global stats_mysql_database "sauerstats"
 global stats_mysql_username ""
 global stats_mysql_password ""
 global stats_mysql_install 0
-
-global name_reservation_domain ""
-global reserved_name_expire (mins 3600)
 
 global use_server_maprotation 1
 global use_server_random_maprotation 0
@@ -219,10 +213,6 @@ global shell_label "server"
 global use_kickspec 0
 global kickspec_maxtime (mins 25)
 
-global enable_ownage_messages 0
-
-global enable_suddendeath 0
-
 global change_default_maptime 0
 global default_maptime (mins 15)
 
@@ -230,9 +220,6 @@ global use_spec_inactives 0
 global spec_inactives_check_time (mins 6)
 global spec_inactives_time (mins 5)
 
-global use_cd_modmap 0
-
-global use_cd_accuracy 0
 global cd_accuracy_limit 0
 
 global use_cd_chainsawhack 0
