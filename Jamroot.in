@@ -113,6 +113,7 @@ exe sauer_authserver :
 explicit sauer_authserver ;
 
 install dist : sauer_server keygen /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
+install install_sauer_authserver : sauer_authserver : <install-dependencies>on <install-type>EXE <install-type>LIB <location>bin ;
 
 install lua-packages :
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;

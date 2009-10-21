@@ -8,7 +8,7 @@ debug: .dummy
 	@$(BJAM) debug $(USER_CONFIG)
 
 authserver: .dummy
-	@$(BJAM) sauer_authserver $(USER_CONFIG)
+	@$(BJAM) sauer_authserver install_sauer_authserver $(USER_CONFIG)
 
 clean: .dummy
 	@$(BJAM) clean $(USER_CONFIG)

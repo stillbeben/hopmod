@@ -28,6 +28,7 @@ static inline int server_interface_newindex(lua_State *);
 static inline void push_server_table(lua_State *);
 static inline void register_to_server_namespace(lua_State *,lua_CFunction,const char *);
 static int parse_list(lua_State *);
+static int execute_cubescript_file(lua_State * L);
 
 static script::env * env = NULL;
 
@@ -64,6 +65,7 @@ void init_scripting()
 
     // Utility functions
     register_lua_function(&parse_list, "parse_list");
+    register_lua_function(&execute_cubescript_file, "execute_cubescript_file");
 }
 
 static void create_server_namespace(lua_State * L)
@@ -305,4 +307,22 @@ void unset_global(const char * name)
 {
     script::env_symbol * symbol = env->lookup_symbol(const_string(name, name + strlen(name) - 1));
     if(symbol) symbol->unset_global_object();
+}
+
+int execute_cubescript_file(lua_State * L)
+{
+    const char * filename = luaL_checkstring(L, 1);
+    try
+    {
+        script::execute_file(filename, *env);
+    }
+    catch(const script::error & error)
+    {
+        luaL_error(L, "%s", error.get_error_message().c_str());
+    }
+    catch(script::error_trace * error_trace)
+    {
+        luaL_error(L, "%s", get_script_error_message(error_trace).c_str());
+    }
+    return 0;
 }

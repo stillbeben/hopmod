@@ -474,14 +474,13 @@ int main(int argc, char **argv)
     sigaction(SIGINT, &terminate_action, NULL);
     sigaction(SIGTERM, &terminate_action, NULL);
     
-    const char * confname = "script/base/auth/server_init.lua";
-    
     int port = DEFAULT_SERVER_PORT;
     string ip = "";
     
     init_scripting();
     
     script::env & e = get_script_env();
+    lua_State * L = e.get_lua_state();
     
     script::bind_var(port, "serverport", e);
     script::bind_var(ip, "serverip", e);
@@ -502,14 +501,8 @@ int main(int argc, char **argv)
     init_script_pipe();
     open_script_pipe("authexec", 511, e);
     
-    try
-    {
-        fungu::script::execute_file(confname, e);
-    }
-    catch(fungu::script::error_trace * error)
-    {
-        report_script_error(error);
-    }
+    if(luaL_dofile(L, "./script/base/auth/server_init.lua")==1)
+        log_error(lua_tostring(L, -1));
     
     setupserver(port, (ip[0] ? ip : NULL));
     
@@ -528,4 +521,3 @@ int main(int argc, char **argv)
     
     return EXIT_SUCCESS;
 }
-
