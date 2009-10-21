@@ -145,8 +145,8 @@ function internal.send_request(cn, user_id, domain)
     
 end
 
-server.event_handler("request_auth_challenge", function(cn, user_id, domain)
-    
+local function start_auth_challenge(cn, user_id, domain)
+
     local domain_id = domain
     
     domain = auth.directory.get_domain(domain)
@@ -191,8 +191,9 @@ server.event_handler("request_auth_challenge", function(cn, user_id, domain)
     end
     
     internal.send_request(cn, user_id, domain)
-    
-end)
+end
+
+server.event_handler("request_auth_challenge", start_auth_challenge)
 
 server.event_handler("auth_challenge_response", function(cn, request_id, answer)
     
@@ -271,8 +272,8 @@ function auth.cancel_listener(domain, index)
     table.remove(domain_listeners[domain], index)
 end
 
-function auth.send_request(cn, domain_id, callback)
-        
+local function push_request_listener(cn, domain_id, callback)
+
     local listeners = clients[cn].listeners[domain_id]
     
     if not listeners then
@@ -281,6 +282,11 @@ function auth.send_request(cn, domain_id, callback)
     end
     
     table.insert(listeners, callback)
+end
+
+function auth.send_request(cn, domain_id, callback)
+        
+    push_request_listener(cn, domain_id, callback)
     
     server.send_auth_request(cn, domain_id)
     
@@ -295,4 +301,16 @@ function auth.send_request(cn, domain_id, callback)
         end
     end)
     
+end
+
+function auth.send_challenge_request_to_authserver(cn, user_id, domain_id, callback)
+
+    local domain = auth.directory.get_domain(domain_id)
+    if not domain then error("unknown domain") end
+    
+    push_request_listener(cn, domain_id, callback)
+    
+    create_request(cn, user_id, domain)
+    
+    start_auth_challenge(cn, user_id, domain_id)
 end
