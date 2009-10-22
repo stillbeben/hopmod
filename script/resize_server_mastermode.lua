@@ -20,7 +20,7 @@ local function resizeMastermode(mmode)
     
     if mmode == server.resize_mastermode then
     
-        restore_maxplayers server.maxplayers
+        restore_maxplayers = server.maxplayers
         server.maxplayers = server.resize_totalmaxplayers
     else
         server.maxplayers = restore_maxplayers
