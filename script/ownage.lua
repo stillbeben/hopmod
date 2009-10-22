@@ -102,6 +102,8 @@ end
 
 events.frag = server.event_handler_object("frag", function(target_cn, actor_cn)
     
+    if server.is_teamkill(actor_cn, target_cn) then return end
+    
     send_first_frag_message(target_cn, actor_cn)
     
     local target_vars = server.player_vars(target_cn)

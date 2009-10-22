@@ -461,3 +461,9 @@ function table.deepcopy(object)
     end
     return _copy(object)
 end
+
+function server.is_teamkill(player1, player2)
+    if not gamemodeinfo.teams then return false end
+    if server.player_team(player1) == server.player_team(player2) then return true end
+    return false
+end
