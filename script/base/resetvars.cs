@@ -191,12 +191,9 @@ flood_protect_switchname 1000
 flood_protect_remip 10000
 flood_protect_newmap 10000
 
-global enable_teamkill_limiter 1
 global teamkill_limit 7
 global teamkill_bantime (mins 30)
-global teamkill_show_public 0
-global teamkill_show_public_minium_tks 0
-global teamkill_showlimit 1
+global teamkill_broadcast_after 1
 
 global enable_ping_limiter 1
 global ping_limiter_tick 25000
@@ -246,3 +243,7 @@ global masterserver "sauerbraten.org"
 global masterserverport 28787
 
 global use_master_auth 1
+
+global autoteambalance_using_bots 1
+global autoteambalance_using_moveplayers 0
+global autoteambalance_using_blockmove 0
