@@ -8,6 +8,7 @@ local sqlite3 = sqlite3
 local string = string
 local print = print
 local tostring = tostring
+local type = type
 
 module("sqlite3utils")
 
@@ -24,6 +25,7 @@ function createMissingTables(schemafilename, db)
     db:exec("BEGIN TRANSACTION")
     
     for row in schema:rows("SELECT * FROM sqlite_master") do
+    
         --FIXME find a way to reset prepared statement
         local search_for_table,perr = db:prepare("SELECT count(*) as count FROM sqlite_master WHERE name = ?")
         search_for_table:bind(row.name)
