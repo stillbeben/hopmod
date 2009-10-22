@@ -92,10 +92,6 @@ extern boost::signal<void ()> signal_shutdown_scripting;
 extern boost::signal<void ()> signal_reloadhopmod;
 extern boost::signal<void ()> signal_maintenance;
 
-#ifdef HOPMOD_AUTHSERVER_EVENTS
-extern boost::signal<void ()> signal_rootserver_failedconnect;
-#endif
-
 /**
     @brief Register signals with the global script::slot_factory instance.
 */
