@@ -1,7 +1,7 @@
 
 CREATE TABLE IF NOT EXISTS domains (
     id          INTEGER PRIMARY KEY,
-    name        TEXT UNIQUE,
+    name        TEXT UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS users (
