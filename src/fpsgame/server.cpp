@@ -2564,10 +2564,12 @@ namespace server
                     if(!cancel)
                     {
                         if(smode && ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, text);
+                        string oldteam;
+                        copystring(oldteam, ci->team);
                         copystring(ci->team, text);
                         aiman::changeteam(ci);
                         sendf(-1, 1, "riis", SV_SETTEAM, sender, ci->team);
-                        signal_reteam(ci->clientnum, ci->team, text);
+                        signal_reteam(ci->clientnum, oldteam, text);
                     }
                     else sendf(sender, 1, "riis", SV_SETTEAM, sender, ci->team);
                 }
