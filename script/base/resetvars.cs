@@ -1,4 +1,4 @@
-# Default values for external variables
+# Declarations and default values for the Core Configuration Variables
 
 global motd "Running Hopmod"
 
@@ -31,25 +31,6 @@ global allowed_gamemodes [
     "protect"
     "insta protect"
 ]
-
-global stats_db_filename "log/stats.sqlite"
-global stats_use_auth 0
-global stats_auth_domain ""
-global stats_tell_auth_name 0
-global stats_debug 0
-global stats_use_sqlite 1
-global stats_sqlite_exclusive_locking 0
-global stats_sqlite_synchronous 1
-global stats_use_json 0
-global stats_overwrite_name_with_authname 0
-global stats_use_mysql 0
-global stats_servername ""
-global stats_mysql_hostname "localhost"
-global stats_mysql_port 3306
-global stats_mysql_database "sauerstats"
-global stats_mysql_username ""
-global stats_mysql_password ""
-global stats_mysql_install 0
 
 global use_server_maprotation 1
 global use_server_random_maprotation 0
@@ -191,59 +172,10 @@ flood_protect_switchname 1000
 flood_protect_remip 10000
 flood_protect_newmap 10000
 
-global teamkill_limit 7
-global teamkill_bantime (mins 30)
-global teamkill_broadcast_after 1
-
-global enable_ping_limiter 1
-global ping_limiter_tick 25000
-global ping_limit 500
-global lag_limit 30
-global ping_limit_warnings 4
-
-global enable_dynamic_maxclients 0
-
-global disable_masterauth_in_coopedit 0
-
 global shell_label "server"
-
-global use_kickspec 0
-global kickspec_maxtime (mins 25)
-
-global change_default_maptime 0
-global default_maptime (mins 15)
-
-global use_spec_inactives 0
-global spec_inactives_check_time (mins 6)
-global spec_inactives_time (mins 5)
-
-global cd_accuracy_limit 0
-
-global use_cd_chainsawhack 0
-
-global resize_totalminplayers 1
-global resize_totalmaxplayers 7
-
-global use_resize_mastermode 0
-global resize_mastermode locked
-global resize_totalmaxplayers 50
-
-global cheater_ad_timer (mins 4)
-global votekick_ad_timer (mins 4)
-
-global master_domains []
-global admin_domain ""
-global invadmin_domain ""
-
-global warning_limit 2
-global warning_bantime (mins 60)
 
 global updatemaster 1
 global masterserver "sauerbraten.org"
 global masterserverport 28787
 
 global use_master_auth 1
-
-global autoteambalance_using_bots 1
-global autoteambalance_using_moveplayers 0
-global autoteambalance_using_blockmove 0

@@ -15,8 +15,6 @@ server.module("base/auth/init")
 server.module("base/mapvote")
 server.module("base/register_server")
 
-server.event_handler("shutdown",function() server.log_status("Server shutting down.") end)
-
 local function update_gamemodeinfo()
     gamemodeinfo = server.gengamemodeinfo()
 end
@@ -26,6 +24,25 @@ server.event_handler("mapchange", function(map, mode)
 end)
 
 update_gamemodeinfo()
+
+-- Load module configuration variables
+local function load_module_vars(path)
+
+    local filesystem = require "filesystem"
+    
+    for filetype, filename in filesystem.dir(path) do
+        
+        local fullfilename = path .. "/" .. filename
+        
+        if filetype == filesystem.DIRECTORY and (filename ~="." and filename ~= "..") then
+            load_module_vars(fullfilename)
+        elseif filetype == filesystem.FILE and filename:match(".vars$") then
+            server.execute_cubescript_file(fullfilename)
+        end
+    end
+end
+
+load_module_vars("./script/modvars")
 
 server.event_handler("started", function()
 
@@ -60,4 +77,8 @@ server.event_handler("started", function()
     
     server.log_status("-> Successfully loaded Hopmod")
     
+end)
+
+server.event_handler("shutdown", function() 
+    server.log_status("Server shutting down.")
 end)
