@@ -55,6 +55,7 @@ void init_hopmod()
     lua::module::open_crypto(L);
     lua::module::open_cubescript(L);
     lua::module::open_geoip(L);
+    lua::module::open_filesystem(L);
     
     try
     {

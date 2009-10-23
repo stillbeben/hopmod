@@ -50,6 +50,7 @@ lib serverscripting :
     src/hopmod/lua/net.cpp
     src/hopmod/lua/cubescript.cpp
     src/hopmod/lua/geoip.cpp
+    src/hopmod/lua/filesystem.cpp
     /lua//lua
     /boost//headers
     /boost//signals
