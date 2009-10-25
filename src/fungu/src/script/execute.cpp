@@ -37,10 +37,19 @@ typedef script::eval_stream file_eval_stream;
 
 } //namespace execute_detail
 
-int execute_file(const char * filename, env & environment)
+void execute_file(const char * filename, env & environment)
 {
     FILE * file_stream = fopen(filename,"r");
-    if(!file_stream) return ENOENT;
+    if(!file_stream)
+    {
+        std::string description;
+        description  = "unable to open file ";
+        description += filename;
+        description += ":";
+        description += strerror(errno);
+        
+        throw error(OPERATION_ERROR, boost::make_tuple(description));
+    }
     
     file_source_context file_context(filename);
     const source_context * prev_context = environment.get_source_context();
@@ -72,14 +81,16 @@ int execute_file(const char * filename, env & environment)
     
     if(reader.is_parsing_expression()) throw error(UNEXPECTED_EOF);
     
-    int code = feof(file_stream) ? 0 : errno;
-    return code;
-}
-
-void throw_if_error(int errcode)
-{
-    if(errcode)
-        throw error(OPERATION_ERROR, boost::make_tuple(std::string(strerror(errcode))));
+    if(!feof(file_stream))
+    {
+        std::string description;
+        description  = "error reading from file ";
+        description += filename;
+        description += ":";
+        description += strerror(errno);
+        
+        throw error(OPERATION_ERROR, boost::make_tuple(description));
+    }
 }
 
 any execute_text(const_string code,env_frame * parent_scope)

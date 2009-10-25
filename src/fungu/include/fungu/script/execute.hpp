@@ -13,8 +13,7 @@
 namespace fungu{
 namespace script{
 
-int execute_file(const char * filename, env &);
-void throw_if_error(int errcode);
+void execute_file(const char * filename, env &);
 
 any execute_text(const_string code, env_frame * parent_scope);
 

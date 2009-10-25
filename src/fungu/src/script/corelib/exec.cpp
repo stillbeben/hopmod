@@ -16,7 +16,7 @@ inline any exec_cubescript(env_object::call_arguments & args,env_frame * aFrame)
 {
     const_string filename = args.safe_casted_front<const_string>();
     args.pop_front();
-    throw_if_error(execute_file(std::string(filename.copy()).c_str(),*aFrame->get_env()));
+    execute_file(std::string(filename.copy()).c_str(),*aFrame->get_env());
     return any::null_value();
 }
 
