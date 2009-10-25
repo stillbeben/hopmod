@@ -127,6 +127,7 @@ namespace aiman
 		ci->aireinit = 2;
 		ci->connected = true;
         ci->playerid = next_botid--;
+        ci->sessionid = (rnd(0x1000000)*((totalmillis%10000)+1))&0xFFFFFF;
         dorefresh = true;
 		return ci;
 	}
