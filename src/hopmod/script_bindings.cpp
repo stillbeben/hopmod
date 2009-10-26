@@ -131,8 +131,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::unsetban, "unsetban", env);
     script::bind_freefunc(server::clearbans, "clearbans", env);
     script::bind_freefunc(server::get_bans, "bans", env);
-    script::bind_freefunc(start_restarter, "activate_restarter", env);
-    script::bind_freefunc(stop_restarter, "deactivate_restarter", env);
     script::bind_freefunc(server::addbot, "addbot", env);
     script::bind_freefunc(server::aiman::deleteai, "delbot", env);
     script::bind_freefunc(server::recorddemo, "recorddemo", env, &recorddemo_defargs);
