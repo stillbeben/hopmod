@@ -18,8 +18,11 @@ auth.listener("", function(cn, user_id, domain, status)
     
     if server.player_priv_code(cn) == 0 and not admin_present and server.use_master_auth == 1 then
         
+        local name = server.player_name(cn)
+        
         if server.setmaster(cn) then
-            server.msg(string.format("%s claimed master as '%s'",server.player_name(cn),magenta(user_id)))
+            server.msg(string.format("%s claimed master as '%s'", name, magenta(user_id)))
+            server.log(string.format("%s(%i) claimed master as '%s'", name, cn, user_id))
         else
             server.player_msg(cn, red("Master is disabled."))
         end
