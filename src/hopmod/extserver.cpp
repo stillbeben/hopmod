@@ -92,16 +92,23 @@ void crash_handler(int signal)
         close(fd);
     }
     
-    int maxfd = getdtablesize();
-    for(int i = 3; i < maxfd; i++) close(i);
-    
-    if(totalmillis > 10000)
+    if(totalmillis > 10000) //attempt to restart
     {
-        //restart program from child process so a core dump is written for the failed parent process
-        if(fork()!=0)
+        int maxfd = getdtablesize();
+        for(int i = 3; i < maxfd; i++) close(i);
+        
+        if(fork() == 0)
         {
             setpgid(0,0);
+            umask(0);
+            
+            sigset_t unblock_signal;
+            sigemptyset(&unblock_signal);
+            sigaddset(&unblock_signal, signal);
+            sigprocmask(SIG_UNBLOCK, &unblock_signal, NULL);
+            
             execv(prog_argv[0], prog_argv);
+            exit(1);
         }
     }
 
