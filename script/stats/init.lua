@@ -19,7 +19,7 @@ if using_sqlite then
         error(err) -- log but don't throw
     end
     
-    catch_error(server.stats_sqlite_reinstall_triggers) -- FIXME TEMPORARY
+    --catch_error(server.stats_sqlite_reinstall_triggers) -- Causes the database connection to break (reason uknown)
     
     backends.query = backends.sqlite3
 end
