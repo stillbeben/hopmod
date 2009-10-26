@@ -192,7 +192,7 @@ function internal.commit()
     game.players = human_players
     game.bots = bot_players
     game.duration = round(server.gamemillis / 60000)
-   
+    
     if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
         game = nil
         players = nil

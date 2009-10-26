@@ -73,6 +73,7 @@ function createMissingTables(schemafilename, db)
     db:exec("COMMIT TRANSACTION")
 end
 
+-- BROKEN
 function reinstallTriggers(schemafilename, db)
     
     schemafile,err = io.open(schemafilename)
@@ -82,7 +83,7 @@ function reinstallTriggers(schemafilename, db)
     schema:exec("BEGIN TRANSACTION")
     schema:exec(schemafile:read("*a"))
     schema:exec("COMMIT TRANSACTION")
-    
+
     db:exec("BEGIN TRANSACTION")
     
     for trigger in schema:rows("SELECT * FROM sqlite_master WHERE type = 'trigger'") do

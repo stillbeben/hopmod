@@ -628,7 +628,6 @@ void setpriv(int cn, int priv)
 
 bool server_setmaster(int cn)
 {
-    if(!allow_master) return false;
     setpriv(cn, PRIV_MASTER);
     return true;
 }

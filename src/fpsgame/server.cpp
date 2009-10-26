@@ -399,7 +399,6 @@ namespace server
     bool allow_mm_locked = false;
     bool allow_mm_private = false;
     bool allow_item[11] = {true, true, true, true, true, true, true, true, true, true, true};
-    bool allow_master = true;
     
     string next_gamemode = "";
     string next_mapname = "";
@@ -1013,18 +1012,13 @@ namespace server
                 else if(existing->privilege >= PRIV_ADMIN) return;
             }
             if(haspass) ci->privilege = PRIV_ADMIN;
-            else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege && !ci->local && allow_master)
+            else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege && !ci->local)
             {
                 sendf(ci->clientnum, 1, "ris", SV_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
                 return;
             }
             else
             {
-                if(!allow_master)
-                {
-                    sendf(ci->clientnum, 1, "ris", SV_SERVMSG, RED "Master is disabled.");
-                    return;
-                }
                 if(authname && currentmaster != -1) getinfo(currentmaster)->privilege = PRIV_NONE;
                 ci->privilege = PRIV_MASTER;
             }

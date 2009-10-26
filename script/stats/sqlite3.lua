@@ -33,18 +33,18 @@ local function open(settings)
     
     insert_game,perr = db:prepare("INSERT INTO games (datetime, duration, gamemode, mapname, players, bots, finished) VALUES (:datetime, :duration, :mode, :map, :players, :bots, :finished)")
     if not insert_game then return nil, perr end
-
+    
     insert_team,perr = db:prepare("INSERT INTO teams (game_id, name, score, win, draw) VALUES (:gameid,:name,:score,:win,:draw)")
     if not insert_team then return nil, perr end
-
+    
     insert_player,perr = db:prepare[[INSERT INTO players (game_id, team_id, name, ipaddr, country, score, frags, deaths, suicides, teamkills, hits, shots, damage, damagewasted, timeplayed, finished, win, rank, botskill) 
         VALUES(:gameid, :team_id, :name, :ipaddr, :country, :score, :frags, :deaths, :suicides, :teamkills, :hits, :shots, :damage, :damagewasted, :timeplayed, :finished, :win, :rank, :botskill)]]
     if not insert_player then return nil, perr end
-
+    
     select_player_totals,perr = db:prepare("SELECT * FROM playertotals WHERE name = :name")
     if not select_player_totals then error(perr) end
     
-    find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
+    find_names_by_ip,perr = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
     if not find_names_by_ip then error(perr) end
     
     server.stats_db_absolute_filename = server.PWD .. "/" .. settings.filename
@@ -53,7 +53,7 @@ local function open(settings)
 end
 
 local function commit_game(game, players, teams)
-
+    
     db:exec("BEGIN TRANSACTION")
     
     insert_game:bind(game)
@@ -77,7 +77,7 @@ local function commit_game(game, players, teams)
     end
     
     for id, player in pairs(players) do
-    
+        
         player.gameid = game_id
         
         insert_player:bind(player)

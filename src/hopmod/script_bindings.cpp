@@ -165,7 +165,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::allow_mm_veto, "allow_mm_veto", env);
     script::bind_var(server::allow_mm_locked, "allow_mm_locked", env);
     script::bind_var(server::allow_mm_private, "allow_mm_private", env);
-    script::bind_var(server::allow_master, "allow_master", env);
     
     script::bind_var(server::allow_item[I_SHELLS-I_SHELLS], "allow_shells", env);
     script::bind_var(server::allow_item[I_BULLETS-I_SHELLS], "allow_bullets", env);
