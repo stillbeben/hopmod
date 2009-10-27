@@ -16,7 +16,7 @@ local function readjustCapacity()
         extra = extra + 1
     end
     
-    if server.gamemodeinfo.teams then
+    if gamemodeinfo.teams then
         extra = extra - ((pc + extra)%2)
     end
     

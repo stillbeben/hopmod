@@ -121,7 +121,7 @@ local function get_maplist(mode)
     if using_best_map_size then
         if server.playercount <= smallgamesize then
             maplist = small_maps[mode]
-        elseif server.gamemodeinfo.teams then
+        elseif gamemodeinfo.teams then
             maplist = big_maps[mode]
         end
     end
@@ -271,7 +271,7 @@ local function nextmap_command(cn)
             local nm = nextmap(tostring(server.gamemode), gamecount)
             if nm then
                 server.player_msg(cn, "The next map is " .. green(nm) .. ".")
-                if bestmapsize == 1 and not server.gamemodeinfo.teams then
+                if bestmapsize == 1 and not gamemodeinfo.teams then
                     server.player_msg(cn, "Note: The next map will be determined on the number of players still connected at the end of this game.")
                 end
             end
