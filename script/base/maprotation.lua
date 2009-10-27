@@ -120,9 +120,9 @@ local function get_maplist(mode)
     
     if using_best_map_size then
         if server.playercount <= smallgamesize then
-            maplist = small_maps[mode]
+            maplist = small_maps[mode] or maplist
         elseif gamemodeinfo.teams then
-            maplist = big_maps[mode]
+            maplist = big_maps[mode] or maplist
         end
     end
     
