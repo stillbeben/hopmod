@@ -2485,12 +2485,21 @@ namespace server
             {
                 getstring(text, p);
                 filtertext(text, text);
-                if(ci && !ci->check_flooding(ci->sv_text_hit,"sending text") && 
-                    signal_text(ci->clientnum,text) != -1)
+                
+                if(ci && !ci->check_flooding(ci->sv_text_hit,"sending text"))
                 {
-                    QUEUE_AI;
-                    QUEUE_INT(SV_TEXT);
-                    QUEUE_STR(text);
+                    if(text[0] == '#' && !strcmp(text+1, "reload") && ci->privilege == PRIV_ADMIN)
+                    {
+                        reload_hopmod();
+                        break;
+                    }
+                    
+                    if(signal_text(ci->clientnum, text) != -1)
+                    {
+                        QUEUE_AI;
+                        QUEUE_INT(SV_TEXT);
+                        QUEUE_STR(text);
+                    }
                 }
                 break;
             }
