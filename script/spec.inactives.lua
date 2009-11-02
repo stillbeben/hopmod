@@ -89,7 +89,7 @@ function spec_inactives.loadEventHandlers()
 end
 
 
-server.event_handler("setmastermode",function(old,new)
+server.event_handler("setmastermode",function(cn,old,new)
 
 	if new == "open" then
  		spec_inactives.enable()

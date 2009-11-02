@@ -27,7 +27,7 @@ local function resizeMastermode(mmode)
     end
 end
 
-server.event_handler("setmastermode",function(old, new)
+server.event_handler("setmastermode",function(cn, old, new)
     resizeMastermode(new)
 end)
 

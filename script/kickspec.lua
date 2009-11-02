@@ -113,7 +113,7 @@ end
 -- always running events
 --
 -- disable kickspec, when mastermode is not open
-server.event_handler("setmastermode",function(old,new)
+server.event_handler("setmastermode",function(cn, old, new)
     if not ( new == "open" ) then
         kickspec_disabler()
     else

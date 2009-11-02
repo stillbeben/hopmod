@@ -2682,7 +2682,7 @@ namespace server
                 {
                     if((ci->privilege>=PRIV_ADMIN || ci->local) || (mastermask&(1<<mm)))
                     {
-                        if(signal_setmastermode(mastermodename(mastermode),mastermodename(mm))==-1) break;
+                        if(signal_setmastermode(ci->clientnum, mastermodename(mastermode),mastermodename(mm))==-1) break;
                         mastermode = mm;
                         mastermode_owner = ci->clientnum;
                         mastermode_mtime = totalmillis;

@@ -113,7 +113,7 @@ server.event_handler("mapchange", function(map, mode)
     log(string.format("New game: %s on %s, %s", mode, map, playerstats))
 end)
 
-server.event_handler("setmastermode", function(oldmode, newmode)
+server.event_handler("setmastermode", function(cn, oldmode, newmode)
     log(string.format("mastermode changed to %s",newmode))
 end)
 
