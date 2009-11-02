@@ -30,6 +30,7 @@ killingspree_message[15] = yellow("%s is ") .. orange("DOMINATING!!")
 killingspree_message[20] = yellow("%s is ") .. orange("UNSTOPPABLE!!")
 killingspree_message[30] = yellow("%s is ") .. orange("GODLIKE!!")
 
+local broadcast_minimum = 10
 local long_killingspree = 15
 local multikill_timelimit = 2000
 local first_frag = true
@@ -54,7 +55,14 @@ local function send_killingspree_message(target_cn, target_vars, actor_cn, actor
     end
     
     if killingspree_message[actor_killingspree] then
-        server.msg(string.format(killingspree_message[actor_killingspree], server.player_displayname(actor_cn)))
+    
+        local message = string.format(killingspree_message[actor_killingspree], server.player_displayname(actor_cn))
+        
+        if actor_killingspree < broadcast_minimum then
+            server.player_msg(actor_cn, message)
+        else
+            server.msg(message)
+        end
     end
     
     if target_killingspree >= long_killingspree then
