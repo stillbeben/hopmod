@@ -112,7 +112,7 @@ inline std::vector<std::string> split(const char * body,const char * delim)
 
 inline int strstr(const char * s1, const char * s2)
 {
-    char * s3 = ::strstr(s1, s2);
+    const char * s3 = ::strstr(s1, s2);
     return (s3 ? s3 - s1 : -1);
 }
 
