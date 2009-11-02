@@ -74,7 +74,7 @@ end
 function red(text) return formatcol(3,text) end
 function orange(text) return formatcol(6, text) end
 function green(text) return formatcol(0, text) end
-function white(text) return formatcol(10, text) end
+function white(text) return formatcol(9, text) end
 function yellow(text) return formatcol(2, text) end
 function magenta(text) return formatcol(5, text) end
 function blue(text) return formatcol(1, text) end
@@ -466,4 +466,28 @@ function server.is_teamkill(player1, player2)
     if not gamemodeinfo.teams then return false end
     if server.player_team(player1) == server.player_team(player2) then return true end
     return false
+end
+
+function print_displaynamelist(clientnums)
+    local names = {}
+    for _, cn in ipairs(clientnums) do
+        table.insert(names, server.player_displayname(cn))
+    end
+    return print_list(unpack(names))
+end
+
+function print_list(...)
+    local output = ""
+    for _, item in ipairs(arg) do
+        item = tostring(item)
+        if #item > 0 then
+            if #output > 0 then output = output .. ", " end
+            output = output .. item
+        end
+    end
+    return output
+end
+
+function server.is_bot(cn)
+    return cn > 127;
 end
