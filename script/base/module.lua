@@ -112,4 +112,11 @@ function server.unload_module(name)
     collectgarbage()
 end
 
+local function unload_all_modules()
+    for name in pairs(loaded_modules) do 
+        catch_error(server.unload_module, name)
+    end
+end
+
 server.event_handler("started", load_modules_now)
+server.event_handler("shutdown", unload_all_modules)
