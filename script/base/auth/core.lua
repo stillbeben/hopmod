@@ -244,6 +244,7 @@ end)
 server.event_handler("disconnect", function(cn)
     
     local client_auth_info = clients[cn]
+    if not client_auth_info then return end -- DEBUG
     
     for i, request in ipairs(client_auth_info.requests) do
         request:complete(auth.request_status.CANCELLED)
@@ -301,16 +302,4 @@ function auth.send_request(cn, domain_id, callback)
         end
     end)
     
-end
-
-function auth.send_challenge_request_to_authserver(cn, user_id, domain_id, callback)
-
-    local domain = auth.directory.get_domain(domain_id)
-    if not domain then error("unknown domain") end
-    
-    push_request_listener(cn, domain_id, callback)
-    
-    create_request(cn, user_id, domain)
-    
-    start_auth_challenge(cn, user_id, domain_id)
 end
