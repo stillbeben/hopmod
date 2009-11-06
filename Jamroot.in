@@ -30,7 +30,7 @@ lib enet :
     : : <include>src/enet/include ;
 
 lib z : : <name>z ;
-lib geoip : : <name>GeoIP ;
+lib geoip : : <name>GeoIP <link>shared ;
 
 cpp-pch pch : src/hopmod/pch.hpp /fungu//script : <include>src/shared <include>src/enet/include <define>STANDALONE ;
 
