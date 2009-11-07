@@ -20,6 +20,7 @@
 
 #include <boost/lexical_cast.hpp>
 #include "fungu/stringutils.hpp"
+#include "fungu/convert.hpp"
 
 #include "any.cpp"
 #include "lexical_cast.cpp"

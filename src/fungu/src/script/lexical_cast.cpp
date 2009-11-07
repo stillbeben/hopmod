@@ -22,20 +22,38 @@ std::string lexical_cast(const const_string & src,type_tag<std::string>)
 
 int lexical_cast(const const_string & src, type_tag<int>)
 {
-    try{return src.to_int<int>();}
-    catch(std::bad_cast){throw error(BAD_CAST);}
+    try
+    {
+        return to_int<int>(src);
+    }
+    catch(std::bad_cast)
+    {
+        throw error(BAD_CAST);
+    }
 }
 
 unsigned int lexical_cast(const const_string & src, type_tag<unsigned int>)
 {
-    try{return src.to_int<unsigned int>();}
-    catch(std::bad_cast){throw error(BAD_CAST);}
+    try
+    {
+        return to_int<unsigned int>(src);
+    }
+    catch(std::bad_cast)
+    {
+        throw error(BAD_CAST);
+    }
 }
 
 const_string lexical_cast(int src, type_tag<const_string>)
 {
-    try{return const_string::from_int<int>(src);}
-    catch(std::bad_cast){throw error(BAD_CAST);}
+    try
+    {
+        return from_int<int>(src);
+    }
+    catch(std::bad_cast)
+    {
+        throw error(BAD_CAST);
+    }
 }
 
 int lexical_cast(const std::string & src, type_tag<int>)
@@ -82,20 +100,38 @@ const_string lexical_cast(float src,type_tag<const_string>)
 
 unsigned short lexical_cast(const const_string & src,type_tag<unsigned short>)
 {
-    try{return src.to_int<unsigned short>();}
-    catch(std::bad_cast){throw error(BAD_CAST);}
+    try
+    {
+        return to_int<unsigned short>(src);
+    }
+    catch(std::bad_cast)
+    {
+        throw error(BAD_CAST);
+    }
 }
 
 const_string lexical_cast(unsigned short src, type_tag<const_string>)
 {
-    try{return const_string::from_int<unsigned short>(src);}
-    catch(std::bad_cast){throw error(BAD_CAST);}
+    try
+    {
+        return from_int<unsigned short>(src);
+    }
+    catch(std::bad_cast)
+    {
+        throw error(BAD_CAST);
+    }
 }
 
 const_string lexical_cast(unsigned int src, type_tag<const_string>)
 {
-    try{return const_string::from_int<unsigned int>(src);}
-    catch(std::bad_cast){throw error(BAD_CAST);}
+    try
+    {
+        return from_int<unsigned int>(src);
+    }
+    catch(std::bad_cast)
+    {
+        throw error(BAD_CAST);
+    }
 }
 
 const_string lexical_cast_from_any(const any & arg,type_tag<const_string>)
