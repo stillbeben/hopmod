@@ -28,28 +28,6 @@ local function team_sizes()
     return teams, greatest_teamsize
 end
 
-local function get_teamoverflow()
-    
-    local teamsizes = team_sizes()
-    local team_good = teamsizes["good"] or 0 
-    local team_evil = teamsizes["evil"] or 0
-    
-    local overflow = {good = 0, evil = 0}
-    
-    if not team_good or not team_evil or team_good == team_evil then return overflow,false end
-    
-    local sizediff = math.abs(team_good - team_evil)
-    local correction = math.ceil(sizediff/2)
-    
-    if team_good > team_evil then
-        overflow.good = correction
-    else
-        overflow.evil = correction
-    end
-    
-    return overflow, correction > 0
-end
-
 local function addbots(num)
     
     if num == 0 then return end
@@ -59,7 +37,7 @@ local function addbots(num)
     if num == 1 then
         server.msg("The server has added a random skilled bot to balance the teams.")
     else
-        server.msg(string.format("The server has added %i random skilled bots to balance the teams.", orange(num)))
+        server.msg(string.format("The server has added %s random skilled bots to balance the teams.", orange(num)))
     end
 end
 
@@ -80,12 +58,16 @@ local function check_balance()
         remove_bots()
     end
     
-    local overflow, unbalanced = get_teamoverflow()
+    local teams = team_sizes()
+    local size_difference = math.abs((teams.good or 0) - (teams.evil or 0))
+    local unbalanced = size_difference > 0
     
     if unbalanced then
         if using_bots then
             
-            local change = (overflow.good + overflow.evil) - bots_added
+            local change = size_difference - bots_added
+            
+            server.msg(change)
             
             if change ~= 0 then
                 
