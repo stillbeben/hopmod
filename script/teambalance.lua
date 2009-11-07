@@ -66,9 +66,7 @@ local function check_balance()
         if using_bots then
             
             local change = size_difference - bots_added
-            
-            server.msg(change)
-            
+        
             if change ~= 0 then
                 
                 local change_function = addbots

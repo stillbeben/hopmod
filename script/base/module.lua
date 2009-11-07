@@ -97,14 +97,21 @@ function server.module(name)
     
 end
 
-function server.unload_module(name)
+function server.unload_module(name, hide_warnings)
     
     local control = loaded_modules[name]
     
     if not control then error(string.format("Module \"%s\" not found", name)) end
-    if not control.unload then error(string.format("Module \"%s\" cannot be unloaded", name)) end
     
-    control.unload()
+    if control.unload then
+        control.unload()
+    else
+        if not hide_warnings then
+            server.log_error(string.format("Module \"%s\" cannot be unloaded", name))
+        end
+        
+        return
+    end
     
     loaded_modules[name] = nil
     loaded_scripts[control.filename] = nil
@@ -114,7 +121,7 @@ end
 
 local function unload_all_modules()
     for name in pairs(loaded_modules) do 
-        catch_error(server.unload_module, name)
+        catch_error(server.unload_module, name, true)
     end
 end
 
