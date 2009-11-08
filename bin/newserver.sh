@@ -5,6 +5,7 @@ DEST=$1
 mkdir -p $DEST
 
 ln -s $PWD/bin $DEST/bin
+ln -s $PWD/lib $DEST/lib
 ln -s $PWD/script $DEST/script
 ln -s $PWD/share $DEST/share
 

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 
-#include <fungu/script.hpp>
+#include <boost/signals.hpp>
+#include <boost/lexical_cast.hpp>
 
 #endif

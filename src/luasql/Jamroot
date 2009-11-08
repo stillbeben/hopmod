@@ -11,4 +11,4 @@ lib luasql_mysql :
     z 
     : <include>/usr/local/mysql/include ;
 
-install dist : luasql_mysql : <location>../../bin ;
+install dist : luasql_mysql : <location>../../lib ;

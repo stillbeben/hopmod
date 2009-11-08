@@ -1,6 +1,6 @@
 
 package.path = package.path .. ";script/package/?.lua"
-package.cpath = package.cpath .. ";bin/lib?.so"
+package.cpath = package.cpath .. ";lib/lib?.so"
 
 load_once("base/restart")
 load_once("base/player/object_wrapper")

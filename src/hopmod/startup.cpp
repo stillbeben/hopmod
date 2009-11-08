@@ -5,6 +5,7 @@
 #include "hopmod.hpp"
 #include "lua/modules.hpp"
 #include <fungu/script/env.hpp>
+#include <fungu/script/execute.hpp>
 using namespace fungu;
 
 static boost::signals::connection close_listenserver_slot;

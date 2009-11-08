@@ -31,6 +31,7 @@ lib enet :
 
 lib z : : <name>z ;
 lib geoip : : <name>GeoIP <link>shared ;
+lib rt : : <name>rt ;
 
 cpp-pch pch : src/hopmod/pch.hpp /fungu//script : <include>src/shared <include>src/enet/include <define>STANDALONE ;
 
@@ -38,9 +39,7 @@ lib sauertools :
     src/shared/tools.cpp
     src/shared/stream.cpp
     src/shared/crypto.cpp
-    : <include>src/shared <include>src/enet/include
-    <define>STANDALONE
-    <link>static
+    : <include>src/shared <include>src/enet/include <define>STANDALONE <link>static
     : : <include>src/shared <include>src/enet/include ;
 
 lib serverscripting :
@@ -54,6 +53,7 @@ lib serverscripting :
     /lua//lua
     /boost//headers
     /boost//signals
+    /boost//system
     /fungu//script
     geoip
     pch
@@ -63,8 +63,6 @@ lib scriptpipe :
     src/hopmod/script_pipe.cpp
     serverscripting
     : <link>static <include>src/shared <include>src/enet/include <define>STANDALONE ;
-
-lib rt : : <name>rt ;
 
 exe sauer_server :
     src/engine/server.cpp
@@ -89,8 +87,7 @@ exe sauer_server :
     z
     enet
     /boost//headers
-    /boost//system
-    /libmicrohttpd//httpd
+    /libmicrohttpd//microhttpd
     rt
     pch
     : <define>STANDALONE 
@@ -111,10 +108,12 @@ exe sauer_authserver :
     enet
     : <define>STANDALONE <define>HOPMOD_AUTHSERVER_EVENTS ;
 
-explicit sauer_authserver ;
+install executables : sauer_server keygen : <install-type>EXE <location>bin ;
+install libraries : /boost//system /boost//signals /lua//lua /lua-sqlite3//luasqlite3 /libmicrohttpd//microhttpd : <install-type>LIB <location>lib ;
 
-install dist : sauer_server keygen /lua-sqlite3//luasqlite3 : <install-dependencies>on <install-type>LIB <install-type>EXE <location>bin ;
-install install_sauer_authserver : sauer_authserver : <install-dependencies>on <install-type>EXE <install-type>LIB <location>bin ;
+install install_sauer_authserver : sauer_authserver : <install-type>EXE <install-type>LIB <location>bin ;
+explicit sauer_authserver ;
+explicit install_sauer_authserver ;
 
 install lua-packages :
     /lua-sqlite3//script-package : <location>$(SCRIPT_PACKAGE_PATH) ;

@@ -6,9 +6,9 @@ alias headers : : : :
     <include>src/include
     <include>src/daemon ;
 
-lib pthread : : <name>pthread ;
+lib pthread : : <name>pthread <link>shared ;
 
-lib httpd :
+lib microhttpd :
     daemon/connection.c
     daemon/daemon.c
     daemon/internal.c
@@ -17,4 +17,4 @@ lib httpd :
     daemon/reason_phrase.c
     daemon/response.c
     headers
-    pthread ;
+    pthread : <link>static ;

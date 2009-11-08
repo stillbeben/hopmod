@@ -1,5 +1,5 @@
 package.path = package.path .. ";script/package/?.lua"
-package.cpath = package.cpath .. ";bin/lib?.so"
+package.cpath = package.cpath .. ";lib/lib?.so"
 dofile("./script/base/utils.lua")
 
 function server.load_sqlite3_database(filename)
