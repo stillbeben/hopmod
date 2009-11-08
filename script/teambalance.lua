@@ -93,8 +93,8 @@ event.mapchange = server.event_handler_object("mapchange", function()
 end)
 
 event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, curteam, newteam)
-    local overflow = get_teamoverflow()
-    if overflow[newteam] and using_moveblock then
+    local teams = team_sizes()
+    if (teams[curteam] or 0) > (teams[newteam] or 0) and using_moveblock then
         server.player_msg(cn, red(string.format("Team change disallowed: \"%s\" team has enough players.", newteam)))
         return -1
     end
