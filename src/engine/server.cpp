@@ -731,9 +731,8 @@ static void check_timeouts()
         currentPeer < &serverhost->peers[serverhost->peerCount]; 
         currentPeer++)
     {
-        if (currentPeer -> state == ENET_PEER_STATE_DISCONNECTED ||
-            currentPeer -> state == ENET_PEER_STATE_ZOMBIE)
-          continue;
+        if (currentPeer -> state != ENET_PEER_STATE_CONNECTED)
+            continue;
         
         check_peer_timeout(serverhost, currentPeer);
     }
