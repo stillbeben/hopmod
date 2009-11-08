@@ -7,7 +7,7 @@ int main(int argc, const char ** argv)
     if(!rng) return 1;
     
     unsigned int seed[256];
-    size_t readsize = fread(seed, sizeof(unsigned int), sizeof(seed)/sizeof(unsigned int), rng);
+    fread(seed, sizeof(unsigned int), sizeof(seed)/sizeof(unsigned int), rng);
     
     vector<char> privkey, pubkey;
     genprivkey(seed,sizeof(seed), privkey, pubkey);
