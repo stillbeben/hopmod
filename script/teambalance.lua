@@ -56,6 +56,7 @@ local function check_balance()
 
     if not gamemodeinfo.teams or server.mastermode > 1 then -- deactivate conditions
         remove_bots()
+        return
     end
     
     local teams = team_sizes()
