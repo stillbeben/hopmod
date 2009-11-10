@@ -187,7 +187,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(close_script_socket, "close_script_socket_server", env);
     
     script::bind_property<int>(
-        boost::bind(script::property<int>::generic_getter, server::mastermode),
+        boost::bind(script::property<int>::generic_getter, boost::ref(server::mastermode)),
         server::script_set_mastermode, "mastermode", env);
     
     script::bind_var(server::mastermode_owner, "mastermode_owner", env);
