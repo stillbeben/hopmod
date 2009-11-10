@@ -10,6 +10,7 @@
 
 #include "string.hpp"
 #include <string>
+#include <string.h>
 #include <boost/functional/hash.hpp>
 #include <ostream>
 #include <istream>
