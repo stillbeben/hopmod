@@ -1,6 +1,7 @@
 local mute_time = 1000*60*60*4
 local key_function = server.player_iplong
 local muted = {}
+local mute_spectators = false
 
 function server.mute(cn)
 
@@ -30,9 +31,19 @@ function server.unmute(cn)
     end
 end
 
+function server.mute_spectators()
+    mute_spectators = true
+end
+
+function server.unmute_spectators()
+    mute_spectators = false
+end
+
 local function block_text(cn,text)
 
-    if muted[key_function(cn)] then
+    local is_muted = muted[key_function(cn)] or (mute_spectators and server.player_status_code(cn) == server.SPECTATOR and server.player_priv_code(cn) ~= server.PRIV_ADMIN)
+    
+    if is_muted then
         server.player_msg(cn, red("Your chat messages are being blocked."))
         return -1
     end

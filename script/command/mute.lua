@@ -7,7 +7,7 @@
 return function(cn,tcn)
 
     if not server.mute then
-        return false, "muting is disabled at this time."
+        return false, "mute module not loaded"
     end
 
 	if not tcn then

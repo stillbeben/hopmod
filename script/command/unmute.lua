@@ -8,7 +8,7 @@
 return function(cn,tcn)
 
     if not server.unmute then
-        return
+        return false, "mute module not loaded"
     end
 
 	if not tcn then
