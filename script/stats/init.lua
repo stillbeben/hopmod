@@ -57,7 +57,10 @@ stats_command.initialize(backends)
 player_command_function("stats", stats_command.command_function)
 
 -- 
-server.find_names_by_ip = backends.query.find_names_by_ip
+
+if backends.query then
+    server.find_names_by_ip = backends.query.find_names_by_ip
+end
 
 if not server.find_names_by_ip then 
     server.find_names_by_ip = function() return nil end
