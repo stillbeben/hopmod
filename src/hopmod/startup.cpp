@@ -8,6 +8,10 @@
 #include <fungu/script/execute.hpp>
 using namespace fungu;
 
+extern "C"{
+int lua_packlibopen(lua_State *L);
+}
+
 static boost::signals::connection close_listenserver_slot;
 static bool reload = false;
 
@@ -57,6 +61,7 @@ void init_hopmod()
     lua::module::open_cubescript(L);
     lua::module::open_geoip(L);
     lua::module::open_filesystem(L);
+    lua_packlibopen(L);
     
     try
     {
