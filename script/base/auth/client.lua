@@ -112,6 +112,46 @@ local function request_constructor(socket, id, name, domain)
     }
 end
 
+local function query_request_constructor(socket, id, name, domain, callback)
+    
+    local completed = false
+    local request_line = string.format("QueryId %i %s %s\n", id, name, domain)
+    
+    local function has_completed()
+        return completed
+    end
+    
+    local function process_failure()
+        completed = true
+        callback(nil)
+    end
+    
+    local function send_handler(errmsg)
+        if errmsg and not completed and completion_handler then
+            process_failure()
+        end
+    end
+    
+    local function process_reply(unused, arguments)
+        
+        if arguments[1] == "FoundId" then
+            callback(true)
+        else
+            callback(false)
+        end
+        
+        completed = true
+    end
+    
+    socket:async_send(request_line, send_handler)
+    
+    return {
+        has_completed = has_completed,
+        process_reply = process_reply,
+        process_failure = process_failure
+    }
+end
+
 local function client_constructor()
 
     local socket = net.tcp_client()
@@ -181,11 +221,17 @@ local function client_constructor()
         return read_failed
     end
     
+    local function query_id(unused, request_id, name, domain, callback)
+        if pending_requests[request_id] then error("request_id collision") end
+        pending_requests[request_id] = query_request_constructor(socket, request_id, name, domain, callback)
+    end
+    
     return {
         connect = connect,
         disconnect = disconnect,
         new_request = new_request,
-        has_failed = has_failed
+        has_failed = has_failed,
+        query_id = query_id
     }
 end
 

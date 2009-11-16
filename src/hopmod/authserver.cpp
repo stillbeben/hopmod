@@ -338,6 +338,27 @@ void confauth(client &c, uint id, const char *val)
     outputf(c, "failauth %u\n", id);
 }
 
+void queryid(client & c, uint id, char * name, char * domain)
+{
+    domains_map::const_iterator domainIt = users.find(domain);
+    users_map::const_iterator userIt;
+    
+    if(domainIt == users.end())
+    {
+        outputf(c, "DomainNotFound %u\n", id);
+        return;
+    }
+    
+    userIt = domainIt->second.find(name);
+    if(userIt == domainIt->second.end())
+    {
+        outputf(c, "NameNotFound %u\n", id);
+        return;
+    }
+    
+    outputf(c, "FoundId %u\n", id);
+}
+
 bool checkclientinput(client &c)
 {
     if(c.inputpos<0) return true;
@@ -360,6 +381,10 @@ bool checkclientinput(client &c)
         else if(sscanf(c.input, "confauth %u %100s", &id, val) == 2)
         {
             confauth(c, id, val);
+        }
+        else if(sscanf(c.input, "QueryId %u %100s %100s", &id, user, domain) == 3)
+        {
+            queryid(c, id, user, domain);
         }
         
         c.inputpos = &c.input[c.inputpos] - end;

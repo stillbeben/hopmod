@@ -90,14 +90,19 @@ local function create_request(cn, user_id, domain)
     return request_object
 end
 
-local function defer_request_until_connected(cn, user_id, domain)
+local function setup_authserver_connection(domain, callback)
     
     domain.server.connection = authp_client()
     
     local hostname = domain.server.hostname
     local port = domain.server.port
     
-    domain.server.connection:connect(hostname, port, function(error_message)
+    domain.server.connection:connect(hostname, port, callback)
+end
+
+local function defer_request_until_connected(cn, user_id, domain)
+    
+    setup_authserver_connection(domain, function(error_message)
         
         if error_message then
             call_listeners(cn, user_id, domain.id, auth.request_status.CHALLENGE_FAILED)
@@ -302,4 +307,39 @@ function auth.send_request(cn, domain_id, callback)
         end
     end)
     
+end
+
+function auth.query_id(username, domain_id, callback)
+    
+    local domain = auth.directory.get_domain(domain_id)
+    if not domain then error("unknown domain") end
+    
+    if not domain.server.remote then
+        local user = domain:get_user(user_id)
+        local found = user ~= nil
+        callback(found)
+        return
+    end
+    
+    local function send_query()
+        domain.server.connection:query_id(next_request_id, username, domain_id, callback)
+        next_request_id = next_request_id + 1
+    end
+    
+    if not domain.server.connection then
+        
+        setup_authserver_connection(domain, function(errmsg)
+            
+            if errmsg then
+                callback(nil)
+                return
+            end
+            
+            send_query()
+        end)
+        
+        return
+    end
+    
+    send_query()
 end
