@@ -90,7 +90,7 @@ end)
 
 server.event_handler("text", function(cn, msg)
     local mute_tag = ""
-    if server.player_pvar(cn,"mute") then mute_tag = "(muted)" end
+    if server.is_muted(cn) then mute_tag = "(muted)" end
     log(string.format("%s(%i)%s: %s",server.player_name(cn),cn,mute_tag,msg))
 end)
 

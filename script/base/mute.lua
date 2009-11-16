@@ -31,6 +31,10 @@ function server.unmute(cn)
     end
 end
 
+function server.is_muted(cn)
+    return muted[key_function(cn)]
+end
+
 function server.mute_spectators()
     mute_spectators = true
 end
