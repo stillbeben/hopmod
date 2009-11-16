@@ -60,10 +60,13 @@ events.intermission = server.event_handler_object("intermission", function()
     for player in server.gplayers("all") do
         
         local cn = player.cn
+        local qualify = player:frags() > 9;
         
-        best.accuracy:update(cn, player:accuracy())
-        best.frags:update(cn, player:frags())
-        best.kpd:update(cn, player:frags() - player:deaths())
+        if qualify then
+            best.accuracy:update(cn, player:accuracy())
+            best.frags:update(cn, player:frags())
+            best.kpd:update(cn, player:frags() - player:deaths())
+        end
         
         if check_ctf_stats then
             
