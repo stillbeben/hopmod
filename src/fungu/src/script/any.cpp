@@ -98,19 +98,14 @@ const std::type_info & any::get_type()const
     return table->get_type();
 }
 
+type_id any::get_type_id()const
+{
+    return table->get_type_id();
+}
+
 const_string any::to_string()const
 {
     return table->to_string(&object);
-}
-
-bool any::is_arithmetic()const
-{
-    return table->is_arithmetic();
-}
-
-dynamic_typecaster * any::get_dynamic_typecaster()const
-{
-    return table->get_dynamic_typecaster(&object);
 }
 
 #ifdef FUNGU_WITH_LUA

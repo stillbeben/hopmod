@@ -181,6 +181,8 @@ namespace server
     void enable_setmaster_autoapprove(bool);
     bool get_setmaster_autoapprove();
     
+    bool send_item(int item_code, int recipient);
+    
 } //namespace server
 
 #endif

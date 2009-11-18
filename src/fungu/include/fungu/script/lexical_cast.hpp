@@ -16,6 +16,7 @@
 #include <boost/mpl/bool.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/intrusive_ptr.hpp>
+#include <boost/numeric/conversion/cast.hpp>
 #include <vector>
 #include <deque>
 

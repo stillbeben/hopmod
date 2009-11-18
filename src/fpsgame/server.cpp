@@ -515,6 +515,7 @@ namespace server
     }
     
     vector<server_entity> sents;
+    int sents_type_index[MAXENTTYPES];
     vector<savedscore> scores;
 
     int msgsizelookup(int msg)
@@ -2610,6 +2611,7 @@ namespace server
                     server_entity se = { NOTUSED, 0, false };
                     while(sents.length()<=n) sents.add(se);
                     sents[n].type = getint(p);
+                    sents_type_index[sents[n].type] = n;
                     if(canspawnitem(sents[n].type))
                     {
                         if(m_mp(gamemode) && (sents[n].type==I_QUAD || sents[n].type==I_BOOST)) sents[n].spawntime = spawntime(sents[n].type);

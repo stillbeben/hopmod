@@ -1000,4 +1000,15 @@ bool get_setmaster_autoapprove()
     return mastermask & MM_AUTOAPPROVE;
 }
 
+bool send_item(int type, int recipient) 
+{
+    int ent_index = sents_type_index[type];
+    if(minremain<=0 || !sents.inrange(ent_index)) return false;
+    clientinfo *ci = getinfo(recipient);
+    if(!ci || (!ci->local && !ci->state.canpickup(sents[ent_index].type))) return false;
+    sendf(-1, 1, "ri3", SV_ITEMACC, ent_index, recipient);
+    ci->state.pickup(sents[ent_index].type);
+    return true;
+}
+
 #endif

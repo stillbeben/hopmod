@@ -83,6 +83,7 @@ void register_server_script_bindings(script::env & env)
     register_lua_function((int (*)(lua_State *))&server::player_pos, "player_pos");
     script::bind_freefunc(server::send_auth_request, "send_auth_request", env);
     script::bind_freefunc(server::sendauthchallenge, "send_auth_challenge_to_client", env);
+    script::bind_freefunc(server::send_item, "send_item", env);
     
     script::bind_const((int)CS_ALIVE, "ALIVE", env);
     script::bind_const((int)CS_DEAD, "DEAD", env);
@@ -177,7 +178,19 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::allow_item[I_GREENARMOUR-I_SHELLS], "allow_greenarmour", env);
     script::bind_var(server::allow_item[I_YELLOWARMOUR-I_SHELLS], "allow_yellowarmour", env);
     script::bind_var(server::allow_item[I_QUAD-I_SHELLS], "allow_quad", env);
-    
+
+    script::bind_const((int)I_SHELLS, "ITEM_SHELLS", env);
+    script::bind_const((int)I_BULLETS, "ITEM_BULLETS", env);
+    script::bind_const((int)I_ROCKETS, "ITEM_ROCKETS", env);
+    script::bind_const((int)I_ROUNDS, "ITEM_ROUNDS", env);
+    script::bind_const((int)I_GRENADES, "ITEM_GRENADES", env);
+    script::bind_const((int)I_CARTRIDGES, "ITEM_CARTRIDGES", env);
+    script::bind_const((int)I_HEALTH, "ITEM_HEALTH", env);
+    script::bind_const((int)I_BOOST, "ITEM_HEALTHBOOST", env);
+    script::bind_const((int)I_GREENARMOUR, "ITEM_GREENARMOUR", env);
+    script::bind_const((int)I_YELLOWARMOUR, "ITEM_YELLOWARMOUR", env);
+    script::bind_const((int)I_QUAD, "ITEM_QUAD", env);
+
     script::bind_var(server::reservedslots, "reservedslots", env);
     script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
     

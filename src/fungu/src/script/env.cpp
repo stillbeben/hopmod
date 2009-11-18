@@ -101,5 +101,12 @@ void env::set_lua_state(lua_State * state)
 }
 #endif
 
+void initialize_base_cast_operations();
+
+void initialize_library()
+{
+    initialize_base_cast_operations();
+}
+
 } //namespace script
 } //namespace fungu

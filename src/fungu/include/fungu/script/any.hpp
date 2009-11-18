@@ -34,7 +34,8 @@
 #define FUNGU_SCRIPT_ANY_HPP
 
 #include "../string.hpp"
-#include "dynamic_typecasting.hpp"
+#include "type_id.hpp"
+#include "cast.hpp"
 
 #ifdef FUNGU_WITH_LUA
 #include "lua/push_value.hpp"
@@ -66,12 +67,11 @@ namespace any_detail {
 
 struct fxn_ptr_table {
   const std::type_info& (*get_type)();
+  type_id (*get_type_id)();
   void (*static_delete)(void**);
   void (*clone)(void* const*, void**);
   void (*move)(void* const*,void**);
   const_string (*to_string)(void * const *);
-  bool (*is_arithmetic)();
-  dynamic_typecaster * (*get_dynamic_typecaster)(void * const *);
 #ifdef FUNGU_WITH_LUA
   void (*lua_push_value)(lua_State *,void * const *);
 #endif
@@ -87,6 +87,9 @@ struct fxns
     static const std::type_info& get_type() {
       return typeid(T);
     }
+    static type_id get_type_id() {
+      return type_id::get(type_tag<T>());
+    }
     static void static_delete(void** x) {
       reinterpret_cast<T*>(reinterpret_cast<void *>(x))->~T();
     }
@@ -99,16 +102,6 @@ struct fxns
     }
     static const_string to_string(void *const* src) {
         return fungu::script::lexical_cast<const_string,T>(*reinterpret_cast<const T *>(src));
-    }
-    static bool is_arithmetic()
-    {
-        return boost::is_arithmetic<T>::value;
-    }
-    static dynamic_typecaster * get_dynamic_typecaster(void * const * src)
-    {
-        static derived_dynamic_typecaster<T> typecaster;
-        typecaster = derived_dynamic_typecaster<T>(reinterpret_cast<T const *>(src));
-        return &typecaster;
     }
     #ifdef FUNGU_WITH_LUA
     static void lua_push_value(lua_State * L, void * const * src)
@@ -129,6 +122,9 @@ struct fxns<false>
     static const std::type_info& get_type() {
       return typeid(T);
     }
+    static type_id get_type_id() {
+      return type_id::get(type_tag<T>());
+    }
     static void static_delete(void** x) {
         delete(*reinterpret_cast<T**>(x));
     }
@@ -141,15 +137,6 @@ struct fxns<false>
     }
     static const_string to_string(void *const* src) {
         return fungu::script::lexical_cast<const_string>(**reinterpret_cast<T * const *>(src));
-    }
-    static bool is_arithmetic() {
-        return boost::is_arithmetic<T>::value;
-    }
-    static dynamic_typecaster * get_dynamic_typecaster(void * const * src)
-    {
-        static derived_dynamic_typecaster<T> typecaster;
-        typecaster = derived_dynamic_typecaster<T>(*reinterpret_cast<T * const *>(src));
-        return &typecaster;
     }
     #ifdef FUNGU_WITH_LUA
     static void lua_push_value(lua_State * L, void * const * src)
@@ -169,12 +156,11 @@ struct get_table
   {
     static fxn_ptr_table static_table = {
       fxns<is_small>::template type<T>::get_type
+    , fxns<is_small>::template type<T>::get_type_id
     , fxns<is_small>::template type<T>::static_delete
     , fxns<is_small>::template type<T>::clone
     , fxns<is_small>::template type<T>::move
     , fxns<is_small>::template type<T>::to_string
-    , fxns<is_small>::template type<T>::is_arithmetic
-    , fxns<is_small>::template type<T>::get_dynamic_typecaster
     #ifdef FUNGU_WITH_LUA
     , fxns<is_small>::template type<T>::lua_push_value
     #endif
@@ -254,13 +240,10 @@ struct any
     any& swap(any& x);
     
     const std::type_info& get_type()const;
+    type_id get_type_id()const;
     
     const_string to_string()const;
-    
-    bool is_arithmetic()const;
-    
-    dynamic_typecaster * get_dynamic_typecaster()const;
-    
+        
     #ifdef FUNGU_WITH_LUA
     void push_value(lua_State *)const;
     #endif
@@ -279,24 +262,38 @@ struct any
 // boost::any-like casting
 
 template<typename T>
-T* any_cast(any* this_) {
+T* any_cast(any* this_)
+{
+    static const bool SMALL_TYPE = sizeof(T) <= sizeof(void*);
+    void * source_object = (SMALL_TYPE ? &this_->object : this_->object);
+    
+    // If types don't match then try type coercion
     if (this_->get_type() != typeid(T)) {
-        static T tmp;
-        if(boost::is_arithmetic<T>::value && this_->is_arithmetic())
+        
+        type_id destType;
+        
+        try
         {
-            tmp = this_->get_dynamic_typecaster()->numeric_cast(type_tag<T>());
-            return &tmp;
+            destType = type_id::get(type_tag<T>());
         }
-        if(this_->empty()) {tmp = T(); return &tmp;}
-        return NULL;
+        catch(type_id)
+        {
+            return NULL;
+        }
+        
+        try
+        {
+            static T temporary_destination;
+            cast(source_object, this_->get_type_id(), &temporary_destination, destType);
+            return &temporary_destination;
+        }
+        catch(std::bad_cast)
+        {
+            return NULL;
+        }
     }
-    if (sizeof(T) <= sizeof(void*)) {
-        void ** ptr = &this_->object; //fixes strict-aliasing warning (GCC 4.1.2)
-        return reinterpret_cast<T*>(reinterpret_cast<void *>(ptr));
-    }
-    else {
-        return reinterpret_cast<T*>(this_->object);
-    }
+    
+    return reinterpret_cast<T*>(source_object);
 }
 
 template<typename T>

@@ -25,3 +25,5 @@
 #include "any.cpp"
 #include "lexical_cast.cpp"
 #include "callargs.cpp"
+#include "cast.cpp"
+#include "type_id.cpp"

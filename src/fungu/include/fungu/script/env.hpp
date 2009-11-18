@@ -27,6 +27,8 @@ extern "C"{
 namespace fungu{
 namespace script{
 
+class source_context;
+
 /**
     @brief Global environment class.
     
@@ -185,6 +187,8 @@ private:
     
     void * m_module[max_modules];
 };
+
+void initialize_library();
 
 } //namespace script
 } //namespace fungu

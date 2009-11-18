@@ -9,6 +9,7 @@
 #define FUNGU_CONVERT_HPP
 
 #include "string.hpp"
+#include <cmath>
 #include <typeinfo>
 #include <limits>
 

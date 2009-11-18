@@ -43,6 +43,8 @@ static bool binding_object_to_cubescript = false;
 
 void init_scripting()
 {
+    script::initialize_library();
+    
     // Initialize our CubeScript environment
     assert(!env);
     env = new script::env;

@@ -16,10 +16,10 @@
 #include <iostream>
 
 #include "fungu/script/expression.hpp"
+#include "fungu/script/error.hpp"
 #include "fungu/script/core_constructs.hpp"
 #include "fungu/script/parse_array.hpp"
 #include "fungu/script/lexical_cast.hpp"
-#include "fungu/script/error.hpp"
 #include "fungu/script/callargs.hpp"
 #include "fungu/script/env_frame.hpp"
 #include "fungu/script/env_object.hpp"

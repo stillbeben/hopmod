@@ -9,6 +9,8 @@
 #define FUNGU_SCRIPT_LUA_LUA_FUNCTION_HPP
 
 #include "../env.hpp"
+#include "../error.hpp"
+
 extern "C"{
 #include <lua.h>
 #include <lualib.h>
