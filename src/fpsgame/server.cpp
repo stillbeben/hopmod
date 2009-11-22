@@ -340,13 +340,13 @@ namespace server
             sendf(clientnum, 1, "ris", SV_SERVMSG, text);
         }
         
-        bool check_flooding(freqlimit & hit,const char * activity = NULL,bool sendwarning = true)
+        bool check_flooding(freqlimit & hit, const char * activity = NULL, bool sendwarning = true)
         {
             int remaining = hit.next(totalmillis);
-            bool flooding = remaining > 999;
+            bool flooding = remaining > 0;
             if(flooding && activity && sendwarning)
             {
-                defformatstring(blockedinfo)(RED "[Flood Protection] You are blocked from %s for the next %i seconds.", activity, remaining/1000);
+                defformatstring(blockedinfo)(RED "[Flood Protection] You are blocked from %s for another %i seconds.", activity, static_cast<int>(std::ceil(remaining/1000.0)));
                 sendprivtext(blockedinfo);
             }
             return flooding;
