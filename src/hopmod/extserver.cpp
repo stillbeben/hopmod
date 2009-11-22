@@ -530,12 +530,11 @@ int getspeccount()
 void team_msg(const char * team,const char * msg)
 {
     if(!m_teammode) return;
-    defformatstring(line)("server: " BLUE "%s",msg);
     loopv(clients)
     {
         clientinfo *t = clients[i];
         if(t->state.state==CS_SPECTATOR || t->state.aitype != AI_NONE || strcmp(t->team, team)) continue;
-        t->sendprivtext(line);
+        t->sendprivtext(msg);
     }
 }
 
