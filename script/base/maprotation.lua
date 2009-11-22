@@ -29,6 +29,7 @@ local using_random_mode
 local using_random_map
 local default_gamemode = "ffa"
 local default_game_on_empty
+local using_server_maprotation
 
 local gamemodes = {
     [ 1] = "ffa",
@@ -52,55 +53,56 @@ function server.reload_maprotation()
 
     local parse = server.parse_list
     
-    maps["ffa"] = table_unique(parse(server["ffa_maps"]))
-    maps["templay"] = table_unique(parse(server["teamplay_maps"]))
-    maps["efficiency"] = table_unique(parse(server["efficiency_maps"]))
+    maps["ffa"]             = table_unique(parse(server["ffa_maps"]))
+    maps["templay"]         = table_unique(parse(server["teamplay_maps"]))
+    maps["efficiency"]      = table_unique(parse(server["efficiency_maps"]))
     maps["efficiency team"] = table_unique(parse(server["efficiency team_maps"]))
-    maps["tactics"] = table_unique(parse(server["tactics_maps"]))
-    maps["tactics team"] = table_unique(parse(server["tactics team_maps"]))
-    maps["instagib"] = table_unique(parse(server["instagib_maps"]))
-    maps["instagib team"] = table_unique(parse(server["instagib team_maps"]))
-    maps["capture"] = table_unique(parse(server["capture_maps"]))
-    maps["regen capture"] = table_unique(parse(server["regen capture_maps"]))
-    maps["ctf"] = table_unique(parse(server["ctf_maps"]))
-    maps["insta ctf"] = table_unique(parse(server["insta ctf_maps"]))
-    maps["protect"] = table_unique(parse(server["protect_maps"]))
-    maps["insta protect"] = table_unique(parse(server["insta protect_maps"]))
+    maps["tactics"]         = table_unique(parse(server["tactics_maps"]))
+    maps["tactics team"]    = table_unique(parse(server["tactics team_maps"]))
+    maps["instagib"]        = table_unique(parse(server["instagib_maps"]))
+    maps["instagib team"]   = table_unique(parse(server["instagib team_maps"]))
+    maps["capture"]         = table_unique(parse(server["capture_maps"]))
+    maps["regen capture"]   = table_unique(parse(server["regen capture_maps"]))
+    maps["ctf"]             = table_unique(parse(server["ctf_maps"]))
+    maps["insta ctf"]       = table_unique(parse(server["insta ctf_maps"]))
+    maps["protect"]         = table_unique(parse(server["protect_maps"]))
+    maps["insta protect"]   = table_unique(parse(server["insta protect_maps"]))
     
-    big_maps["ffa"] = table_unique(parse(server["big_ffa_maps"]))
-    big_maps["efficiency"] = table_unique(parse(server["big_efficiency_maps"]))
-    big_maps["tactics"] = table_unique(parse(server["big_tactics_maps"]))
-    big_maps["instagib"] = table_unique(parse(server["big_instagib_maps"]))
+    big_maps["ffa"]         = table_unique(parse(server["big_ffa_maps"]))
+    big_maps["efficiency"]  = table_unique(parse(server["big_efficiency_maps"]))
+    big_maps["tactics"]     = table_unique(parse(server["big_tactics_maps"]))
+    big_maps["instagib"]    = table_unique(parse(server["big_instagib_maps"]))
     
-    small_maps["ffa"] = table_unique(parse(server["small_ffa_maps"]))
-    small_maps["teamplay"] = table_unique(parse(server["small_teamplay_maps"]))
-    small_maps["efficiency"] = table_unique(parse(server["small_efficiency_maps"]))
+    small_maps["ffa"]             = table_unique(parse(server["small_ffa_maps"]))
+    small_maps["teamplay"]        = table_unique(parse(server["small_teamplay_maps"]))
+    small_maps["efficiency"]      = table_unique(parse(server["small_efficiency_maps"]))
     small_maps["efficiency team"] = table_unique(parse(server["small_efficiency team_maps"]))
-    small_maps["tactics"] = table_unique(parse(server["small_tactics_maps"]))
-    small_maps["tactics team"] = table_unique(parse(server["small_tactics team_maps"]))
-    small_maps["instagib"] = table_unique(parse(server["small_instagib_maps"]))
-    small_maps["instagib team"] = table_unique(parse(server["small_instagib team_maps"]))
-    small_maps["capture"] = table_unique(parse(server["small_capture_maps"]))
-    small_maps["regen capture"] = table_unique(parse(server["small_regen capture_maps"]))
-    small_maps["ctf"] = table_unique(parse(server["small_ctf_maps"]))
-    small_maps["insta ctf"] = table_unique(parse(server["small_insta ctf_maps"]))
-    small_maps["protect"] = table_unique(parse(server["small_protect_maps"]))
-    small_maps["insta protect"] = table_unique(parse(server["small_insta protect_maps"]))
+    small_maps["tactics"]         = table_unique(parse(server["small_tactics_maps"]))
+    small_maps["tactics team"]    = table_unique(parse(server["small_tactics team_maps"]))
+    small_maps["instagib"]        = table_unique(parse(server["small_instagib_maps"]))
+    small_maps["instagib team"]   = table_unique(parse(server["small_instagib team_maps"]))
+    small_maps["capture"]         = table_unique(parse(server["small_capture_maps"]))
+    small_maps["regen capture"]   = table_unique(parse(server["small_regen capture_maps"]))
+    small_maps["ctf"]             = table_unique(parse(server["small_ctf_maps"]))
+    small_maps["insta ctf"]       = table_unique(parse(server["small_insta ctf_maps"]))
+    small_maps["protect"]         = table_unique(parse(server["small_protect_maps"]))
+    small_maps["insta protect"]   = table_unique(parse(server["small_insta protect_maps"]))
     
-    client_maps["ffa"] = table_unique(parse(server["def_ffa_maps"]))
-    client_maps["templay"] = table_unique(parse(server["def_teamplay_maps"]))
-    client_maps["efficiency"] = table_unique(parse(server["def_efficiency_maps"]))
+    -- Store a list of client-side map rotations so #nextmap can tell the player what map is next when server map rotation is disabled
+    client_maps["ffa"]             = table_unique(parse(server["def_ffa_maps"]))
+    client_maps["templay"]         = table_unique(parse(server["def_teamplay_maps"]))
+    client_maps["efficiency"]      = table_unique(parse(server["def_efficiency_maps"]))
     client_maps["efficiency team"] = table_unique(parse(server["def_efficiency team_maps"]))
-    client_maps["tactics"] = table_unique(parse(server["def_tactics_maps"]))
-    client_maps["tactics team"] = table_unique(parse(server["def_tactics team_maps"]))
-    client_maps["instagib"] = table_unique(parse(server["def_instagib_maps"]))
-    client_maps["instagib team"] = table_unique(parse(server["def_instagib team_maps"]))
-    client_maps["capture"] = table_unique(parse(server["def_capture_maps"]))
-    client_maps["regen capture"] = table_unique(parse(server["def_regen capture_maps"]))
-    client_maps["ctf"] = table_unique(parse(server["def_ctf_maps"]))
-    client_maps["insta ctf"] = table_unique(parse(server["def_insta ctf_maps"]))
-    client_maps["protect"] = table_unique(parse(server["def_protect_maps"]))
-    client_maps["insta protect"] = table_unique(parse(server["def_insta protect_maps"]))
+    client_maps["tactics"]         = table_unique(parse(server["def_tactics_maps"]))
+    client_maps["tactics team"]    = table_unique(parse(server["def_tactics team_maps"]))
+    client_maps["instagib"]        = table_unique(parse(server["def_instagib_maps"]))
+    client_maps["instagib team"]   = table_unique(parse(server["def_instagib team_maps"]))
+    client_maps["capture"]         = table_unique(parse(server["def_capture_maps"]))
+    client_maps["regen capture"]   = table_unique(parse(server["def_regen capture_maps"]))
+    client_maps["ctf"]             = table_unique(parse(server["def_ctf_maps"]))
+    client_maps["insta ctf"]       = table_unique(parse(server["def_insta ctf_maps"]))
+    client_maps["protect"]         = table_unique(parse(server["def_protect_maps"]))
+    client_maps["insta protect"]   = table_unique(parse(server["def_insta protect_maps"]))
     
     using_best_map_size = (server.use_best_map_size == 1)
     smallgamesize = server.small_gamesize
@@ -111,7 +113,8 @@ function server.reload_maprotation()
     
     default_gamemode = server.default_gamemode
     default_game_on_empty = (server.default_game_on_empty == 1)
-
+    
+    using_server_maprotation = (server.use_server_maprotation == 1)
 end
 
 local function get_maplist(mode)
@@ -212,18 +215,19 @@ end
 
 server.event_handler("setnextgame",function()
     
+    if not using_server_maprotation then return end
+    
     local mode
     if gamecount == 0 then mode = default_gamemode end
     
     server.next_mode, server.next_map = get_nextgame(mode)
     
     gamecount = gamecount + 1
-    
 end)
 
 server.event_handler("disconnect", function()
 
-    if server.playercount == 0 and default_game_on_empty then
+    if server.playercount == 0 and default_game_on_empty and using_server_maprotation then
         
         local mode = default_gamemode
         local map = nil
@@ -261,7 +265,7 @@ end
 
 local function nextmap_command(cn)
 
-    if server.use_server_maprotation == 1 then
+    if using_server_maprotation then
     
         if server.use_server_random_moderotation == 1 then
             server.player_msg(cn, "Note: The next mode will be chosen randomly at the end of this game, therefore the next map, too.")
@@ -283,7 +287,6 @@ local function nextmap_command(cn)
         if nm then
             server.player_msg(cn, "The next map is " .. green(nm) .. ".")
         end
-        
     end
     
 end
