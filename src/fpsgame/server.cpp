@@ -354,9 +354,10 @@ namespace server
         
         const char * hostname()const
         {
-            in_addr addr;
-            addr.s_addr = getclientip(clientnum);
-            return inet_ntoa(addr);
+            static char hostname_buffer[15];            
+            ENetAddress addr;
+            addr.host = getclientip(clientnum);
+            return ((enet_address_get_host_ip(&addr, hostname_buffer, sizeof(hostname_buffer)) == 0) ? hostname_buffer : "unknown");
         }
     };
     
