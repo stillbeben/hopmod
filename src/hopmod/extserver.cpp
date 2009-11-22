@@ -195,9 +195,7 @@ static int execute_kick(void * vinfoptr)
     
     allowedips.removeobj(ip);
     
-    netmask addrmask(ip);
-    if(info->time > 0) bantimes.set_ban(addrmask, info->time);
-    else if(info->time == -1) bannedips.set_permanent_ban(addrmask);
+    bans.add(netmask(ip), info->time);
     
     signal_kick(info->cn, info->time, info->admin, info->reason);
     
@@ -239,7 +237,7 @@ void changetime(int remaining)
 
 void clearbans()
 {
-    bantimes.clear();
+    bans.clear_temporary_bans();
 }
 
 void player_msg(int cn,const char * text)
@@ -659,15 +657,15 @@ void addpermban(const char * addrstr)
     netmask addr;
     try{addr = netmask::make(addrstr);}
     catch(std::bad_cast){throw fungu::script::error(fungu::script::BAD_CAST);}
-    bannedips.set_permanent_ban(addr);
+    bans.add(addr);
 }
 
-int unsetban(const char * addrstr)
+bool unsetban(const char * addrstr)
 {
     netmask addr;
     try{addr = netmask::make(addrstr);}
     catch(std::bad_cast){throw fungu::script::error(fungu::script::BAD_CAST);}
-    return bannedips.unset_ban(addr);
+    return bans.remove(addr);
 }
 
 int addbot(int skill)
@@ -973,12 +971,7 @@ bool compare_admin_password(const char * x)
 
 std::vector<std::string> get_bans()
 {
-    std::vector<netmask> permbans = bannedips.get_permanent_bans();
-    std::vector<netmask> tmpbans = bannedips.get_temporary_bans();
-    std::vector<netmask> allbans;
-    
-    std::set_union(permbans.begin(), permbans.end(), tmpbans.begin(), tmpbans.end(), 
-        std::inserter(allbans, allbans.begin()));
+    std::vector<netmask> allbans = bans.bans();
     
     std::vector<std::string> result;
     result.reserve(allbans.size());

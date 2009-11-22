@@ -8,56 +8,29 @@
 #include <set>
 #include <vector>
 #include <queue>
-#include <algorithm>
 
-/**
-    @brief Stores a set of banned network addresses.
-*/
 class banned_networks
 {
 public:
-    void set_permanent_ban(const netmask & ipmask);
-    void set_temporary_ban(const netmask & ipmask);
-    
+    void set_ban(const netmask & ipmask);
     template<typename ConstIterator>
-    void set_permanent_bans(ConstIterator start,ConstIterator end)
+    void set_bans(ConstIterator start, ConstIterator end)
     {
-        for(ConstIterator i = start; i != end; ++i)
-            set_permanent_ban(*i);
+        for(ConstIterator i = start; i != end; ++i) set_ban(*i);
     }
-    
-    template<typename ConstIterator>
-    void set_temporary_bans(ConstIterator start,ConstIterator end)
-    {
-        for(ConstIterator i = start; i != end; ++i)
-            set_temporary_ban(*i);
-    }
-    
-    void unset_temporary_bans();
     int unset_ban(const netmask & ipmask);
-    
+    void clear();
     bool is_banned(const netmask & ipmask)const;
-    std::vector<netmask> get_permanent_bans()const;
-    std::vector<netmask> get_temporary_bans()const;
+    std::vector<netmask> get_bans()const;
 private:
-    template<typename Container>
-    void get_permanent_banset(Container & outputContainer,typename Container::iterator beginOutput)const
-    {
-        // the permanent ban set is the complement set of m_tmp_index
-        std::set_difference(m_index.begin(), m_index.end(), 
-            m_tmp_index.begin(), m_tmp_index.end(), 
-            std::inserter(outputContainer, beginOutput));
-    }
-    
     std::set<netmask> m_index;
-    std::set<netmask> m_tmp_index;
 };
 
-class timedbans_service
+class ban_times
 {
 public:
-    timedbans_service(banned_networks & bans);
-    void set_ban(const netmask & addr,int secs);
+    ban_times(banned_networks & bans);
+    void add(const netmask & addr, int secs);
     void update(int time);
     void clear();
 private:
@@ -73,6 +46,24 @@ private:
     
     std::priority_queue<entry> m_ban_times;
     int m_last_update;
+};
+
+class ban_manager
+{
+public:
+    ban_manager();
+    void add(const netmask &, int secs = -1);
+    bool remove(const netmask &);
+    void update(int time);
+    void clear_temporary_bans();
+    bool is_banned(const netmask &)const;
+    std::vector<netmask> permanant_bans()const;
+    std::vector<netmask> temporary_bans()const;
+    std::vector<netmask> bans()const;
+private:
+    banned_networks m_temporary_bans;
+    banned_networks m_permanant_bans;
+    ban_times m_ban_timer;
 };
 
 #endif

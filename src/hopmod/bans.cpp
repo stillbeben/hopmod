@@ -1,116 +1,59 @@
 #include "bans.hpp"
-#include <assert.h>
+#include <algorithm>
+#include <cassert>
 
-/**
-    @brief Insert network address into the permanent ban set.
-
-    This will override existing bans matching the given network address.
-*/
-void banned_networks::set_permanent_ban(const netmask & ipmask)
+void banned_networks::set_ban(const netmask & ipmask)
 {
     unset_ban(ipmask);
     m_index.insert(ipmask);
 }
 
-template<typename ConstIterator>
-void set_permanent_bans(ConstIterator start,ConstIterator end)
-{
-    for(ConstIterator i = start; i != end; ++i)
-        set_permanent_ban(*i);
-}
-
-/**
-    @brief Insert network address into the temporary ban set.
-    
-    This will override existing bans matching the given network address.
-*/
-void banned_networks::set_temporary_ban(const netmask & ipmask)
-{
-    unset_ban(ipmask);
-    m_index.insert(ipmask);
-    m_tmp_index.insert(ipmask);
-}
-
-template<typename ConstIterator>
-void set_temporary_bans(ConstIterator start,ConstIterator end)
-{
-    for(ConstIterator i = start; i != end; ++i)
-        set_temporary_ban(*i);
-}
-
-/**
-    @brief Clear temporary bans.
-*/
-void banned_networks::unset_temporary_bans()
-{
-    std::set<netmask> permbans;
-    get_permanent_banset(permbans, permbans.begin()); 
-    m_index = permbans;
-    m_tmp_index.clear();
-}
-
-/**
-    @brief Remove a network address from the ban set.
-*/
 int banned_networks::unset_ban(const netmask & ipmask)
 {
     int count = 0;
     while(m_index.erase(ipmask)) count++;
-    while(m_tmp_index.erase(ipmask));
     return count;
 }
 
-/**
-    @brief Search for a matched network address in either the temporary or permanent ban sets.
-*/
+void banned_networks::clear()
+{
+    m_index.clear();
+}
+
 bool banned_networks::is_banned(const netmask & ipmask)const
 {
     return m_index.find(ipmask) != m_index.end();
 }
 
-/**
-    @brief Return the set of permanent banned network addresses.
-*/
-std::vector<netmask> banned_networks::get_permanent_bans()const
+std::vector<netmask> banned_networks::get_bans()const
 {
-    std::vector<netmask> permbans;
-    get_permanent_banset(permbans, permbans.begin());
-    return permbans;
+    return std::vector<netmask>(m_index.begin(), m_index.end());
 }
 
-/**
-    @brief Return the set of temporary banned network addresses.
-*/
-std::vector<netmask> banned_networks::get_temporary_bans()const
-{
-    return std::vector<netmask>(m_tmp_index.begin(), m_tmp_index.end());
-}
-
-timedbans_service::entry::entry(const netmask & a,int e)
+ban_times::entry::entry(const netmask & a,int e)
  :addr(a),expire(e)
 {
 
 }
 
-bool timedbans_service::entry::operator<(const entry & y)const
+bool ban_times::entry::operator<(const entry & y)const
 {
     return expire > y.expire;
 }
     
-timedbans_service::timedbans_service(banned_networks & bans)
+ban_times::ban_times(banned_networks & bans)
  :m_bans(bans),m_last_update(-1)
 {
     
 }
 
-void timedbans_service::set_ban(const netmask & addr,int secs)
+void ban_times::add(const netmask & addr, int secs)
 {
     assert(m_last_update!=-1 && secs >= 0);
-    m_bans.set_temporary_ban(addr);
-    m_ban_times.push(entry(addr,m_last_update+(secs*1000)));
+    m_ban_times.push( entry(addr, m_last_update + (secs*1000)) );
 }
 
-void timedbans_service::update(int time)
+void ban_times::update(int time)
 {
     m_last_update = time;
     if(m_ban_times.empty()) return;
@@ -122,11 +65,66 @@ void timedbans_service::update(int time)
     }
 }
 
-void timedbans_service::clear()
+void ban_times::clear()
 {
-    while(!m_ban_times.empty())
+    while(!m_ban_times.empty()) m_ban_times.pop();
+}
+
+ban_manager::ban_manager()
+ :m_ban_timer(m_temporary_bans)
+{
+    
+}
+
+void ban_manager::add(const netmask & address, int secs)
+{
+    if(secs == -1) m_permanant_bans.set_ban(address);
+    else
     {
-        m_bans.unset_ban(m_ban_times.top().addr);
-        m_ban_times.pop();
+        m_temporary_bans.set_ban(address);
+        m_ban_timer.add(address, secs);
     }
 }
+
+bool ban_manager::remove(const netmask & address)
+{
+    return (m_temporary_bans.unset_ban(address) + m_permanant_bans.unset_ban(address)) > 0;
+}
+
+void ban_manager::update(int time)
+{
+    m_ban_timer.update(time);
+}
+
+void ban_manager::clear_temporary_bans()
+{
+    m_ban_timer.clear();
+    m_temporary_bans.clear();
+}
+
+std::vector<netmask> ban_manager::permanant_bans()const
+{
+    return m_permanant_bans.get_bans();
+}
+
+std::vector<netmask> ban_manager::temporary_bans()const
+{
+    return m_temporary_bans.get_bans();
+}
+
+std::vector<netmask> ban_manager::bans()const
+{
+    std::vector<netmask> output;
+    std::vector<netmask> tempbans = m_temporary_bans.get_bans();
+    std::vector<netmask> permbans = m_permanant_bans.get_bans();
+    std::set_union(tempbans.begin(), tempbans.end(), 
+                   permbans.begin(), permbans.end(), 
+                    std::inserter(output, output.begin()) );
+    return output;
+}
+
+bool ban_manager::is_banned(const netmask & address)const
+{
+    return m_temporary_bans.is_banned(address) || m_permanant_bans.is_banned(address);
+}
+

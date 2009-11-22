@@ -132,7 +132,7 @@ namespace server
     bool writebanlist(const char * filename);
     bool loadbanlist(const char * filename);
     void addpermban(const char * addr);
-    int unsetban(const char * addr);
+    bool unsetban(const char * addr);
     int addbot(int);
     int delbot();
     void enable_master_auth(bool);

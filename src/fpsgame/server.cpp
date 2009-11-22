@@ -427,8 +427,7 @@ namespace server
     stream *mapdata = NULL;
     
     vector<uint> allowedips;
-    banned_networks bannedips;
-    timedbans_service bantimes(bannedips);
+    ban_manager bans;
     
     vector<clientinfo *> connects, clients, bots;
     vector<worldstate *> worldstates;
@@ -587,7 +586,7 @@ namespace server
         
         init_hopmod();
         
-        bantimes.update(totalmillis);
+        bans.update(totalmillis);
     }
     
     int numclients(int exclude = -1, bool nospec = true, bool noai = true)
@@ -2072,8 +2071,8 @@ namespace server
         
         uint ip = getclientip(ci->clientnum);
         
-        bantimes.update(totalmillis);
-        if(bannedips.is_banned(netmask(ip))) return DISC_IPBAN;
+        bans.update(totalmillis); //needed for some obscure case (cant remember why), TODO check why this is needed
+        if(bans.is_banned(netmask(ip))) return DISC_IPBAN;
         
         if(mastermode>=MM_PRIVATE && allowedips.find(ip)<0) return DISC_PRIVATE;
         
@@ -2542,9 +2541,9 @@ namespace server
                 
                 QUEUE_STR(ci->name);
                 
-                // Unable to block rename so only option is to kick the player.
+                // Unable to block rename so only good option is to kick the player.
                 if(ci->check_flooding(ci->sv_switchname_hit, "switching name", false))
-                    kick(ci->clientnum, 60, "server", "switching between names too quickly");
+                    kick(ci->clientnum, 60, "server", "renaming too quickly");
 
                 break;
             }
