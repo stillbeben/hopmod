@@ -225,7 +225,7 @@ function show_players($db, $order, $country = NULL, $player = NULL, $norank = FA
 			echo $rank;
 			echo '</td>';
 		}
-		echo '<td><div align="center" id="flag"><a href="?show=players&fplayer='.$_GET["fplayer"].'&page='.$page.'&c='.$row["country"].'"><img class="a" src="flags/'.strtolower($row["country"]).'.gif" alt="'.$row["country"].'" title="'.$row["country"].'"></a></div>';
+		echo '<td><div align="center" id="flag"><a href="?show=players&fplayer='.$_GET["fplayer"].'&page='.$page.'&c='.$row["country"].'"><img class="a" src="images/flags/'.strtolower($row["country"]).'.gif" alt="'.$row["country"].'" title="'.$row["country"].'"></a></div>';
 		echo '</td>';
 		echo '<td><a href="?show=player&player=';
 		echo fix($row["name"]);
