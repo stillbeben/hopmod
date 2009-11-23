@@ -108,6 +108,7 @@ namespace server
     int player_rank(int);
     bool player_isbot(int);
     void set_invadmin(int);
+    void set_invmaster(int);
     void unset_invadmin(int);
     int player_mapcrc(int);
     

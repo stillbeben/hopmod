@@ -98,6 +98,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::server_setmaster, "setmaster", env);
     script::bind_freefunc(server::server_setadmin, "setadmin", env);
     script::bind_freefunc(server::set_invadmin, "set_invadmin", env);
+    script::bind_freefunc(server::set_invmaster, "set_invmaster", env);
     script::bind_freefunc(server::unset_invadmin, "unset_invadmin", env);
     
     script::bind_freefunc(server::cs_player_list, "players", env);

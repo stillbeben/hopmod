@@ -641,6 +641,13 @@ void set_invadmin(int cn)
     sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_ADMIN);
 }
 
+void set_invmaster(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    ci->privilege = PRIV_MASTER;
+    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_MASTER);
+}
+
 void unset_invadmin(int cn)
 {
     clientinfo * ci = get_ci(cn);
