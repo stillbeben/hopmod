@@ -85,7 +85,18 @@ function internal.getPlayerTable(player_id)
         botskill    = 0
     }
     
+    if gamemodeinfo.ctf then
+        players[player_id].flags_stolen = 0
+        players[player_id].flags_scored = 0
+    end
+    
     return players[player_id]
+end
+
+function internal.getPlayerTableFromCn(cn)
+    local player_id = server.player_id(cn)
+    if players == nil or player_id == -1 then return nil end
+    return internal.getPlayerTable(player_id)
 end
 
 function internal.updatePlayer(cn)
@@ -326,6 +337,16 @@ function internal.loadEventHandlers()
         internal.updatePlayer(cn).playing = (value == 0)
     end)
     
+    local takeflag = server.event_handler("takeflag", function(cn)
+        local player = internal.getPlayerTableFromCn(cn)
+        player.flags_stolen = player.flags_stolen + 1
+    end)
+    
+    local scoreflag = server.event_handler("scoreflag", function(cn)
+        local player = internal.getPlayerTableFromCn(cn)
+        player.flags_scored = player.flags_scored + 1
+    end)
+
     function internal.unloadEventHandlers()
     
         server.cancel_handler(active)
@@ -337,6 +358,8 @@ function internal.loadEventHandlers()
         server.cancel_handler(_rename)
         server.cancel_handler(renaming)
         server.cancel_handler(spectator)
+        server.cancel_handler(takeflag)
+        server.cancel_handler(scoreflag)
         
     end
     
