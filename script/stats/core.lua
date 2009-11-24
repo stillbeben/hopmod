@@ -178,9 +178,8 @@ function internal.commit()
     
     if game == nil or players == nil then return end
     
-    -- Update stats for human players
-    for _, cn in ipairs(server.players()) do
-        
+    local function final_update(cn)
+    
         local playerData = internal.updatePlayer(cn)
         
         playerData.finished = playerData.playing
@@ -197,20 +196,19 @@ function internal.commit()
                 playerData.player_name = playerData.name -- save the original name
                 playerData.name = playerData.auth_name
             end
-            
         end
+    end
+    
+    -- Update stats for human players
+    for _, cn in ipairs(server.players()) do
+        final_update(cn)
     end
     
     -- Update stats for bot players
     for _, cn in ipairs(server.bots()) do
-    
-        local botData = internal.updatePlayer(cn)
-        
-        botData.finished = botData.playing
-        botData.win = server.player_win(cn)
-        botData.rank = server.player_rank(cn)
+        final_update(cn)
     end
-    
+
     local human_players = 0
     local bot_players = 0
     local unique_players = 0 -- human players
@@ -324,6 +322,10 @@ function internal.loadEventHandlers()
         internal.updatePlayer(cn).playing = false
     end)
     
+    local spectator = server.event_handler("spectator", function(cn, value)
+        internal.updatePlayer(cn).playing = (value == 0)
+    end)
+    
     function internal.unloadEventHandlers()
     
         server.cancel_handler(active)
@@ -334,6 +336,7 @@ function internal.loadEventHandlers()
         server.cancel_handler(finishedgame)
         server.cancel_handler(_rename)
         server.cancel_handler(renaming)
+        server.cancel_handler(spectator)
         
     end
     
