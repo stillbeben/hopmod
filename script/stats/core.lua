@@ -4,8 +4,34 @@
     
     MAINTAINER
         Graham
+    
+    OVERVIEW
+    
+        * Data is stored in a local table and is updated whenever a player
+          leaves the game. At the end of the game, references to the data are
+          given to the backend database objects for permanant storage.
+          
+        * Player data is associated by name and ip, if a player renames or
+          changes IP address then a new record is created.
+          
+        * The player botskill field value 0 indicates that the player is human;
+        * The player timeplayed field value is the number of seconds played;
+        * The game duration field value is the number of minutes the game lasted.
+        
+        * Conditions for discarding all data:
+            * Gamemode is coop-edit,
+            * There are less than two ip-unique human players,
+            * Game duration is less than one minute.
+        
+        * Conditions for discarding player data:
+            * Zero frag count
         
     GUIDELINES
+        * Define private functions in the internal table
+        * CamelCase name convention (i.e. verbNoun) acceptable for temporary and private names
+    
+    CONTRIBUTIONS
+        * server.stats_overwrite_name_with_authname feature by Zombie
     
     TODO
 ]]
@@ -19,7 +45,15 @@ local internal = {}
 local auth_domain
 
 function internal.setNewGame()
-    game = {datetime = os.time(), duration = server.timeleft, mode = server.gamemode, map = server.map, finished = false}
+    
+    game = {
+        datetime = os.time(),
+        duration = server.timeleft,
+        mode = server.gamemode,
+        map = server.map,
+        finished = false
+    }
+    
     players = {}
     -- players table will be populated by the addPlayer function which will be called on active event for each player
 end
@@ -114,13 +148,19 @@ function internal.addPlayer(cn)
     return t
 end
 
-function internal.construct_teams_table()
+function internal.removePlayer(cn)
+    local player_id = server.player_id(tonumber(cn))
+    if players == nil or player_id == -1 then return end
+    players[player_id] = nil
+end
+
+function internal.constructTeamsTable()
     
     if not gamemodeinfo.teams then return end
     
     local teams = {}
     
-    for i, teamname in ipairs(server.teams()) do
+    for _, teamname in ipairs(server.teams()) do
     
         team = {}
         team.name = teamname
@@ -138,33 +178,37 @@ function internal.commit()
     
     if game == nil or players == nil then return end
     
-    for i, cn in ipairs(server.players()) do
+    -- Update stats for human players
+    for _, cn in ipairs(server.players()) do
         
-        local t = internal.updatePlayer(cn)
-        if t.playing then t.finished = true end
+        local playerData = internal.updatePlayer(cn)
         
-        t.win = server.player_win(cn)
-        t.rank = server.player_rank(cn)
+        playerData.finished = playerData.playing
+        playerData.win = server.player_win(cn)
+        playerData.rank = server.player_rank(cn)
         
-        if auth_domain and t.auth_name then
+        if auth_domain and playerData.auth_name then
             
             if server.stats_tell_auth_name == 1 then
-                server.player_msg(cn, string.format("Saving your stats as %s@%s", t.auth_name, auth_domain))
+                server.player_msg(cn, string.format("Saving your stats as %s@%s", playerData.auth_name, auth_domain))
             end
             
             if server.stats_overwrite_name_with_authname == 1 then
-                t.player_name = t.name -- save the original name
-                t.name = t.auth_name
+                playerData.player_name = playerData.name -- save the original name
+                playerData.name = playerData.auth_name
             end
             
         end
     end
     
-    for i, cn in ipairs(server.bots()) do
-        local t = internal.updatePlayer(cn)
-        if t.playing and game.finished then t.finished = true end
-        t.win = server.player_win(cn)
-        t.rank = server.player_rank(cn)
+    -- Update stats for bot players
+    for _, cn in ipairs(server.bots()) do
+    
+        local botData = internal.updatePlayer(cn)
+        
+        botData.finished = botData.playing
+        botData.win = server.player_win(cn)
+        botData.rank = server.player_rank(cn)
     end
     
     local human_players = 0
@@ -172,22 +216,27 @@ function internal.commit()
     local unique_players = 0 -- human players
     local ipcount = {}
     
+    -- Count the players
     for id, player in pairs(players) do
-    
-        if player.botskill == 0 then
-            human_players = human_players + 1
-            
-            if not ipcount[player.ipaddrlong] then
-                ipcount[player.ipaddrlong] = true
-                unique_players = unique_players + 1
-            end
-        else
-            bot_players = bot_players + 1
-        end
         
+        if (player.frags == 0 and player.timeplayed < 60) then -- Remove players that didn't contribute to the game
+            players[id] = nil
+        else
+            
+            if player.botskill == 0 then
+                human_players = human_players + 1
+                
+                if not ipcount[player.ipaddrlong] then
+                    ipcount[player.ipaddrlong] = true
+                    unique_players = unique_players + 1
+                end
+            else
+                bot_players = bot_players + 1
+            end
+        end
     end
     
-    local teams = internal.construct_teams_table()
+    local teams = internal.constructTeamsTable()
     
     game.players = human_players
     game.bots = bot_players
@@ -202,7 +251,7 @@ function internal.commit()
     local query_backend = internal.backends.query
     internal.backends.query = nil
     
-    for i, backend in pairs(internal.backends) do
+    for _, backend in pairs(internal.backends) do
         catch_error(backend.commit_game, game, players, teams)
     end
     
