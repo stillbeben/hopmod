@@ -50,7 +50,7 @@ img{border:0;}
 	width:100%;
 }
 
-.scoreboard table th{
+.scoreboard table th, .scoreboard table th a:link, .scoreboard table th a:visited{
 	color:#F9F48C;
 	font-weight:bold;
 	text-shadow:#262626 1px 1px 1px;

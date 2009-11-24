@@ -1,7 +1,7 @@
 <?php
 php_version_check();
 // Config
-$database["path"] = '/home/sauerbraten/hopserver/log/stats.sqlite';
+$database["path"] = '/home/sauerbraten/coe_stats.sqlite';
 
 $db = new SQLite3($database["path"]);
 
@@ -51,7 +51,7 @@ if ($_GET["show"] == "player") {
 function find_player() {
 	echo '<div align="center">';
 	echo '<form action="?show=players" method="GET">';
-	echo '<table><tr><td><input class="txt" type="text" onKeyPress="find_user(this.value)" onKeyUp="find_user(this.value)" name="fplayer"></td><td>';
+	echo '<table border="0" cellpadding="0" cellspacing="0"><tr><td><input class="txt" type="text" onKeyPress="find_user(this.value)" onKeyUp="find_user(this.value)" name="fplayer"></td><td>';
 	echo '&nbsp;<input class="btn" type="submit" value="Find Player"></td>';
 	echo '</table><div id="html"></div>';
 	echo '</form>';
@@ -72,7 +72,7 @@ function show_player($db, $player, $order, $admin) {
 	order by "'.$order.'" DESC
 	');
 	echo '<div align="center">Player Name:  '.$player;
-	echo '<table border="1" align="center" class="stats">';
+	echo '<table border="0" cellpadding="0" cellspacing="0" class="stats">';
 	echo '
 	<tr>
 	<td><a href="?show=player&player='.$player.'&order=gametime">Time</a></td>
@@ -178,24 +178,24 @@ function show_players($db, $order, $country = NULL, $player = NULL, $norank = FA
 	order by '.$order.' desc
 	');
 	echo '
-	<table border="1" align="center" class="stats">
+	<table border="0" cellpadding="0" cellspacing="0">
 		<tr>';
-			if (!$norank) {	echo '		<td>Rank</td>'; }
-			echo '<td><a href="?show=players&order=country&fplayer='.$_GET["fplayer"].'">Country</a></td>
-			<td><a href="?show=players&order=name&fplayer='.$_GET["fplayer"].'">Name</a></td>';
-			if ($admin) echo '<td>IP</td>';
+			if (!$norank) {	echo '		<th>Rank</th>'; }
+			echo '<th><a href="?show=players&order=country&fplayer='.$_GET["fplayer"].'"></a></th>
+			<th><a href="?show=players&order=name&fplayer='.$_GET["fplayer"].'">Name</a></th>';
+			if ($admin) echo '<th>IP</th>';
 			echo '
-			<td><a href="?show=players&order=frags&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Frags</a></td>
-			<td><a href="?show=players&order=deaths&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Deaths</a></td>
-			<td>Kpd</td>
-			<td><a href="?show=players&order=acc&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Acc</a></td>
-			<td><a href="?show=players&order=wins&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Wins</a></td>
-			<td><a href="?show=players&order=losses&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Losses</a></td>
-			<td><a href="?show=players&order=suicides&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Suicides</a></td>
-			<td><a href="?show=players&order=teamkills&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Teamkills</a></td>
-			<td><a href="?show=players&order=hits&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Hits</a></td>
-			<td><a href="?show=players&order=shots&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Shots</a></td>
-			<td><a href="?show=players&order=timeplayed&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Played Time</a></td>
+			<th><a href="?show=players&order=frags&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Frags</a></th>
+			<th><a href="?show=players&order=deaths&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Deaths</a></th>
+			<th>Kpd</th>
+			<th><a href="?show=players&order=acc&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Acc</a></th>
+			<th><a href="?show=players&order=wins&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Wins</a></th>
+			<th><a href="?show=players&order=losses&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Losses</a></th>
+			<th><a href="?show=players&order=suicides&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Suicides</a></th>
+			<th><a href="?show=players&order=teamkills&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Teamkills</a></th>
+			<th><a href="?show=players&order=hits&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Hits</a></th>
+			<th><a href="?show=players&order=shots&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Shots</a></th>
+			<th><a href="?show=players&order=timeplayed&page='.$_GET["page"].'&fplayer='.$_GET["fplayer"].'">Played Time</a></th>
 		</tr>
 	';
 	if ($_GET["page"] == NULL) 
@@ -332,119 +332,9 @@ function duration($seconds)
 
 function style() {
 	?>
-<html>
-<head>
-	<title>Sauerbraten Scoreboard</title>
-	<style type="text/css">
-		A:link { color: black; text-decoration: none; border:0px; }
-		A:visited { color: black; text-decoration: none; border:0px; }
-		A:hover { color: orange; border:0px;  }	
-		#flag img { border: 0px; }	
-		input.btn {
-			width:80px;
-			color:#283386;
-			font-size:12px;
-			border:1px solid #8FD3EF;
-		}
-		input.txt {
-			width:110px;
-			color:#283386;
-			font-size:12px;
-			border:1px solid #8FD3EF;
-		}
-
-		table.stats {
-			text-align: center;
-			font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
-			font-weight: normal;
-			font-size: 11px;
-			color: #fff;
-			background-color: #666;
-			border: 0px;
-			border-collapse: collapse;
-			border-spacing: 0px;}
-			table.stats td
-			{background-color: #CCC;
-			color: #000;
-			padding: 4px;
-			text-align: left;
-			border: 1px #fff solid;
-		}
-		table.stats td.hed {
-			background-color: #666;
-			color: #aaa;
-			padding: 4px;
-			text-align: left;
-			border-bottom: 2px #fff solid;
-			font-size: 12px;
-			font-weight: bold;
-		} 
-	</style>
-	<script type="text/javascript">
-	function find_user(nick) {
-		if (!nick) {
-			document.getElementById('html').innerHTML="";
-			return false;
-		}
-		get("?nick=" + nick, "ausgabe_html");
-	}
-			
-	function ausgabe_html(users) {
-		document.getElementById('html').innerHTML='<font face="Tahoma" size="-2">Matches: ' + users + '</font>';
-		document.getElementById('html').style.visibility='visible';
-	}
-	
-	function get_server(port) {
-		if (!port) {
-			document.getElementById('html_server').innerHTML="";
-			return false;
-		}
-		get("?serverport=" + port, "server");
-	}
-	
-	function server(html) {
-		document.getElementById('html_server').innerHTML=html;
-		document.getElementById('html_server').style.visibility='visible';
-	}
-			
-	function get(url, callback_function, return_xml){
-		var http_request = false;	
-		if (window.XMLHttpRequest) {
-			http_request = new XMLHttpRequest();
-		if (http_request.overrideMimeType) {
-			http_request.overrideMimeType('text/xml; charset= iso-8859-1');
-		}
-		}else if(window.ActiveXObject) {
-			try {
-				http_request = new ActiveXObject("Msxml2.XMLHTTP");
-			}catch (e) {
-				try {
-					http_request = new ActiveXObject("Microsoft.XMLHTTP");
-				} catch (e) {}
-			}
-		}
-		if (!http_request) {
-			eval(callback_function + '(404)');
-			return false;
-		}
-		http_request.onreadystatechange = function() {
-			if (http_request.readyState == 4) {
-				if (http_request.status == 200) {
-					if (return_xml) {
-						eval(callback_function + '(http_request.responseXML)');
-					} else {
-						eval(callback_function + '(http_request.responseText)');
-						StopTheClock();
-					}
-				} 
-			}
-		}
-		http_request.open('GET', url, true);
-		http_request.send(null);
-	}
-	</script>
-</head>
-<body bgcolor="#CCCCCC">
+<?php include("header.inc.php");?>
+<div class="box">
+<div class="scoreboard">
 	<?php
 }
 function phpvar2jsvar($value, $var) {
@@ -539,6 +429,69 @@ if (ENABLE_SERVER_STATUS) {
 	//get_server(SERVER_PORT);
 }
 </script>
-<div id="html_server"></div>
-</body>
-</html>
+    <script type="text/javascript">
+    function find_user(nick) {
+            if (!nick) {
+                    document.getElementById('html').innerHTML="";
+                    return false;
+            }
+            get("?nick=" + nick, "ausgabe_html");
+    }
+                    
+    function ausgabe_html(users) {
+            document.getElementById('html').innerHTML='<font face="Tahoma" size="-2">Matches: ' + users + '</font>';
+            document.getElementById('html').style.visibility='visible';
+    }
+    
+    function get_server(port) {
+            if (!port) {
+                    document.getElementById('html_server').innerHTML="";
+                    return false;
+            }
+            get("?serverport=" + port, "server");
+    }
+    
+    function server(html) {
+            document.getElementById('html_server').innerHTML=html;
+            document.getElementById('html_server').style.visibility='visible';
+    }
+                    
+    function get(url, callback_function, return_xml){
+            var http_request = false;       
+            if (window.XMLHttpRequest) {
+                    http_request = new XMLHttpRequest();
+            if (http_request.overrideMimeType) {
+                    http_request.overrideMimeType('text/xml; charset= iso-8859-1');
+            }
+            }else if(window.ActiveXObject) {
+                    try {
+                            http_request = new ActiveXObject("Msxml2.XMLHTTP");
+                    }catch (e) {
+                            try {
+                                    http_request = new ActiveXObject("Microsoft.XMLHTTP");
+                            } catch (e) {}
+                    }
+            }
+            if (!http_request) {
+                    eval(callback_function + '(404)');
+                    return false;
+            }
+            http_request.onreadystatechange = function() {
+                    if (http_request.readyState == 4) {
+                            if (http_request.status == 200) {
+                                    if (return_xml) {
+                                            eval(callback_function + '(http_request.responseXML)');
+                                    } else {
+                                            eval(callback_function + '(http_request.responseText)');
+                                            StopTheClock();
+                                    }
+                            } 
+                    }
+            }
+            http_request.open('GET', url, true);
+            http_request.send(null);
+    }
+    </script>
+</div>
+</div>
+<?php include("footer.inc.php");?>

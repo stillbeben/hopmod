@@ -45,8 +45,6 @@ if(isTeamMode($game["gamemode"])){
     }
 }
 
-date_default_timezone_set("UTC");
-
 $displayGameInfo = array(
     0 => array("name" => "Date", "value" => strftime("%a, %b %e, %Y at %I:%M %p", $game["datetime"])),
     1 => array("name" => "Duration", "value" => $game["duration"] . " mins"),

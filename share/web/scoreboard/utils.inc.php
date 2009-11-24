@@ -1,5 +1,7 @@
 <?php
 
+date_default_timezone_set("UTC");
+
 function requestFailure($title){
     include("header.inc.php");
     echo "<div class=\"box\"><span class=\"errormsg\">$title</span></div>";
