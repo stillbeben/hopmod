@@ -57,10 +57,10 @@ events.intermission = server.event_handler_object("intermission", function()
     
     local check_ctf_stats = gamemodeinfo.ctf
     
-    for player in server.gplayers("all") do
-        
+    local function update_stats(player)
+    
         local cn = player.cn
-        local qualify = player:frags() > 9;
+        local qualify = player:frags() > round(server.gamemillis / 60000); -- game duration in mins
         
         if qualify then
             best.accuracy:update(cn, player:accuracy())
@@ -70,18 +70,21 @@ events.intermission = server.event_handler_object("intermission", function()
         
         if check_ctf_stats then
             
-            local player_stats = stats.vars(player.cn)
+            local player_stats = stats.vars(cn)
             
             best.takeflag:update(cn, player_stats.takeflag or 0)
             best.scoreflag:update(cn, player_stats.scoreflag or 0)
             best.returnflag:update(cn, player_stats.returnflag or 0)
         end
+        
+    end
+    
+    for p in server.gplayers("all") do
+        update_stats(p)
     end
     
     for _,cn in ipairs(server.bots()) do
-        
-        best.accuracy:update(cn, server.player_accuracy(cn))
-        best.frags:update(cn, server.player_frags(cn))
+        update_stats(server.new_player_object(cn))
     end
     
     if best.kpd.value then
