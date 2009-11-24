@@ -1,8 +1,17 @@
 #include "../hopmod.hpp"
 #include "../crypto.hpp"
 #include "../md5.h"
+#include <stdio.h>
+
+static FILE * urandom = NULL;
 
 namespace ecc{
+
+static void make_seed(unsigned int * output, std::size_t n)
+{
+    if(!urandom || fread(output, sizeof(unsigned int), n, urandom) < n)
+        loopi(n) output[i] = randomMT();
+}
 
 class key;
 
@@ -115,11 +124,13 @@ private:
     static int generate_challenge(lua_State * L)
     {
         key * self = reinterpret_cast<key *>(luaL_checkudata(L, 1, MT_NAME));
-        uint seed[3] = { rx_bytes, totalmillis, randomMT() };
         
         challenge * chal = new (lua_newuserdata(L, sizeof(challenge))) challenge;
         luaL_getmetatable(L, challenge::MT_NAME);
         lua_setmetatable(L, -2);
+        
+        unsigned int seed[4];
+        make_seed(seed, 4);
         
         chal->m_answer = genchallenge(self->m_key, seed, sizeof(seed), chal->m_challenge);
         return 1;
@@ -143,8 +154,10 @@ static int generate_key_pair(lua_State * L)
 {
     vector<char> privkeyout, pubkeyout;
     
-    uint seed[3] = { rx_bytes, totalmillis, randomMT() };
-    genprivkey(seed,sizeof(seed), privkeyout, pubkeyout);
+    unsigned int seed[4];
+    make_seed(seed, 4);
+    
+    genprivkey(seed, sizeof(seed), privkeyout, pubkeyout);
     
     lua_pushstring(L, privkeyout.getbuf());
     new (lua_newuserdata(L, sizeof(key))) key(pubkeyout.getbuf());
@@ -221,6 +234,16 @@ namespace module{
 
 void open_crypto(lua_State * L)
 {
+    urandom = fopen("/dev/urandom","r");
+    if(!urandom)
+    {
+        fprintf(stderr, "Crypto module warning: couldn't open /dev/urandom for reading -- will be using randomMT() instead!");
+    }
+    else
+    {
+        seedMT(time(NULL));
+    }
+    
     static luaL_Reg functions[] = {
         {"md5sum", md5sum},
         {"tigersum", tigersum},

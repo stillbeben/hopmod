@@ -32,6 +32,7 @@ lib enet :
 lib z : : <name>z ;
 lib geoip : : <name>GeoIP <link>shared ;
 lib rt : : <name>rt ;
+lib pthread : : <name>pthread <link>shared ;
 
 cpp-pch pch : src/hopmod/pch.hpp /fungu//script : <include>src/shared <include>src/enet/include <define>STANDALONE ;
 
@@ -42,21 +43,33 @@ lib sauertools :
     : <include>src/shared <include>src/enet/include <define>STANDALONE <link>static
     : : <include>src/shared <include>src/enet/include ;
 
-lib serverscripting :
-    src/hopmod/signals.cpp
-    src/hopmod/scripting.cpp
+lib lua_modules :
     src/hopmod/lua/crypto.cpp
+    src/hopmod/md5.c
     src/hopmod/lua/net.cpp
     src/hopmod/lua/cubescript.cpp
     src/hopmod/lua/geoip.cpp
     src/hopmod/lua/filesystem.cpp
-    src/hopmod/lua/packlib.c
+    src/hopmod/lua/packlib.c 
     /lua//lua
     /boost//headers
     /boost//signals
     /boost//system
     /fungu//script
     geoip
+    sauertools
+    pthread
+    : <define>STANDALONE <include>src/hopmod <link>static ;
+
+lib serverscripting :
+    src/hopmod/signals.cpp
+    src/hopmod/scripting.cpp
+    /lua//lua
+    /boost//headers
+    /boost//signals
+    /boost//system
+    /fungu//script
+    lua_modules
     pch
     : <link>static <include>src/hopmod <include>src/shared <include>src/enet/include <define>STANDALONE : : <include>src ;
 
@@ -79,7 +92,6 @@ exe sauer_server :
     src/hopmod/playerid.cpp
     src/hopmod/restarter.cpp
     src/hopmod/utils.cpp
-    src/hopmod/md5.c
     src/hopmod/netmask.cpp
     src/hopmod/bans.cpp
     sauertools
@@ -109,7 +121,15 @@ exe sauer_authserver :
     enet
     : <define>STANDALONE <define>HOPMOD_AUTHSERVER_EVENTS ;
 
-install executables : sauer_server keygen : <install-type>EXE <location>bin ;
+exe luapp :
+    src/hopmod/luapp.cpp
+    /lua//lua
+    /boost//headers
+    /boost//system
+    lua_modules
+    : <define>STANDALONE ;
+
+install executables : sauer_server keygen luapp : <install-type>EXE <location>bin ;
 install libraries : /boost//system /boost//signals /lua//lua /lua-sqlite3//luasqlite3 /libmicrohttpd//microhttpd : <install-type>LIB <location>lib ;
 
 install install_sauer_authserver : sauer_authserver : <install-type>EXE <install-type>LIB <location>bin ;

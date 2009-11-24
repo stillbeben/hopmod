@@ -2,8 +2,6 @@
     A Lua Network Library module developed for Hopmod
     Copyright (C) 2009 Graham Daws
 */
-#include "main_io_service.hpp"
-#include "hopmod.hpp"
 #include <netinet/in.h> //byte ordering functions
 #include <unistd.h> //unlink()
 #include <iostream>
@@ -11,6 +9,16 @@
 using namespace boost::asio;
 #include "buffered_socket.hpp"
 #include <boost/bind/protect.hpp>
+
+extern "C"{
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
+// External
+boost::asio::io_service & get_main_io_service();
+void report_script_error(const char *);
 
 class tcp_socket: public ip::tcp::socket, 
                   public buffered_reading<ip::tcp::socket>

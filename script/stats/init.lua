@@ -1,3 +1,6 @@
+--[[
+    See script/stats/core.lua for information
+]]
 
 local using_sqlite = (server.stats_use_sqlite == 1)
 local using_json = (server.stats_use_json == 1)
@@ -19,7 +22,7 @@ if using_sqlite then
         error(err) -- log but don't throw
     end
     
-    --catch_error(server.stats_sqlite_reinstall_triggers) -- Causes the database connection to break (reason uknown)
+    --catch_error(server.stats_sqlite_reinstall_triggers) -- Causes the database connection to break (reason unknown)
     
     backends.query = backends.sqlite3
 end
