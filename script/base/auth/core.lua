@@ -180,7 +180,7 @@ local function start_auth_challenge(cn, user_id, domain)
         
         local request = create_request(cn, user_id, domain)
         
-        local key = crypto.ecc.key(user.public_key)
+        local key = crypto.sauerecc.key(user.public_key)
         
         request.local_request = {}
         request.local_request.challenge = key:generate_challenge()

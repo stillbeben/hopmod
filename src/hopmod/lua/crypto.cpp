@@ -268,7 +268,7 @@ void open_crypto(lua_State * L)
     lua_newtable(L);
     luaL_register(L, NULL, ecc_functions);
     
-    lua_setfield(L, -2, "ecc");
+    lua_setfield(L, -2, "sauerecc");
     
     ecc::key::register_class(L);
     ecc::challenge::register_class(L);
