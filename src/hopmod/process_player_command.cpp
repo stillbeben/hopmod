@@ -11,6 +11,10 @@
 #include <fungu/script/error.hpp>
 using namespace fungu;
 
+namespace server{
+void player_msg(int,const char *);
+} //namespace server
+
 bool using_command_prefix = true;
 char command_prefix = '#';
 

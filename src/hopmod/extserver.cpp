@@ -961,9 +961,12 @@ void script_set_mastermode(int value)
     }
 }
 
-void add_allowed_ip(const char * ip)
+void add_allowed_ip(const char * hostname)
 {
-    allowedips.add(inet_addr(ip));
+    ENetAddress addr;
+    if(enet_address_set_host(&addr, hostname) != 0)
+        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("invalid hostname given")));
+    allowedips.add(addr.host);
 }
 
 void suicide(int cn)

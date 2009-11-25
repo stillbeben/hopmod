@@ -1,7 +1,15 @@
-#include "../hopmod.hpp"
 #include <fungu/script.hpp>
 #include <fungu/script/any_variable.hpp>
 using namespace fungu;
+
+extern "C"{
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
+fungu::script::env & get_script_env();
+void report_script_error(const char *);
 
 const char * ENV_MT = "cubescript_env_class";
 const char * PARSER_MT = "cubescript_parser_class";

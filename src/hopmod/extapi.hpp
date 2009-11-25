@@ -1,28 +1,14 @@
 #ifndef HOPMOD_EXTAPI_HPP
 #define HOPMOD_EXTAPI_HPP
 
-#include "cube.h"
 #include "utils.hpp"
 
 extern "C"{
 #include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
 }
 
 #include <string>
 #include <vector>
-#include <iostream>
-
-#include <signal.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-
-#include <fungu/script/error.hpp>
-#include <fungu/script/lexical_cast.hpp>
-#include <boost/lexical_cast.hpp>
 
 namespace server
 {

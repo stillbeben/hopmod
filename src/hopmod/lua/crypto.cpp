@@ -1,7 +1,13 @@
-#include "../hopmod.hpp"
 #include "../crypto.hpp"
 #include "../md5.h"
+
+#include <string>
 #include <stdio.h>
+extern "C"{
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
 
 static FILE * urandom = NULL;
 

@@ -3,9 +3,28 @@
 #endif
 
 #include "game.h"
+
+#include "extapi.hpp"
 #include "hopmod.hpp"
 #include "hopmod/bans.hpp"
-#include <arpa/inet.h> //inet_ntoa
+#include "hopmod/utils.hpp"
+
+#include <fungu/script/error.hpp>
+#include <fungu/script/lexical_cast.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <iostream>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
+
+extern "C"{
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
 
 namespace game
 {         

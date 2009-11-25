@@ -21,6 +21,12 @@ using namespace fungu;
 #include <iostream>
 #include <time.h>
 
+extern "C"{
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+}
+
 static void create_server_namespace(lua_State *);
 static void bind_object_to_lua(const_string, script::env_object *);
 static inline int server_interface_index(lua_State *);

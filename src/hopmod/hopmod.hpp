@@ -1,7 +1,9 @@
 #ifndef HOPMOD_HPP
 #define HOPMOD_HPP
 
-struct lua_State;
+extern "C"{
+#include <lua.h>
+}
 
 namespace fungu{
 namespace script{
@@ -10,7 +12,7 @@ class error_trace;
 } //namespace script
 } //namespace fungu
 
-#include "extapi.hpp"
+/*#include "extapi.hpp"*/
 #include "signals.hpp"
 #include "utils.hpp"
 

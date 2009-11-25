@@ -2,15 +2,30 @@
 #include "pch.hpp"
 #endif
 
+#include "cube.h"
 #include "hopmod.hpp"
 #include "lua/modules.hpp"
+
 #include <fungu/script/env.hpp>
 #include <fungu/script/execute.hpp>
+#include <fungu/script/error.hpp>
 using namespace fungu;
+
+#include <signal.h>
+
+namespace server{
+void enable_setmaster_autoapprove(bool);
+void crash_handler(int signal);
+void restore_server(const char * filename);
+void started();
+void sendservmsg(const char *);
+extern string smapname;
+bool selectnextgame();
+}//namespace server
 
 extern "C"{
 int lua_packlibopen(lua_State *L);
-}
+} //extern "C"
 
 static boost::signals::connection close_listenserver_slot;
 static bool reload = false;
@@ -118,7 +133,7 @@ namespace server{
 void started()
 {
     signal_started();
-    if(!smapname[0]) selectnextgame();
+    if(!server::smapname[0]) selectnextgame();
     
     if(access("log/restore", R_OK) == 0) restore_server("log/restore");
 }
