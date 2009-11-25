@@ -49,9 +49,10 @@ if using_mysql then
     
 end
 
-loadfile("./script/stats/core.lua")().initialize(backends,{
+dofile("./script/stats/core.lua").initialize(backends,{
         using_auth = server.stats_use_auth,
-        auth_domain = server.stats_auth_domain
+        auth_domain = server.stats_auth_domain,
+        gamemodes = list_to_set(server.parse_list(server.stats_enabled_gamemodes))
     })
 
 -- Load and register the #stats player command

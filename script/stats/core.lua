@@ -251,7 +251,7 @@ function internal.commit()
     game.bots = bot_players
     game.duration = round(server.gamemillis / 60000)
     
-    if unique_players < 2 or server.gamemode == "coop edit" or game.duration == 0 then
+    if unique_players < 2 or game.duration == 0 or not internal.supported_gamemodes[game.mode] then
         game = nil
         players = nil
         return
@@ -374,7 +374,7 @@ function internal.initialize(tableOfBackends, settings)
     end
     
     internal.backends = tableOfBackends
-
+    internal.supported_gamemodes = settings.gamemodes
 end
 
 function internal.shutdown()
