@@ -57,6 +57,7 @@ void init_hopmod()
     lua_State * L = env.get_lua_state();
     
     lua::module::open_net(L);
+    lua::module::open_timer(L);
     lua::module::open_crypto(L);
     lua::module::open_cubescript(L);
     lua::module::open_geoip(L);

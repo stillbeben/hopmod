@@ -47,6 +47,7 @@ int main(int argc, char ** argv)
     luaL_openlibs(L);
     
     lua::module::open_net(L);
+    lua::module::open_timer(L);
     lua::module::open_crypto(L);
     lua::module::open_cubescript(L);
     lua::module::open_geoip(L);

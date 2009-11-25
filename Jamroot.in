@@ -47,6 +47,7 @@ lib lua_modules :
     src/hopmod/lua/crypto.cpp
     src/hopmod/md5.c
     src/hopmod/lua/net.cpp
+    src/hopmod/lua/timer.cpp
     src/hopmod/lua/cubescript.cpp
     src/hopmod/lua/geoip.cpp
     src/hopmod/lua/filesystem.cpp
