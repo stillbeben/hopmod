@@ -60,11 +60,6 @@ server.event_handler("started", function()
         server.script_socket_server(server.script_socket_port, server.script_socket_password)
     end
     
-    if server.use_irc_bot == 1 then
-        os.execute("bin/server start_ircbot")
-        server.event_handler("shutdown", function() server.stop_ircbot() end)
-    end
-    
     if server.change_default_maptime == 1 then
         load_once("change_default_maptime")
     end

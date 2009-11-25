@@ -162,8 +162,6 @@ global small_teamgamesize 5
 global default_gamemode "ffa"
 global default_game_on_empty 0
 
-global use_irc_bot 0
-
 flood_protect_text 1000
 flood_protect_sayteam 1000
 flood_protect_mapvote 1000
