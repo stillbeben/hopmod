@@ -67,6 +67,12 @@ function map_to_array(map)
     return result
 end
 
+function list_to_set(list)
+    local set = {}
+    for _,value in ipairs(list) do set[value] = true end
+    return set
+end
+
 function formatcol(col, text)
     if text then return "\fs\f" .. col .. text .. "\fr" else return "\f" ..col end
 end
