@@ -14,7 +14,7 @@
 local deny_mapvote = (server.allow_mapvote == 0)
 local deny_modevote = (server.allow_modevote == 0)
 local deny_unknown_map = (server.mapvote_disallow_unknown_map == 1)
-local allowed_modes = table_unique(server.parse_list(server["allowed_gamemodes"]))
+local allowed_modes = list_to_set(server.parse_list(server["allowed_gamemodes"]))
 
 local function mapvote(cn, map, mode)
 
@@ -30,21 +30,11 @@ local function mapvote(cn, map, mode)
         
 	end
     
-    -- Find voted mode in the allowed game modes list
-    local isFound = false
-    
-    for i, gamemode in pairs(allowed_modes) do
-        if mode == gamemode then 
-            isFound = true
-            break
-        end
-    end
-    
-    if isFound == false then
+    if not allowed_modes[mode] then
         server.player_msg(cn, red("This server doesn't accept votes for '" .. mode .. "' game mode."))
         return -1
     end
-
+    
     if deny_unknown_map and mode ~= "coop edit" then
     
         local globalFound = server.is_known_map(map)
