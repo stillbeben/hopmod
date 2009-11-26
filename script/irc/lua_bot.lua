@@ -196,7 +196,7 @@ server.event_handler("disconnect", function (cn,reason)
         reason_tag = " because: " .. reason
     end
 
-    irc.toChannel(string.format("\0032DISCONNECT\003    \00312%s(%i)\003%s disconnected%s, time %s\n", server.player_name(cn), cn, ip, reason_tag, server.format_duration(server.player_connection_time(cn))))
+    irc:toChannel(string.format("\0032DISCONNECT\003    \00312%s(%i)\003%s disconnected%s, time %s\n", server.player_name(cn), cn, ip, reason_tag, server.format_duration(server.player_connection_time(cn))))
 end)
 
 
