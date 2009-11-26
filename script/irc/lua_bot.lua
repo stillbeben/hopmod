@@ -241,6 +241,7 @@ server.event_handler("reteam",function(cn, oldteam, newteam)
 end)
 
 server.event_handler("text", function(cn, msg)
+	if string.match(msg,"^#.*") then return end
     local mute_tag = ""
     if server.is_muted(cn) then mute_tag = "(muted)" end
     irc:toChannel(string.format("\0033CHAT\003    \00312%s(%i)\003%s  ~>  \0033%s\003\n",server.player_name(cn),cn,mute_tag,msg))
