@@ -161,6 +161,8 @@ end)
 
 server.event_handler("shutdown", function() log("server shutting down"); logfile:close() end)
 
-server.event_handler("reloadhopmod", function() log("reloading hopmod...") end)
-
-log("server started")
+if server.reloaded then
+    log("reloaded server scripts")
+else
+    log("server started")
+end

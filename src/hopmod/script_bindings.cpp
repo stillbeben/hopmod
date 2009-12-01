@@ -15,6 +15,7 @@ using namespace fungu;
 static std::vector<script::any> player_kick_defargs;
 static std::vector<script::any> changemap_defargs;
 static std::vector<script::any> recorddemo_defargs;
+extern bool reloaded; //startup.cpp
 
 static void setup_default_arguments()
 {
@@ -194,6 +195,7 @@ void register_server_script_bindings(script::env & env)
 
     script::bind_var(server::reservedslots, "reservedslots", env);
     script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
+    script::bind_ro_var(reloaded, "reloaded", env);
     
     // script_socket functions
     script::bind_freefunc(script_socket_supported, "script_socket_supported?", env);

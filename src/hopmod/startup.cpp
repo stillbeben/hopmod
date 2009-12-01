@@ -32,6 +32,7 @@ static bool reload = false;
 
 unsigned int maintenance_frequency;
 static int maintenance_time = 0;
+bool reloaded = false;
 
 void init_hopmod()
 {
@@ -99,6 +100,8 @@ void reload_hopmod()
     else reload = false;
     
     signal_reloadhopmod();
+    
+    reloaded = true;
     
     close_listenserver_slot.block();
     signal_shutdown();
