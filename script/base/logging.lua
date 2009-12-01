@@ -159,7 +159,16 @@ server.event_handler("mapcrcfail", function(cn)
     log_usednames(cn)
 end)
 
-server.event_handler("shutdown", function() log("server shutting down"); logfile:close() end)
+server.event_handler("shutdown", function(shutdown_type)
+    
+    if shutdown_type == server.SHUTDOWN_NORMAL then
+        log("server shutting down");
+    elseif shutdown_type == server.SHUTDOWN_RESTART then
+        log("server restarting")
+    end
+    
+    logfile:close()
+end)
 
 if server.reloaded then
     log("reloaded server scripts")

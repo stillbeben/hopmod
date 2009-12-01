@@ -12,7 +12,6 @@ class error_trace;
 } //namespace script
 } //namespace fungu
 
-/*#include "extapi.hpp"*/
 #include "signals.hpp"
 #include "utils.hpp"
 
@@ -23,7 +22,7 @@ void restart_now();
 
 // Scripting functions
 void init_scripting();
-void shutdown_scripting();
+void shutdown_scripting(int);
 fungu::script::env & get_script_env();
 std::string get_script_error_message(fungu::script::error_trace * errinfo);
 void report_script_error(fungu::script::error_trace *);
@@ -35,7 +34,7 @@ void unset_global(const char *);
 void init_script_pipe();
 bool open_script_pipe(const char *,int,fungu::script::env &);
 void run_script_pipe_service(int);
-void close_script_pipe();
+void close_script_pipe(int);
 void unlink_script_pipe();
 
 // Script Socket Functions
@@ -43,7 +42,7 @@ bool script_socket_supported();
 void init_script_socket();
 bool open_script_socket(unsigned short, const char *);
 void run_script_socket_service();
-void close_script_socket();
+void close_script_socket(int);
 
 // Restarter
 void start_restarter();
@@ -57,7 +56,6 @@ void register_server_script_bindings(fungu::script::env &);
 // Scheduler Functions
 void init_scheduler();
 void update_scheduler(int);
-void cancel_free_scheduled();
 void sched_callback(int (*)(void *),void *);
 
 #include <vector>
@@ -81,5 +79,11 @@ extern bool using_command_prefix;
 
 extern unsigned int maintenance_frequency;
 void set_maintenance_frequency(unsigned int);
+
+enum{
+    SHUTDOWN_NORMAL,
+    SHUTDOWN_RESTART,
+    SHUTDOWN_RELOAD
+};
 
 #endif

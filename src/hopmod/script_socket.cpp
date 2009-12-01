@@ -58,11 +58,11 @@ void run_script_socket_service()
     if(s_daemon)
     {
         MHD_run(s_daemon);
-        if(sched_close) close_script_socket();
+        if(sched_close) close_script_socket(0);
     }
 }
 
-void close_script_socket()
+void close_script_socket(int)
 {
     if(in_request)
     {
@@ -206,5 +206,5 @@ bool script_socket_supported(){return false;}
 void init_script_socket(){}
 bool open_script_socket(unsigned short){return false;}
 void run_script_socket_service(){};
-void close_script_socket(){};
+void close_script_socket(int){};
 #endif

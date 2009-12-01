@@ -341,7 +341,7 @@ extern bool haslocalclients();
 extern void sendserverinforeply(ucharbuf &p);
 extern bool requestmaster(const char *req);
 extern bool requestmasterf(const char *fmt, ...);
-extern void stopgameserver();
+extern void stopgameserver(int);
 
 // client
 extern void sendclientpacket(ENetPacket *packet, int chan);

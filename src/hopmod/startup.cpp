@@ -104,7 +104,7 @@ void reload_hopmod()
     reloaded = true;
     
     close_listenserver_slot.block();
-    signal_shutdown();
+    signal_shutdown(SHUTDOWN_RELOAD);
     close_listenserver_slot.unblock();
     
     disconnect_all_slots();
@@ -143,7 +143,7 @@ void started()
 
 void shutdown()
 {
-    signal_shutdown();
+    signal_shutdown(SHUTDOWN_NORMAL);
     stop_restarter();
     exit(0);
 }
@@ -154,7 +154,7 @@ void restart_now()
 {
     server::sendservmsg("Server restarting...");
     start_restarter();
-    signal_shutdown();
+    signal_shutdown(SHUTDOWN_RESTART);
     exit(0);
 }
 

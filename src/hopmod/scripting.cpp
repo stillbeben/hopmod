@@ -109,7 +109,7 @@ static void create_server_namespace(lua_State * L)
     lua_pop(L, 1); // pop server table
 }
 
-void shutdown_scripting()
+void shutdown_scripting(int)
 {
     signal_shutdown_scripting();
     

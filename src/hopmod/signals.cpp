@@ -13,7 +13,7 @@ static script::env * env = NULL;
 static script::slot_factory slots;
 
 boost::signal<void ()> signal_started;
-boost::signal<void ()> signal_shutdown;
+boost::signal<void (int)> signal_shutdown;
 boost::signal<void ()> signal_shutdown_scripting;
 boost::signal<void ()> signal_reloadhopmod;
 
@@ -167,7 +167,7 @@ static void destroy_slot(int handle)
     slots.destroy_slot(handle);
 }
 
-static void cleanup()
+static void cleanup(int)
 {
     slots.clear();
     slots.deallocate_destroyed_slots();

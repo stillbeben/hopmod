@@ -197,6 +197,10 @@ void register_server_script_bindings(script::env & env)
     script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
     script::bind_ro_var(reloaded, "reloaded", env);
     
+    script::bind_const((int)SHUTDOWN_NORMAL, "SHUTDOWN_NORMAL", env);
+    script::bind_const((int)SHUTDOWN_RESTART, "SHUTDOWN_RESTART", env);
+    script::bind_const((int)SHUTDOWN_RELOAD, "SHUTDOWN_RELOAD", env);
+    
     // script_socket functions
     script::bind_freefunc(script_socket_supported, "script_socket_supported?", env);
     script::bind_freefunc(open_script_socket, "script_socket_server", env);

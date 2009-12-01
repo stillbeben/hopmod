@@ -16,7 +16,7 @@ static void shutdown_from_signal(int i)
 #ifdef STANDALONE
 void fatal(const char *s, ...) 
 {
-    stopgameserver(); 
+    stopgameserver(0); 
     defvformatstring(msg,s,s);
     printf("servererror: %s\n", msg); 
     exit(EXIT_FAILURE); 
@@ -196,7 +196,7 @@ deadline_timer update_timer(main_io_service);
 deadline_timer register_timer(main_io_service);
 deadline_timer netstats_timer(main_io_service);
 
-void stopgameserver()
+void stopgameserver(int)
 {
     kicknonlocalclients(DISC_NONE);
     
@@ -1034,7 +1034,7 @@ void stoplistenserver()
 
     kicknonlocalclients();
     enet_host_flush(serverhost);
-    stopgameserver();
+    stopgameserver(0);
 
     conoutf("listen server stopped");
 }

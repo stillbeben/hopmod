@@ -15,6 +15,7 @@ static int sched_free_lua_function(lua_State * L, bool);
 static inline int sched_free_lua_sleep(lua_State *);
 static inline int sched_free_lua_interval(lua_State *);
 static script::any sched_free_cs_function(bool, script::env_object::call_arguments &, script::env_frame *);
+static void cancel_free_scheduled(int);
 
 void init_scheduler()
 {
@@ -27,10 +28,10 @@ void init_scheduler()
     register_lua_function(sched_free_lua_sleep, "sleep");
     register_lua_function(sched_free_lua_interval, "interval");
     
-    signal_shutdown.connect(cancel_free_scheduled,boost::signals::at_front);
+    signal_shutdown.connect(cancel_free_scheduled, boost::signals::at_front);
 }
 
-void cancel_free_scheduled()
+void cancel_free_scheduled(int)
 {
     free_scheduled.cancel_all();
 }

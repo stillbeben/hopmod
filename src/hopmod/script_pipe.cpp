@@ -157,7 +157,7 @@ void run_script_pipe_service(int curtime)
     }
 }
 
-void close_script_pipe()
+void close_script_pipe(int)
 {
     close(fd);
     if(filename && unlink(filename) == -1)
