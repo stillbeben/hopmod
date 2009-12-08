@@ -595,14 +595,17 @@ void unsetmaster()
     {
         clientinfo * master = getinfo(currentmaster);
         
-        defformatstring(msg)("The server has revoked your %s privilege.",privname(master->privilege));
+        defformatstring(msg)("The server has revoked your %s privilege.", privname(master->privilege));
         master->sendprivtext(msg);
         
         master->privilege = 0;
+        int oldmaster = currentmaster;
         currentmaster = -1;
         masterupdate = true;
         
         cleanup_masterstate(master);
+        
+        signal_masterchange(oldmaster, get_ci(oldmaster)->name, false);
     }
 }
 
@@ -621,6 +624,8 @@ void setpriv(int cn, int priv)
     
     defformatstring(msg)("The server has %s your privilege to %s.", change, privname(priv));
     player->sendprivtext(msg);
+    
+    signal_masterchange(currentmaster, player->name, true);
 }
 
 bool server_setmaster(int cn)

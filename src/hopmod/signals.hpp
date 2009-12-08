@@ -54,7 +54,7 @@ extern boost::signal<int (int,const char *), proceed>               signal_sayte
 extern boost::signal<int (int,const char *,const char *), proceed>  signal_mapvote;
 extern boost::signal<int (int, const char *,const char *), proceed> signal_setmastermode;
 extern boost::signal<void (int,int)>                                signal_spectator;
-extern boost::signal<void (int,const char *,int)>                   signal_setmaster;
+extern boost::signal<void (int,const char *,int)>                   signal_masterchange;
 extern boost::signal<void (int,int)>                                signal_teamkill;
 extern boost::signal<void (int,const char *,const char *)>          signal_authreq;
 extern boost::signal<void (int,int,const char *)>                   signal_authrep;
