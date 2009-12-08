@@ -15,7 +15,7 @@ server.event_handler("frag", function(target, actor)
     local x, y, z = server.player_pos(actor)
     local last_pos = last_positions[actor_id] or {x = x, y = y, z = z}
 
-    local distance = math.sqrt(math.abs(x - last_pos.x)^2 + math.abs(y - last_pos.y)^2 + math.abs(z - last_pos.z)^2)
+    local distance = math.sqrt((x - last_pos.x)^2 + (y - last_pos.y)^2 + (z - last_pos.z)^2)
     average_distances[actor_id] = ((average_distances[actor_id] or START_AVERAGE)/2) + (distance/2)
     
     last_positions[actor_id] = {x = x, y = y, z = z}
