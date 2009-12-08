@@ -1,10 +1,4 @@
 
-function server.delete_file(filename)
-    local file = io.open(filename, "w+")
-    file:close()
-    os.remove(filename)
-end
-
 -- Copied from http://lua-users.org/wiki/SimpleRound
 function round(num, idp)
   local mult = 10^(idp or 0)
