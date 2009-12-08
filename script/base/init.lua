@@ -47,7 +47,7 @@ load_module_vars("./script/modvars")
 
 server.event_handler("started", function()
     
-    if server.fileExists(server.banlist_file) then
+    if server.file_exists(server.banlist_file) then
         server.execCubeScriptFile(server.banlist_file)
     end
     

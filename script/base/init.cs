@@ -5,7 +5,7 @@
 do = [arg1]
 global execCubeScriptFile &exec-cubescript
 global execIfFound (func [filename] [
-    if (fileExists $filename) [exec $filename]
+    if (file_exists $filename) [exec $filename]
 ])
 
 exec "./script/base/resetvars.cs"

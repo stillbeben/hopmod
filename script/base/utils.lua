@@ -5,11 +5,6 @@ function server.deleteFile(filename)
     os.remove(filename)
 end
 
-function server.fileExists(filename)
-    local file = io.open(filename, "r")
-    if file ~= nil then return true else return false end
-end
-
 -- Copied from http://lua-users.org/wiki/SimpleRound
 function round(num, idp)
   local mult = 10^(idp or 0)
