@@ -38,7 +38,7 @@ boost::signal<void ()> signal_gamepaused;
 boost::signal<void ()> signal_gameresumed;
 boost::signal<int (int, const char *,const char *),proceed> signal_setmastermode;
 boost::signal<void (int,int)> signal_spectator;
-boost::signal<void (int,const char *,int)> signal_masterchange;
+boost::signal<void (int,int)> signal_masterchange;
 boost::signal<void (int,int)> signal_teamkill;
 boost::signal<void (int,int)> signal_frag;
 boost::signal<void (int,const char *,const char *)> signal_authreq;

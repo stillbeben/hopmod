@@ -1077,7 +1077,7 @@ namespace server
         }
         #endif
         
-        signal_masterchange(ci->clientnum, name, val);
+        signal_masterchange(ci->clientnum, val);
     }
 
     savedscore &findscore(clientinfo *ci, bool insert)

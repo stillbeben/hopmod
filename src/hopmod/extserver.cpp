@@ -605,7 +605,7 @@ void unsetmaster()
         
         cleanup_masterstate(master);
         
-        signal_masterchange(oldmaster, get_ci(oldmaster)->name, false);
+        signal_masterchange(oldmaster, false);
     }
 }
 
@@ -625,7 +625,7 @@ void setpriv(int cn, int priv)
     defformatstring(msg)("The server has %s your privilege to %s.", change, privname(priv));
     player->sendprivtext(msg);
     
-    signal_masterchange(currentmaster, player->name, true);
+    signal_masterchange(currentmaster, true);
 }
 
 bool server_setmaster(int cn)

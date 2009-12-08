@@ -117,12 +117,12 @@ server.event_handler("setmastermode", function(cn, oldmode, newmode)
     log(string.format("mastermode changed to %s",newmode))
 end)
 
-server.event_handler("masterchange", function(cn, priv, value)
+server.event_handler("masterchange", function(cn, value)
     
     local action_tag = "claimed"
     if tonumber(value) == 0 then action_tag = "relinquished" end
     
-    log(string.format("%s(%i) %s %s",server.player_name(cn),cn,action_tag,priv))
+    log(string.format("%s(%i) %s %s", server.player_name(cn), cn, action_tag, server.player_priv(cn)))
 end)
 
 server.event_handler("spectator", function(cn, value)
