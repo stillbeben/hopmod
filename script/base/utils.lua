@@ -1,5 +1,5 @@
 
-function server.deleteFile(filename)
+function server.delete_file(filename)
     local file = io.open(filename, "w+")
     file:close()
     os.remove(filename)

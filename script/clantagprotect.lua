@@ -85,6 +85,6 @@ end
 server.event_handler("connect", check_name)
 server.event_handler("rename", check_name)
 
-if server.fileExists("conf/clans.lua") then
+if server.file_exists("conf/clans.lua") then
     script("conf/clans.lua")
 end
