@@ -37,7 +37,7 @@ if ( eval { require 'bin/Filter.pm' } ) {
 	exit
 }
 
-$config = Config::Auto::parse("../conf/server.conf" , format => "equal");
+$config = Config::Auto::parse("../conf/ircbot.conf" , format => "equal");
 if ( $config->{irc_player_locator} eq "1" ) {
         if ( eval { require 'bin/player_locator.pm' } ) {
                 print "INFO	: Player Locator module is	LOADED\n";
