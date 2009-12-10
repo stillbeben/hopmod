@@ -67,11 +67,13 @@ function server.reload_maprotation()
     maps["insta ctf"]       = table_unique(parse(server["insta ctf_maps"]))
     maps["protect"]         = table_unique(parse(server["protect_maps"]))
     maps["insta protect"]   = table_unique(parse(server["insta protect_maps"]))
+    maps["coop-edit"]       = maps["ffa"]
     
     big_maps["ffa"]         = table_unique(parse(server["big_ffa_maps"]))
     big_maps["efficiency"]  = table_unique(parse(server["big_efficiency_maps"]))
     big_maps["tactics"]     = table_unique(parse(server["big_tactics_maps"]))
     big_maps["instagib"]    = table_unique(parse(server["big_instagib_maps"]))
+    big_maps["coop-edit"]   = big_maps["ffa"]
     
     small_maps["ffa"]             = table_unique(parse(server["small_ffa_maps"]))
     small_maps["teamplay"]        = table_unique(parse(server["small_teamplay_maps"]))
@@ -87,6 +89,7 @@ function server.reload_maprotation()
     small_maps["insta ctf"]       = table_unique(parse(server["small_insta ctf_maps"]))
     small_maps["protect"]         = table_unique(parse(server["small_protect_maps"]))
     small_maps["insta protect"]   = table_unique(parse(server["small_insta protect_maps"]))
+    small_maps["coop-edit"]       = small_maps["ffa"]
     
     -- Store a list of client-side map rotations so #nextmap can tell the player what map is next when server map rotation is disabled
     client_maps["ffa"]             = table_unique(parse(server["def_ffa_maps"]))
@@ -103,6 +106,7 @@ function server.reload_maprotation()
     client_maps["insta ctf"]       = table_unique(parse(server["def_insta ctf_maps"]))
     client_maps["protect"]         = table_unique(parse(server["def_protect_maps"]))
     client_maps["insta protect"]   = table_unique(parse(server["def_insta protect_maps"]))
+    client_maps["coop-edit"]       = client_maps["ffa"]
     
     using_best_map_size = (server.use_best_map_size == 1)
     smallgamesize = server.small_gamesize
