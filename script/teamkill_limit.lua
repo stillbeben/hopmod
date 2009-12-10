@@ -14,7 +14,7 @@ local function onTeamkill(actor, victim)
     local actor_teamkills = actor:teamkills()
     
 	if teamkill_broadcast_after > 0 and actor_teamkills > teamkill_broadcast_after then
-        server.msg(red(string.format("%s has fragged teammates %i times", white(actor:displayname()), white(actor_teamkills))))
+        server.msg(red(string.format("%s has fragged teammates %s times", white(actor:displayname()), white(actor_teamkills))))
 	end
     
 	if actor_teamkills > teamkill_limit then
