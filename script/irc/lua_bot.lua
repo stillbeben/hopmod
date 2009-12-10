@@ -183,7 +183,7 @@ irc:connectServer(irc.client)
 server.event_handler("connect", function (cn)
     local ip = server.player_ip(cn)
     local country = geoip.ip_to_country(ip)
-		irc:toChannel(string.format("\0039CONNECT\003    \00312%s(%i)\003 \0037%s\003\n",server.player_name(cn),cn,country)) 
+		irc:toChannel(string.format("\0039CONNECT\003    \00312%s(%i)\003 \0037%s\003",server.player_name(cn),cn,country)) 
 end)
 
 server.event_handler("disconnect", function (cn,reason)
@@ -252,7 +252,7 @@ server.event_handler("sayteam", function(cn, msg)
 end)
 
 server.event_handler("mapvote", function(cn, map, mode)
-    irc:toChannel(string.format("\00333VOTE\003    \00312%s(%i)\003 suggests \037%s\003 on map \037%s\003\n",server.player_name(cn),cn,mode,map))
+    irc:toChannel(string.format("\0033VOTE\003    \00312%s(%i)\003 suggests \0037%s\003 on map \0037%s\003",server.player_name(cn),cn,mode,map))
 end)
 
 server.event_handler("mapchange", function(map, mode)
@@ -263,20 +263,21 @@ server.event_handler("mapchange", function(map, mode)
     playerstats = tostring(pc) .. " players"
     if sc > 0 then playerstats = playerstats .. " " .. tostring(sc) .. " spectators" end
     
-    irc:toChannel(string.format("\0032NEWMAP\003    New game: \037%s\003 on \037%s\003, \037%s\003\n", mode, map, playerstats))
+    irc:toChannel(string.format("\0032NEWMAP\003    New game: \0037%s\003 on \0037%s\003, \0037%s\003", mode, map, playerstats))
 end)
 
 server.event_handler("setmastermode", function(cn, oldmode, newmode)
-    irc:toChannel(string.format("\0034MM\003    Mastermode changed to %s\n",newmode))
+    irc:toChannel(string.format("\0034MM\003    Mastermode changed to %s",newmode))
 end)
 
-server.event_handler("setmaster", function(cn, priv, value)
-    
+server.event_handler("masterchange", function(cn, value)
+
     local action_tag = "claimed"
     if tonumber(value) == 0 then action_tag = "relinquished" end
-    
-    irc:toChannel(string.format("\0034MASTER\003    \00312%s(%i)\003 %s %s\n",server.player_name(cn),cn,action_tag,priv))
+
+    irc:toChannel(string.format("\0034MASTER\003    \00312%s(%i)\003 %s \0037%s\003", server.player_name(cn), cn, action_tag, server.player_priv(cn)))
 end)
+
 
 server.event_handler("spectator", function(cn, value)
     
@@ -286,13 +287,13 @@ server.event_handler("spectator", function(cn, value)
     irc:toChannel(string.format("\0034SPEC\003    \00312%s(%i)\003 %s spectators",server.player_name(cn),cn,action_tag))
 end)
 
-server.event_handler("gamepaused", function() irc:toChannel("\0034PAUSE\003    game is paused\n")end)
-server.event_handler("gameresumed", function() irc:toChannel("\0034RESM\003    game is resumed\n") end)
+server.event_handler("gamepaused", function() irc:toChannel("\0034PAUSE\003    game is paused")end)
+server.event_handler("gameresumed", function() irc:toChannel("\0034RESM\003    game is resumed") end)
 
 server.event_handler("addbot", function(cn,skill,owner)
     local addedby = "server"
-    if cn ~= -1 then addedby = server.player_name(cn) .. string.format("PRIVMSG "..server.irc_channel.." : (%i)", cn) end
-    irc:toChannel(string.format("\00315ADDBOT\003    %s added a bot (skill %i)\n", addedby, skill))
+    if cn ~= -1 then addedby = "\00312" .. server.player_name(cn) .. string.format("(%i)\003", cn) end
+    irc:toChannel(string.format("\00315ADDBOT\003    %s added a bot (skill %i)", addedby, skill))
 end)
 
 server.event_handler("delbot", function(cn)
@@ -312,7 +313,7 @@ server.event_handler("mapcrcfail", function(cn)
     log_usednames(cn)
 end)
 
-server.event_handler("shutdown", function() irc:toChannel("\0034HALT\003    Server shutting down"); logfile:close() end)
+server.event_handler("shutdown", function() irc:toChannel("\0034HALT\003    Server shutting down"); end)
 
 server.event_handler("reloadhopmod", function() irc:toChannel("\0034RELOAD\003    Reloading hopmod...\n") end)
 
