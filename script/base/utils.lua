@@ -486,4 +486,3 @@ end
 function server.is_bot(cn)
     return cn > 127;
 end
-

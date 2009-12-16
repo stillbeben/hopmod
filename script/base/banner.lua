@@ -19,18 +19,12 @@ local function sendServerBanner(cn)
     end)
 end
 
+server.map_loaded(sendServerBanner)
+
 local function onConnect(cn)
-    
-    -- Workaround for: players who connect as spectators (can happen when server is locked) don't trigger active events
-    if server.player_status_code(cn) == server.SPECTATOR then
-        local sid = server.player_sessionid(cn)
-        server.sleep(10000, function()
-            if sid == server.player_sessionid(cn) then sendServerBanner(cn) end
-        end)
-    end
-    
+
     local country = geoip.ip_to_country(server.player_ip(cn))
- 	
+    
     if server.show_country_message == 1 and #country > 0 then
         
         local str_connect = string.format("%s connected from %s.", green(server.player_displayname(cn)), green(country))
@@ -43,8 +37,7 @@ local function onConnect(cn)
                 server.player_msg(cn, str_connect)
             end
         end
-    end
-    
+    end    
 end
 
 local function onDisconnect(cn)
@@ -53,5 +46,4 @@ end
 
 server.event_handler("connect",onConnect)
 server.event_handler("disconnect", onDisconnect)
-server.event_handler("active", sendServerBanner)
 server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
