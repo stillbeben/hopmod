@@ -30,7 +30,7 @@ lib enet :
     : : <include>src/enet/include ;
 
 lib z : : <name>z ;
-lib geoip : : <name>GeoIP <link>shared ;
+lib geoip : : <name>GeoIP <link>shared <search>/usr/local/lib <include>/usr/local/include ;
 lib rt : : <name>rt ;
 lib pthread : : <name>pthread <link>shared ;
 
