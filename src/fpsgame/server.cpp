@@ -265,7 +265,7 @@ namespace server
         uint authreq;
         string authname;
         string authdomain;
-        int ping, lastposupdate, lag, aireinit;
+        int ping, lastpingupdate, lastposupdate, lag, aireinit;
         string clientmap;
         int mapcrc;
         bool warned, gameclip;
@@ -335,6 +335,7 @@ namespace server
             position.setsizenodelete(0);
             messages.setsizenodelete(0);
             ping = 0;
+            lastpingupdate = 0;
             lastposupdate = 0;
             lag = 0;
             aireinit = 0;
@@ -2676,6 +2677,7 @@ namespace server
             }
 
             case SV_PING:
+                if(ci) ci->lastpingupdate = totalmillis; 
                 sendf(sender, 1, "i2", SV_PONG, getint(p));
                 break;
 

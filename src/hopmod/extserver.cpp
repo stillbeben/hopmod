@@ -324,6 +324,11 @@ int player_ping(int cn)
     return get_ci(cn)->ping;
 }
 
+int player_ping_update(int cn)
+{
+    return get_ci(cn)->lastpingupdate;
+}
+
 int player_lag(int cn)
 {
     return get_ci(cn)->lag;

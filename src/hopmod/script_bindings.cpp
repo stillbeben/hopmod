@@ -53,6 +53,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(clear_player_ids, "clear_player_ids", env);
     script::bind_freefunc(server::player_sessionid, "player_sessionid", env);
     script::bind_freefunc(server::player_ping, "player_ping", env);
+    script::bind_freefunc(server::player_ping_update, "player_ping_update", env);
     script::bind_freefunc(server::player_lag, "player_lag", env);
     script::bind_freefunc(server::player_ip, "player_ip", env);
     script::bind_freefunc(server::player_iplong, "player_iplong", env);

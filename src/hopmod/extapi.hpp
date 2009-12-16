@@ -60,6 +60,7 @@ namespace server
     const char * player_privilege(int);
     int player_privilege_code(int);
     int player_ping(int);
+    int player_ping_update(int);
     int player_lag(int);
     const char * player_ip(int);
     int player_iplong(int);
