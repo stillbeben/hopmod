@@ -1,68 +1,28 @@
---[[
 
-	A player command to raise privilege to master
+local master_domain = server.master_domain or ""
 
-]]
+local function init() end
+local function unload() end
 
-
-local events = {}
-
-local master_domains = table_unique(server.parse_list(server["master_domains"]))
-
-
-local function init()
-
-	for i,domain in ipairs(master_domains) do
-
-		events[domain] = auth.add_domain_handler(domain,function(cn,name)
-
-			if server.player_vars(cn).master and server.player_vars(cn).master == domain then
-
-				server.player_vars(cn).master = nil
-				server.setmaster(cn)
-				server.msg(server.player_displayname(cn) .. " claimed master as '" .. magenta(name) .. "'")
-			end
-
-		end)
-
-	end
-
+local function run(cn)
+    
+    local session_id = server.player_sessionid(cn)
+    
+    auth.send_request(cn, master_domain, function(cn, user_id, domain, status)
+        
+        if session_id ~= server.player_sessionid(cn) then return end
+        
+        if status ~= auth.request_status.SUCCESS then
+            server.player_msg(cn, red("Master command failed: unable to authenticate"))
+            return 
+        end
+        
+        server.setmaster(cn)
+        
+        server.msg(server.player_displayname(cn) .. " claimed master as '" .. magenta(user_id) .. "'")
+        server.log(string.format("%s playing as %s(%i) used auth to claim master.", user_id, server.player_name(cn), cn))
+    end)
+    
 end
 
-
-local function unload()
-
-	for i,domain in ipairs(master_domains) do
-
-		if events[domain] then
-
-			auth.cancel_domain_handler(domain,events[domain])
-			events[domain] = nil
-		end
-	end
-
-end
-
-
-local function run(cn,master_domain)
-
-	if server.player_priv_code(cn) > 0 then
-
-		server.unsetmaster(cn)
-
-	else
-
-		for i,domain in ipairs(master_domains) do
-
-			if master_domain == domain then
-
-				server.player_vars(cn).master = domain
-				auth.send_auth_request(cn,domain)
-				break
-			end
-		end
-	end
-
-end
-
-return {init = init, run = run, unload = unload}
+return {init = init,run = run,unload = unload}
