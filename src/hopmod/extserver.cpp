@@ -661,7 +661,7 @@ void set_invmaster(int cn)
 void unset_invadmin(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    if(ci->privilege != PRIV_ADMIN || cn == currentmaster) return;
+    if(ci->privilege < PRIV_MASTER || cn == currentmaster) return;
     
     ci->privilege = PRIV_NONE;
     sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_NONE);
