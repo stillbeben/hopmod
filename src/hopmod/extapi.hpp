@@ -96,8 +96,9 @@ namespace server
     bool player_isbot(int);
     void set_invadmin(int);
     void set_invmaster(int);
-    void unset_invadmin(int);
+    void unsetpriv(int);
     int player_mapcrc(int);
+    void set_player_priv(int, int);
     
     void team_msg(const char *,const char *);
     std::vector<std::string> get_teams();
