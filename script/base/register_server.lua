@@ -12,6 +12,10 @@ local function register_server(hostname, port, gameport, callback)
 
     local client = net.tcp_client()
     
+    if #server.serverip > 0 then
+        client:bind(server.serverip, 0)
+    end
+    
     client:async_connect(hostname, port, function(errmsg)
         
         if errmsg then

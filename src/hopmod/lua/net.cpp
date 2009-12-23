@@ -921,6 +921,36 @@ int client_async_connect(lua_State * L)
     return 0;
 }
 
+int tcp_client_bind(lua_State * L)
+{
+    tcp_socket * socket = reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, TCP_CLIENT_SOCKET_MT));
+    
+    if(!socket->is_open()) socket->open(ip::tcp::v4());
+    
+    const char * ip = luaL_checkstring(L, 2);
+    int port = luaL_checkinteger(L, 3);
+    
+    boost::system::error_code ec;
+    
+    ip::address_v4 host = ip::address_v4::from_string(ip, ec);
+    if(ec)
+    {
+        lua_pushboolean(L, 1);
+        lua_pushstring(L, ec.message().c_str());
+        return 2;
+    }
+    
+    socket->bind(ip::tcp::endpoint(ip::address_v4::from_string(ip), port), ec);
+    if(ec)
+    {
+        lua_pushboolean(L, 1);
+        lua_pushstring(L, ec.message().c_str());
+        return 2;
+    }
+    
+    return 0;
+}
+
 void create_client_socket_metatable(lua_State * L)
 {
     luaL_newmetatable(L, TCP_CLIENT_SOCKET_MT);
@@ -931,6 +961,7 @@ void create_client_socket_metatable(lua_State * L)
     static luaL_Reg funcs[] = {
         {"__gc", socket_gc},
         {"async_connect", client_async_connect},
+        {"bind", tcp_client_bind},
         {NULL, NULL}
     };
     luaL_register(L, NULL, funcs);
