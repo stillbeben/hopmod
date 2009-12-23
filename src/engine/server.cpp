@@ -950,8 +950,15 @@ bool setuplistenserver(bool dedicated)
     if(serverip[0])
     {
         if(enet_address_set_host(&address, serverip)<0) conoutf(CON_WARN, "WARNING: server ip not resolved");
-        else serveraddress.host = address.host;
+        else
+        {
+            serveraddress.host = address.host;
+            char hn[1024];
+            copystring(serverip, (enet_address_get_host_ip(&serveraddress, hn, sizeof(hn))==0 ? hn : "0.0.0.0"));
+        }
     }
+    else copystring(serverip,"0.0.0.0");
+    
     serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), 0, uprate);
     if(!serverhost) return servererror(dedicated, "could not create server host");
     loopi(maxclients) serverhost->peers[i].data = NULL;
