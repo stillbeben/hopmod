@@ -7,7 +7,7 @@
  */
 
 #ifdef BOOST_BUILD_PCH_ENABLED
-#include "fungu/script/pch.hpp"
+#include "pch.h"
 #endif
 
 #include <boost/scope_exit.hpp>

@@ -1,23 +1,14 @@
-#----------------------------------------------------------------------------
-# This file was automatically generated from the original CMakeLists.txt file
-# Add a variable to hold the headers for the library
-set (lib_headers
-    signals.hpp
-    signal.hpp
-    signals
-)
 
-# Add a library target to the build system
-boost_library_project(
-  signals
-  SRCDIRS  src 
-  TESTDIRS  test
-  HEADERS ${lib_headers}
-  #  DOCDIRS 
-  DESCRIPTION  "Managed signals & slots callback implementation."
-  MODULARIZED
-  AUTHORS  "Douglas Gregor <doug.gregor -at- gmail.com>"
-  #  MAINTAINERS 
-)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../)
+add_definitions(-DBOOST_SIGNALS_DYN_LINK=1)
 
+set(BOOST_SIGNALS_SOURCES
+    src/connection.cpp
+    src/named_slot_map.cpp
+    src/signal_base.cpp
+    src/slot.cpp
+    src/trackable.cpp)
 
+add_library(boost_signals SHARED ${BOOST_SIGNALS_SOURCES})
+
+install(TARGETS boost_signals LIBRARY DESTINATION ${INSTALL_LIBRARY_DESTINATION})

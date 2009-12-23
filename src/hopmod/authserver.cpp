@@ -1,7 +1,7 @@
 // Original source code copied from engine/master.cpp found in Sauerbraten's source tree.
 
 #include "cube.h"
-#include "hopmod.hpp"
+#include "hopmod/hopmod.hpp"
 #include "hopmod/string_var.hpp"
 
 #include <enet/time.h>
@@ -481,7 +481,7 @@ void checkclients()
 
 static void shutdown_from_signal(int i)
 {
-    signal_shutdown();
+    signal_shutdown(SHUTDOWN_NORMAL);
     exit(0);
 }
 

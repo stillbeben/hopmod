@@ -12,6 +12,7 @@
 using namespace fungu;
 
 #include <signal.h>
+#include <iostream>
 
 namespace server{
 void enable_setmaster_autoapprove(bool);

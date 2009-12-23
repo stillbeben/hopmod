@@ -4,8 +4,8 @@
 
 #include "game.h"
 
-#include "extapi.hpp"
-#include "hopmod.hpp"
+#include "hopmod/extapi.hpp"
+#include "hopmod/hopmod.hpp"
 #include "hopmod/bans.hpp"
 #include "hopmod/utils.hpp"
 
