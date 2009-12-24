@@ -136,9 +136,12 @@ function server.printserverstatus(filename, filemode)
     if #host == 0 then host="<ANY>" end
     local mm = server.mastermode
     local desc = string.gsub(server.servername, " ", "_")
-    if #desc == 0 then desc = "<EMPTY>" end
+    if #desc == 0 then desc = "<NONE>" end
     
-    status_rows = status_rows .. string.format("%i/%i %s %s %i %s %i %s", server.playercount, server.maxplayers, server.map, server.gamemode, mm, host, server.serverport, desc)
+    local mapname = server.map
+    if #mapname == 0 then mapname = "<NONE>" end
+    
+    status_rows = status_rows .. string.format("%i/%i %s %s %i %s %i %s", server.playercount, server.maxplayers, mapname, server.gamemode, mm, host, server.serverport, desc)
     
     out:write(tabulate(status_rows))
     out:write("\n")
