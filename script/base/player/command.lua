@@ -145,6 +145,9 @@ end
 
 local function set_priv(command, priv)
 
+    local already_set = command.require_admin or command.require_master
+    if already_set then return end    
+
     if priv == "admin" then 
         
         command.require_admin = true
