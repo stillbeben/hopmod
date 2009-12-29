@@ -74,10 +74,12 @@ SET(SAUER_SERVER_SOURCES
     hopmod/restarter.cpp
     hopmod/utils.cpp
     hopmod/netmask.cpp
-    hopmod/bans.cpp)
-    
+    hopmod/bans.cpp
+    hopmod/httpserver/httpserver.cpp
+    hopmod/httpserver/serverexec.cpp)
+
 add_executable(sauer_server ${SAUER_SERVER_SOURCES})
-target_link_libraries(sauer_server sauertools serverscripting scriptpipe enet microhttpd -lz -lrt)
+target_link_libraries(sauer_server sauertools serverscripting scriptpipe enet microhttpd fungu_http -lz -lrt)
 
 add_precompiled_header(sauer_server ${CMAKE_CURRENT_SOURCE_DIR}/hopmod/pch.h)
 
@@ -87,7 +89,10 @@ target_link_libraries(keygen sauertools -lz)
 add_executable(luapp hopmod/luapp.cpp)
 target_link_libraries(luapp lua boost_system lua_modules)
 
-install(TARGETS sauer_server sauertools lua_modules serverscripting scriptpipe keygen luapp
+add_executable(testapp test.cpp)
+target_link_libraries(testapp fungu_http)
+
+install(TARGETS sauer_server sauertools lua_modules serverscripting scriptpipe keygen luapp testapp
     RUNTIME DESTINATION ${INSTALL_RUNTIME_DESTINATION} 
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DESTINATION} 
     ARCHIVE DESTINATION ${INSTALL_ARCHIVE_DESTINATION})

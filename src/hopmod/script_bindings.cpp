@@ -12,6 +12,8 @@
 using namespace fungu;
 #include <unistd.h>
 
+void start_http_server(const char * ip, const char * port);
+
 static std::vector<script::any> player_kick_defargs;
 static std::vector<script::any> changemap_defargs;
 static std::vector<script::any> recorddemo_defargs;
@@ -277,4 +279,6 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_property<bool>(
         server::get_setmaster_autoapprove, server::enable_setmaster_autoapprove, "allow_setmaster", env);
+    
+    script::bind_freefunc(start_http_server, "start_http_server", env);
 }
