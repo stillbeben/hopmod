@@ -76,7 +76,7 @@ SET(SAUER_SERVER_SOURCES
     hopmod/httpserver/serverexec.cpp)
 
 add_executable(sauer_server ${SAUER_SERVER_SOURCES})
-target_link_libraries(sauer_server sauertools serverscripting scriptpipe enet microhttpd fungu_http -lz -lrt)
+target_link_libraries(sauer_server sauertools serverscripting scriptpipe enet fungu_http -lz -lrt)
 
 add_precompiled_header(sauer_server ${CMAKE_CURRENT_SOURCE_DIR}/hopmod/pch.h)
 
