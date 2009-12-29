@@ -50,6 +50,12 @@ const_string::const_string(const const_string & src)
     m_lastc = addr(m_copy,0) + (src.m_lastc - addr(src.m_copy,0));
 }
 
+const_string::const_string(const std::pair<const char *, const char *> & src)
+ :m_firstc(src.first), m_lastc(src.second)
+{
+    
+}
+
 const_string const_string::literal(const char * literalString)
 {
     return const_string(literalString, literalString + std::char_traits<char>::length(literalString) - 1);

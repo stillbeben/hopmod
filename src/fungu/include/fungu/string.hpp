@@ -27,6 +27,7 @@ public:
     const_string(const std::string & src);
     const_string(const char * raw_string);
     const_string(const const_string & src);
+    const_string(const std::pair<const char *, const char *> &);
 
     static const_string literal(const char * literalString);
     const_iterator begin()const;
