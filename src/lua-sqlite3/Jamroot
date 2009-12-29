@@ -1,4 +1,0 @@
-
-lib sqlite3 : : <name>sqlite3 <search>/usr/local/lib <include>/usr/local/include ;
-lib luasqlite3 : libluasqlite3.c sqlite3 /lua//lua ;
-alias script-package : libluasqlite3-loader.lua sqlite3.lua ;
