@@ -69,8 +69,6 @@ void init_hopmod()
     init_script_pipe();
     open_script_pipe("serverexec",511,get_script_env());
     
-    init_script_socket();
-    
     lua_State * L = env.get_lua_state();
     
     lua::module::open_net(L);
@@ -120,7 +118,6 @@ void update_hopmod()
     if(reload) reload_hopmod();
     
     run_script_pipe_service(totalmillis);
-    run_script_socket_service();
     
     update_scheduler(totalmillis);
     cleanup_dead_slots();

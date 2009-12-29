@@ -2,7 +2,6 @@ add_subdirectory(enet)
 add_subdirectory(lua)
 add_subdirectory(boost)
 add_subdirectory(fungu)
-add_subdirectory(libmicrohttpd)
 add_subdirectory(lua-sqlite3)
 add_subdirectory(authserver EXCLUDE_FROM_ALL)
 
@@ -26,8 +25,7 @@ include_directories(
     ${ENET_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
     ${BOOST_INCLUDE_DIR}
-    ${FUNGU_INCLUDE_DIR}
-    ${MICROHTTPD_INCLUDE_DIR})
+    ${FUNGU_INCLUDE_DIR})
 
 add_definitions(-DSTANDALONE -DFUNGU_WITH_LUA -DHOPMOD_GAMESERVER_EVENTS)
 
@@ -66,7 +64,6 @@ SET(SAUER_SERVER_SOURCES
     hopmod/scripting.cpp
     hopmod/script_bindings.cpp
     hopmod/script_pipe.cpp
-    hopmod/script_socket.cpp
     hopmod/parse_player_command.cpp
     hopmod/process_player_command.cpp
     hopmod/scheduler.cpp
