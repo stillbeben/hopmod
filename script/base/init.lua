@@ -52,15 +52,8 @@ server.event_handler("started", function()
         server.execCubeScriptFile(server.banlist_file)
     end
     
-    if server.use_script_socket_server == 1 then
-    
-        if not server["script_socket_supported?"]() then
-            server.log_status("Cannot run script_socket server as it's not supported (couldn't detect libmicrohttpd as being installed at build time).")
-        end
-        
-        server.script_socket_server(server.script_socket_port, server.script_socket_password)
-    end
-    
+    server.start_http_server("0.0.0.0", server.script_socket_port)
+
     if server.change_default_maptime == 1 then
         load_once("change_default_maptime")
     end
