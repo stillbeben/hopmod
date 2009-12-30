@@ -5,13 +5,21 @@
 ]]
 
 
-return function(cn,text)
+return function(cn, ...)
 
-	if not text then
+	local text = ""
 
-		return false, "#msg \"<text>\""
+	for _, item in ipairs(arg) do
+		item = tostring(item)
+		if #item > 0 then
+			if #text > 0 then
+				text = text .. " "
+			end
+
+			text = text .. item
+		end
 	end
 
-	server.msg("(" .. green("Info") .. ")  " .. text)
+	server.msg("(" .. green("Admin Info") .. ")  " .. text)
 
 end
