@@ -4,6 +4,7 @@ add_subdirectory(boost)
 add_subdirectory(fungu)
 add_subdirectory(lua-sqlite3)
 add_subdirectory(authserver EXCLUDE_FROM_ALL)
+add_subdirectory(luasql EXCLUDE_FROM_ALL)
 
 include(PCHSupport)
 include(CheckLibraryExists)

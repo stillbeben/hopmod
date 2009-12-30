@@ -1,15 +1,3 @@
+== How to Build Hopmod ==
 
-== Building Hopmod ==
-
-For the first and only time:
-
-    ./buildtools.sh
-    ./autogen.sh
-    
-To compile and install the server:
-
-    ./configure
-    make
-    
-    ./bin/server
-    
+See http://hopmod.e-topic.info/index.php5?title=Installation
