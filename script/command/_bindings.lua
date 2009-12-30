@@ -62,3 +62,8 @@ local eslmatch_commands = loadfile(player_command_filename("eslmatch"))()
 player_command_function("insta", eslmatch_commands.insta_cmd)
 player_command_function("effic", eslmatch_commands.effic_cmd)
 
+local mapchange_commands = loadfile(player_command_filename("mapchange"))()
+player_command_function("changemap", mapchange_commands.changemap_cmd, "master")
+player_command_function("forcemap", mapchange_commands.forcemap_cmd,   "admin")
+player_command_alias("cmap", "changemap")
+player_command_alias("fmap", "forcemap")
