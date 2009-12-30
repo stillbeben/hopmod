@@ -14,9 +14,11 @@ load_once("base/maprotation") -- the reason this can be loaded now instead as a 
 load_once("base/banner")
 
 server.module("base/mute")
+server.module("base/force_spec")
 server.module("base/auth/init")
 server.module("base/mapvote")
 server.module("base/register_server")
+
 
 local function update_gamemodeinfo()
     gamemodeinfo = server.gengamemodeinfo()
