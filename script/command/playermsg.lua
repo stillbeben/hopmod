@@ -5,24 +5,29 @@
 ]]
 
 
-return function(cn,tcn,text)
+return function(cn, tcn, ...)
 
 	if not tcn then
-
-		return false, "#playermsg (<cn>|\"<name>\") \"<text>\""
+		return false, "#playermsg (<cn>|\"<name>\") <text>"
 	end
 
-	if not text then
+	local text = ""
 
-		return false, "text is missing"
+	for _, item in ipairs(arg) do
+		item = tostring(item)
+		if #item > 0 then
+			if #text > 0 then
+				text = text .. " "
+			end
+
+			text = text .. item
+		end
 	end
 
 	if not server.valid_cn(tcn) then
-
 		tcn = server.name_to_cn_list_matches(cn,tcn)
 
 		if not tcn then
-
 			return
 		end
 	end
