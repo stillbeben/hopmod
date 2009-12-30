@@ -7,7 +7,6 @@
 ]]
 
 
---local invmaster_domains =  list_to_set(server.parse_list(server["invmaster_domains"])) or ""
 local invmaster_domains = table_unique(server.parse_list(server["invmaster_domains"])) or ""
 
 
