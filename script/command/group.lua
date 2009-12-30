@@ -7,7 +7,7 @@
 
 return function(cn,arg1,arg2,arg3)
 
-	if not gamemodeinfo.teams and server.reassignteams == 1 then
+	if not gamemodeinfo.teams then
 
 		return
 	end
