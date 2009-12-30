@@ -52,6 +52,7 @@ player_command_script("eval",       nil, "admin")
 player_command_script("nosd",       nil, "admin")
 player_command_script("sd",         nil, "admin")
 player_command_script("unfspec",    nil, "admin")
+player_command_script("slay",       nil, "admin")
 
 local eslmatch_commands = loadfile(player_command_filename("eslmatch"))()
 player_command_function("insta", eslmatch_commands.insta_cmd)
