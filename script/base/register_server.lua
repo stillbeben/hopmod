@@ -3,6 +3,8 @@ require "net"
 
 local update = 3600000
 
+local interval_active = true
+
 local function complete(client, callback, errmsg)
     client:close()
     callback(errmsg)    
@@ -75,7 +77,17 @@ local function update_now()
 end
 
 server.interval(update, function()
+
+	if interval_active == false then return -1 end
+
     update_now()
+
 end)
 
 update_now()
+
+local function unload()
+	interval_active = false
+end
+
+return {unload = unload}
