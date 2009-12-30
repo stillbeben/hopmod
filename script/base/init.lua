@@ -11,9 +11,9 @@ load_once("base/player/command")
 load_once("base/player/map_loaded")
 load_once("base/logging")
 load_once("base/maprotation") -- the reason this can be loaded now instead as a scheduled module is because of reload_maprotation is called from started event
-load_once("base/mute")
 load_once("base/banner")
 
+server.module("base/mute")
 server.module("base/auth/init")
 server.module("base/mapvote")
 server.module("base/register_server")
