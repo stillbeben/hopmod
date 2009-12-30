@@ -8,6 +8,10 @@
 
 return function(cn, target_cn)
 
+	if server.stats_use_sqlite == 0 then
+		return false, "command requires sqlite"
+	end
+
 	if not target_cn then
 
 		return false, "#names <cn>|\"<name>\""
