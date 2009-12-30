@@ -152,7 +152,7 @@ function server.group_players(arg1,arg2,arg3)
 end
 
 
-local alias_of_mode {
+local alias_of_mode = {
     "instagib team"     = "instagib team",
     "instateam"         = "instagib team",
     "iteam"             = "instagib team",
