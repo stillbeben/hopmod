@@ -12,6 +12,7 @@ player_command_script("votekick")
 player_command_script("playermsg")
 player_command_alias("pm", "playermsg")
 player_command_script("invadmin")
+player_command_script("whoisonline")
 
 player_command_script("givemaster", nil, "master")
 player_command_script("mute",       nil, "master")
