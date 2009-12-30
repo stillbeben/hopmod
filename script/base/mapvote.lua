@@ -53,4 +53,15 @@ local function mapvote(cn, map, mode)
     
 end
 
-server.event_handler("mapvote", mapvote)
+
+local event_mapvote = server.event_handler_object("mapvote", mapvote)
+
+
+local function unload()
+
+	event_mapvote = nil
+
+end
+
+
+return {unload = unload}
