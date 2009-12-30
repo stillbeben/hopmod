@@ -20,6 +20,7 @@ player_command_alias("specchat", "specmsg")
 player_command_alias("sm",       "specmsg")
 player_command_alias("schat",    "specmsg")
 player_command_alias("sc",       "specmsg")
+player_command_script("invmaster")
 
 player_command_script("givemaster",  nil, "master")
 player_command_script("mute",        nil, "master")
