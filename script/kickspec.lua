@@ -1,137 +1,120 @@
 --[[--------------------------------------------------------------------------
-
-    A script to kick spectators
-    who reach the spectate time limit and the server is full
-    
+--
+--    A script to kick spectators
+--    who reach the spectate time limit and the server is full
+--
 --]]--------------------------------------------------------------------------
 
---
--- helper
---
--- clear memory
-local function kickspec_clearmem(kickspec_clearmem_cn)
-    for i,cn in ipairs(server.spectators()) do
-        if cn == kickspec_clearmem_cn then
-            kickspec_spectators[kickspec_clearmem_cn] = nil
-            break
-        end
-    end
-end
 
--- kick and clear mem-place
-local function kickspec_kick(kickspec_kick_cn)
-    server.kick(kickspec_kick_cn,"1","server","spec-time too high")
-    kickspec_clearmem(kickspec_kick_cn)
-end
+local diff = server.kickspec_players_diff
+local max_spec_time = server.kickspec_max_time
+local max_spec_time_when_server_empty = server.kickspec_max_spec_time_when_server_empty
 
--- spec time check
-local function kickspec_checkSpecTimes()
-    for i,cn in ipairs(server.spectators()) do
-        if kickspec_spectators[cn] > server.kickspec_maxtime then
-            kickspec_kick(cn)
-        end
-    end
-end
+local interval_check_time = server.kickspec_interval_check_time
 
---
--- events
---
--- notice new spectators, remove leaving persons
-local function kickspec_spectator_event(kickspec_spec_cn,kickspec_spec_joined)
-    if kickspec_spec_joined == 1 then
-        kickspec_spectators[kickspec_spec_cn] = 0
-    elseif kickspec_spec_joined == 0 then
-        kickspec_clearmem(kickspec_spec_cn)
-    end
-end
+local event = {}
+
+local is_unload = false
+
 
 -- maptime - timeplayed = return [in seconds]
-local function kickspec_spectime(kickspec_spectime_maptime,kickspec_spectime_cn)
-    return (kickspec_spectime_maptime - (server.player_timeplayed(kickspec_spectime_cn) * 1000))
+local function spectime(maptime, cn)
+
+	return (maptime - (server.player_timeplayed(cn) * 1000))
+
 end
 
--- sum the spectimes on "intermission"
-local function kickspec_finishedgame_event()
-    lgamelimit = tonumber(server.gamelimit)
-    for i,cn in ipairs(server.spectators()) do
-        kickspec_spectators[cn] = kickspec_spectators[cn] + kickspec_spectime(lgamelimit,cn)
-    end
+
+-- kick and clear mem-place
+local function kick(cn)
+
+	server.kick(cn, "0", "server", "spec-time too high")
+	server.player_pvars(cn).spec_time = nil
+
 end
 
-local function kickspec_connect(kickspec_cn)
-    if tonumber(server.playercount) < tonumber(server.maxplayers) then
-	kickspec_check_enabled = 0
-    else
-	kickspec_check_enabled = 1
-    end
+
+-- spec time check
+local function check_spec_times(is_empty)
+
+	local max_stime = max_spec_time
+
+	if is_empty then
+		max_stime = max_spec_time_when_server_empty
+	end
+
+	for p in server.splayers() do
+		if (p:pvars().spec_time or 0) > max_stime then
+			kick(p.cn)
+		end
+	end
+
 end
 
-local function kickspec_disconnect(kickspec_cn)
-    kickspec_clearmem(kickspec_cn)
-    if tonumber(server.playercount) < tonumber(server.maxplayers) then
-	kickspec_check_enabled = 0
-    else
-	kickspec_check_enabled = 1
-    end
-end
 
---
--- enable/ disable events
---
-function kickspec_enabler()
-    kickspec_spectators = {}
-    for i,cn in ipairs(server.spectators()) do
-        kickspec_spectators[cn] = 0
-    end
+event.disconnect = server.event_handler_object("disconnect", function(cn, reason)
 
-    local kickspec_connect = server.event_handler("disconnect",kickspec_connect)
-    local kickspec_disconnect = server.event_handler("disconnect",kickspec_disconnect)
-    local kickspec_spectator = server.event_handler("spectator",kickspec_spectator_event)
-    local kickspec_finishedgame = server.event_handler("finishedgame",kickspec_finishedgame_event)
+	server.player_pvars(cn).spec_time = nil
 
-    kickspec_events = {}
-    table.insert(kickspec_events,kickspec_connect)
-    table.insert(kickspec_events,kickspec_disconnect)
-    table.insert(kickspec_events,kickspec_spectator)
-    table.insert(kickspec_events,kickspec_finishedgame)
-
-    kickspec_check_enabled = 1
-end
-
-function kickspec_disabler()
-    kickspec_check_enabled = 0
-
-    for i,handlerId in ipairs(kickspec_events) do
-        server.cancel_handler(handlerId)
-    end
-    kickspec_events = {}
-
-    kickspec_spectators = {}
-end
-
---
--- always running events
---
--- disable kickspec, when mastermode is not open
-server.event_handler("setmastermode",function(cn, old, new)
-    if not ( new == "open" ) then
-        kickspec_disabler()
-    else
-        kickspec_enabler()
-    end
 end)
 
---
--- on start
---
-server.event_handler("started",function()
-    kickspec_enabler()
+-- notice new spectators, remove leaving persons
+event.spectator = server.event_handler_object("spectator", function(cn, joined)
 
-    kickspec_check_enabled = 1
-    -- check spec times every 5 minutes
-    server.interval(300000,function()
-        if kickspec_check_enabled == 1 then
-            kickspec_checkSpecTimes()
-        end
-    end)
-end) 
+	if joined == 0 then
+		server.player_pvars(cn).spec_time = nil
+	end
+
+end)
+
+
+-- set the spectimes on "intermission"
+event.finishedgame = server.event_handler_object("finishedgame", function()
+
+	local gamelimit = server.gamelimit
+
+	for p in server.splayers() do
+		p:pvars().spec_time = (p:pvars().spec_time or 0) + spectime(gamelimit, p.cn)
+	end
+
+end)
+
+
+-- check spec times every X minutes
+server.interval(interval_check_time, function()
+
+	if is_unload == true then
+		return -1
+	end
+
+	local pdiff = diff
+	if (server.maxplayers - pdiff) >= server.maxplayers then
+		pdiff = server.maxplayers - 1
+	end
+
+	if server.mastermode == 0 and server.playercount > (server.maxplayers - pdiff) then
+		check_spec_times()
+	end
+
+	if (server.playercount - server.speccount) == 0 then
+		check_spec_times("is_empty")
+	end
+
+end)
+
+
+-- unloader
+local function unload()
+
+	is_unload = true
+
+	event = {}
+
+	for p in server.aplayers() do
+		p:pvars().spec_time = nil
+	end
+
+end
+
+
+return {unload = unload}
