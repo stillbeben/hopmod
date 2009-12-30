@@ -1,40 +1,69 @@
+local event = {}
 
-local restore_maxplayers = server.maxplayers
+local max_players = server.maxplayers
 
-local function resizeMastermode(mmode)
+local total_max_players = server.resize_server_mastermode_size
 
-    if not mmode then
-        mmode = tonumber(server.mastermode)
-        if mmode == 0 then
-            mmode = "open"
-        elseif mmode == 1 then
-            mmode = "veto"
-        elseif mmode == 2 then
-            mmode = "locked"
-        elseif mmode == 3 then
-            mmode = "private"
-        else
-            return
-        end
-    end
-    
-    if mmode == server.resize_mastermode then
-    
-        restore_maxplayers = server.maxplayers
-        server.maxplayers = server.resize_totalmaxplayers
-    else
-        server.maxplayers = restore_maxplayers
-    end
+local resize_mastermode = server.resize_server_mastermode_using_mastermode
+
+
+local function resize_mastermodechange(mmode)
+
+	if mmode == resize_mastermode then
+		server.maxplayers = total_max_players
+	else
+		local pcount = server.playercount
+
+		if pcount > max_players then
+			server.maxplayers = pcount
+		else
+			server.maxplayers = max_players
+		end
+	end
+
 end
 
-server.event_handler("setmastermode",function(cn, old, new)
-    resizeMastermode(new)
+
+event.setmastermode = server.event_handler_object("setmastermode", function(cn, old, new)
+
+	server.sleep(500, function()
+		resize_mastermodechange(server.mastermode)
+	end)
+
 end)
 
-server.event_handler("disconnect",function(cn)
-    if tonumber(server.playercount) == 0 then
-        resizeMastermode()
-    end
+event.disconnect = server.event_handler_object("disconnect", function(cn)
+
+	server.sleep(500, function()
+		resize_mastermodechange(server.mastermode)
+	end)
+
 end)
 
-resizeMastermode()
+event.mapchange = server.event_handler_object("mapchange", function(map, mode)
+
+	server.sleep(500, function()
+		resize_mastermodechange(server.mastermode)
+	end)
+
+end)
+
+event.started = server.event_handler_object("started", function()
+
+	server.sleep(500, function()
+		resize_mastermodechange(server.mastermode)
+	end)
+
+end)
+
+
+local function unload()
+
+	event = {}
+
+	server.maxplayers = max_players
+
+end
+
+
+return {unload = unload}
