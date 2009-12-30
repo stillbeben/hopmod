@@ -13,10 +13,16 @@ function server.load_sqlite3_database(filename)
     
     local select_users_sql = "SELECT users.name as name, users.pubkey as pubkey, domains.name as domain FROM users INNER JOIN domains ON users.domain_id = domains.id"
 
-    for row in db:rows(select_users_sql) do
-        
-        server.adduser(row.name, row.domain, row.pubkey)
-    end
+	if (server.authnames_case_insensitive or 0) == 1 then
+		for row in db:rows(select_users_sql) do
+			server.adduser(row.name, row.domain, row.pubkey)
+			server.adduser(string.lower(row.name), row.domain, "")
+		end
+	else
+		for row in db:rows(select_users_sql) do
+			server.adduser(row.name, row.domain, row.pubkey)
+		end
+	end
     
     db:close()
 end
