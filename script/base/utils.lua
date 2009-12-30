@@ -125,53 +125,52 @@ end
 
 function server.printserverstatus(filename, filemode)
 
-    if not filemode then
-        filemode = "a+"
-    end
-    
-    local out = io.open(filename, filemode)
-    
-    local status_rows = "PLAYERS MAP MODE MASTER HOST PORT DESCRIPTION\n"
-    local host = server.serverip
-    if #host == 0 then host="<ANY>" end
-    local mm = server.mastermode
-    local desc = string.gsub(server.servername, " ", "_")
-    if #desc == 0 then desc = "<NONE>" end
-    
-    local mapname = server.map
-    if #mapname == 0 then mapname = "<NONE>" end
-    
-    status_rows = status_rows .. string.format("%i/%i %s %s %i %s %i %s", server.playercount, server.maxplayers, mapname, server.gamemode, mm, host, server.serverport, desc)
-    
-    out:write(tabulate(status_rows))
-    out:write("\n")
-    
+	if not filemode then
+		filemode = "a+"
+	end
 
-    if server.playercount > 0 then
-    
-        local player_rows = "CN LAG PING IP CO NAME TIME STATE PRIV\n"
-        
-        for p in server.gplayers("all") do
-            
-            local country = geoip.ip_to_country_code(p:ip())
-            if #country == 0 then country = "?" end
-            
-            local priv = p:priv()
-            if server.master == cn then priv = "*" .. priv end
-            
-            local player_row = string.format("%i %i %i %s %s %s %s %s %s",
-               p.cn, p:lag(), p:ping(), p:ip(), country, p:name(), format_duration(p:connection_time()), p:status(), priv)
-            
-            player_rows = player_rows .. player_row .. "\n"
-            
-        end
-        
-        out:write("\n")
-        out:write(tabulate(player_rows))
-    end
-    
-    out:flush()
-    out:close()
+	local out = io.open(filename, filemode)
+
+	local status_rows = "PLAYERS MAP MODE MASTER HOST PORT DESCRIPTION\n"
+	local host = server.serverip
+	if #host == 0 then host="<ANY>" end
+	local mm = server.mastermode
+	local desc = string.gsub(server.servername, " ", "_")
+	if #desc == 0 then desc = "<NONE>" end
+
+	local mapname = server.map
+	if #mapname == 0 then mapname = "<NONE>" end
+
+	status_rows = status_rows .. string.format("%i/%i %s %s %i %s %i %s", server.playercount, server.maxplayers, mapname, server.gamemode, mm, host, server.serverport, desc)
+
+	out:write(tabulate(status_rows))
+	out:write("\n")
+
+	if server.playercount > 0 then
+
+		local player_rows = "CN LAG PING IP CO NAME TIME STATE PRIV\n"
+
+		for p in server.aplayers() do
+
+			local country = geoip.ip_to_country_code(p:ip())
+			if #country == 0 then country = "?" end
+
+			local priv = p:priv()
+			if server.master == cn then priv = "*" .. priv end
+
+			local player_row = string.format("%i %i %i %s %s %s %s %s %s",
+				p.cn, p:lag(), p:ping(), p:ip(), country, p:name(), format_duration(p:connection_time()), p:status(), priv)
+
+			player_rows = player_rows .. player_row .. "\n"
+
+		end
+
+		out:write("\n")
+		out:write(tabulate(player_rows))
+	end
+
+	out:flush()
+	out:close()
 end
 
 function server.valid_cn(cn)
@@ -487,5 +486,47 @@ function print_list(...)
 end
 
 function server.is_bot(cn)
-    return cn > 127;
+    return cn > 127
+end
+
+function server.parse_mode(mode)
+
+	local gmode = nil
+
+	if mode then
+		if mode == "instagib team" or mode == "instateam" or mode == "iteam" then
+			gmode = "instagib team"
+		elseif mode == "instagib" or mode == "insta" then
+			gmode = "instagib"
+		elseif mode == "insta ctf" or mode == "instactf" or mode == "ictf" then
+			gmode = "insta ctf"
+		elseif mode == "ctf" then
+			gmode = "ctf"
+		elseif mode == "insta protect" or mode == "instaprotect" or mode == "iprotect" then
+			gmode = "insta protect"
+		elseif mode == "protect" then
+			gmode = "protect"
+		elseif mode == "teamplay" then
+			gmode = "teamplay"
+		elseif mode == "ffa" then
+			gmode = "ffa"
+		elseif mode == "efficiency team" or mode == "efficteam" or mode == "eteam" then
+			gmode = "efficiency team"
+		elseif mode == "efficiency" or mode == "effic" then
+			gmode = "efficiency"
+		elseif mode == "tactics team" or mode == "tacteam" or mode == "tteam" then
+			gmode = "tactics team"
+		elseif mode == "tactics" or mode == "tac" then
+			gmode = "tactics"
+		elseif mode == "regen capture" or mode == "regencapture" or mode == "regen" then
+			gmode = "regen capture"
+		elseif mode == "capture" or mode == "cap" then
+			gmode = "capture"
+		elseif mode == "coop edit" or mode == "coopedit" or mode == "coop" then
+			gmode = "coop edit"
+		end
+	end
+
+	return gmode
+
 end
