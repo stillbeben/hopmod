@@ -1,11 +1,16 @@
-local mute_time = 1000*60*60*4
+local mute_time = server.mute_default_time
 local key_function = server.player_iplong
 local muted = {}
 local mute_spectators = false
 
-function server.mute(cn)
+function server.mute(cn,time)
 
     local key = key_function(cn)
+
+	local mtime = mute_time
+	if time then
+		mtime = time * 60 * 1000
+	end
     
     muted[key] = true
     
@@ -15,7 +20,7 @@ function server.mute(cn)
         end
     end
     
-    server.sleep(mute_time, function()
+    server.sleep(time, function()
         muted[key] = nil
     end)
 end
@@ -27,12 +32,14 @@ function server.unmute(cn)
     muted[key] = nil
     
     for i,cn in ipairs(server.players()) do
-        server.player_msg(cn, "You have been unmuted.")
+		if key_function(cn) == key then
+			server.player_msg(cn, "You have been unmuted.")
+		end
     end
 end
 
 function server.is_muted(cn)
-    return muted[key_function(cn)]
+	return muted[key_function(cn)]
 end
 
 function server.mute_spectators()
@@ -45,7 +52,7 @@ end
 
 local function block_text(cn,text)
 
-    local is_muted = muted[key_function(cn)] or (mute_spectators and server.player_status_code(cn) == server.SPECTATOR and server.player_priv_code(cn) ~= server.PRIV_ADMIN)
+    local is_muted = muted[key_function(cn)] or (mute_spectators and server.player_status_code(cn) == server.SPECTATOR and server.player_priv_code(cn) < server.PRIV_MASTER)
     
     if is_muted then
         server.player_msg(cn, red("Your chat messages are being blocked."))
@@ -61,8 +68,8 @@ local function unload()
     server.cancel_handler(text_event)
     server.cancel_handler(sayteam_event)
     
-    server.mute = nil
-    server.unmute = nil
+--    server.mute = nil
+--    server.unmute = nil
 end
 
 return {unload = unload}
