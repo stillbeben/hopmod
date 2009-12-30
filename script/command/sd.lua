@@ -1,7 +1,10 @@
 -- #sd
 return function(cn)
 
-	suddendeath.enable()
-	server.msg(orange("--[ Sudden Death Mode Enabled. There will be no ties"))
+	if not server.cmd_sd then
+		return false, "suddendeath module is not loaded"
+	end
+
+	server.cmd_sd()
 
 end
