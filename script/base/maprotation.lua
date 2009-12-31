@@ -33,6 +33,11 @@ local random_map_on_empty
 local random_mode_on_empty
 local using_server_maprotation
 
+local setnextmap_cmd_active = false
+local setnextmap_cmd_map
+local setnextmap_cmd_mode
+local deny_unknown_map
+
 local gamemodes = {
     [ 1] = "ffa",
     [ 2] = "coop edit",
@@ -124,6 +129,8 @@ function server.reload_maprotation()
     random_mode_on_empty = (server.random_mode_on_empty == 1)
     
     using_server_maprotation = (server.use_server_maprotation == 1)
+    
+    deny_unknown_map = (server.mapvote_disallow_unknown_map == 1)
 end
 
 local function get_maplist(mode)
@@ -209,12 +216,17 @@ server.random_map = random_map
 
 local function get_nextgame(mode, map)
     
+    if setnextmap_cmd_active == true then
+        setnextmap_cmd_active = false
+	
+	return setnextmap_cmd_mode, setnextmap_cmd_map
+    end
+    
     if not mode then
         mode = get_mode()
     end
     
     if not map then
-        
         if using_random_map then
             map = random_map(mode)
         else
@@ -234,7 +246,11 @@ server.event_handler("setnextgame",function()
     
     server.next_mode, server.next_map = get_nextgame(mode)
     
+    setnextmap_cmd_mode = nil
+    setnextmap_cmd_map = nil
+    
     gamecount = gamecount + 1
+    
 end)
 
 server.event_handler("disconnect", function()
@@ -298,10 +314,20 @@ local function nextmap_command(cn)
 
     if using_server_maprotation then
     
-        if server.use_server_random_moderotation == 1 then
+        if using_random_mode then
             server.player_msg(cn, "Note: The next mode will be chosen randomly at the end of this game, therefore the next map, too.")
-        elseif server.use_server_random_maprotation == 1 then
+        elseif using_random_mode then
             server.player_msg(cn, "The next map will be chosen randomly at the end of this game.")
+	elseif setnextmap_cmd_active == true then
+	    local msg = "The next map is " .. green(setnextmap_cmd_map)
+	    
+	    if setnextmap_cmd_mode == server.gamemode then
+	        msg = msg .. "."
+	    else
+	        msg = msg .. " (" .. green(setnextmap_cmd_mode) .. ")."
+	    end
+	    
+	    server.player_msg(cn, msg)
         else
             local nm = nextmap(tostring(server.gamemode), gamecount)
             if nm then
@@ -323,3 +349,37 @@ local function nextmap_command(cn)
 end
 
 player_command_function("nextmap", nextmap_command)
+
+local setnextmap_cmd_info = "#setnextmap <map> [<mode>]"
+
+local function setnextmap_command(cn,map,mode)
+
+    if using_server_maprotation then
+        if not map then
+            return false, setnextmap_cmd_info
+        end
+	
+        if not mode then
+            setnextmap_cmd_mode = server.gamemode
+        else
+            setnextmap_cmd_mode = server.parse_mode(mode)
+	    
+            if not setnextmap_cmd_mode then
+                return false, "mode not known"
+            end
+        end
+        
+        if deny_unknown_map and not (setnextmap_cmd_mode == "coop edit" or server.is_known_map(map,setnextmap_cmd_mode)) then
+            return false, "map is not allowed"
+        end
+        
+        setnextmap_cmd_map = map
+        
+        setnextmap_cmd_active = true
+    else
+        return false, "server doesn't control the maprotation - use the client commands"
+    end
+    
+end
+
+player_command_function("setnextmap", setnextmap_command, "admin")
