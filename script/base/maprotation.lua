@@ -29,6 +29,8 @@ local using_random_mode
 local using_random_map
 local default_gamemode = "ffa"
 local default_game_on_empty
+local random_map_on_empty
+local random_mode_on_empty
 local using_server_maprotation
 
 local gamemodes = {
@@ -117,6 +119,9 @@ function server.reload_maprotation()
     
     default_gamemode = server.default_gamemode
     default_game_on_empty = (server.default_game_on_empty == 1)
+    
+    random_map_on_empty = (server.random_map_on_empty == 1)
+    random_mode_on_empty = (server.random_mode_on_empty == 1)
     
     using_server_maprotation = (server.use_server_maprotation == 1)
 end
@@ -234,15 +239,34 @@ end)
 
 server.event_handler("disconnect", function()
 
-    if server.playercount == 0 and default_game_on_empty and using_server_maprotation then
-        
+    if server.playercount == 0 and using_server_maprotation and (default_game_on_empty or random_mode_on_empty or random_map_on_empty) then
         local mode = default_gamemode
         local map = nil
         
-        mode, map = get_nextgame(mode)
-        
-        server.changemap(map, mode, -1)
-        gamecount = gamecount + 1
+        if default_game_on_empty then
+	    mode, map = get_nextgame(mode)
+        else
+    	    if random_mode_on_empty then
+		mode = gamemodes[math.random(#gamemodes)]
+		
+		while mode == server.gamemode or mode == "coop edit" do
+		    mode = gamemodes[math.random(#gamemodes)]
+		end
+	    end
+	    
+	    if random_map_on_empy then
+		map = random_map(mode)
+	    end
+	end
+	
+	if not map then
+	    local lmode, lmap = get_nextgame(mode)
+	    
+	    map = lmap
+	end
+	
+	server.changemap(map, mode, -1)
+	gamecount = gamecount + 1
     end
 
 end)
