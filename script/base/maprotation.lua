@@ -38,6 +38,7 @@ local setnextmap_cmd_active = false
 local setnextmap_cmd_map
 local setnextmap_cmd_mode
 local deny_unknown_map
+local allowed_modes
 
 local map_memory = {}
 local map_memory_size = 0
@@ -129,6 +130,7 @@ function server.reload_maprotation()
     default_gamemode = server.default_gamemode
     default_game_on_empty = (server.default_game_on_empty == 1)
     random_mode_on_empty = (server.random_mode_on_empty == 1)
+    allowed_modes = list_to_set(server.parse_list(server["allowed_gamemodes"]))
     
     using_server_maprotation = (server.use_server_maprotation == 1)
     
@@ -316,10 +318,10 @@ server.event_handler("disconnect", function()
         if default_game_on_empty then
 	    mode, map = get_nextgame(mode)
         elseif random_mode_on_empty then
-	    mode = gamemodes[math.random(#gamemodes)]
+	    mode = allowed_modes[math.random(#allowed_modes)]
 	    
 	    while mode == server.gamemode or mode == "coop edit" do
-                mode = gamemodes[math.random(#gamemodes)]
+                mode = allowed_modes[math.random(#allowed_modes)]
             end
         end
 	
@@ -412,6 +414,10 @@ local function setnextmap_command(cn,map,mode)
 	    
             if not setnextmap_cmd_mode then
                 return false, "mode not known"
+            end
+            
+            if not allowed_modes[setnextmap_cmd_mode] then
+                return false, "mode is not allowed"
             end
         end
         
