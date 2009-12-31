@@ -8,9 +8,11 @@
         Graham
 
     CONTRIBUTION HISTORY
-        * Randomized map and mode selection - Zombie
-        * Small and big maps for each game mode, instead of just for ffa_maps - Zombie
-        * Client-side map list useful for #nextmap - Zombie
+        * Randomized map and mode selection - ]Zombie[
+        * Small and big maps for each game mode, instead of just for ffa_maps - ]Zombie[
+        * Client-side map list useful for #nextmap - ]Zombie[
+        * #setnextmap <map> [<mode>] to change the nextmap and mode - ]Zombie[
+        * map memory (independently from the mode) to prevent that a map comes again too fast - ]Zombie[
         
     GUIDELINES
         * Transfer global configuration variables to local scope variables on module initialization (in reload_maprotation)
@@ -37,6 +39,9 @@ local setnextmap_cmd_active = false
 local setnextmap_cmd_map
 local setnextmap_cmd_mode
 local deny_unknown_map
+
+local map_memory = {}
+local map_memory_size = 0
 
 local gamemodes = {
     [ 1] = "ffa",
@@ -131,6 +136,57 @@ function server.reload_maprotation()
     using_server_maprotation = (server.use_server_maprotation == 1)
     
     deny_unknown_map = (server.mapvote_disallow_unknown_map == 1)
+    
+    -- init map memory size
+    local smallest_maplist_size = 0
+    
+    local function compare_maplist_sizes(size)
+    
+        if smallest_maplist_size > size then
+	    smallest_maplist_size = size
+	end
+	
+    end
+    
+    for a = 1, #gamemodes do
+	compare_maplist_sizes(#maps[gamemodes[a]])
+	
+	if using_best_map_size then
+	    if big_maps[gamemodes[a]] then
+		compare_maplist_sizes(#big_maps[gamemodes[a]])
+	    end
+	    
+	    compare_maplist_sizes(#small_maps[gamemodes[a]])
+	end
+    end
+    
+    if smallest_maplist_size < 3 then
+	map_memory_size = 0
+    else
+	map_memory_size = round((smallest_maplist_size * 3) / 4) - 1
+    end
+    
+end
+
+local function check_map_memory(map)
+
+    if map_memory_size < 1 then
+	 return true
+    end
+    
+    for i,mapname in ipairs(map_memory) do
+	if mapname == map then
+	    return false
+	end
+    end
+    
+    if table.maxn(map_memory) >= map_memory_size then
+	table.remove(map_memory,1)
+    end
+    table.insert(map_memory,map)
+
+    return true
+
 end
 
 local function get_maplist(mode)
@@ -205,7 +261,7 @@ local function random_map(mode)
     local maplist = get_maplist(mode)
     local chosen_map = maplist[math.random(#maplist)]
     
-    if chosen_map == server.map then
+    if chosen_map == server.map or not check_map_memory(chosen_map) then
         return random_map(mode)
     end
     
@@ -231,6 +287,10 @@ local function get_nextgame(mode, map)
             map = random_map(mode)
         else
             map = nextmap(mode, gamecount)
+            
+            if not check_map_memory(map) then
+		map = nextmap(mode, gamecount + 1)
+	    end
         end
     end
     
@@ -245,9 +305,6 @@ server.event_handler("setnextgame",function()
     if gamecount == 0 then mode = default_gamemode end
     
     server.next_mode, server.next_map = get_nextgame(mode)
-    
-    setnextmap_cmd_mode = nil
-    setnextmap_cmd_map = nil
     
     gamecount = gamecount + 1
     
@@ -375,6 +432,9 @@ local function setnextmap_command(cn,map,mode)
         
         setnextmap_cmd_map = map
         
+        -- fill map memory
+	local tmp = check_map_memory(setnextmap_cmd_map)
+	
         setnextmap_cmd_active = true
     else
         return false, "server doesn't control the maprotation - use the client commands"
