@@ -374,7 +374,7 @@ namespace server
         
         const char * hostname()const
         {
-            static char hostname_buffer[15];            
+            static char hostname_buffer[16];            
             ENetAddress addr;
             addr.host = getclientip(clientnum);
             return ((enet_address_get_host_ip(&addr, hostname_buffer, sizeof(hostname_buffer)) == 0) ? hostname_buffer : "unknown");
