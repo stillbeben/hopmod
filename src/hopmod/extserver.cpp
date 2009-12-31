@@ -487,11 +487,11 @@ void player_slay(int cn)
 bool player_changeteam(int cn,const char * newteam)
 {
     clientinfo * ci = get_ci(cn);
-    if(!m_teammode || ci->state.state == CS_SPECTATOR || 
-        (smode && !smode->canchangeteam(ci, ci->team, newteam)) ||
+    
+    if(!m_teammode || (smode && !smode->canchangeteam(ci, ci->team, newteam)) ||
         signal_chteamrequest(cn, ci->team, newteam) == -1) return false;
     
-    if(smode) smode->changeteam(ci, ci->team, newteam);
+    if(smode || ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, newteam);
     signal_reteam(ci->clientnum, ci->team, newteam);
     
     copystring(ci->team, newteam, MAXTEAMLEN+1);
