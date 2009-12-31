@@ -24,6 +24,7 @@ player_command_script("invmaster")
 player_command_script("changeteam")
 player_command_alias("cteam", "changeteam")
 player_command_alias("team",  "changeteam")
+player_command_script("getmap")
 
 player_command_script("givemaster",  nil, "master")
 player_command_script("mute",        nil, "master")
