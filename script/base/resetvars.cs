@@ -162,7 +162,6 @@ global small_teamgamesize 5
 global default_gamemode "ffa"
 global default_game_on_empty 0
 global random_mode_on_empty 0
-global random_map_on_empty 1
 
 flood_protect_text 1000
 flood_protect_sayteam 1000
