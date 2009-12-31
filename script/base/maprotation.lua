@@ -33,14 +33,14 @@ local using_server_maprotation
 
 local gamemodes = {
     [ 1] = "ffa",
-    [ 2] = "coop-edit",
+    [ 2] = "coop edit",
     [ 3] = "teamplay",
     [ 4] = "instagib",
     [ 5] = "instagib team",
     [ 6] = "efficiency",
     [ 7] = "efficiency team",
     [ 8] = "tactics",
-    [ 9] = "tactics teams",
+    [ 9] = "tactics team",
     [10] = "capture",
     [11] = "regen capture",
     [12] = "ctf",
@@ -54,7 +54,7 @@ function server.reload_maprotation()
     local parse = server.parse_list
     
     maps["ffa"]             = table_unique(parse(server["ffa_maps"]))
-    maps["templay"]         = table_unique(parse(server["teamplay_maps"]))
+    maps["teamplay"]        = table_unique(parse(server["teamplay_maps"]))
     maps["efficiency"]      = table_unique(parse(server["efficiency_maps"]))
     maps["efficiency team"] = table_unique(parse(server["efficiency team_maps"]))
     maps["tactics"]         = table_unique(parse(server["tactics_maps"]))
@@ -67,13 +67,13 @@ function server.reload_maprotation()
     maps["insta ctf"]       = table_unique(parse(server["insta ctf_maps"]))
     maps["protect"]         = table_unique(parse(server["protect_maps"]))
     maps["insta protect"]   = table_unique(parse(server["insta protect_maps"]))
-    maps["coop-edit"]       = maps["ffa"]
+    maps["coop edit"]       = maps["ffa"]
     
     big_maps["ffa"]         = table_unique(parse(server["big_ffa_maps"]))
     big_maps["efficiency"]  = table_unique(parse(server["big_efficiency_maps"]))
     big_maps["tactics"]     = table_unique(parse(server["big_tactics_maps"]))
     big_maps["instagib"]    = table_unique(parse(server["big_instagib_maps"]))
-    big_maps["coop-edit"]   = big_maps["ffa"]
+    big_maps["coop edit"]   = big_maps["ffa"]
     
     small_maps["ffa"]             = table_unique(parse(server["small_ffa_maps"]))
     small_maps["teamplay"]        = table_unique(parse(server["small_teamplay_maps"]))
@@ -89,11 +89,11 @@ function server.reload_maprotation()
     small_maps["insta ctf"]       = table_unique(parse(server["small_insta ctf_maps"]))
     small_maps["protect"]         = table_unique(parse(server["small_protect_maps"]))
     small_maps["insta protect"]   = table_unique(parse(server["small_insta protect_maps"]))
-    small_maps["coop-edit"]       = small_maps["ffa"]
+    small_maps["coop edit"]       = small_maps["ffa"]
     
     -- Store a list of client-side map rotations so #nextmap can tell the player what map is next when server map rotation is disabled
     client_maps["ffa"]             = table_unique(parse(server["def_ffa_maps"]))
-    client_maps["templay"]         = table_unique(parse(server["def_teamplay_maps"]))
+    client_maps["teamplay"]        = table_unique(parse(server["def_teamplay_maps"]))
     client_maps["efficiency"]      = table_unique(parse(server["def_efficiency_maps"]))
     client_maps["efficiency team"] = table_unique(parse(server["def_efficiency team_maps"]))
     client_maps["tactics"]         = table_unique(parse(server["def_tactics_maps"]))
@@ -106,7 +106,7 @@ function server.reload_maprotation()
     client_maps["insta ctf"]       = table_unique(parse(server["def_insta ctf_maps"]))
     client_maps["protect"]         = table_unique(parse(server["def_protect_maps"]))
     client_maps["insta protect"]   = table_unique(parse(server["def_insta protect_maps"]))
-    client_maps["coop-edit"]       = client_maps["ffa"]
+    client_maps["coop edit"]       = client_maps["ffa"]
     
     using_best_map_size = (server.use_best_map_size == 1)
     smallgamesize = server.small_gamesize
@@ -128,7 +128,7 @@ local function get_maplist(mode)
     if using_best_map_size then
         if server.playercount <= smallgamesize then
             maplist = small_maps[mode] or maplist
-        elseif gamemodeinfo.teams then
+        else
             maplist = big_maps[mode] or maplist
         end
     end
@@ -173,17 +173,18 @@ end
 
 local function get_mode()
 
+    local chosen_gamemode = server.gamemode
+    
     if using_random_mode then
+        chosen_gamemode = gamemodes[math.random(#gamemodes)]
         
-        local chosen_gamemode = gamemodes[math.random(#gamemodes)]
-        
-        if chosen_gamemode == server.gamemode or chosen_gamemode == "coop-edit" then
+        if chosen_gamemode == server.gamemode or chosen_gamemode == "coop edit" then
             return get_mode()
         end
         
     end
     
-    return server.gamemode
+    return chosen_gamemode
     
 end
 
@@ -199,6 +200,8 @@ local function random_map(mode)
     return chosen_map
 end
 
+server.random_map = random_map
+
 local function get_nextgame(mode, map)
     
     if not mode then
@@ -210,8 +213,8 @@ local function get_nextgame(mode, map)
         if using_random_map then
             map = random_map(mode)
         else
-            map = nextmap(mode, gamecount) or map
-        end        
+            map = nextmap(mode, gamecount)
+        end
     end
     
     return mode, map
@@ -279,7 +282,7 @@ local function nextmap_command(cn)
             local nm = nextmap(tostring(server.gamemode), gamecount)
             if nm then
                 server.player_msg(cn, "The next map is " .. green(nm) .. ".")
-                if bestmapsize == 1 and not gamemodeinfo.teams then
+                if using_best_map_size then
                     server.player_msg(cn, "Note: The next map will be determined on the number of players still connected at the end of this game.")
                 end
             end

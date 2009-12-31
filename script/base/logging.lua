@@ -24,7 +24,10 @@ function server.log_status(msg)
 end
 
 -- FIX ME: server.find_names_by_ip is not nil, when sqlite3 is not loaded
-local using_sqlite = (server.stats_use_sqlite == 1)
+local using_sqlite
+server.event_handler("started", function()
+    using_sqlite = (server.stats_use_sqlite == 1)
+end)
 
 local function log_usednames(cn)
 
