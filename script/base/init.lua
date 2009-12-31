@@ -11,14 +11,13 @@ load_once("base/player/command")
 load_once("base/player/map_loaded")
 load_once("base/logging")
 load_once("base/maprotation") -- the reason this can be loaded now instead as a scheduled module is because of reload_maprotation is called from started event
-load_once("base/banner")
 
+server.module("base/banner")
 server.module("base/mute")
 server.module("base/force_spec")
 server.module("base/auth/init")
 server.module("base/mapvote")
 server.module("base/register_server")
-
 
 local function update_gamemodeinfo()
     gamemodeinfo = server.gengamemodeinfo()
@@ -55,11 +54,11 @@ server.event_handler("started", function()
         server.execCubeScriptFile(server.banlist_file)
     end
     
-    server.start_http_server("0.0.0.0", server.script_socket_port)
-
-    if server.change_default_maptime == 1 then
-        load_once("change_default_maptime")
+    if server.file_exists(server.lua_ban_file) then
+        load_once(server.lua_ban_file)
     end
+    
+    server.start_http_server("0.0.0.0", server.script_socket_port)
     
     server.reload_maprotation()
     

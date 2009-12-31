@@ -1,6 +1,8 @@
 
 require "geoip"
 
+local event = {}
+
 local function sendServerBanner(cn)
 
     if server.player_pvar(cn,"shown_banner") then return end
@@ -44,6 +46,14 @@ local function onDisconnect(cn)
     server.player_unsetpvar(cn, "shown_banner")
 end
 
-server.event_handler("connect",onConnect)
-server.event_handler("disconnect", onDisconnect)
-server.event_handler("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
+
+event.connect    = server.event_handler_object("connect",onConnect)
+event.disconnect = server.event_handler_object("disconnect", onDisconnect)
+event.rename     = server.event_handler_object("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
+
+
+local function unload()
+    event = {}
+end
+
+return {unload=unload}

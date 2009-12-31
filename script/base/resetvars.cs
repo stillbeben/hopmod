@@ -5,9 +5,9 @@ global motd "Running Hopmod"
 global show_country_message 1
 
 global banlist_file "conf/bans"
+global lua_ban_file "conf/permabans.lua"
 global geoip_db_file "share/GeoIP.dat"
 
-global use_script_socket_server 1
 global script_socket_port 7894
 global script_socket_password ""
 
