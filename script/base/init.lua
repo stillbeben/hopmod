@@ -58,7 +58,7 @@ server.event_handler("started", function()
         load_once(server.lua_ban_file)
     end
     
-    server.start_http_server("0.0.0.0", server.script_socket_port)
+    server.start_http_server("0.0.0.0", server.serverport + 3)
     
     server.reload_maprotation()
     

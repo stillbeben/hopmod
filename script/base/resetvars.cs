@@ -8,9 +8,6 @@ global banlist_file "conf/bans"
 global lua_ban_file "conf/permabans.lua"
 global geoip_db_file "share/GeoIP.dat"
 
-global script_socket_port 7894
-global script_socket_password ""
-
 global allow_mapvote 1
 global mapvote_disallow_unknown_map 0
 
