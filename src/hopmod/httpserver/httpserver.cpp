@@ -10,6 +10,7 @@
 
 #include "directory_resource.hpp"
 #include "serverexec.hpp"
+#include "../utils.hpp"
 
 using namespace fungu;
 using namespace boost::asio;
@@ -17,6 +18,7 @@ using namespace boost::system;
 
 boost::asio::io_service & get_main_io_service();
 static void wait_next_accept(ip::tcp::acceptor & listener);
+
 
 static ip::tcp::acceptor * server_acceptor = NULL;
 static directory_resource root_resource;
@@ -65,6 +67,8 @@ void start_http_server(const char * ip, const char * port)
     server_acceptor->listen();
     
     wait_next_accept(*server_acceptor);
+    
+    info_file("log/sauer_server_http.port", "%s\n", port);
 }
 
 directory_resource & get_root_resource()

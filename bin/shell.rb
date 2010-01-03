@@ -86,4 +86,11 @@ rescue Interrupt
     
 end
 
-start_shell(ARGV[0] || "127.0.0.1", ARGV[1] || 7894, nil)
+DEFAULT_PORT = 7894
+
+if File.readable? "log/sauer_server_http.port"
+    f = File.open("log/sauer_server_http.port")
+    PORTFILE = Integer(f.readline()) rescue nil
+end
+
+start_shell(ARGV[0] || "127.0.0.1", ARGV[1] || PORTFILE || DEFAULT_PORT, nil)

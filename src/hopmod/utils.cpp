@@ -1,5 +1,6 @@
 #include "utils.hpp"
-
+#include <cstdio>
+#include <cstdarg>
 #include <string>
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -86,4 +87,31 @@ int freqlimit::next(int time)
         m_hit = time + m_length;
         return 0;
     }else return m_hit - time; 
+}
+
+static std::vector<const char *> info_files;
+
+bool info_file(const char * filename, const char * format, ...)
+{
+    FILE * file = fopen(filename, "w");
+    if(!file) return false;
+    va_list args;
+    va_start (args, format);
+    vfprintf(file, format, args);
+    va_end(args);
+    fclose(file);
+    info_files.push_back(filename);
+    return true;
+}
+
+void cleanup_info_files()
+{
+    for(std::vector<const char *>::const_iterator it = info_files.begin(); it != info_files.end(); it++)
+        unlink(*it);
+    info_files.clear();
+}
+
+void cleanup_info_files_on_shutdown(int type)
+{
+    cleanup_info_files();
 }

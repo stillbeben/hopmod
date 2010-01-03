@@ -63,6 +63,7 @@ void init_hopmod()
     
     close_listenserver_slot = signal_shutdown.connect(&stopgameserver);
     signal_shutdown.connect(&shutdown_scripting);
+    signal_shutdown.connect(&cleanup_info_files_on_shutdown);
     
     init_scheduler();
     
@@ -88,6 +89,8 @@ void init_hopmod()
     {
         report_script_error(error);
     }
+    
+    info_file("log/sauer_server.pid", "%i\n", getpid());
 }
 
 void reload_hopmod()

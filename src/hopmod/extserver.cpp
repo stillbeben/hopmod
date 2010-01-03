@@ -35,6 +35,7 @@ struct restore_teamscore
 void crash_handler(int signal)
 {
     unlink_script_pipe();
+    cleanup_info_files();
     
     int fd = open("log/restore", O_CREAT | O_WRONLY | O_APPEND, S_IRWXU);
     
@@ -111,7 +112,6 @@ void crash_handler(int signal)
             exit(1);
         }
     }
-
 }
 
 void restore_server(const char * filename)
