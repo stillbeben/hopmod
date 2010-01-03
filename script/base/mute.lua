@@ -20,7 +20,7 @@ function server.mute(cn,time)
         end
     end
     
-    server.sleep(time, function()
+    server.sleep(mtime, function()
         muted[key] = nil
     end)
 end
