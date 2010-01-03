@@ -74,15 +74,7 @@ function yellow(text) return formatcol(2, text) end
 function magenta(text) return formatcol(5, text) end
 function blue(text) return formatcol(1, text) end
 
-function server.specall()
-    for i,cn in ipairs(server.players()) do server.spec(cn) end
-end
-
-function server.unspecall()
-    for i,cn in ipairs(server.spectators()) do server.unspec(cn) end
-end
-
-function server.console(admin,msg)
+function server.console(admin, msg)
     server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))
 end
 
@@ -173,10 +165,6 @@ function server.printserverstatus(filename, filemode)
 	out:close()
 end
 
-function server.valid_cn(cn)
-    return server.player_id(tonumber(cn) or -1) ~= -1
-end
-
 function server.teamsize(teamsize_teamname)
     local a = 0
     for i,cn in ipairs(server.team_players(teamsize_teamname)) do
@@ -192,7 +180,6 @@ function event_conditions.disconnect.empty_server()
 end
 
 function server.conditional_event_handler(event_name, condition_function, handler_function)
-    
     if type(condition_function) == "string" then
         condition_function = event_conditions[event_name][condition_function]
         if not condition_function then
@@ -207,7 +194,6 @@ function server.conditional_event_handler(event_name, condition_function, handle
     end)
     
     return id
-    
 end
 
 function pack(...)
@@ -224,24 +210,9 @@ function catch_error(fun, ...)
     end
     
     if returnvals then
-    
         table.remove(returnvals, 1)
-    
         return unpack(returnvals)
     end
-    
-end
-
-
-function server.all_players()
-
-	local list = server.players()
-
-	for i,c in ipairs(server.spectators()) do
-        table.insert(list,c)
-	end
-
-	return list
 end
 
 function validate_table(subject_table, schema)
@@ -252,7 +223,7 @@ function validate_table(subject_table, schema)
     
     check_type(subject_table, "table")
     
-    for i, element in ipairs(schema) do
+    for _, element in ipairs(schema) do
         
         local id = element[1]
         local typeinfo = element[2]
@@ -266,21 +237,14 @@ function validate_table(subject_table, schema)
         end
         
         if typeinfo then
-            
             if type(typeinfo) == "string" then
-                
                 check_type(lookup, typeinfo)
-                
             elseif type(typeinfo) == "table" then
-                
                 validate_table(lookup, typeinfo)
-                
             else
                 error("error in table schema")
             end
-            
         end
-        
     end
     
 end
@@ -304,12 +268,6 @@ function table.deepcopy(object)
     return _copy(object)
 end
 
-function server.is_teamkill(player1, player2)
-    if not gamemodeinfo.teams then return false end
-    if server.player_team(player1) == server.player_team(player2) then return true end
-    return false
-end
-
 function print_displaynamelist(clientnums)
     local names = {}
     for _, cn in ipairs(clientnums) do
@@ -330,6 +288,3 @@ function print_list(...)
     return output
 end
 
-function server.is_bot(cn)
-    return cn > 127
-end

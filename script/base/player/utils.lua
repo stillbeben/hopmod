@@ -190,11 +190,38 @@ local alias_of_mode = {
 }
 
 function server.parse_mode(mode)
-
     if mode then
         return alias_of_mode[mode]
     end
-
     return nil
+end
 
+function server.is_bot(cn)
+    return cn > 127
+end
+
+function server.is_teamkill(player1, player2)
+    if not gamemodeinfo.teams then return false end
+    if server.player_team(player1) == server.player_team(player2) then return true end
+    return false
+end
+
+function server.all_players()
+	local output = server.players()
+	for _, cn in ipairs(server.spectators()) do
+        table.insert(output, cn)
+	end
+	return output
+end
+
+function server.valid_cn(cn)
+    return server.player_id(tonumber(cn) or -1) ~= -1
+end
+
+function server.specall()
+    for _,cn in ipairs(server.players()) do server.spec(cn) end
+end
+
+function server.unspecall()
+    for _,cn in ipairs(server.spectators()) do server.unspec(cn) end
 end
