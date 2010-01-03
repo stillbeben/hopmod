@@ -179,9 +179,9 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::aiman::botbalance, "botbalance", env);
     script::bind_funvar<const char *>(server::gamemodename, "gamemode", env);
     
-    script::bind_var(server::allow_mm_veto, "allow_mm_veto", env);
-    script::bind_var(server::allow_mm_locked, "allow_mm_locked", env);
-    script::bind_var(server::allow_mm_private, "allow_mm_private", env);
+    script::bind_var(server::allow_mm_veto, "allow_mastermode_veto", env);
+    script::bind_var(server::allow_mm_locked, "allow_mastermode_locked", env);
+    script::bind_var(server::allow_mm_private, "allow_mastermode_private", env);
     
     script::bind_var(server::allow_item[I_SHELLS-I_SHELLS], "allow_shells", env);
     script::bind_var(server::allow_item[I_BULLETS-I_SHELLS], "allow_bullets", env);
