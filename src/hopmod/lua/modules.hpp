@@ -10,6 +10,7 @@ void open_cubescript(lua_State *L);
 void open_geoip(lua_State *L);
 void open_filesystem(lua_State *L);
 void open_timer(lua_State *L);
+void open_http_server(lua_State * L);
 
 } //namespace module
 } //namespace lua

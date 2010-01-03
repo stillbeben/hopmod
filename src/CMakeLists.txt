@@ -74,7 +74,8 @@ SET(SAUER_SERVER_SOURCES
     hopmod/netmask.cpp
     hopmod/bans.cpp
     hopmod/httpserver/httpserver.cpp
-    hopmod/httpserver/serverexec.cpp)
+    hopmod/httpserver/serverexec.cpp
+    hopmod/httpserver/lua_module.cpp)
 
 add_executable(sauer_server ${SAUER_SERVER_SOURCES})
 target_link_libraries(sauer_server sauertools serverscripting scriptpipe enet fungu_http -lz -lrt)
