@@ -111,6 +111,7 @@ namespace server
     
     void pausegame(bool);
     void kick(int cn,int time,const std::string & admin,const std::string & reason);
+    void disconnect(int cn, int code, const std::string & reason);
     void changetime(int remaining);
     void clearbans();
     void changemap(const char * map,const char * mode,int mins);

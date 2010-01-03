@@ -229,6 +229,13 @@ void kick(int cn,int time,const std::string & admin,const std::string & reason)
     sched_callback(&execute_kick, info);
 }
 
+void disconnect(int cn, int code, const std::string & reason)
+{
+    clientinfo * ci = get_ci(cn);
+    ci->disconnect_reason = reason;
+    disconnect_client(cn, code);
+}
+
 void changetime(int remaining)
 {
     gamelimit = gamemillis + remaining;

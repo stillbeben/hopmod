@@ -42,6 +42,17 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::player_msg, "player_msg", env);
     script::bind_freefunc(process_player_command, "process_player_command", env);
     script::bind_freefunc(server::kick, "kick", env, &player_kick_defargs);
+    script::bind_const((int)DISC_NONE, "DISC_NONE", env);
+    script::bind_const((int)DISC_EOP, "DISC_EOP", env);
+    script::bind_const((int)DISC_EOP, "DISC_CN", env);
+    script::bind_const((int)DISC_EOP, "DISC_KICK", env);
+    script::bind_const((int)DISC_EOP, "DISC_TAGT", env);
+    script::bind_const((int)DISC_EOP, "DISC_IPBAN", env);
+    script::bind_const((int)DISC_EOP, "DISC_PRIVATE", env);
+    script::bind_const((int)DISC_EOP, "DISC_MAXCLIENTS", env);
+    script::bind_const((int)DISC_EOP, "DISC_TIMEOUT", env);
+    script::bind_const((int)DISC_EOP, "DISC_NUM", env);
+    script::bind_freefunc(server::disconnect, "disconnect", env);
     script::bind_var(server::kick_bannedip_group, "kick_bannedip_group", env);
     script::bind_freefunc(server::player_name, "player_name", env);
     script::bind_freefunc(server::player_displayname, "player_displayname", env);
