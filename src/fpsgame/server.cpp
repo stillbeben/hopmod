@@ -2960,13 +2960,15 @@ namespace server
             extserverinforeply(req, p);
             return;
         }
-
-        putint(p, numclients(-1, false, true));
+        
+        int clients = numclients(-1, false, true);
+        
+        putint(p, clients);
         putint(p, 5);                   // number of attrs following
         putint(p, PROTOCOL_VERSION);    // a // generic attributes, passed back below
         putint(p, gamemode);            // b
         putint(p, minremain);           // c
-        putint(p, maxclients);
+        putint(p, (clients <= maxclients ? maxclients : clients));
         putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : (mastermode || mastermask&MM_AUTOAPPROVE ? mastermode : MM_AUTH)));
         sendstring(smapname, p);
         sendstring(serverdesc, p);
