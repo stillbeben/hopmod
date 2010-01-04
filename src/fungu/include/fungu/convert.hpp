@@ -12,6 +12,7 @@
 #include <cmath>
 #include <typeinfo>
 #include <limits>
+#include <boost/type_traits/make_signed.hpp>
 
 namespace fungu{
 
@@ -60,7 +61,7 @@ template<typename IntType>
 const_string from_int(IntType i)
 {
     int index = std::numeric_limits<IntType>::digits10 + 1;
-    bool negative = std::numeric_limits<IntType>::is_signed && i < 0;
+    bool negative = std::numeric_limits<IntType>::is_signed && static_cast<typename boost::make_signed<IntType>::type>(i) < 0;
     if(negative)
     {
         if(i == std::numeric_limits<IntType>::min()) throw std::bad_cast();
