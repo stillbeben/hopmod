@@ -68,8 +68,8 @@ local function unload()
     server.cancel_handler(text_event)
     server.cancel_handler(sayteam_event)
     
---    server.mute = nil
---    server.unmute = nil
+    server.mute = nil
+    server.unmute = nil
 end
 
 return {unload = unload}
