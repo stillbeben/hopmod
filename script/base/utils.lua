@@ -268,14 +268,6 @@ function table.deepcopy(object)
     return _copy(object)
 end
 
-function print_displaynamelist(clientnums)
-    local names = {}
-    for _, cn in ipairs(clientnums) do
-        table.insert(names, server.player_displayname(cn))
-    end
-    return print_list(unpack(names))
-end
-
 function print_list(...)
     local output = ""
     for _, item in ipairs(arg) do
@@ -288,3 +280,52 @@ function print_list(...)
     return output
 end
 
+local alias_of_mode = {
+    ["instagib team"]    = "instagib team",
+    ["instateam"]        = "instagib team",
+    ["iteam"]            = "instagib team",
+    ["instagib"]         = "instagib",
+    ["insta"]            = "instagib",
+    ["insta ctf"]        = "insta ctf",
+    ["instactf"]         = "insta ctf",
+    ["ictf"]             = "insta ctf",
+    ["ctf"]              = "ctf",
+    ["insta protect"]    = "insta protect",
+    ["instaprotect"]     = "insta protect",
+    ["iprotect"]         = "insta protect",
+    ["protect"]          = "protect",
+    ["teamplay"]         = "teamplay",
+    ["ffa"]              = "ffa",
+    ["efficiency team"]  = "efficiency team",
+    ["efficteam"]        = "efficiency team",
+    ["eteam"]            = "efficiency team",
+    ["efficiency"]       = "efficiency",
+    ["effic"]            = "efficiency",
+    ["tactics team"]     = "tactics team",
+    ["tacteam"]          = "tactics team",
+    ["tteam"]            = "tactics team",
+    ["tactics"]          = "tactics",
+    ["tac"]              = "tactics",
+    ["regen capture"]    = "regen capture",
+    ["regencapture"]     = "regen capture",
+    ["regencap"]         = "regen capture",
+    ["regen"]            = "regen capture",
+    ["capture"]          = "capture",
+    ["cap"]              = "capture",
+    ["coop edit"]        = "coop edit",
+    ["coopedit"]         = "coop edit",
+    ["coop"]             = "coop edit"
+}
+
+function server.parse_mode(mode)
+    if mode then
+        return alias_of_mode[mode]
+    end
+    return nil
+end
+
+function server.eval_lua(str)
+    local func, err = loadstring(str)
+    if not func then error(err) end
+    return func()
+end
