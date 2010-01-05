@@ -24,6 +24,6 @@ return function(cn, ...)
 		return false, "#eval <code>"
 	end
 
-	server["do"](code)
+	server.player_msg(cn, server["do"](code) or "")
 
 end
