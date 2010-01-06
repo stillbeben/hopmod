@@ -72,13 +72,13 @@ public:
     template<typename CompletionHandler>
     void async_send(const std::string & data, CompletionHandler handler)
     {
-        m_socket.async_send(boost::asio::buffer(data), bind_io_handler(&connection::send_complete<CompletionHandler>, handler));
+        boost::asio::async_write(m_socket, boost::asio::buffer(data), boost::asio::transfer_at_least(data.length()), bind_io_handler(&connection::send_complete<CompletionHandler>, handler));
     }
     
     template<typename CompletionHandler>
     void async_send(const void * data, std::size_t datalen, CompletionHandler handler)
     {
-        m_socket.async_send(boost::asio::buffer(data, datalen), bind_io_handler(&connection::send_complete<CompletionHandler>, handler));
+        boost::asio::async_write(m_socket, boost::asio::buffer(data, datalen), boost::asio::transfer_at_least(datalen), bind_io_handler(&connection::send_complete<CompletionHandler>, handler));
     }
     
     template<typename CompletionHandler>
@@ -328,6 +328,7 @@ private:
     boost::system::error_code m_send_error;
     boost::asio::ip::tcp::socket & m_socket;
     std::size_t m_receive_buffer_size;
+    std::size_t m_send_buffer_size;
     
     std::queue<std::string> m_sent_chunk_headers;
 };
