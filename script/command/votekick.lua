@@ -127,6 +127,10 @@ local function run(cn,kick_who)
 
 		return false, "You can't vote to kick yourself"
 	end
+	
+	if server.player_priv(kick_who) == "admin" then
+		return false, "You can't vote to kick a server admin!"
+	end 
 
 	if not votes[kick_who] then
 
