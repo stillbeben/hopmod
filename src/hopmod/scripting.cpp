@@ -1,5 +1,5 @@
 /*
-    Copyright (C) 2009 Graham Daws
+    Copyright (C) 2009-2010 Graham Daws
 */
 #ifdef BOOST_BUILD_PCH_ENABLED
 #include "pch.hpp"
@@ -131,38 +131,37 @@ script::env & get_script_env()
     return *env;
 }
 
+// index(table, key) metamethod for the server table
 int server_interface_index(lua_State * L)
 {
-    // index(table, key)
-    const char * key = luaL_checkstring(L, 2);
+    const char * key = lua_tostring(L, 2);
     
+    // Get the value
     lua_rawgeti(L, LUA_REGISTRYINDEX, server_namespace_index_ref);
-    if(lua_type(L,-1) != LUA_TTABLE) return luaL_error(L, "missing server.index table");
-    
     lua_getfield(L, -1, key);
     
     script::env_object * obj = script::lua::get_object(L, -1);
-    
     if(obj && obj->get_object_type() == script::env_object::DATA_OBJECT)
     {
         lua_pop(L, 1);
-        obj->value(L); //push value of object onto lua stack
+        obj->value(L); // Pushed onto the stack
     }
     
     return 1;
 }
 
-int server_interface_newindex(lua_State * L)
+// newindex(table, key, value) metamethod for the server table
+int server_interface_newindex(lua_State * L) 
 {
-    // newindex(table, key, value)
-    bool is_func = (lua_type(L, -1) == LUA_TFUNCTION);
-    std::string key = lua_tostring(L, -2);
+    std::size_t keylen;
+    const char * key = lua_tolstring(L, 2, &keylen);
+    int value_type = lua_type(L, 3);
     
     lua_rawgeti(L, LUA_REGISTRYINDEX, server_namespace_index_ref);
-    if(lua_type(L, -1) != LUA_TTABLE) return luaL_error(L, "missing server.index table");
     
-    lua_pushvalue(L, -2);
-    lua_setfield(L, -2, key.c_str()); // server.index[key]=value
+    lua_pushvalue(L, 2);
+    lua_pushvalue(L, 3);
+    lua_settable(L, -3); // server.index[key]=value
 
     if(binding_object_to_lua) return 0;
     
@@ -170,28 +169,50 @@ int server_interface_newindex(lua_State * L)
     
     try
     {
-        if(is_func)
+        const_string const_string_key(key, key + keylen - 1);
+        
+        switch(value_type)
         {
-            scoped_setting<bool> setting(binding_object_to_cubescript, true);
-            hangingObj = new script::lua::lua_function(L, -1, key.c_str());
-            hangingObj->set_adopted();
-            env->bind_global_object(hangingObj, const_string(key));
-            hangingObj = NULL;
-        }
-        else
-        {
-            lua_pushvalue(L, -2);
-            script::env_object * obj = env->lookup_global_object(key);
-            if(obj) obj->assign(script::lua::get_argument_value(L));
-            else
+            case LUA_TNIL:
+            {
+                script::env_symbol * key_symbol = env->lookup_symbol(const_string(key, key + keylen - 1));
+                if(key_symbol) key_symbol->unset_global_object();
+                break;
+            }
+            case LUA_TFUNCTION:
             {
                 scoped_setting<bool> setting(binding_object_to_cubescript, true);
-                script::any_variable * newvar = new script::any_variable;
-                hangingObj = newvar;
-                newvar->set_adopted();
-                newvar->assign(script::lua::get_argument_value(L));
-                env->bind_global_object(newvar, const_string(key));
+                hangingObj = new script::lua::lua_function(L, 3);
+                hangingObj->set_adopted();
+                env->bind_global_object(hangingObj, const_string(std::string(key)));
                 hangingObj = NULL;
+                break;
+            }
+            default:
+            {
+                script::env_symbol * key_symbol = env->lookup_symbol(const_string(key, key + keylen - 1));
+                
+                if(!key_symbol)
+                {
+                    key_symbol = env->create_symbol(const_string(std::string(key)));
+                }
+                
+                script::env_object * obj = key_symbol->get_global_object();
+                
+                if(obj)
+                {
+                    obj->assign(script::lua::get_argument_value(L, 3));
+                }
+                else
+                {
+                    scoped_setting<bool> setting(binding_object_to_cubescript, true);
+                    script::any_variable * newvar = new script::any_variable;
+                    hangingObj = newvar;
+                    newvar->set_adopted();
+                    newvar->assign(script::lua::get_argument_value(L, 3));
+                    key_symbol->set_global_object(newvar);
+                    hangingObj = NULL;
+                }
             }
         }
     }
@@ -346,11 +367,10 @@ int make_var(lua_State * L)
     
     if(lua_gettop(L) > 1)
     {
-        lua_pushvalue(L, 2);
-        var->assign(script::lua::get_argument_value(L));
+        var->assign(script::lua::get_argument_value(L, 2));
     }
     
-    env->bind_global_object(var, name);
+    env->bind_global_object(var, const_string(std::string(name)));
     
     return 0;
 }
