@@ -235,15 +235,19 @@ server.event_handler("auth_challenge_response", function(cn, request_id, answer)
 
 end)
 
-server.event_handler("connect", function(cn)
-    
+local function initClientTable(cn)
+
     clients[cn] = {
         listeners = {},
-        has_key = {},
-        authed = {},
-        requests = {},
+        has_key   = {},
+        authed    = {},
+        requests  = {},
     }
     
+end
+
+server.event_handler("connect", function(cn)
+    initClientTable(cn)
 end)
 
 server.event_handler("disconnect", function(cn)
@@ -342,4 +346,8 @@ function auth.query_id(username, domain_id, callback)
     end
     
     send_query()
+end
+
+for _, cn in ipairs(server.players()) do
+    initClientTable(cn)
 end
