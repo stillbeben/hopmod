@@ -121,11 +121,17 @@ static int eval_string(lua_State * L)
     }
     catch(script::error_trace * errinfo)
     {
-        return luaL_error(L, errinfo->get_root_info()->get_error().get_error_message().c_str());
+        lua_pushnil(L);
+        lua_pushstring(L, errinfo->get_root_info()->get_error().get_error_message().c_str());
+        return 2;
+        //return luaL_error(L, errinfo->get_root_info()->get_error().get_error_message().c_str());
     }
     catch(script::error err)
     {
-        return luaL_error(L, err.get_error_message().c_str());
+        lua_pushnil(L);
+        lua_pushstring(L, err.get_error_message().c_str());
+        return 2;
+        //return luaL_error(L, err.get_error_message().c_str());
     }
 }
 
