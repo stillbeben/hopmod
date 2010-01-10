@@ -2546,6 +2546,13 @@ namespace server
                 if(!text[0]) copystring(text, "unnamed");
                 if(strcmp(ci->name,text)!=0)
                 {
+                    // Unable to block rename so only good option is to kick the player.
+                    if(ci->check_flooding(ci->sv_switchname_hit, "switching name", false))
+                    {
+                        kick(ci->clientnum, 60, "server", "renaming too quickly");
+                        return;
+                    }
+                    
                     signal_renaming(ci->clientnum);
                     ci->playerid = get_player_id(text, getclientip(ci->clientnum));
                     
@@ -2558,10 +2565,6 @@ namespace server
                 
                 QUEUE_STR(ci->name);
                 
-                // Unable to block rename so only good option is to kick the player.
-                if(ci->check_flooding(ci->sv_switchname_hit, "switching name", false))
-                    kick(ci->clientnum, 60, "server", "renaming too quickly");
-
                 break;
             }
 
