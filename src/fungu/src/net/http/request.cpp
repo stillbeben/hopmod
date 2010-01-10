@@ -176,16 +176,8 @@ void request::process_header(const char * header, std::size_t header_len, const 
             }
             case CONNECTION:
             {
-                field_value_token token;
-                if(!field.next_value_token(token) || token.get_type() != field_value_token::atom)
-                {
-                    send_response(BAD_REQUEST, "malformed Connection header field\n");
-                    return;
-                }
-                
-                m_close_connection = strncaseeq(token.get_content(), "close", 5);
+                m_close_connection = strcasecmp(field.get_value(), "close") == 0;
                 // in case of Keep-Alive value: value != "close" so m_close_connection would be assigned false value
-                
                 break;
             }
             case CONTENT_TYPE:
@@ -278,6 +270,11 @@ resource * request::resolve_resource(const char * uri)
         if(*c == '/' || !*c || !*(c+1))
         {
             const char * last = (*c=='/' ? c-1 : c);
+            if(*start == '.' && *last == '.') // ignore /./ and /../
+            {
+                start = (start == last ? last + 1 : last + 2);
+                continue;
+            }
             parent = parent->resolve(const_string(start, last));
             if(!parent) return NULL;
             start = last + 2;

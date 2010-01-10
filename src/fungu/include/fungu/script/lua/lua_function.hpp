@@ -26,15 +26,15 @@ class lua_function:public env_object
 public:
     lua_function(lua_State *,int index, const char * name);
     lua_function(lua_State *); //function at top of stack
+    lua_function(lua_State *, int index);
     ~lua_function();
     any call(call_arguments & args,env_frame * aFrame);
     int call(lua_State * L);
     const source_context * get_source_context()const;
 private:
-    void set_location(lua_State *);
     int m_ref;
     lua_State * m_lua;
-    file_source_context m_location;
+    mutable file_source_context m_location;
 };
 
 } //namespace lua

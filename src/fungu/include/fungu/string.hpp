@@ -30,12 +30,19 @@ public:
     const_string(const std::pair<const char *, const char *> &);
 
     static const_string literal(const char * literalString);
+
     const_iterator begin()const;
     const_iterator end()const;
     static const_iterator null_const_iterator();
+
     std::size_t length()const;
+
     const_string substring(const_iterator first, const_iterator last)const;
     std::string copy()const;
+    
+    const char * c_str()const;
+    const std::string & std_string()const;
+    
     bool operator<(const const_string & operand)const;
     bool operator==(const const_string & operand)const;
 private:
@@ -43,6 +50,9 @@ private:
     const_iterator m_firstc;
     const_iterator m_lastc;
 };
+
+const_string join(const const_string &, const const_string &);
+const_string join(const_string *, std::size_t);
 
 } //namespace fungu
 

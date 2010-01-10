@@ -26,7 +26,7 @@ static const char * datetime_now(char * buffer, std::size_t buffersize)
         return buffer;
     }
     
-    strftime(buffer, buffersize, "%a, %e %b %Y %T GMT", current_gmtime);
+    strftime(buffer, buffersize, "%a, %d %b %Y %T GMT", current_gmtime);
     return buffer;
 }
 

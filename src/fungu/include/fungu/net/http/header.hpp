@@ -125,6 +125,8 @@ enum transfer_encoding_type
 
 bool parse_transfer_encoding(header_field &, transfer_encoding_type &);
 
+time_t parse_date(const char *);
+
 } //namespace http
 } //namespace fungu
 

@@ -88,7 +88,7 @@ private:
     int m_def_index; //start using default args when m_arg_index reaches m_def_index
 };
 
-any get_argument_value(lua_State *);
+any get_argument_value(lua_State *,int index = -1);
 
 } //namespace lua
 } //namespace script

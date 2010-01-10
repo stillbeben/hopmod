@@ -75,6 +75,12 @@ void env::bind_global_object(env_object * obj, const_string id)
     if(m_bind_observer) m_bind_observer(id, obj);
 }
 
+void env::unbind_global_object(const_string id)
+{
+    env_symbol * sym = create_symbol(id);
+    sym->unset_global_object();
+}
+
 env_object * env::lookup_global_object(const_string id)const
 {
     env_symbol * sym = lookup_symbol(id);

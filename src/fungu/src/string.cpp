@@ -109,4 +109,28 @@ bool const_string::operator==(const const_string & operand)const
     return string_detail::equals(*this, operand);
 }
 
+const char * const_string::c_str()const
+{
+    return begin();
+}
+
+const_string join(const_string * a, std::size_t n)
+{
+    std::string output;
+    for(int i = 0; i < n; i++)
+    {
+        const_string s(a[i]);
+        output.append(s.begin(), s.end());
+    }
+    return output;
+}
+
+const_string join(const const_string & a, const const_string & b)
+{
+    const_string arrayOfStrings[2];
+    arrayOfStrings[0] = a;
+    arrayOfStrings[1] = b;
+    return join(arrayOfStrings, 2);
+}
+
 } //namespace fungu

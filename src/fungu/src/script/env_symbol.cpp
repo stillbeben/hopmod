@@ -41,6 +41,11 @@ env_symbol_local * env_symbol::push_local_object(env_object * obj, const env_fra
     return newLocal;
 }
 
+env_object * env_symbol::get_global_object()
+{
+    return m_global.get();
+}
+
 void env_symbol::set_global_object(env_object * obj)
 {
     assert(obj != NULL);

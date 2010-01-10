@@ -464,5 +464,112 @@ bool parse_transfer_encoding(header_field & field, transfer_encoding_type & outp
     else return false;
 }
 
+static int weekday(const char * weekday_string)
+{
+    static const char * names[] = 
+    {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+    
+    for(int i = 0; i < sizeof(names)/sizeof(const char *); i++)
+        if(strncasecmp(weekday_string, names[i], 3) == 0) return i;
+    
+    return -1;
+}
+
+static int month(const char * month_string)
+{
+    static const char * names[] =
+    {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    
+    for(int i = 0; i < sizeof(names)/sizeof(const char *); i++)
+        if(strncasecmp(month_string, names[i], 3) == 0) return i;
+    
+    return -1;
+}
+
+static int parse_int(const char ** date_string, char delim)
+{
+    const char * start = *date_string;
+    const char * end = *date_string;
+    
+    for(; *end && *end != delim; end++);
+    if(*end != delim) return -1;
+    
+    *date_string = end + 1;
+    
+    try
+    {
+        return to_int<int>(const_string(start, end - 1));
+    }
+    catch(std::bad_cast)
+    {
+        return -1;
+    }
+}
+
+static bool parse_rfc1123_date(const char * date_string, time_t & output)
+{
+    tm time_info;
+    memset(&time_info, 0, sizeof(time_info));
+    
+    time_info.tm_wday = weekday(date_string);
+    if(time_info.tm_wday == -1) return false;
+    
+    for(date_string += 3; *date_string && *date_string != ','; date_string++);
+    if(*date_string !=',' || *(date_string+1) !=' ') return false;
+    date_string += 2;
+    
+    time_info.tm_mday = parse_int(&date_string, ' ');
+    if(time_info.tm_mday == -1) return false;
+    
+    time_info.tm_mon = month(date_string);
+    if(time_info.tm_mon == -1) return false;
+    
+    date_string += 3;
+    if(*date_string != ' ') return false;
+    date_string++;
+    
+    time_info.tm_year = parse_int(&date_string, ' ') - 1900;
+    if(time_info.tm_year == -1) return false;
+    
+    time_info.tm_hour = parse_int(&date_string, ':');
+    if(time_info.tm_hour == -1) return false;
+    
+    time_info.tm_min = parse_int(&date_string, ':');
+    if(time_info.tm_min == -1) return false;
+    
+    time_info.tm_sec = parse_int(&date_string, ' ');
+    if(time_info.tm_sec  == -1) return false;
+    
+    //bool has_gmt = *(date_string++) == 'G' && *(date_string++) == 'M' && *(date_string++) == 'T';
+    
+    output = mktime(&time_info);
+    
+    return true;
+    //return has_gmt;
+}
+
+static bool parse_rfc850_date(const char * date_string, time_t & output)
+{
+    return false;
+}
+
+static bool parse_asctime_date(const char * date_string, time_t & output)
+{
+    return false;
+}
+
+time_t parse_date(const char * date_string)
+{
+    time_t output;
+    if( !parse_rfc1123_date(date_string, output) &&
+        !parse_rfc850_date(date_string, output) &&
+        !parse_asctime_date(date_string, output)) return -1;
+    return output;
+}
+
 } //namespace http
 } //namespace fungu

@@ -83,6 +83,12 @@ public:
     void bind_global_object(env_object * obj, const_string id);
     
     /**
+    
+        
+    */
+    void unbind_global_object(const_string id);
+    
+    /**
         @brief Search for a global symbol binding.
         
         @param id symbol name

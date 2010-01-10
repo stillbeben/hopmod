@@ -138,26 +138,26 @@ arguments::value_type arguments::get_void_value()
     return 0;
 }
 
-any get_argument_value(lua_State * L)
+any get_argument_value(lua_State * L, int index)
 {
-    switch(lua_type(L,-1))
+    switch(lua_type(L, index))
     {
         case LUA_TNIL:
             return any::null_value();
         case LUA_TNUMBER:
         {
-            lua_Integer i = lua_tointeger(L,-1);
-            lua_Number n = lua_tonumber(L,-1);
+            lua_Integer i = lua_tointeger(L, index);
+            lua_Number n = lua_tonumber(L, index);
             if(n==i) return any(static_cast<int>(i));
             else return any(n);
         }
         case LUA_TBOOLEAN:
-            return lua_toboolean(L,-1);
+            return lua_toboolean(L, index);
         case LUA_TSTRING:
-            return const_string(lua_tostring(L,-1));
+            return const_string(lua_tostring(L, index));
         case LUA_TFUNCTION:
         {
-            env_object * obj = new lua_function(L);
+            env_object * obj = new lua_function(L, index);
             obj->set_adopted();
             return obj->get_shared_ptr();
         }

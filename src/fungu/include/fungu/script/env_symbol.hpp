@@ -22,6 +22,7 @@ public:
     env_symbol();
     ~env_symbol();
     env_symbol_local * push_local_object(env_object *, const env_frame *);
+    env_object * get_global_object();
     void set_global_object(env_object *);
     void unset_global_object();
     env_object * lookup_object(const env_frame *)const;
