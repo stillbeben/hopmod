@@ -37,6 +37,7 @@ public:
             {"content_length", &request_wrapper::get_content_length},
             {"content_type", &request_wrapper::get_content_type},
             {"header", &request_wrapper::get_header},
+            {"async_read_content", &request_wrapper::async_read_content},
             {NULL, NULL}
         };
         
@@ -82,6 +83,35 @@ private:
             lua_pushstring(L, req->m_request.get_header_field(field_name).get_value());
         else lua_pushnil(L);
         return 1;
+    }
+    
+    static void read_content_complete(lua_State * L, int functionRef, stream::char_vector_sink * sink, const http::connection::error & err)
+    {
+        lua_rawgeti(L, LUA_REGISTRYINDEX, functionRef);
+        luaL_unref(L, LUA_REGISTRYINDEX, functionRef);
+        
+        if(err) lua_pushnil(L);
+        else lua_pushlstring(L, sink->data(), sink->size());
+        
+        delete sink;
+        
+        if(lua_pcall(L, 1, 0, 0) != 0)
+            report_script_error(lua_tostring(L, -1));
+    }
+    
+    static int async_read_content(lua_State * L)
+    {
+        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        
+        luaL_checktype(L, 2, LUA_TFUNCTION);
+        lua_pushvalue(L, 2);
+        int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
+        
+        stream::char_vector_sink * sink = new stream::char_vector_sink(req->m_request.get_content_length());
+        
+        req->m_request.async_read_content(*sink, boost::bind(&request_wrapper::read_content_complete, L, functionRef, sink, _1));
+        
+        return 0;
     }
     
     http::server::request & m_request;
@@ -256,7 +286,8 @@ class resource_wrapper:public http::server::resource
     static const char * MT;
 public:
     resource_wrapper()
-     :m_resolve_function(LUA_REFNIL),
+     :m_lua(NULL),
+      m_resolve_function(LUA_REFNIL),
       m_get_function(LUA_REFNIL),
       m_put_function(LUA_REFNIL),
       m_post_function(LUA_REFNIL),
@@ -372,7 +403,11 @@ public:
     {
         luaL_checktype(L, 1, LUA_TTABLE);
         
-        int resolve_function, get_function, put_function, post_function, delete_function = LUA_REFNIL;
+        int resolve_function = LUA_REFNIL;
+        int get_function = LUA_REFNIL;
+        int put_function = LUA_REFNIL;
+        int post_function = LUA_REFNIL;
+        int delete_function = LUA_REFNIL;
         
         lua_pushstring(L, "resolve");
         lua_rawget(L, -2);
