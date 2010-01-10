@@ -1,5 +1,6 @@
 #include <fungu/net/http/response.hpp>
 #include "directory_resource.hpp"
+#include "filesystem_resource.hpp"
 using namespace fungu;
 
 extern "C"{
@@ -478,6 +479,15 @@ private:
 
 const char * resource_wrapper::MT = "http::server::resource";
 
+int bind_filesystem_path(lua_State * L)
+{
+    const char * resource_id = luaL_checkstring(L, 1);
+    const char * root_path = luaL_checkstring(L, 2);
+    const char * index_file = luaL_checkstring(L, 3);
+    get_root_resource().add_resource(*new filesystem_resource(std::string(root_path), std::string(index_file), NULL), std::string(resource_id));
+    return 0;
+}
+
 namespace lua{
 namespace module{
 
@@ -487,6 +497,7 @@ void open_http_server(lua_State * L)
         {"resource", &resource_wrapper::create_object},
         {"bind", &resource_wrapper::bind_to_root},
         {"response", &response_wrapper::create_object},
+        {"bind_filesystem_path", bind_filesystem_path},
         {NULL, NULL}
     };
     

@@ -75,6 +75,7 @@ SET(SAUER_SERVER_SOURCES
     hopmod/bans.cpp
     hopmod/httpserver/httpserver.cpp
     hopmod/httpserver/serverexec.cpp
+    hopmod/httpserver/filesystem_resource.cpp
     hopmod/httpserver/lua_module.cpp)
 
 add_executable(sauer_server ${SAUER_SERVER_SOURCES})

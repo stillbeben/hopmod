@@ -4,11 +4,14 @@
 #include "cube.h"
 #include <fungu/script/env_object.hpp>
 #include <fungu/script/variable.hpp>
-#include <string.h>
+#include <cstring>
 
 namespace fungu{
 namespace script{
 
+/**
+    A specialized class for sauer's string type
+*/
 template<>
 class variable<string>:public env_object
 {

@@ -14,7 +14,7 @@ function server.mute(cn,time)
     
     muted[key] = true
     
-    for i,cn in ipairs(server.players()) do 
+    for _, cn in ipairs(server.players()) do 
         if key_function(cn) == key then
             server.player_msg(cn, red("You have been muted by an admin; your future chat messages will be blocked."))
         end

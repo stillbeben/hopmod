@@ -18,6 +18,7 @@ server.module("base/force_spec")
 server.module("base/auth/init")
 server.module("base/mapvote")
 server.module("base/register_server")
+server.module("base/web/init")
 
 local function update_gamemodeinfo()
     gamemodeinfo = server.gengamemodeinfo()
@@ -57,9 +58,7 @@ server.event_handler("started", function()
     if server.file_exists(server.lua_ban_file) then
         load_once(server.lua_ban_file)
     end
-    
-    server.start_http_server("0.0.0.0", server.serverport + 3)
-    
+        
     server.reload_maprotation()
     
     require("geoip").load_database(server.geoip_db_file)
