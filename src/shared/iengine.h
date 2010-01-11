@@ -302,7 +302,7 @@ extern size_t rx_bytes;
 extern int prog_argc;
 extern char * const * prog_argv;
 
-enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_NUM };
+enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_PRIVATE, DISC_MAXCLIENTS, DISC_TIMEOUT, DISC_OVERFLOW, DISC_NUM };
 
 inline const char * disconnect_reason(int code)
 {
@@ -310,7 +310,7 @@ inline const char * disconnect_reason(int code)
         "normal", "end of packet", "client num", 
         "kicked/banned", "tag type", "ip is banned", 
         "server is in private mode", "server FULL (maxclients)", 
-        "connection timed out" };
+        "connection timed out", "overflow" };
     return reasons[code];
 }
 
