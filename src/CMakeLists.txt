@@ -23,6 +23,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/shared
     ${CMAKE_CURRENT_SOURCE_DIR}/fpsgame
     ${CMAKE_CURRENT_SOURCE_DIR}/hopmod
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ENET_INCLUDE_DIR}
     ${LUA_INCLUDE_DIR}
     ${BOOST_INCLUDE_DIR}
