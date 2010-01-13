@@ -19,6 +19,16 @@ local function escape_string(s)
     return s
 end
 
+local function execute_statement(statement)
+    local cursor, errorinfo = connection:execute(statement)
+    if not cursor then
+        server.log_error(string.format("Buffering stats data because of a MySQL stats failure: %s", errorinfo))
+        connection:close()
+        connection = nil
+    end
+    return cursor
+end
+
 local function install_db(connection, settings)
 
     local schema = readWholeFile(settings.schema)
@@ -37,20 +47,10 @@ local function install_db(connection, settings)
     
 end
 
-local function execute_statement(statement)
-    local cursor, errorinfo = connection:execute(statement)
-    if not cursor then
-        server.log_error(string.format("Buffering stats data because of a MySQL stats failure: %s", errorinfo))
-        connection:close()
-        connection = nil
-    end
-    return cursor
-end
-
 local function open(settings)
     
     connection = luasql.mysql():connect(settings.database, settings.username, settings.password, settings.hostname, settings.port)
-        
+    
     if not connection then
         server.log_error(string.format("couldn't connect to MySQL server at %s:%s", settings.hostname, settings.port))
         return nil
