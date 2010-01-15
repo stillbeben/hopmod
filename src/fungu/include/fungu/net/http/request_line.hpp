@@ -42,11 +42,14 @@ public:
         PARSE_MALFORMED_VERSION
     };
     
+    request_line();
+    
     parse_status parse(cursor_type);
     
     method_code method()const;
     
     const char * uri()const;
+    const char * query()const;
     
     int version_major()const;
     int version_minor()const;
@@ -56,8 +59,12 @@ private:
     static method_code parse_method(cursor_type);
     method_code m_method;
     const char * m_uri;
+    const char * m_query;
     char m_version;
 };
+
+char * pct_decode(const char * input, const char * input_end, char * output, std::size_t * maxlen);
+char * pct_encode(const char * input, const char * input_end, char * output, std::size_t * maxlen);
 
 } //namespace http
 } //namespace fungu

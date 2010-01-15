@@ -3,6 +3,8 @@
 #include "filesystem_resource.hpp"
 using namespace fungu;
 
+#include <iostream>
+
 extern "C"{
 #include <lua.h>
 #include <lualib.h>
@@ -37,8 +39,14 @@ public:
             {"__gc", &request_wrapper::__gc},
             {"content_length", &request_wrapper::get_content_length},
             {"content_type", &request_wrapper::get_content_type},
+            {"content_subtype", &request_wrapper::get_content_subtype},
             {"header", &request_wrapper::get_header},
+            {"uri", &request_wrapper::get_uri},
+            {"uri_query", &request_wrapper::get_query_string},
+            {"host", &request_wrapper::get_host},
             {"async_read_content", &request_wrapper::async_read_content},
+            {"client_ip", &request_wrapper::get_client_ip},
+            {"content_type", &request_wrapper::get_content_type},
             {NULL, NULL}
         };
         
@@ -68,14 +76,6 @@ private:
         return 1;
     }
     
-    static int get_content_type(lua_State * L)
-    {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
-        lua_pushstring(L, "content-type");
-        lua_insert(L, 2);
-        return get_header(L);
-    }
-    
     static int get_header(lua_State * L)
     {
         request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
@@ -83,6 +83,27 @@ private:
         if(req->m_request.has_header_field(field_name)) 
             lua_pushstring(L, req->m_request.get_header_field(field_name).get_value());
         else lua_pushnil(L);
+        return 1;
+    }
+    
+    static int get_uri(lua_State * L)
+    {
+        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        lua_pushstring(L, req->m_request.get_uri());
+        return 1;
+    }
+    
+    static int get_query_string(lua_State * L)
+    {
+        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        lua_pushstring(L, req->m_request.get_uri_query());
+        return 1;
+    }
+    
+    static int get_host(lua_State * L)
+    {
+        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        lua_pushstring(L, req->m_request.get_host());
         return 1;
     }
     
@@ -113,6 +134,30 @@ private:
         req->m_request.async_read_content(*sink, boost::bind(&request_wrapper::read_content_complete, L, functionRef, sink, _1));
         
         return 0;
+    }
+    
+    static int get_client_ip(lua_State * L)
+    {
+        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        std::string ip = req->m_request.get_connection().remote_ip_string();
+        lua_pushlstring(L, ip.c_str(), ip.length());
+        return 1;
+    }
+    
+    static int get_content_type(lua_State * L)
+    {
+        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        const_string content_type = const_string(req->m_request.get_content_type().type());
+        lua_pushstring(L, content_type.copy().c_str());
+        return 1;
+    }
+    
+    static int get_content_subtype(lua_State * L)
+    {
+        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        const_string content_type = const_string(req->m_request.get_content_type().subtype());
+        lua_pushstring(L, content_type.copy().c_str());
+        return 1;
     }
     
     http::server::request & m_request;
@@ -488,6 +533,26 @@ int bind_filesystem_path(lua_State * L)
     return 0;
 }
 
+static int url_decode(lua_State * L)
+{
+    std::size_t input_len;
+    const char * input = luaL_checklstring(L, 1, &input_len);
+    char buffer[1024];
+    std::size_t output_len = sizeof(buffer);
+    lua_pushstring(L, http::pct_decode(input, input + input_len, buffer, &output_len));
+    return 1;
+}
+
+static int url_encode(lua_State * L)
+{
+    std::size_t input_len;
+    const char * input = luaL_checklstring(L, 1, &input_len);
+    char buffer[1024];
+    std::size_t output_len = sizeof(buffer);
+    lua_pushstring(L, http::pct_encode(input, input + input_len, buffer, &output_len));
+    return 1;
+}
+
 namespace lua{
 namespace module{
 
@@ -498,6 +563,8 @@ void open_http_server(lua_State * L)
         {"bind", &resource_wrapper::bind_to_root},
         {"response", &response_wrapper::create_object},
         {"bind_filesystem_path", bind_filesystem_path},
+        {"url_decode", &url_decode},
+        {"url_encode", &url_encode},
         {NULL, NULL}
     };
     

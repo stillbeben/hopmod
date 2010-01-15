@@ -255,7 +255,7 @@ server.event_handler("disconnect", function(cn)
     local client_auth_info = clients[cn]
     if not client_auth_info then return end -- DEBUG
     
-    for i, request in ipairs(client_auth_info.requests) do
+    for _, request in ipairs(client_auth_info.requests) do
         request:complete(auth.request_status.CANCELLED)
     end
     

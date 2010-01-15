@@ -112,6 +112,21 @@ content_type request::get_content_type()const
     return m_content_type;
 }
 
+const char * request::get_uri()const
+{
+    return m_request_line.uri();
+}
+
+const char * request::get_uri_query()const
+{
+    return m_request_line.query();
+}
+
+const char * request::get_host()const
+{
+    return m_host;
+}
+
 void request::process_header(const char * header, std::size_t header_len, const connection::error & connerr)
 {
     if(connerr)
@@ -171,7 +186,7 @@ void request::process_header(const char * header, std::size_t header_len, const 
                     send_response(BAD_REQUEST, "malformed host header field\n");
                     return;
                 }
-                m_host = host.get_content().first;
+                m_host = field.get_value();
                 break;
             }
             case CONNECTION:
@@ -275,8 +290,14 @@ resource * request::resolve_resource(const char * uri)
                 start = (start == last ? last + 1 : last + 2);
                 continue;
             }
-            parent = parent->resolve(const_string(start, last));
+            
+            char normalized_filename[255];
+            std::size_t normalized_filename_len = sizeof(normalized_filename);
+            pct_decode(start, last + 1, normalized_filename, &normalized_filename_len);
+            
+            parent = parent->resolve(const_string(normalized_filename, normalized_filename + normalized_filename_len - 1));
             if(!parent) return NULL;
+            
             start = last + 2;
         }
     }

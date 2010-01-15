@@ -1,0 +1,74 @@
+
+body{
+	font-size:0.9em;
+	font-family:verdana;
+	/*text-align:center;*/
+}
+
+.preload{display:none;}
+
+form{text-align:right;}
+form fieldset{border:0}
+
+form fieldset label{
+	display:block;
+	float:left;
+	width:35%;
+	text-align:right;
+}
+
+form fieldset input{
+	display:block;
+	float:right;
+	width:60%;
+	margin:0;
+	padding:0;
+}
+
+form p{
+	padding:10px;
+	margin:10px;
+}
+
+#login-form{
+	background:silver;
+	width:400px;
+	margin:auto;
+	background:#8EC9E3;
+	color:#0D2631;
+	border:outset 1px #3095C0;
+}
+
+form .form-error{
+	color:red;
+	font-weight:bold;
+	text-align:center;
+	margin:0px;
+}
+
+div.fatal-error{background:#FF3333; border:solid 1px #660000; color:#ffffff; padding:5px; margin:1px; font-weight:bold; text-align:center;}
+
+div.server-status-error{
+	background: transparent url(error.png) no-repeat;
+	padding-left: 20px;
+	color:#FF0000;
+	font-weight:bold;
+}
+
+#admin-startup{text-align:center;}
+#admin-container{display:none;}
+
+#command-shell{width:100%;}
+#command-shell-output{height:200px; border:solid 1px #000000; margin:1px; overflow:scroll;}
+#command-shell-output-padding{padding:3px;}
+#command-shell input{width:100%; border:solid 1px black;}
+#command-shell input, #command-shell-output{font-family: courier new;}
+#command-shell .error-output{
+	padding-left:15px;
+	color:#FF7673;
+}
+#command-shell-output .normal-output{padding-left:15px;}
+#command-shell-output .normal-no-output{margin-left:15px; background:transparent url(success.png) no-repeat; height:16px; width:16px;}
+#command-shell-output .echo-output{
+	
+}

@@ -15,6 +15,12 @@ static inline bool is_digit(char c)
 
 namespace fungu{
 namespace http{
+    
+request_line::request_line()
+ :m_uri(NULL), m_query(NULL)
+{
+    
+}
 
 /**
     @param cursor
@@ -37,10 +43,19 @@ request_line::parse_status request_line::parse(cursor_type cursor)
     if(*input++ != ' ') return PARSE_MISSING_URI;
     
     m_uri = input;
-    for(; *input != ' ' && *input; input++);
+    for(; *input != ' ' && *input !='?' && *input; input++);
     if(!(input - m_uri)) return PARSE_MISSING_URI;
     
     char * end_of_uri = *cursor + (input - *cursor);
+    char * end_of_query = end_of_uri;
+    
+    if(*end_of_uri == '?')
+    {
+        m_query = end_of_uri + 1;
+        for(; *input != ' ' && *input; input++);
+        if(!(input - m_uri)) return PARSE_MISSING_URI;
+        end_of_query = *cursor + (input - *cursor);
+    }
     
     bool valid_version = input[0] == ' ' && 
         input[1] == 'H' && input[2] == 'T' && input[3] == 'T' && input[4] == 'P' && input[5] == '/' &&
@@ -52,6 +67,7 @@ request_line::parse_status request_line::parse(cursor_type cursor)
     
     *cursor = input + 11;
     *end_of_uri = '\0';
+    *end_of_query = '\0';
     
     return PARSE_OK;
 }
@@ -64,6 +80,11 @@ method_code request_line::method()const
 const char *  request_line::uri()const
 {
     return m_uri;
+}
+
+const char * request_line::query()const
+{
+    return m_query;
 }
 
 int request_line::version_major()const
@@ -162,6 +183,89 @@ method_code request_line::parse_method(cursor_type cursor)
         return wanted_method_code;
     }
     else return UNKNOWN;
+}
+
+static int hex_digit(char c)
+{
+    if(c >= '0' && c <='9') return c - '0';
+    else if(c >= 'A' && c <= 'F') return (c - 'A') + 10;
+    return -1;
+}
+
+static bool is_unreserved(char c)
+{
+    if( c >= 'a' && c <= 'z') return true;
+    if( c >= 'A' && c <= 'Z') return true;
+    if( c >= '0' && c <= '9') return true;
+    switch(c)
+    {
+        case '-':
+        case '.':
+        case '_':
+        case '~':
+            return true;
+        default: break;
+    }
+    return false;
+}
+
+char * pct_decode(const char * input, const char * input_end, char * output, std::size_t * maxlen)
+{
+    (*maxlen)--; //reserve one char for null-term
+    
+    char * start_of_output = output;
+    char * output_limit = output + *maxlen;
+    
+    for(; input < input_end && output < output_limit; input++, output++)
+    {
+        if(*input != '%') *output = *input;
+        else
+        {
+            if(!*(input + 1) || !*(input + 2)) continue;
+            int a = hex_digit(toupper(*(input + 1)));
+            int b = hex_digit(toupper(*(input + 2)));
+            if(a == -1 || b == -1) continue;
+            *output = static_cast<char>(a * 16 + b);
+            input += 2;
+        }
+    }
+    
+    *output = '\0';
+    *maxlen = output - start_of_output;
+    
+    return start_of_output;
+}
+
+char * pct_encode(const char * input, const char * input_end, char * output, std::size_t * maxlen)
+{
+    (*maxlen)--;
+    
+    char * start_of_output = output;
+    char * output_limit = output + *maxlen;
+    
+    for(; input < input_end && output < output_limit; input++, output++)
+    {
+        if(is_unreserved(*input)) *output = *input;
+        else
+        {
+            if(output + 3 > output_limit) break;
+            
+            *output = '%';
+            output++;
+            
+            static const char * digits = "0123456789ABCDEF";
+            
+            *output = digits[*input / 16];
+            output++;
+            
+            *output = digits[*input % 16];
+        }
+    }
+    
+    *output = '\0';
+    *maxlen = output - start_of_output;
+    
+    return start_of_output;
 }
 
 } //namespace http

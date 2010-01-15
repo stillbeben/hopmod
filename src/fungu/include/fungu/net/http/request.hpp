@@ -61,6 +61,10 @@ public:
     std::size_t get_content_length()const;
     content_type get_content_type()const;
     
+    const char * get_uri()const;
+    const char * get_uri_query()const;
+    const char * get_host()const;
+
     template<typename CompletionHandler>
     void async_read_content(stream::sink & output, CompletionHandler handler)
     {

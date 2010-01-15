@@ -1,0 +1,11 @@
+
+http_server.bind("admin", http_server.resource({
+    get = function(request)
+        
+        if web_admin.require_login(request) then
+            return
+        end
+        
+        http_response.send_file(request, "script/base/web/public/admin.html", "text/html")
+    end
+}))
