@@ -11,7 +11,7 @@ content_handler["text/x-cubescript"] = function(request, code)
     
     local responseStatus = 200
     
-    if #result == 0 then responseStatus = 204 end
+    --if #result == 0 then responseStatus = 204 end
     
     if errorMessage then
         responseStatus = 400
