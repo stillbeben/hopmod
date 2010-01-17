@@ -36,10 +36,13 @@ public:
         };
         error():m_value(NONE){}
         error(error_type value):m_value(value){}
+        error(error_type value, const std::string & message):m_value(value), m_message(message){}
         error_type type()const{return m_value;}
         operator bool()const{return m_value != NONE;}
+        const std::string & message()const{return m_message;}
     private:
         error_type m_value;
+        std::string m_message;
     };
     
     connection(boost::asio::ip::tcp::socket &);
@@ -144,7 +147,7 @@ private:
         
         if(error_code)
         {
-            handler(static_cast<const char * >(NULL), 0, error(error::NETWORK));
+            handler(static_cast<const char * >(NULL), 0, error(error::NETWORK, error_code.message()));
         }
         else
         {            
@@ -160,7 +163,7 @@ private:
         if(error_code)
         {
             m_read_error = error_code;
-            m_socket.io_service().post(boost::bind(finishedHandler, error(error::NETWORK)));
+            m_socket.io_service().post(boost::bind(finishedHandler, error(error::NETWORK, error_code.message())));
             return;
         }
         
@@ -203,7 +206,7 @@ private:
         if(error_code)
         {
             m_read_error = error_code;
-            handler(error(error::NETWORK));
+            handler(error(error::NETWORK, error_code.message()));
             return;
         }
         
@@ -236,7 +239,7 @@ private:
         if(error_code)
         {
             m_read_error = error_code;
-            handler(error(error::NETWORK));
+            handler(error(error::NETWORK, error_code.message()));
             return;
         }
         
@@ -268,7 +271,7 @@ private:
         if(error_code)
         {
             m_read_error = error_code;
-            handler(error(error::NETWORK));
+            handler(error(error::NETWORK, error_code.message()));
             return;
         }
         
@@ -281,7 +284,7 @@ private:
         if(error_code)
         {
             m_read_error = error_code;
-            handler(error(error::NETWORK));
+            handler(error(error::NETWORK, error_code.message()));
             return;
         }
         
@@ -291,26 +294,28 @@ private:
     }
     
     template<typename CompletionHandler>
-    void send_complete(CompletionHandler handler, const boost::system::error_code & err, std::size_t bytes_sent)
+    void send_complete(CompletionHandler handler, const boost::system::error_code & error_code, std::size_t bytes_sent)
     {
-        if(err)
+        if(error_code)
         {
-            m_send_error = err;
-            handler(error(error::NETWORK));
+            m_send_error = error_code;
+            handler(error(error::NETWORK, error_code.message()));
+            return;
         }
         
         handler(error(error::NONE));
     }
     
     template<typename CompletionHandler>
-    void send_chunk_complete(CompletionHandler handler, const boost::system::error_code & err, std::size_t bytes_sent)
+    void send_chunk_complete(CompletionHandler handler, const boost::system::error_code & error_code, std::size_t bytes_sent)
     {
         m_sent_chunk_headers.pop();
         
-        if(err)
+        if(error_code)
         {
-            m_send_error = err;
-            handler(error(error::NETWORK));
+            m_send_error = error_code;
+            handler(error(error::NETWORK, error_code.message()));
+            return;
         }
         
         handler(error(error::NONE));
