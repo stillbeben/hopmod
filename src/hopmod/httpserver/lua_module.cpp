@@ -327,6 +327,19 @@ private:
 
 const char * response_wrapper::MT = "http::server::response";
 
+static bool lua_isusertype(lua_State * L, int index, const char * tname)
+{
+    if(!lua_isuserdata(L, index)) return false;
+    
+    lua_getmetatable(L, index);
+    luaL_getmetatable(L, tname);
+    
+    int equal = lua_equal(L, -1, -2);
+    lua_pop(L, 2);
+    
+    return equal == 1;
+}
+
 class resource_wrapper:public http::server::resource
 {
     static const char * MT;
@@ -358,6 +371,8 @@ public:
         if(m_resolve_function == LUA_REFNIL) return NULL;
         lua_rawgeti(m_lua, LUA_REGISTRYINDEX, m_resolve_function);
         
+        lua_pushstring(m_lua, uri.copy().c_str());
+        
         if(lua_pcall(m_lua, 1, 1, 0) != 0)
         {
             report_script_error(lua_tostring(m_lua, -1));
@@ -365,8 +380,8 @@ public:
         }
         else
         {
-            //TODO
-            return NULL;
+            if(!lua_isusertype(m_lua, -1, MT)) return NULL;
+            return reinterpret_cast<resource_wrapper *>(lua_touserdata(m_lua, -1));
         }
     }
     
