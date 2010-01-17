@@ -21,6 +21,16 @@ local function parseQueryString(query)
     return result
 end
 
+local function parseCookie(cookie)
+    local result = {}
+    for param in string.gmatch(cookie or "", "[^; ]+") do
+        local name, value = unpack(string.split(param, "[^=]+"))
+        local decode = decodeQueryString
+        result[decode(name)] = decode(value)
+    end
+    return result
+end
+
 local function buildQueryString(queryTable)
     local result = ""
     for name, value in pairs(queryTable) do
@@ -46,6 +56,7 @@ end
 
 http_request = {
     absolute_uri = buildAbsoluteUri,
+    parse_cookie = parseCookie,
     parse_query_string = parseQueryString,
     build_query_string = buildQueryString
 }

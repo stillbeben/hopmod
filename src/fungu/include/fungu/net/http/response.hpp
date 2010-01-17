@@ -55,6 +55,7 @@ public:
     void send_body(const char * content, std::size_t content_length);
 private:
     void send_header_complete(const connection::error &);
+    static void sent_body(response * res, char * data, const http::connection::error & err);
     
     request & m_request;
     bool m_keep_request;
@@ -62,9 +63,10 @@ private:
     connection & m_connection;
     status m_status;
     std::string m_header;
-    
+
     bool m_using_chunked_encoding;
     std::size_t m_content_length;
+    
 #ifndef NBEBUG
     std::size_t m_bytes_sent;
     bool m_sent_header;

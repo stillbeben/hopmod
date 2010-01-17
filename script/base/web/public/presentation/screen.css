@@ -1,11 +1,8 @@
-
 body{
 	font-size:0.9em;
 	font-family:verdana;
-	/*text-align:center;*/
 }
-
-.preload{display:none;}
+.clear{clear:both; height:0; padding:0; margin:0;}
 
 form{text-align:right;}
 form fieldset{border:0}
@@ -58,8 +55,27 @@ div.server-status-error{
 #admin-startup{text-align:center;}
 #admin-container{display:none;}
 
+.text-shell{width:100%;}
+.text-shell-heading{padding-left:18px; font-weight:bold;}
+.text-shell-output{height:200px; border:solid 1px #000000; margin:1px; overflow:scroll;}
+.text-shell-output-padding{padding:3px;}
+.text-shell input{width:100%; border:solid 1px black; padding: 2px 0 2px;}
+
+#chat-shell-heading{background:transparent url(balloons.png) no-repeat;}
+.chat-shell-name{
+	float:left;
+	width:170px;
+	text-align:right;
+	font-weight:bold;
+	overflow:hidden;
+	margin-right:5px;
+}
+.chat-shell-text{word-wrap: break-word;}
+.chat-shell-message{margin:0; padding:0;}
+
 #command-shell{width:100%;}
-#command-shell-output{height:200px; border:solid 1px #000000; margin:1px; overflow:scroll;}
+#command-shell-heading{padding-left:18px; background:transparent url(gear.png) no-repeat; font-weight:bold;}
+#command-shell-output{height:120px; border:solid 1px #000000; margin:1px; overflow:scroll;}
 #command-shell-output-padding{padding:3px;}
 #command-shell input{width:100%; border:solid 1px black;}
 #command-shell input, #command-shell-output{font-family: courier new;}
@@ -69,6 +85,4 @@ div.server-status-error{
 }
 #command-shell-output .normal-output{padding-left:15px;}
 #command-shell-output .normal-no-output{margin-left:15px; background:transparent url(success.png) no-repeat; height:16px; width:16px;}
-#command-shell-output .echo-output{
-	
-}
+#command-shell-output .echo-output{}

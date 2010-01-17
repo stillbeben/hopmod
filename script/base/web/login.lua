@@ -7,7 +7,7 @@ local function generateSessionKey()
 end
 
 local function isLoggedIn(request)
-    local params = http_request.parse_query_string(request:header("cookie"))
+    local params = http_request.parse_cookie(request:header("cookie"))
     local sessionId = params.id
     if not sessionId then return false end
     local sessionInfo = sessions[sessionId]
@@ -17,7 +17,7 @@ local function isLoggedIn(request)
 end
 
 local function requireLogin(request)
-    if not isLoggedIn(request) then
+    if request:client_ip() ~= "127.0.0.1" and not isLoggedIn(request) then
         http_response.redirect(request, "http://" .. request:host() .. "/login?return=" .. http_request.absolute_uri(request))
         return true
     end

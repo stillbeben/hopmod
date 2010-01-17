@@ -13,7 +13,10 @@ local function send_html(request, html)
     response:header("Content-Type", "text/html")
     response:set_content_length(#html)
     response:send_header()
-    response:send_body(html)
+    
+    if #html > 0 then
+        response:send_body(html)
+    end
 end
 
 local function send_json(request, tab)
@@ -24,7 +27,10 @@ local function send_json(request, tab)
     response:header("Content-Type", "application/json")
     response:set_content_length(#output)
     response:send_header()
-    response:send_body(output)
+    
+    if #output > 0 then
+        response:send_body(output)
+    end
 end
 
 local function send_file(request, filename, contentType)

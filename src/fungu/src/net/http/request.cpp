@@ -8,6 +8,7 @@
 
 #include "fungu/net/http/request.hpp"
 #include "fungu/net/http/response.hpp"
+#include <iostream>
 
 namespace fungu{
 namespace http{
@@ -144,7 +145,7 @@ void request::process_header(const char * header, std::size_t header_len, const 
     switch(m_request_line.parse(&cursor))
     {
         case request_line::PARSE_UNKNOWN_METHOD:
-            send_response(NOT_IMPLEMENTED);
+            send_response(NOT_IMPLEMENTED, "unknown method");
             return;
         case request_line::PARSE_MISSING_URI:
         case request_line::PARSE_MALFORMED_VERSION:

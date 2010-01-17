@@ -1,8 +1,25 @@
+/*
+    Hopmod Web Admin Control Panel
+    Copyright (C) 2010 Graham Daws
+*/
+
+var eventListeners = [];
+var clients = {};
+var username = "Admin";
 
 $(document).ready(function(){
     
     hideServerStatus();
+    
     createCommandShell();
+    createChatShell();
+    
+    clients.init();
+    clients.update();
+    
+    createListenerResource(eventListeners);
+    
+    executeCommand("return $web_admin_username", function(status, response){username = response;});
     
     $("#admin-startup").css("display", "none");
     $("#admin-container").css("display","block");
@@ -20,6 +37,11 @@ function hideServerStatus(){
     $("#server-status").hide();
 }
 
+function gotoLogin(){
+    alert("You are not logged in");
+    document.location = "/login?return=" + document.location;
+}
+
 function executeCommand(commandLine, responseHandler){
 
     function success(data, textStatus){
@@ -29,13 +51,18 @@ function executeCommand(commandLine, responseHandler){
 
     function error(HttpObject, textStatus, errorThrown){
         
-        if(HttpObject.status == 0){
-            updateServerStatus("server-status-error", "Disconnected from Game Server!");
-            responseHandler(false, "<connection broken>");
-        }
-        else{
-            hideServerStatus();
-            responseHandler(false, HttpObject.responseText);
+        switch(HttpObject.status){
+            case 0:
+            case 12029:
+                updateServerStatus("server-status-error", "Disconnected from Game Server!");
+                responseHandler(false, "<connection broken>");
+                break;
+            case 401:
+                gotoLogin();
+                break;
+            default:
+                hideServerStatus();
+                responseHandler(false, HttpObject.responseText);
         }
     }
 
@@ -54,6 +81,10 @@ function createCommandShell(){
     var commandShell = document.getElementById("command-shell");
     if(!commandShell) return;
     
+    var heading = document.createElement("div");
+    heading.id = "command-shell-heading";
+    heading.appendChild(document.createTextNode("Command Shell"));
+    
     var outputContainer = document.createElement("div");
     outputContainer.id = "command-shell-output";
     
@@ -64,11 +95,9 @@ function createCommandShell(){
     var input = document.createElement("input");
     input.type = "text";
     
+    commandShell.appendChild(heading);
     commandShell.appendChild(outputContainer);
     commandShell.appendChild(input);
-    
-    var history = [];
-    var history_index = 0;
     
     $(input).keypress(function(e){
     
@@ -100,24 +129,164 @@ function createCommandShell(){
                     
                     $(outputContainer).scrollTop(output.scrollHeight);
                     
-                    history.push(input.value);
-                    history_index = 0;
                     input.value = "";
                 });
             
                 break;
             }
-            case 38: // up arrow
-                var index = history.length - (++history_index);
-                if(index >= 0 && index < history.length) input.value = history[index];
-                else history_index--;
-                break;
-            case 40: // down arrow
-                var index = history.length - (--history_index);
-                if(index >= 0 && index < history.length) input.value = history[index];
-                else history_index++;
-                return false;
         }
         
+    });
+}
+
+function createChatShell(){
+
+    var chatShell = document.getElementById("chat-shell");
+    if(!chatShell) return;
+    $(chatShell).addClass("text-shell");
+    
+    var heading = document.createElement("div");
+    heading.id = "chat-shell-heading";
+    heading.className="text-shell-heading";
+    heading.appendChild(document.createTextNode("Chat"));
+    
+    var outputContainer = document.createElement("div");
+    outputContainer.id = "chat-shell-output";
+    outputContainer.className="text-shell-output";
+    
+    var output = document.createElement("div");
+    output.id = "chat-shell-output-padding";
+    output.className = "text-shell-output-padding";
+    outputContainer.appendChild(output);
+    
+    var input = document.createElement("input");
+    input.type = "text";
+    
+    chatShell.appendChild(heading);
+    chatShell.appendChild(outputContainer);
+    chatShell.appendChild(input);
+    
+    function addTextMessage(playerName, text){
+        
+        var message = document.createElement("p");
+        message.className = "chat-shell-message";
+        
+        var name = document.createElement("span");
+        name.className = "chat-shell-name";
+        name.appendChild(document.createTextNode(playerName));
+        
+        var messageText = document.createElement("span");
+        messageText.className = "chat-shell-text";
+        messageText.appendChild(document.createTextNode(text));
+        
+        var clear = document.createElement("div");
+        clear.className = "clear";
+        
+        message.appendChild(name);
+        message.appendChild(messageText);
+        
+        output.appendChild(message);
+        output.appendChild(clear);
+        
+        $(outputContainer).scrollTop(output.scrollHeight);
+    }
+    
+    var eventListener = {
+        eventName:"text",
+        handler:function(cn, text){
+            var clientInfo = clients[cn];
+            if(!clientInfo) clientInfo = {name:"<unknown>"};
+            var playerName = clientInfo.name + "(" + cn + ")";
+            addTextMessage(playerName, text);
+        }
+    };
+    eventListeners.push(eventListener);
+    
+    $(input).keypress(function(e){
+    
+        switch(e.which){
+            case 13: // enter
+            {
+                if(this.value.length == 0) return;
+                
+                executeCommand("console [" + username + "] [" + this.value + "]", function(status, responseBody){
+                    addTextMessage(username, input.value);
+                    input.value = "";
+                });
+                
+                break;
+            }
+        }
+        
+    });
+    
+}
+
+function createListenerResource(reactors){
+    
+    var reactorMap = {};
+    $.each(reactors, function(){
+        var a = reactorMap[this.eventName];
+        if(a === undefined) a = [];
+        a.push(this);
+        reactorMap[this.eventName] = a;
+    });
+    reactors = reactorMap;
+    
+    var eventsList = "[";
+    var count = 0;
+    $.each(reactors, function(eventName){
+        if(count++ > 0) eventsList += ", ";
+        eventsList += "\"" + eventName + "\"";
+    });
+    eventsList += "]";
+    
+    $.post("/listener", eventsList, function(response, textStatus){
+        if(textStatus != "success"){
+            updateServerStatus("server-status-error", "Failed to start event listening");
+            return;
+        }
+        eventLoop(response.listenerURI);
+    }, "json");
+    
+    function eventLoop(listenerURI){
+        
+        $.getJSON(listenerURI, function(events, textStatus){
+            
+            if(textStatus != "success"){
+                updateServerStatus("server-status-error", "Event listening failure");
+                return;
+            }
+            
+            $.each(events, function(){
+                var event = this;
+                $.each(reactors[event.name], function(){
+                    if(this.handler) this.handler.apply(this, event.args);
+                });
+            });
+            
+            eventLoop(listenerURI);
+        });
+    }
+}
+
+clients.init = function(){
+    eventListeners.push({eventName:"connect", handler:clients.update});
+    eventListeners.push({eventName:"disconnect", handler:clients.update});
+    eventListeners.push({eventName:"rename", handler:clients.update});
+}
+
+clients.update = function(){
+
+    $.getJSON("/clients", function(response, textStatus){
+        
+        if(textStatus != "success"){
+            updateServerStatus("server-status-error", "Clients update failure");
+            return;
+        }
+        
+        $.each(response, function(){
+            clients[this.cn] = this;
+        });
     });
 }

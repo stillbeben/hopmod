@@ -35,8 +35,22 @@ local function players()
     return output
 end
 
+local function clients()
+    local output = {}
+    for p in server.gplayers("all") do
+        table.insert(output, player(p))
+    end
+    return output
+end
+
 http_server.bind("players", http_server.resource({
     get = function(request)
         http_response.send_json(request, players())
+    end
+}))
+
+http_server.bind("clients", http_server.resource({
+    get = function(request)
+        http_response.send_json(request, clients())
     end
 }))

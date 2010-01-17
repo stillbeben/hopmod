@@ -10,6 +10,7 @@
 #include "fungu/convert.hpp"
 #include <sstream>
 #include <ctime>
+#include <iostream>
 
 namespace fungu{
 namespace http{
@@ -112,7 +113,7 @@ void response::send_header_complete(const connection::error &)
     if(!m_content_length && !m_using_chunked_encoding) delete this;
 }
 
-static void sent_body(response * res, char * data, const http::connection::error & err)
+void response::sent_body(response * res, char * data, const http::connection::error & err)
 {
     delete [] data;
     delete res;
@@ -122,7 +123,7 @@ void response::send_body(const char * content, std::size_t content_length)
 {
     char * content_copy = new char[content_length];
     memcpy(content_copy, content, content_length);
-    async_send_body(content_copy, content_length, boost::bind(sent_body, this, content_copy, _1));
+    async_send_body(content_copy, content_length, boost::bind(&response::sent_body, this, content_copy, _1));
 }
 
 void send_response(request & req, status status_code, const char * content)

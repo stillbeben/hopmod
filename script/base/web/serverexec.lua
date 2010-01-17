@@ -32,14 +32,15 @@ end
 http_server.bind("serverexec", http_server.resource({
     post = function(request)
 
-        if web_admin.require_backend_login(request) then
-            return
-        end
-        
         local handler = content_handler[request:content_type() .. "/" .. request:content_subtype()]
         
         if handler then
             request:async_read_content(function(code)
+            
+                if web_admin.require_backend_login(request) then
+                    return
+                end
+            
                 handler(request, code)
             end)
         else

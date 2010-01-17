@@ -32,11 +32,11 @@ function irc:connectServer(client)
 	irc.client:close()
 	irc.client = net.tcp_client()
 	irc.client:async_connect(server.irc_network, server.irc_network_port, function(errmsg) 
-		if errmsg then handleError(errmsg) return  end
+		if errmsg then irc:handleError(errmsg) return  end
 		irc.client:async_send("NICK "..server.irc_bot_name.."\n", function(errmsg)
-			if errmsg then handleError(errmsg) return  end
+			if errmsg then irc:handleError(errmsg) return  end
 			irc.client:async_send("USER  "..server.irc_network_username..string.random(15,"%l%d").." 8 *  : HopBot\n", function(errmsg)
-				if errmsg then handleError(errmsg) return  end
+				if errmsg then irc:handleError(errmsg) return  end
 			end)
 		if server.irc_debug == 1 then print ("DEBUG [connectServer] : Connected to "..server.irc_network) end
 		irc:readData(irc.client) 
