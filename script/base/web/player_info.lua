@@ -36,10 +36,21 @@ local function players()
 end
 
 local function clients()
+
     local output = {}
-    for p in server.gplayers("all") do
-        table.insert(output, player(p))
+    
+    for _, cn in ipairs(server.players()) do
+        table.insert(output, player(server.new_player_object(cn)))
     end
+    
+    for _, cn in ipairs(server.spectators()) do
+        table.insert(output, player(server.new_player_object(cn)))
+    end
+    
+    for _, cn in ipairs(server.bots()) do
+        table.insert(output, player(server.new_player_object(cn)))
+    end
+    
     return output
 end
 
