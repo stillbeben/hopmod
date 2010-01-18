@@ -24,7 +24,6 @@ local function createListener(events)
             return
         end
         
-        print("sending events")
         http_response.send_json(listener.request, listener.queue)
         
         listener.queue = {}

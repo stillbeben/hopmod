@@ -5,7 +5,9 @@
 
 var eventListeners = [];
 var clients = {};
-var username = "Admin";
+var teams = [];
+var spectators = [];
+var server = {};
 
 $(document).ready(function(){
     
@@ -14,12 +16,16 @@ $(document).ready(function(){
     createCommandShell();
     createChatShell();
     
-    clients.init();
-    clients.update();
+    server.updateVars = [
+        "web_admin_username", "servername", "gamemode"
+    ];
+    
+    server.update();
+    
+    clients_init();
+    clients_update();
     
     createListenerResource(eventListeners);
-    
-    executeCommand("return $web_admin_username", function(status, response){username = response;});
     
     $("#admin-startup").css("display", "none");
     $("#admin-container").css("display","block");
@@ -43,7 +49,7 @@ function gotoLogin(){
 }
 
 function executeCommand(commandLine, responseHandler){
-
+    
     function success(data, textStatus){
         hideServerStatus();
         responseHandler(true, data);
@@ -209,8 +215,8 @@ function createChatShell(){
             {
                 if(this.value.length == 0) return;
                 
-                executeCommand("console [" + username + "] [" + this.value + "]", function(status, responseBody){
-                    addTextMessage(username, input.value);
+                executeCommand("console [" + server.web_admin_username + "] [" + this.value + "]", function(status, responseBody){
+                    addTextMessage(server.web_admin_username, input.value);
                     input.value = "";
                 });
                 
@@ -270,14 +276,16 @@ function createListenerResource(reactors){
     }
 }
 
-clients.init = function(){
-    eventListeners.push({eventName:"connect", handler:clients.update});
-    eventListeners.push({eventName:"disconnect", handler:clients.update});
-    eventListeners.push({eventName:"rename", handler:clients.update});
+clients_init = function(){
+    eventListeners.push({eventName:"connect", handler:clients_update});
+    eventListeners.push({eventName:"disconnect", handler:clients_update});
+    eventListeners.push({eventName:"rename", handler:clients_update});
+    eventListeners.push({eventName:"spectator", handler:clients_update});
+    eventListeners.push({eventName:"frag", handler:clients_frag});
 }
 
-clients.update = function(){
-
+clients_update = function(){
+    
     $.getJSON("/clients", function(response, textStatus){
         
         if(textStatus != "success"){
@@ -285,8 +293,125 @@ clients.update = function(){
             return;
         }
         
+        spectators = [];
+        teams = {};
+        
         $.each(response, function(){
+            
             clients[this.cn] = this;
+            
+            if(this.status != "spectator"){
+                
+                if(this.team){
+                    (teams[this.team] = teams[this.team] || []).push(this);
+                }
+            }
+            else{
+                spectators.push(this);
+            }
         });
+        updatePlayersDiv();
     });
+}
+
+clients_frag = function(target, actor){
+    var deaths = ++clients[target].deaths;
+    var frags = ++clients[actor].frags;
+    $(clients[target].tableRow.deaths).text(deaths);
+    $(clients[actor].tableRow.frags).text(frags);
+}
+
+server.update = function(){
+    
+    var queryvars = $.toJSON(this.updateVars);
+    
+    $.post("/queryvars", queryvars, function(response, textStatus){
+        
+        if(textStatus != "success"){
+            updateServerStatus("server-status-error", "Server update failure");
+            return;
+        }
+        
+        $.each(response, function(name, value){
+            server[name] = value;
+        });
+        
+    }, "json");
+}
+
+function createPlayersTable(parent, playersCollection, team){
+    var tableContainer = document.createElement("div");
+    tableContainer.className = "team";
+    tableContainer.id = "team-" + team;
+    var heading = document.createElement("h2");
+    heading.appendChild(document.createTextNode(team || "Players"));
+    tableContainer.appendChild(heading);
+    var table = new HtmlTable();
+    table.columns([
+        {label:"CN", key:"cn"},
+        {label:"IP Addr", key:"ip"},
+        {label:"Priv", key:"priv"},
+        {label:"Name", key:"name"},
+        {label:"Ping", key:"ping"},
+        {label:"Frags", key:"frags"},
+        {label:"Deaths", key:"deaths"},
+        {label:"Teamkills", key:"teamkills"}
+    ]);
+    $.each(playersCollection, function(){
+        clients[this.cn].tableRow = table.row(this);
+    });
+    table.attachTo(tableContainer);
+    parent.appendChild(tableContainer);
+}
+
+function createSpectatorsTable(parent, specsCollection){
+    var tableContainer = document.createElement("div");
+    tableContainer.className = "spectators";
+    var heading = document.createElement("h2");
+    heading.appendChild(document.createTextNode("Spectators"));
+    tableContainer.appendChild(heading);
+    var table = new HtmlTable();
+    table.columns([
+        {label:"CN", key:"cn"},
+        {label:"IP Addr", key:"ip"},
+        {label:"Priv", key:"priv"},
+        {label:"Name", key:"name"}
+    ]);
+    $.each(specsCollection, function(){
+        clients[this.cn].tableRow = table.row(this);
+    });
+    table.attachTo(tableContainer);
+    parent.appendChild(tableContainer);
+}
+
+function isTeamMode(gamemode){
+    switch(gamemode){
+        case "insta ctf":
+            return true;
+    }
+    return false;
+}
+
+function updatePlayersDiv(){
+    var playersDiv = document.getElementById("players");
+    if(!playersDiv) return;
+    $(playersDiv).empty();
+    
+    if(isTeamMode(server.gamemode)){
+        $.each(teams, function(name){
+            createPlayersTable(playersDiv, this, name);
+        });
+    }
+    else{
+        createPlayersTable(playersDiv, clients);
+    }
+    
+    playersDiv.appendChild(createClearDiv());
+    if(spectators.length) createSpectatorsTable(playersDiv, spectators);
+}
+
+function createClearDiv(){
+    var clear = document.createElement("div");
+    clear.className = "clear";
+    return clear;
 }

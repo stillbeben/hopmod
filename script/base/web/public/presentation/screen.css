@@ -4,6 +4,9 @@ body{
 }
 .clear{clear:both; height:0; padding:0; margin:0;}
 
+table{font-size:0.84em;}
+table th{text-align:left;}
+
 form{text-align:right;}
 form fieldset{border:0}
 
@@ -86,3 +89,12 @@ div.server-status-error{
 #command-shell-output .normal-output{padding-left:15px;}
 #command-shell-output .normal-no-output{margin-left:15px; background:transparent url(success.png) no-repeat; height:16px; width:16px;}
 #command-shell-output .echo-output{}
+
+#players .team h2, #players .spectators h2{font-size:1em; padding:2px; margin:0;}
+#players #team-good h2{background-color:#124BE3; color:#FFFFFF;}
+#players #team-evil h2{background-color:#B32C05; color:#FFFFFF;}
+#players .spectators h2{background-color:#FFFF99;}
+
+
+#players{float:left; width:50%;}
+#chat-shell{float:left; width:50%;}
