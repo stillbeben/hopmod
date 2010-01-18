@@ -114,7 +114,7 @@ code_block & code_block::compile(env_frame * frm)
         if(current->parse(&readptr, m_source.end()-1, frm) != PARSE_COMPLETE)
         {
             const char * lf = "\n";
-            current->parse(&lf,lf,frm);
+            if(current->parse(&lf,lf,frm) != PARSE_COMPLETE) throw error(UNEXPECTED_EOF);
         }
         
         if(!current->is_empty_expression())
