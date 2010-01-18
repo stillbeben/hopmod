@@ -10,6 +10,7 @@ load_once("script/base/web/admin.lua")
 load_once("script/base/web/serverexec.lua")
 load_once("script/base/web/listener.lua")
 load_once("script/base/web/player_info.lua")
+load_once("script/base/web/queryvars.lua")
 
 http_server.bind_filesystem_path("static", "script/base/web/public", "index.htm")
 
