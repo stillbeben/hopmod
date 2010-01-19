@@ -86,6 +86,7 @@ function createCommandShell(){
 
     var commandShell = document.getElementById("command-shell");
     if(!commandShell) return;
+    $(commandShell).empty();
     
     var heading = document.createElement("div");
     heading.id = "command-shell-heading";
@@ -149,7 +150,7 @@ function createChatShell(){
 
     var chatShell = document.getElementById("chat-shell");
     if(!chatShell) return;
-    $(chatShell).addClass("text-shell");
+    $(chatShell).empty().addClass("text-shell");
     
     var heading = document.createElement("div");
     heading.id = "chat-shell-heading";
@@ -310,6 +311,7 @@ clients_update = function(){
                 spectators.push(this);
             }
         });
+        
         updatePlayersDiv();
     });
 }
@@ -339,6 +341,21 @@ server.update = function(){
     }, "json");
 }
 
+function createPlayerControlLinks(data){
+    var kick = document.createElement("a");
+    kick.className = "kick-button";
+    kick.href="#";
+    kick.title="Kick";
+    kick.onclick = function(){
+        var yes = confirm("You are you sure you want to kick " + data.name + "(" + data.cn + ")");
+        if(yes){
+            executeCommand("kick " + data.cn);
+        }
+        return false;
+    }
+    return kick;
+}
+
 function createPlayersTable(parent, playersCollection, team){
     var tableContainer = document.createElement("div");
     tableContainer.className = "team";
@@ -355,7 +372,8 @@ function createPlayersTable(parent, playersCollection, team){
         {label:"Ping", key:"ping"},
         {label:"Frags", key:"frags"},
         {label:"Deaths", key:"deaths"},
-        {label:"Teamkills", key:"teamkills"}
+        {label:"Teamkills", key:"teamkills"},
+        {label:"", cellFunction: createPlayerControlLinks, className:"player-control-links"}
     ]);
     $.each(playersCollection, function(){
         clients[this.cn].tableRow = table.row(this);

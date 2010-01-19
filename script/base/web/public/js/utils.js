@@ -22,9 +22,19 @@ function HtmlTable(){
         var tr = document.createElement("tr");
         for(var i = 0; i < columns.length; i++){
             var td = document.createElement("td");
-            td.appendChild(document.createTextNode(data[columns[i].key]));
-            tr.appendChild(td);
-            row_access[columns[i].key] = td;
+            var key = columns[i].key;
+            td.className = columns[i].className;
+            if(key){
+                td.appendChild(document.createTextNode(data[key]));
+                tr.appendChild(td);
+                row_access[key] = td;
+            }else{
+                var cellFunction = columns[i].cellFunction;
+                if(cellFunction){
+                    td.appendChild(cellFunction(data));
+                    tr.appendChild(td);
+                }
+            }
         }
         table.appendChild(tr);
         return row_access;

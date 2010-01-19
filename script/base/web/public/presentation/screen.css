@@ -1,6 +1,7 @@
 body{
 	font-size:0.9em;
 	font-family:verdana;
+	color:#262626;
 }
 .clear{clear:both; height:0; padding:0; margin:0;}
 
@@ -62,7 +63,7 @@ div.server-status-error{
 .text-shell-heading{padding-left:18px; font-weight:bold;}
 .text-shell-output{height:200px; border:solid 1px #000000; margin:1px; overflow:scroll;}
 .text-shell-output-padding{padding:3px;}
-.text-shell input{width:100%; border:solid 1px black; padding: 2px 0 2px;}
+.text-shell input{display:block; width:100%; border:solid 1px black; padding: 2px 0 2px;}
 
 #chat-shell-heading{background:transparent url(balloons.png) no-repeat;}
 .chat-shell-name{
@@ -90,11 +91,20 @@ div.server-status-error{
 #command-shell-output .normal-no-output{margin-left:15px; background:transparent url(success.png) no-repeat; height:16px; width:16px;}
 #command-shell-output .echo-output{}
 
-#players .team h2, #players .spectators h2{font-size:1em; padding:2px; margin:0;}
+#players .team h2, #players .spectators h2{font-size:1em; padding:2px; margin:0; background:#737373; color:#FFFFFF;}
 #players #team-good h2{background-color:#124BE3; color:#FFFFFF;}
 #players #team-evil h2{background-color:#B32C05; color:#FFFFFF;}
-#players .spectators h2{background-color:#FFFF99;}
+#players .spectators h2{background-color:#FFFF99; color:#999900;}
+
+#top-layout-left{float:left; width:500px; padding:5px;}
+#top-layout-right{margin-left:510px; min-width:400px;}
 
 
-#players{float:left; width:50%;}
-#chat-shell{float:left; width:50%;}
+.player-control-links{float:left;}
+.kick-button{
+	display:block;
+	width:16px;
+	height:16px;
+	background:transparent url(cross_circle.png) no-repeat;
+	outline-style: none;
+}
