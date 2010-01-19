@@ -278,6 +278,7 @@ namespace server
         freqlimit sv_kick_hit;
         freqlimit sv_remip_hit;
         freqlimit sv_newmap_hit;
+        freqlimit sv_spec_hit;
         std::string disconnect_reason;
         bool active;
         int rank;
@@ -291,7 +292,8 @@ namespace server
            sv_switchteam_hit(sv_switchteam_hit_length),
            sv_kick_hit(sv_kick_hit_length),
            sv_remip_hit(sv_remip_hit_length),
-           sv_newmap_hit(sv_newmap_hit_length)
+           sv_newmap_hit(sv_newmap_hit_length),
+           sv_spec_hit(sv_spec_hit_length)
         { reset(); }
         
         ~clientinfo() { events.deletecontentsp(); }
@@ -2765,7 +2767,7 @@ namespace server
             case SV_SPECTATOR:
             {
                 int spectator = getint(p), val = getint(p);
-                if(!ci->privilege && !ci->local && (spectator!=sender || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED))) break;
+                if(!ci->privilege && !ci->local && (spectator!=sender || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED)) || ci->check_flooding(ci->sv_spec_hit, "switching")) break;
                 clientinfo *spinfo = (clientinfo *)getclientinfo(spectator); // no bots
                 if(val && spinfo && spinfo != ci && spinfo->privilege && ci->privilege < PRIV_ADMIN)
                 {

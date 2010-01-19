@@ -167,6 +167,7 @@ flood_protect_switchteam 1000
 flood_protect_switchname 1000
 flood_protect_remip 10000
 flood_protect_newmap 10000
+flood_protect_spectator 10000
 
 global shell_label "server"
 

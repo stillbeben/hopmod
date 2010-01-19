@@ -235,6 +235,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::sv_kick_hit_length, "flood_protect_kick", env);
     script::bind_var(server::sv_remip_hit_length, "flood_protect_remip", env);
     script::bind_var(server::sv_newmap_hit_length, "flood_protect_newmap", env);
+    script::bind_var(server::sv_spec_hit_length, "flood_protect_spectator", env);
     
     script::bind_var(server::broadcast_mapmodified, "broadcast_mapmodified", env);
     
