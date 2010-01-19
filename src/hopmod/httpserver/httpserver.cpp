@@ -75,6 +75,7 @@ void start_http_server(const char * ip, const char * port)
     wait_next_accept(*server_acceptor);
     
     info_file("log/sauer_server_http.port", "%s\n", port);
+    std::cout<<"HTTP server listening on TCP "<<ip<<":"<<port<<std::endl;
 }
 
 void stop_http_server()
