@@ -259,8 +259,7 @@ void sendf(int cn, int chan, const char *format, ...)
     int exclude = -1;
     bool reliable = false;
     if(*format=='r') { reliable = true; ++format; }
-    ENetPacket *packet = enet_packet_create(NULL, MAXTRANS, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
-    ucharbuf p(packet->data, packet->dataLength);
+    packetbuf p(MAXTRANS, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
     va_list args;
     va_start(args, format);
     while(*format) switch(*format++)
@@ -293,17 +292,12 @@ void sendf(int cn, int chan, const char *format, ...)
         case 'm':
         {
             int n = va_arg(args, int);
-            enet_packet_resize(packet, packet->dataLength+n);
-            p.buf = packet->data;
-            p.maxlen += n;
             p.put(va_arg(args, uchar *), n);
             break;
         }
     }
     va_end(args);
-    enet_packet_resize(packet, p.length());
-    sendpacket(cn, chan, packet, exclude);
-    if(packet->referenceCount==0) enet_packet_destroy(packet);
+    sendpacket(cn, chan, p.finalize(), exclude);
 }
 
 void sendfile(int cn, int chan, stream *file, const char *format, ...)
@@ -319,11 +313,7 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
     int len = file->size();
     if(len <= 0) return;
 
-    bool reliable = false;
-    if(*format=='r') { reliable = true; ++format; }
-    ENetPacket *packet = enet_packet_create(NULL, MAXTRANS+len, ENET_PACKET_FLAG_RELIABLE);
-
-    ucharbuf p(packet->data, packet->dataLength);
+    packetbuf p(MAXTRANS+len, ENET_PACKET_FLAG_RELIABLE);
     va_list args;
     va_start(args, format);
     while(*format) switch(*format++)
@@ -338,17 +328,15 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
         case 'l': putint(p, len); break;
     }
     va_end(args);
-    enet_packet_resize(packet, p.length()+len);
 
     file->seek(0, SEEK_SET);
-    file->read(&packet->data[p.length()], len);
-    enet_packet_resize(packet, p.length()+len);
+    file->read(p.subbuf(len).buf, len);
 
+    ENetPacket *packet = p.finalize();
     if(cn >= 0) sendpacket(cn, chan, packet, -1);
 #ifndef STANDALONE
     else sendclientpacket(packet, chan);
 #endif
-    if(!packet->referenceCount) enet_packet_destroy(packet);
 }
 
 void disconnect_client_now(int n, int reason)
