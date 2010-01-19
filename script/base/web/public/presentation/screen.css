@@ -95,10 +95,15 @@ div.server-status-error{
 #players #team-good h2{background-color:#124BE3; color:#FFFFFF;}
 #players #team-evil h2{background-color:#B32C05; color:#FFFFFF;}
 #players .spectators h2{background-color:#FFFF99; color:#999900;}
+#players table{
+	width:100%;
+	margin-bottom:10px;
+}
+#players tr.admin-priv{background-color:#FF8533;}
+#players tr.master-priv{background-color:#80FF80;}
 
 #top-layout-left{float:left; width:500px; padding:5px;}
 #top-layout-right{margin-left:510px; min-width:400px;}
-
 
 .player-control-links{float:left;}
 .kick-button{

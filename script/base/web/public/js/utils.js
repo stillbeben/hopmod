@@ -2,6 +2,8 @@
 function HtmlTable(){
 
     var table = document.createElement("table");
+    table.cellSpacing = 0;
+    table.cellPadding = 2;
     var columns = [];
     
     this.columns = function(fields){
@@ -17,9 +19,10 @@ function HtmlTable(){
         table.appendChild(tr);
     }
     
-    this.row = function(data){
+    this.row = function(data, className){
         var row_access = {};
         var tr = document.createElement("tr");
+        tr.className = className;
         for(var i = 0; i < columns.length; i++){
             var td = document.createElement("td");
             var key = columns[i].key;

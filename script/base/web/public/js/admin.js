@@ -311,7 +311,7 @@ clients_update = function(){
                 spectators.push(this);
             }
         });
-        
+
         updatePlayersDiv();
     });
 }
@@ -367,7 +367,6 @@ function createPlayersTable(parent, playersCollection, team){
     table.columns([
         {label:"CN", key:"cn"},
         {label:"IP Addr", key:"ip"},
-        {label:"Priv", key:"priv"},
         {label:"Name", key:"name"},
         {label:"Ping", key:"ping"},
         {label:"Frags", key:"frags"},
@@ -376,7 +375,14 @@ function createPlayersTable(parent, playersCollection, team){
         {label:"", cellFunction: createPlayerControlLinks, className:"player-control-links"}
     ]);
     $.each(playersCollection, function(){
-        clients[this.cn].tableRow = table.row(this);
+        var privClassName = "no-priv";
+        if(this.priv == "master"){
+            privClassName = "master-priv";
+        }
+        else if(this.priv == "admin"){
+            privClassName = "admin-priv";
+        }
+        clients[this.cn].tableRow = table.row(this, privClassName);
     });
     table.attachTo(tableContainer);
     parent.appendChild(tableContainer);
@@ -393,7 +399,8 @@ function createSpectatorsTable(parent, specsCollection){
         {label:"CN", key:"cn"},
         {label:"IP Addr", key:"ip"},
         {label:"Priv", key:"priv"},
-        {label:"Name", key:"name"}
+        {label:"Name", key:"name"},
+        {label:"", cellFunction: createPlayerControlLinks, className:"player-control-links"}
     ]);
     $.each(specsCollection, function(){
         clients[this.cn].tableRow = table.row(this);
