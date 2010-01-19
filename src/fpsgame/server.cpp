@@ -2592,16 +2592,17 @@ namespace server
                 if(strcmp(ci->team, text) && m_teammode)
                 {
                     bool cancel = ci->check_flooding(ci->sv_switchteam_hit,"switching teams") || 
-                        (smode && !smode->canchangeteam(ci,ci->team,text)) ||
+                        (smode && !smode->canchangeteam(ci, ci->team, text)) ||
                         signal_chteamrequest(ci->clientnum, ci->team, text) == -1;
                     
                     if(!cancel)
                     {
-                        if(smode && ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, text);
+                        if(ci->state.state==CS_ALIVE) suicide(ci);
                         string oldteam;
                         copystring(oldteam, ci->team);
                         copystring(ci->team, text);
                         aiman::changeteam(ci);
+                        /*sendf(-1, 1, "riisi", SV_SETTEAM, sender, ci->team , ci->state.state==CS_SPECTATOR ? -1 : 0); FUTURE */
                         sendf(-1, 1, "riis", SV_SETTEAM, sender, ci->team);
                         signal_reteam(ci->clientnum, oldteam, text);
                     }
@@ -2786,8 +2787,7 @@ namespace server
                 if((!smode || smode->canchangeteam(wi, wi->team, text)) && 
                     signal_chteamrequest(wi->clientnum,wi->team,text) != -1)
                 {
-                    if(smode && wi->state.state==CS_ALIVE)
-                        smode->changeteam(wi, wi->team, text);
+                    if(smode && wi->state.state==CS_ALIVE) suicide(wi);
                     signal_reteam(wi->clientnum, wi->team, text);
                     copystring(wi->team, text, MAXTEAMLEN+1);
                 }

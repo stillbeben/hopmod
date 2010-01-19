@@ -498,7 +498,7 @@ bool player_changeteam(int cn,const char * newteam)
     if(!m_teammode || (smode && !smode->canchangeteam(ci, ci->team, newteam)) ||
         signal_chteamrequest(cn, ci->team, newteam) == -1) return false;
     
-    if(smode || ci->state.state==CS_ALIVE) smode->changeteam(ci, ci->team, newteam);
+    if(smode || ci->state.state==CS_ALIVE) suicide(ci);
     signal_reteam(ci->clientnum, ci->team, newteam);
     
     copystring(ci->team, newteam, MAXTEAMLEN+1);
