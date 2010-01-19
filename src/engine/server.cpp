@@ -353,7 +353,7 @@ void sendfile(int cn, int chan, stream *file, const char *format, ...)
 
 void disconnect_client_now(int n, int reason)
 {
-    if(clients[n]->type!=ST_TCPIP) return;
+    if(!clients.inrange(n) || clients[n]->type!=ST_TCPIP) return;
     enet_peer_reset(clients[n]->peer);
     server::clientdisconnect(n, reason);
     clients[n]->type = ST_EMPTY;
@@ -364,7 +364,7 @@ void disconnect_client_now(int n, int reason)
 
 void disconnect_client(int n, int reason)
 {
-    if(clients[n]->type!=ST_TCPIP) return;
+    if(!clients.inrange(n) || clients[n]->type!=ST_TCPIP) return;
     enet_peer_disconnect(clients[n]->peer, reason);
     server::clientdisconnect(n, reason);
     clients[n]->type = ST_EMPTY;
