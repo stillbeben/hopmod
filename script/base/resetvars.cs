@@ -179,3 +179,5 @@ global use_master_auth 1
 
 global web_admin_username ""
 global web_admin_password ""
+
+global masterauth_banned []
