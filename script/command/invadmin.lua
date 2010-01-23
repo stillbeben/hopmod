@@ -12,7 +12,8 @@ local invadmin_domains = table_unique(server.parse_list(server["invadmin_domains
 
 local function set_invadmin(cn,name)
 
-	server.set_invadmin(cn)
+	server.set_invisible_admin(cn)
+    
 	server.player_msg(cn,"Your rights have been raised to invisible-admin.")
 
 	if not name then
