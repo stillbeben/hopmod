@@ -123,12 +123,12 @@ server.event_handler("setmastermode", function(cn, oldmode, newmode)
     log(string.format("mastermode changed to %s",newmode))
 end)
 
-server.event_handler("masterchange", function(cn, value)
+server.event_handler("privilege", function(cn, oldpriv, curpriv)
     
-    local action_tag = "claimed"
-    if tonumber(value) == 0 then action_tag = "relinquished" end
+    local change = "lowered"
+    if oldpriv < curpriv then change = "raised" end
     
-    log(string.format("%s(%i) %s %s", server.player_name(cn), cn, action_tag, server.player_priv(cn)))
+    log(string.format("%s(%i) %s %s", server.player_name(cn), cn, change, server.priv_priv(cn)))
 end)
 
 server.event_handler("spectator", function(cn, value)

@@ -1019,6 +1019,8 @@ namespace server
         //FIXME this should really be an assertion check
         if(authname && !val) return;
         
+        int old_privilege = ci->privilege;
+        
         const char *name = "";
         if(val)
         {
@@ -1082,7 +1084,7 @@ namespace server
         }
         #endif
         
-        signal_masterchange(ci->clientnum, val);
+        signal_privilege(ci->clientnum, old_privilege, ci->privilege);
     }
 
     savedscore &findscore(clientinfo *ci, bool insert)
@@ -2278,7 +2280,7 @@ namespace server
                 
                 signal_connect(ci->clientnum);
                 
-                if(give_admin_priv) set_invadmin(ci->clientnum);
+                if(give_admin_priv) set_player_private_admin(ci->clientnum);
             }
         }
         else if(chan==2)

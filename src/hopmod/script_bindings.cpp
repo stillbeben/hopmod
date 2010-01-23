@@ -111,11 +111,11 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::player_spec, "spec", env);
     script::bind_freefunc(server::player_unspec, "unspec", env);
     script::bind_freefunc(server::unsetmaster, "unsetmaster", env);
-    script::bind_freefunc(server::server_setmaster, "setmaster", env);
-    script::bind_freefunc(server::server_setadmin, "setadmin", env);
-    script::bind_freefunc(server::set_invadmin, "set_invadmin", env);
-    script::bind_freefunc(server::set_invmaster, "set_invmaster", env);
-    script::bind_freefunc(server::unsetpriv, "unsetpriv", env);
+    script::bind_freefunc(server::set_player_master, "setmaster", env);
+    script::bind_freefunc(server::set_player_admin, "setadmin", env);
+    script::bind_freefunc(server::set_player_private_admin, "set_invadmin", env);
+    script::bind_freefunc(server::set_player_private_master, "set_invmaster", env);
+    script::bind_freefunc(server::unset_player_privilege, "unsetpriv", env);
     
     script::bind_freefunc(server::cs_player_list, "players", env);
     script::bind_freefunc(server::cs_spec_list, "spectators", env);

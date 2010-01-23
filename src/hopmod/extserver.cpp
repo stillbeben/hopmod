@@ -630,6 +630,7 @@ void unsetmaster()
         defformatstring(msg)("The server has revoked your %s privilege.", privname(master->privilege));
         master->sendprivtext(msg);
         
+        int old_priv = master->privilege;
         master->privilege = 0;
         int oldmaster = currentmaster;
         currentmaster = -1;
@@ -637,65 +638,78 @@ void unsetmaster()
         
         cleanup_masterstate(master);
         
-        signal_masterchange(oldmaster, false);
+        signal_privilege(oldmaster, old_priv, PRIV_NONE);
     }
 }
 
-void setpriv(int cn, int priv)
+void unset_player_privilege(int cn)
 {
-    clientinfo * player = get_ci(cn);
-    if(player->privilege == priv || priv == PRIV_NONE) return;
-    
-    unsetmaster();
-    
-    const char * change = (priv > player->privilege ? "raised" : "lowered");
-    
-    player->privilege = priv;
-    currentmaster = cn;
-    masterupdate = true;
-    
-    defformatstring(msg)("The server has %s your privilege to %s.", change, privname(priv));
-    player->sendprivtext(msg);
-    
-    signal_masterchange(currentmaster, true);
-}
-
-bool server_setmaster(int cn)
-{
-    setpriv(cn, PRIV_MASTER);
-    return true;
-}
-
-void server_setadmin(int cn)
-{
-    setpriv(cn, PRIV_ADMIN);
-}
-
-void set_invadmin(int cn)
-{
-    clientinfo * ci = get_ci(cn);
-    ci->privilege = PRIV_ADMIN;
-    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_ADMIN);
-}
-
-void set_invmaster(int cn)
-{
-    clientinfo * ci = get_ci(cn);
-    ci->privilege = PRIV_MASTER;
-    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_MASTER);
-}
-
-void unsetpriv(int cn)
-{
-    if(currentmaster == cn) unsetmaster();
+    if(currentmaster == cn)
+    {
+        unsetmaster();
+        return;
+    }
     
     clientinfo * ci = get_ci(cn);
-    if(ci->privilege < PRIV_MASTER || cn == currentmaster) return;
+    if(ci->privilege == PRIV_NONE) return;
     
+    int old_priv = ci->privilege;
     ci->privilege = PRIV_NONE;
     sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_NONE);
     
     cleanup_masterstate(ci);
+    
+    signal_privilege(cn, old_priv, PRIV_NONE);
+}
+
+void set_player_privilege(int cn, int priv_code, bool public_priv = false)
+{
+    clientinfo * player = get_ci(cn);
+    
+    if(player->privilege == priv_code) return;
+    if(priv_code == PRIV_NONE) unset_player_privilege(cn);
+    
+    if(cn == currentmaster && !public_priv)
+    {
+        currentmaster = -1;
+        masterupdate = true;
+    }
+    
+    int old_priv = player->privilege;
+    player->privilege = priv_code;
+    
+    if(public_priv)
+    {
+        currentmaster = cn;
+        masterupdate = true;
+    }
+    
+    const char * change = (old_priv < player->privilege ? "raised" : "lowered");
+    defformatstring(msg)("The server has %s your privilege to %s.", change, privname(priv_code));
+    player->sendprivtext(msg);
+    
+    signal_privilege(cn, old_priv, player->privilege);
+}
+
+bool set_player_master(int cn)
+{
+    set_player_privilege(cn, PRIV_MASTER, true);
+    return true;
+}
+
+void set_player_admin(int cn)
+{
+    set_player_privilege(cn, PRIV_ADMIN, true);
+}
+
+void set_player_private_admin(int cn)
+{
+   set_player_privilege(cn, PRIV_ADMIN, false);
+}
+
+void set_player_private_master(int cn)
+{
+    set_player_privilege(cn, PRIV_MASTER, false);
 }
 
 void addpermban(const char * addrstr)

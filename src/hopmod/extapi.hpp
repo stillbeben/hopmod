@@ -88,17 +88,17 @@ namespace server
     int player_pos(lua_State *);
     std::vector<float> player_pos(int);
     void unsetmaster();
-    bool server_setmaster(int);
-    void server_setadmin(int);
+    bool set_player_master(int);
+    void set_player_admin(int);
     void player_slay(int);
     bool player_changeteam(int,const char *);
     int player_rank(int);
     bool player_isbot(int);
-    void set_invadmin(int);
-    void set_invmaster(int);
-    void unsetpriv(int);
+    void set_player_private_admin(int);
+    void set_player_private_master(int);
+    void unset_player_privilege(int);
     int player_mapcrc(int);
-    void set_player_priv(int, int);
+    void set_player_privilege(int, int);
     
     void team_msg(const char *,const char *);
     std::vector<std::string> get_teams();
