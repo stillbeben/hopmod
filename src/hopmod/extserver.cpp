@@ -11,6 +11,7 @@ int sv_switchteam_hit_length = 0;
 int sv_kick_hit_length = 0;
 int sv_remip_hit_length = 0;
 int sv_newmap_hit_length = 0;
+int sv_spec_hit_length = 0;
 
 bool kick_bannedip_group = true;
 
