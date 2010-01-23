@@ -1623,6 +1623,7 @@ namespace server
 
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0))
     {
+        if(signal_damage(target->clientnum, actor->clientnum, damage, gun) == -1) return;
         gamestate &ts = target->state;
         ts.dodamage(damage);
         actor->state.damage += damage;

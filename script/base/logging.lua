@@ -128,7 +128,7 @@ server.event_handler("privilege", function(cn, oldpriv, curpriv)
     local change = "lowered"
     if oldpriv < curpriv then change = "raised" end
     
-    log(string.format("%s(%i) %s %s", server.player_name(cn), cn, change, server.priv_priv(cn)))
+    log(string.format("%s(%i) %s %s", server.player_name(cn), cn, change, server.player_priv(cn)))
 end)
 
 server.event_handler("spectator", function(cn, value)

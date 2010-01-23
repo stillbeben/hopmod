@@ -67,6 +67,7 @@ extern boost::signal<void (int,int)>                                signal_frag;
 extern boost::signal<void (int,int,int)>                            signal_shot;
 extern boost::signal<void (int)>                                    signal_suicide;
 extern boost::signal<void (int)>                                    signal_spawn;
+extern boost::signal<int (int, int, int, int), proceed>            signal_damage;
 
 // Game Events
 extern boost::signal<void ()>                                       signal_intermission;
