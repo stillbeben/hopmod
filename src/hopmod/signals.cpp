@@ -57,6 +57,7 @@ boost::signal<void (int)> signal_dropflag;
 boost::signal<void (int)> signal_scoreflag;
 boost::signal<void (int)> signal_returnflag;
 boost::signal<void ()> signal_maintenance;
+boost::signal<void (int)> signal_spawn;
 
 static void destroy_slot(int handle);
 static int lua_event_handler(lua_State * L);
@@ -224,6 +225,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_dropflag, "dropflag", normal_error_handler);
     slots.register_signal(signal_scoreflag, "scoreflag", normal_error_handler);
     slots.register_signal(signal_returnflag, "returnflag", normal_error_handler);
+    slots.register_signal(signal_spawn, "spawn", normal_error_handler);
     
     script::bind_freefunc(cubescript_event_handler, "event_handler", env);
     script::bind_freefunc(destroy_slot, "cancel_handler", env);
@@ -286,5 +288,6 @@ void disconnect_all_slots()
     signal_dropflag.disconnect_all_slots();
     signal_scoreflag.disconnect_all_slots();
     signal_returnflag.disconnect_all_slots();
+    signal_spawn.disconnect_all_slots();
 }
 
