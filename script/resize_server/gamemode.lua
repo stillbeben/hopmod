@@ -35,7 +35,7 @@ end
 
 event.mapchange = server.event_handler_object("mapchange", function(map, mode)
 
-	server,sleep(500, function()
+	server.sleep(500, function()
 		resize_gamemodechange(mode)
 	end)
 
