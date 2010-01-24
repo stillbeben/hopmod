@@ -60,6 +60,7 @@ local function getLoginFormHtml(attributes)
         </script>
     </head>
     <body>
+        <div id="server-info"><span id="app-title">Cube 2 Server Control Panel</span></div>
         <form method="post" id="login-form" name="login" action="?return=%s">
             %s
             <fieldset>
@@ -75,7 +76,7 @@ local function getLoginFormHtml(attributes)
     return string.format(html, attributes.returnUrl or "", failed, attributes.username or "")
 end
 
-http_server.bind("login", http_server.resource({
+http_server_root["login"] = http_server.resource({
 
     get = function(request)
         local uri_query_params = http_request.parse_query_string(request:uri_query() or "")
@@ -120,10 +121,10 @@ http_server.bind("login", http_server.resource({
             http_response.redirect(request, http_utils.return_url(request, uri_query_params["return"]), {["Set-Cookie"] = cookie})
         end)
     end
-}))
+})
 
-http_server.bind("logout", http_server.resource({
+http_server_root["logout"] = http_server.resource({
     get = function(request)
         
     end
-}))
+})

@@ -54,14 +54,14 @@ local function clients()
     return output
 end
 
-http_server.bind("players", http_server.resource({
+http_server_root["players"] = http_server.resource({
     get = function(request)
         http_response.send_json(request, players())
     end
-}))
+})
 
-http_server.bind("clients", http_server.resource({
+http_server_root["clients"] = http_server.resource({
     get = function(request)
         http_response.send_json(request, clients())
     end
-}))
+})

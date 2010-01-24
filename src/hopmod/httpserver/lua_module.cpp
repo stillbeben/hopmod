@@ -1,5 +1,6 @@
 #include <fungu/net/http/response.hpp>
 #include "directory_resource.hpp"
+#include "proxy_resource.hpp"
 #include "filesystem_resource.hpp"
 using namespace fungu;
 
@@ -12,7 +13,7 @@ extern "C"{
 }
 
 void report_script_error(const char *);
-directory_resource & get_root_resource();
+proxy_resource & get_root_resource();
 
 class request_wrapper
 {
@@ -340,6 +341,51 @@ static bool lua_isusertype(lua_State * L, int index, const char * tname)
     return equal == 1;
 }
 
+class filesystem_resource_wrapper:public filesystem_resource
+{
+public:
+    static const char * MT;
+    
+    filesystem_resource_wrapper(fungu::const_string fs_path, fungu::const_string bind_name)
+     :filesystem_resource(fs_path, bind_name, NULL)
+    {
+        
+    }
+    
+    static int register_class(lua_State * L)
+    {
+        luaL_newmetatable(L, MT);
+        
+        lua_pushvalue(L, -1);
+        lua_setfield(L, -1, "__index");
+        
+        static luaL_Reg funcs[] = {
+            {"__gc", &filesystem_resource_wrapper::__gc},
+            {NULL, NULL}
+        };
+        
+        luaL_register(L, NULL, funcs);
+    }
+    
+    static int create_object(lua_State * L)
+    {
+        const char * fs_path = luaL_checkstring(L, 1);
+        const char * bind_name = luaL_checkstring(L, 2);
+        new (lua_newuserdata(L, sizeof(filesystem_resource_wrapper))) filesystem_resource_wrapper(const_string(std::string(fs_path)), const_string(std::string(bind_name)));
+        luaL_getmetatable(L, filesystem_resource_wrapper::MT);
+        lua_setmetatable(L, -2);
+        return 1;
+    }
+private:
+    static int __gc(lua_State * L)
+    {
+        reinterpret_cast<filesystem_resource_wrapper *>(luaL_checkudata(L, 1, MT))->~filesystem_resource_wrapper();
+        return 0;
+    }
+};
+
+const char * filesystem_resource_wrapper::MT = "http::server::filesystem_resource";
+
 class resource_wrapper:public http::server::resource
 {
     static const char * MT;
@@ -350,8 +396,7 @@ public:
       m_get_function(LUA_REFNIL),
       m_put_function(LUA_REFNIL),
       m_post_function(LUA_REFNIL),
-      m_delete_function(LUA_REFNIL),
-      m_self_ref(LUA_REFNIL)
+      m_delete_function(LUA_REFNIL)
     {
         
     }
@@ -363,7 +408,6 @@ public:
         luaL_unref(m_lua, LUA_REGISTRYINDEX, m_put_function);
         luaL_unref(m_lua, LUA_REGISTRYINDEX, m_post_function);
         luaL_unref(m_lua, LUA_REGISTRYINDEX, m_delete_function);
-        luaL_unref(m_lua, LUA_REGISTRYINDEX, m_self_ref);
     }
     
     http::server::resource * resolve(const const_string & uri)
@@ -380,7 +424,8 @@ public:
         }
         else
         {
-            if(!lua_isusertype(m_lua, -1, MT)) return NULL;
+            if(!lua_isusertype(m_lua, -1, MT) && !lua_isusertype(m_lua, -1, filesystem_resource_wrapper::MT))
+                return NULL;
             return reinterpret_cast<resource_wrapper *>(lua_touserdata(m_lua, -1));
         }
     }
@@ -507,18 +552,15 @@ public:
         res->m_delete_function = delete_function;
         res->m_lua = L;
         
-        lua_pushvalue(L, -1);
-        res->m_self_ref = luaL_ref(L, LUA_REGISTRYINDEX);
-        
         return 1;
     }
     
-    static int bind_to_root(lua_State * L)
+    static int set_root(lua_State * L)
     {
-        const char * name = luaL_checkstring(L, 1);
-        resource_wrapper * res = reinterpret_cast<resource_wrapper *>(luaL_checkudata(L, 2, MT));
-        
-        get_root_resource().add_resource(*res, const_string(std::string(name)));
+        resource_wrapper * res = reinterpret_cast<resource_wrapper *>(luaL_checkudata(L, 1, MT));
+        lua_pushvalue(L, -1);
+        int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+        get_root_resource().set_resource(res, boost::bind(&resource_wrapper::cleanup_root_resource, L, ref));
         return 0;
     }
 private:
@@ -528,7 +570,11 @@ private:
         return 0;
     }
     
-    int m_self_ref;
+    static void cleanup_root_resource(lua_State * L, int ref)
+    {
+        luaL_unref(L, LUA_REGISTRYINDEX, ref);
+    }
+    
     int m_resolve_function;
     int m_get_function;
     int m_put_function;
@@ -538,15 +584,6 @@ private:
 };
 
 const char * resource_wrapper::MT = "http::server::resource";
-
-int bind_filesystem_path(lua_State * L)
-{
-    const char * resource_id = luaL_checkstring(L, 1);
-    const char * root_path = luaL_checkstring(L, 2);
-    const char * index_file = luaL_checkstring(L, 3);
-    get_root_resource().add_resource(*new filesystem_resource(std::string(root_path), std::string(index_file), NULL), std::string(resource_id));
-    return 0;
-}
 
 static int url_decode(lua_State * L)
 {
@@ -575,9 +612,9 @@ void open_http_server(lua_State * L)
 {
     static luaL_Reg functions[] = {
         {"resource", &resource_wrapper::create_object},
-        {"bind", &resource_wrapper::bind_to_root},
+        {"filesystem_resource", &filesystem_resource_wrapper::create_object},
+        {"set_root", &resource_wrapper::set_root},
         {"response", &response_wrapper::create_object},
-        {"bind_filesystem_path", bind_filesystem_path},
         {"url_decode", &url_decode},
         {"url_encode", &url_encode},
         {NULL, NULL}
@@ -588,6 +625,7 @@ void open_http_server(lua_State * L)
     request_wrapper::register_class(L);
     response_wrapper::register_class(L);
     resource_wrapper::register_class(L);
+    filesystem_resource_wrapper::register_class(L);
 }
 
 } //namespace module

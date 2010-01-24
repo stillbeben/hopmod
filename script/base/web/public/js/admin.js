@@ -2,7 +2,7 @@
     Hopmod Web Admin Control Panel
     Copyright (C) 2010 Graham Daws
 */
-
+var appTitle;
 var eventListeners = [];
 var clients = {};
 var teams = [];
@@ -11,13 +11,15 @@ var server = {};
 
 $(document).ready(function(){
     
+    appTitle = document.title;
+    
     hideServerStatus();
     
     createCommandShell();
     createChatShell();
     
     server.updateVars = [
-        "web_admin_username", "servername", "gamemode"
+        "web_admin_username", "servername", "gamemode", "map", "timeleft"
     ];
     
     server.update();
@@ -226,7 +228,6 @@ function createChatShell(){
         }
         
     });
-    
 }
 
 function createListenerResource(reactors){
@@ -282,6 +283,7 @@ clients_init = function(){
     eventListeners.push({eventName:"disconnect", handler:clients_update});
     eventListeners.push({eventName:"rename", handler:clients_update});
     eventListeners.push({eventName:"spectator", handler:clients_update});
+    eventListeners.push({eventName:"mapchange", handler:clients_update});
     eventListeners.push({eventName:"frag", handler:clients_frag});
 }
 
@@ -337,6 +339,9 @@ server.update = function(){
         $.each(response, function(name, value){
             server[name] = value;
         });
+        
+        updateServerInfoDiv();
+        updateGameInfoDiv();
         
     }, "json");
 }
@@ -433,6 +438,54 @@ function updatePlayersDiv(){
     
     playersDiv.appendChild(createClearDiv());
     if(spectators.length) createSpectatorsTable(playersDiv, spectators);
+}
+
+function updateServerInfoDiv(){
+    var infoDiv = document.getElementById("server-info");
+    if(!infoDiv) return;
+    $(infoDiv).empty();
+    
+    var infoList = document.createElement("ul");
+    infoList.className = "";
+    
+    function createListItem(text, id){
+        var li = document.createElement("li");
+        li.appendChild(document.createTextNode(text));
+        li.id = id;
+        infoList.appendChild(li);
+    }
+    
+    document.title = server.servername + " - " + appTitle;
+    createListItem(server.servername, "server-name");
+    
+    createListItem(appTitle, "app-title");
+    
+    infoDiv.appendChild(infoList);
+}
+
+function updateGameInfoDiv(){
+    var infoDiv = document.getElementById("game-info");
+    if(!infoDiv) return;
+    $(infoDiv).empty();
+    
+    var gamemode = document.createElement("span");
+    var mapname = document.createElement("span");
+    var minsleft = document.createElement("span");
+    
+    gamemode.id = "gamemode";
+    gamemode.appendChild(document.createTextNode(server.gamemode));
+    
+    mapname.id = "mapname";
+    mapname.appendChild(document.createTextNode(server.map));
+    
+    minsleft.id = "timeleft";
+    minsleft.appendChild(document.createTextNode(server.timeleft + " mins left"));
+    
+    infoDiv.appendChild(gamemode);
+    infoDiv.appendChild(document.createTextNode(" - "));
+    infoDiv.appendChild(mapname);
+    infoDiv.appendChild(document.createTextNode(" - "));
+    infoDiv.appendChild(minsleft);
 }
 
 function createClearDiv(){

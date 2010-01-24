@@ -12,6 +12,11 @@ public:
         m_child_resources[name] = &res;
     }
     
+    void remove_resource(const fungu::const_string & name)
+    {
+        m_child_resources.erase(name);
+    }
+    
     fungu::http::server::resource * resolve(const fungu::const_string & name)
     {
         std::map<fungu::const_string, fungu::http::server::resource *>::const_iterator it = m_child_resources.find(name);

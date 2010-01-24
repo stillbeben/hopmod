@@ -29,7 +29,7 @@ content_handler["text/x-cubescript"] = function(request, code)
     end
 end
 
-http_server.bind("serverexec", http_server.resource({
+http_server_root["serverexec"] = http_server.resource({
     post = function(request)
 
         local handler = content_handler[request:content_type() .. "/" .. request:content_subtype()]
@@ -48,4 +48,4 @@ http_server.bind("serverexec", http_server.resource({
             http_response.send_error(request, 400, "Unsupported content type")
         end
     end
-}))
+})

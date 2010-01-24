@@ -5,10 +5,12 @@
 #include <fungu/net/http/info.hpp>
 #include <fungu/net/http/response.hpp>
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
 #include <cstdio>
 #include <iostream>
 
 #include "directory_resource.hpp"
+#include "proxy_resource.hpp"
 #include "filesystem_resource.hpp"
 #include "serverexec.hpp"
 #include "../utils.hpp"
@@ -23,7 +25,7 @@ void setup_ext_to_ct_map();
 static void wait_next_accept(ip::tcp::acceptor & listener);
 
 static ip::tcp::acceptor * server_acceptor = NULL;
-static directory_resource root_resource;
+static proxy_resource root_resource;
 static serverexec_resource serverexec;
 
 static void accept_handler(ip::tcp::acceptor & listener, http::server::client_connection * client, const error_code & error)
@@ -49,12 +51,25 @@ static void wait_next_accept(ip::tcp::acceptor & listener)
     listener.async_accept(*client, boost::bind(accept_handler, boost::ref(listener), client, _1));
 }
 
+template<typename Class>
+void delete_object(Class * object)
+{
+    delete object;
+}
+
+void setup_default_root()
+{
+    directory_resource * root = new directory_resource;
+    root->add_resource(serverexec, "serverexec");
+    root_resource.set_resource(root, boost::bind(delete_object<directory_resource>, root));
+}
+
 void start_http_server(const char * ip, const char * port)
 {
     setup_ext_to_ct_map();
     http::register_standard_headers();
     
-    root_resource.add_resource(serverexec, "serverexec");
+    setup_default_root();
     
     server_acceptor = new ip::tcp::acceptor(get_main_io_service());
     server_acceptor->open(ip::tcp::v4());
@@ -84,8 +99,7 @@ void stop_http_server()
     server_acceptor = NULL;
 }
 
-directory_resource & get_root_resource()
+proxy_resource & get_root_resource()
 {
     return root_resource;
 }
-

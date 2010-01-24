@@ -1,7 +1,7 @@
 
 local nonvartype = {["function"] = true, ["userdata"] = true, ["thread"] = true}
 
-http_server.bind("queryvars", http_server.resource({
+http_server_root["queryvars"] = http_server.resource({
     post = function(request)
         request:async_read_content(function(vars)
         
@@ -22,4 +22,4 @@ http_server.bind("queryvars", http_server.resource({
             http_response.send_json(request, result)
         end)
     end
-}))
+})

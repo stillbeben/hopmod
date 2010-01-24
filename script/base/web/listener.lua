@@ -61,7 +61,7 @@ local function createListener(events)
     return nextId
 end
 
-http_server.bind("listener", http_server.resource({
+http_server_root["listener"] = http_server.resource({
 
     resolve = function(name)
         local listener = listeners[tonumber(name)]
@@ -83,4 +83,4 @@ http_server.bind("listener", http_server.resource({
             http_response.send_json(request, {listenerURI = "/listener/" .. id})
         end)
     end
-}))
+})

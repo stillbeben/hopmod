@@ -1,4 +1,6 @@
-
+/*
+    This is the fallback serverexec resource, look in script/base/web/serverexec.lua for actual servexec resource used.
+*/
 #include "serverexec.hpp"
 #include "../hopmod.hpp"
 #include "../netmask.hpp"
