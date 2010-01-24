@@ -13,10 +13,18 @@ local function createListener(events)
     
     local nextId = #listeners + 1
     local listener = {}
+    local last_request_time = nil
+    local handlers = {}
     
-    listener.handlers = {}
     listener.queue = {}
     listener.request = nil
+    
+    local function destroy_listener()
+        listener = nil
+        for _, handlerId in ipairs(handlers) do
+            server.cancel_handler(handlerId)
+        end
+    end
     
     local function dequeueEvents()
         
@@ -28,17 +36,30 @@ local function createListener(events)
         
         listener.queue = {}
         listener.request = nil
+        
+        last_request_time = server.uptime
     end
     
     for _, eventName in ipairs(events) do
         
-        local handler = server.event_handler_object(eventName, function(...)
+        local handler = server.event_handler(eventName, function(...)
             table.insert(listener.queue, {name = eventName, args = argToArray(arg)})
             dequeueEvents()
         end)
         
-        table.insert(listener.handlers, handler)
+        table.insert(handlers, handler)
     end
+    
+    server.interval(30000, function()
+        
+        if not listener.request and (not last_request_time or server.uptime - last_request_time > 29999) then
+            destroy_listener()
+            return -1
+        end
+        
+        table.insert(listener.queue, {name = "keep-alive", args = {}})
+        dequeueEvents()
+    end)
     
     listener.resource = http_server.resource({
         get = function(request)
@@ -54,6 +75,15 @@ local function createListener(events)
             listener.request = request
             
             dequeueEvents()
+        end,
+        
+        delete = function(request)
+            
+            if web_admin.require_backend_login(request) then
+                return
+            end
+            
+            listener = nil
         end
     })
     

@@ -268,9 +268,12 @@ function createListenerResource(reactors){
             
             $.each(events, function(){
                 var event = this;
-                $.each(reactors[event.name], function(){
-                    if(this.handler) this.handler.apply(this, event.args);
-                });
+                var reactor = reactors[event.name];
+                if(reactor){
+                    $.each(reactor, function(){
+                        if(this.handler) this.handler.apply(this, event.args);
+                    });
+                }
             });
             
             eventLoop(listenerURI);
