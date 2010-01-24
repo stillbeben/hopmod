@@ -21,8 +21,6 @@ local function sendServerBanner(cn)
     end)
 end
 
-server.map_loaded(sendServerBanner)
-
 local function onConnect(cn)
 
     local country = geoip.ip_to_country(server.player_ip(cn))
@@ -46,11 +44,10 @@ local function onDisconnect(cn)
     server.player_unsetpvar(cn, "shown_banner")
 end
 
-
 event.connect    = server.event_handler_object("connect",onConnect)
 event.disconnect = server.event_handler_object("disconnect", onDisconnect)
 event.rename     = server.event_handler_object("rename", function(cn) server.player_pvar(cn, "shown_banner", true) end)
-
+event.maploaded  = server.event_handler_object("maploaded", sendServerBanner)
 
 local function unload()
     event = {}

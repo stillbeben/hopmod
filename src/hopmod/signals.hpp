@@ -43,7 +43,7 @@ struct maxvalue
 extern boost::signal<void (int)>                                    signal_connect;
 extern boost::signal<void (int,const char *)>                       signal_disconnect;
 extern boost::signal<void (const char *,const char *)>              signal_failedconnect;
-extern boost::signal<void (int)>                                    signal_active;
+extern boost::signal<void (int)>                                    signal_maploaded;
 extern boost::signal<void (int)>                                    signal_renaming;
 extern boost::signal<void (int,const char *,const char *)>          signal_rename;
 extern boost::signal<void (int,const char *,const char *)>          signal_reteam;
@@ -67,7 +67,7 @@ extern boost::signal<void (int,int)>                                signal_frag;
 extern boost::signal<void (int,int,int)>                            signal_shot;
 extern boost::signal<void (int)>                                    signal_suicide;
 extern boost::signal<void (int)>                                    signal_spawn;
-extern boost::signal<int (int, int, int, int), proceed>            signal_damage;
+extern boost::signal<int (int, int, int, int), proceed>             signal_damage;
 
 // Game Events
 extern boost::signal<void ()>                                       signal_intermission;

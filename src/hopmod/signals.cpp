@@ -20,7 +20,7 @@ boost::signal<void ()> signal_reloadhopmod;
 boost::signal<void (int)> signal_connect;
 boost::signal<void (int,const char *)> signal_disconnect;
 boost::signal<void (const char *,const char *)> signal_failedconnect;
-boost::signal<void (int)> signal_active;
+boost::signal<void (int)> signal_maploaded;
 boost::signal<void (int,const char *,const char *)> signal_rename;
 boost::signal<void (int)> signal_renaming;
 boost::signal<void (int,const char *,const char *)> signal_reteam;
@@ -190,7 +190,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_connect,"connect",normal_error_handler);
     slots.register_signal(signal_disconnect,"disconnect",normal_error_handler);
     slots.register_signal(signal_failedconnect, "failedconnect",normal_error_handler);
-    slots.register_signal(signal_active, "active", normal_error_handler);
+    slots.register_signal(signal_maploaded, "maploaded", normal_error_handler);
     slots.register_signal(signal_rename,"rename",normal_error_handler);
     slots.register_signal(signal_renaming, "renaming", normal_error_handler);
     slots.register_signal(signal_reteam, "reteam", normal_error_handler);
@@ -254,7 +254,7 @@ void disconnect_all_slots()
     signal_connect.disconnect_all_slots();
     signal_disconnect.disconnect_all_slots();
     signal_failedconnect.disconnect_all_slots();
-    signal_active.disconnect_all_slots();
+    signal_maploaded.disconnect_all_slots();
     signal_rename.disconnect_all_slots();
     signal_renaming.disconnect_all_slots();
     signal_reteam.disconnect_all_slots();

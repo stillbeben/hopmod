@@ -141,7 +141,9 @@ end
 function internal.addPlayer(cn)
 
     local t = internal.updatePlayer(cn)
-    t.playing = true
+    
+    local spec = server.player_status_code(cn) == server.SPECTATOR
+    t.playing = not spec
     
     local human = not server.player_isbot(cn)
     
@@ -301,7 +303,7 @@ end
 
 function internal.loadEventHandlers()
 
-    local active = server.event_handler("active", internal.addPlayer)
+    local active = server.event_handler("maploaded", internal.addPlayer)
     
     local disconnect = server.event_handler("disconnect", function(cn) 
         internal.updatePlayer(cn).playing = false

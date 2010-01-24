@@ -280,7 +280,7 @@ namespace server
         freqlimit sv_newmap_hit;
         freqlimit sv_spec_hit;
         std::string disconnect_reason;
-        bool active;
+        bool maploaded;
         int rank;
         bool using_reservedslot;
         
@@ -312,7 +312,7 @@ namespace server
             overflow = 0;
             timesync = false;
             lastevent = 0;
-            active = false;
+            maploaded = false;
             clientmap[0] = '\0';
             mapcrc = 0;
             warned = false;
@@ -2327,13 +2327,13 @@ namespace server
                         cp->position.setsizenodelete(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
                     }
-                    if(cp->state.state==CS_ALIVE && !cp->active && cp->state.aitype == AI_NONE)
+                    if(cp->state.state==CS_ALIVE && !cp->maploaded && cp->state.aitype == AI_NONE)
                     {
                         cp->lastposupdate = totalmillis - 30;
-                        cp->active = true;
-                        signal_active(cp->clientnum);
+                        cp->maploaded = true;
+                        signal_maploaded(cp->clientnum);
                     }
-                    if(cp->active)
+                    if(cp->maploaded)
                     {
                         cp->lag = (std::max(30,cp->lag)*10 + (totalmillis - cp->lastposupdate))/12;
                         cp->lastposupdate = totalmillis;
@@ -2697,6 +2697,11 @@ namespace server
             }
 
             case SV_PING:
+                if(!ci->maploaded && totalmillis - ci->connectmillis > 2000)
+                {
+                    ci->maploaded = true;
+                    signal_maploaded(ci->clientnum);
+                }
                 if(ci) ci->lastpingupdate = totalmillis; 
                 sendf(sender, 1, "i2", SV_PONG, getint(p));
                 break;

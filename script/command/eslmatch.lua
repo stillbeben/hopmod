@@ -186,7 +186,7 @@ local function installHandlers()
 
     local connect = server.event_handler("connect", onConnect)
     local disconnect = server.event_handler("disconnect", onDisconnect)
-    local active = server.event_handler("active", onActive)
+    local active = server.event_handler("maploaded", onActive)
     local mapchange = server.event_handler("mapchange", onMapchange)
     local intermission = server.event_handler("intermission", onIntermission)
     local frag = server.event_handler("frag", onFrag)
