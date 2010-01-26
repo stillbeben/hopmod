@@ -95,7 +95,7 @@ div.server-status-error{
 .chat-shell-text{word-wrap: break-word;}
 .chat-shell-message{margin:0; padding:0;}
 
-#command-shell {width:100%;}
+#command-shell {width:100%; margin-top:10px;}
 #command-shell-heading {padding-left:18px; background:transparent url(gear.png) no-repeat; font-weight:bold;}
 #command-shell-output {height:120px; border:inset 1px #000000; margin:1px; overflow:scroll;}
 #command-shell-output-padding {padding:3px;}
@@ -116,6 +116,7 @@ div.server-status-error{
 }
 #players tr.admin-priv{background-color:#FFAC75;}
 #players tr.master-priv{background-color:#80FF80;}
+#players tr.dead{opacity:0.5; border:solid 2px black;}
 
 #top-layout-left{float:left; width:500px; padding:5px;}
 #top-layout-right{margin-left:510px; min-width:400px;}

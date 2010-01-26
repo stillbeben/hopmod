@@ -6,6 +6,7 @@ var appTitle;
 var eventListeners = [];
 var clients = {};
 var teams = [];
+var singles = [];
 var spectators = [];
 var server = {};
 
@@ -26,6 +27,8 @@ $(document).ready(function(){
     
     clients_init();
     clients_update();
+    
+    server_init();
     
     createListenerResource(eventListeners);
     
@@ -284,10 +287,23 @@ function createListenerResource(reactors){
 clients_init = function(){
     eventListeners.push({eventName:"connect", handler:clients_update});
     eventListeners.push({eventName:"disconnect", handler:clients_update});
+    eventListeners.push({eventName:"maploaded", handler:clients_update});
     eventListeners.push({eventName:"rename", handler:clients_update});
     eventListeners.push({eventName:"spectator", handler:clients_update});
     eventListeners.push({eventName:"mapchange", handler:clients_update});
     eventListeners.push({eventName:"frag", handler:clients_frag});
+    eventListeners.push({eventName:"spawn", handler:clients_spawn});
+    eventListeners.push({eventName:"privilege", handler:clients_update});
+}
+
+server_init = function(){
+    eventListeners.push({eventName:"timeupdate", handler:function(timeleft){
+            server.timeleft = timeleft;
+            updateGameInfoDiv();
+        }
+    });
+    
+    eventListeners.push({eventName:"mapchange", handler: function(){server.update();}});
 }
 
 clients_update = function(){
@@ -301,31 +317,58 @@ clients_update = function(){
         
         spectators = [];
         teams = {};
+        singles = [];
         
         $.each(response, function(){
             
             clients[this.cn] = this;
             
             if(this.status != "spectator"){
-                
-                if(this.team){
-                    (teams[this.team] = teams[this.team] || []).push(this);
-                }
+                if(this.team) (teams[this.team] = teams[this.team] || []).push(this);
+                else singles.push(this);
             }
             else{
                 spectators.push(this);
             }
         });
 
+        function comparePlayer(a, b){
+            var better = a.frags > b.frags || a.deaths < b.deaths;
+            if(better) return -1;
+            else return 1;
+        }
+
+        singles.sort(comparePlayer);
+        $.each(teams, function(){this.sort(comparePlayer);});
+        
         updatePlayersDiv();
     });
 }
 
+function swapTableRowElements(firstRow, secondRow){
+    secondRow.parentNode.insertBefore(secondRow, firstRow);
+    firstRow.parentNode.removeChild(secondRow);
+}
+
 clients_frag = function(target, actor){
+
     var deaths = ++clients[target].deaths;
     var frags = ++clients[actor].frags;
-    $(clients[target].tableRow.deaths).text(deaths);
-    $(clients[actor].tableRow.frags).text(frags);
+    
+    var targetClient = clients[target];
+    var actorClient = clients[actor];
+    
+    $(targetClient.tableRow.deaths).text(deaths);
+    $(targetClient.tableRow.tableRowElement).addClass("dead");
+    $(actorClient.tableRow.frags).text(frags);
+    
+    while(actorClient.tableRow.prevRowData && actorClient.tableRow.frags > actorClient.tableRow.prevRowData.frags){
+        swapTableRowElements(actorClient.tableRow.tableRowElement, actorClient.tableRow.prevRowData.tableRowElement);
+    }
+}
+
+clients_spawn = function(target, actor){
+    $(clients[target].tableRow.tableRowElement).removeClass("dead");
 }
 
 server.update = function(){
@@ -391,6 +434,7 @@ function createPlayersTable(parent, playersCollection, team){
             privClassName = "admin-priv";
         }
         clients[this.cn].tableRow = table.row(this, privClassName);
+        if(this.status == "dead") $(clients[this.cn].tableRow.tableRowElement).addClass("dead");
     });
     table.attachTo(tableContainer);
     parent.appendChild(tableContainer);
@@ -436,7 +480,7 @@ function updatePlayersDiv(){
         });
     }
     else{
-        createPlayersTable(playersDiv, clients);
+        createPlayersTable(playersDiv, singles);
     }
     
     playersDiv.appendChild(createClearDiv());
@@ -482,7 +526,10 @@ function updateGameInfoDiv(){
     mapname.appendChild(document.createTextNode(server.map));
     
     minsleft.id = "timeleft";
-    minsleft.appendChild(document.createTextNode(server.timeleft + " mins left"));
+    var timeleft_message = "";
+    if(server.timeleft > 0) timeleftMessage = server.timeleft + " mins left";
+    else timeleftMessage = "intermission";
+    minsleft.appendChild(document.createTextNode(timeleftMessage));
     
     infoDiv.appendChild(gamemode);
     infoDiv.appendChild(document.createTextNode(" - "));
