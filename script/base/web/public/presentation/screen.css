@@ -116,7 +116,7 @@ div.server-status-error{
 }
 #players tr.admin-priv{background-color:#FFAC75;}
 #players tr.master-priv{background-color:#80FF80;}
-#players tr.dead{opacity:0.5; border:solid 2px black;}
+#players tr.dead{opacity:0.5;}
 
 #top-layout-left{float:left; width:500px; padding:5px;}
 #top-layout-right{margin-left:510px; min-width:400px;}

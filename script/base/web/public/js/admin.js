@@ -358,17 +358,14 @@ clients_frag = function(target, actor){
     var targetClient = clients[target];
     var actorClient = clients[actor];
     
-    $(targetClient.tableRow.deaths).text(deaths);
-    $(targetClient.tableRow.tableRowElement).addClass("dead");
-    $(actorClient.tableRow.frags).text(frags);
+    targetClient.tableRow.update({deaths: deaths});
+    actorClient.tableRow.update({frags: frags});
     
-    while(actorClient.tableRow.prevRowData && actorClient.tableRow.frags > actorClient.tableRow.prevRowData.frags){
-        swapTableRowElements(actorClient.tableRow.tableRowElement, actorClient.tableRow.prevRowData.tableRowElement);
-    }
+    $(targetClient.tableRow.tableRowElement).addClass("dead");
 }
 
-clients_spawn = function(target, actor){
-    $(clients[target].tableRow.tableRowElement).removeClass("dead");
+clients_spawn = function(cn){
+    $(clients[cn].tableRow.tableRowElement).removeClass("dead");
 }
 
 server.update = function(){
@@ -424,7 +421,8 @@ function createPlayersTable(parent, playersCollection, team){
         {label:"Deaths", key:"deaths"},
         {label:"Teamkills", key:"teamkills"},
         {label:"", cellFunction: createPlayerControlLinks, className:"player-control-links"}
-    ]);
+    ], [{key:"frags", order: descendingOrder}, {key:"deaths", order: ascendingOrder}]);
+    
     $.each(playersCollection, function(){
         var privClassName = "no-priv";
         if(this.priv == "master"){
