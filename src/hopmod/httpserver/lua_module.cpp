@@ -15,6 +15,8 @@ extern "C"{
 void report_script_error(const char *);
 proxy_resource & get_root_resource();
 
+static int root_resource_ref = LUA_REFNIL;
+
 class request_wrapper
 {
     static const char * MT;
@@ -560,7 +562,8 @@ public:
         resource_wrapper * res = reinterpret_cast<resource_wrapper *>(luaL_checkudata(L, 1, MT));
         lua_pushvalue(L, -1);
         int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-        get_root_resource().set_resource(res, boost::bind(&resource_wrapper::cleanup_root_resource, L, ref));
+        get_root_resource().set_resource(res, boost::bind(&resource_wrapper::cleanup_root_resource, L));
+        root_resource_ref = ref;
         return 0;
     }
 private:
@@ -570,9 +573,9 @@ private:
         return 0;
     }
     
-    static void cleanup_root_resource(lua_State * L, int ref)
+    static void cleanup_root_resource(lua_State * L)
     {
-        luaL_unref(L, LUA_REGISTRYINDEX, ref);
+        luaL_unref(L, LUA_REGISTRYINDEX, root_resource_ref);
     }
     
     int m_resolve_function;
@@ -610,6 +613,8 @@ namespace module{
 
 void open_http_server(lua_State * L)
 {
+    root_resource_ref = LUA_REFNIL;
+    
     static luaL_Reg functions[] = {
         {"resource", &resource_wrapper::create_object},
         {"filesystem_resource", &filesystem_resource_wrapper::create_object},
