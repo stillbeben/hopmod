@@ -1,12 +1,28 @@
 require "http_server"
 require "Json"
 
-local listeners = {}
-
 function argToArray(arg)
     local result = {}
     for i = 1, arg.n do result[i] = arg[i] end
     return result
+end
+
+local listeners = {}
+local specialHandlerConstructors = {}
+
+specialHandlerConstructors.timeupdate = function(eventName, listener, dequeueFunction)
+    return server.event_handler("timeleft", function(mins)
+        table.insert(listener.queue, {name = "timeleft", args = {mins}})
+        dequeueFunction()
+        return mins
+    end)
+end
+
+local function defaultHandlerConstructor(eventName, listener, dequeueFunction)
+    return server.event_handler(eventName, function(...)
+        table.insert(listener.queue, {name = eventName, args = argToArray(arg)})
+        dequeueFunction()
+    end)
 end
 
 local function createListener(events)
@@ -31,7 +47,7 @@ local function createListener(events)
         if not listener.request or #listener.queue == 0 then
             return
         end
-        
+    
         http_response.send_json(listener.request, listener.queue)
         
         listener.queue = {}
@@ -41,13 +57,8 @@ local function createListener(events)
     end
     
     for _, eventName in ipairs(events) do
-        
-        local handler = server.event_handler(eventName, function(...)
-            table.insert(listener.queue, {name = eventName, args = argToArray(arg)})
-            dequeueEvents()
-        end)
-        
-        table.insert(handlers, handler)
+        local handlerConstructor = specialHandlerConstructors[eventName] or defaultHandlerConstructor
+        table.insert(handlers, handlerConstructor(eventName, listener, dequeueEvents))
     end
     
     server.interval(30000, function()

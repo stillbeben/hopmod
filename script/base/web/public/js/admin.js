@@ -324,22 +324,13 @@ clients_update = function(){
             clients[this.cn] = this;
             
             if(this.status != "spectator"){
-                if(this.team) (teams[this.team] = teams[this.team] || []).push(this);
+                if(isTeamMode(server.gamemode)) (teams[this.team] = teams[this.team] || []).push(this);
                 else singles.push(this);
             }
             else{
                 spectators.push(this);
             }
         });
-
-        function comparePlayer(a, b){
-            var better = a.frags > b.frags || a.deaths < b.deaths;
-            if(better) return -1;
-            else return 1;
-        }
-
-        singles.sort(comparePlayer);
-        $.each(teams, function(){this.sort(comparePlayer);});
         
         updatePlayersDiv();
     });
