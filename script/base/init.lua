@@ -46,7 +46,7 @@ local function load_module_vars(path)
     end
 end
 
-load_module_vars("./script/modvars")
+load_module_vars("./script/module/declare")
 
 server.event_handler("started", function()
     

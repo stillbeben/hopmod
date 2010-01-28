@@ -10,14 +10,14 @@ local backends = {}
 
 if using_sqlite then
     
-    backends.sqlite3 = loadfile("./script/stats/sqlite3.lua")()
+    backends.sqlite3 = loadfile("./script/module/stats/sqlite3.lua")()
     
     local is_open, err = catch_error(backends.sqlite3.open,{
         filename = server.stats_db_filename, 
-        schemafile = "./script/stats/schema.sql",
+        schemafile = "./script/module/stats/schema.sql",
         exclusive_locking = server.stats_sqlite_exclusive_locking,
         synchronous = server.stats_sqlite_synchronous})
-        
+    
     if not is_open then
         error(err) -- log but don't throw
     end
@@ -27,13 +27,15 @@ if using_sqlite then
     backends.query = backends.sqlite3
 end
 
+
+
 if using_json then
-    backends.json = catch_error(loadfile("./script/stats/json.lua"))    
+    backends.json = catch_error(loadfile("./script/module/stats/json.lua"))    
 end
 
 if using_mysql then
     
-    backends.mysql = dofile("./script/stats/mysql.lua")
+    backends.mysql = dofile("./script/module/stats/mysql.lua")
     
     catch_error(backends.mysql.open,{
         hostname = server.stats_mysql_hostname,
@@ -41,22 +43,22 @@ if using_mysql then
         username = server.stats_mysql_username,
         password = server.stats_mysql_password,
         database = server.stats_mysql_database,
-        schema = "./script/stats/mysql_schema.sql",
-        triggers = "./script/stats/mysql_triggers.sql",
+        schema = "./script/module/stats/mysql_schema.sql",
+        triggers = "./script/module/stats/mysql_triggers.sql",
         install = server.stats_mysql_install == 1,
         servername = server.stats_servername
     })
     
 end
 
-dofile("./script/stats/core.lua").initialize(backends,{
+dofile("./script/module/stats/core.lua").initialize(backends,{
         using_auth = server.stats_use_auth,
         auth_domain = server.stats_auth_domain,
         gamemodes = list_to_set(server.parse_list(server.stats_enabled_gamemodes))
     })
 
 -- Load and register the #stats player command
-local stats_command = loadfile("./script/stats/playercmd.lua")()
+local stats_command = loadfile("./script/module/stats/playercmd.lua")()
 stats_command.initialize(backends)
 player_command_function("stats", stats_command.command_function)
 
