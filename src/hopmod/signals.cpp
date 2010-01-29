@@ -166,6 +166,7 @@ static int cubescript_event_handler(const std::string & name, script::any obj)
 */
 static void destroy_slot(int handle)
 {
+    if(handle < 0) return;
     slots.destroy_slot(handle);
 }
 
