@@ -25,6 +25,7 @@ $(document).ready(function(){
     
     server.update();
     
+    
     clients_init();
     clients_update();
     
@@ -85,6 +86,10 @@ function executeCommand(commandLine, responseHandler){
         success: success,
         error: error
     });
+}
+
+server.event_handler = function(name, handler){
+    eventListeners.push({eventName: name, handler: handler});
 }
 
 function createCommandShell(){
@@ -285,15 +290,17 @@ function createListenerResource(reactors){
 }
 
 clients_init = function(){
-    eventListeners.push({eventName:"connect", handler:clients_update});
-    eventListeners.push({eventName:"disconnect", handler:clients_update});
-    eventListeners.push({eventName:"maploaded", handler:clients_update});
-    eventListeners.push({eventName:"rename", handler:clients_update});
-    eventListeners.push({eventName:"spectator", handler:clients_update});
-    eventListeners.push({eventName:"mapchange", handler:clients_update});
-    eventListeners.push({eventName:"frag", handler:clients_frag});
-    eventListeners.push({eventName:"spawn", handler:clients_spawn});
-    eventListeners.push({eventName:"privilege", handler:clients_update});
+    server.event_handler("connect", clients_update);
+    server.event_handler("disconnect", clients_update);
+    server.event_handler("maploaded", clients_update);
+    server.event_handler("rename", clients_update);
+    server.event_handler("spectator", clients_update);
+    server.event_handler("mapchange", clients_update);
+    server.event_handler("frag", clients_update);
+    server.event_handler("spawn", clients_spawn);
+    server.event_handler("privilege", clients_update);
+    server.event_handler("addbot", clients_update);
+    server.event_handler("botleft", clients_update);
 }
 
 server_init = function(){
@@ -324,14 +331,14 @@ clients_update = function(){
             clients[this.cn] = this;
             
             if(this.status != "spectator"){
-                if(isTeamMode(server.gamemode)) (teams[this.team] = teams[this.team] || []).push(this);
+                if(this.team) (teams[this.team] = teams[this.team] || []).push(this);
                 else singles.push(this);
             }
             else{
                 spectators.push(this);
             }
         });
-        
+
         updatePlayersDiv();
     });
 }
