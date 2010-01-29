@@ -62,7 +62,7 @@ end
 
 local function update_now()
     
-    if server.updatemaster == 1 then
+    if server.publicserver == 1 then
     
         register_server(server.masterserver, server.masterserverport, server.serverport, function(error_message)
             

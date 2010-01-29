@@ -171,7 +171,7 @@ flood_protect_spectator 10000
 
 global shell_label "server"
 
-global updatemaster 1
+global publicserver 1
 global masterserver "sauerbraten.org"
 global masterserverport 28787
 
