@@ -173,6 +173,7 @@ int server_interface_newindex(lua_State * L)
         
         switch(value_type)
         {
+            #if 0
             case LUA_TNIL:
             {
                 script::env_symbol * key_symbol = env->lookup_symbol(const_string(key, key + keylen - 1));
@@ -188,6 +189,7 @@ int server_interface_newindex(lua_State * L)
                 hangingObj = NULL;
                 break;
             }
+            #endif
             default:
             {
                 script::env_symbol * key_symbol = env->lookup_symbol(const_string(key, key + keylen - 1));
