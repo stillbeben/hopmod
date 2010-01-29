@@ -75,7 +75,6 @@ function magenta(text) return formatcol(5, text) end
 function blue(text) return formatcol(1, text) end
 
 function server.console(admin, msg)
-    print(msg)
     server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))
 end
 

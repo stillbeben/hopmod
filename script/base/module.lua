@@ -71,10 +71,22 @@ load_once = server.load_once
 
 local function load_module(name)
 
-    local control, filename = load_once(name)
+    local real_server_event_handler = server.event_handler
+    local event_handlers = {}
+    
+    server.index.event_handler = function(name, handler)
+        event_handlers[#event_handlers + 1] = real_server_event_handler(name, handler)
+        return -1
+    end
+    
+    local control, filename = catch_error(load_once, name)
     control = control or {}
     
+    server.index.event_handler = real_server_event_handler
+    
     control.filename = filename
+    control.event_handlers = event_handlers
+    
     loaded_modules[name] = control
 end
 
@@ -113,6 +125,10 @@ function server.unload_module(name, hide_warnings)
         end
         
         return
+    end
+    
+    for _, handlerId in ipairs(control.event_handlers) do
+        server.cancel_handler(handlerId)
     end
     
     loaded_modules[name] = nil
