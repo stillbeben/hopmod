@@ -124,7 +124,7 @@ namespace server
     void addpermban(const char * addr);
     bool unsetban(const char * addr);
     int addbot(int);
-    int delbot();
+    void deletebot(int);
     void enable_master_auth(bool);
     bool using_master_auth();
     void update_mastermask();

@@ -412,6 +412,7 @@ namespace server
         extern void changeteam(clientinfo *ci);
         extern clientinfo * addai(int skill, int limit);
         extern bool deleteai();
+        extern void deleteai(clientinfo *);
     }
 
     #define MM_MODE 0xF

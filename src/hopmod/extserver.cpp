@@ -220,6 +220,12 @@ void kick(int cn,int time,const std::string & admin,const std::string & reason)
 {
     clientinfo * ci = get_ci(cn);
     
+    if(ci->state.aitype != AI_NONE)
+    {
+        aiman::deleteai(ci);
+        return;
+    }
+    
     kickinfo * info = new kickinfo;
     info->cn = cn;
     info->sessionid = ci->sessionid;
@@ -734,6 +740,14 @@ int addbot(int skill)
     if(!owner) return -1;
     signal_addbot(-1, skill, owner->clientnum);
     return owner->clientnum;
+}
+
+void deletebot(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    if(ci->state.aitype == AI_NONE) 
+        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("not a bot player")));
+    aiman::deleteai(ci);
 }
 
 void enable_master_auth(bool enable)

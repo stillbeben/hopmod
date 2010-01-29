@@ -150,7 +150,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::clearbans, "clearbans", env);
     script::bind_freefunc(server::get_bans, "bans", env);
     script::bind_freefunc(server::addbot, "addbot", env);
-    script::bind_freefunc(server::aiman::deleteai, "delbot", env);
+    script::bind_freefunc(server::deletebot, "delbot", env);
     script::bind_freefunc(server::recorddemo, "recorddemo", env, &recorddemo_defargs);
     script::bind_freefunc(server::enddemorecord, "stopdemo", env);
     script::bind_freefunc(server::add_allowed_ip, "allow_ip", env);
