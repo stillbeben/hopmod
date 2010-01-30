@@ -689,6 +689,10 @@ void set_player_privilege(int cn, int priv_code, bool public_priv = false)
         currentmaster = cn;
         masterupdate = true;
     }
+    else
+    {
+        sendf(player->clientnum, 1, "ri3", SV_CURRENTMASTER, player->clientnum, player->privilege);
+    }
     
     const char * change = (old_priv < player->privilege ? "raised" : "lowered");
     defformatstring(msg)("The server has %s your privilege to %s.", change, privname(priv_code));
