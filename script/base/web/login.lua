@@ -1,6 +1,25 @@
 require "crypto"
 
+local users = {}
 local sessions = {}
+
+local function createUsersTable()
+    local parse = server.parse_list
+    for _, entry in ipairs(parse(server.web_admins)) do
+        local fields = parse(entry)
+        if #fields >= 3 then
+            local name = fields[1]
+            local password_hash = fields[2]
+            local salt = fields[3]
+            users[name] = {
+                password_hash = password_hash,
+                salt = salt
+            }
+        end
+    end
+end
+
+createUsersTable()
 
 local function generateSessionKey()
     return crypto.sauerecc.generate_key_pair()
@@ -38,7 +57,9 @@ web_admin = {
 }
 
 local function tryLogin(username, password)
-    return username == server.web_admin_username and password == server.web_admin_password
+    local user = users[username]
+    if not user then return false end
+    return crypto.tigersum(user.salt .. password) == user.password_hash
 end
 
 local function getLoginFormHtml(attributes)
