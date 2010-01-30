@@ -61,6 +61,15 @@ http_server_root["players"] = http_server.resource({
 })
 
 http_server_root["clients"] = http_server.resource({
+    resolve = function(cn)
+        if server.player_sessionid(cn) == -1 then return nil end
+        return http_server.resource({
+            get = function(request)
+                http_response.send_json(request, player(server.new_player_object(cn)))
+            end
+        })
+    end,
+    
     get = function(request)
         http_response.send_json(request, clients())
     end

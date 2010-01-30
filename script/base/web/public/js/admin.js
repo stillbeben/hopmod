@@ -9,6 +9,7 @@ var teams = [];
 var singles = [];
 var spectators = [];
 var server = {};
+var ui = {};
 
 $(document).ready(function(){
     
@@ -289,31 +290,125 @@ function createListenerResource(reactors){
     }
 }
 
-clients_init = function(){
-    server.event_handler("connect", clients_update);
-    server.event_handler("disconnect", clients_update);
-    server.event_handler("maploaded", clients_update);
-    server.event_handler("rename", clients_update);
-    server.event_handler("spectator", clients_update);
-    server.event_handler("mapchange", clients_update);
-    server.event_handler("frag", clients_update);
-    server.event_handler("spawn", clients_spawn);
-    server.event_handler("privilege", clients_update);
-    server.event_handler("addbot", clients_update);
-    server.event_handler("botleft", clients_update);
+function addClientToPlayerTable(client){
+    if(client.status != "spectator"){
+        if(isTeamMode(server.gamemode)) (teams[client.team] = teams[client.team] || []).push(client);
+        else singles.push(client);
+    }
+    else{
+        spectators.push(client);
+    }
 }
 
-server_init = function(){
-    eventListeners.push({eventName:"timeupdate", handler:function(timeleft){
-            server.timeleft = timeleft;
-            updateGameInfoDiv();
+function addClientToUiTable(client){
+    var table;
+    if(client.status == "spectator"){
+        if(ui.spectators) table = ui.spectators;
+    }
+    else{
+        if(isTeamMode(server.gamemode)) table = ui.teams[client.team];
+        else table = ui.players;
+    }
+    if(!table){
+        updatePlayersDiv();
+        return;
+    }
+    clients[client.cn].tableRow = table.row(client);
+    updateClientUiTableRow(clients[client.cn]);
+}
+
+function updateClientUiTableRow(client){
+    $(client.tableRow.tableRowElement)
+        .removeClass("no-priv")
+        .removeClass("master-priv")
+        .removeClass("admin-priv")
+        .addClass(getPrivilegeClassName(client.priv));
+}
+
+function clients_init(){
+
+    function onDisconnect(cn){
+        clients[cn].tableRow.remove(); 
+        clients[cn] = null;
+    }
+    
+    function onPlayerFrag(target, actor){
+        
+        var deaths = ++clients[target].deaths;
+        var frags = ++clients[actor].frags;
+        
+        var targetClient = clients[target];
+        var actorClient = clients[actor];
+        
+        targetClient.tableRow.update({deaths: deaths});
+        actorClient.tableRow.update({frags: frags});
+        
+        $(targetClient.tableRow.tableRowElement).addClass("dead");
+    }
+    
+    function onPlayerSpawn(cn){
+        if(clients[cn]) $(clients[cn].tableRow.tableRowElement).removeClass("dead");
+    }
+    
+    function onSpectator(cn, joined){
+        clients[cn].status = (joined ? "spectator" : "dead");
+        clients[cn].tableRow.remove();
+        resyncClientTables();
+        addClientToUiTable(clients[cn]);
+    }
+    
+    server.event_handler("connect", getSingleClientUpdate);
+    server.event_handler("disconnect", onDisconnect);
+    server.event_handler("maploaded", getSingleClientUpdate);
+    server.event_handler("rename", getSingleClientUpdate);
+    server.event_handler("spectator", onSpectator);
+    server.event_handler("mapchange", clients_update);
+    server.event_handler("frag", onPlayerFrag);
+    server.event_handler("spawn", onPlayerSpawn);
+    server.event_handler("privilege", getSingleClientUpdate);
+    server.event_handler("addbot", function(ownerCn, skill, botCn){getSingleClientUpdate(botCn);});
+    server.event_handler("botleft", onDisconnect);
+}
+
+function server_init(){
+
+    server.event_handler("timeupdate", function(timeleft){
+        server.timeleft = timeleft;
+        updateGameInfoDiv();
+    });
+
+    server.event_handler("mapchange", function(){server.update();});
+}
+
+function getSingleClientUpdate(cn){
+    $.getJSON("/clients/" + cn, function(response, textStatus){
+        if(textStatus != "success"){
+            updateServerStatus("server-status-error", "Clients update failure");
+            return;
+        }
+        cn = response.cn;
+        if(clients[cn]){
+            for(var key in response) clients[cn][key] = response[key];
+            clients[cn].tableRow.update(clients[cn]);
+            if(clients[cn].status != "dead") $(clients[cn].tableRow.tableRowElement).removeClass("dead");
+            updateClientUiTableRow(clients[cn]);
+        }
+        else{
+            clients[cn] = response;
+            addClientToPlayerTable(response);
+            addClientToUiTable(response);
         }
     });
-    
-    eventListeners.push({eventName:"mapchange", handler: function(){server.update();}});
 }
 
-clients_update = function(){
+function resyncClientTables(){
+    spectators = [];
+    teams = {};
+    singles = [];
+    for(var cn in clients) addClientToPlayerTable(clients[cn]);
+}
+
+function clients_update(){
     
     $.getJSON("/clients", function(response, textStatus){
         
@@ -327,18 +422,10 @@ clients_update = function(){
         singles = [];
         
         $.each(response, function(){
-            
             clients[this.cn] = this;
-            
-            if(this.status != "spectator"){
-                if(this.team) (teams[this.team] = teams[this.team] || []).push(this);
-                else singles.push(this);
-            }
-            else{
-                spectators.push(this);
-            }
+            addClientToPlayerTable(this);
         });
-
+        
         updatePlayersDiv();
     });
 }
@@ -346,24 +433,6 @@ clients_update = function(){
 function swapTableRowElements(firstRow, secondRow){
     secondRow.parentNode.insertBefore(secondRow, firstRow);
     firstRow.parentNode.removeChild(secondRow);
-}
-
-clients_frag = function(target, actor){
-
-    var deaths = ++clients[target].deaths;
-    var frags = ++clients[actor].frags;
-    
-    var targetClient = clients[target];
-    var actorClient = clients[actor];
-    
-    targetClient.tableRow.update({deaths: deaths});
-    actorClient.tableRow.update({frags: frags});
-    
-    $(targetClient.tableRow.tableRowElement).addClass("dead");
-}
-
-clients_spawn = function(cn){
-    $(clients[cn].tableRow.tableRowElement).removeClass("dead");
 }
 
 server.update = function(){
@@ -409,6 +478,7 @@ function createPlayersTable(parent, playersCollection, team){
     var heading = document.createElement("h2");
     heading.appendChild(document.createTextNode(team || "Players"));
     tableContainer.appendChild(heading);
+    
     var table = new HtmlTable();
     table.columns([
         {label:"CN", key:"cn"},
@@ -422,18 +492,13 @@ function createPlayersTable(parent, playersCollection, team){
     ], [{key:"frags", order: descendingOrder}, {key:"deaths", order: ascendingOrder}]);
     
     $.each(playersCollection, function(){
-        var privClassName = "no-priv";
-        if(this.priv == "master"){
-            privClassName = "master-priv";
-        }
-        else if(this.priv == "admin"){
-            privClassName = "admin-priv";
-        }
-        clients[this.cn].tableRow = table.row(this, privClassName);
+        clients[this.cn].tableRow = table.row(this, getPrivilegeClassName(this.priv));
         if(this.status == "dead") $(clients[this.cn].tableRow.tableRowElement).addClass("dead");
     });
+    
     table.attachTo(tableContainer);
     parent.appendChild(tableContainer);
+    return table;
 }
 
 function createSpectatorsTable(parent, specsCollection){
@@ -455,6 +520,7 @@ function createSpectatorsTable(parent, specsCollection){
     });
     table.attachTo(tableContainer);
     parent.appendChild(tableContainer);
+    return table;
 }
 
 function isTeamMode(gamemode){
@@ -466,21 +532,28 @@ function isTeamMode(gamemode){
 }
 
 function updatePlayersDiv(){
+
     var playersDiv = document.getElementById("players");
     if(!playersDiv) return;
     $(playersDiv).empty();
     
+    ui.spectators = null;
+    ui.teams = {};
+    ui.players = null;
+    
     if(isTeamMode(server.gamemode)){
         $.each(teams, function(name){
-            createPlayersTable(playersDiv, this, name);
+            ui.team[name] = createPlayersTable(playersDiv, this, name);
         });
     }
     else{
-        createPlayersTable(playersDiv, singles);
+        if(singles.length) ui.players = createPlayersTable(playersDiv, singles);
     }
     
     playersDiv.appendChild(createClearDiv());
-    if(spectators.length) createSpectatorsTable(playersDiv, spectators);
+    if(spectators.length){
+        ui.spectators = createSpectatorsTable(playersDiv, spectators);
+    }
 }
 
 function updateServerInfoDiv(){
@@ -538,4 +611,15 @@ function createClearDiv(){
     var clear = document.createElement("div");
     clear.className = "clear";
     return clear;
+}
+
+function getPrivilegeClassName(privName){
+    var privClassName = "no-priv";
+    if(privName == "master"){
+        privClassName = "master-priv";
+    }
+    else if(privName == "admin"){
+        privClassName = "admin-priv";
+    }
+    return privClassName;
 }

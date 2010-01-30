@@ -11,8 +11,8 @@ local listeners = {}
 local specialHandlerConstructors = {}
 
 specialHandlerConstructors.timeupdate = function(eventName, listener, dequeueFunction)
-    return server.event_handler("timeleft", function(mins)
-        table.insert(listener.queue, {name = "timeleft", args = {mins}})
+    return server.event_handler("timeupdate", function(mins)
+        table.insert(listener.queue, {name = "timeupdate", args = {mins}})
         dequeueFunction()
         return mins
     end)
