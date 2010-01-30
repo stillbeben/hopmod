@@ -123,6 +123,7 @@ http_server_root["login"] = http_server.resource({
             local missing_fields = not params.username or not params.password
             
             if missing_fields or tryLogin(params.username, params.password) == false then
+                server.log(string.format("Failed web admin login by %s@%s", params.username, request:client_ip()))
                 http_response.send_html(request, 
                     getLoginFormHtml({failed=true, 
                         returnUrl = uri_query_params["return"],
@@ -130,6 +131,8 @@ http_server_root["login"] = http_server.resource({
                     }))
                 return
             end
+            
+            server.log(string.format("Successful web admin login by %s@%s", params.username, request:client_ip()))
             
             local sessionId = generateSessionKey()
             
