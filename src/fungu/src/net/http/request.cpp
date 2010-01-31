@@ -54,8 +54,9 @@ request::~request()
     if(m_close_connection || m_connection.has_connection_error())
     {
         m_connection.close();
+        m_finished_callback();
     }
-    else request::create(m_connection, m_root_resource);
+    else request::create(m_connection, m_root_resource, m_finished_callback);
 }
 
 connection & request::get_connection()

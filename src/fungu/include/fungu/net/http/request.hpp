@@ -15,6 +15,7 @@
 #include "info.hpp"
 #include "status.hpp"
 #include <map>
+#include <boost/function.hpp>
 
 struct ltstr
 {
@@ -45,7 +46,14 @@ public:
 class request
 {
 public:
-    static request * create(connection &, resource &);
+    template<typename FinishedCallbackFunction>
+    static request * create(connection & con, resource & res, FinishedCallbackFunction callback)
+    {
+        request * req = create(con, res);
+        req->m_finished_callback = callback;
+        return req;
+    }
+    
     static void destroy(request &);
     ~request();
     connection & get_connection();
@@ -72,6 +80,8 @@ public:
         else m_connection.async_read_body(m_content_length, output, handler);
     }
 private:
+    static request * create(connection &, resource &);
+    
     request(connection &, resource &);    
     void process_header(const char *, std::size_t, const connection::error &);
     resource * resolve_resource(const char *);
@@ -97,6 +107,8 @@ private:
     transfer_encoding_type m_transfer_encoding;
     std::size_t m_content_length;
     content_type m_content_type;
+    
+    boost::function0<void> m_finished_callback;
 };
 
 } //namespace server

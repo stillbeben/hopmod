@@ -28,6 +28,11 @@ static ip::tcp::acceptor * server_acceptor = NULL;
 static proxy_resource root_resource;
 static serverexec_resource serverexec;
 
+static void cleanup_client_connection(http::server::client_connection * client)
+{
+    delete client;
+}
+
 static void accept_handler(ip::tcp::acceptor & listener, http::server::client_connection * client, const error_code & error)
 {
     if(error)
@@ -40,7 +45,7 @@ static void accept_handler(ip::tcp::acceptor & listener, http::server::client_co
         return;
     }
     
-    http::server::request::create(*client, root_resource);
+    http::server::request::create(*client, root_resource, boost::bind(cleanup_client_connection, client));
     
     wait_next_accept(listener);
 }
