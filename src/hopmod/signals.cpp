@@ -61,7 +61,9 @@ boost::signal<void (int)> signal_spawn;
 boost::signal<int (int,int,int,int), proceed> signal_damage;
 
 static void destroy_slot(int handle);
-static int lua_event_handler(lua_State * L);
+namespace lua{
+static int register_event_handler(lua_State * L);
+}//namespace lua
 
 class event_handler_object
 {
@@ -97,7 +99,7 @@ public:
         luaL_getmetatable(L, MT);
         lua_setmetatable(L, -2);
         
-        lua_event_handler(L);
+        lua::register_event_handler(L);
         self->handler_id = lua_tointeger(L, -1);
         lua_pushvalue(L, -2); //FIXME assert -2 is the event handler object
         return 1;
@@ -133,10 +135,48 @@ static script::any normal_error_handler(script::error_trace * errinfo)
     return script::any::null_value();
 }
 
-/*
-    Register function as an event handler
-*/
-static int lua_event_handler(lua_State * L)
+namespace lua{
+
+typedef std::vector<int> lua_function_vector;
+static std::map<std::string, lua_function_vector> created_event_slots;
+typedef std::map<std::string, lua_function_vector>::const_iterator create_event_slots_iterator;
+
+static int event_trigger(lua_State * L)
+{
+    lua_function_vector & handlers = *reinterpret_cast<lua_function_vector *>(lua_touserdata(L, lua_upvalueindex(1)));
+    int argc = lua_gettop(L);
+    
+    for(lua_function_vector::const_iterator it = handlers.begin(); it != handlers.end(); it++)
+    {
+        lua_rawgeti(L, LUA_REGISTRYINDEX, *it);
+        for(int i = 1; i <= argc; i++) lua_pushvalue(L, i);
+        if(lua_pcall(L, argc, 0, 0) != 0)
+        {
+            report_script_error(lua_tostring(L, -1));
+        }
+    }
+    
+    return 0;
+}
+
+static int create_event(lua_State * L)
+{
+    const char * name = luaL_checkstring(L, 1);
+    
+    std::pair<std::map<std::string, lua_function_vector>::iterator, bool> inserted = created_event_slots.insert(std::pair<std::string, lua_function_vector>(name, std::vector<int>()));
+    
+    if(inserted.second == false)
+    {
+        luaL_argerror(L, 1, "name already in use");
+        return 0;
+    }
+    
+    lua_pushlightuserdata(L, &inserted.first->second);
+    lua_pushcclosure(L, &event_trigger, 1);
+    return 1;
+}
+
+static int register_event_handler(lua_State * L)
 {
     const char * name = luaL_checkstring(L, 1);
     
@@ -147,19 +187,30 @@ static int lua_event_handler(lua_State * L)
     luaFunctionObject->set_adopted();
 
     int handle = slots.create_slot(name, luaFunctionObject, env);
+    
+    if(handle == -1)
+    {
+        std::map<std::string, lua_function_vector>::iterator it = created_event_slots.find(name);
+        if(it != created_event_slots.end())
+        {
+            lua_pushvalue(L, 2);
+            it->second.push_back(luaL_ref(L, LUA_REGISTRYINDEX));
+        }
+    }
+    
     lua_pushinteger(L, handle);
     
     return 1;
 }
+} //namespace lua
 
-/*
-    Register function as an event handler
-*/
-static int cubescript_event_handler(const std::string & name, script::any obj)
+namespace cubescript{    
+static int register_event_handler(const std::string & name, script::any obj)
 {
     if(obj.get_type() != typeid(script::env_object::shared_ptr)) throw script::error(script::BAD_CAST);
     return slots.create_slot(name, script::any_cast<script::env_object::shared_ptr>(obj), env);
 }
+}//namespace cubescript
 
 /*
     Cancel event handler
@@ -230,10 +281,11 @@ void register_signals(script::env & env)
     slots.register_signal(signal_spawn, "spawn", normal_error_handler);
     slots.register_signal(signal_damage, "damage", normal_error_handler);
     
-    script::bind_freefunc(cubescript_event_handler, "event_handler", env);
+    script::bind_freefunc(cubescript::register_event_handler, "event_handler", env);
     script::bind_freefunc(destroy_slot, "cancel_handler", env);
     
-    register_lua_function(lua_event_handler,"event_handler");
+    register_lua_function(lua::register_event_handler,"event_handler");
+    register_lua_function(lua::create_event, "create_event_slot");
     
     event_handler_object::register_class(env.get_lua_state());
     register_lua_function(event_handler_object::create, "event_handler_object");
