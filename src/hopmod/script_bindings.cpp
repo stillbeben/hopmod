@@ -167,6 +167,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_ro_var(server::gamemillis, "gamemillis", env);
     script::bind_ro_var(server::gamelimit, "gamelimit", env);
     script::bind_var(maxclients, "maxplayers", env);
+    script::bind_var(maxclients, "maxclients", env);
     script::bind_var(serverip, "serverip", env);
     script::bind_var(serverport, "serverport", env);
     script::bind_var(server::next_gamemode, "next_mode", env);

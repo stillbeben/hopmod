@@ -88,11 +88,11 @@ server.interval(interval_check_time, function()
 	end
 
 	local pdiff = diff
-	if (server.maxplayers - pdiff) >= server.maxplayers then
-		pdiff = server.maxplayers - 1
+	if (server.maxclients - pdiff) >= server.maxclients then
+		pdiff = server.maxclients - 1
 	end
 
-	if server.mastermode == 0 and server.playercount > (server.maxplayers - pdiff) then
+	if server.mastermode == 0 and server.playercount > (server.maxclients - pdiff) then
 		check_spec_times()
 	end
 

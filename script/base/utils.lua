@@ -133,7 +133,7 @@ function server.printserverstatus(filename, filemode)
 	local mapname = server.map
 	if #mapname == 0 then mapname = "<NONE>" end
 
-	status_rows = status_rows .. string.format("%i/%i %s %s %i %s %i %s", server.playercount, server.maxplayers, mapname, server.gamemode, mm, host, server.serverport, desc)
+	status_rows = status_rows .. string.format("%i/%i %s %s %i %s %i %s", server.playercount, server.maxclients, mapname, server.gamemode, mm, host, server.serverport, desc)
 
 	out:write(tabulate(status_rows))
 	out:write("\n")

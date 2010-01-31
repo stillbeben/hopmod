@@ -140,52 +140,48 @@ function server.reload_maprotation()
     local smallest_maplist_size = 0
     
     local function compare_maplist_sizes(size)
-    
         if smallest_maplist_size > size then
-	    smallest_maplist_size = size
-	end
-	
+            smallest_maplist_size = size
+        end
     end
     
     for a = 1, #gamemodes do
-	compare_maplist_sizes(#maps[gamemodes[a]])
-	
-	if using_best_map_size then
-	    if big_maps[gamemodes[a]] then
-		compare_maplist_sizes(#big_maps[gamemodes[a]])
-	    end
-	    
-	    compare_maplist_sizes(#small_maps[gamemodes[a]])
-	end
+        compare_maplist_sizes(#maps[gamemodes[a]])
+        
+        if using_best_map_size then
+            if big_maps[gamemodes[a]] then
+                compare_maplist_sizes(#big_maps[gamemodes[a]])
+            end
+            compare_maplist_sizes(#small_maps[gamemodes[a]])
+        end
     end
     
     if smallest_maplist_size < 3 then
-	map_memory_size = 0
+        map_memory_size = 0
     else
-	map_memory_size = round((smallest_maplist_size * 3) / 4) - 1
+        map_memory_size = round((smallest_maplist_size * 3) / 4) - 1
     end
-    
 end
 
 local function check_map_memory(map)
 
     if map_memory_size < 1 then
-	 return true
+        return true
     end
     
     for i,mapname in ipairs(map_memory) do
-	if mapname == map then
-	    return false
-	end
+        if mapname == map then
+            return false
+        end
     end
     
     if table.maxn(map_memory) >= map_memory_size then
-	table.remove(map_memory,1)
+        table.remove(map_memory,1)
     end
+    
     table.insert(map_memory,map)
 
     return true
-
 end
 
 local function get_maplist(mode)
@@ -226,13 +222,17 @@ function server.is_known_map(mapname, gamemode)
 
     if not gamemode then
         for k,list in pairs(maps) do
-            if server.is_known_map(mapname, k) then return true end
+            if server.is_known_map(mapname, k) then 
+                return true
+            end
         end
         return false
     end
     
     for i,mapnameX in ipairs(maps[gamemode]) do
-        if mapname == mapnameX then return true end
+        if mapname == mapnameX then 
+            return true 
+        end
     end
     
     return false
@@ -248,11 +248,9 @@ local function get_mode()
         if chosen_gamemode == server.gamemode or chosen_gamemode == "coop edit" then
             return get_mode()
         end
-        
     end
     
     return chosen_gamemode
-    
 end
 
 local function random_map(mode)
@@ -273,8 +271,7 @@ local function get_nextgame(mode, map)
     
     if setnextmap_cmd_active == true then
         setnextmap_cmd_active = false
-	
-	return setnextmap_cmd_mode, setnextmap_cmd_map
+        return setnextmap_cmd_mode, setnextmap_cmd_map
     end
     
     if not mode then
@@ -288,8 +285,8 @@ local function get_nextgame(mode, map)
             map = nextmap(mode, gamecount)
             
             if not check_map_memory(map) then
-		map = nextmap(mode, gamecount + 1)
-	    end
+                map = nextmap(mode, gamecount + 1)
+            end
         end
     end
     
@@ -298,10 +295,15 @@ end
 
 server.event_handler("setnextgame",function()
     
-    if not using_server_maprotation then return end
+    if not using_server_maprotation then 
+        return
+    end
     
     local mode
-    if gamecount == 0 then mode = default_gamemode end
+    
+    if gamecount == 0 then 
+        mode = default_gamemode
+    end
     
     server.next_mode, server.next_map = get_nextgame(mode)
     
@@ -312,25 +314,27 @@ end)
 server.event_handler("disconnect", function()
 
     if server.playercount == 0 and using_server_maprotation and (default_game_on_empty or random_mode_on_empty) then
+    
         local mode = default_gamemode
         local map = nil
         
         if default_game_on_empty then
-	    mode, map = get_nextgame(mode)
+            mode, map = get_nextgame(mode)
         elseif random_mode_on_empty then
-	    mode = allowed_modes[math.random(#allowed_modes)]
+        
+            mode = allowed_modes[math.random(#allowed_modes)]
 	    
-	    while mode == server.gamemode or mode == "coop edit" do
-                mode = allowed_modes[math.random(#allowed_modes)]
+            while mode == server.gamemode or mode == "coop edit" do
+                    mode = allowed_modes[math.random(#allowed_modes)]
             end
         end
-	
-	if not map then
-	    mode, map = get_nextgame(mode)
-	end
-	
-	server.changemap(map, mode, -1)
-	gamecount = gamecount + 1
+        
+        if not map then
+            mode, map = get_nextgame(mode)
+        end
+        
+        server.changemap(map, mode, -1)
+        gamecount = gamecount + 1
     end
 
 end)
@@ -344,7 +348,7 @@ local function def_nextmap(gmode, cmap)
     end
     
     local index = -1
-    for i,name in ipairs(mlist) do
+    for i, name in ipairs(mlist) do
         if name == cmap then
             index = i
             break
