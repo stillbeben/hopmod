@@ -4,79 +4,41 @@
 --
 --]]--------------------------------------------------------------------------
 
-
-local event = {}
-
-server.recordgames_active = true
-
 local is_recording = false
 
-
 local function start_recording(map, mode)
-
-	local gmode = mode
-
-	if not (gmode == "coop edit" or server.playercount == 0) and server.recordgames_active == true and is_recording == false then
-
-		if gmode == "tactics team" then
-			gmode = "tactics_team"
-		elseif gmode == "efficiency team" then
-			gmode = "efficiency_team"
-		elseif gmode == "instagib team" then
-			gmode = "instagib_team"
-		elseif gmode == "insta ctf" then
-			gmode = "insta_ctf"
-		elseif gmode == "insta protect" then
-			gmode = "insta_protect"
-		elseif gmode == "regen capture" then
-			gmode = "regen_capture"
-		end
-
-		server.recorddemo("log/demo/" .. os.date("!%y_%m_%d.%H_%M") .. "." .. gmode .. "." .. server.map .. ".dmo")
-		server.msg("Start demo recording")
-		is_recording = true
-
-	end
-
+    
+	if mode == "coop edit" or server.playercount == 0 and is_recording then
+        return
+    end
+    
+    mode = string.gsub(mode, " ", "_")
+    
+    server.recorddemo(string.format("log/demo/%s.%s.%s.dmo", os.date("!%y_%m_%d.%H_%M"), mode, map))
+    server.msg("recording demo")
+    
+    is_recording = true
 end
 
+server.event_handler("mapchange", start_recording)
 
-event.mapchange = server.event_handler_object("mapchange", start_recording)
-
-
-event.connect = server.event_handler_object("connect", function(cn)
+server.event_handler("connect", function(cn)
 
 	if server.playercount == 2 then
 		start_recording(server.map, server.gamemode)
 	end
-
 end)
 
-
-event.disconnect = server.event_handler_object("disconnect", function(cn, reason)
+server.event_handler("disconnect", function(cn, reason)
 
 	if server.playercount == 0 and is_recording == true then
 		server.stopdemo()
 		is_recording = false
 	end
-
 end)
 
-
-event.finishedgame = server.event_handler_object("finishedgame", function()
-
+server.event_handler("finishedgame", function()
 	is_recording = false
-
 end)
 
-
-local function unload()
-
-	event = {}
-	server.recordgames_active = nil
-	is_recording = false
-
-end
-
-
-return {unload = unload}
+return {unload = function() end}
