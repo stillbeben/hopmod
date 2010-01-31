@@ -75,8 +75,9 @@ local function load_module(name)
     local event_handlers = {}
     
     server.index.event_handler = function(name, handler)
-        event_handlers[#event_handlers + 1] = real_server_event_handler(name, handler)
-        return -1
+        local handlerId = real_server_event_handler(name, handler)
+        event_handlers[#event_handlers + 1] = handlerId
+        return handlerId
     end
     
     local control, filename = catch_error(load_once, name)

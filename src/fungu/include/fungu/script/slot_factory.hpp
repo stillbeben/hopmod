@@ -24,6 +24,12 @@ class slot_factory
 public:
     typedef any (* error_handler_function)(error_trace *);
     
+    slot_factory()
+      :m_next_slot_id(0)
+    {
+        
+    }
+
     ~slot_factory()
     {
         clear();
@@ -50,12 +56,11 @@ public:
     
     void destroy_slot(int handle)
     {
-        if((unsigned int)handle >= m_slots.size() || handle < 0) return;
-        
-        m_destroyed.push_back(m_slots[handle].first);
-        
-        m_slots[handle].first = NULL;
-        m_slots[handle].second.disconnect();
+        slot_map::iterator it = m_slots.find(handle);
+        if(it == m_slots.end()) return;
+        m_destroyed.push_back(it->second.first);
+        it->second.second.disconnect();
+        m_slots.erase(it);
     }
     
     void deallocate_destroyed_slots()
@@ -82,27 +87,12 @@ private:
         newSlot.first = newSlotFunction;
         newSlot.second = sig.connect(boost::ref(*newSlotFunction), cp);
         
-        int handle = -1;
-        for(slot_vector::iterator it = m_slots.begin(); it != m_slots.end(); ++it)
-        {
-            if(!it->first)
-            {
-                handle = it - m_slots.begin(); 
-                break;
-            }
-        }
+        int slot_id = m_next_slot_id;
+        m_next_slot_id++;
         
-        if(handle != -1)
-        {
-            m_slots[handle] = newSlot;
-        }
-        else
-        {
-            m_slots.push_back(newSlot); 
-            handle = m_slots.size() - 1;
-        }
+        m_slots[slot_id] = newSlot;
         
-        return handle;
+        return slot_id;
     }
     
     typedef boost::function<int (env_object::shared_ptr,env *)> slot_connect_function;
@@ -110,7 +100,9 @@ private:
     
     typedef detail::base_script_function<std::vector<any>, callargs_serializer, error> base_script_function;
     typedef std::vector<std::pair<base_script_function *,boost::signals::connection> > slot_vector;
-    slot_vector m_slots;
+    typedef std::map<int, std::pair<base_script_function *, boost::signals::connection> > slot_map;
+    slot_map m_slots;
+    int m_next_slot_id;
     
     std::list<base_script_function *> m_destroyed;
 };
