@@ -94,6 +94,7 @@ div.server-status-error{
 }
 .chat-shell-text{word-wrap: break-word;}
 .chat-shell-message{margin:0; padding:0;}
+#chat-shell-output .admin{color:#FF531A;}
 
 #command-shell {width:100%; margin-top:10px;}
 #command-shell-heading {padding-left:18px; background:transparent url(gear.png) no-repeat; font-weight:bold;}

@@ -74,9 +74,18 @@ function yellow(text) return formatcol(2, text) end
 function magenta(text) return formatcol(5, text) end
 function blue(text) return formatcol(1, text) end
 
-function server.console(admin, msg)
-    server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))
+
+local function createConsoleFunction()
+    
+    local triggerCallEvent = server.create_event_slot("admin-message")
+    
+    function server.console(admin, msg)
+        server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))
+        triggerCallEvent(admin, msg)
+    end
 end
+
+createConsoleFunction()
 
 server.system = os.execute
 

@@ -183,10 +183,14 @@ function createChatShell(){
     chatShell.appendChild(outputContainer);
     chatShell.appendChild(input);
     
-    function addTextMessage(playerName, text){
+    function addTextMessage(playerName, text, className){
         
         var message = document.createElement("p");
         message.className = "chat-shell-message";
+        
+        if(className){
+            message.className += " " + className;
+        }
         
         var name = document.createElement("span");
         name.className = "chat-shell-name";
@@ -208,16 +212,16 @@ function createChatShell(){
         $(outputContainer).scrollTop(output.scrollHeight);
     }
     
-    var eventListener = {
-        eventName:"text",
-        handler:function(cn, text){
-            var clientInfo = clients[cn];
-            if(!clientInfo) clientInfo = {name:"<unknown>"};
-            var playerName = clientInfo.name + "(" + cn + ")";
-            addTextMessage(playerName, text);
-        }
-    };
-    eventListeners.push(eventListener);
+    server.event_handler("text", function(cn, text){
+        var clientInfo = clients[cn];
+        if(!clientInfo) clientInfo = {name:"<unknown>"};
+        var playerName = clientInfo.name + "(" + cn + ")";
+        addTextMessage(playerName, text);
+    });
+    
+    server.event_handler("admin-message", function(admin, text){
+        addTextMessage(admin, text, "admin");
+    });
     
     $(input).keypress(function(e){
     
@@ -227,7 +231,7 @@ function createChatShell(){
                 if(this.value.length == 0) return;
                 
                 executeCommand("console [" + server.web_admin_session_username + "] [" + this.value + "]", function(status, responseBody){
-                    addTextMessage(server.web_admin_session_username, input.value);
+                    //addTextMessage(server.web_admin_session_username, input.value);
                     input.value = "";
                 });
                 
