@@ -51,9 +51,19 @@ local function requireBackendLogin(request)
     return false
 end
 
+local function getSessionUsername(request)
+    local params = http_request.parse_cookie(request:header("cookie"))
+    local sessionId = params.id
+    if not sessionId then return "root" end
+    local sessionInfo = sessions[sessionId]
+    if not sessionInfo then return "root" end
+    return sessionInfo.username
+end
+
 web_admin = {
     require_login = requireLogin,
-    require_backend_login = requireBackendLogin
+    require_backend_login = requireBackendLogin,
+    get_session_username = getSessionUsername
 }
 
 local function tryLogin(username, password)
@@ -137,7 +147,8 @@ http_server_root["login"] = http_server.resource({
             local sessionId = generateSessionKey()
             
             sessions[sessionId] = {
-                ip = request:client_ip()
+                ip = request:client_ip(),
+                username = params.username
             }
 
             local cookie = http_request.build_query_string({id = sessionId})

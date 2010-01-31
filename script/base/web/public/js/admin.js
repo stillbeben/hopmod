@@ -21,11 +21,10 @@ $(document).ready(function(){
     createChatShell();
     
     server.updateVars = [
-        "web_admin_username", "servername", "gamemode", "map", "timeleft"
+        "web_admin_session_username", "servername", "gamemode", "map", "timeleft"
     ];
     
     server.update();
-    
     
     clients_init();
     clients_update();
@@ -227,8 +226,8 @@ function createChatShell(){
             {
                 if(this.value.length == 0) return;
                 
-                executeCommand("console [" + server.web_admin_username + "] [" + this.value + "]", function(status, responseBody){
-                    addTextMessage(server.web_admin_username, input.value);
+                executeCommand("console [" + server.web_admin_session_username + "] [" + this.value + "]", function(status, responseBody){
+                    addTextMessage(server.web_admin_session_username, input.value);
                     input.value = "";
                 });
                 

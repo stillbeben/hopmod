@@ -9,6 +9,8 @@ http_server_root["queryvars"] = http_server.resource({
                 return
             end
             
+            server.web_admin_session_username = web_admin.get_session_username(request)
+            
             vars = Json.Decode(vars)
             
             local result = {}
