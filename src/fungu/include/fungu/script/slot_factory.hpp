@@ -54,13 +54,14 @@ public:
         return it->second(obj, environment);
     }
     
-    void destroy_slot(int handle)
+    bool destroy_slot(int handle)
     {
         slot_map::iterator it = m_slots.find(handle);
-        if(it == m_slots.end()) return;
+        if(it == m_slots.end()) return false;
         m_destroyed.push_back(it->second.first);
         it->second.second.disconnect();
         m_slots.erase(it);
+        return true;
     }
     
     void deallocate_destroyed_slots()
@@ -70,6 +71,11 @@ public:
             delete m_destroyed.front();
             m_destroyed.pop_front();
         }
+    }
+    
+    int skip_slot_id()
+    {
+        return m_next_slot_id;
     }
 private:
     template<typename SignalType>

@@ -63,6 +63,7 @@ boost::signal<int (int,int,int,int), proceed> signal_damage;
 static void destroy_slot(int handle);
 namespace lua{
 static int register_event_handler(lua_State * L);
+static void cleanup(lua_State * L);
 }//namespace lua
 
 class event_handler_object
@@ -140,6 +141,16 @@ namespace lua{
 typedef std::vector<int> lua_function_vector;
 static std::map<std::string, lua_function_vector> created_event_slots;
 typedef std::map<std::string, lua_function_vector>::const_iterator create_event_slots_iterator;
+typedef std::map<int, std::pair<lua_function_vector *, int> > handle_slot_map;
+static handle_slot_map handle_to_slot;
+
+static lua_function_vector::iterator get_free_vector_iterator(lua_function_vector & v)
+{
+    for(lua_function_vector::iterator it = v.begin(); it != v.end(); it++)
+        if(*it == -1) return it;
+    v.push_back(-1);
+    return v.end() - 1;
+}
 
 static int event_trigger(lua_State * L)
 {
@@ -149,7 +160,8 @@ static int event_trigger(lua_State * L)
     for(lua_function_vector::const_iterator it = handlers.begin(); it != handlers.end(); it++)
     {
         lua_rawgeti(L, LUA_REGISTRYINDEX, *it);
-        for(int i = 1; i <= argc; i++) lua_pushvalue(L, i);
+        for(int i = 1; i <= argc; i++) 
+            lua_pushvalue(L, i);
         if(lua_pcall(L, argc, 0, 0) != 0)
         {
             report_script_error(lua_tostring(L, -1));
@@ -193,8 +205,13 @@ static int register_event_handler(lua_State * L)
         std::map<std::string, lua_function_vector>::iterator it = created_event_slots.find(name);
         if(it != created_event_slots.end())
         {
+            lua_function_vector::iterator pos = get_free_vector_iterator(it->second);
+            
             lua_pushvalue(L, 2);
-            it->second.push_back(luaL_ref(L, LUA_REGISTRYINDEX));
+            *pos = luaL_ref(L, LUA_REGISTRYINDEX);
+            
+            handle = slots.skip_slot_id();
+            handle_to_slot[handle] = std::pair<lua_function_vector *, int>(&it->second, static_cast<int>(pos - it->second.begin()));
         }
     }
     
@@ -202,6 +219,34 @@ static int register_event_handler(lua_State * L)
     
     return 1;
 }
+
+static void cancel_event_handler(lua_State * L, int handle)
+{
+    handle_slot_map::iterator it = handle_to_slot.find(handle);
+    if(it == handle_to_slot.end()) return;
+    int index = it->second.second;
+    int luaFunctionRef = (*it->second.first)[index];
+    luaL_unref(L, LUA_REGISTRYINDEX, luaFunctionRef);
+    (*it->second.first)[index] = -1;
+}
+
+static int destroy_slot(lua_State * L)
+{
+    int handle = luaL_checkint(L, 1);
+    if(handle < 0) return 0;
+    bool done = slots.destroy_slot(handle);
+    if(!done) cancel_event_handler(L, handle);
+    return 0;
+}
+
+static void cleanup(lua_State * L)
+{
+    for(handle_slot_map::iterator it = handle_to_slot.begin(); it != handle_to_slot.end(); it++)
+        luaL_unref(L, LUA_REGISTRYINDEX, (*it->second.first)[it->second.second]);
+    handle_to_slot.clear();
+    created_event_slots.clear();
+}
+
 } //namespace lua
 
 namespace cubescript{    
@@ -225,6 +270,7 @@ static void cleanup(int)
 {
     slots.clear();
     slots.deallocate_destroyed_slots();
+    lua::cleanup(env->get_lua_state());
 }
 
 void register_signals(script::env & env)
@@ -285,6 +331,7 @@ void register_signals(script::env & env)
     script::bind_freefunc(destroy_slot, "cancel_handler", env);
     
     register_lua_function(lua::register_event_handler,"event_handler");
+    register_lua_function(lua::destroy_slot, "cancel_handler");
     register_lua_function(lua::create_event, "create_event_slot");
     
     event_handler_object::register_class(env.get_lua_state());
