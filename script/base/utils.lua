@@ -182,29 +182,6 @@ function server.teamsize(teamsize_teamname)
     return a
 end
 
-local event_conditions = { disconnect = {}}
-
-function event_conditions.disconnect.empty_server()
-    return server.playercount == 0
-end
-
-function server.conditional_event_handler(event_name, condition_function, handler_function)
-    if type(condition_function) == "string" then
-        condition_function = event_conditions[event_name][condition_function]
-        if not condition_function then
-            error("Unknown condition function")
-        end
-    end
-    
-    local id = server.event_handler(event_name, function(...)
-        if condition_function(unpack(arg)) then
-            handler_function(unpack(arg))
-        end
-    end)
-    
-    return id
-end
-
 function pack(...)
     return arg
 end
