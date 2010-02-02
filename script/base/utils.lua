@@ -87,8 +87,6 @@ end
 
 createConsoleFunction()
 
-server.system = os.execute
-
 function string.split(s, pattern)
     local a = {}
     for x in string.gmatch(s, pattern) do
