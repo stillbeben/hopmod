@@ -35,42 +35,24 @@ unsigned int maintenance_frequency;
 static int maintenance_time = 0;
 bool reloaded = false;
 
-void init_hopmod()
+static void install_crash_handler()
 {
-    set_maintenance_frequency(86400000);
-    
-    server::enable_setmaster_autoapprove(false);
-    
     struct sigaction crash_action;
     sigemptyset(&crash_action.sa_mask);
     crash_action.sa_handler = &server::crash_handler;
     crash_action.sa_flags = SA_RESETHAND;
     
-    sigaction(SIGILL, &crash_action, NULL);
+    sigaction(SIGILL,  &crash_action, NULL);
     sigaction(SIGABRT, &crash_action, NULL);
-    sigaction(SIGFPE, &crash_action, NULL);
-    sigaction(SIGBUS, &crash_action, NULL);
+    sigaction(SIGFPE,  &crash_action, NULL);
+    sigaction(SIGBUS,  &crash_action, NULL);
     sigaction(SIGSEGV, &crash_action, NULL);
-    sigaction(SIGSYS, &crash_action, NULL);
-    
-    init_scripting();
-    
-    script::env & env = get_script_env();
-    
-    register_server_script_bindings(env);
-    
-    register_signals(env);
-    
-    close_listenserver_slot = signal_shutdown.connect(&stopgameserver);
-    signal_shutdown.connect(&shutdown_scripting);
-    signal_shutdown.connect(&cleanup_info_files_on_shutdown);
-    
-    init_scheduler();
-    
-    init_script_pipe();
-    open_script_pipe("serverexec",511,get_script_env());
-    
-    lua_State * L = env.get_lua_state();
+    sigaction(SIGSYS,  &crash_action, NULL);
+}
+
+static void load_lua_modules()
+{
+    lua_State * L = get_script_env().get_lua_state();
     
     lua::module::open_net(L);
     lua::module::open_timer(L);
@@ -79,8 +61,46 @@ void init_hopmod()
     lua::module::open_geoip(L);
     lua::module::open_filesystem(L);
     lua::module::open_http_server(L);
-    lua_packlibopen(L);
     
+    lua_packlibopen(L);
+}
+
+/**
+    Initializes everything in hopmod. This function is called at server startup and server reload.
+
+    Things to keep in mind: 
+*/
+void init_hopmod()
+{
+    /*
+        Misc
+    */
+    set_maintenance_frequency(86400000); // signal maintenance event every 24 hours
+    server::enable_setmaster_autoapprove(false); // disable /setmaster command
+    info_file("log/sauer_server.pid", "%i\n", getpid());
+    install_crash_handler();
+    
+    /*
+        Scripting environment
+    */
+    init_scripting(); // create scripting environment
+    script::env & env = get_script_env(); 
+    register_server_script_bindings(env); // expose the core server api to the embedded scripting languages
+    register_signals(env); // register signals with scripting environment
+    init_scheduler(); // expose the scheduler functions to the scripting environment
+    load_lua_modules(); // extra lua modules written for hopmod
+    
+    /*
+        Event handlers
+    */
+    close_listenserver_slot = signal_shutdown.connect(&stopgameserver);
+    signal_shutdown.connect(&shutdown_scripting);
+    signal_shutdown.connect(&cleanup_info_files_on_shutdown);
+    
+    /*
+        Execute the first script. After this script is finished everything on
+        the scripting side of hopmod should be loaded.
+    */
     try
     {
         fungu::script::execute_file("script/base/init.cs", get_script_env());
@@ -89,8 +109,6 @@ void init_hopmod()
     {
         report_script_error(error);
     }
-    
-    info_file("log/sauer_server.pid", "%i\n", getpid());
 }
 
 void reload_hopmod()
@@ -106,7 +124,7 @@ void reload_hopmod()
     
     reloaded = true;
     
-    close_listenserver_slot.block();
+    close_listenserver_slot.block();  // block close_listenserver_slot to keep clients connected
     signal_shutdown(SHUTDOWN_RELOAD);
     close_listenserver_slot.unblock();
     
@@ -137,9 +155,17 @@ namespace server{
 
 void started()
 {
+    /*
+        Startup the serverexec named pipe service. The service runs by polling
+        from update_hopmod().
+    */
+    init_script_pipe();
+    open_script_pipe("serverexec",511,get_script_env());
+    
     signal_started();
     if(!server::smapname[0]) selectnextgame();
     
+    // Restore game state and player stats after server crash
     if(access("log/restore", R_OK) == 0) restore_server("log/restore");
 }
 
