@@ -108,6 +108,7 @@ namespace server
     int lua_team_players(lua_State *);
     int team_win(const char *);
     int team_draw(const char *);
+    int team_size(const char *);
     
     void pausegame(bool);
     void kick(int cn,int time,const std::string & admin,const std::string & reason);

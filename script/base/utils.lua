@@ -174,14 +174,6 @@ function server.printserverstatus(filename, filemode)
 	out:close()
 end
 
-function server.teamsize(teamsize_teamname)
-    local a = 0
-    for i,cn in ipairs(server.team_players(teamsize_teamname)) do
-        a = a + 1
-    end
-    return a
-end
-
 function pack(...)
     return arg
 end

@@ -894,6 +894,13 @@ int team_draw(const char * team)
     return true;
 }
 
+int team_size(const char * team)
+{
+    int count = 0;
+    loopv(clients) if(strcmp(clients[i]->team, team)==0) count++;
+    return count;
+}
+
 int recorddemo(const char * filename)
 {
     if(demorecord) return demo_id;

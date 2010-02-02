@@ -135,6 +135,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::team_draw, "team_draw", env);
     script::bind_freefunc(server::get_team_players, "team_players", env);
     register_lua_function(&server::lua_team_players, "team_players");
+    script::bind_freefunc(server::team_size, "teamsize", env);
     
     // Server-oriented functions and variables
     script::bind_freefunc(reload_hopmod, "reloadscripts", env);
