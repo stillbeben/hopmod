@@ -2777,7 +2777,7 @@ namespace server
             case SV_SPECTATOR:
             {
                 int spectator = getint(p), val = getint(p);
-                if(!ci->privilege && !ci->local && (spectator!=sender || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED)) || ci->check_flooding(ci->sv_spec_hit, "switching")) break;
+                if(!ci->privilege && (spectator!=sender || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED)) || (spectator == sender && ci->check_flooding(ci->sv_spec_hit, "switching"))) break;
                 clientinfo *spinfo = (clientinfo *)getclientinfo(spectator); // no bots
                 if(val && spinfo && spinfo != ci && spinfo->privilege && ci->privilege < PRIV_ADMIN)
                 {
