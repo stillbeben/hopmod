@@ -2521,7 +2521,7 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text);
                 
-                if(ci && !ci->check_flooding(ci->sv_text_hit,"sending text"))
+                if(ci && (ci->privilege != PRIV_ADMIN && !ci->check_flooding(ci->sv_text_hit,"sending text")))
                 {
                     if(text[0] == '#' && !strcmp(text+1, "reload") && ci->privilege == PRIV_ADMIN)
                     {
