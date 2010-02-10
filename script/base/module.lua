@@ -3,8 +3,24 @@ local modules = {}
 local loaded_modules = {}
 local loaded_scripts = {}
 
+local environment = {}
+environment.server = {}
+
+local function createEnvironment()
+    local env = table.deepcopy(environment)
+    setmetatable(env.server, {__index = _G.server, __newindex = _G.server})
+    setmetatable(env, {__index = _G, __newindex = _G})
+    return env
+end
+
+local function run_lua_script(filename)
+    local loaded = loadfile(filename)
+    setfenv(loaded, createEnvironment())
+    return loaded()
+end
+
 local script_extension_handlers = {
-    lua = dofile,
+    lua = run_lua_script,
     cs = server.execCubeScriptFile,
     _default = server.execCubeScriptFile
 }
@@ -37,58 +53,121 @@ local function find_script(filename)
         end
     end
     
-    return real_filename
+    local extension = string.gmatch(real_filename, "%.(%a+)$")() or "_default"
+    
+    return real_filename, script_extension_handlers[extension]
 end
 
 server.find_script = find_script
 
 function server.script(filename)
     
-    filename = find_script(filename) or filename
+    local filename, scriptRunner = find_script(filename)
     
     if loaded_scripts[filename] then
         return nil
     end
     
-    local extension = string.gmatch(filename, "%.(%a+)$")() or "_default"
-    local handler = script_extension_handlers[extension]
+    loaded_scripts[filename] = true
     
-    if not handler then
+    if not scriptRunner then
         error(string.format("Unrecognized file extension for script \"%s\".", filename))
     end
     
-    return handler(filename), filename
+    return scriptRunner(filename)
 end
 
-function server.load_once(filename)
-    local retval, filename = server.script(filename)
-    loaded_scripts[filename] = true
-    return retval, filename
-end
-
+server.load_once = server.script
 script = server.script
 load_once = server.load_once
 
+function server.unload_module(name)
+    
+    local control = loaded_modules[name]
+    if not control then error(string.format("module \"%s\" not found", name)) end
+    
+    if control.unload then
+        control.unload()
+    end
+    
+    for _, handlerId in ipairs(control.event_handlers) do
+        server.cancel_handler(handlerId)
+    end
+    
+    for _, handlerId in ipairs(control.timers) do
+        server.cancel_timer(handlerId)
+    end
+    
+    loaded_modules[name] = nil
+    loaded_scripts[control.filename] = nil
+    
+    collectgarbage()
+end
+
+local function unload_all_modules()
+    for name in pairs(loaded_modules) do 
+        catch_error(server.unload_module, name, true)
+    end
+end
+
 local function load_module(name)
 
-    local real_server_event_handler = server.event_handler
     local event_handlers = {}
+    local timers = {}
     
-    server.index.event_handler = function(name, handler)
-        local handlerId = real_server_event_handler(name, handler)
+    environment.server.event_handler = function(name, handler)
+        local handlerId = server.event_handler(name, handler)
         event_handlers[#event_handlers + 1] = handlerId
         return handlerId
     end
     
-    local control, filename = catch_error(load_once, name)
+    local function timerFunction(timerFunction, countdown, handler)
+        local handlerId = timerFunction(countdown, handler)
+        timers[#timers + 1] = handlerId
+        return handlerId
+    end
+    
+    environment.server.sleep = function(countdown, handler)
+        return timerFunction(server.sleep, countdown, handler)
+    end
+    
+    environment.server.interval = function(countdown, handler)
+        return timerFunction(server.interval, countdown, handler)
+    end
+    
+    local filename, runScript = find_script(name)
+    
+    if loaded_scripts[filename] then
+        return
+    end
+    
+    if not filename then
+        error(string.format("module \"%s\" not found", name))
+    end
+    
+    if not runScript then
+        error(string.format("module \"%s\" is an unknown script type", name))
+    end
+    
+    local success, control = return_catch_error(runScript, filename)
+    
+    if not success then control = nil end
+    
     control = control or {}
-    
-    server.index.event_handler = real_server_event_handler
-    
     control.filename = filename
     control.event_handlers = event_handlers
+    control.timers = timers
     
+    environment.server.event_handler = nil
+    environment.server.sleep = nil
+    environment.server.interval = nil
+    
+    loaded_scripts[filename] = true
     loaded_modules[name] = control
+    
+    if not success then
+        server.unload_module(name)
+    end
 end
 
 local function load_modules_now()
@@ -110,38 +189,6 @@ function server.module(name)
         table.insert(modules, name)
     end
     
-end
-
-function server.unload_module(name, hide_warnings)
-    
-    local control = loaded_modules[name]
-    
-    if not control then error(string.format("Module \"%s\" not found", name)) end
-    
-    if control.unload then
-        control.unload()
-    else
-        if not hide_warnings then
-            server.log_error(string.format("Module \"%s\" cannot be unloaded", name))
-        end
-        
-        return
-    end
-    
-    for _, handlerId in ipairs(control.event_handlers) do
-        server.cancel_handler(handlerId)
-    end
-    
-    loaded_modules[name] = nil
-    loaded_scripts[control.filename] = nil
-    
-    collectgarbage()
-end
-
-local function unload_all_modules()
-    for name in pairs(loaded_modules) do 
-        catch_error(server.unload_module, name, true)
-    end
 end
 
 server.event_handler("started", load_modules_now)

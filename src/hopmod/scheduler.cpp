@@ -16,6 +16,7 @@ static inline int sched_free_lua_sleep(lua_State *);
 static inline int sched_free_lua_interval(lua_State *);
 static script::any sched_free_cs_function(bool, script::env_object::call_arguments &, script::env_frame *);
 static void cancel_free_scheduled(int);
+static void cancel_timer(int);
 
 void init_scheduler()
 {
@@ -24,6 +25,9 @@ void init_scheduler()
     
     static script::function<script::raw_function_type> free_interval(boost::bind(sched_free_cs_function, true, _1, _2));
     get_script_env().bind_global_object(&free_interval, FUNGU_OBJECT_ID("interval"));
+    
+    static script::function<void (int)> cancel_timer_func(cancel_timer);
+    get_script_env().bind_global_object(&cancel_timer_func, FUNGU_OBJECT_ID("cancel_timer"));
     
     register_lua_function(sched_free_lua_sleep, "sleep");
     register_lua_function(sched_free_lua_interval, "interval");
@@ -67,9 +71,9 @@ int sched_free_lua_function(lua_State * L, bool repeat)
     script::env_object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
     luaFunctionObject->set_adopted();
     
-    free_scheduled.schedule(boost::bind(call_lua_function, luaFunctionObject, &get_script_env()), countdown, repeat);
-    
-    return 0;
+    int id = free_scheduled.schedule(boost::bind(call_lua_function, luaFunctionObject, &get_script_env()), countdown, repeat);
+    lua_pushinteger(L, id);
+    return 1;
 }
 
 int sched_free_lua_sleep(lua_State * L)
@@ -112,9 +116,8 @@ script::any sched_free_cs_function(bool repeat, script::env_object::call_argumen
     script::code_block code = cs.deserialize(args.front(),type_tag<script::code_block>());
     args.pop_front();
     
-    free_scheduled.schedule(boost::bind(call_cs_function, code, frame->get_env()), countdown, repeat);
-    
-    return script::any::null_value();
+    int id = free_scheduled.schedule(boost::bind(call_cs_function, code, frame->get_env()), countdown, repeat);
+    return id;
 }
 
 void sched_callback(int (* fun)(void *),void * closure)
@@ -126,4 +129,9 @@ void sched_callback(int (* fun)(void *),void * closure)
 void update_scheduler(int timenow)
 {
     free_scheduled.update(timenow);
+}
+
+static void cancel_timer(int job_id)
+{
+    free_scheduled.cancel(job_id);
 }

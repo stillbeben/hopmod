@@ -10,7 +10,7 @@ include(PCHSupport)
 include(CheckLibraryExists)
 
 check_library_exists(GeoIP GeoIP_open "" GEOIP_EXISTS)
-check_library_exists(z opengzfile "" ZLIB_EXISTS)
+check_library_exists(z gzopen "" ZLIB_EXISTS)
 check_library_exists(pthread pthread_self "" PTHREAD_EXISTS)
 check_library_exists(rt clock_gettime "" RTLIB_EXISTS)
 
