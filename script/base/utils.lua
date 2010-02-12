@@ -9,7 +9,7 @@ end
 math.round = round
 
 do
-    local triggerCallEvent = server.create_event_slot("admin-message")
+    local triggerCallEvent = server.create_event_signal("admin-message")
     
     function server.console(admin, msg)
         server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))

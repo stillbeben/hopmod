@@ -1,3 +1,6 @@
+local signal_loaded = server.create_event_signal("module-loaded")
+local signal_unloaded = server.create_event_signal("module-unloaded")
+
 local started = false
 local modules = {}
 local loaded_modules = {}
@@ -94,6 +97,10 @@ function server.unload_module(name)
         server.cancel_handler(handlerId)
     end
     
+    for _, handlerId in ipairs(control.event_signals) do
+        server.cancel_event_signal(handlerId)
+    end
+    
     for _, handlerId in ipairs(control.timers) do
         server.cancel_timer(handlerId)
     end
@@ -102,6 +109,10 @@ function server.unload_module(name)
     loaded_scripts[control.filename] = nil
     
     collectgarbage()
+    
+    if control.successful_startup then
+        signal_unloaded(name, control.filename)
+    end
 end
 
 local function unload_all_modules()
@@ -113,12 +124,19 @@ end
 local function load_module(name)
 
     local event_handlers = {}
+    local event_signals = {}
     local timers = {}
     
     environment.server.event_handler = function(name, handler)
         local handlerId = server.event_handler(name, handler)
         event_handlers[#event_handlers + 1] = handlerId
         return handlerId
+    end
+    
+    environment.server.create_event_signal = function(name)
+        local trigger, signalId = server.create_event_signal(name)
+        event_signals[#event_signals + 1] = signalId
+        return trigger, signalId
     end
     
     local function timerFunction(timerFunction, countdown, handler)
@@ -156,9 +174,12 @@ local function load_module(name)
     control = control or {}
     control.filename = filename
     control.event_handlers = event_handlers
+    control.event_signals = event_signals
     control.timers = timers
+    control.successful_startup = success
     
     environment.server.event_handler = nil
+    environment.server.create_event_signal = nil
     environment.server.sleep = nil
     environment.server.interval = nil
     
@@ -167,7 +188,10 @@ local function load_module(name)
     
     if not success then
         server.unload_module(name)
+        return
     end
+    
+    signal_loaded(name, filename)
 end
 
 local function load_modules_now()

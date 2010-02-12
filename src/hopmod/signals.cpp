@@ -3,6 +3,7 @@
 #endif
 
 #include "hopmod.hpp"
+#include "handle_resolver.hpp"
 
 #include <fungu/script.hpp>
 #include <fungu/script/slot_factory.hpp>
@@ -140,9 +141,10 @@ namespace lua{
 
 typedef std::vector<int> lua_function_vector;
 static std::map<std::string, lua_function_vector> created_event_slots;
-typedef std::map<std::string, lua_function_vector>::const_iterator create_event_slots_iterator;
+typedef std::map<std::string, lua_function_vector>::iterator created_event_slots_iterator;
 typedef std::map<int, std::pair<lua_function_vector *, int> > handle_slot_map;
 static handle_slot_map handle_to_slot;
+static handle_resolver<created_event_slots_iterator> signal_handles;
 
 static lua_function_vector::iterator get_free_vector_iterator(lua_function_vector & v)
 {
@@ -171,11 +173,11 @@ static int event_trigger(lua_State * L)
     return 0;
 }
 
-static int create_event(lua_State * L)
+static int create_signal(lua_State * L)
 {
     const char * name = luaL_checkstring(L, 1);
     
-    std::pair<std::map<std::string, lua_function_vector>::iterator, bool> inserted = created_event_slots.insert(std::pair<std::string, lua_function_vector>(name, std::vector<int>()));
+    std::pair<created_event_slots_iterator, bool> inserted = created_event_slots.insert(std::pair<std::string, lua_function_vector>(name, std::vector<int>()));
     
     if(inserted.second == false)
     {
@@ -185,7 +187,10 @@ static int create_event(lua_State * L)
     
     lua_pushlightuserdata(L, &inserted.first->second);
     lua_pushcclosure(L, &event_trigger, 1);
-    return 1;
+    
+    lua_pushinteger(L, signal_handles.assign(inserted.first));
+    
+    return 2;
 }
 
 static int register_event_handler(lua_State * L)
@@ -218,6 +223,21 @@ static int register_event_handler(lua_State * L)
     lua_pushinteger(L, handle);
     
     return 1;
+}
+
+static int cancel_signal(lua_State * L)
+{
+    int signalId = luaL_checkint(L, 1);
+    created_event_slots_iterator iter = signal_handles.resolve(signalId);
+    if(iter == created_event_slots_iterator()) return 0;
+    
+    for(lua_function_vector::const_iterator functionIter = iter->second.begin(); functionIter != iter->second.end(); ++functionIter)
+        luaL_unref(L, LUA_REGISTRYINDEX, *functionIter);
+    
+    created_event_slots.erase(iter);
+    signal_handles.free(signalId);
+    
+    return 0;
 }
 
 static void cancel_event_handler(lua_State * L, int handle)
@@ -332,10 +352,11 @@ void register_signals(script::env & env)
     
     register_lua_function(lua::register_event_handler,"event_handler");
     register_lua_function(lua::destroy_slot, "cancel_handler");
-    register_lua_function(lua::create_event, "create_event_slot");
+    register_lua_function(lua::create_signal, "create_event_signal");
+    register_lua_function(lua::cancel_signal, "cancel_event_signal");
     
     event_handler_object::register_class(env.get_lua_state());
-    register_lua_function(event_handler_object::create, "event_handler_object");
+    register_lua_function(event_handler_object::create, "event_handler_object"); //deprecated
 }
 
 void cleanup_dead_slots()
