@@ -56,6 +56,8 @@ local function find_script(filename)
         end
     end
     
+    if not real_filename then return end
+    
     local extension = string.gmatch(real_filename, "%.(%a+)$")() or "_default"
     
     return real_filename, script_extension_handlers[extension]
