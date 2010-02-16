@@ -16,6 +16,7 @@ void report_script_error(const char *);
 proxy_resource & get_root_resource();
 
 static int root_resource_ref = LUA_REFNIL;
+static lua_State * opened_state = NULL;
 
 class request_wrapper
 {
@@ -112,6 +113,10 @@ private:
     
     static void read_content_complete(lua_State * L, int functionRef, stream::char_vector_sink * sink, const http::connection::error & err)
     {
+        #ifndef DISABLE_RELOADSCRIPTS
+        if(L!=opened_state) return;
+        #endif
+        
         lua_rawgeti(L, LUA_REGISTRYINDEX, functionRef);
         luaL_unref(L, LUA_REGISTRYINDEX, functionRef);
         
@@ -276,6 +281,10 @@ private:
     
     void sent_body(lua_State * L, int functionRef, const http::connection::error & err)
     {
+        #ifndef DISABLE_RELOADSCRIPTS
+        if(L!=opened_state) return;
+        #endif
+        
         lua_rawgeti(L, LUA_REGISTRYINDEX, functionRef);
         luaL_unref(L, LUA_REGISTRYINDEX, functionRef);
         
@@ -613,6 +622,7 @@ namespace module{
 
 void open_http_server(lua_State * L)
 {
+    opened_state = L;
     root_resource_ref = LUA_REFNIL;
     
     static luaL_Reg functions[] = {

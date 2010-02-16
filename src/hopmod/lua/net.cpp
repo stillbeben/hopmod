@@ -20,6 +20,25 @@ extern "C"{
 boost::asio::io_service & get_main_io_service();
 void report_script_error(const char *);
 
+static const char * TCP_ACCEPTOR_MT = "lnetlib_tcp_acceptor";
+static const char * BASIC_TCP_SOCKET_MT = "lnetlib_basic_tcp_socket";
+static const char * TCP_CLIENT_SOCKET_MT = "lnetlib_tcp_client_socket";
+static const char * BUFFER_MT = "lnetlib_buffer";
+static const char * UDP_SOCKET_MT = "lnetlib_udp_socket";
+static const char * LOCAL_SOCKET_MT = "lnetlib_local_socket";
+static const char * LOCAL_ACCEPTOR_MT = "lnetlib_local_acceptor";
+static const char * LOCAL_SOCKET_CLIENT_MT = "lnetlib_local_client";
+
+static lua_State * lua_state;
+static io_service * main_io;
+
+static int async_resolve_operations = 0;
+
+int get_num_async_resolve_operations()
+{
+    return async_resolve_operations;
+}
+
 class tcp_socket: public ip::tcp::socket, 
                   public buffered_reading<ip::tcp::socket>
 {
@@ -42,12 +61,19 @@ private:
     void _async_connect(const std::string & hostname, const std::string & port, ConnectHandler handler)
     {
         ip::tcp::resolver::query query(hostname, port);
-        m_resolver.async_resolve(query, boost::bind(&tcp_socket::resolve_handler<ConnectHandler>, this, handler, _1, _2));
+        m_resolver.async_resolve(query, boost::bind(&tcp_socket::resolve_handler<ConnectHandler>, this, lua_state, handler, _1, _2));
+        async_resolve_operations++;
     }
     
     template<typename ConnectHandler>
-    void resolve_handler(ConnectHandler handler, const boost::system::error_code error, ip::tcp::resolver::iterator addresses)
+    void resolve_handler(lua_State * L, ConnectHandler handler, const boost::system::error_code error, ip::tcp::resolver::iterator addresses)
     {
+        async_resolve_operations--;
+        
+        #ifndef DISABLE_RELOADSCRIPTS
+        if(L!=lua_state) return;
+        #endif
+        
         if(error)
         {
             handler(error);
@@ -96,18 +122,6 @@ struct lnetlib_buffer
     }
 };
 
-static const char * TCP_ACCEPTOR_MT = "lnetlib_tcp_acceptor";
-static const char * BASIC_TCP_SOCKET_MT = "lnetlib_basic_tcp_socket";
-static const char * TCP_CLIENT_SOCKET_MT = "lnetlib_tcp_client_socket";
-static const char * BUFFER_MT = "lnetlib_buffer";
-static const char * UDP_SOCKET_MT = "lnetlib_udp_socket";
-static const char * LOCAL_SOCKET_MT = "lnetlib_local_socket";
-static const char * LOCAL_ACCEPTOR_MT = "lnetlib_local_acceptor";
-static const char * LOCAL_SOCKET_CLIENT_MT = "lnetlib_local_client";
-
-static lua_State * lua_state;
-static io_service * main_io;
-
 void * lua_aux_checkobject(lua_State * L, int narg, const char * tname)
 {
     luaL_checktype(L, narg, LUA_TUSERDATA);
@@ -147,8 +161,12 @@ void push_endpoint(lua_State * L, const EndpointType & endpoint)
     }
 }
 
-void resolve_handler(int luaFunctionCbRef, const boost::system::error_code ec, ip::tcp::resolver::iterator it)
+void resolve_handler(lua_State * L, int luaFunctionCbRef, const boost::system::error_code ec, ip::tcp::resolver::iterator it)
 {
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L != lua_state) return;
+    #endif
+    
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, luaFunctionCbRef);
     luaL_unref(lua_state, LUA_REGISTRYINDEX, luaFunctionCbRef);
     
@@ -183,7 +201,7 @@ int async_resolve(lua_State * L)
     luaL_checktype(L, 2, LUA_TFUNCTION);
     lua_pushvalue(L, 2);
     ip::tcp::resolver::query query(hostname, "");
-    dns.async_resolve(query, boost::bind(resolve_handler, luaL_ref(L, LUA_REGISTRYINDEX), _1, _2));
+    dns.async_resolve(query, boost::bind(resolve_handler, L, luaL_ref(L, LUA_REGISTRYINDEX), _1, _2));
     return 0;
 }
 
@@ -201,8 +219,12 @@ int acceptor_close(lua_State * L)
     return 0;
 }
 
-void async_accept_handler(int luaFunctionCbRef, int socketRef, boost::system::error_code error)
+void async_accept_handler(lua_State * L, int luaFunctionCbRef, int socketRef, boost::system::error_code error)
 {
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L != lua_state) return;
+    #endif
+    
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, luaFunctionCbRef);
     luaL_unref(lua_state, LUA_REGISTRYINDEX, luaFunctionCbRef);
     
@@ -235,7 +257,7 @@ int acceptor_async_accept(lua_State * L)
     int socketRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
     lua_pushvalue(L, 2);
-    acceptor->async_accept(*socket, boost::bind(async_accept_handler, luaL_ref(L, LUA_REGISTRYINDEX), socketRef, _1));
+    acceptor->async_accept(*socket, boost::bind(async_accept_handler, L, luaL_ref(L, LUA_REGISTRYINDEX), socketRef, _1));
     
     return 0;
 }
@@ -348,8 +370,12 @@ int socket_close(lua_State * L)
     return 0;
 }
 
-void async_send_handler(int functionRef, int stringRef, const boost::system::error_code error, const size_t len)
+void async_send_handler(lua_State * L, int functionRef, int stringRef, const boost::system::error_code error, const size_t len)
 {
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L != lua_state) return;
+    #endif
+    
     luaL_unref(lua_state, LUA_REGISTRYINDEX, stringRef);
     
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, functionRef);
@@ -380,13 +406,17 @@ int socket_async_send(lua_State * L)
     int stringRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
     lua_pushvalue(L, 3);
-    socket->async_send(boost::asio::buffer(str, stringlen), boost::bind(async_send_handler, luaL_ref(L, LUA_REGISTRYINDEX), stringRef, _1, _2));
+    socket->async_send(boost::asio::buffer(str, stringlen), boost::bind(async_send_handler, L, luaL_ref(L, LUA_REGISTRYINDEX), stringRef, _1, _2));
     
     return 0;
 }
 
-void async_read_until_handler(int functionRef, boost::asio::streambuf * buf, const boost::system::error_code error, const size_t readlen)
-{    
+void async_read_until_handler(lua_State * L, int functionRef, boost::asio::streambuf * buf, const boost::system::error_code error, const size_t readlen)
+{
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L!=lua_state) return;
+    #endif
+    
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua_state, LUA_REGISTRYINDEX, functionRef);
     
@@ -416,13 +446,17 @@ int socket_async_read_until(lua_State * L)
     lua_pushvalue(L, 3);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    socket->async_read_until(delim, boost::bind(async_read_until_handler, functionRef, &socket->read_buffer(), _1, _2));
+    socket->async_read_until(delim, boost::bind(async_read_until_handler, L, functionRef, &socket->read_buffer(), _1, _2));
     
     return 0;
 }
 
-void async_read_handler(int functionRef, streambuf * socketbuf, lnetlib_buffer * rbuf, int bufferRef, int reqreadsize, const boost::system::error_code error, const size_t readsize)
+void async_read_handler(lua_State * L, int functionRef, streambuf * socketbuf, lnetlib_buffer * rbuf, int bufferRef, int reqreadsize, const boost::system::error_code error, const size_t readsize)
 {
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L!=lua_state) return;
+    #endif
+    
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua_state, LUA_REGISTRYINDEX, functionRef);
     
@@ -470,13 +504,17 @@ int socket_async_read(lua_State * L)
     lua_pushvalue(L, function_arg_index);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    socket->async_read(reqreadsize, boost::bind(async_read_handler, functionRef, &socket->read_buffer(), rbuf, bufferRef, reqreadsize, _1, _2));
+    socket->async_read(reqreadsize, boost::bind(async_read_handler, L, functionRef, &socket->read_buffer(), rbuf, bufferRef, reqreadsize, _1, _2));
     
     return 0;
 }
 
-void async_send_buffer_handler(int functionRef, lnetlib_buffer * buf, int bufferRef, const boost::system::error_code error, const size_t written)
+void async_send_buffer_handler(lua_State * L, int functionRef, lnetlib_buffer * buf, int bufferRef, const boost::system::error_code error, const size_t written)
 {
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L!=lua_state) return;
+    #endif
+    
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua_state, LUA_REGISTRYINDEX, functionRef);
     
@@ -517,7 +555,7 @@ int socket_async_send_buffer(lua_State * L)
     lua_pushvalue(L, function_arg_index);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    socket->async_send(buffer(buf->consumed, writesize), boost::bind(async_send_buffer_handler, functionRef, buf, bufferRef, _1, _2));
+    socket->async_send(buffer(buf->consumed, writesize), boost::bind(async_send_buffer_handler, L, functionRef, buf, bufferRef, _1, _2));
     
     return 0;
 }
@@ -690,8 +728,12 @@ int udp_socket_bind(lua_State * L)
     else return 0;
 }
 
-void async_read_from_handler(int functionRef, lnetlib_buffer * rbuf, int bufferRef, ip::udp::endpoint * endpoint, const boost::system::error_code error, size_t readsize)
+void async_read_from_handler(lua_State * L, int functionRef, lnetlib_buffer * rbuf, int bufferRef, ip::udp::endpoint * endpoint, const boost::system::error_code error, size_t readsize)
 {
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L!=lua_state) return;
+    #endif
+    
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua_state, LUA_REGISTRYINDEX, functionRef);
     
@@ -742,7 +784,7 @@ int async_read_from(lua_State * L)
     
     ip::udp::endpoint * endpoint = new ip::udp::endpoint;
     
-    socket->async_receive_from(buffer(rbuf->start, reqreadsize), *endpoint, boost::bind(async_read_from_handler, functionRef, rbuf, bufferRef, endpoint, _1, _2));
+    socket->async_receive_from(buffer(rbuf->start, reqreadsize), *endpoint, boost::bind(async_read_from_handler, L, functionRef, rbuf, bufferRef, endpoint, _1, _2));
     
     return 0;
 }
@@ -794,7 +836,7 @@ int async_send_to(lua_State * L)
     lua_pushvalue(L, function_arg_index);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    socket->async_send_to(buffer(buf->consumed, writesize), endpoint, boost::bind(async_send_buffer_handler, functionRef, buf, bufferRef, _1, _2));
+    socket->async_send_to(buffer(buf->consumed, writesize), endpoint, boost::bind(async_send_buffer_handler, L, functionRef, buf, bufferRef, _1, _2));
     
     return 0;
 }
@@ -886,8 +928,12 @@ int create_udp_socket(lua_State * L)
     return 1;
 }
 
-void async_connect_handler(int functionRef, const boost::system::error_code & error)
+void async_connect_handler(lua_State * L, int functionRef, const boost::system::error_code & error)
 {
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L!=lua_state) return;
+    #endif
+    
     lua_rawgeti(lua_state, LUA_REGISTRYINDEX, functionRef);
     luaL_unref(lua_state, LUA_REGISTRYINDEX, functionRef);
     
@@ -916,7 +962,7 @@ int client_async_connect(lua_State * L)
     
     if(!socket->is_open()) socket->open(ip::tcp::v4());
     
-    socket->async_connect(hostname, port, boost::bind(async_connect_handler, functionRef, _1));
+    socket->async_connect(hostname, port, boost::bind(async_connect_handler, L, functionRef, _1));
     
     return 0;
 }
@@ -1195,7 +1241,7 @@ int local_acceptor_async_accept(lua_State * L)
     int socketRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
     lua_pushvalue(L, 2);
-    acceptor->async_accept(*socket, boost::bind(async_accept_handler, luaL_ref(L, LUA_REGISTRYINDEX), socketRef, _1));
+    acceptor->async_accept(*socket, boost::bind(async_accept_handler, L, luaL_ref(L, LUA_REGISTRYINDEX), socketRef, _1));
     
     return 0;
 }
@@ -1302,7 +1348,7 @@ int local_socket_async_send_buffer(lua_State * L)
     lua_pushvalue(L, function_arg_index);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    socket->async_send(buffer(buf->consumed, writesize), boost::bind(async_send_buffer_handler, functionRef, buf, bufferRef, _1, _2));
+    socket->async_send(buffer(buf->consumed, writesize), boost::bind(async_send_buffer_handler, L, functionRef, buf, bufferRef, _1, _2));
     
     return 0;
 }
@@ -1321,7 +1367,7 @@ int local_socket_async_send(lua_State * L)
     int stringRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
     lua_pushvalue(L, 3);
-    socket->async_send(boost::asio::buffer(str, stringlen), boost::bind(async_send_handler, luaL_ref(L, LUA_REGISTRYINDEX), stringRef, _1, _2));
+    socket->async_send(boost::asio::buffer(str, stringlen), boost::bind(async_send_handler, L, luaL_ref(L, LUA_REGISTRYINDEX), stringRef, _1, _2));
     
     return 0;
 }
@@ -1338,7 +1384,7 @@ int local_socket_async_read_until(lua_State * L)
     
     boost::asio::streambuf * readbuf = new boost::asio::streambuf;
     
-    socket->async_read_until(delim, boost::bind(async_read_until_handler, functionRef, readbuf, _1, _2));
+    socket->async_read_until(delim, boost::bind(async_read_until_handler, L, functionRef, readbuf, _1, _2));
     
     return 0;
 }
@@ -1366,7 +1412,7 @@ int local_socket_async_read(lua_State * L)
     lua_pushvalue(L, function_arg_index);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    socket->async_read(reqreadsize, boost::bind(async_read_handler, functionRef, &socket->read_buffer(), rbuf, bufferRef, reqreadsize, _1, _2));
+    socket->async_read(reqreadsize, boost::bind(async_read_handler, L, functionRef, &socket->read_buffer(), rbuf, bufferRef, reqreadsize, _1, _2));
     
     return 0;
 }
@@ -1439,7 +1485,7 @@ int local_socket_client_async_connect(lua_State * L)
     
     //if(!socket->is_open()) socket->open(local::stream_protocol::endpoint::protocol());
     
-    socket->async_connect(endpoint, boost::bind(async_connect_handler, functionRef, _1));
+    socket->async_connect(endpoint, boost::bind(async_connect_handler, L, functionRef, _1));
     
     return 0;
 }

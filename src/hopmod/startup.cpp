@@ -5,6 +5,7 @@
 #include "cube.h"
 #include "hopmod.hpp"
 #include "lua/modules.hpp"
+#include "main_io_service.hpp"
 
 #include <fungu/script/env.hpp>
 #include <fungu/script/execute.hpp>
@@ -23,6 +24,8 @@ void sendservmsg(const char *);
 extern string smapname;
 bool selectnextgame();
 }//namespace server
+
+int get_num_async_resolve_operations(); //defined in lua/net.cpp
 
 extern "C"{
 int lua_packlibopen(lua_State *L);
@@ -111,14 +114,14 @@ void init_hopmod()
     }
 }
 
-void reload_hopmod()
+static void reload_hopmod_now()
 {
-    if(!reload)
+    if(get_num_async_resolve_operations())
     {
-        reload = true;
+        //Reload scripts delayed due to pending async resolve operations. Rescheduling reload...
+        get_main_io_service().post(reload_hopmod_now);
         return;
     }
-    else reload = false;
     
     signal_reloadhopmod();
     
@@ -133,6 +136,11 @@ void reload_hopmod()
     init_hopmod();
     server::started();
     std::cout<<"-> Reloaded Hopmod."<<std::endl;
+}
+
+void reload_hopmod()
+{
+    get_main_io_service().post(reload_hopmod_now);
 }
 
 void update_hopmod()
