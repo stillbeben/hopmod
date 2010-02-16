@@ -27,6 +27,4 @@ function server.load_sqlite3_database(filename)
     db:close()
 end
 
-if server.file_exists("./conf/authserver.conf") then
-    server.execute_cubescript_file("./conf/authserver.conf")
-end
+server.execute_cubescript_file("./conf/authserver.conf")
