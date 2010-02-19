@@ -81,7 +81,7 @@ void execute_file(const char * filename, env & environment)
     
     if(reader.is_parsing_expression()) throw error(UNEXPECTED_EOF);
     
-    if(!feof(file_stream))
+    if(ferror(file_stream))
     {
         std::string description;
         description  = "error reading from file ";
