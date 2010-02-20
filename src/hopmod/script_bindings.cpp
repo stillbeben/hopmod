@@ -120,9 +120,12 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::cs_player_list, "players", env);
     script::bind_freefunc(server::cs_spec_list, "spectators", env);
     script::bind_freefunc(server::cs_bot_list, "bots", env);
+    script::bind_freefunc(server::cs_client_list, "clients", env);
+    
     register_lua_function(&server::lua_player_list, "players");
     register_lua_function(&server::lua_spec_list, "spectators");
     register_lua_function(&server::lua_bot_list, "bots");
+    register_lua_function(&server::lua_client_list, "clients");
     
     register_lua_function(&server::lua_gamemodeinfo, "gengamemodeinfo");
     
