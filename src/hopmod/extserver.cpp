@@ -334,6 +334,7 @@ std::string player_displayname(int cn)
 
 const char * player_team(int cn)
 {
+    if(!m_teammode) return "";
     return get_ci(cn)->team;
 }
 
