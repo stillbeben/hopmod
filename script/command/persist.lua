@@ -22,7 +22,7 @@ return function(cn,option)
 	elseif tonumber(option) == 0 then
 
 		server.reassignteams = 1
-		server.player_msg(persist_cn, orange("reshuffle teams at mapchange enabled"))
+		server.player_msg(cn, orange("reshuffle teams at mapchange enabled"))
 
 	else
 
