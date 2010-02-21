@@ -20,13 +20,15 @@
 		
 ]]
 
-
-
 server.sleep(10000, function()
+
 require "geoip"
+
 irc = {}
 irc.client = net.tcp_client()
+
 if server.irc_debug == 1 then print ("DEBUG [Start UP] : Starting hopbot") end
+
 --Connect and send required handshake information.
 function irc:connectServer(client)
 	irc.client:close()
@@ -47,8 +49,10 @@ end
 --Main Data Loop
 function irc:readData(client)
 	irc.client:async_read_until("\n", function(data)
-	if data then irc:processData(client,data) end
-		irc:readData(irc.client)
+        if data then 
+            irc:processData(client, data)
+            irc:readData(irc.client)
+        end
 	end)
 end
 
