@@ -2570,8 +2570,9 @@ namespace server
                         return;
                     }
                     
-                    signal_renaming(ci->clientnum);
-                    ci->playerid = get_player_id(text, getclientip(ci->clientnum));
+                    int futureId = get_player_id(text, getclientip(ci->clientnum));
+                    signal_renaming(ci->clientnum, futureId);
+                    ci->playerid = futureId;
                     
                     string oldname;
                     copystring(oldname, ci->name);
