@@ -58,7 +58,7 @@ void initialize_base_cast_operations()
     base_cast_operations[type_id::BOOLEAN] [type_id::NUMBER]  = dispatch_numeric_cast;
     base_cast_operations[type_id::NUMBER]  [type_id::BOOLEAN] = dispatch_numeric_cast;
     base_cast_operations[type_id::NIL]     [type_id::NUMBER]  = dispatch_numeric_cast;
-    base_cast_operations[type_id::NUMBER]  [type_id::NIL]    = dispatch_numeric_cast;
+    base_cast_operations[type_id::NUMBER]  [type_id::NIL]     = dispatch_numeric_cast;
     
     /*
         types = {

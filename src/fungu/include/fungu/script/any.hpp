@@ -271,15 +271,8 @@ T* any_cast(any* this_)
     if (this_->get_type() != typeid(T)) {
         
         type_id destType;
-        
-        try
-        {
-            destType = type_id::get(type_tag<T>());
-        }
-        catch(type_id)
-        {
-            return NULL;
-        }
+        destType = type_id::get(type_tag<T>());
+        if(destType.base() == type_id::FOREIGN) return NULL;
         
         try
         {

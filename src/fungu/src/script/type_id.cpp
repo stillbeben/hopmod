@@ -33,6 +33,8 @@ type_id type_id::get(type_tag<float>){return type_id(NUMBER, FLOAT);}
 type_id type_id::get(type_tag<double>){return type_id(NUMBER, DOUBLE);}
 type_id type_id::get(type_tag<bool>){return type_id(BOOLEAN, UNSIGNED_CHAR);}
 type_id type_id::get(type_tag<const_string>){return type_id(STRING, CONST_STRING);}
+type_id type_id::get(type_tag<const char *>){return type_id(STRING, C_STRING);}
+type_id type_id::get(type_tag<std::string>){return type_id(STRING, STD_STRING);}
 type_id type_id::get(type_tag<any_detail::empty>){return type_id(NIL, NIL_INT);}
 
 bool type_id::is_nil()const{return m_base == NIL;}

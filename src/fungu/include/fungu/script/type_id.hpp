@@ -54,7 +54,7 @@ public:
     }; static const std::size_t sub_id_count = 19;
     
     template<typename T> 
-    static type_id get(type_tag<T>){throw FOREIGN;}
+    static type_id get(type_tag<T>){return type_id(FOREIGN, NIL_INT);}
     
     static type_id get(type_tag<signed char>);
     static type_id get(type_tag<signed int>);
@@ -68,6 +68,8 @@ public:
     static type_id get(type_tag<double>);
     static type_id get(type_tag<bool>);
     static type_id get(type_tag<const_string>);
+    static type_id get(type_tag<const char *>);
+    static type_id get(type_tag<std::string>);
     static type_id get(type_tag<any_detail::empty>);
     
     type_id(base_id base, sub_id sub);
