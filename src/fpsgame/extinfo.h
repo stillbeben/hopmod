@@ -1,6 +1,6 @@
 
 #define EXT_ACK                         -1
-#define EXT_VERSION                     103
+#define EXT_VERSION                     104
 #define EXT_NO_ERROR                    0
 #define EXT_ERROR                       1
 #define EXT_PLAYERSTATS_RESP_IDS        -10
@@ -31,21 +31,21 @@
 
     void extinfoplayer(ucharbuf &p, clientinfo *ci)
     {
-        if(ci->spy) return;
-        
         ucharbuf q = p;
         putint(q, EXT_PLAYERSTATS_RESP_STATS); // send player stats following
         putint(q, ci->clientnum); //add player id
+        putint(q, ci->ping);
         sendstring(ci->name, q);
         sendstring(ci->team, q);
         putint(q, ci->state.frags);
+        putint(q, ci->state.flags);
         putint(q, ci->state.deaths);
         putint(q, ci->state.teamkills);
         putint(q, ci->state.damage*100/max(ci->state.shotdamage,1));
         putint(q, ci->state.health);
         putint(q, ci->state.armour);
         putint(q, ci->state.gunselect);
-        putint(q, ci->hidden_priv ? PRIV_NONE : ci->privilege);
+        putint(q, currentmaster == ci->clientnum ? ci->privilege : PRIV_NONE);
         putint(q, ci->state.state);
         uint ip = getclientip(ci->clientnum);
         q.put((uchar*)&ip, 3);
@@ -65,7 +65,7 @@
         if(smode && smode->hidefrags()) 
         {
             smode->getteamscores(scores);
-            loopv(clients) if(clients[i]->team[0] && !clients[i]->spy)
+            loopv(clients) if(clients[i]->team[0])
             {
                 clientinfo *ci = clients[i];
                 teamscore *ts = NULL;
@@ -75,7 +75,7 @@
         }
         else
         {
-            loopv(clients) if(clients[i]->team[0] && !clients[i]->spy)
+            loopv(clients) if(clients[i]->team[0])
             {
                 clientinfo *ci = clients[i];
                 teamscore *ts = NULL;
@@ -118,7 +118,7 @@
                 clientinfo *ci = NULL;
                 if(cn >= 0)
                 {
-                    loopv(clients) if(clients[i]->clientnum == cn && !clients[i]->spy) { ci = clients[i]; break; }
+                    loopv(clients) if(clients[i]->clientnum == cn) { ci = clients[i]; break; }
                     if(!ci)
                     {
                         putint(p, EXT_ERROR); //client requested by id was not found
@@ -132,7 +132,7 @@
                 ucharbuf q = p; //remember buffer position
                 putint(q, EXT_PLAYERSTATS_RESP_IDS); //send player ids following
                 if(ci) putint(q, ci->clientnum);
-                else loopv(clients) if(!clients[i]->spy) putint(q, clients[i]->clientnum);
+                else loopv(clients) putint(q, clients[i]->clientnum);
                 sendserverinforeply(q);
             
                 if(ci) extinfoplayer(p, ci);

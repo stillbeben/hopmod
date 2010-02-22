@@ -1,3 +1,6 @@
+#ifndef __GEOM_H__
+#define __GEOM_H__
+
 struct vec4;
 
 struct vec
@@ -63,27 +66,29 @@ struct vec
     }
     void lerp(const vec &a, const vec &b, float t) { x = a.x*(1-t)+b.x*t; y = a.y*(1-t)+b.y*t; z = a.z*(1-t)+b.z*t; }
 
-    void rescale(float k)
+    vec &rescale(float k)
     {
         float mag = magnitude();
         if(mag > 1e-6f) mul(k / mag);
+        return *this;
     }
 
-    void rotate_around_z(float angle) { *this = vec(cosf(angle)*x-sinf(angle)*y, cosf(angle)*y+sinf(angle)*x, z); }
-    void rotate_around_x(float angle) { *this = vec(x, cosf(angle)*y-sinf(angle)*z, cosf(angle)*z+sinf(angle)*y); }
-    void rotate_around_y(float angle) { *this = vec(cosf(angle)*x-sinf(angle)*z, y, cosf(angle)*z+sinf(angle)*x); }
+    vec &rotate_around_z(float angle) { *this = vec(cosf(angle)*x-sinf(angle)*y, cosf(angle)*y+sinf(angle)*x, z); return *this; }
+    vec &rotate_around_x(float angle) { *this = vec(x, cosf(angle)*y-sinf(angle)*z, cosf(angle)*z+sinf(angle)*y); return *this; }
+    vec &rotate_around_y(float angle) { *this = vec(cosf(angle)*x-sinf(angle)*z, y, cosf(angle)*z+sinf(angle)*x); return *this; }
 
-    void rotate(float angle, const vec &d)
+    vec &rotate(float angle, const vec &d)
     {
         float c = cosf(angle), s = sinf(angle);
-        rotate(c, s, d);
+        return rotate(c, s, d);
     }
 
-    void rotate(float c, float s, const vec &d)
+    vec &rotate(float c, float s, const vec &d)
     {
         *this = vec(x*(d.x*d.x*(1-c)+c) + y*(d.x*d.y*(1-c)-d.z*s) + z*(d.x*d.z*(1-c)+d.y*s),
                     x*(d.y*d.x*(1-c)+d.z*s) + y*(d.y*d.y*(1-c)+c) + z*(d.y*d.z*(1-c)-d.x*s),
                     x*(d.x*d.z*(1-c)-d.y*s) + y*(d.y*d.z*(1-c)+d.x*s) + z*(d.z*d.z*(1-c)+c));
+        return *this;
     }
 
     void orthogonal(const vec &d)
@@ -117,6 +122,18 @@ struct vec
         return dist_to_bb(o, T(o).add(size));
     }
 };
+
+static inline bool htcmp(const vec &x, const vec &y)
+{
+    return x == y;
+}
+
+static inline uint hthash(const vec &k)
+{
+    union { int i; float f; } x, y, z;
+    x.f = k.x; y.f = k.y; z.f = k.z;
+    return x.i^y.i^z.i;
+}
 
 struct vec4
 {
@@ -176,9 +193,9 @@ struct quat : vec4
     }
     explicit quat(const matrix3x3 &m) { convertmatrix(m); }
     explicit quat(const matrix3x4 &m) { convertmatrix(m); }
- 
-    void restorew() { w = 1.0f-x*x-y*y-z*z; w = w<0 ? 0 : -sqrtf(w); }
 
+    void restorew() { w = 1.0f-x*x-y*y-z*z; w = w<0 ? 0 : -sqrtf(w); }
+    
     void add(const vec4 &o) { vec4::add(o); }
     void mul(float k) { vec4::mul(k); }
 
@@ -1116,3 +1133,4 @@ extern bool raysphereintersect(const vec &center, float radius, const vec &o, co
 extern bool rayrectintersect(const vec &b, const vec &s, const vec &o, const vec &ray, float &dist, int &orient);
 extern bool linecylinderintersect(const vec &from, const vec &to, const vec &start, const vec &end, float radius, float &dist);
 
+#endif

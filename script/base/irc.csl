@@ -1,0 +1,114 @@
+
+global irc_pid -1
+
+player_list = [
+
+    my scores ""
+    my line ""
+    
+    foreach (players) [
+        set line (format "N=%1C=%2P=%3 " (player_name $arg1) $arg1 (player_ping $arg1))
+        set scores (concat $scores $line)
+    ]
+    
+    if (! (strcmp $scores "")) [
+        set line (concat "COMMAND WHO " $scores)
+    ]
+    
+    if (strcmp $scores "" ) [set line 0]
+    
+    get line
+]
+
+score = [
+
+	my scores ""
+    my line ""
+    
+	foreach (players) [
+		set line (format "N=%3F=%1D=%2" (player_frags $arg1) (player_deaths $arg1) (player_name $arg1))
+		set scores (concat $scores $line)
+	]
+    
+	if (! (strcmp $scores "")) [
+		set line (concat "COMMAND SCORE " $scores)
+	]
+    
+	if (strcmp $scores "" ) [
+		set line "Apparently no one is connected"
+	]
+    
+    get line
+]
+
+getvar = [
+
+    my line ""
+    my output ""
+    
+	if (symbol? $arg1) [ 
+        set output (get $arg1)
+        set line $output
+	] [
+        set line "INVALID or NULL VAR"
+    ]
+
+	get line
+]
+
+global stop_ircbot (func [] [
+    
+    if (= $irc_pid -1) [
+        log_error "IRC bot not running (irc_pid is unset)"
+        return
+    ]
+
+    system [kill @irc_pid]
+    set irc_pid -1
+])
+
+restart_ircbot = [
+    stop_ircbot
+    system [bin/server start_ircbot]
+]
+
+status = [
+    
+    my mastername "NULL"
+    
+    if (!= $master -1 ) [
+        set mastername (player_name $master)
+    ]
+    
+    format "COMMAND STATUS map=%1 mode=%2 time=%3 master=%4 mm=%5 playercount=%6 avgping=%7" $map $gamemode $timeleft $mastername $mastermode $playercount (avgpings)
+]
+
+global avgpings (func [] [
+    
+    my pingtotal 1 
+    
+    foreach (players) [
+        pingtotal = (+ $pingtotal (player_ping $arg1))
+    ]
+    
+	if (!= $playercount 0) [
+		return (div $pingtotal $playercount)
+	] [return 0]
+])
+
+global showaliasesbyip (func [ip] [
+    my output ""
+    foreach (find_names_by_ip $ip) [
+        set output (concatword $output $arg2 ", ")
+    ]
+    return $output
+])
+
+global showaliases (func [cn] [
+    my ip (player_ip $cn)
+    my output ""
+    foreach (find_names_by_ip $ip) [
+        set output (concatword $output $arg2 ", ")
+    ]
+    return $output
+])

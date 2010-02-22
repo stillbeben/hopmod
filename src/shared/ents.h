@@ -1,3 +1,6 @@
+#ifndef __ENTS_H__
+#define __ENTS_H__
+
 // this file defines static map entities ("entity") and dynamic entities (players/monsters, "dynent")
 // the gamecode extends these types to add game specific functionality
 
@@ -44,7 +47,7 @@ struct extentity : entity                       // part of the entity that doesn
 
 //extern vector<extentity *> ents;                // map entities
 
-enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATOR};
+enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATOR };
 
 enum { PHYS_FLOAT = 0, PHYS_FALL, PHYS_SLIDE, PHYS_SLOPE, PHYS_FLOOR, PHYS_STEP_UP, PHYS_STEP_DOWN, PHYS_BOUNCE };
 
@@ -65,10 +68,6 @@ struct physent                                  // base entity type, can be affe
 
     int inwater;
     bool jumpnext;
-    bool blocked, moving;                       // used by physics to signal ai
-    physent *onplayer;
-    int lastmove, lastmoveattempt, collisions, stacks;
-
     char move, strafe;
 
     uchar physstate;                            // one of PHYS_* above
@@ -76,12 +75,16 @@ struct physent                                  // base entity type, can be affe
     uchar type;                                 // one of ENT_* above
     uchar collidetype;                          // one of COLLIDE_* above           
 
+    bool blocked, moving;                       // used by physics to signal ai
+    physent *onplayer;
+    int lastmove, lastmoveattempt, collisions, stacks;
+
     physent() : o(0, 0, 0), deltapos(0, 0, 0), newpos(0, 0, 0), yaw(270), pitch(0), roll(0), maxspeed(100), 
                radius(4.1f), eyeheight(14), aboveeye(1), xradius(4.1f), yradius(4.1f), zmargin(0),
-               blocked(false), moving(true), 
-               onplayer(NULL), lastmove(0), lastmoveattempt(0), collisions(0), stacks(0),
                state(CS_ALIVE), editstate(CS_ALIVE), type(ENT_PLAYER),
-               collidetype(COLLIDE_ELLIPSE)
+               collidetype(COLLIDE_ELLIPSE),
+               blocked(false), moving(true),
+               onplayer(NULL), lastmove(0), lastmoveattempt(0), collisions(0), stacks(0)
                { reset(); }
               
     void resetinterp()
@@ -99,17 +102,21 @@ struct physent                                  // base entity type, can be affe
         vel = falling = vec(0, 0, 0);
         floor = vec(0, 0, 1);
     }
+
+    vec feetpos() const { return vec(o).sub(vec(0, 0, eyeheight)); }
 };
 
 enum
 {
     ANIM_DEAD = 0, ANIM_DYING, ANIM_IDLE,
     ANIM_FORWARD, ANIM_BACKWARD, ANIM_LEFT, ANIM_RIGHT,
-    ANIM_PUNCH, ANIM_SHOOT, ANIM_PAIN,
+    ANIM_HOLD1, ANIM_HOLD2, ANIM_HOLD3, ANIM_HOLD4, ANIM_HOLD5, ANIM_HOLD6, ANIM_HOLD7,
+    ANIM_ATTACK1, ANIM_ATTACK2, ANIM_ATTACK3, ANIM_ATTACK4, ANIM_ATTACK5, ANIM_ATTACK6, ANIM_ATTACK7,
+    ANIM_PAIN,
     ANIM_JUMP, ANIM_SINK, ANIM_SWIM,
     ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
-    ANIM_GUNSHOOT, ANIM_GUNIDLE,
-    ANIM_VWEP, ANIM_SHIELD, ANIM_POWERUP,
+    ANIM_GUN_IDLE, ANIM_GUN_SHOOT,
+    ANIM_VWEP_IDLE, ANIM_VWEP_SHOOT, ANIM_SHIELD, ANIM_POWERUP,
     ANIM_MAPMODEL, ANIM_TRIGGER,
     NUMANIMS
 };
@@ -157,6 +164,7 @@ struct animinterpinfo // used for animation blending of animated characters
 #define MAXANIMPARTS 2
 
 struct occludequery;
+struct ragdolldata;
 
 struct dynent : physent                         // animated characters, or characters that can receive input
 {
@@ -165,12 +173,21 @@ struct dynent : physent                         // animated characters, or chara
 
     entitylight light;
     animinterpinfo animinterp[MAXANIMPARTS];
+    ragdolldata *ragdoll;
     occludequery *query;
     int occluded, lastrendered;
 
-    dynent() : query(NULL), occluded(0), lastrendered(0)
+    dynent() : ragdoll(NULL), query(NULL), occluded(0), lastrendered(0)
     { 
         reset(); 
+    }
+
+    ~dynent()
+    {
+#ifndef STANDALONE
+        extern void cleanragdoll(dynent *d);
+        if(ragdoll) cleanragdoll(this);
+#endif
     }
                
     void stopmoving()
@@ -195,4 +212,4 @@ struct dynent : physent                         // animated characters, or chara
     }
 };
 
-
+#endif

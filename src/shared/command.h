@@ -1,3 +1,6 @@
+#ifndef __COMMAND_H__
+#define __COMMAND_H__
+
 // script binding functionality
 
 
@@ -31,7 +34,16 @@ struct ident
 {
     int type;           // one of ID_* above
     const char *name;
-    int minval, maxval; // ID_VAR
+    union
+    {
+        int minval;    // ID_VAR
+        float minvalf; // ID_FVAR
+    };
+    union
+    {
+        int maxval;    // ID_VAR
+        float maxvalf; // ID_FVAR
+    };
     int override;       // either NO_OVERRIDE, OVERRIDDEN, or value
     union
     {
@@ -59,8 +71,8 @@ struct ident
         : type(t), name(n), minval(m), maxval(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
     { val.i = c; storage.i = s; }
     // ID_FVAR
-    ident(int t, const char *n, float c, float *s, void *f = NULL, int flags = 0)
-        : type(t), name(n), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
+    ident(int t, const char *n, float m, float c, float x, float *s, void *f = NULL, int flags = 0)
+        : type(t), name(n), minvalf(m), maxvalf(x), override(NO_OVERRIDE), fun((void (__cdecl *)())f), flags(flags)
     { val.f = c; storage.f = s; }
     // ID_SVAR
     ident(int t, const char *n, char *c, char **s, void *f = NULL, int flags = 0)
@@ -82,6 +94,8 @@ struct ident
 
 extern void addident(const char *name, ident *id);
 extern void intret(int v);
+extern const char *floatstr(float v);
+extern void floatret(float v);
 extern void result(const char *s);
 
 // nasty macros for registering script functions, abuses globals to avoid excessive infrastructure
@@ -101,18 +115,18 @@ extern void result(const char *s);
 #define VARFP(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_PERSIST)
 #define VARFR(name, min, cur, max, body) _VARF(name, name, min, cur, max, body, IDF_OVERRIDE)
 
-#define _FVAR(name, global, cur, persist) float global = fvariable(#name, cur, &global, NULL, persist)
-#define FVARN(name, global, cur) _FVAR(name, global, cur, 0)
-#define FVARNP(name, global, cur) _FVAR(name, global, cur, IDF_PERSIST)
-#define FVARNR(name, global, cur) _FVAR(name, global, cur, IDF_OVERRIDE)
-#define FVAR(name, cur) _FVAR(name, name, cur, 0)
-#define FVARP(name, cur) _FVAR(name, name, cur, IDF_PERSIST)
-#define FVARR(name, cur) _FVAR(name, name, cur, IDF_OVERRIDE)
-#define _FVARF(name, global, cur, body, persist) void var_##name(); float global = fvariable(#name, cur, &global, var_##name, persist); void var_##name() { body; }
-#define FVARFN(name, global, cur, body) _FVARF(name, global, cur, body, 0)
-#define FVARF(name, cur, body) _FVARF(name, name, cur, body, 0)
-#define FVARFP(name, cur, body) _FVARF(name, name, cur, body, IDF_PERSIST)
-#define FVARFR(name, cur, body) _FVARF(name, name, cur, body, IDF_OVERRIDE)
+#define _FVAR(name, global, min, cur, max, persist) float global = fvariable(#name, min, cur, max, &global, NULL, persist)
+#define FVARN(name, global, min, cur, max) _FVAR(name, global, min, cur, max, 0)
+#define FVARNP(name, global, min, cur, max) _FVAR(name, global, min, cur, max, IDF_PERSIST)
+#define FVARNR(name, global, min, cur, max) _FVAR(name, global, min, cur, max, IDF_OVERRIDE)
+#define FVAR(name, min, cur, max) _FVAR(name, name, min, cur, max, 0)
+#define FVARP(name, min, cur, max) _FVAR(name, name, min, cur, max, IDF_PERSIST)
+#define FVARR(name, min, cur, max) _FVAR(name, name, min, cur, max, IDF_OVERRIDE)
+#define _FVARF(name, global, min, cur, max, body, persist) void var_##name(); float global = fvariable(#name, min, cur, max, &global, var_##name, persist); void var_##name() { body; }
+#define FVARFN(name, global, min, cur, max, body) _FVARF(name, global, min, cur, max, body, 0)
+#define FVARF(name, min, cur, max, body) _FVARF(name, name, min, cur, max, body, 0)
+#define FVARFP(name, min, cur, max, body) _FVARF(name, name, min, cur, max, body, IDF_PERSIST)
+#define FVARFR(name, min, cur, max, body) _FVARF(name, name, min, cur, max, body, IDF_OVERRIDE)
 
 #define _SVAR(name, global, cur, persist) char *global = svariable(#name, cur, &global, NULL, persist)
 #define SVARN(name, global, cur) _SVAR(name, global, cur, 0)
@@ -158,3 +172,5 @@ extern void result(const char *s);
 #define IVARFR(n, m, c, x, b) _IVAR(n, m, c, x, void changed() { b; }, IDF_OVERRIDE)
 //#define ICALL(n, a) { char *args[] = a; icom_##n.run(args); }
 //
+
+#endif

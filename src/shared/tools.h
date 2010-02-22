@@ -3,31 +3,6 @@
 #ifndef _TOOLS_H
 #define _TOOLS_H
 
-#include <math.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <stdarg.h>
-#include <limits.h>
-#include <assert.h>
-#ifdef __GNUC__
-    #include <new>
-#else
-    #include <new.h>
-#endif
-#include <time.h>
-
-#ifdef WIN32
-  #define _WINDOWS
-  #ifndef __GNUC__
-    #define ZLIB_DLL
-    #include <eh.h>
-    #include <dbghelp.h>
-  #endif
-#endif
-#include <zlib.h>
-
 #ifdef NULL
 #undef NULL
 #endif
@@ -76,6 +51,7 @@ static inline T min(T a, T b)
 
 #define clamp(a,b,c) (max(b, min(a, c)))
 #define rnd(x) ((int)(randomMT()&0xFFFFFF)%(x))
+#define rndscale(x) (float((randomMT()&0xFFFFFF)*double(x)/double(0xFFFFFF)))
 #define detrnd(s, x) ((int)(((((uint)(s))*1103515245+12345)>>16)%(x)))
 
 #define loop(v,m) for(int v = 0; v<int(m); v++)
@@ -121,34 +97,31 @@ static inline T min(T a, T b)
 #define MAXSTRLEN 260
 typedef char string[MAXSTRLEN];
 
-inline void formatstring(char *d, const char *fmt, va_list v) { _vsnprintf(d, MAXSTRLEN, fmt, v); d[MAXSTRLEN-1] = 0; }
-inline char *s_strncpy(char *d, const char *s, size_t m) { strncpy(d,s,m); d[m-1] = 0; return d; }
-inline char *s_strcpy(char *d, const char *s) { return s_strncpy(d,s,MAXSTRLEN); }
-inline char *s_strcat(char *d, const char *s) { size_t n = strlen(d); return s_strncpy(d+n,s,MAXSTRLEN-n); }
+inline void vformatstring(char *d, const char *fmt, va_list v, int len = MAXSTRLEN) { _vsnprintf(d, len, fmt, v); d[len-1] = 0; }
+inline char *copystring(char *d, const char *s, size_t len = MAXSTRLEN) { strncpy(d, s, len); d[len-1] = 0; return d; }
+inline char *concatstring(char *d, const char *s) { size_t len = strlen(d); return copystring(d+len, s, MAXSTRLEN-len); }
 
-
-struct s_sprintf_f
+struct stringformatter
 {
-    char *d;
-    s_sprintf_f(char *str): d(str) {}
-    void operator()(const char* fmt, ...)
+    char *buf;
+    stringformatter(char *buf): buf((char *)buf) {}
+    void operator()(const char *fmt, ...)
     {
         va_list v;
         va_start(v, fmt);
-        formatstring(d, fmt, v);
+        vformatstring(buf, fmt, v);
         va_end(v);
     }
 };
 
-#define s_sprintf(d) s_sprintf_f((char *)d)
-#define s_sprintfd(d) string d; s_sprintf(d)
-#define s_sprintfdlv(d,last,fmt) string d; { va_list ap; va_start(ap, last); formatstring(d, fmt, ap); va_end(ap); }
-#define s_sprintfdv(d,fmt) s_sprintfdlv(d,fmt,fmt)
+#define formatstring(d) stringformatter((char *)d)
+#define defformatstring(d) string d; formatstring(d)
+#define defvformatstring(d,last,fmt) string d; { va_list ap; va_start(ap, last); vformatstring(d, fmt, ap); va_end(ap); }
 
-#define loopv(v)    if(false) {} else for(int i = 0; i<(v).length(); i++)
-#define loopvj(v)   if(false) {} else for(int j = 0; j<(v).length(); j++)
-#define loopvk(v)   if(false) {} else for(int k = 0; k<(v).length(); k++)
-#define loopvrev(v) if(false) {} else for(int i = (v).length()-1; i>=0; i--)
+#define loopv(v)    for(int i = 0; i<(v).length(); i++)
+#define loopvj(v)   for(int j = 0; j<(v).length(); j++)
+#define loopvk(v)   for(int k = 0; k<(v).length(); k++)
+#define loopvrev(v) for(int i = (v).length()-1; i>=0; i--)
 
 template <class T>
 struct databuf
@@ -162,6 +135,8 @@ struct databuf
     T *buf;
     int len, maxlen;
     uchar flags;
+
+    databuf() : buf(NULL), len(0), maxlen(0), flags(0) {}
 
     template<class U> 
     databuf(T *buf, U maxlen) : buf(buf), len(0), maxlen((int)maxlen), flags(0) {}
@@ -217,6 +192,57 @@ struct databuf
 
 typedef databuf<char> charbuf;
 typedef databuf<uchar> ucharbuf;
+
+struct packetbuf : ucharbuf
+{
+    ENetPacket *packet;
+    int growth;
+
+    packetbuf(ENetPacket *packet) : ucharbuf(packet->data, packet->dataLength), packet(packet), growth(0) {}
+    packetbuf(int growth, int pflags = 0) : growth(growth)
+    {
+        packet = enet_packet_create(NULL, growth, pflags);
+        buf = (uchar *)packet->data;
+        maxlen = packet->dataLength;
+    }
+    ~packetbuf() { cleanup(); }
+
+    void reliable() { packet->flags |= ENET_PACKET_FLAG_RELIABLE; }
+
+    void checkspace(int n)
+    {
+        if(len + n > maxlen && packet && growth > 0) enet_packet_resize(packet, max(len + n, maxlen + growth));    
+    }
+
+    ucharbuf subbuf(int sz)
+    {
+        checkspace(sz);
+        return ucharbuf::subbuf(sz);
+    }
+
+    void put(const uchar &val)
+    {
+        checkspace(1);
+        ucharbuf::put(val);
+    }
+
+    void put(const uchar *vals, int numvals)
+    {
+        checkspace(numvals);
+        ucharbuf::put(vals, numvals);
+    }
+    
+    ENetPacket *finalize()
+    {
+        enet_packet_resize(packet, len);
+        return packet;
+    }
+
+    void cleanup()
+    {
+        if(growth > 0 && packet && !packet->referenceCount) { enet_packet_destroy(packet); packet = NULL; buf = NULL; len = maxlen = 0; }
+    }
+};
 
 template <class T> struct vector
 {
@@ -290,6 +316,7 @@ template <class T> struct vector
     void drop() { buf[--ulen].~T(); }
     bool empty() const { return ulen==0; }
 
+    int capacity() const { return alen; }
     int length() const { return ulen; }
     T &operator[](int i) { ASSERT(i>=0 && i<ulen); return buf[i]; }
     const T &operator[](int i) const { ASSERT(i >= 0 && i<ulen); return buf[i]; }
@@ -340,7 +367,9 @@ template <class T> struct vector
     {
         advance(p.length());
     }
-
+    
+    void put(const T &v) { add(v); }
+    
     void put(const T *v, int n)
     {
         databuf<T> buf = reserve(n);
@@ -359,6 +388,14 @@ template <class T> struct vector
         T e = buf[i];
         for(int p = i+1; p<ulen; p++) buf[p-1] = buf[p];
         ulen--;
+        return e;
+    }
+
+    T removeunordered(int i)
+    {
+        T e = buf[i];
+        ulen--;
+        if(ulen>0) buf[i] = buf[ulen];
         return e;
     }
 
@@ -554,8 +591,8 @@ template <class K, class T> struct hashtable
     }
 };
 
-#define enumeratekt(ht,k,e,t,f,b) loopi((ht).size)  for(hashtable<k,t>::chain *enumc = (ht).table[i]; enumc; enumc = enumc->next) { hashtable<k,t>::const_key &e = enumc->key; t &f = enumc->data; b; }
-#define enumerate(ht,t,e,b)       loopi((ht).size) for((ht).enumc = (ht).table[i]; (ht).enumc; (ht).enumc = (ht).enumc->next) { t &e = (ht).enumc->data; b; }
+#define enumeratekt(ht,k,e,t,f,b) loopi((ht).size)  for(hashtable<k,t>::chain *enumc = (ht).table[i]; enumc;) { hashtable<k,t>::const_key &e = enumc->key; t &f = enumc->data; enumc = enumc->next; b; }
+#define enumerate(ht,t,e,b)       loopi((ht).size) for((ht).enumc = (ht).table[i]; (ht).enumc;) { t &e = (ht).enumc->data;  (ht).enumc = (ht).enumc->next; b; }
 
 struct unionfind
 {
@@ -615,11 +652,10 @@ template <class T, int SIZE> struct ringbuf
 
     T &add(const T &e)
     {
-        T &t = data[index];
-        t = e;
+        T &t = (data[index] = e);
         index++;
-        if(index>=SIZE) index = 0;
-        if(len<SIZE) len++;
+        if(index >= SIZE) index -= SIZE;
+        if(len < SIZE) len++;
         return t;
     }
 
@@ -627,25 +663,57 @@ template <class T, int SIZE> struct ringbuf
 
     T &operator[](int i)
     {
-        int start = index - len;
-        if(start < 0) start += SIZE;
-        i += start;
-        if(i >= SIZE) i -= SIZE;
-        return data[i];
+        i += index - len;
+        return data[i < 0 ? i + SIZE : i%SIZE];
     }
 
     const T &operator[](int i) const
     {
-        int start = index - len;
-        if(start < 0) start += SIZE;
-        i += start;
-        if(i >= SIZE) i -= SIZE;
-        return data[i];
+        i += index - len;
+        return data[i < 0 ? i + SIZE : i%SIZE];
+    }
+};
+
+template <class T, int SIZE> struct queue
+{
+    int head, tail, len;
+    T data[SIZE];
+    
+    queue() { clear(); }
+    
+    void clear() { head = tail = len = 0; }
+
+    int length() const { return len; }
+    bool empty() const { return !len; }
+    bool full() const { return len == SIZE; }
+
+    T &added() { return data[tail > 0 ? tail-1 : SIZE-1]; }
+    T &added(int offset) { return data[tail-offset > 0 ? tail-offset-1 : tail-offset-1 + SIZE]; }
+    T &adding() { return data[tail]; }
+    T &adding(int offset) { return data[tail+offset >= SIZE ? tail+offset - SIZE : tail+offset]; }
+    T &add()
+    {
+        ASSERT(len < SIZE);    
+        T &t = data[tail];
+        tail = (tail + 1)%SIZE;
+        len++;
+        return t;
+    }
+
+    T &removing() { return data[head]; }
+    T &removing(int offset) { return data[head+offset >= SIZE ? head+offset - SIZE : head+offset]; }
+    T &remove()
+    {
+        ASSERT(len > 0);
+        T &t = data[head];
+        head = (head + 1)%SIZE;
+        len--;
+        return t;
     }
 };
 
 inline char *newstring(size_t l)                { return new char[l+1]; }
-inline char *newstring(const char *s, size_t l) { return s_strncpy(newstring(l), s, l+1); }
+inline char *newstring(const char *s, size_t l) { return copystring(newstring(l), s, l+1); }
 inline char *newstring(const char *s)           { return newstring(s, strlen(s));          }
 inline char *newstringbuf(const char *s)        { return newstring(s, MAXSTRLEN-1);       }
 
@@ -659,21 +727,96 @@ inline void __cdecl operator delete(void *p, const char *fn, int l) { ::operator
 #endif 
 #endif
 
+const int islittleendian = 1;
+#ifdef SDL_BYTEORDER
+#define endianswap16 SDL_Swap16
+#define endianswap32 SDL_Swap32
+#else
+inline ushort endianswap16(ushort n) { return (n<<8) | (n>>8); }
+inline uint endianswap32(uint n) { return (n<<24) | (n>>24) | ((n>>8)&0xFF00) | ((n<<8)&0xFF0000); }
+#endif
+template<class T> inline T endianswap(T n) { union { T t; uint i; } conv; conv.t = n; conv.i = endianswap32(conv.i); return conv.t; }
+template<> inline ushort endianswap<ushort>(ushort n) { return endianswap16(n); }
+template<> inline short endianswap<short>(short n) { return endianswap16(n); }
+template<> inline uint endianswap<uint>(uint n) { return endianswap32(n); }
+template<> inline int endianswap<int>(int n) { return endianswap32(n); }
+template<class T> inline void endianswap(T *buf, int len) { for(T *end = &buf[len]; buf < end; buf++) *buf = endianswap(*buf); }
+template<> inline void endianswap(float *buf, int len) { uint *src = (uint *)buf; for(uint *end = &src[len]; src < end; src++) *src = endianswap(*src); }
+template<class T> inline T endiansame(T n) { return n; }
+template<class T> inline void endiansame(T *buf, int len) {}
+#ifdef SDL_BYTEORDER
+#if SDL_BYTEORDER == SDL_LIL_ENDIAN
+#define lilswap endiansame
+#define bigswap endianswap
+#else
+#define lilswap endianswap
+#define bigswap endiansame
+#endif
+#else
+template<class T> inline T lilswap(T n) { return *(const uchar *)&islittleendian ? n : endianswap(n); }
+template<class T> inline void lilswap(T *buf, int len) { if(!*(const uchar *)&islittleendian) endianswap(buf, len); }
+template<class T> inline T bigswap(T n) { return *(const uchar *)&islittleendian ? endianswap(n) : n; }
+template<class T> inline void bigswap(T *buf, int len) { if(*(const uchar *)&islittleendian) endianswap(buf, len); }
+#endif
+
+/* workaround for some C platforms that have these two functions as macros - not used anywhere */
+#ifdef getchar
+#undef getchar
+#endif
+#ifdef putchar
+#undef putchar
+#endif
+
+struct stream
+{
+    virtual ~stream() {}
+    virtual void close() = 0;
+    virtual bool end() = 0;
+    virtual long tell() { return -1; }
+    virtual bool seek(long offset, int whence = SEEK_SET) { return false; }
+    virtual long size();
+    virtual int read(void *buf, int len) { return 0; }
+    virtual int write(const void *buf, int len) { return 0; }
+    virtual int getchar() { uchar c; return read(&c, 1) == 1 ? c : -1; }
+    virtual bool putchar(int n) { uchar c = n; return write(&c, 1) == 1; }
+    virtual bool getline(char *str, int len);
+    virtual bool putstring(const char *str) { int len = (int)strlen(str); return write(str, len) == len; }
+    virtual bool putline(const char *str) { return putstring(str) && putchar('\n'); }
+    virtual int printf(const char *fmt, ...) { return -1; }
+    virtual uint getcrc() { return 0; }
+
+    template<class T> bool put(T n) { return write(&n, sizeof(n)) == sizeof(n); }
+    template<class T> bool putlil(T n) { return put<T>(lilswap(n)); }
+    template<class T> bool putbig(T n) { return put<T>(bigswap(n)); }
+
+    template<class T> T get() { T n; return read(&n, sizeof(n)) == sizeof(n) ? n : 0; }
+    template<class T> T getlil() { return lilswap(get<T>()); }
+    template<class T> T getbig() { return bigswap(get<T>()); }
+
+#ifndef STANDALONE
+    SDL_RWops *rwops();
+#endif
+};
+
 extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL, const char *cmd = NULL);
 extern char *path(char *s);
 extern char *path(const char *s, bool copy);
 extern const char *parentdir(const char *directory);
 extern bool fileexists(const char *path, const char *mode);
 extern bool createdir(const char *path);
+extern size_t fixpackagedir(char *dir);
 extern void sethomedir(const char *dir);
 extern void addpackagedir(const char *dir);
 extern const char *findfile(const char *filename, const char *mode);
-extern FILE *openfile(const char *filename, const char *mode);
-extern gzFile opengzfile(const char *filename, const char *mode);
+extern stream *openrawfile(const char *filename, const char *mode);
+extern stream *openzipfile(const char *filename, const char *mode);
+extern stream *openfile(const char *filename, const char *mode);
+extern stream *opentempfile(const char *filename, const char *mode);
+extern stream *opengzfile(const char *filename, const char *mode, stream *file = NULL, int level = Z_BEST_COMPRESSION);
 extern char *loadfile(const char *fn, int *size);
 extern bool listdir(const char *dir, const char *ext, vector<char *> &files);
 extern int listfiles(const char *dir, const char *ext, vector<char *> &files);
-extern void endianswap(void *, int, int);
+extern int listzipfiles(const char *dir, const char *ext, vector<char *> &files);
 extern void seedMT(uint seed);
 extern uint randomMT(void);
 

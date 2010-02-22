@@ -1,2 +1,0 @@
-
-if (strcmp (player_priv $cn) "admin") [spy $cn] [privmsg $cn (err "Command not found.")]

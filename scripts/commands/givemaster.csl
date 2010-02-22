@@ -1,9 +1,0 @@
-
-if (! (strcmp (player_priv $cn) "none")) [
-    if (>= (listlen $arguments) 2) [
-        setmaster $cn 0
-        local to_cn (at $arguments 1) 
-        setmaster $to_cn 1
-        log (format "%1(%2) handed master to %3(%4)." (player_name $cn) $cn (player_name $to_cn) $to_cn)
-    ] [privmsg $cn (err "Missing cn argument.")]
-] [privmsg $cn (err "Permission denied.")]

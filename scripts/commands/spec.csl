@@ -1,7 +1,0 @@
-
-if (! (strcmp (player_priv $cn) "none")) [
-    if (>= (listlen $arguments) 2) [
-	reference cn arg1
-	spec $cn 
-    ] [privmsg $cn (err "Missing argument cn. This command is used to quickly spectate someone.")]
-] [privmsg $cn (err "Permission denied.")]

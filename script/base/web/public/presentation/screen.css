@@ -1,0 +1,71 @@
+body{margin-top:0px; font-size:0.9em; font-family:verdana; color:#262626;}
+.clear{clear:both; height:0; padding:0; margin:0;}
+
+table{font-size:0.84em;}
+table th{text-align:left;}
+
+form{text-align:right;}
+form fieldset{border:0}
+form fieldset label{display:block; float:left; width:35%; text-align:right;}
+form fieldset input{display:block; float:right; width:60%; margin:0; padding:0; border:inset 1px #63B2D9;}
+form p{padding:10px; margin:10px;}
+
+form .form-error{margin:0px; color:red; font-weight:bold; text-align:center; }
+
+#login-form{width:400px; margin:auto; background:#DEEFF7; color:#0D2631; -moz-border-radius:8px;}
+
+div.fatal-error{background:#FF3333; border:solid 1px #660000; color:#ffffff; padding:5px; margin:1px; font-weight:bold; text-align:center;}
+div.server-status-error{padding-left:20px; background:url(error.png) no-repeat; color:#FF0000; font-weight:bold;}
+
+#admin-startup{margin-top:10px; text-align:center;}
+#admin-container{display:none;}
+
+.text-shell{width:100%;}
+.text-shell-heading{padding-left:18px; font-weight:bold;}
+.text-shell-output{height:200px; border:inset 1px #000000; margin:1px; overflow:scroll;}
+.text-shell-output-padding{padding:3px;}
+.text-shell input{display:block; width:100%; border:inset 1px black; padding:2px 0 2px;}
+.text-shell input:focus, #command-shell input:focus{background:#DEEFF7;}
+
+#chat-shell-heading{background:transparent url(balloons.png) no-repeat;}
+.chat-shell-name{float:left; width:170px; overflow:hidden; margin-right:5px; text-align:right; font-weight:bold;}
+.chat-shell-text{word-wrap:break-word;}
+.chat-shell-message{margin:0; padding:0;}
+#chat-shell-output .admin{color:#FF531A;}
+
+#command-shell {width:100%; margin-top:10px;}
+#command-shell-heading {padding-left:18px; background:transparent url(gear.png) no-repeat; font-weight:bold;}
+#command-shell-output {height:120px; border:inset 1px #000000; margin:1px; overflow:scroll;}
+#command-shell-output-padding {padding:3px;}
+#command-shell input {display:block; width:100%; border:inset 1px black;}
+#command-shell input, #command-shell-output {font-family:courier new;}
+#command-shell .error-output {padding-left:15px;color:#FF7673;}
+#command-shell-output .normal-output {padding-left:15px;}
+#command-shell-output .normal-no-output {margin-left:15px; background:transparent url(success.png) no-repeat; height:16px; width:16px;}
+#command-shell-output .echo-output {}
+
+#players .team h2, #players .spectators h2{font-size:1em; padding:2px; margin:0; background:#737373; color:#FFFFFF;}
+#players #team-good h2{background-color:#4EA8D4; color:#FFFFFF;}
+#players #team-evil h2{background-color:#FF3333; color:#FFFFFF;}
+#players .spectators h2{background-color:#FFFF99; color:#999900;}
+#players table{width:100%; margin-bottom:10px;}
+#players tr.admin-priv{background-color:#FFAC75;}
+#players tr.master-priv{background-color:#80FF80;}
+#players tr.dead{opacity:0.5;}
+
+#top-layout-left{float:left; width:500px; padding:5px;}
+#top-layout-right{margin-left:510px; min-width:400px;}
+
+.player-control-links{float:left;}
+.kick-button{display:block; width:16px; height:16px; background:url(cross_circle.png) no-repeat; outline-style:none;}
+
+#server-info ul{margin:0; padding:0;}
+#server-info li{display:inline; margin-left:10px;}
+#server-info{margin-bottom:5px; padding:4px; background:#F2F2F2; font-weight:bold; -moz-border-radius-bottomleft:10px; -moz-border-radius-bottomright:10px; text-shadow:#E6E6E6 2px 2px 0px;}
+#server-info #app-title {color:#BFBFBF; text-shadow:#FFFFFF 1px 1px 0px; font-size:0.7em; font-weight:bold; letter-spacing:-0.1em;}
+#server-info #server-name {color:#00B800;}
+
+#game-info{padding:5px; margin-bottom:5px; background:#DEEFF7; color:#206283; -moz-border-radius:8px;}
+#game-info #mapname{font-size:1.2em;}
+
+#footer{margin-top:20px; text-align:center; color:#BFBFBF; font-size:0.7em;}
