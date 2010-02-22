@@ -85,7 +85,8 @@ private:
     lua_State * m_stack;
     int m_arg_index;
     const std::vector<any> * m_default_args;
-    int m_def_index; //start using default args when m_arg_index reaches m_def_index
+    int m_skip_defarg_index;
+    int m_argc;
 };
 
 any get_argument_value(lua_State *,int index = -1);

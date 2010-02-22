@@ -14,13 +14,13 @@ arguments::arguments(lua_State * stack,const std::vector<any> * default_args,std
  :m_stack(stack),
   m_arg_index(1),
   m_default_args(default_args),
-  m_def_index((int)func_arity+1)
+  m_skip_defarg_index(0)
 {
-    int argc = static_cast<int>(size());
-    if(argc < static_cast<int>(func_arity) && default_args)
+    m_argc = static_cast<int>(size());
+    if(m_argc < static_cast<int>(func_arity) && default_args)
     {
-        int missing = static_cast<int>(func_arity) - argc;
-        m_def_index = argc + (default_args->size() - missing) + 1;
+        int missing = static_cast<int>(func_arity) - m_argc;
+        m_skip_defarg_index = m_argc - (static_cast<int>(func_arity) - m_default_args->size());
         for(int i = 1; i<= missing; i++) lua_pushnil(stack); //correct arguments::size()
     }
 }
@@ -42,13 +42,13 @@ std::size_t arguments::size()const
 
 bool arguments::deserialize(value_type arg,type_tag<bool>)
 {
-    if(arg >= m_def_index) return lexical_cast<bool>((*m_default_args)[arg - m_def_index]);
+    if(arg >= m_argc + 1) return lexical_cast<bool>((*m_default_args)[(arg - m_argc - 1) + m_skip_defarg_index]);
     return lua_toboolean(m_stack, arg);
 }
 
 int arguments::deserialize(value_type arg,type_tag<int>)
 {
-    if(arg >= m_def_index) return lexical_cast<int>((*m_default_args)[arg - m_def_index]);
+    if(arg >= m_argc + 1) return lexical_cast<int>((*m_default_args)[(arg - m_argc - 1) + m_skip_defarg_index]);
     if(!lua_isnumber(m_stack, arg))
     {
         luaL_argerror(m_stack, arg, "expected integer");
@@ -60,7 +60,7 @@ int arguments::deserialize(value_type arg,type_tag<int>)
 
 unsigned int arguments::deserialize(value_type arg, type_tag<unsigned int>)
 {
-    if(arg >= m_def_index) return lexical_cast<unsigned int>((*m_default_args)[arg - m_def_index]);
+    if(arg >= m_argc + 1) return lexical_cast<unsigned int>((*m_default_args)[(arg - m_argc - 1) + m_skip_defarg_index]);
     int n = lua_tointeger(m_stack, arg);
     if(!lua_isnumber(m_stack, arg) || n < 0)
     {
@@ -73,7 +73,7 @@ unsigned int arguments::deserialize(value_type arg, type_tag<unsigned int>)
 
 unsigned short arguments::deserialize(value_type arg, type_tag<unsigned short>)
 {
-    if(arg >= m_def_index) return lexical_cast<unsigned short>((*m_default_args)[arg - m_def_index]);
+    if(arg >= m_argc + 1) return lexical_cast<unsigned short>((*m_default_args)[(arg - m_argc - 1) + m_skip_defarg_index]);
     int n = lua_tointeger(m_stack, arg);
     if(!lua_isnumber(m_stack, arg) || n < 0 || n > std::numeric_limits<unsigned short>::max())
     {
@@ -99,13 +99,13 @@ static const char * get_cstr_from_lua_stack(lua_State * stack, int index)
 
 const char * arguments::deserialize(value_type arg, type_tag<const char *>)
 {
-    if(arg >= m_def_index) return lexical_cast<const char *>((*m_default_args)[arg - m_def_index]);
+    if(arg >= m_argc + 1) return lexical_cast<const char *>((*m_default_args)[(arg - m_argc - 1) + m_skip_defarg_index]);
     return get_cstr_from_lua_stack(m_stack, arg);
 }
 
 std::string arguments::deserialize(value_type arg, type_tag<std::string>)
 {
-    if(arg >= m_def_index) return lexical_cast<std::string>((*m_default_args)[arg - m_def_index]);
+    if(arg >= m_argc + 1) return lexical_cast<std::string>((*m_default_args)[(arg - m_argc - 1) + m_skip_defarg_index]);
     const char * val = get_cstr_from_lua_stack(m_stack, arg);
     return std::string(val ? val : "");
 }
