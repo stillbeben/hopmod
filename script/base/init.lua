@@ -5,6 +5,7 @@ package.cpath = package.cpath .. ";lib/lib?.so"
 load_once("base/restart")
 load_once("base/player/utils")
 load_once("base/player/object_wrapper")
+load_once("base/player/query")
 load_once("base/player/global_vars")
 load_once("base/player/private_vars")
 load_once("base/player/command")

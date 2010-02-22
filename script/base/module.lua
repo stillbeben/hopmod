@@ -17,14 +17,15 @@ local function createEnvironment()
 end
 
 local function run_lua_script(filename)
-    local loaded = loadfile(filename)
+    local loaded, errorMessage = loadfile(filename)
+    if not loaded then error(errorMessage) end
     setfenv(loaded, createEnvironment())
     return loaded()
 end
 
 local script_extension_handlers = {
-    lua = run_lua_script,
-    cs = server.execCubeScriptFile,
+    lua      = run_lua_script,
+    cs       = server.execCubeScriptFile,
     _default = server.execCubeScriptFile
 }
 

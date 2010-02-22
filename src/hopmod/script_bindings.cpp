@@ -28,11 +28,11 @@ static void setup_default_arguments()
     player_kick_defargs.push_back(std::string(""));
     
     changemap_defargs.clear();
-    changemap_defargs.push_back(const_string());
+    changemap_defargs.push_back(static_cast<const char *>(""));
     changemap_defargs.push_back(-1);
     
     recorddemo_defargs.clear();
-    recorddemo_defargs.push_back(std::string(""));
+    recorddemo_defargs.push_back(static_cast<const char *>(""));
 }
 
 void register_server_script_bindings(script::env & env)
