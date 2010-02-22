@@ -20,28 +20,61 @@
 		
 ]]
 
-server.sleep(10000, function()
-
 require "geoip"
+require "net"
 
-irc = {}
+local WAIT_TO_RECONNECT = 30000
+
+local function noop() end -- Use this function instead of defining new empty callback functions
+local debug_mode = server.irc_debug == 1
+
+local function print_debug(msg)
+    if debug_mode then
+        print(string.format("IRC DEBUG %s", msg))
+    end
+end
+
+print_debug("[Startup] : Loading irc/lua_bot module")
+
+local irc = {}
 irc.client = net.tcp_client()
-
-if server.irc_debug == 1 then print ("DEBUG [Start UP] : Starting hopbot") end
 
 --Connect and send required handshake information.
 function irc:connectServer(client)
+
 	irc.client:close()
 	irc.client = net.tcp_client()
+    
 	irc.client:async_connect(server.irc_network, server.irc_network_port, function(errmsg) 
-		if errmsg then irc:handleError(errmsg) return  end
-		irc.client:async_send("NICK "..server.irc_bot_name.."\n", function(errmsg)
-			if errmsg then irc:handleError(errmsg) return  end
-			irc.client:async_send("USER  "..server.irc_network_username..string.random(15,"%l%d").." 8 *  : HopBot\n", function(errmsg)
-				if errmsg then irc:handleError(errmsg) return  end
-			end)
-		if server.irc_debug == 1 then print ("DEBUG [connectServer] : Connected to "..server.irc_network) end
-		irc:readData(irc.client) 
+		
+        if errmsg then
+            irc:handleError(errmsg)
+            return
+        end
+		
+        local localAddress = irc.client:local_endpoint()
+        print_debug(string.format("[SOCKET] : Local socket address %s:%s", localAddress.ip, localAddress.port))
+        
+        irc.client:async_send("NICK "..server.irc_bot_name.."\n", function(errmsg)
+        
+            if errmsg then
+                irc:handleError(errmsg)
+                return 
+            end
+            
+            local username = server.irc_network_username..string.random(15,"%l%d")
+            print_debug("[username] : Setting username to " .. username)
+            
+            irc.client:async_send("USER  ".. username .." 8 *  : HopBot\n", function(errmsg)
+                if errmsg then
+                    irc:handleError(errmsg) 
+                    return
+                end
+            end)
+            
+            print_debug("[connect Server] : Connected to " .. server.irc_network)
+            
+            irc:readData(irc.client) 
 		end)
 	end)
 end
@@ -49,145 +82,148 @@ end
 --Main Data Loop
 function irc:readData(client)
 	irc.client:async_read_until("\n", function(data)
-        if data then 
+        if data then
             irc:processData(client, data)
             irc:readData(irc.client)
+        else
+            irc:handleError("Read error")
         end
 	end)
 end
 
 --Process data read from the server.
-function irc:processData(client,data)
-	if server.irc_debug == 1 then print("DEBUG [Server Output] : "..data) end
+function irc:processData(client, data)
+
+    print_debug("[Server Output] : " .. data)
+    
 	-- If a ping is detected respond with a pong
 	if data.find(data,"PING") then
 		local pong = string.gsub(data,"PING","PONG",1)
-		if server.irc_debug == 1 then print ("DEBUG [processData:PING] : "..pong) end
-		irc.client:async_send(pong,function(errmsg) end)
+		if debug_mode then print ("DEBUG [processData:PING] : "..pong) end
+		irc.client:async_send(pong, noop)
 		return
 	end
+    
 	-- If mode changes in channel then assume operator status has changed. Request userlist
 	if data.find(data,"MODE") then
-		irc.client:async_send("NAMES "..server.irc_channel.."\n",function(errmsg) end)
+		irc.client:async_send("NAMES "..server.irc_channel.."\n", noop)
         return
     end
+    
 	-- Parse user list and store it as the operator list
 	if data.find(data,"353") then
         irc.operators = string.match(data,"%S* 353 (.*)")
         return
     end
+    
 	-- After a notice is detected then start the join operation
 	if data.find(data,"NOTICE") then
 		server.sleep(10000, function()
-		irc.client:async_send("JOIN "..server.irc_channel.."\n",function(errmsg) end)
-		end) 
+            irc.client:async_send("JOIN "..server.irc_channel.."\n", noop)
+		end)
 		return
 	end 
+    
 	-- If the link is closed start over
 	if data.find(data,"Closing Link") then
-		irc:handleError('Link Closed','30000')
+		irc.handleError("Link Closed")
 		return
 	end
+    
 	-- Detect a command and hand it off to the command processor
 	if string.match(data,":(.+)!.+ PRIVMSG (.+) :"..server.irc_bot_command_name.." (.+)") then
-		nick,channel,command = string.match(data,":(.+)!.+ PRIVMSG (.+) :"..server.irc_bot_command_name.." (.+)")
-		if server.irc_debug == 1 then print ("DEBUG [processData] : Nick: "..nick.." Channel: "..channel.." Command: "..command) end 
-		irc:processCommand(nick,channel,command)
+		local nick, channel, command = string.match(data,":(.+)!.+ PRIVMSG (.+) :"..server.irc_bot_command_name.." (.+)")
+        irc.processCommand(nick, channel, command)
 		return
 	end
 end 
 
 --Process any commands
-function irc:processCommand(nick,channel,command)
-	cmd,arg1,arg2,arg3 = string.match(command, "(%S+)%s*(%S*)%s*(%S*)%s*(%S*)") 
-	if not cmd 	then cmd 	= "null" end
-	if not arg1 then arg1 	= "null" end
-	if not arg2 then arg2 	= "null" end
-	if not arg3 then arg3 	= "null" end
-	if server.irc_debug == 1 then print ("DEBUG [processCommand] : Command: "..cmd.." Nick: "..nick.." Arg1: "..arg1.." Arg2: "..arg2.." Arg3: "..arg3) end
-	if not string.match(irc.operators, "@"..nick) then return end
-	irc.commands:case(cmd) -- Case command selector
-	return
+function irc.processCommand(nick, channel, command)
+    
+    print_debug(string.format("[processCommand] : %s <%s> %s", channel or "<error>", nick or "<error>", command or "<error>"))
+    
+    local arguments = command:split("[^ \r\n]+")
+    local commandName = arguments[1]
+    
+    local function handleUnknownCommand()
+        irc:toChannel("\0036IRC\003         \0034ERROR\003  \0034Unrecognized command\003")
+    end
+    
+    local commandFunction = irc.commands[commandName] or handleUnknownCommand
+    table.remove(arguments, 1) -- Remove the command name from the list of arguments
+    
+    for index, value in ipairs(arguments) do
+        local number = tonumber(value)
+        if number then arguments[index] = number end
+    end
+    
+    irc.command_nick = nick
+    irc.command_channel = channel
+    irc.command_command = command
+    
+    local status = return_catch_error(commandFunction, unpack(arguments))
+    
+    if not status then
+        irc:toChannel("\0036IRC\003         \0034ERROR\003  \0034An error occured while executing the command\003")
+    end
 end
 
 --Command to display players
 function irc:playerList()
+
 	player_list = {}
 	counter = nil 
-	output = "" 
-		for player in server.aplayers() do
-			if counter == nil then counter = 0 end
-			counter = counter + 1
-			output = output .. string.format("\00312%s\003(%s) ", player:displayname(), player.cn)
-			if counter == 5 then irc:toChannel("\0036IRC\003         \0034-/WHO/-\003 is "..output); counter = 0 end
-		end
+	output = ""
+    
+    for player in server.aplayers() do
+        if counter == nil then counter = 0 end
+        counter = counter + 1
+        output = output .. string.format("\00312%s\003(%s) ", player:displayname(), player.cn)
+        if counter == 5 then irc:toChannel("\0036IRC\003         \0034-/WHO/-\003 is "..output); counter = 0 end
+    end
 
-		if counter == nil then 
-			irc:toChannel("Apparently no one is connected.") 
-		else
-			if counter < 5 and counter > 0 then irc:toChannel("\0036IRC\003         \0034-/WHO/-\003 is "..output); end
-		end
-	return
-	
-end
-
---Wrap command in a pcall to stop it from killing the server. 
-function irc:wrapCommand(command)
-	local status, message = pcall(command)
-		
-	if status == false then
-		err = string.match(message,"%w+:%w+:%s(.+)")
-		if server.irc_debug == 1 then print("DEBUG [wrapCommand] : "..message); irc:toChannel(string.format("\0036IRC\003         \0034ERROR\003  \0034%s\003",err))  end
-	end
-	return
+    if counter == nil then 
+        irc:toChannel("Apparently no one is connected.") 
+    else
+        if counter < 5 and counter > 0 then irc:toChannel("\0036IRC\003         \0034-/WHO/-\003 is "..output); end
+    end
 end
 
 --Send message to channel.
 function irc:toChannel(message)
 	if message then
-		irc.client:async_send( "PRIVMSG "..server.irc_channel.." : "..message.."\n", function(errmsg)  end)
+		irc.client:async_send( "PRIVMSG "..server.irc_channel.." : "..message.."\n", noop)
+        print_debug(string.format("[Sending] : %s : %s", server.irc_channel, message))
 		return
-	end	
-	return
+	end
 end
 
 --Handle any errors.
-function irc:handleError(errmsg, time)
-	if not errmsg then return end
-	irc.client:cancel()
-	irc.client:close()
-    if server.irc_debug == 1 then print("DEBUG [handleError] : "..errmsg) end
-	if not time then time = 30000 end
-	server.sleep(time, function() 
-		irc:connectServer(irc.client)
-	 end)
-end
+function irc:handleError(errmsg, retry)
 
---Case function
-function switch(t)
-	t.case = function (self,x)
-		local f=self[x] or self.default
-		if f then
-			if type(f)=="function" then
-				f(x,self)
-			else
-				error("case "..tostring(x).." not a function")
-			end
-		end
-	end
-	return t
+    if not errmsg then return end
+    retry = retry or WAIT_TO_RECONNECT
+    
+    irc.client:cancel()
+    irc.client:close()
+    print_debug("[handleError] : " .. errmsg)
+    
+    if retry ~= -1 then    
+        server.sleep(retry, function() 
+            irc:connectServer(irc.client)
+        end)
+    end
 end
-
 
 -- Initiate Connection
 irc:connectServer(irc.client)
-
 
 -- Handle Game Message Events
 server.event_handler("connect", function (cn)
     local ip = server.player_ip(cn)
     local country = geoip.ip_to_country(ip)
-		irc:toChannel(string.format("\0039CONNECT\003    \00312%s(%i)\003 \0037%s\003",server.player_name(cn),cn,country)) 
+    irc:toChannel(string.format("\0039CONNECT\003    \00312%s(%i)\003 \0037%s\003",server.player_name(cn),cn,country)) 
 end)
 
 server.event_handler("disconnect", function (cn,reason)
@@ -202,9 +238,6 @@ server.event_handler("disconnect", function (cn,reason)
 
     irc:toChannel(string.format("\0032DISCONNECT\003    \00312%s(%i)\003%s disconnected%s, time %s\n", server.player_name(cn), cn, ip, reason_tag, server.format_duration(server.player_connection_time(cn))))
 end)
-
-
-
 
 local function log_usednames(cn)
 
@@ -233,7 +266,7 @@ server.event_handler("kick", function(cn, bantime, admin, reason)
     local action_tag = "kicked"
     if tonumber(bantime) < 0 then action_tag = "kicked and permanently banned" end
     
-    irc:toChannel(string.format("\0034KICK\003    \00312%s(%i)\003 was \0037%s\003 by \0037%s\003 \0037%s\003\n",server.player_name(cn),cn,action_tag,admin,reason_tag),function(errmsg) end)
+    irc:toChannel(string.format("\0034KICK\003    \00312%s(%i)\003 was \0037%s\003 by \0037%s\003 \0037%s\003\n",server.player_name(cn),cn,action_tag,admin,reason_tag), noop)
 end)
 
 server.event_handler("rename",function(cn, oldname, newname)
@@ -245,7 +278,12 @@ server.event_handler("reteam",function(cn, oldteam, newteam)
 end)
 
 server.event_handler("text", function(cn, msg)
-	if string.match(msg,"^#.*") then return end
+	
+    -- Hide player commands
+    if string.match(msg, "^#.*") then 
+        return 
+    end
+    
     local mute_tag = ""
     if server.is_muted(cn) then mute_tag = "(muted)" end
     irc:toChannel(string.format("\0033CHAT\003    \00312%s(%i)\003%s  ~>  \0033%s\003\n",server.player_name(cn),cn,mute_tag,msg))
@@ -323,88 +361,44 @@ server.event_handler("reloadhopmod", function() irc:toChannel("\0034RELOAD\003  
 
 irc:toChannel("\00312START\003    Server started")
 
--- Auth Listener for auth events
+-- Auth Listener for masterauth events
 auth.listener("", function(cn, user_id, domain, status)
     if status ~= auth.request_status.SUCCESS then return end
     local msg = string.format("\00312%s(%i)\003 successfully authed", server.player_name(cn), cn)
     irc:toChannel(" \0034AUTH\003    " .. msg)
 end)
 
-
-
--- Random sequence generator
-local Chars = {}
-for Loop = 0, 255 do
-   Chars[Loop+1] = string.char(Loop)
-end
-local String = table.concat(Chars)
-
-local Built = {['.'] = Chars}
-
-local AddLookup = function(CharSet)
-   local Substitute = string.gsub(String, '[^'..CharSet..']', '')
-   local Lookup = {}
-   for Loop = 1, string.len(Substitute) do
-       Lookup[Loop] = string.sub(Substitute, Loop, Loop)
-   end
-   Built[CharSet] = Lookup
-
-   return Lookup
+local function sendAdminMessage()
+    local chat = string.match(irc.command_command, "say%s*(.+)\n")
+    server.console(irc.command_nick, chat)
 end
 
-
-function string.random(Length, CharSet)
-   -- Length (number)
-   -- CharSet (string, optional); e.g. %l%d for lower case letters and digits
-   local CharSet = CharSet or '.'
-   if CharSet == '' then
-      return ''
-   else
-      local Result = {}
-      local Lookup = Built[CharSet] or AddLookup(CharSet)
-      local Range = table.getn(Lookup)
-      math.randomseed( os.time() )
-      for Loop = 1,Length do
-
-         Result[Loop] = Lookup[math.random(1, Range)]
-      end
-
-      return table.concat(Result)
-   end
-end
-
-
---Command list
-irc.commands = switch {
-        ['kick']        = function () irc:wrapCommand(function() server.kick(arg1, 0,"IRC Admin", "Later Sucka") end) end,--
-        ['version']     = function () irc:toChannel("HopBot v.l01 support #hopmod@irc.gamesurge.net") end,--
-        ['spec']        = function () irc:wrapCommand(function() server.spec(arg1) end) end,--
-        ['unspec']      = function () irc:wrapCommand(function() server.unspec(arg1) end) end,--
-        ['mute']        = function () irc:wrapCommand(function() server.mute(arg1) end) end,--
-        ['unmute']      = function () irc:wrapCommand(function() server.unmute(arg1) end) end,--
-        ['setmaster']   = function () irc:wrapCommand(function() server.setmaster(arg1) end) end,--
-        ['setadmin']    = function () irc:wrapCommand(function() server.setadmin(arg1) end) end,--
-        ['unsetmaster'] = function () irc:wrapCommand(function() server.unsetmaster() end) end,--
-        ['slay']        = function () irc:wrapCommand(function() server.player_slay(arg1) end) end,--
-        ['changeteam']  = function () irc:wrapCommand(function() server.changeteam(arg1,arg2) end) end,--
-        ['pause']       = function () irc:wrapCommand(function() server.pausegame(true) end) end,--
-        ['unpause']     = function () irc:wrapCommand(function() server.pausegame(false) end) end,--
-        ['map']         = function () irc:wrapCommand(function() server.changemap(arg1,arg2,"10") end) end,--
-        ['delbot']     	= function () irc:wrapCommand(function() server.delbot(arg1) end) end,--
-        ['restart']		= function () irc:wrapCommand(function() server.restart() end) end,--
-        ['kill']		= function () irc:wrapCommand(function() server.restart_now() end) end,--
-        ['shutdown']	= function () irc:wrapCommand(function() server.shutdown() end) end, --
-        ['reload']		= function () irc:wrapCommand(function() server.reloadscripts() end) end,--
-        ['say']			= function () irc:wrapCommand(function() local chat = string.match(command, "say%s*(.+)\n"); server.msg(red("Console").."("..nick.."): "..green(chat)); irc:toChannel("\003\0036IRC\003         \0034-/SAY/-\003 Console("..nick.."): \0034"..chat.."\003") end) end,--
-        ['clearbans']	= function () irc:wrapCommand(function() server.clearbans() end) end,--
-        ['permban']		= function () irc:wrapCommand(function() server.permban(arg1) end) end,--
-        ['unsetban']	= function () irc:wrapCommand(function() server.unsetban(arg1) end) end,--
-        ['recorddemo']	= function () irc:wrapCommand(function() server.recorddemo(arg1) end) end,--
-        ['stopdemo']	= function () irc:wrapCommand(function() server.stopdemo() end) end,--
-        ['who']			= function () irc:playerList() end,
-        default = function () end,
-        }
-
-
-
-end)
+-- Command list
+irc.commands = {
+    ['kick']        = function(cn, reason) server.kick(cn, 0, irc.command_nick, reason) end,
+    ['version']     = function() irc:toChannel("HopBot v.l01 support #hopmod@irc.gamesurge.net") end,
+    ['spec']        = server.spec,
+    ['unspec']      = server.unspec,
+    ['mute']        = server.mute,
+    ['unmute']      = server.unmute,
+    ['setmaster']   = server.setmaster,
+    ['setadmin']    = server.setadmin,
+    ['unsetmaster'] = server.unsetmaster,
+    ['slay']        = server.player_slay,
+    ['changeteam']  = server.changeteam,
+    ['pause']       = function() server.pausegame(true) end,
+    ['unpause']     = function() server.pausegame(false) end,
+    ['map']         = server.changemap,
+    ['delbot']     	= server.delbot,
+    ['restart']		= server.restart,
+    ['kill']		= server.restart_now,
+    ['shutdown']	= server.shutdown,
+    ['reload']		= server.reloadscripts,
+    ['say']			= sendAdminMessage,
+    ['clearbans']	= server.clearbans,
+    ['permban']		= server.permban,
+    ['unsetban']	= server.unsetban,
+    ['recorddemo']	= server.recorddemo,
+    ['stopdemo']	= server.stopdemo,
+    ['who']			= irc.playerList
+}
