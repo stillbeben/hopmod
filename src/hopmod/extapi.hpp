@@ -22,7 +22,7 @@ namespace server
     extern string serverdesc;
     extern string smapname;
     extern string serverpass;
-    extern string masterpass;
+    extern string adminpass;
     extern int currentmaster;
     extern int minremain;
     extern int interm;

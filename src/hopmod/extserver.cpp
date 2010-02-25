@@ -1065,7 +1065,7 @@ void suicide(int cn)
 
 bool compare_admin_password(const char * x)
 {
-    return !strcmp(x, masterpass);
+    return !strcmp(x, adminpass);
 }
 
 std::vector<std::string> get_bans()

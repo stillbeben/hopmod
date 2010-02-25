@@ -4,6 +4,10 @@
 #ifdef SERVMODE
 struct captureservmode : servmode
 #else
+VARP(capturetether, 0, 1, 1);
+VARP(autorepammo, 0, 1, 1);
+VARP(basenumbers, 0, 1, 1);
+
 struct captureclientmode : clientmode
 #endif
 {
@@ -22,6 +26,7 @@ struct captureclientmode : clientmode
     static const int MAXAMMO = 5;
     static const int REPAMMODIST = 32;
     static const int RESPAWNSECS = 5;
+    static const int MAXBASES = 100;
 
     struct baseinfo
     {
@@ -83,12 +88,12 @@ struct captureclientmode : clientmode
 
         bool leave(const char *team)
         {
-            if(!strcmp(owner, team))
+            if(!strcmp(owner, team) && owners > 0)
             {
                 owners--;
                 return false;
             }
-            if(strcmp(enemy, team)) return false;
+            if(strcmp(enemy, team) || enemies <= 0) return false;
             enemies--;
             return !enemies;
         }
@@ -173,6 +178,7 @@ struct captureclientmode : clientmode
 
     void addbase(int ammotype, const vec &o)
     {
+        if(bases.length() >= MAXBASES) return;
         baseinfo &b = bases.add();
         b.ammogroup = min(ammotype, 0);
         b.ammotype = ammotype > 0 ? ammotype : rnd(5)+1;
@@ -244,9 +250,6 @@ struct captureclientmode : clientmode
 
     float radarscale;
 
-    IVARP(capturetether, 0, 1, 1);
-    IVARP(autorepammo, 0, 1, 1);
-
     captureclientmode() : captures(0), radarscale(0)
     {
         CCOMMAND(repammo, "", (captureclientmode *self), self->replenishammo());
@@ -276,7 +279,7 @@ struct captureclientmode : clientmode
 
     void checkitems(fpsent *d)
     {
-        if(m_regencapture || !autorepammo() || d!=player1 || d->state!=CS_ALIVE) return;
+        if(m_regencapture || !autorepammo || d!=player1 || d->state!=CS_ALIVE) return;
         vec o = d->feetpos();
         loopv(bases)
         {
@@ -305,6 +308,7 @@ struct captureclientmode : clientmode
             {
                 baseinfo &b = bases[i];
                 if(!insidebase(b, d->feetpos()) || (strcmp(b.owner, d->team) && strcmp(b.enemy, d->team))) continue;
+                if(d->lastbase < 0 && (lookupmaterial(d->feetpos())&MATF_CLIP) == MAT_GAMECLIP) break;
                 particle_flare(b.ammopos, pos, 0, PART_LIGHTNING, strcmp(d->team, player1->team) ? 0xFF2222 : 0x2222FF, 0.28f);
                 if(oldbase < 0)
                 {
@@ -329,7 +333,7 @@ struct captureclientmode : clientmode
 
     void rendergame()
     {
-        if(capturetether() && canaddparticles())
+        if(capturetether && canaddparticles())
         {
             loopv(players)
             {
@@ -372,15 +376,15 @@ struct captureclientmode : clientmode
             {
                 bool isowner = !strcmp(b.owner, player1->team);
                 if(b.enemy[0]) { mtype = PART_METER_VS; mcolor = 0xFF1932; mcolor2 = 0x3219FF; if(!isowner) swap(mcolor, mcolor2); }
-                formatstring(b.info)("%s", b.owner); tcolor = isowner ? 0x6496FF : 0xFF4B19;
+                formatstring(b.info)("%s: %s", b.name, b.owner); tcolor = isowner ? 0x6496FF : 0xFF4B19;
             }
             else if(b.enemy[0])
             {
-                formatstring(b.info)("%s", b.enemy);
+                formatstring(b.info)("%s: %s", b.name, b.enemy);
                 if(strcmp(b.enemy, player1->team)) { tcolor = 0xFF4B19; mtype = PART_METER; mcolor = 0xFF1932; }
                 else { tcolor = 0x6496FF; mtype = PART_METER; mcolor = 0x3219FF; }
             }
-            else b.info[0] = '\0';
+            else copystring(b.info, b.name);
 
             vec above(b.ammopos);
             above.z += FIREBALLRADIUS+1.0f;
@@ -393,20 +397,10 @@ struct captureclientmode : clientmode
         }
     }
 
-    void drawradar(float x, float y, float s)
+    void drawblips(fpsent *d, float blipsize, int fw, int fh, int type, bool skipenemy = false)
     {
-        glTexCoord2f(0.0f, 0.0f); glVertex2f(x,   y);
-        glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
-        glTexCoord2f(0.0f, 1.0f); glVertex2f(x,   y+s);
-    }
-
-    void drawblips(fpsent *d, int x, int y, int s, int type, bool skipenemy = false)
-    {
-        const char *textures[3] = {"packages/hud/blip_red.png", "packages/hud/blip_grey.png", "packages/hud/blip_blue.png"};
-        settexture(textures[max(type+1, 0)]);
-        glBegin(GL_QUADS);
         float scale = radarscale<=0 || radarscale>maxradarscale ? maxradarscale : radarscale;
+        int blips = 0;
         loopv(bases)
         {
             baseinfo &b = bases[i];
@@ -419,14 +413,30 @@ struct captureclientmode : clientmode
                 case -2: if(!b.enemy[0] || !strcmp(b.enemy, player1->team)) continue; break;
             }
             vec dir(b.o);
-            dir.sub(d->o);
-            dir.z = 0.0f;
-            float dist = dir.magnitude();
-            if(dist >= scale*(1 - 0.05f)) dir.mul(scale*(1 - 0.05f)/dist);
+            dir.sub(d->o).div(scale);
+            float dist = dir.magnitude2();
+            if(dist >= 1 - blipsize) dir.mul((1 - blipsize)/dist);
             dir.rotate_around_z(-d->yaw*RAD);
-            drawradar(x + s*0.5f*(1.0f + dir.x/scale - 0.05f), y + s*0.5f*(1.0f + dir.y/scale - 0.05f), 0.05f*s);
+            if(basenumbers)
+            {
+                static string blip;
+                formatstring(blip)("%d", i+1);
+                int tw, th;
+                text_bounds(blip, tw, th);
+                draw_text(blip, int(0.5f*(dir.x*fw/blipsize - tw)), int(0.5f*(dir.y*fh/blipsize - th)));
+            }
+            else
+            {
+                if(!blips) glBegin(GL_QUADS);
+                float x = 0.5f*(dir.x*fw/blipsize - fw), y = 0.5f*(dir.y*fh/blipsize - fh);
+                glTexCoord2f(0.0f, 0.0f); glVertex2f(x,    y);
+                glTexCoord2f(1.0f, 0.0f); glVertex2f(x+fw, y);
+                glTexCoord2f(1.0f, 1.0f); glVertex2f(x+fw, y+fh);
+                glTexCoord2f(0.0f, 1.0f); glVertex2f(x,    y+fh);
+            }
+            blips++;
         }
-        glEnd();
+        if(blips && !basenumbers) glEnd();
     }
 
     int respawnwait(fpsent *d)
@@ -447,13 +457,34 @@ struct captureclientmode : clientmode
         glColor3f(1, 1, 1);
         settexture("packages/hud/radar.png");
         glBegin(GL_QUADS);
-        drawradar(float(x), float(y), float(s));
+        glTexCoord2f(0.0f, 0.0f); glVertex2f(x,   y);
+        glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
+        glTexCoord2f(0.0f, 1.0f); glVertex2f(x,   y+s);
         glEnd();
         bool showenemies = lastmillis%1000 >= 500;
-        drawblips(d, x, y, s, 1, showenemies);
-        drawblips(d, x, y, s, 0, showenemies);
-        drawblips(d, x, y, s, -1, showenemies);
-        if(showenemies) drawblips(d, x, y, s, -2);
+        int fw = 1, fh = 1;
+        if(basenumbers)
+        {
+            pushfont();
+            setfont("digit_blue");
+            text_bounds(" ", fw, fh);
+        }
+        else settexture("packages/hud/blip_blue.png");
+        glPushMatrix();
+        glTranslatef(x + 0.5f*s, y + 0.5f*s, 0);
+        float blipsize = basenumbers ? 0.1f : 0.05f;
+        glScalef((s*blipsize)/fw, (s*blipsize)/fh, 1.0f);
+        drawblips(d, blipsize, fw, fh, 1, showenemies);
+        if(basenumbers) setfont("digit_grey");
+        else settexture("packages/hud/blip_grey.png");
+        drawblips(d, blipsize, fw, fh, 0, showenemies);
+        if(basenumbers) setfont("digit_red");
+        else settexture("packages/hud/blip_red.png");
+        drawblips(d, blipsize, fw, fh, -1, showenemies);
+        if(showenemies) drawblips(d, blipsize, fw, fh, -2);
+        glPopMatrix();
+        if(basenumbers) popfont();
         if(d->state == CS_DEAD)
         {
             int wait = respawnwait(d);
@@ -483,7 +514,8 @@ struct captureclientmode : clientmode
             b.ammotype = e->attr1;
             defformatstring(alias)("base_%d", e->attr2);
             const char *name = getalias(alias);
-            if(name[0]) copystring(b.name, name); else formatstring(b.name)("base %d", bases.length());
+            if(name[0]) formatstring(b.name)("%s (%d)", name, bases.length());
+            else formatstring(b.name)("base %d", bases.length());
             b.light = e->light;
         }
         vec center(0, 0, 0);
@@ -541,10 +573,10 @@ struct captureclientmode : clientmode
             baseinfo &b = bases[base];
             if(!strcmp(b.owner, team))
             {
-                defformatstring(msg)("@%d", total);
+                defformatstring(msg)("%d", total);
                 vec above(b.ammopos);
                 above.z += FIREBALLRADIUS+1.0f;
-                particle_text(above, msg, PART_TEXT, 2000, isteam(team, player1->team) ? 0x6496FF : 0xFF4B19, 4.0f, -8);
+                particle_textcopy(above, msg, PART_TEXT, 2000, isteam(team, player1->team) ? 0x6496FF : 0xFF4B19, 4.0f, -8);
             }
         }
     }
@@ -682,7 +714,7 @@ struct captureclientmode : clientmode
 				{
 					if(lastmillis-b.millis >= (201-d->skill)*33)
 					{
-						d->ai->clear = true; // re-evaluate so as not to herd
+						d->ai->trywipe = true; // re-evaluate so as not to herd
 						return true;
 					}
 					else walk = 2;
@@ -703,15 +735,13 @@ struct captureclientmode : clientmode
 };
 
 #else
-    int scoresec;
     bool notgotbases;
 
-    captureservmode() : captures(0), scoresec(0), notgotbases(false) {}
+    captureservmode() : captures(0), notgotbases(false) {}
 
     void reset(bool empty)
     {
         resetbases();
-        scoresec = 0;
         notgotbases = !empty;
     }
 
@@ -955,9 +985,7 @@ struct captureclientmode : clientmode
         {
             int ammotype = getint(p);
             vec o;
-            o.x = getint(p)/DMF;
-            o.y = getint(p)/DMF;
-            o.z = getint(p)/DMF;
+            loopk(3) o[k] = max(getint(p)/DMF, 0.0f);
             if(p.overread()) break;
             if(commit && notgotbases) addbase(ammotype>=GUN_SG && ammotype<=GUN_PISTOL ? ammotype : min(ammotype, 0), o);
         }

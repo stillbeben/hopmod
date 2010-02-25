@@ -24,6 +24,9 @@ namespace entities
     extern void clearents();
     extern vector<extentity *> &getents();
     extern const char *entmodel(const entity &e);
+    extern void resettriggers();
+    extern void checktriggers();
+    extern void animatemapmodel(const extentity &e, int &anim, int &basetime);
 }
 
 namespace game
@@ -45,17 +48,18 @@ namespace game
     extern bool ispaused();
 
     extern const char *gameident();
-    extern const char *defaultmap();
     extern const char *savedconfig();
     extern const char *defaultconfig();
     extern const char *autoexec();
     extern const char *savedservers();
+    extern void loadconfigs();
 
     extern void updateworld();
     extern void initclient();
     extern void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel, int material = 0);
     extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0);
     extern void vartrigger(ident *id);
+    extern void dynentcollide(physent *d, physent *o, const vec &dir);
     extern const char *getclientmap();
     extern const char *getmapinfo();
     extern void resetgamestate();
@@ -84,6 +88,7 @@ namespace game
     extern bool collidecamera();
     extern void adddynlights();
     extern void particletrack(physent *owner, vec &o, vec &d);
+    extern void dynlighttrack(physent *owner, vec &o);
     extern bool serverinfostartcolumn(g3d_gui *g, int i);
     extern void serverinfoendcolumn(g3d_gui *g, int i);
     extern bool serverinfoentry(g3d_gui *g, int i, const char *name, int port, const char *desc, const char *map, int ping, const vector<int> &attr, int np);
