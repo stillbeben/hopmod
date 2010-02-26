@@ -292,6 +292,27 @@ int player_sessionid(int cn)
 
 const char * player_name(int cn){return get_ci(cn)->name;}
 
+void player_rename(int cn, const char * newname)
+{
+    char safenewname[MAXNAMELEN + 1];
+    filtertext(safenewname, newname, false, MAXNAMELEN);
+    
+    clientinfo * ci = get_ci(cn);
+    putuint(ci->messages, SV_SWITCHNAME);
+    sendstring(safenewname, ci->messages);
+    
+    vector<uchar> switchname_message;
+    putuint(switchname_message, SV_SWITCHNAME);
+    sendstring(safenewname, switchname_message);
+    
+    packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+    putuint(p, SV_CLIENT);
+    putint(p, ci->clientnum);
+    putint(p, switchname_message.length());
+    p.put(switchname_message.getbuf(), switchname_message.length());
+    sendpacket(ci->clientnum, 1, p.finalize(), -1);
+}
+
 std::string player_displayname(int cn)
 {
     clientinfo * ci = get_ci(cn);

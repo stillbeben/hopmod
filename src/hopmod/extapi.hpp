@@ -55,6 +55,7 @@ namespace server
     int player_id(int);
     void player_msg(int,const char *);
     const char * player_name(int);
+    void player_rename(int, const char *);
     std::string player_displayname(int);
     const char * player_team(int);
     const char * player_privilege(int);
