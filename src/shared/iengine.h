@@ -311,13 +311,14 @@ enum { DISC_NONE = 0, DISC_EOP, DISC_CN, DISC_KICK, DISC_TAGT, DISC_IPBAN, DISC_
 
 inline const char * disconnect_reason(int code)
 {
-    const char * reasons[] = { 
-        "normal", "end of packet", 
-        "client num", "kicked/banned", "tag type", 
-        "ip is banned", "server is in private mode",
-        "server FULL", "connection timed out", 
-        "overflow" };
-    return reasons[code];
+    static const char * reasons[] = { 
+        "normal", "end of packet", "client num", 
+        "kicked/banned", "tag type", "ip is banned", 
+        "server is in private mode", "server FULL (maxclients)", 
+        "connection timed out", "overflow" };
+    assert(code > 0 && code < sizeof(reasons)/sizeof(char *));
+    if(code < 0) return "";
+    return reasons[code % sizeof(reasons)/sizeof(char *)];
 }
 
 extern void *getclientinfo(int i);
