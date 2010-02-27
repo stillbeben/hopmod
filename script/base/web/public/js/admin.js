@@ -266,9 +266,10 @@ function createListenerResource(reactors){
             updateServerStatus("server-status-error", "Failed to start event listening");
             return;
         }
+        
         eventLoop(response.listenerURI);
     }, "json");
-    
+
     function eventLoop(listenerURI){
         
         $.getJSON(listenerURI, function(events, textStatus){
