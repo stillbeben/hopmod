@@ -8,7 +8,6 @@ local methods = {
     priv            = function(obj) return server.player_priv(obj.cn) end,
     priv_code       = function(obj) return server.player_priv_code(obj.cn) end,
     id              = function(obj) return server.player_id(obj.cn) end,
-    sessionid       = function(obj) return server.player_sessionid(obj.cn) end,
     ping            = function(obj) return server.player_ping(obj.cn) end,
     lag             = function(obj) return server.player_lag(obj.cn) end,
     ip              = function(obj) return server.player_ip(obj.cn) end,
