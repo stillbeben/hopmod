@@ -6,7 +6,7 @@ local function player(p)
     local output = {}
     
     output.cn = p.cn
-    output.sessionid = p:sessionid()
+    output.sessionid = p.sessionid
     output.id = p:id()
     output.name = p:name()
     output.team = p:team()
@@ -39,15 +39,7 @@ local function clients()
 
     local output = {}
     
-    for _, cn in ipairs(server.players()) do
-        table.insert(output, player(server.new_player_object(cn)))
-    end
-    
-    for _, cn in ipairs(server.spectators()) do
-        table.insert(output, player(server.new_player_object(cn)))
-    end
-    
-    for _, cn in ipairs(server.bots()) do
+    for _, cn in ipairs(server.clients()) do
         table.insert(output, player(server.new_player_object(cn)))
     end
     
