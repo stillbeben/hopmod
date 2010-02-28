@@ -1,9 +1,13 @@
 require "Json"
+require "net"
 
 local VARS_FILE = "log/player_vars"
+local IPMASK_VARS_FILE = "log/player_ipmask_vars"
 local MINIMUM_UPDATE_INTERVAL = 1000 * 60 * 60
 
 local variablesByIpAddr = {}
+local variablesByIpMask = {}
+local variablesByIpMaskIndex = net.ipmask_table()
 local variablesById = {}
 
 local lastsave = 0
@@ -13,19 +17,38 @@ local function checkValue(value)
 end
 
 local function saveVars()
+
     local file = io.open(VARS_FILE, "w")
     if not file then
         server.log_error("Unable to save player vars")
     end
     file:write(Json.Encode(variablesByIpAddr))
     file:close()
+    
+    file = io.open(IPMASK_VARS_FILE, "w")
+    if not file then
+        server.log_error("Unable to save player ipmask vars")
+    end
+    file:write(Json.Encode(variablesByIpMask))
+    file:close()
+    
 end
 
 local function loadVars()
+
     local file = io.open(VARS_FILE)
     if not file then return end
     variablesByIpAddr = Json.Decode(file:read("*a"))
     file:close()
+    
+    local file = io.open(IPMASK_VARS_FILE)
+    if not file then return end
+    variablesByIpMask = Json.Decode(file:read("*a"))
+    file:close()
+    
+    for key, value in pairs(variablesByIpMask) do
+        variablesByIpMaskIndex[net.ipmask(key)] = value
+    end
 end
 
 function server.player_vars(cn)
@@ -35,7 +58,7 @@ function server.player_vars(cn)
     local publicInterface = {}
     setmetatable(publicInterface, {
         __index = function(_, key)
-            return vars
+            return vars[key]
         end,
         __newindex = function()
             error("table is read-only")
@@ -72,7 +95,28 @@ function server.set_iplong_var(iplong, name, value)
     for _, cn in ipairs(server.clients()) do
         local id = server.player_id(cn)
         if id then
-            variablesById[id][name] = variablesById[id][name] or value
+            variablesById[id][name] = value
+        end
+    end
+end
+
+function server.set_ipmask_var(maskstring, name, value)
+    
+    local mask = net.ipmask(maskstring)
+    local vars = variablesByIpMaskIndex[mask]
+    
+    if not vars then
+        vars = {}
+        variablesByIpMask[mask:to_string()] = vars
+        variablesByIpMaskIndex[mask] = vars
+    end
+    
+    vars[name] = value
+    
+    for _, cn in ipairs(server.clients()) do
+        if mask == net.ipmask(server.player_iplong(cn)) then
+            local id = server.player_id(cn)
+            variablesById[id][name] = value
         end
     end
 end
@@ -86,6 +130,14 @@ server.event_handler("connect", function(cn)
     if ipSetVars then
         local vars = variablesById[id]
         for key, value in pairs(ipSetVars) do
+            vars[key] = vars[key] or value
+        end
+    end
+    
+    local ipmaskSetVars = variablesByIpMaskIndex[net.ipmask(server.player_iplong(cn))]
+    if ipmaskSetVars then
+        local vars = variablesById[id]
+        for key, value in pairs(ipmaskSetVars) do
             vars[key] = vars[key] or value
         end
     end
