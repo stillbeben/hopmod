@@ -1552,14 +1552,35 @@ public:
     static int create_object(lua_State * L)
     {
         netmask tmp;
-        try
+        int argc = lua_gettop(L);
+        if(argc == 0) luaL_error(L, "missing argument");
+        
+        
+        if(lua_type(L, 1) == LUA_TSTRING)
         {
-            tmp = netmask::make(luaL_checkstring(L, 1));
+            try
+            {
+                tmp = netmask::make(lua_tostring(L, 1));
+            }
+            catch(std::bad_cast)
+            {
+                return luaL_error(L, "invalid ip mask");
+            }
         }
-        catch(std::bad_cast)
+        else if(lua_type(L, 1) == LUA_TNUMBER)
         {
-            return luaL_error(L, "invalid ip mask");
+            unsigned long prefix = static_cast<unsigned long>(lua_tointeger(L, 1));
+            int bits = 32;
+            
+            if(argc > 1 && lua_isnumber(L, 2)) 
+            {
+                bits = lua_tointeger(L, 2);
+                if(bits < 1 || bits > 32) luaL_argerror(L, 2, "invalid value");
+            }
+            
+            tmp = netmask(prefix, bits);
         }
+        
         new (lua_newuserdata(L, sizeof(netmask_wrapper))) netmask_wrapper(tmp);
         luaL_getmetatable(L, MT);
         lua_setmetatable(L, -2);
