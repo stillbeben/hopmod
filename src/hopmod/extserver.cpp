@@ -311,6 +311,8 @@ void player_rename(int cn, const char * newname)
     putint(p, switchname_message.length());
     p.put(switchname_message.getbuf(), switchname_message.length());
     sendpacket(ci->clientnum, 1, p.finalize(), -1);
+    
+    copystring(ci->name, safenewname, MAXNAMELEN+1);
 }
 
 std::string player_displayname(int cn)
