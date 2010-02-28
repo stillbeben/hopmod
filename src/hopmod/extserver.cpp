@@ -296,6 +296,7 @@ void player_rename(int cn, const char * newname)
 {
     char safenewname[MAXNAMELEN + 1];
     filtertext(safenewname, newname, false, MAXNAMELEN);
+    if(!safenewname[0]) copystring(safenewname, "unnamed");
     
     clientinfo * ci = get_ci(cn);
     putuint(ci->messages, SV_SWITCHNAME);
@@ -312,7 +313,12 @@ void player_rename(int cn, const char * newname)
     p.put(switchname_message.getbuf(), switchname_message.length());
     sendpacket(ci->clientnum, 1, p.finalize(), -1);
     
+    char oldname[MAXNAMELEN+1];
+    copystring(oldname, ci->name, MAXNAMELEN+1);
+    
     copystring(ci->name, safenewname, MAXNAMELEN+1);
+    
+    signal_rename(ci->clientnum, oldname, ci->name);
 }
 
 std::string player_displayname(int cn)
