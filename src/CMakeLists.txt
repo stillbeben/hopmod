@@ -36,7 +36,8 @@ set(SCRIPTING_LIBRARIES lua fungu_script)
 set(SAUERTOOLS_SOURCES
     shared/tools.cpp
     shared/stream.cpp
-    shared/crypto.cpp)
+    shared/crypto.cpp
+    hopmod/netmask.cpp)
 
 add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 
@@ -72,7 +73,6 @@ SET(SAUER_SERVER_SOURCES
     hopmod/playerid.cpp
     hopmod/restarter.cpp
     hopmod/utils.cpp
-    hopmod/netmask.cpp
     hopmod/bans.cpp
     hopmod/httpserver/httpserver.cpp
     hopmod/httpserver/serverexec.cpp

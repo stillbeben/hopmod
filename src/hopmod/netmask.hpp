@@ -23,10 +23,11 @@ public:
     
     bool operator==(addr_t ip)const;
     bool operator!=(addr_t ip)const;
-    bool operator==(const netmask & x)const;
-    bool operator!=(const netmask & x)const;
-    bool operator<(const netmask & x)const;
-    
+    bool operator==(const netmask &)const;
+    bool operator!=(const netmask &)const;
+    bool operator<(const netmask &)const;
+    bool operator<=(const netmask &)const;
+
     std::string to_string()const;
 private:
     unsigned long m_prefix;

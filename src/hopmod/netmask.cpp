@@ -112,7 +112,8 @@ bool netmask::operator!=(addr_t ip)const
 
 bool netmask::operator==(const netmask & x)const
 {
-    return m_prefix == (m_mask & x.m_prefix);
+    unsigned long mask = std::min(m_mask, x.m_mask);
+    return (m_prefix & mask) == (x.m_prefix & mask);
 }
 
 bool netmask::operator!=(const netmask & x)const
@@ -123,6 +124,11 @@ bool netmask::operator!=(const netmask & x)const
 bool netmask::operator<(const netmask & x)const
 {
     return m_prefix < (m_mask & x.m_prefix);
+}
+
+bool netmask::operator<=(const netmask & x)const
+{
+    return m_prefix <= (m_mask & x.m_prefix);
 }
 
 std::string netmask::to_string()const
