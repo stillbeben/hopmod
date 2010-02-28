@@ -6,7 +6,7 @@ local function player(p)
     local output = {}
     
     output.cn = p.cn
-    output.sessionid = p:sessionid
+    output.sessionid = p.sessionid
     output.id = p:id()
     output.name = p:name()
     output.team = p:team()
