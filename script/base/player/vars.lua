@@ -55,32 +55,7 @@ function server.player_vars(cn)
     local id = server.player_id(cn)
     if id == -1 then error("invalid cn") end
     local vars = variablesById[id]
-    local publicInterface = {}
-    setmetatable(publicInterface, {
-        __index = function(_, key)
-            return vars[key]
-        end,
-        __newindex = function()
-            error("table is read-only")
-        end
-    })
-    return publicInterface
-end
-
-function server.player_create_var(cn, name, value)
-
-    local id = server.player_id(cn)
-    if id == -1 then error("invalid cn") end
-    local vars = variablesById[id][name]
-    if vars[name] then error(string.format("variable %s already exists for player %i", name, id)) end
-    checkValue(value)
-    vars[name] = value
-    
-    local controller = {
-        set = function(value) checkValue(value); vars[name] = value end,
-        unset = function() vars[name] = nil end
-    }
-    return controller
+    return vars
 end
 
 function server.set_iplong_var(iplong, name, value)

@@ -205,7 +205,7 @@ static int register_event_handler(lua_State * L)
 
     int handle = slots.create_slot(name, luaFunctionObject, env);
     
-    if(handle == -1)
+    if(handle == -1) // signal was not found
     {
         std::map<std::string, lua_function_vector>::iterator it = created_event_slots.find(name);
         if(it != created_event_slots.end())

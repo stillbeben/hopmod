@@ -26,6 +26,7 @@ bool selectnextgame();
 }//namespace server
 
 int get_num_async_resolve_operations(); //defined in lua/net.cpp
+void stop_http_server(); //defined in httpserver/httpserver.cpp
 
 extern "C"{
 int lua_packlibopen(lua_State *L);
@@ -68,6 +69,11 @@ static void load_lua_modules()
     lua_packlibopen(L);
 }
 
+static int application_shutdown_utils_handler(int shutdownType)
+{
+    stop_http_server();
+}
+
 /**
     Initializes everything in hopmod. This function is called at server startup and server reload.
 
@@ -99,6 +105,7 @@ void init_hopmod()
     close_listenserver_slot = signal_shutdown.connect(&stopgameserver);
     signal_shutdown.connect(&shutdown_scripting);
     signal_shutdown.connect(&cleanup_info_files_on_shutdown);
+    signal_shutdown.connect(&application_shutdown_utils_handler);
     
     /*
         Execute the first script. After this script is finished everything on

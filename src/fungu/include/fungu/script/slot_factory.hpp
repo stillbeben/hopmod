@@ -33,11 +33,12 @@ public:
     ~slot_factory()
     {
         clear();
+        deallocate_destroyed_slots();
     }
     
     void clear()
     {
-        for(unsigned int i = 0; i < m_slots.size(); ++i) destroy_slot(i);
+        while(m_slots.size()) destroy_slot(m_slots.begin()->first);
         m_slots.clear();
     }
     
