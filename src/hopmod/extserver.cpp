@@ -752,6 +752,18 @@ void set_player_private_master(int cn)
     set_player_privilege(cn, PRIV_MASTER, false);
 }
 
+void player_freeze(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    sendf(ci->clientnum, 1, "rii", SV_PAUSEGAME, 1);
+}
+
+void player_unfreeze(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    sendf(ci->clientnum, 1, "rii", SV_PAUSEGAME, 0);
+}
+
 void addpermban(const char * addrstr)
 {
     netmask addr;

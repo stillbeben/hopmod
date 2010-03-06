@@ -102,6 +102,8 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::send_auth_request, "send_auth_request", env);
     script::bind_freefunc(server::sendauthchallenge, "send_auth_challenge_to_client", env);
     script::bind_freefunc(server::send_item, "send_item", env);
+    script::bind_freefunc(server::player_freeze, "player_freeze", env);
+    script::bind_freefunc(server::player_unfreeze, "player_unfreeze", env);
     
     script::bind_const((int)CS_ALIVE, "ALIVE", env);
     script::bind_const((int)CS_DEAD, "DEAD", env);

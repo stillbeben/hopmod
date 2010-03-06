@@ -100,6 +100,8 @@ namespace server
     void unset_player_privilege(int);
     int player_mapcrc(int);
     void set_player_privilege(int, int);
+    void player_freeze(int);
+    void player_unfreeze(int);
     
     void team_msg(const char *,const char *);
     std::vector<std::string> get_teams();
