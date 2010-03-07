@@ -34,7 +34,6 @@ local broadcast_minimum = 10
 local long_killingspree = 15
 local multikill_timelimit = 2000
 local first_frag = true
-local events = {}
 
 local function send_first_frag_message(target, actor)
     if not first_frag or target == actor then return end
@@ -104,7 +103,7 @@ local function send_multikills_message(target_cn, target_vars, actor_cn, actor_v
     
 end
 
-events.frag = server.event_handler_object("frag", function(target_cn, actor_cn)
+server.event_handler("frag", function(target_cn, actor_cn)
     
     if server.is_teamkill(actor_cn, target_cn) then return end
     
@@ -119,14 +118,13 @@ events.frag = server.event_handler_object("frag", function(target_cn, actor_cn)
     
 end)
 
-events.finishedgame = server.event_handler_object("finishedgame",function()
+server.event_handler("finishedgame",function()
     first_frag = true
     -- Killing-spree and Multikills player variables are automatically cleared by the server
 end)
 
-events.suicide = server.event_handler_object("suicide", function(cn)
+server.event_handler("suicide", function(cn)
     server.player_vars(cn).killingspree = 0
     server.player_vars(cn).multikills = 1
 end)
 
-return {unload = function() events = nil end}

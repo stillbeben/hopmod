@@ -42,7 +42,9 @@ local function addbots(num)
 end
 
 local function delbots(num)
-    for x = 1, num do server.delbot() end
+    local bots = server.bots()
+    local num = math.min(num, #bots)
+    for x = 1, num do server.delbot(bots[x]) end
 end
 
 local function remove_bots()
@@ -83,17 +85,17 @@ local function check_balance()
     
 end
 
-event.disconnect = server.event_handler_object("disconnect",    check_balance)
-event.connect = server.event_handler_object("connect",          check_balance)
-event.spectator = server.event_handler_object("spectator",      check_balance)
-event.reteam = server.event_handler_object("reteam",            check_balance)
+server.event_handler("disconnect",  check_balance)
+server.event_handler("connect",     check_balance)
+server.event_handler("spectator",   check_balance)
+server.event_handler("reteam",      check_balance)
 
-event.mapchange = server.event_handler_object("mapchange", function()
+server.event_handler("mapchange", function()
     bots_added = 0 -- the server disconnects all the bots at the end of the game
     check_balance() -- for one player case
 end)
 
-event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, curteam, newteam)
+server.event_handler("chteamrequest", function(cn, curteam, newteam)
     local teams = team_sizes()
     if (teams[curteam] or 0) > (teams[newteam] or 0) and using_moveblock then
         server.player_msg(cn, red(string.format("Team change disallowed: \"%s\" team has enough players.", newteam)))
@@ -101,7 +103,7 @@ event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, 
     end
 end)
 
-event.setmastermode = server.event_handler_object("setmastermode", function(cn, current, new)
+server.event_handler("setmastermode", function(cn, current, new)
     if (new ~= "open" and new ~= "veto") and bots_added then
         remove_bots()
         server.player_msg(cn, "Auto Team Balancing has been disabled. It will be re-enabled once the bots have been removed and/or the mastermode has been set to OPEN(0) or VETO(1).")
@@ -110,7 +112,6 @@ end)
 
 local function unload_module()
     remove_bots()
-    event = nil
 end
 
 check_balance() -- in case this module was loaded from #reload

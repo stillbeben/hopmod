@@ -313,7 +313,10 @@ end)
 
 server.event_handler("disconnect", function()
 
-    if server.playercount == 0 and using_server_maprotation and (default_game_on_empty or random_mode_on_empty) then
+    if  server.playercount == 0 and 
+        server.botcount == 0 and 
+        using_server_maprotation and
+        (default_game_on_empty or random_mode_on_empty) then
     
         local mode = default_gamemode
         local map = nil

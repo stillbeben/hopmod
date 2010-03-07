@@ -55,6 +55,8 @@ end)
 
 server.event_handler("connect", function (cn)
 
+    if server.player_isbot(cn) then return end
+
     local ip = server.player_ip(cn)
     local country = geoip.ip_to_country(ip)
     
@@ -64,6 +66,8 @@ end)
 
 server.event_handler("disconnect", function (cn,reason)
     
+    if server.player_isbot(cn) then return end
+
     local reason_tag = ""
     local ip = ""
     

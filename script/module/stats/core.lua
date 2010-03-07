@@ -101,7 +101,7 @@ end
 
 function internal.updatePlayer(cn)
     
-    if server.player_pvars(cn).players_block then return {} end
+    if server.player_vars(cn).block_stats then return {} end
     
     local player_id = server.player_id(cn)
     if players == nil or player_id == -1 then return {} end
@@ -148,11 +148,8 @@ function internal.addPlayer(cn)
     local human = not server.player_isbot(cn)
     
     if human and auth_domain then
-        
-        local pvars = server.player_pvars(cn)
-
-        if pvars.players_auth_name then
-            t.auth_name = pvars.players_auth_name
+        if server.player_vars(cn).stats_auth_name then
+            t.auth_name = server.player_vars(cn).stats_auth_name
         else
             auth.send_auth_request(cn, auth_domain)
         end
@@ -287,7 +284,6 @@ function internal.loadAuthHandlers(domain)
         
         if status ~= auth.request_status.SUCCESS then return end
         
-        server.player_pvars(cn).stats_auth_name = name
         server.player_vars(cn).stats_auth_name = name
         
         local t = internal.getPlayerTable(server.player_id(cn))
@@ -305,9 +301,9 @@ function internal.loadEventHandlers()
 
     local active = server.event_handler("maploaded", internal.addPlayer)
     
-    local disconnect = server.event_handler("disconnect", function(cn) 
+    local disconnect = server.event_handler("disconnect", function(cn)
         internal.updatePlayer(cn).playing = false
-        server.player_unsetpvar(cn,"players_auth_name")
+        server.player_vars(cn).stats_auth_name = nil
     end)
     
     local addbot = server.event_handler("addbot", function(cn, skill, botcn)
@@ -327,7 +323,6 @@ function internal.loadEventHandlers()
     local mapchange = server.event_handler("mapchange", internal.setNewGame)
     
     local _rename = server.event_handler("rename", function(cn)
-        server.player_pvars(cn).players_auth_name = server.player_vars(cn).players_auth_name
         internal.addPlayer(cn)
     end)
     
