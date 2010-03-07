@@ -130,6 +130,9 @@ namespace aiman
         ci->playerid = next_botid--;
         ci->sessionid = (rnd(0x1000000)*((totalmillis%10000)+1))&0xFFFFFF;
         dorefresh = true;
+        
+        signal_connect(ci->clientnum);
+        
 		return ci;
 	}
 
@@ -140,6 +143,7 @@ namespace aiman
         if(smode) smode->leavegame(ci, true);
         sendf(-1, 1, "ri2", SV_CDIS, ci->clientnum);
         signal_botleft(ci->clientnum);
+        signal_disconnect(ci->clientnum,"");
         clientinfo *owner = (clientinfo *)getclientinfo(ci->ownernum);
         if(owner) owner->bots.removeobj(ci);
         clients.removeobj(ci);

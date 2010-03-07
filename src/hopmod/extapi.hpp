@@ -68,6 +68,7 @@ namespace server
     const char * player_status(int);
     int player_status_code(int);
     int player_frags(int);
+    int player_real_frags(int);
     int player_deaths(int);
     int player_suicides(int);
     int player_teamkills(int);
@@ -127,7 +128,7 @@ namespace server
     bool loadbanlist(const char * filename);
     void addpermban(const char * addr);
     bool unsetban(const char * addr);
-    int addbot(int);
+    void addbot(int);
     void deletebot(int);
     void enable_master_auth(bool);
     bool using_master_auth();

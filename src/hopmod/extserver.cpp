@@ -402,6 +402,12 @@ int player_frags(int cn)
     return get_ci(cn)->state.frags;
 }
 
+int player_real_frags(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return ci->state.frags + ci->state.suicides + ci->state.teamkills;
+}
+
 int player_deaths(int cn)
 {
     return get_ci(cn)->state.deaths;
@@ -780,20 +786,37 @@ bool unsetban(const char * addrstr)
     return bans.remove(addr);
 }
 
-int addbot(int skill)
+static int execute_addbot(void * arg)
 {
+    int skill = reinterpret_cast<int>(arg);
     clientinfo * owner = aiman::addai(skill, -1);
-    if(!owner) return -1;
+    if(!owner) return 0;
     signal_addbot(-1, skill, owner->clientnum);
-    return owner->clientnum;
+    return 0;
+}
+
+void addbot(int skill)
+{
+    //TODO static assert sizeof void * >= int
+    sched_callback(&execute_addbot, reinterpret_cast<void *>(skill));
+}
+
+static int execute_deletebot(void * arg)
+{
+    int cn = reinterpret_cast<int>(arg);
+    clientinfo * ci = getinfo(cn);
+    if(!ci) return 0;
+    if(ci->state.aitype == AI_NONE) 
+        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("not a bot player")));
+    aiman::deleteai(ci);
+    return 0;
 }
 
 void deletebot(int cn)
 {
-    clientinfo * ci = get_ci(cn);
-    if(ci->state.aitype == AI_NONE) 
-        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("not a bot player")));
-    aiman::deleteai(ci);
+    //TODO static assert sizeof void * >= int
+    get_ci(cn);
+    sched_callback(&execute_deletebot, reinterpret_cast<void *>(cn));
 }
 
 void enable_master_auth(bool enable)
