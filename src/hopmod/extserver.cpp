@@ -372,7 +372,7 @@ const char * player_ip(int cn)
     return get_ci(cn)->hostname();
 }
 
-int player_iplong(int cn)
+unsigned long player_iplong(int cn)
 {
     return getclientip(get_ci(cn)->clientnum);
 }
