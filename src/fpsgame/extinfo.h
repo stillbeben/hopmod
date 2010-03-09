@@ -9,6 +9,8 @@
 #define EXT_PLAYERSTATS                 1
 #define EXT_TEAMSCORE                   2
 
+#define EXT_HOPMOD						200 // Case to identify Hopmod based servers
+
 /*
     Client:
     -----
@@ -110,6 +112,12 @@
                 putint(p, uint(totalmillis)/1000); //in seconds
                 break;
             }
+			
+			case EXT_HOPMOD:
+            {
+                putint(p, 1); 
+                break;
+            }	
 
             case EXT_PLAYERSTATS:
             {

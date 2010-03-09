@@ -2290,6 +2290,9 @@ namespace server
                 if(m_demo) setupdemoplayback();
                 
                 signal_connect(ci->clientnum);
+				
+				sendf(ci->clientnum, 200/* we are sending our signal on the channel 200, so we are not coliding with the main data-channels */,
+					"i2", 1, 1);
                 
                 if(give_admin_priv) set_player_private_admin(ci->clientnum);
             }
