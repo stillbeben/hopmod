@@ -133,6 +133,12 @@ arguments::value_type arguments::serialize(bool value)
     return 1;
 }
 
+arguments::value_type arguments::serialize(unsigned long value)
+{
+    lua_pushnumber(m_stack, static_cast<lua_Number>(value));
+    return 1;
+}
+
 arguments::value_type arguments::get_void_value()
 {
     return 0;

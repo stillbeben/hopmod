@@ -49,6 +49,7 @@ public:
     int deserialize(value_type arg,type_tag<int>);
     unsigned int deserialize(value_type arg, type_tag<unsigned int>);
     unsigned short deserialize(value_type arg, type_tag<unsigned short>);
+    unsigned long deserialize(value_type arg, type_tag<unsigned long>);
     const char * deserialize(value_type arg, type_tag<const char *>);
     std::string deserialize(value_type arg, type_tag<std::string>);
     
@@ -62,6 +63,7 @@ public:
     value_type serialize(const char * str);
     value_type serialize(const std::string & str);
     value_type serialize(int n);
+    value_type serialize(unsigned long);
     value_type serialize(bool);
     
     template<typename T>
