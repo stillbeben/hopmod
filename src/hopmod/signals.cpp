@@ -18,6 +18,7 @@ boost::signal<void (int)> signal_shutdown;
 boost::signal<void ()> signal_shutdown_scripting;
 boost::signal<void ()> signal_reloadhopmod;
 
+boost::signal<int (const char *, const char *), proceed> signal_connecting;
 boost::signal<void (int)> signal_connect;
 boost::signal<void (int,const char *)> signal_disconnect;
 boost::signal<void (const char *,const char *)> signal_failedconnect;
@@ -305,6 +306,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_reloadhopmod, "reloadhopmod", normal_error_handler);
     slots.register_signal(signal_maintenance, "maintenance", normal_error_handler);
     
+    slots.register_signal(signal_connecting, "connecting", normal_error_handler);
     slots.register_signal(signal_connect,"connect",normal_error_handler);
     slots.register_signal(signal_disconnect,"disconnect",normal_error_handler);
     slots.register_signal(signal_failedconnect, "failedconnect",normal_error_handler);
@@ -372,6 +374,7 @@ void disconnect_all_slots()
     signal_reloadhopmod.disconnect_all_slots();
     signal_maintenance.disconnect_all_slots();
     
+    signal_connecting.disconnect_all_slots();
     signal_connect.disconnect_all_slots();
     signal_disconnect.disconnect_all_slots();
     signal_failedconnect.disconnect_all_slots();
