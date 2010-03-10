@@ -4,7 +4,7 @@
 
 
 local fhandle = io.open("conf/name_bans.txt")
-local banned_names = string.split(fhandle:read("*a"), "[^\n]+")
+local banned_names = string.split(fhandle:read("*a"), "[^ ]+")
 fhandle:close()
 
 local function is_banned_name(name)
