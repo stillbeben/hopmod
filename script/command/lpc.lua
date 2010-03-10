@@ -11,7 +11,7 @@ return function(cn)
 
 	for p in server.aplayers() do
 
-		server.player_msg(cn, "Player: " .. green(p:displayname()) .. " Country: " ..  orange(server.ip_to_country(p:ip())))
+		server.player_msg(cn, "Player: " .. green(p:displayname()) .. " Country: " ..  orange(geoip.ip_to_country(p:ip())))
 	end
 
 end
