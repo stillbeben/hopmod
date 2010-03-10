@@ -2030,7 +2030,6 @@ namespace server
         const char * disc_reason_msg = "normal";
         if(reason != DISC_NONE || ci->disconnect_reason.length())
         {
-            asm("int $3");
             disc_reason_msg = (ci->disconnect_reason.length() ? ci->disconnect_reason.c_str() : disconnect_reason(reason));
             defformatstring(discmsg)("client (%s) disconnected because: %s\n", ci->hostname(), disc_reason_msg);
             printf("%s",discmsg);
