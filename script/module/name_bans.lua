@@ -7,7 +7,7 @@ local fhandle = io.open("conf/name_bans.txt")
 local banned_names = string.split(fhandle:read("*a"), "[^\n]+")
 fhandle:close()
 
-function is_banned_name(name)
+local function is_banned_name(name)
 	local name = string.upper(name)
 	for i, ban_name in ipairs(banned_names) do
 		local ban_name = string.upper(ban_name)
