@@ -11,7 +11,11 @@
 
 #include <fungu/script/error.hpp>
 #include <fungu/script/lexical_cast.hpp>
+
 #include <boost/lexical_cast.hpp>
+#include <boost/asio.hpp>
+#include <boost/bind.hpp>
+boost::asio::io_service & get_main_io_service();
 
 #include <iostream>
 #include <signal.h>

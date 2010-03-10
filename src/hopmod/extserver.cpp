@@ -786,37 +786,32 @@ bool unsetban(const char * addrstr)
     return bans.remove(addr);
 }
 
-static int execute_addbot(void * arg)
+static void execute_addbot(int skill)
 {
-    int skill = reinterpret_cast<int>(arg);
     clientinfo * owner = aiman::addai(skill, -1);
-    if(!owner) return 0;
+    if(!owner) return;
     signal_addbot(-1, skill, owner->clientnum);
-    return 0;
+    return;
 }
 
 void addbot(int skill)
 {
-    //TODO static assert sizeof void * >= int
-    sched_callback(&execute_addbot, reinterpret_cast<void *>(skill));
+    get_main_io_service().post(boost::bind(&execute_addbot, skill));
 }
 
-static int execute_deletebot(void * arg)
+static void execute_deletebot(int cn)
 {
-    int cn = reinterpret_cast<int>(arg);
     clientinfo * ci = getinfo(cn);
-    if(!ci) return 0;
-    if(ci->state.aitype == AI_NONE) 
-        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("not a bot player")));
+    if(!ci) return;
     aiman::deleteai(ci);
-    return 0;
+    return;
 }
 
 void deletebot(int cn)
 {
-    //TODO static assert sizeof void * >= int
-    get_ci(cn);
-    sched_callback(&execute_deletebot, reinterpret_cast<void *>(cn));
+    if(get_ci(cn)->state.aitype == AI_NONE) 
+        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("not a bot player")));
+    get_main_io_service().post(boost::bind(&execute_deletebot, cn));
 }
 
 void enable_master_auth(bool enable)
