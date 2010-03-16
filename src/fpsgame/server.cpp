@@ -1019,6 +1019,8 @@ namespace server
 
     void setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL)
     {
+        if (!authname && signal_setmaster(ci->clientnum, pass/*hash*/) == -1) return;  
+        
         update_mastermask();
         
         //FIXME this should really be an assertion check
