@@ -150,3 +150,7 @@ function server.eval_lua(str)
     if not func then error(err) end
     return func()
 end
+
+function server.hashpassword(cn, pass)
+	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), pass))
+end
