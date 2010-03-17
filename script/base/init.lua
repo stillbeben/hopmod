@@ -21,6 +21,7 @@ server.module("base/mapvote")
 server.module("base/register_server")
 server.module("base/web/init")
 server.module("base/teamkills")
+server.module("base/setmaster")
 
 local function update_gamemodeinfo()
     gamemodeinfo = server.gengamemodeinfo()
