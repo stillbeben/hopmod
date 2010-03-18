@@ -2715,14 +2715,18 @@ namespace server
             }
 
             case SV_PING:
+	    {
                 if(!ci->maploaded && totalmillis - ci->connectmillis > 2000)
                 {
                     ci->maploaded = true;
                     signal_maploaded(ci->clientnum);
                 }
                 if(ci) ci->lastpingupdate = totalmillis; 
-                sendf(sender, 1, "i2", SV_PONG, getint(p));
+		int client_time = getint(p);
+		signal_pong(ci->clientnum, client_time);
+                sendf(sender, 1, "i2", SV_PONG, client_time);
                 break;
+            }
 
             case SV_CLIENTPING:
             {
