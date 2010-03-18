@@ -6,7 +6,6 @@ add_subdirectory(lua-sqlite3)
 add_subdirectory(authserver EXCLUDE_FROM_ALL)
 add_subdirectory(luasql EXCLUDE_FROM_ALL)
 
-include(PCHSupport)
 include(CheckLibraryExists)
 
 check_library_exists(GeoIP GeoIP_open "" GEOIP_EXISTS)
@@ -81,8 +80,6 @@ SET(SAUER_SERVER_SOURCES
 
 add_executable(sauer_server ${SAUER_SERVER_SOURCES})
 target_link_libraries(sauer_server sauertools serverscripting scriptpipe enet fungu_http -lz -lrt)
-
-add_precompiled_header(sauer_server ${CMAKE_CURRENT_SOURCE_DIR}/hopmod/pch.h)
 
 add_executable(keygen hopmod/keygen.cpp)
 target_link_libraries(keygen sauertools -lz)
