@@ -19,7 +19,4 @@ include_directories(
 
 add_library(fungu_script STATIC ${SOURCES})
 
-include(PCHSupport)
-add_precompiled_header(fungu_script ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
-
 target_link_libraries(fungu_script fungu_string lua)
