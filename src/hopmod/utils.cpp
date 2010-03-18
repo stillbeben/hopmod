@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 in_addr to_in_addr(in_addr_t x)
 {
