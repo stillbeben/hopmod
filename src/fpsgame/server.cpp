@@ -2087,6 +2087,11 @@ namespace server
         if(!m_mp(gamemode)) return DISC_PRIVATE;
         int clientcount = numclients(-1, false, true);
         
+        if(signal_connecting(ci->clientnum, ci->hostname(), ci->name, pwd) == -1)
+        {
+            return DISC_IPBAN;
+        }
+        
         if(masterpass[0] && checkpassword(ci, masterpass, pwd) && reservedslots > 0) 
         {
             if(clientcount >= maxclients)
@@ -2114,11 +2119,6 @@ namespace server
         if(bans.is_banned(netmask(ip))) return DISC_IPBAN;
         
         if(mastermode>=MM_PRIVATE && allowedips.find(ip)<0) return DISC_PRIVATE;
-        
-        if(signal_connecting(ci->hostname(), ci->name) == -1)
-        {
-            return DISC_IPBAN;
-        }
         
         return DISC_NONE;
     }
