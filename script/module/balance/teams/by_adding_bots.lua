@@ -33,12 +33,6 @@ local function addbots(num)
     if num == 0 then return end
     
     for x = 1, num do server.addbot(-1) end
-    
-    if num == 1 then
-        server.msg("The server has added a random skilled bot to balance the teams.")
-    else
-        server.msg(string.format("The server has added %s random skilled bots to balance the teams.", orange(num)))
-    end
 end
 
 local function delbots(num)
