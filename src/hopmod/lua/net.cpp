@@ -9,6 +9,7 @@
 using namespace boost::asio;
 #include "buffered_socket.hpp"
 #include "../netmask.hpp"
+#include "../net/prefix_tree.hpp"
 #include <boost/bind/protect.hpp>
 
 extern "C"{
@@ -1522,113 +1523,6 @@ int create_local_client(lua_State * L)
     return 1;
 }
 
-class netmask_wrapper:public netmask
-{
-public:
-    static const char * MT;
-    
-    netmask_wrapper(const netmask & src):netmask(src){}
-    
-    static void register_class(lua_State * L)
-    {
-        luaL_newmetatable(L, MT);
-        
-        lua_pushvalue(L, -1);
-        lua_setfield(L, -1, "__index");
-        
-        static luaL_Reg funcs[] = {
-            {"__gc", &netmask_wrapper::__gc},
-            {"__tostring", &netmask_wrapper::__tostring},
-            {"__eq", &netmask_wrapper::__eq},
-            {"__lt", &netmask_wrapper::__lt},
-            {"__le", &netmask_wrapper::__le},
-            {"to_string", &netmask_wrapper::__tostring},
-            {NULL, NULL}
-        };
-        
-        luaL_register(L, NULL, funcs);
-    }
-    
-    static int create_object(lua_State * L)
-    {
-        netmask tmp;
-        int argc = lua_gettop(L);
-        if(argc == 0) luaL_error(L, "missing argument");
-        
-        
-        if(lua_type(L, 1) == LUA_TSTRING)
-        {
-            try
-            {
-                tmp = netmask::make(lua_tostring(L, 1));
-            }
-            catch(std::bad_cast)
-            {
-                return luaL_error(L, "invalid ip mask");
-            }
-        }
-        else if(lua_type(L, 1) == LUA_TNUMBER)
-        {
-            unsigned long prefix = static_cast<unsigned long>(lua_tointeger(L, 1));
-            int bits = 32;
-            
-            if(argc > 1 && lua_isnumber(L, 2)) 
-            {
-                bits = lua_tointeger(L, 2);
-                if(bits < 1 || bits > 32) luaL_argerror(L, 2, "invalid value");
-            }
-            
-            tmp = netmask(prefix, bits);
-        }
-        
-        new (lua_newuserdata(L, sizeof(netmask_wrapper))) netmask_wrapper(tmp);
-        luaL_getmetatable(L, MT);
-        lua_setmetatable(L, -2);
-        return 1;
-    }
-    
-private:
-    static int __gc(lua_State * L)
-    {
-        reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 1, MT))->~netmask_wrapper();
-        return 0;
-    }
-    
-    static int __tostring(lua_State * L)
-    {
-        netmask_wrapper * obj = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 1, MT));
-        std::string ipmaskstring = obj->to_string();
-        lua_pushlstring(L, ipmaskstring.c_str(), ipmaskstring.length());
-        return 1;
-    }
-    
-    static int __eq(lua_State * L)
-    {
-        netmask_wrapper * op1 = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 1, MT));
-        netmask_wrapper * op2 = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 2, MT));
-        lua_pushboolean(L, *op1 == *op2);
-        return 1;
-    }
-    
-    static int __lt(lua_State * L)
-    {
-        netmask_wrapper * op1 = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 1, MT));
-        netmask_wrapper * op2 = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 2, MT));
-        lua_pushboolean(L, *op1 < *op2);
-        return 1;
-    }
-    
-    static int __le(lua_State * L)
-    {
-        netmask_wrapper * op1 = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 1, MT));
-        netmask_wrapper * op2 = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 2, MT));
-        lua_pushboolean(L, *op1 <= *op2);
-        return 1;
-    }
-};
-
-const char * netmask_wrapper::MT = "netmask";
-
 class netmask_table
 {
 public:
@@ -1665,24 +1559,38 @@ private:
     static int __index(lua_State * L)
     {
         netmask_table * table = reinterpret_cast<netmask_table *>(luaL_checkudata(L, 1, MT));
-        netmask_wrapper * aNetmask = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 2, netmask_wrapper::MT));
-        std::map<netmask, int>::iterator it = table->m_masks.find(*aNetmask);
-        if(it == table->m_masks.end()) return 0;
-        lua_rawgeti(L, LUA_REGISTRYINDEX, it->second);
+        hopmod::ip::address_prefix ipmask = hopmod::ip::address_prefix::parse(luaL_checkstring(L, 2));
+        
+        lua_newtable(L);        
+        int i = 1;
+        
+        hopmod::ip::address_prefix_tree<int, -1> * child = &table->m_masks;
+        while((child = child->next_match(&ipmask)))
+        {
+            lua_pushinteger(L, i++);
+            lua_rawgeti(L, LUA_REGISTRYINDEX, child->value());
+            lua_settable(L, -3);
+        }
+        
         return 1;
     }
     
     static int __newindex(lua_State * L)
     {
         netmask_table * table = reinterpret_cast<netmask_table *>(luaL_checkudata(L, 1, MT));
-        netmask_wrapper * aNetmask = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 2, netmask_wrapper::MT));
-        while(table->m_masks.erase(*aNetmask));
-        lua_pushvalue(L, 3);
-        table->m_masks[*aNetmask] = luaL_ref(L, LUA_REGISTRYINDEX);
+        const char * ipmask = luaL_checkstring(L, 2);
+        
+        if(lua_type(L, 3) != LUA_TNIL)
+        {
+            lua_pushvalue(L, 3);
+            table->m_masks.insert(hopmod::ip::address_prefix::parse(ipmask), luaL_ref(L, LUA_REGISTRYINDEX));
+        }
+        else table->m_masks.erase(hopmod::ip::address_prefix::parse(ipmask));
+        
         return 0;
     }
     
-    std::map<netmask, int> m_masks;
+    hopmod::ip::address_prefix_tree<int, -1> m_masks;
 };
 
 const char * netmask_table::MT = "netmask_table";
@@ -1715,7 +1623,6 @@ void open_net(lua_State * L)
         {"local_acceptor", create_local_acceptor},
         {"local_client", create_local_client},
         {"buffer", create_buffer},
-        {"ipmask", netmask_wrapper::create_object},
         {"ipmask_table", netmask_table::create_object},
         {NULL, NULL}
     };

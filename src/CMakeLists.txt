@@ -37,7 +37,10 @@ set(SAUERTOOLS_SOURCES
     shared/tools.cpp
     shared/stream.cpp
     shared/crypto.cpp
-    hopmod/netmask.cpp)
+    hopmod/netmask.cpp
+    hopmod/net/address.cpp
+    hopmod/net/address_mask.cpp
+    hopmod/net/address_prefix.cpp)
 
 add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 
