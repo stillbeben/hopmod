@@ -93,6 +93,27 @@ address_mask address_prefix::mask()const
     return m_mask;
 }
 
+void address_prefix::to_string(cstring_buffer * output)const
+{
+    address::cstring_buffer ip;
+    m_addr_prefix.to_string(&ip);
+    
+    char mask[4];
+    mask[0] = '\0';
+    
+    std::size_t bits = m_mask.bits();
+    if(bits < 32) sprintf(mask, "/%i", bits);
+    
+    sprintf(*output, "%s%s", ip, mask);
+}
+
+std::string address_prefix::to_string()const
+{
+    cstring_buffer buffer;
+    to_string(&buffer);
+    return buffer;
+}
+
 address_prefix address_prefix::common_prefix(const address_prefix & first, const address_prefix & second)
 {
     int n = std::min(first.m_mask.bits(), second.m_mask.bits());
@@ -120,6 +141,12 @@ address_prefix & address_prefix::operator<<=(address_mask mask)
     m_addr_prefix = m_addr_prefix << mask.bits();
     m_mask = m_mask << mask.bits();
     return *this;
+}
+
+bool address_prefix::operator==(const address_prefix & x)const
+{
+    address::integral_type mask = std::min(x.mask().value(), m_mask.value());
+    return (m_addr_prefix.value() & mask) == (x.m_addr_prefix.value() & mask);
 }
 
 } //namespace ip

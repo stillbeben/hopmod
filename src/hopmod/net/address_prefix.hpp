@@ -28,6 +28,7 @@ public:
     address_prefix common_prefix(const address_prefix &)const;
     
     address_prefix & operator<<=(address_mask);
+    bool operator==(const address_prefix &)const;
 private:
     address m_addr_prefix;
     address_mask m_mask;
