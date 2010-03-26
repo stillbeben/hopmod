@@ -34,7 +34,7 @@ address::integral_type address::value()const
 
 void address::to_string(cstring_buffer * output)const
 {
-    sprintf(*output, "%i.%i.%i.%i", m_value_part[0], m_value_part[1], m_value_part[2], m_value_part[3]);
+    sprintf(*output, "%i.%i.%i.%i", m_value_part[3], m_value_part[2], m_value_part[1], m_value_part[0]);
 }
 
 std::string address::to_string()const
