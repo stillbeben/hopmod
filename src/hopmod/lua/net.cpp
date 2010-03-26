@@ -1578,6 +1578,11 @@ public:
             
             tmp = hopmod::ip::address_prefix(hopmod::ip::address(prefix), bits);
         }
+        else
+        {
+            netmask_wrapper * src = reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 1, MT));
+            tmp = *src;
+        }
         
         new (lua_newuserdata(L, sizeof(netmask_wrapper))) netmask_wrapper(tmp);
         luaL_getmetatable(L, MT);
