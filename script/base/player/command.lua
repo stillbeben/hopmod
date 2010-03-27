@@ -85,7 +85,7 @@ local function create_command(name)
 end
 
 local function parse_command_list(commandlist)
-    return commandlist:split("[^ \n\t]+")
+    return commandlist:split("[^ \r\n\t]+")
 end
 
 local function set_commands(commandlist, fields)
