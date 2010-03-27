@@ -85,7 +85,7 @@ local function create_command(name)
 end
 
 local function parse_command_list(commandlist)
-    return commandlist:split("[^ \n\t]+")
+    return commandlist:split("[^ \r\n\t]+")
 end
 
 local function set_commands(commandlist, fields)
@@ -102,7 +102,7 @@ end
 
 local function foreach_command(commandlist, fun)
 
-    for i, cmdname in pairs(parse_command_list(commandlist)) do
+    for _, cmdname in ipairs(parse_command_list(commandlist)) do
         local command = player_commands[cmdname] or create_command(cmdname)
         fun(command)
     end
