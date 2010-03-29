@@ -10,6 +10,15 @@ function table_count(tt, item)
     return count
 end
 
+function empty(table)
+    local isEmpty = true
+    for _ in pairs(table) do 
+        isEmpty = false 
+        return
+    end
+    return isEmpty
+end
+
 -- Copied from http://lua-users.org/wiki/TableUtils
 -- Remove duplicates from a table array (doesn't currently work
 -- on key-value tables)
@@ -88,4 +97,17 @@ function validate_table(subject_table, schema)
             end
         end
     end
+end
+
+function read_only(table)
+    local proxy = {}
+    setmetatable(proxy, {
+        __index = function(_, key)
+            return table[key]
+        end,
+        __newindex = function()
+            error("read-only")
+        end
+    })
+    return proxy
 end
