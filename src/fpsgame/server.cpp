@@ -2722,8 +2722,8 @@ namespace server
                     signal_maploaded(ci->clientnum);
                 }
                 if(ci) ci->lastpingupdate = totalmillis; 
-		int client_time = getint(p);
-		signal_pong(ci->clientnum, client_time);
+                int client_time = getint(p);
+                signal_pingpong(ci->clientnum, client_time);
                 sendf(sender, 1, "i2", SV_PONG, client_time);
                 break;
             }

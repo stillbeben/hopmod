@@ -62,7 +62,7 @@ boost::signal<void ()> signal_maintenance;
 boost::signal<void (int)> signal_spawn;
 boost::signal<int (int,int,int,int), proceed> signal_damage;
 boost::signal<int (int,const char*), proceed> signal_setmaster;
-boost::signal<int (int,int), proceed> signal_pong;
+boost::signal<int (int,int), proceed> signal_pingpong;
 
 static void destroy_slot(int handle);
 namespace lua{
@@ -351,7 +351,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_spawn, "spawn", normal_error_handler);
     slots.register_signal(signal_damage, "damage", normal_error_handler);
     slots.register_signal(signal_setmaster, "setmaster", normal_error_handler);
-    slots.register_signal(signal_pong, "pong", normal_error_handler);
+    slots.register_signal(signal_pingpong, "ping/pong", normal_error_handler);
    
     script::bind_freefunc(cubescript::register_event_handler, "event_handler", env);
     script::bind_freefunc(destroy_slot, "cancel_handler", env);
