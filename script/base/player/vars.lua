@@ -1,7 +1,7 @@
 require "Json"
 require "net"
 
-local VARS_FILE = "log/player_vars"
+local VARS_FILE = "log/vars"
 local MINIMUM_UPDATE_INTERVAL = 1000 * 60 * 60
 
 local variablesByIp = {}
@@ -15,13 +15,20 @@ local function checkValue(value)
 end
 
 local function saveVars()
-
-    local file = io.open(VARS_FILE, "w")
+    
+    local tmpfilename = VARS_FILE .. os.time()
+    
+    local file = io.open(tmpfilename, "w")
     if not file then
         server.log_error("Unable to save player vars")
     end
     file:write(Json.Encode(variablesByIp))
     file:close()
+    
+    os.remove(VARS_FILE .. ".bck")
+    os.rename(VARS_FILE, VARS_FILE .. ".bck")
+    os.remove(VARS_FILE)
+    os.rename(tmpfilename, VARS_FILE)
 end
 
 local function loadVars()
@@ -32,7 +39,11 @@ local function loadVars()
     file:close()
     
     for key, value in pairs(variablesByIp) do
-        variablesByIpIndex[key] = value
+        if not empty(value) then
+            variablesByIpIndex[key] = value
+        else
+            variablesByIp[key] = nil
+        end
     end
 end
 
@@ -45,8 +56,12 @@ end
 
 function server.set_ip_var(ipmask, name, value)
     
+    ipmask = net.ipmask(ipmask)
+    
     local matches = variablesByIpIndex[ipmask]
     local vars = matches[#matches]
+    
+    ipmask = ipmask:to_string()
     
     if not vars then
         vars = {}
@@ -64,6 +79,22 @@ function server.set_ip_var(ipmask, name, value)
     end
 end
 
+function server.ip_vars(ipmask)
+
+    if not ipmask then
+        return variablesByIpIndex
+    end
+    
+    local matches = variablesByIpIndex[ipmask]
+    local vars = {}
+    for _, match in ipairs(matches) do
+        for key, value in pairs(match) do
+            vars[key] = value
+        end
+    end
+    return vars
+end
+
 server.event_handler("connect", function(cn)
 
     local id = server.player_id(cn)
@@ -73,7 +104,7 @@ server.event_handler("connect", function(cn)
     local vars = variablesById[id]
     for _, match in ipairs(matches) do
         for key, value in pairs(match) do
-            vars[key] = vars[key] or value
+            vars[key] = value
         end
     end
 end)
