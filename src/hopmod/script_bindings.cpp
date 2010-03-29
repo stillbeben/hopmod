@@ -15,18 +15,12 @@ using namespace fungu;
 void start_http_server(const char * ip, const char * port);
 void stop_http_server();
 
-static std::vector<script::any> player_kick_defargs;
 static std::vector<script::any> changemap_defargs;
 static std::vector<script::any> recorddemo_defargs;
 extern bool reloaded; //startup.cpp
 
 static void setup_default_arguments()
-{
-    player_kick_defargs.clear();
-    player_kick_defargs.push_back(14400);
-    player_kick_defargs.push_back(std::string("server"));
-    player_kick_defargs.push_back(std::string(""));
-    
+{    
     changemap_defargs.clear();
     changemap_defargs.push_back(static_cast<const char *>(""));
     changemap_defargs.push_back(-1);
@@ -42,7 +36,6 @@ void register_server_script_bindings(script::env & env)
     // Player-oriented functions
     script::bind_freefunc(server::player_msg, "player_msg", env);
     script::bind_freefunc(process_player_command, "process_player_command", env);
-    script::bind_freefunc(server::kick, "kick", env, &player_kick_defargs);
     script::bind_const((int)DISC_NONE, "DISC_NONE", env);
     script::bind_const((int)DISC_EOP, "DISC_EOP", env);
     script::bind_const((int)DISC_CN, "DISC_CN", env);
@@ -55,7 +48,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_const((int)DISC_OVERFLOW, "DISC_OVERFLOW", env);
     script::bind_const((int)DISC_NUM, "DISC_NUM", env);
     script::bind_freefunc(server::disconnect, "disconnect", env);
-    script::bind_var(server::kick_bannedip_group, "kick_bannedip_group", env);
     script::bind_freefunc(server::player_name, "player_name", env);
     script::bind_freefunc(server::player_rename, "player_rename", env);
     script::bind_freefunc(server::player_displayname, "player_displayname", env);
@@ -154,10 +146,6 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(restart_now, "restart_now", env);
     script::bind_freefunc(server::changetime, "changetime", env);
     script::bind_freefunc(server::changemap,"changemap", env, &changemap_defargs);
-    script::bind_freefunc(server::addpermban, "permban", env);
-    script::bind_freefunc(server::unsetban, "unsetban", env);
-    script::bind_freefunc(server::clearbans, "clearbans", env);
-    script::bind_freefunc(server::get_bans, "bans", env);
     script::bind_freefunc(server::addbot, "addbot", env);
     script::bind_freefunc(server::deletebot, "delbot", env);
     script::bind_freefunc(server::recorddemo, "recorddemo", env, &recorddemo_defargs);

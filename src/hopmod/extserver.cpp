@@ -13,8 +13,6 @@ int sv_remip_hit_length = 0;
 int sv_newmap_hit_length = 0;
 int sv_spec_hit_length = 0;
 
-bool kick_bannedip_group = true;
-
 struct restore_state_header
 {
     int gamemode;
@@ -164,78 +162,6 @@ void restore_server(const char * filename)
     unlink(filename);
 }
 
-struct kickinfo
-{
-    int cn;
-    int sessionid;
-    int time; //seconds
-    std::string admin;
-    std::string reason;
-};
-
-static int execute_kick(void * vinfoptr)
-{
-    kickinfo * info = (kickinfo *)vinfoptr;
-    clientinfo * ci = (clientinfo *)getinfo(info->cn);
-    
-    if(!ci || ci->sessionid != info->sessionid)
-    {
-        delete info;
-        return 0;
-    }
-    
-    std::string full_reason;
-    if(info->reason.length())
-    {
-        full_reason = (info->time == 0 ? "kicked for " : "kicked and banned for ");
-        full_reason += info->reason;
-    }
-    ci->disconnect_reason = full_reason;
-    
-    uint ip = getclientip(ci->clientnum);
-    
-    allowedips.removeobj(ip);
-    
-    bans.add(netmask(ip), info->time);
-    
-    signal_kick(info->cn, info->time, info->admin, info->reason);
-    
-    disconnect_client(info->cn, DISC_KICK);
-    
-    if(kick_bannedip_group && info->time > 0)
-    {
-        loopv(clients)
-        {
-            if(getclientip(clients[i]->clientnum) == ip) 
-                kick(clients[i]->clientnum, 0, info->admin, "banned ip"); 
-        }
-    }
-    
-    delete info;
-    
-    return 0;
-}
-
-void kick(int cn,int time,const std::string & admin,const std::string & reason)
-{
-    clientinfo * ci = get_ci(cn);
-    
-    if(ci->state.aitype != AI_NONE)
-    {
-        aiman::deleteai(ci);
-        return;
-    }
-    
-    kickinfo * info = new kickinfo;
-    info->cn = cn;
-    info->sessionid = ci->sessionid;
-    info->time = time;
-    info->admin = admin;
-    info->reason = reason;
-    
-    sched_callback(&execute_kick, info);
-}
-
 struct disconnect_info
 {
     int cn;
@@ -266,11 +192,6 @@ void changetime(int remaining)
 {
     gamelimit = gamemillis + remaining;
     if(!gamepaused) checkintermission();
-}
-
-void clearbans()
-{
-    bans.clear_temporary_bans();
 }
 
 void player_msg(int cn,const char * text)
@@ -374,7 +295,7 @@ const char * player_ip(int cn)
 
 unsigned long player_iplong(int cn)
 {
-    return getclientip(get_ci(cn)->clientnum);
+    return ntohl(getclientip(get_ci(cn)->clientnum));
 }
 
 int player_status_code(int cn)
@@ -770,22 +691,6 @@ void player_unfreeze(int cn)
     sendf(ci->clientnum, 1, "rii", SV_PAUSEGAME, 0);
 }
 
-void addpermban(const char * addrstr)
-{
-    netmask addr;
-    try{addr = netmask::make(addrstr);}
-    catch(std::bad_cast){throw fungu::script::error(fungu::script::BAD_CAST);}
-    bans.add(addr);
-}
-
-bool unsetban(const char * addrstr)
-{
-    netmask addr;
-    try{addr = netmask::make(addrstr);}
-    catch(std::bad_cast){throw fungu::script::error(fungu::script::BAD_CAST);}
-    return bans.remove(addr);
-}
-
 static void execute_addbot(int skill)
 {
     clientinfo * owner = aiman::addai(skill, -1);
@@ -1125,19 +1030,6 @@ void suicide(int cn)
 bool compare_admin_password(const char * x)
 {
     return !strcmp(x, adminpass);
-}
-
-std::vector<std::string> get_bans()
-{
-    std::vector<netmask> allbans = bans.bans();
-    
-    std::vector<std::string> result;
-    result.reserve(allbans.size());
-    
-    for(std::vector<netmask>::const_iterator it = allbans.begin(); it != allbans.end(); it++)
-        result.push_back(it->to_string());
-    
-    return result;
 }
 
 void enable_setmaster_autoapprove(bool enable)

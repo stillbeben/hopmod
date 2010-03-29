@@ -456,7 +456,6 @@ namespace server
     stream *mapdata = NULL;
     
     vector<uint> allowedips;
-    ban_manager bans;
     
     vector<clientinfo *> connects, clients, bots;
     vector<worldstate *> worldstates;
@@ -614,8 +613,6 @@ namespace server
         resetitems();
         
         init_hopmod();
-        
-        bans.update(totalmillis);
     }
     
     int numclients(int exclude = -1, bool nospec = true, bool noai = true)
@@ -1992,7 +1989,7 @@ namespace server
 
     void noclients()
     {
-        clearbans();
+        signal_clearbans_request();
         aiman::clearai();
     }
     
@@ -2122,8 +2119,8 @@ namespace server
         
         uint ip = getclientip(ci->clientnum);
         
-        bans.update(totalmillis); //needed for some obscure case (cant remember why), TODO check why this is needed
-        if(bans.is_banned(netmask(ip))) return DISC_IPBAN;
+        //bans.update(totalmillis); //needed for some obscure case (cant remember why), TODO check why this is needed
+        //if(bans.is_banned(netmask(ip))) return DISC_IPBAN;
         
         if(mastermode>=MM_PRIVATE && allowedips.find(ip)<0) return DISC_PRIVATE;
         
@@ -2580,10 +2577,9 @@ namespace server
                 if(!text[0]) copystring(text, "unnamed");
                 if(strcmp(ci->name,text)!=0)
                 {
-                    // Unable to block rename so only good option is to kick the player.
                     if(ci->check_flooding(ci->sv_switchname_hit, "switching name", false))
                     {
-                        kick(ci->clientnum, 60, "server", "renaming too quickly");
+                        //kick(ci->clientnum, 60, "server", "renaming too quickly");
                         return;
                     }
                     
@@ -2772,25 +2768,17 @@ namespace server
 
             case SV_CLEARBANS:
             {
-                if(ci->privilege || ci->local)
-                {
-                    clearbans();
-                    sendservmsg("cleared all bans");
-                }
+                if(ci->privilege) signal_clearbans_request();
                 break;
             }
 
             case SV_KICK:
             {
                 int victim = getint(p);
-                if((ci->privilege || ci->local) && ci->clientnum!=victim && getclientinfo(victim)) // no bots
+                if(ci->privilege && ci->clientnum != victim && getclientinfo(victim))
                 {
                     if(ci->privilege < PRIV_ADMIN && ci->check_flooding(ci->sv_kick_hit, "kicking")) break;
-                    
-                    clientinfo * victim_info = (clientinfo *)getinfo(victim);
-                    if(victim_info->privilege && ci->privilege < PRIV_ADMIN)
-                        ci->sendprivtext(RED "You cannot kick that player because they have an above normal privilege.");
-                    else kick(victim, 14400, ci->name,"");
+                    signal_kick_request(ci->clientnum, ci->name, 14400, victim, "");
                 }
                 break;
             }

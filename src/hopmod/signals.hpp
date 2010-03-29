@@ -49,7 +49,6 @@ extern boost::signal<void (int,int)>                                signal_renam
 extern boost::signal<void (int,const char *,const char *)>          signal_rename;
 extern boost::signal<void (int,const char *,const char *)>          signal_reteam;
 extern boost::signal<int (int,const char *,const char *),proceed>   signal_chteamrequest;
-extern boost::signal<void (int,int,std::string,std::string)>        signal_kick;
 extern boost::signal<int (int,const char *), proceed>               signal_text;
 extern boost::signal<int (int,const char *), proceed>               signal_sayteam;
 extern boost::signal<int (int,const char *,const char *), proceed>  signal_mapvote;
@@ -71,6 +70,10 @@ extern boost::signal<void (int)>                                    signal_spawn
 extern boost::signal<int (int, int, int, int), proceed>             signal_damage;
 extern boost::signal<int (int,const char*), proceed>                signal_setmaster;
 extern boost::signal<int (int,int), proceed>                        signal_pingpong;
+
+// Command Requests
+extern boost::signal<void ()>                                           signal_clearbans_request;
+extern boost::signal<void (int, const char *, int, int, const char *)>  signal_kick_request;
 
 // Game Events
 extern boost::signal<void ()>                                       signal_intermission;

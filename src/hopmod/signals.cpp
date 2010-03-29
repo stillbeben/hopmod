@@ -27,7 +27,6 @@ boost::signal<void (int,const char *,const char *)> signal_rename;
 boost::signal<void (int,int)> signal_renaming;
 boost::signal<void (int,const char *,const char *)> signal_reteam;
 boost::signal<int (int,const char *,const char *), proceed> signal_chteamrequest;
-boost::signal<void (int,int,std::string,std::string)> signal_kick;
 boost::signal<int (int,const char *), proceed> signal_text;
 boost::signal<int (int,const char *), proceed> signal_sayteam;
 boost::signal<void ()> signal_intermission;
@@ -63,6 +62,8 @@ boost::signal<void (int)> signal_spawn;
 boost::signal<int (int,int,int,int), proceed> signal_damage;
 boost::signal<int (int,const char*), proceed> signal_setmaster;
 boost::signal<int (int,int), proceed> signal_pingpong;
+boost::signal<void ()> signal_clearbans_request;
+boost::signal<void (int, const char *, int, int, const char *)> signal_kick_request;
 
 static void destroy_slot(int handle);
 namespace lua{
@@ -317,7 +318,6 @@ void register_signals(script::env & env)
     slots.register_signal(signal_renaming, "renaming", normal_error_handler);
     slots.register_signal(signal_reteam, "reteam", normal_error_handler);
     slots.register_signal(signal_chteamrequest, "chteamrequest", proceed_error_handler);
-    slots.register_signal(signal_kick,"kick",normal_error_handler);
     slots.register_signal(signal_text,"text",proceed_error_handler);
     slots.register_signal(signal_sayteam,"sayteam",proceed_error_handler);
     slots.register_signal(signal_intermission,"intermission", normal_error_handler);
@@ -353,6 +353,9 @@ void register_signals(script::env & env)
     slots.register_signal(signal_setmaster, "setmaster", normal_error_handler);
     slots.register_signal(signal_pingpong, "ping/pong", normal_error_handler);
    
+    slots.register_signal(signal_clearbans_request, "clearbans_request", normal_error_handler);
+    slots.register_signal(signal_kick_request, "kick_request", normal_error_handler);
+    
     script::bind_freefunc(cubescript::register_event_handler, "event_handler", env);
     script::bind_freefunc(destroy_slot, "cancel_handler", env);
     
@@ -387,7 +390,6 @@ void disconnect_all_slots()
     signal_renaming.disconnect_all_slots();
     signal_reteam.disconnect_all_slots();
     signal_chteamrequest.disconnect_all_slots();
-    signal_kick.disconnect_all_slots();
     signal_text.disconnect_all_slots();
     signal_sayteam.disconnect_all_slots();
     signal_intermission.disconnect_all_slots();
@@ -420,4 +422,7 @@ void disconnect_all_slots()
     signal_returnflag.disconnect_all_slots();
     signal_spawn.disconnect_all_slots();
     signal_damage.disconnect_all_slots();
+    
+    signal_kick_request.disconnect_all_slots();
+    signal_clearbans_request.disconnect_all_slots();
 }

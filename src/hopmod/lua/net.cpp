@@ -1701,6 +1701,11 @@ private:
                 luaL_argerror(L, 2, "invalid ip prefix");
             }
         }
+        else if(lua_type(L, 1) == LUA_TNUMBER)
+        {
+            unsigned long prefix = static_cast<unsigned long>(lua_tointeger(L, 2));
+            ipmask = hopmod::ip::address_prefix(hopmod::ip::address(prefix), 32);
+        }
         else
         {
             ipmask = *(reinterpret_cast<netmask_wrapper *>(luaL_checkudata(L, 2, netmask_wrapper::MT)));

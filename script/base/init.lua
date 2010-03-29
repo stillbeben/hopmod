@@ -2,7 +2,13 @@
 package.path = package.path .. ";script/package/?.lua"
 package.cpath = package.cpath .. ";lib/lib?.so"
 
+server.event_handler("mapchange", function()
+    gamemodeinfo = server.gengamemodeinfo()
+end)
+gamemodeinfo = server.gengamemodeinfo()
+
 load_once("base/restart")
+load_once("base/kickban")
 load_once("base/player/utils")
 load_once("base/player/vars")
 load_once("base/player/object_wrapper")
@@ -22,16 +28,6 @@ server.module("base/register_server")
 server.module("base/web/init")
 server.module("base/teamkills")
 server.module("base/setmaster")
-
-local function update_gamemodeinfo()
-    gamemodeinfo = server.gengamemodeinfo()
-end
-
-server.event_handler("mapchange", function(map, mode)
-    update_gamemodeinfo()
-end)
-
-update_gamemodeinfo()
 
 -- Load module configuration variables
 local function load_module_vars(path)

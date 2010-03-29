@@ -49,7 +49,6 @@ namespace server
     extern timer::time_diff_t timer_alarm_threshold;
     
     extern bool enable_extinfo;
-    extern bool kick_bannedip_group;
     
     int player_sessionid(int);
     int player_id(int);
@@ -118,16 +117,11 @@ namespace server
     void kick(int cn,int time,const std::string & admin,const std::string & reason);
     void disconnect(int cn, int code, const std::string & reason);
     void changetime(int remaining);
-    void clearbans();
     void changemap(const char * map,const char * mode,int mins);
     int modecode(const char * modename);
     int getplayercount();
     int getbotcount();
     int getspeccount();
-    bool writebanlist(const char * filename);
-    bool loadbanlist(const char * filename);
-    void addpermban(const char * addr);
-    bool unsetban(const char * addr);
     void addbot(int);
     void deletebot(int);
     void enable_master_auth(bool);
@@ -165,8 +159,6 @@ namespace server
     extern int sv_remip_hit_length;
     extern int sv_newmap_hit_length;
     extern int sv_spec_hit_length;
-    
-    extern std::vector<std::string> get_bans();
     
     void crash_handler(int signal);
     void restore_server(const char * filename);
