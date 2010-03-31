@@ -1,6 +1,7 @@
 #include "address_prefix.hpp"
 #include <algorithm>
 #include <cstdlib>
+#include <cstdio>
 #include <typeinfo>
 
 namespace hopmod{
