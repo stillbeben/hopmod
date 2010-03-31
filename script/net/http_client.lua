@@ -2,8 +2,10 @@
 
 	Function to get http-content of a webserver
 	Function: http_client(host, port, get, callback, [timeout])
+    
+    MAKE SURE SERVER SENDS CONTENT-LENGTH, IF YOU WANT TO RECEIVE CONTENT WITHOUT A TIMEOUT!
 
-	Copyright (C) 2009 Thomas
+	Copyright (C) 2010 Thomas
 
 ]]
 
@@ -43,7 +45,7 @@ function http_client(host, port, get, callback, timeout)
 			
 			if not http_client_sock then return end
 			
-			http_client_sock:async_send("GET /" .. get .. " HTTP/1.1\nHost: " .. host .. "\r\n\r\n", function(errmsg, len)
+			http_client_sock:async_send("GET /" .. get .. " HTTP/1.1\r\nHost: " .. host .. "\r\n\r\n", function(errmsg, len)
 				if errmsg then
 					error(errmsg)
 					http_client_cleanup()
