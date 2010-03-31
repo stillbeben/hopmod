@@ -80,8 +80,8 @@ struct ctfclientmode : clientmode
 
     void resetflags()
     {
-        holdspawns.setsize(0);
-        flags.setsize(0);
+        holdspawns.shrink(0);
+        flags.shrink(0);
         loopk(2) scores[k] = 0;
     }
 
@@ -301,7 +301,7 @@ struct ctfclientmode : clientmode
             loopvj(flags) if(flags[j].owner==ci->clientnum) return;
             ownflag(i, ci->clientnum, lastmillis);
             sendf(-1, 1, "ri4", SV_TAKEFLAG, ci->clientnum, i, ++f.version);
-            signal_takeflag(ci->clientnum);
+             signal_takeflag(ci->clientnum);
         }
         else if(m_protect)
         {
@@ -427,39 +427,60 @@ struct ctfclientmode : clientmode
         }
     }
 
+    float calcradarscale()
+    {
+        //return radarscale<=0 || radarscale>maxradarscale ? maxradarscale : max(radarscale, float(minradarscale));
+        return clamp(max(minimapradius.x, minimapradius.y)/3, float(minradarscale), float(maxradarscale));
+    }
+
+    void drawminimap(fpsent *d, float x, float y, float s)
+    {
+        vec pos = vec(d->o).sub(minimapcenter).mul(minimapscale).add(0.5f), dir;
+        vecfromyawpitch(d->yaw, 0, 1, 0, dir);
+        float scale = calcradarscale();
+        glBegin(GL_TRIANGLE_FAN);
+        loopi(16+1)
+        {
+            vec tc = vec(dir).rotate_around_z(i/16.0f*2*M_PI);
+            glTexCoord2f(pos.x + tc.x*scale*minimapscale.x, pos.y + tc.y*scale*minimapscale.y);
+            vec v = vec(0, -1, 0).rotate_around_z(i/16.0f*2*M_PI);
+            glVertex2f(x + 0.5f*s*(1.0f + v.x), y + 0.5f*s*(1.0f + v.y));
+        }
+        glEnd();
+    }
+
     void drawradar(float x, float y, float s)
     {
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f(0.0f, 0.0f); glVertex2f(x,   y);
         glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
         glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
         glTexCoord2f(0.0f, 1.0f); glVertex2f(x,   y+s);
+        glEnd();
     }
 
-    void drawblip(fpsent *d, int x, int y, int s, const vec &pos, bool flagblip)
+    void drawblip(fpsent *d, float x, float y, float s, const vec &pos, bool flagblip)
     {
-        float scale = radarscale<=0 || radarscale>maxradarscale ? maxradarscale : radarscale;
+        float scale = calcradarscale();
         vec dir = pos;
-        dir.sub(d->o);
-        dir.z = 0.0f;
+        dir.sub(d->o).div(scale);
         float size = flagblip ? 0.1f : 0.05f,
               xoffset = flagblip ? -2*(3/32.0f)*size : -size,
               yoffset = flagblip ? -2*(1 - 3/32.0f)*size : -size,
-              dist = dir.magnitude();
-        if(dist >= scale*(1 - 0.05f)) dir.mul(scale*(1 - 0.05f)/dist);
+              dist = dir.magnitude2(), maxdist = 1 - 0.05f - 0.05f;
+        if(dist >= maxdist) dir.mul(maxdist/dist);
         dir.rotate_around_z(-d->yaw*RAD);
-        drawradar(x + s*0.5f*(1.0f + dir.x/scale + xoffset), y + s*0.5f*(1.0f + dir.y/scale + yoffset), size*s);
+        drawradar(x + s*0.5f*(1.0f + dir.x + xoffset), y + s*0.5f*(1.0f + dir.y + yoffset), size*s);
     }
 
-    void drawblip(fpsent *d, int x, int y, int s, int i, bool flagblip)
+    void drawblip(fpsent *d, float x, float y, float s, int i, bool flagblip)
     {
         flag &f = flags[i];
         settexture(m_hold && (!flagblip || !f.owner || lastmillis%1000 < 500) ? (flagblip ? "packages/hud/blip_neutral_flag.png" : "packages/hud/blip_neutral.png") :
                     ((m_hold ? ctfteamflag(f.owner->team) : f.team)==ctfteamflag(player1->team) ?
                         (flagblip ? "packages/hud/blip_blue_flag.png" : "packages/hud/blip_blue.png") :
-                        (flagblip ? "packages/hud/blip_red_flag.png" : "packages/hud/blip_red.png")));
-        glBegin(GL_QUADS);
+                        (flagblip ? "packages/hud/blip_red_flag.png" : "packages/hud/blip_red.png")), 3);
         drawblip(d, x, y, s, flagblip ? (f.owner ? f.owner->o : (f.droptime ? f.droploc : f.spawnloc)) : f.spawnloc, flagblip);
-        glEnd();
     }
 
     int clipconsole(int w, int h)
@@ -487,15 +508,26 @@ struct ctfclientmode : clientmode
         }
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        int x = 1800*w/h*34/40, y = 1800*1/40, s = 1800*w/h*5/40;
+        int s = 1800/4, x = 1800*w/h - s - s/10, y = s/10;
         glColor3f(1, 1, 1);
-        settexture("packages/hud/radar.png");
-        glBegin(GL_QUADS);
-        drawradar(float(x), float(y), float(s));
-        glEnd();
+        glDisable(GL_BLEND);
+        bindminimap();
+        drawminimap(d, x, y, s);
+        glEnable(GL_BLEND);
+        float margin = 0.04f, roffset = s*margin, rsize = s + 2*roffset;
+        settexture("packages/hud/radar.png", 3);
+        drawradar(x - roffset, y - roffset, rsize);
+        #if 0
+        settexture("packages/hud/compass.png", 3);
+        glPushMatrix();
+        glTranslatef(x - roffset + 0.5f*rsize, y - roffset + 0.5f*rsize, 0);
+        glRotatef(camera1->yaw + 180, 0, 0, -1);
+        drawradar(-0.5f*rsize, -0.5f*rsize, rsize);
+        glPopMatrix();
+        #endif
         if(m_hold)
         {
-            settexture("packages/hud/blip_neutral.png");
+            settexture("packages/hud/blip_neutral.png", 3);
             glBegin(GL_QUADS);
             loopv(holdspawns) drawblip(d, x, y, s, holdspawns[i].o, false);
             glEnd();
@@ -587,7 +619,7 @@ struct ctfclientmode : clientmode
                 if(!flags.inrange(f.owner->lastbase))
                 {
                     particle_fireball(pos, 4.8f, PART_EXPLOSION_NO_GLARE, 250, strcmp(f.owner->team, player1->team) ? 0x802020 : 0x2020FF, 4.8f);
-                    particle_splash(PART_SPARK, 50, 250, pos, 0xB49B4B, 0.24f);
+                    particle_splash(PART_SPARK, 50, 250, pos, strcmp(f.owner->team, player1->team) ? 0x802020 : 0x2020FF, 0.24f);
                 }
                 f.owner->lastbase = i;
             }
@@ -601,15 +633,14 @@ struct ctfclientmode : clientmode
             d->lastbase = -1;
             vec pos(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight)/2);
             particle_fireball(pos, 4.8f, PART_EXPLOSION_NO_GLARE, 250, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 4.8f);
-            particle_splash(PART_SPARK, 50, 250, pos, 0xB49B4B, 0.24f);
+            particle_splash(PART_SPARK, 50, 250, pos, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 0.24f);
         }
     }
 
     void setup()
     {
         resetflags();
-        vec center(0, 0, 0);
-        radarscale = 0;
+        vector<extentity *> radarents;
         if(m_hold)
         {
             loopv(entities::ents)
@@ -618,32 +649,44 @@ struct ctfclientmode : clientmode
                 if(e->type!=BASE) continue;
                 if(!addholdspawn(e->o)) continue;
                 holdspawns.last().light = e->light;
+                radarents.add(e); 
             }
-            if(holdspawns.length())
-            {
-                while(flags.length() < HOLDFLAGS) addflag(flags.length(), vec(0, 0, 0), 0, -1000);
-                loopv(holdspawns) center.add(holdspawns[i].o);
-                center.div(holdspawns.length());            
-                loopv(holdspawns) radarscale = max(radarscale, 2*center.dist(holdspawns[i].o));
-            }
+            if(holdspawns.length()) while(flags.length() < HOLDFLAGS) addflag(flags.length(), vec(0, 0, 0), 0, -1000);
         }
         else
         { 
             loopv(entities::ents)
             {
                 extentity *e = entities::ents[i];
-                if(e->type!=FLAG || e->attr2<1 || e->attr2>2) continue;
-                int index = flags.length();
-                if(!addflag(index, e->o, e->attr2, m_protect ? 0 : -1000)) continue;
-                flags[index].spawnangle = e->attr1;
-                flags[index].light = e->light;
+                switch(e->type)
+                {
+#if 0
+                    case PLAYERSTART:
+                        if(e->attr2<1 || e->attr2>2) continue;
+                        break;
+#endif
+                    case FLAG:
+                    {
+                        if(e->attr2<1 || e->attr2>2) continue;
+                        int index = flags.length();
+                        if(!addflag(index, e->o, e->attr2, m_protect ? 0 : -1000)) continue;
+                        flags[index].spawnangle = e->attr1;
+                        flags[index].light = e->light;
+                        break;
+                    }
+                    default:
+                        continue;
+                }
+                radarents.add(e);
             }
-            if(flags.length())
-            {
-                loopv(flags) center.add(flags[i].spawnloc);
-                center.div(flags.length());
-                loopv(flags) radarscale = max(radarscale, 2*center.dist(flags[i].spawnloc));
-            }
+        }
+        radarscale = 0;
+        if(radarents.length())
+        {
+            vec center(0, 0, 0);
+            loopv(radarents) center.add(radarents[i]->o);
+            center.div(radarents.length());
+            loopv(radarents) radarscale = max(radarscale, 2*center.dist(radarents[i]->o));
         }
     }
 
@@ -748,7 +791,7 @@ struct ctfclientmode : clientmode
         else { fcolor = 0x802020; color = vec(1, 0.25f, 0.25f); }
         particle_fireball(loc, 30, PART_EXPLOSION, -1, fcolor, 4.8f);
         adddynlight(loc, 35, color, 900, 100);
-        particle_splash(PART_SPARK, 150, 300, loc, 0xB49B4B, 0.24f);
+        particle_splash(PART_SPARK, 150, 300, loc, fcolor, 0.24f);
     }
 
     void flageffect(int i, int team, const vec &from, const vec &to)
@@ -975,7 +1018,7 @@ struct ctfclientmode : clientmode
 		if(!m_protect && !m_hold)
 		{
 			static vector<int> takenflags;
-			takenflags.setsizenodelete(0);
+			takenflags.setsize(0);
 			loopv(flags)
 			{
 				flag &g = flags[i];
@@ -1006,7 +1049,7 @@ struct ctfclientmode : clientmode
 			if((!m_protect && !m_hold) || f.owner != d)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
-				targets.setsizenodelete(0);
+				targets.setsize(0);
 				bool home = !m_hold && f.team == ctfteamflag(d->team);
 				ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
 				fpsent *e = NULL;
@@ -1098,7 +1141,7 @@ struct ctfclientmode : clientmode
 			if(lastmillis-b.millis >= (201-d->skill)*33)
 			{
 				static vector<int> targets; // build a list of others who are interested in this
-				targets.setsizenodelete(0);
+				targets.setsize(0);
 				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
 				fpsent *e = NULL;
 				loopi(numdynents()) if((e = (fpsent *)iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && !strcmp(d->team, e->team))

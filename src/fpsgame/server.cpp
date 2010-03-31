@@ -79,11 +79,8 @@ namespace server
     {
         int target;
         int lifesequence;
-        union
-        {
-            int rays;
-            float dist;
-        };
+        int rays;
+        float dist;
         vec dir;
     };
 
@@ -152,7 +149,7 @@ namespace server
         int lastdeath, lastspawn, lifesequence;
         int lastshot;
         projectilestate<8> rockets, grenades;
-        int frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, misses, shots;
+        int frags, flags, deaths, suicides, shotdamage, damage, explosivedamage, teamkills, hits, misses, shots;
         int lasttimeplayed, timeplayed;
         float effectiveness;
         int disconnecttime;
@@ -251,7 +248,9 @@ namespace server
             gs.disconnecttime = disconnecttime;
         }
     };
-
+    
+    extern int gamemillis, nextexceeded;
+    
     struct clientinfo
     {
         int clientnum, ownernum, connectmillis, sessionid, overflow, playerid;
@@ -260,7 +259,7 @@ namespace server
         int modevote;
         int privilege;
         bool connected, local, timesync;
-        int gameoffset, lastevent;
+        int gameoffset, lastevent, pushed, exceeded;
         gamestate state;
         vector<gameevent *> events;
         vector<uchar> position, messages;
@@ -273,6 +272,8 @@ namespace server
         string clientmap;
         int mapcrc;
         bool warned, gameclip;
+        ENetPacket *clipboard;
+        int lastclipboard, needclipboard;
 
         freqlimit sv_text_hit;
         freqlimit sv_sayteam_hit;
@@ -289,7 +290,9 @@ namespace server
         bool using_reservedslot;
         
         clientinfo() 
-         : sv_text_hit(sv_text_hit_length),
+         : 
+           clipboard(NULL),
+           sv_text_hit(sv_text_hit_length),
            sv_sayteam_hit(sv_sayteam_hit_length),
            sv_mapvote_hit(sv_mapvote_hit_length),
            sv_switchname_hit(sv_switchname_hit_length),
@@ -300,7 +303,7 @@ namespace server
            sv_spec_hit(sv_spec_hit_length)
         { reset(); }
         
-        ~clientinfo() { events.deletecontentsp(); }
+        ~clientinfo() { events.deletecontents(); cleanclipboard(); }
         
         void addevent(gameevent *e)
         {
@@ -308,14 +311,56 @@ namespace server
             else events.add(e);
         }
 
+        enum
+        {
+            PUSHMILLIS = 2500
+        };
+        
+        int calcpushrange()
+        {
+            ENetPeer *peer = getclientpeer(ownernum);
+            return PUSHMILLIS + (peer ? peer->roundTripTime + peer->roundTripTimeVariance : ENET_PEER_DEFAULT_ROUND_TRIP_TIME);
+        }
+
+        bool checkpushed(int millis, int range)
+        {
+            return millis >= pushed - range && millis <= pushed + range;
+        }
+
+        void scheduleexceeded()
+        {
+            if(state.state!=CS_ALIVE || !exceeded) return;
+            int range = calcpushrange();
+            if(!nextexceeded || exceeded + range < nextexceeded) nextexceeded = exceeded + range;
+        }
+
+        void setexceeded()
+        {
+            if(state.state==CS_ALIVE && !exceeded && !checkpushed(gamemillis, calcpushrange())) exceeded = gamemillis;
+            scheduleexceeded(); 
+        }
+            
+        void setpushed()
+        {
+            pushed = max(pushed, gamemillis);
+            if(exceeded && checkpushed(exceeded, calcpushrange())) exceeded = 0;
+        }
+        
+        bool checkexceeded()
+        {
+            return state.state==CS_ALIVE && exceeded && gamemillis > exceeded + calcpushrange();
+        }
+        
         void mapchange()
         {
             mapvote[0] = 0;
             state.reset();
-            events.deletecontentsp();
+            events.deletecontents();
             overflow = 0;
             timesync = false;
             lastevent = 0;
+            exceeded = 0;
+            pushed = 0;
             maploaded = false;
             clientmap[0] = '\0';
             mapcrc = 0;
@@ -327,9 +372,15 @@ namespace server
         void reassign()
         {
             state.reassign();
-            events.deletecontentsp();
+            events.deletecontents();
             timesync = false;
             lastevent = 0;
+        }
+        
+        void cleanclipboard(bool fullclean = true)
+        {
+            if(clipboard) { if(--clipboard->referenceCount <= 0) enet_packet_destroy(clipboard); clipboard = NULL; }
+            if(fullclean) lastclipboard = 0;
         }
         
         void reset()
@@ -339,14 +390,16 @@ namespace server
             privilege = PRIV_NONE;
             connected = local = false;
             authreq = 0;
-            position.setsizenodelete(0);
-            messages.setsizenodelete(0);
+            position.setsize(0);
+            messages.setsize(0);
             ping = 0;
             lastpingupdate = 0;
             lastposupdate = 0;
             lag = 0;
             aireinit = 0;
             using_reservedslot = false;
+            needclipboard = 0;
+            cleanclipboard();
             mapchange();
         }
         
@@ -425,6 +478,13 @@ namespace server
     #define MM_PUBSERV ((1<<MM_OPEN) | (1<<MM_VETO))
     #define MM_COOPSERV (MM_AUTOAPPROVE | MM_PUBSERV | (1<<MM_LOCKED))
     
+    bool notgotitems = true;        // true when map has changed and waiting for clients to send item
+    int gamemode = 0;
+    int gamemillis = 0, gamelimit = 0, nextexceeded = 0;
+    bool gamepaused = false;
+    int pausegame_owner = -1;
+    bool reassignteams = true;
+    
     bool allow_mm_veto = false;
     bool allow_mm_locked = false;
     bool allow_mm_private = false;
@@ -436,13 +496,6 @@ namespace server
 
     int reservedslots = 0;
     int reservedslots_use = 0;
-    
-    bool notgotitems = true;        // true when map has changed and waiting for clients to send item
-    int gamemode = 0;
-    int gamemillis = 0, gamelimit = 0;
-    bool gamepaused = false;
-    int pausegame_owner = -1;
-    bool reassignteams = true;
     
     string serverdesc = "", serverpass = "";
     string smapname = "";
@@ -590,7 +643,7 @@ namespace server
 
     void resetitems() 
     { 
-        sents.setsize(0);
+        sents.shrink(0);
         //cps.reset(); 
     }
 
@@ -874,7 +927,7 @@ namespace server
         if(!n)
         {
             loopv(demos) delete[] demos[i].data;
-            demos.setsize(0);
+            demos.shrink(0);
             sendservmsg("cleared all demos");
         }
         else if(demos.inrange(n-1))
@@ -1065,7 +1118,7 @@ namespace server
                 mastermode = MM_OPEN;
                 mastermode_owner = -1;
                 mastermode_mtime = totalmillis;
-                allowedips.setsize(0);
+                allowedips.shrink(0);
             }
         }
         //mastermode = MM_OPEN;
@@ -1163,28 +1216,35 @@ namespace server
         }
     }
 
+    void flushclientposition(clientinfo &ci)
+    {
+        if(ci.position.empty() || (!hasnonlocalclients() && !demorecord)) return;
+        packetbuf p(ci.position.length(), 0);
+        p.put(ci.position.getbuf(), ci.position.length());
+        ci.position.setsize(0);
+        sendpacket(-1, 0, p.finalize(), ci.ownernum);
+    }
+
     void addclientstate(worldstate &ws, clientinfo &ci)
     {
         if(ci.position.empty()) ci.posoff = -1;
         else
         {
             ci.posoff = ws.positions.length();
-            loopvj(ci.position) ws.positions.add(ci.position[j]);
+            ws.positions.put(ci.position.getbuf(), ci.position.length());
             ci.poslen = ws.positions.length() - ci.posoff;
-            ci.position.setsizenodelete(0);
+            ci.position.setsize(0);
         }
         if(ci.messages.empty()) ci.msgoff = -1;
         else
         {
             ci.msgoff = ws.messages.length();
-            ucharbuf p = ws.messages.reserve(16);
-            putint(p, SV_CLIENT);
-            putint(p, ci.clientnum);
-            putuint(p, ci.messages.length());
-            ws.messages.addbuf(p);
-            loopvj(ci.messages) ws.messages.add(ci.messages[j]);
+            putint(ws.messages, SV_CLIENT);
+            putint(ws.messages, ci.clientnum);
+            putuint(ws.messages, ci.messages.length());
+            ws.messages.put(ci.messages.getbuf(), ci.messages.length());
             ci.msglen = ws.messages.length() - ci.msgoff;
-            ci.messages.setsizenodelete(0);
+            ci.messages.setsize(0);
         }
     }
     
@@ -1214,10 +1274,20 @@ namespace server
             }
         }
         int psize = ws.positions.length(), msize = ws.messages.length();
-        if(psize) recordpacket(0, ws.positions.getbuf(), psize);
-        if(msize) recordpacket(1, ws.messages.getbuf(), msize);
-        loopi(psize) { uchar c = ws.positions[i]; ws.positions.add(c); }
-        loopi(msize) { uchar c = ws.messages[i]; ws.messages.add(c); }
+        if(psize)
+        {
+            recordpacket(0, ws.positions.getbuf(), psize);
+            ucharbuf p = ws.positions.reserve(psize);
+            p.put(ws.positions.getbuf(), psize);
+            ws.positions.addbuf(p);
+        }
+        if(msize)
+        {
+            recordpacket(1, ws.messages.getbuf(), msize);
+            ucharbuf p = ws.messages.reserve(msize);
+            p.put(ws.messages.getbuf(), msize);
+            ws.messages.addbuf(p);
+        }
         ws.uses = 0;
         if(psize || msize) loopv(clients)
         {
@@ -1226,8 +1296,8 @@ namespace server
             ENetPacket *packet;
             if(psize && (ci.posoff<0 || psize-ci.poslen>0))
             {
-                packet = enet_packet_create(&ws.positions[ci.posoff<0 ? 0 : ci.posoff+ci.poslen], 
-                                            ci.posoff<0 ? psize : psize-ci.poslen, 
+                packet = enet_packet_create(&ws.positions[ci.posoff<0 ? 0 : ci.posoff+ci.poslen],
+                                            ci.posoff<0 ? psize : psize-ci.poslen,
                                             ENET_PACKET_FLAG_NO_ALLOCATE);
                 sendpacket(ci.clientnum, 0, packet);
                 if(!packet->referenceCount) enet_packet_destroy(packet);
@@ -1236,8 +1306,8 @@ namespace server
 
             if(msize && (ci.msgoff<0 || msize-ci.msglen>0))
             {
-                packet = enet_packet_create(&ws.messages[ci.msgoff<0 ? 0 : ci.msgoff+ci.msglen], 
-                                            ci.msgoff<0 ? msize : msize-ci.msglen, 
+                packet = enet_packet_create(&ws.messages[ci.msgoff<0 ? 0 : ci.msgoff+ci.msglen],
+                                            ci.msgoff<0 ? msize : msize-ci.msglen,
                                             (reliablemessages ? ENET_PACKET_FLAG_RELIABLE : 0) | ENET_PACKET_FLAG_NO_ALLOCATE);
                 sendpacket(ci.clientnum, 1, packet);
                 if(!packet->referenceCount) enet_packet_destroy(packet);
@@ -1245,23 +1315,23 @@ namespace server
             }
         }
         reliablemessages = false;
-        if(!ws.uses) 
+        if(!ws.uses)
         {
             delete &ws;
             return false;
         }
-        else 
+        else
         {
-            worldstates.add(&ws); 
+            worldstates.add(&ws);
             return true;
         }
     }
 
-    bool sendpackets()
+    bool sendpackets(bool force)
     {
         if(clients.empty() || (!hasnonlocalclients() && !demorecord)) return false;
         enet_uint32 curtime = enet_time_get()-lastsend;
-        if(curtime<33) return false;
+        if(curtime<33 && !force) return false;
         bool flush = buildworldstate();
         lastsend += curtime - (curtime%33);
         return flush;
@@ -1462,7 +1532,6 @@ namespace server
         
         stopdemo();
         pausegame(false);
-        
         if(smode) smode->reset(false);
         aiman::clearai();
         
@@ -1472,10 +1541,11 @@ namespace server
         minremain = (mins == -1 ? (m_overtime ? 15 : 10) : mins);
         gamelimit = minremain*60000;
         interm = 0;
+        nextexceeded = 0;
         copystring(smapname, s);
         resetitems();
         notgotitems = true;
-        scores.setsize(0);
+        scores.shrink(0);
         loopv(clients)
         {
             clientinfo *ci = clients[i];
@@ -1635,10 +1705,12 @@ namespace server
         ts.dodamage(damage);
         actor->state.damage += damage;
         sendf(-1, 1, "ri6", SV_DAMAGE, target->clientnum, actor->clientnum, damage, ts.armour, ts.health); 
-        if(target!=actor && !hitpush.iszero()) 
+        if(target==actor) target->setpushed();
+        else if(target!=actor && !hitpush.iszero())
         {
             ivec v = vec(hitpush).rescale(DNF);
             sendf(ts.health<=0 ? -1 : target->ownernum, 1, "ri7", SV_HITPUSH, target->clientnum, gun, damage, v.x, v.y, v.z);
+            target->setpushed();
         }
         if(ts.health<=0)
         {
@@ -1660,7 +1732,7 @@ namespace server
             }
             signal_frag(target->clientnum, actor->clientnum);
             sendf(-1, 1, "ri4", SV_DIED, target->clientnum, actor->clientnum, actor->state.frags);
-            target->position.setsizenodelete(0);
+            target->position.setsize(0);
             if(smode) smode->died(target, actor);
             ts.state = CS_DEAD;
             ts.lastdeath = gamemillis;
@@ -1677,7 +1749,7 @@ namespace server
         ci->state.deaths++;
         ci->state.suicides++;
         sendf(-1, 1, "ri4", SV_DIED, ci->clientnum, ci->clientnum, gs.frags);
-        ci->position.setsizenodelete(0);
+        ci->position.setsize(0);
         if(smode) smode->died(ci, NULL);
         gs.state = CS_DEAD;
         gs.respawn();
@@ -1760,7 +1832,7 @@ namespace server
                 {
                     hitinfo &h = hits[i];
                     clientinfo *target = getinfo(h.target);
-                    if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.rays<1) continue;
+                    if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.rays<1 || h.dist > guns[gun].range + 1) continue;
 
                     totalrays += h.rays;
                     if(totalrays>maxrays) continue;
@@ -1850,6 +1922,8 @@ namespace server
         ci->timesync = false;
     }
 
+    bool ispaused() { return gamepaused; }
+
     void serverupdate()
     {
         timer serverupdate_time;
@@ -1883,6 +1957,18 @@ namespace server
         }
 
         loopv(connects) if(totalmillis-connects[i]->connectmillis>15000) disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
+        
+        if(nextexceeded && gamemillis > nextexceeded)
+        {
+            nextexceeded = 0;
+            loopvrev(clients) 
+            {
+                clientinfo &c = *clients[i];
+                if(c.state.aitype != AI_NONE) continue;
+                if(c.checkexceeded()) disconnect_client(c.clientnum, DISC_TAGT);
+                else c.scheduleexceeded();
+            }
+        }
         
         if(masterupdate) 
         { 
@@ -2209,6 +2295,21 @@ namespace server
         sendservmsg(msg);
     }
 
+    void sendclipboard(clientinfo *ci)
+    {
+        if(!ci->lastclipboard || !ci->clipboard) return;
+        bool flushed = false;
+        loopv(clients)
+        {
+            clientinfo &e = *clients[i];
+            if(e.clientnum != ci->clientnum && e.needclipboard >= ci->lastclipboard) 
+            {
+                if(!flushed) { flushserver(true); flushed = true; }
+                sendpacket(e.clientnum, 1, ci->clipboard);
+            }
+        }
+    }
+
     void setspectator(clientinfo * spinfo, bool val)
     {
         if(!spinfo || (spinfo->state.state==CS_SPECTATOR ? val : !val) || spinfo->state.aitype != AI_NONE) return;
@@ -2273,6 +2374,7 @@ namespace server
                 clients.add(ci);
 
                 ci->connected = true;
+                ci->needclipboard = totalmillis;
                 bool restoredscore = restorescore(ci);
                 bool was_playing = restoredscore && ci->state.state != CS_SPECTATOR && ci->state.disconnecttime > mastermode_mtime;
                 
@@ -2285,7 +2387,7 @@ namespace server
                 copystring(ci->team, worst ? worst : "good", MAXTEAMLEN+1);
 
                 sendwelcome(ci);
-                if(restoredscore) sendresume(ci);
+                if(restorescore(ci)) sendresume(ci);
                 sendinitclient(ci);
 
                 aiman::addclient(ci);
@@ -2327,19 +2429,22 @@ namespace server
                 int pcn = getint(p);
                 clientinfo *cp = getinfo(pcn);
                 if(cp && pcn != sender && cp->ownernum != sender) cp = NULL;
-                vec pos;
+                vec pos, vel;
                 loopi(3) pos[i] = getuint(p)/DMF;
                 getuint(p);
-                loopi(5) getint(p);
+                loopi(2) getint(p);
+                loopi(3) vel[i] = getint(p)/DVELF;
                 int physstate = getuint(p);
                 if(physstate&0x20) loopi(2) getint(p);
                 if(physstate&0x10) getint(p);
                 getuint(p);
                 if(cp)
                 {
+                    if(!ci->local && !m_edit && max(vel.magnitude2(), (float)fabs(vel.z)) >= 180)
+                        cp->setexceeded();
                     if((!ci->local || demorecord || hasnonlocalclients()) && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
                     {
-                        cp->position.setsizenodelete(0);
+                        cp->position.setsize(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
                     }
                     if(cp->state.state==CS_ALIVE && !cp->maploaded && cp->state.aitype == AI_NONE)
@@ -2356,6 +2461,33 @@ namespace server
                     if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, cp->state.o, cp->gameclip, pos, (physstate&0x80)!=0);
                     cp->state.o = pos;
                     cp->gameclip = (physstate&0x80)!=0;
+                }
+                break;
+            }
+
+            case SV_TELEPORT:
+            {
+                int pcn = getint(p), teleport = getint(p), teledest = getint(p);
+                clientinfo *cp = getinfo(pcn);
+                if(cp && pcn != sender && cp->ownernum != sender) cp = NULL;
+                if(cp && (!ci->local || demorecord || hasnonlocalclients()) && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
+                {
+                    flushclientposition(*cp);
+                    sendf(-1, 0, "ri4x", SV_TELEPORT, pcn, teleport, teledest, cp->ownernum); 
+                }
+                break;
+            }
+
+            case SV_JUMPPAD:
+            {
+                int pcn = getint(p), jumppad = getint(p);
+                clientinfo *cp = getinfo(pcn);
+                if(cp && pcn != sender && cp->ownernum != sender) cp = NULL;
+                if(cp && (!ci->local || demorecord || hasnonlocalclients()) && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
+                {
+                    cp->setpushed();
+                    flushclientposition(*cp);
+                    sendf(-1, 0, "ri3x", SV_JUMPPAD, pcn, jumppad, cp->ownernum);
                 }
                 break;
             }
@@ -2386,7 +2518,7 @@ namespace server
                 {
                     ci->state.editstate = ci->state.state;
                     ci->state.state = CS_EDITING;
-                    ci->events.setsizenodelete(0);
+                    ci->events.setsize(0);
                     ci->state.rockets.reset();
                     ci->state.grenades.reset();
                 }
@@ -2453,6 +2585,7 @@ namespace server
                 cq->state.lastspawn = -1;
                 cq->state.state = CS_ALIVE;
                 cq->state.gunselect = gunselect;
+                cq->exceeded = 0;
                 if(smode) smode->spawned(cq);
                 QUEUE_AI;
                 QUEUE_BUF({
@@ -2461,6 +2594,7 @@ namespace server
                 });
                 break;
             }
+            
 
             case SV_SUICIDE:
             {
@@ -2477,19 +2611,20 @@ namespace server
                 loopk(3) shot->from[k] = getint(p)/DMF;
                 loopk(3) shot->to[k] = getint(p)/DMF;
                 int hits = getint(p);
-                
                 loopk(hits)
                 {
                     if(p.overread()) break;
                     hitinfo &hit = shot->hits.add();
                     hit.target = getint(p);
                     hit.lifesequence = getint(p);
+                    hit.dist = getint(p)/DMF;
                     hit.rays = getint(p);
                     loopk(3) hit.dir[k] = getint(p)/DNF;
                 }
-                if(cq)
+                if(cq) 
                 {
                     cq->addevent(shot);
+                    cq->setpushed();
                 }
                 else delete shot;
                 break;
@@ -2510,15 +2645,14 @@ namespace server
                     hit.target = getint(p);
                     hit.lifesequence = getint(p);
                     hit.dist = getint(p)/DMF;
+                    hit.rays = getint(p);
                     loopk(3) hit.dir[k] = getint(p)/DNF;
                 }
-                if(cq)
-                {
-                    cq->addevent(exp);
-                }
+                if(cq) cq->addevent(exp);
                 else delete exp;
                 break;
             }
+
 
             case SV_ITEMPICKUP:
             {
@@ -2749,7 +2883,7 @@ namespace server
                         mastermode = mm;
                         mastermode_owner = ci->clientnum;
                         mastermode_mtime = totalmillis;
-                        allowedips.setsize(0);
+                        allowedips.shrink(0);
                         if(mm>=MM_PRIVATE)
                         {
                             loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
@@ -2864,6 +2998,7 @@ namespace server
                 {
                     sendf(sender, 1, "ris", SV_SERVMSG, "server sending map...");
                     sendfile(sender, 2, mapdata, "ri", SV_SENDMAP);
+                    ci->needclipboard = totalmillis;
                 }
                 else sendf(sender, 1, "ris", SV_SERVMSG, "no map to send");
                 break;
@@ -2947,6 +3082,40 @@ namespace server
                 break;
             }
 
+            case SV_COPY:
+                ci->cleanclipboard();
+                ci->lastclipboard = totalmillis;
+                goto genericmsg;
+
+            case SV_PASTE:
+                if(ci->state.state!=CS_SPECTATOR) sendclipboard(ci);
+                goto genericmsg;
+
+            case SV_CLIPBOARD:
+            {
+                int unpacklen = getint(p), packlen = getint(p); 
+                ci->cleanclipboard(false);
+                if(ci->state.state==CS_SPECTATOR)
+                {
+                    if(packlen > 0) p.subbuf(packlen);
+                    break;
+                }
+                if(packlen <= 0 || packlen > (1<<16) || unpacklen <= 0) 
+                {
+                    if(packlen > 0) p.subbuf(packlen);
+                    packlen = unpacklen = 0;
+                }
+                packetbuf q(32 + packlen, ENET_PACKET_FLAG_RELIABLE);
+                putint(q, SV_CLIPBOARD);
+                putint(q, ci->clientnum);
+                putint(q, unpacklen);
+                putint(q, packlen); 
+                if(packlen > 0) p.get(q.subbuf(packlen).buf, packlen);
+                ci->clipboard = q.finalize();
+                ci->clipboard->referenceCount++;
+                break;
+            } 
+
             #define PARSEMESSAGES 1
             #include "capture.h"
             #include "ctf.h"
@@ -2960,7 +3129,7 @@ namespace server
                 disconnect_client(sender, DISC_OVERFLOW);
                 return;
             
-            default:
+            default: genericmsg:
             {
                 int size = server::msgsizelookup(type);
                 if(size<=0) { disconnect_client(sender, DISC_TAGT); return; }

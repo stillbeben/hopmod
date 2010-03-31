@@ -141,8 +141,8 @@ struct captureclientmode : clientmode
 
     void resetbases()
     {
-        bases.setsize(0);
-        scores.setsize(0);
+        bases.shrink(0);
+        scores.shrink(0);
         captures = 0;
     }
 
@@ -246,7 +246,7 @@ struct captureclientmode : clientmode
     }
 
 #ifndef SERVMODE
-    static const int FIREBALLRADIUS = 5;
+    static const int AMMOHEIGHT = 5;
 
     float radarscale;
 
@@ -275,6 +275,8 @@ struct captureclientmode : clientmode
         type += I_SHELLS-1;
         if(type<I_SHELLS || type>I_CARTRIDGES) return;
         entities::repammo(d, type, d==player1);
+        int icon = itemstats[type-I_SHELLS].icon;
+        if(icon >= 0) particle_icon(d->abovehead(), icon%4, icon/4, PART_HUD_ICON_GREY, 2000, 0xFFFFFF, 2.0f, -8);
     }
 
     void checkitems(fpsent *d)
@@ -309,11 +311,11 @@ struct captureclientmode : clientmode
                 baseinfo &b = bases[i];
                 if(!insidebase(b, d->feetpos()) || (strcmp(b.owner, d->team) && strcmp(b.enemy, d->team))) continue;
                 if(d->lastbase < 0 && (lookupmaterial(d->feetpos())&MATF_CLIP) == MAT_GAMECLIP) break;
-                particle_flare(b.ammopos, pos, 0, PART_LIGHTNING, strcmp(d->team, player1->team) ? 0xFF2222 : 0x2222FF, 0.28f);
+                particle_flare(vec(b.ammopos.x, b.ammopos.y, b.ammopos.z - AMMOHEIGHT - 4.4f), pos, 0, PART_LIGHTNING, strcmp(d->team, player1->team) ? 0xFF2222 : 0x2222FF, 0.28f);
                 if(oldbase < 0)
                 {
                     particle_fireball(pos, 4.8f, PART_EXPLOSION_NO_GLARE, 250, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 4.8f);
-                    particle_splash(PART_SPARK, 50, 250, pos, 0xB49B4B, 0.24f);
+                    particle_splash(PART_SPARK, 50, 250, pos, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 0.24f);
                 }
                 d->lastbase = i;
             }
@@ -321,7 +323,7 @@ struct captureclientmode : clientmode
         if(d->lastbase < 0 && oldbase >= 0)
         {
             particle_fireball(pos, 4.8f, PART_EXPLOSION_NO_GLARE, 250, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 4.8f);
-            particle_splash(PART_SPARK, 50, 250, pos, 0xB49B4B, 0.24f);
+            particle_splash(PART_SPARK, 50, 250, pos, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 0.24f);
         }
     }
 
@@ -347,7 +349,11 @@ struct captureclientmode : clientmode
             baseinfo &b = bases[i];
             const char *flagname = b.owner[0] ? (strcmp(b.owner, player1->team) ? "base/red" : "base/blue") : "base/neutral";
             rendermodel(&b.light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
-            particle_fireball(b.ammopos, 4.8f, PART_EXPLOSION_NO_GLARE, 0, b.owner[0] ? (strcmp(b.owner, player1->team) ? 0x802020 : 0x2020FF) : 0x208020, 4.8f);
+            float fradius = 1.0f, fheight = 0.5f; 
+            regular_particle_flame(PART_FLAME, vec(b.ammopos.x, b.ammopos.y, b.ammopos.z - 4.5f), fradius, fheight, b.owner[0] ? (strcmp(b.owner, player1->team) ? 0x802020 : 0x2020FF) : 0x208020, 3, 2.0f);
+            //regular_particle_flame(PART_SMOKE, vec(b.ammopos.x, b.ammopos.y, b.ammopos.z - 4.5f + 4.0f*min(fradius, fheight)), fradius, fheight, 0x303020, 1, 4.0f, 100.0f, 2000.0f, -20);
+
+//            particle_fireball(b.ammopos, 4.8f, PART_EXPLOSION_NO_GLARE, 0, b.owner[0] ? (strcmp(b.owner, player1->team) ? 0x802020 : 0x2020FF) : 0x208020, 4.8f);
 
             if(b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1)
             {
@@ -387,7 +393,7 @@ struct captureclientmode : clientmode
             else copystring(b.info, b.name);
 
             vec above(b.ammopos);
-            above.z += FIREBALLRADIUS+1.0f;
+            above.z += AMMOHEIGHT+1.0f;
             particle_text(above, b.info, PART_TEXT, 1, tcolor, 2.0f);
             if(mtype>=0)
             {
@@ -397,9 +403,15 @@ struct captureclientmode : clientmode
         }
     }
 
+    float calcradarscale()
+    {
+        //return radarscale<=0 || radarscale>maxradarscale ? maxradarscale : max(radarscale, float(minradarscale));
+        return clamp(max(minimapradius.x, minimapradius.y)/3, float(minradarscale), float(maxradarscale));
+    }
+
     void drawblips(fpsent *d, float blipsize, int fw, int fh, int type, bool skipenemy = false)
     {
-        float scale = radarscale<=0 || radarscale>maxradarscale ? maxradarscale : radarscale;
+        float scale = calcradarscale();
         int blips = 0;
         loopv(bases)
         {
@@ -414,8 +426,8 @@ struct captureclientmode : clientmode
             }
             vec dir(b.o);
             dir.sub(d->o).div(scale);
-            float dist = dir.magnitude2();
-            if(dist >= 1 - blipsize) dir.mul((1 - blipsize)/dist);
+            float dist = dir.magnitude2(), maxdist = 1 - 0.05f - blipsize;
+            if(dist >= maxdist) dir.mul(maxdist/dist);
             dir.rotate_around_z(-d->yaw*RAD);
             if(basenumbers)
             {
@@ -450,18 +462,52 @@ struct captureclientmode : clientmode
         return w*6/40;
     }
 
-    void drawhud(fpsent *d, int w, int h)
+    void drawminimap(fpsent *d, float x, float y, float s)
     {
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        int x = 1800*w/h*34/40, y = 1800*1/40, s = 1800*w/h*5/40;
-        glColor3f(1, 1, 1);
-        settexture("packages/hud/radar.png");
-        glBegin(GL_QUADS);
+        vec pos = vec(d->o).sub(minimapcenter).mul(minimapscale).add(0.5f), dir;
+        vecfromyawpitch(d->yaw, 0, 1, 0, dir);
+        float scale = calcradarscale();
+        glBegin(GL_TRIANGLE_FAN);
+        loopi(16+1)
+        {
+            vec tc = vec(dir).rotate_around_z(i/16.0f*2*M_PI);
+            glTexCoord2f(pos.x + tc.x*scale*minimapscale.x, pos.y + tc.y*scale*minimapscale.y);
+            vec v = vec(0, -1, 0).rotate_around_z(i/16.0f*2*M_PI);
+            glVertex2f(x + 0.5f*s*(1.0f + v.x), y + 0.5f*s*(1.0f + v.y));
+        }
+        glEnd();
+    }
+
+    void drawradar(float x, float y, float s)
+    {
+        glBegin(GL_TRIANGLE_FAN);
         glTexCoord2f(0.0f, 0.0f); glVertex2f(x,   y);
         glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
         glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
         glTexCoord2f(0.0f, 1.0f); glVertex2f(x,   y+s);
         glEnd();
+    }
+
+    void drawhud(fpsent *d, int w, int h)
+    {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        int s = 1800/4, x = 1800*w/h - s - s/10, y = s/10;
+        glColor3f(1, 1, 1);
+        glDisable(GL_BLEND);
+        bindminimap();
+        drawminimap(d, x, y, s);
+        glEnable(GL_BLEND);
+        float margin = 0.04f, roffset = s*margin, rsize = s + 2*roffset;
+        settexture("packages/hud/radar.png", 3);
+        drawradar(x - roffset, y - roffset, rsize);
+        #if 0
+        settexture("packages/hud/compass.png", 3);
+        glPushMatrix();
+        glTranslatef(x - roffset + 0.5f*rsize, y - roffset + 0.5f*rsize, 0);
+        glRotatef(camera1->yaw + 180, 0, 0, -1);
+        drawradar(-0.5f*rsize, -0.5f*rsize, rsize);
+        glPopMatrix();
+        #endif
         bool showenemies = lastmillis%1000 >= 500;
         int fw = 1, fh = 1;
         if(basenumbers)
@@ -470,17 +516,17 @@ struct captureclientmode : clientmode
             setfont("digit_blue");
             text_bounds(" ", fw, fh);
         }
-        else settexture("packages/hud/blip_blue.png");
+        else settexture("packages/hud/blip_blue.png", 3);
         glPushMatrix();
         glTranslatef(x + 0.5f*s, y + 0.5f*s, 0);
         float blipsize = basenumbers ? 0.1f : 0.05f;
         glScalef((s*blipsize)/fw, (s*blipsize)/fh, 1.0f);
         drawblips(d, blipsize, fw, fh, 1, showenemies);
         if(basenumbers) setfont("digit_grey");
-        else settexture("packages/hud/blip_grey.png");
+        else settexture("packages/hud/blip_grey.png", 3);
         drawblips(d, blipsize, fw, fh, 0, showenemies);
         if(basenumbers) setfont("digit_red");
-        else settexture("packages/hud/blip_red.png");
+        else settexture("packages/hud/blip_red.png", 3);
         drawblips(d, blipsize, fw, fh, -1, showenemies);
         if(showenemies) drawblips(d, blipsize, fw, fh, -2);
         glPopMatrix();
@@ -510,7 +556,7 @@ struct captureclientmode : clientmode
             b.o = e->o;
             b.ammopos = b.o;
             abovemodel(b.ammopos, "base/neutral");
-            b.ammopos.z += FIREBALLRADIUS-2;
+            b.ammopos.z += AMMOHEIGHT-2;
             b.ammotype = e->attr1;
             defformatstring(alias)("base_%d", e->attr2);
             const char *name = getalias(alias);
@@ -556,11 +602,16 @@ struct captureclientmode : clientmode
             conoutf(CON_GAMEINFO, "%s lost %s", b.owner, b.name);
             if(!strcmp(b.owner, player1->team)) playsound(S_V_BASELOST);
         }
-        if(strcmp(b.owner, owner)) particle_splash(PART_SPARK, 200, 250, b.ammopos, 0xB49B4B, 0.24f);
+        if(strcmp(b.owner, owner)) particle_splash(PART_SPARK, 200, 250, b.ammopos, owner[0] ? (strcmp(owner, player1->team) ? 0x802020 : 0x2020FF) : 0x208020, 0.24f);
         copystring(b.owner, owner);
         copystring(b.enemy, enemy);
         b.converted = converted;
-        if(ammo>b.ammo) playsound(S_ITEMSPAWN, &b.o);
+        if(ammo>b.ammo) 
+        {
+            playsound(S_ITEMSPAWN, &b.o);
+            int icon = b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1 ? itemstats[b.ammotype-1].icon : -1;
+            if(icon >= 0) particle_icon(vec(b.ammopos.x, b.ammopos.y, b.ammopos.z + AMMOHEIGHT + 1.0f), icon%4, icon/4, PART_HUD_ICON, 2000, 0xFFFFFF, 2.0f, -8);
+        }
         b.ammo = ammo;
     }
 
@@ -575,7 +626,7 @@ struct captureclientmode : clientmode
             {
                 defformatstring(msg)("%d", total);
                 vec above(b.ammopos);
-                above.z += FIREBALLRADIUS+1.0f;
+                above.z += AMMOHEIGHT+1.0f;
                 particle_textcopy(above, msg, PART_TEXT, 2000, isteam(team, player1->team) ? 0x6496FF : 0xFF4B19, 4.0f, -8);
             }
         }
@@ -657,7 +708,7 @@ struct captureclientmode : clientmode
 		{
 			baseinfo &f = bases[j];
 			static vector<int> targets; // build a list of others who are interested in this
-			targets.setsizenodelete(0);
+			targets.setsize(0);
 			ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, j, true);
 			fpsent *e = NULL;
 			int regen = !m_regencapture || d->health >= 100 ? 0 : 1;
@@ -701,7 +752,7 @@ struct captureclientmode : clientmode
 			if(!regen && !f.enemy[0] && f.owner[0] && !strcmp(f.owner, d->team))
 			{
 				static vector<int> targets; // build a list of others who are interested in this
-				targets.setsizenodelete(0);
+				targets.setsize(0);
 				ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
 				fpsent *e = NULL;
 				loopi(numdynents()) if((e = (fpsent *)iterdynents(i)) && ai::targetable(d, e, false) && !e->ai && !strcmp(d->team, e->team))

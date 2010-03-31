@@ -322,9 +322,11 @@ inline const char * disconnect_reason(int code)
 }
 
 extern void *getclientinfo(int i);
+extern ENetPeer *getclientpeer(int i);
 extern void sendf(int cn, int chan, const char *format, ...);
 extern void sendfile(int cn, int chan, stream *file, const char *format = "", ...);
 extern void sendpacket(int cn, int chan, ENetPacket *packet, int exclude = -1);
+extern void flushserver(bool force);
 extern int getnumclients();
 extern uint getclientip(int n);
 extern void putint(ucharbuf &p, int n);

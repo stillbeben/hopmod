@@ -224,6 +224,7 @@ void process(ENetPacket *packet, int sender, int chan);
 //void disconnect_client(int n, int reason);
 
 void *getclientinfo(int i) { return !clients.inrange(i) || clients[i]->type==ST_EMPTY ? NULL : clients[i]->info; }
+ENetPeer *getclientpeer(int i) { return clients.inrange(i) && clients[i]->type==ST_TCPIP ? clients[i]->peer : NULL; }
 int getnumclients()        { return clients.length(); }
 uint getclientip(int n)    { return clients.inrange(n) && clients[n]->type==ST_TCPIP ? clients[n]->peer->address.host : 0; }
 
@@ -430,8 +431,8 @@ void disconnectmaster()
     enet_socket_destroy(mastersock);
     mastersock = ENET_SOCKET_NULL;
     
-    masterout.setsizenodelete(0);
-    masterin.setsizenodelete(0);
+    masterout.setsize(0);
+    masterin.setsize(0);
     masteroutpos = masterinpos = 0;
 }
 
@@ -520,7 +521,7 @@ void processmasterinput()
 
     if(masterinpos >= masterin.length())
     {
-        masterin.setsizenodelete(0);
+        masterin.setsize(0);
         masterinpos = 0;
     }
 }
@@ -538,7 +539,7 @@ void flushmasteroutput()
         masteroutpos += sent;
         if(masteroutpos >= masterout.length())
         {
-            masterout.setsizenodelete(0);
+            masterout.setsize(0);
             masteroutpos = 0;
         }
     }
@@ -891,6 +892,11 @@ void netstats_handler(const boost::system::error_code & ec)
     
     netstats_timer.expires_from_now(boost::posix_time::minutes(1));
     netstats_timer.async_wait(netstats_handler);
+}
+
+void flushserver(bool force)
+{
+    if(server::sendpackets(force) && serverhost) enet_host_flush(serverhost);
 }
 
 void rundedicatedserver()

@@ -108,7 +108,7 @@ namespace server
     extern void recordpacket(int chan, void *data, int len);
     extern void parsepacket(int sender, int chan, packetbuf &p);
     extern void sendservmsg(const char *s);
-    extern bool sendpackets();
+    extern bool sendpackets(bool force = false);
     extern void serverinforeply(ucharbuf &req, ucharbuf &p);
     extern void serverupdate();
     extern bool servercompatible(char *name, char *sdec, char *map, int ping, const vector<int> &attr, int np);
@@ -120,6 +120,7 @@ namespace server
     extern void processmasterinput(const char *cmd, int cmdlen, const char *args);
     extern void started();
     extern void shutdown();
+    extern bool ispaused();
 }
 
 #endif

@@ -11,7 +11,8 @@ enum
     CON_TEAMCHAT   = 1<<9,
     CON_GAMEINFO   = 1<<10,
     CON_FRAG_SELF  = 1<<11,
-    CON_FRAG_OTHER = 1<<12
+    CON_FRAG_OTHER = 1<<12,
+    CON_TEAMKILL   = 1<<13
 };
 
 // network quantization scale
@@ -117,7 +118,7 @@ static struct gamemodeinfo
     { "protect", M_CTF | M_PROTECT | M_TEAM, "Protect The Flag: Touch \fs\f3the enemy flag\fr to score points for \fs\f1your team\fr. Pick up \fs\f1your flag\fr to protect it. \fs\f1Your team\fr loses points if a dropped flag resets. Collect items for ammo." },
     { "insta protect", M_NOITEMS | M_INSTA | M_CTF | M_PROTECT | M_TEAM, "Instagib Protect The Flag: Touch \fs\f3the enemy flag\fr to score points for \fs\f1your team\fr. Pick up \fs\f1your flag\fr to protect it. \fs\f1Your team\fr loses points if a dropped flag resets. You spawn with full rifle ammo and die instantly from one shot. There are no items." },
     { "hold", M_CTF | M_HOLD | M_TEAM, "Hold The Flag: Hold \fs\f7the flag\fr for 20 seconds to score points for \fs\f1your team\fr. Collect items for ammo." },
-    { "insta hold", M_NOITEMS | M_INSTA | M_CTF | M_HOLD | M_TEAM, "Instagib Hold The Flag: Hold \fs\f7the flag\fr for 20 to score points for \fs\f1your team\fr. You spawn with full rifle ammo and die instantly from one shot. There are no items." }
+    { "insta hold", M_NOITEMS | M_INSTA | M_CTF | M_HOLD | M_TEAM, "Instagib Hold The Flag: Hold \fs\f7the flag\fr for 20 seconds to score points for \fs\f1your team\fr. You spawn with full rifle ammo and die instantly from one shot. There are no items." }
 };
 
 #define STARTGAMEMODE (-3)
@@ -209,11 +210,11 @@ enum
     SV_DIED, SV_DAMAGE, SV_HITPUSH, SV_SHOTFX, SV_EXPLODEFX,
     SV_TRYSPAWN, SV_SPAWNSTATE, SV_SPAWN, SV_FORCEDEATH,
     SV_GUNSELECT, SV_TAUNT,
-    SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMPICKUP, SV_ITEMACC,
+    SV_MAPCHANGE, SV_MAPVOTE, SV_ITEMSPAWN, SV_ITEMPICKUP, SV_ITEMACC, SV_TELEPORT, SV_JUMPPAD,
     SV_PING, SV_PONG, SV_CLIENTPING,
     SV_TIMEUP, SV_MAPRELOAD, SV_FORCEINTERMISSION,
     SV_SERVMSG, SV_ITEMLIST, SV_RESUME,
-    SV_EDITMODE, SV_EDITENT, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP, SV_EDITVAR,
+    SV_EDITMODE, SV_EDITENT, SV_EDITF, SV_EDITT, SV_EDITM, SV_FLIP, SV_COPY, SV_PASTE, SV_ROTATE, SV_REPLACE, SV_DELCUBE, SV_REMIP, SV_NEWMAP, SV_GETMAP, SV_SENDMAP, SV_CLIPBOARD, SV_EDITVAR,
     SV_MASTERMODE, SV_KICK, SV_CLEARBANS, SV_CURRENTMASTER, SV_SPECTATOR, SV_SETMASTER, SV_SETTEAM,
     SV_BASES, SV_BASEINFO, SV_BASESCORE, SV_REPAMMO, SV_BASEREGEN, SV_ANNOUNCE,
     SV_LISTDEMOS, SV_SENDDEMOLIST, SV_GETDEMO, SV_SENDDEMO,
@@ -273,19 +274,49 @@ struct demoheader
 #define MAXNAMELEN 15
 #define MAXTEAMLEN 4
 
-static struct itemstat { int add, max, sound; const char *name; int info; } itemstats[] =
+enum
 {
-    {10,    30,    S_ITEMAMMO,   "SG", GUN_SG},
-    {20,    60,    S_ITEMAMMO,   "CG", GUN_CG},
-    {5,     15,    S_ITEMAMMO,   "RL", GUN_RL},
-    {5,     15,    S_ITEMAMMO,   "RI", GUN_RIFLE},
-    {10,    30,    S_ITEMAMMO,   "GL", GUN_GL},
-    {30,    120,   S_ITEMAMMO,   "PI", GUN_PISTOL},
-    {25,    100,   S_ITEMHEALTH, "H"},
-    {10,    1000,  S_ITEMHEALTH, "MH"},
-    {100,   100,   S_ITEMARMOUR, "GA", A_GREEN},
-    {200,   200,   S_ITEMARMOUR, "YA", A_YELLOW},
-    {20000, 30000, S_ITEMPUP,    "Q"},
+    HICON_BLUE_ARMOUR = 0,
+    HICON_GREEN_ARMOUR,
+    HICON_YELLOW_ARMOUR,
+
+    HICON_HEALTH,
+
+    HICON_FIST,
+    HICON_SG,
+    HICON_CG,
+    HICON_RL,
+    HICON_RIFLE,
+    HICON_GL,
+    HICON_PISTOL,
+
+    HICON_QUAD,
+
+    HICON_RED_FLAG,
+    HICON_BLUE_FLAG,
+    HICON_NEUTRAL_FLAG,
+
+    HICON_X       = 20,
+    HICON_Y       = 1650,
+    HICON_TEXTY   = 1644,
+    HICON_STEP    = 490,
+    HICON_SIZE    = 120,
+    HICON_SPACE   = 40
+};
+
+static struct itemstat { int add, max, sound; const char *name; int icon, info; } itemstats[] =
+{
+    {10,    30,    S_ITEMAMMO,   "SG", HICON_SG, GUN_SG},
+    {20,    60,    S_ITEMAMMO,   "CG", HICON_CG, GUN_CG},
+    {5,     15,    S_ITEMAMMO,   "RL", HICON_RL, GUN_RL},
+    {5,     15,    S_ITEMAMMO,   "RI", HICON_RIFLE, GUN_RIFLE},
+    {10,    30,    S_ITEMAMMO,   "GL", HICON_GL, GUN_GL},
+    {30,    120,   S_ITEMAMMO,   "PI", HICON_PISTOL, GUN_PISTOL},
+    {25,    100,   S_ITEMHEALTH, "H", HICON_HEALTH},
+    {10,    1000,  S_ITEMHEALTH, "MH", HICON_HEALTH},
+    {100,   100,   S_ITEMARMOUR, "GA", HICON_GREEN_ARMOUR, A_GREEN},
+    {200,   200,   S_ITEMARMOUR, "YA", HICON_YELLOW_ARMOUR, A_YELLOW},
+    {20000, 30000, S_ITEMPUP,    "Q", HICON_QUAD},
 };
 
 #define SGRAYS 20
@@ -565,18 +596,21 @@ namespace entities
 
     extern const char *entmdlname(int type);
     extern const char *itemname(int i);
+    extern int itemicon(int i);
 
     extern void preloadentities();
     extern void renderentities();
     extern void checkitems(fpsent *d);
     extern void checkquad(int time, fpsent *d);
     extern void resetspawns();
-    extern void spawnitems();
+    extern void spawnitems(bool force = false);
     extern void putitems(packetbuf &p);
     extern void setspawn(int i, bool on);
     extern void teleport(int n, fpsent *d);
     extern void pickupeffects(int n, fpsent *d);
-
+    extern void teleporteffects(fpsent *d, int tp, int td, bool local = true);
+    extern void jumppadeffects(fpsent *d, int jp, bool local = true);
+    
     extern void repammo(fpsent *d, int type, bool local = true);
 }
 
@@ -688,7 +722,9 @@ namespace game
     extern void sendmapinfo();
     extern void stopdemo();
     extern void changemap(const char *name, int mode);
-    extern void c2sinfo();
+    extern void c2sinfo(bool force = false);
+    extern void sendposition(fpsent *d, bool reliable = false);
+    extern void sendmessages(fpsent *d);
 
     // monster
     struct monster;
@@ -759,6 +795,7 @@ namespace game
     extern void saveragdoll(fpsent *d);
     extern void clearragdolls();
     extern void moveragdolls();
+    extern void changedplayermodel();
     extern const playermodelinfo &getplayermodelinfo(fpsent *d);
     extern int chooserandomplayermodel(int seed);
     extern void swayhudgun(int curtime);
