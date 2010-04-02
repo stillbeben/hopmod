@@ -1,3 +1,4 @@
+#include "../utils.hpp"
 
 #include <ctime>
 
@@ -117,7 +118,54 @@ private:
     }
 };
 
-const char * deadline_timer_wrapper::MT = "timer_class";
+const char * deadline_timer_wrapper::MT = "deadline_timer_class";
+
+class usec_timer_wrapper
+{
+public:
+    static const char * MT;
+
+    static void register_class(lua_State * L)
+    {
+        luaL_newmetatable(L, MT);
+        
+        static luaL_Reg funcs[] = {
+            {"__gc", &usec_timer_wrapper::__gc},
+            {"elapsed", &usec_timer_wrapper::elapsed},
+            {NULL, NULL}
+        };
+        
+        lua_pushvalue(L, -1);
+        luaL_register(L, NULL, funcs);
+        
+        lua_setfield(L, -1, "__index");
+    }
+
+    static int create(lua_State * L)
+    {
+        new (lua_newuserdata(L, sizeof(usec_timer_wrapper))) usec_timer_wrapper();
+        luaL_getmetatable(L, MT);
+        lua_setmetatable(L, -2);
+        return 1;
+    }
+private:
+    static int elapsed(lua_State * L)
+    {
+        usec_timer_wrapper * timer = reinterpret_cast<usec_timer_wrapper *>(luaL_checkudata(L, 1, MT));
+        lua_pushnumber(L, timer->m_timer.usec_elapsed());
+        return 1;
+    }
+    
+    static int __gc(lua_State * L)
+    {
+        reinterpret_cast<usec_timer_wrapper *>(luaL_checkudata(L, 1, MT))->~usec_timer_wrapper();
+        return 0;
+    }
+    
+    timer m_timer;
+};
+
+const char * usec_timer_wrapper::MT = "usec_timer_class";
 
 namespace lua{
 namespace module{
@@ -126,12 +174,14 @@ void open_timer(lua_State * L)
 {
     static luaL_Reg functions[] = {
         {"create", deadline_timer_wrapper::create},
+        {"usec_timer", usec_timer_wrapper::create},
         {NULL, NULL}
     };
     
     luaL_register(L, "timer", functions);
     
     deadline_timer_wrapper::register_class(L);
+    usec_timer_wrapper::register_class(L);
 }
 
 }//namespace module

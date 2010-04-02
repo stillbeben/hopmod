@@ -37,6 +37,7 @@ set(SAUERTOOLS_SOURCES
     shared/tools.cpp
     shared/stream.cpp
     shared/crypto.cpp
+    hopmod/utils.cpp
     hopmod/net/address.cpp
     hopmod/net/address_mask.cpp
     hopmod/net/address_prefix.cpp)
@@ -74,7 +75,6 @@ SET(SAUER_SERVER_SOURCES
     hopmod/scheduler.cpp
     hopmod/playerid.cpp
     hopmod/restarter.cpp
-    hopmod/utils.cpp
     hopmod/httpserver/httpserver.cpp
     hopmod/httpserver/serverexec.cpp
     hopmod/httpserver/filesystem_resource.cpp
@@ -89,7 +89,7 @@ add_executable(keygen hopmod/keygen.cpp)
 target_link_libraries(keygen sauertools -lz)
 
 add_executable(luapp hopmod/luapp.cpp)
-target_link_libraries(luapp lua boost_system lua_modules)
+target_link_libraries(luapp lua boost_system lua_modules -lrt)
 
 install(TARGETS sauer_server sauertools lua_modules serverscripting scriptpipe keygen luapp
     RUNTIME DESTINATION ${INSTALL_RUNTIME_DESTINATION} 

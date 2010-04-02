@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdarg>
 #include <string>
+#include <vector>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/types.h>
