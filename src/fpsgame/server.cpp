@@ -6,7 +6,6 @@
 
 #include "hopmod/extapi.hpp"
 #include "hopmod/hopmod.hpp"
-#include "hopmod/bans.hpp"
 #include "hopmod/utils.hpp"
 
 #include <fungu/script/error.hpp>
@@ -18,6 +17,7 @@
 boost::asio::io_service & get_main_io_service();
 
 #include <iostream>
+#include <set>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>

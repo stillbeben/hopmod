@@ -37,7 +37,6 @@ set(SAUERTOOLS_SOURCES
     shared/tools.cpp
     shared/stream.cpp
     shared/crypto.cpp
-    hopmod/netmask.cpp
     hopmod/net/address.cpp
     hopmod/net/address_mask.cpp
     hopmod/net/address_prefix.cpp)
@@ -76,7 +75,6 @@ SET(SAUER_SERVER_SOURCES
     hopmod/playerid.cpp
     hopmod/restarter.cpp
     hopmod/utils.cpp
-    hopmod/bans.cpp
     hopmod/httpserver/httpserver.cpp
     hopmod/httpserver/serverexec.cpp
     hopmod/httpserver/filesystem_resource.cpp

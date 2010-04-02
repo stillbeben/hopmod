@@ -3,7 +3,6 @@
 */
 #include "serverexec.hpp"
 #include "../hopmod.hpp"
-#include "../netmask.hpp"
 #include <fungu/net/http/response.hpp>
 #include <boost/bind.hpp>
 #include <boost/bind/protect.hpp>
@@ -115,8 +114,7 @@ void serverexec_resource::put_method(http::server::request & req)
 
 void serverexec_resource::post_method(http::server::request & req)
 {
-    static const netmask loopback = netmask(127, 8);
-    if(loopback != netmask(htonl(req.get_connection().remote_ip_v4_ulong())))
+    if(req.get_connection().remote_ip_v4_ulong() & 0x7F000000)
     {
         http::server::send_response(req, http::FORBIDDEN, "only accepting requests from 127.0.0.1\n");
         return;
