@@ -59,7 +59,7 @@ local function init()
 
 		else
 
-			for p in server.aplayers() do
+			for p in server.gclients() do
 
 				check_player_on_disconnect(p.cn)
 			end
@@ -154,7 +154,7 @@ local function run(cn,kick_who)
 
 	if server.player_priv_code(kick_who) == priv_master then
 
-		for p in server.aplayers() do
+		for p in server.gplayers() do
 
 			if not (p.cn == kick_who) then
 

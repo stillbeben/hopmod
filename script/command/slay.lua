@@ -9,10 +9,8 @@ return function(cn, target)
 	end
 
 	if target == "all" then
-		for p in server.aplayers() do
-			p.slay()
-		end
-
+		for p in server.gplayers() do p:slay() end
+        
 		return
 	elseif not server.valid_cn(target) then
 		target = server.name_to_cn_list_matches(cn, target)

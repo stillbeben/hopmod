@@ -2,7 +2,7 @@
 return function(cn,tcn)
 
 	if not tcn then
-		for p in server.aplayers() do
+		for p in server.gclients() do
 			if p:pvars().reserved_name then
 				server.player_msg(cn, green(p:name()) .. " (" .. p.cn .. "): " .. yellow(p:pvars().reserved_name))
 			elseif p:pvars().stats_auth_name then

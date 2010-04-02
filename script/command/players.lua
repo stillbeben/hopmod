@@ -9,7 +9,7 @@
 
 return function(cn)
 
-	for p in server.aplayers() do
+	for p in server.gclients() do
 
 		server.player_msg(cn, "Player: " .. p:displayname() .. " Frags: " .. p:frags() .. " Deaths: " .. p:deaths() .. " Acc: " .. p:accuracy() .. "%")
 	end
