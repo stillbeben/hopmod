@@ -50,14 +50,6 @@ load_module_vars("./script/module/declare")
 
 server.event_handler("started", function()
     
-    if server.file_exists(server.banlist_file) then
-        server.execCubeScriptFile(server.banlist_file)
-    end
-    
-    if server.file_exists(server.lua_ban_file) then
-        load_once(server.lua_ban_file)
-    end
-        
     server.reload_maprotation()
     
     require("geoip").load_database(server.geoip_db_file)

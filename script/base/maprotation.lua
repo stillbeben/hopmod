@@ -229,7 +229,7 @@ function server.is_known_map(mapname, gamemode)
         return false
     end
     
-    for i,mapnameX in ipairs(maps[gamemode]) do
+    for _, mapnameX in ipairs(maps[gamemode]) do
         if mapname == mapnameX then 
             return true 
         end

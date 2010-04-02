@@ -4,8 +4,6 @@ global motd "Running Hopmod"
 
 global show_country_message 1
 
-global banlist_file "conf/bans"
-global lua_ban_file "conf/permabans.lua"
 global geoip_db_file "share/GeoIP.dat"
 
 global allow_mapvote 1
