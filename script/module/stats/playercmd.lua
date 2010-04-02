@@ -14,13 +14,19 @@ commandFunction = function(cn, selection, subselection)
 	local function currentgame_stats(sendto, player)
 
 		local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
+        
+        local players = server.clients()
+        local rank = -1
+        table.sort(players, function(a, b) return server.player_frags(a) > server.player_frags(b) end)
+        for i, cn in ipairs(players) do if cn == player then rank = i end end	
 
 		server.player_msg(sendto, string.format("Current game stats for %s:", green(server.player_name(player))))
-		server.player_msg(sendto, string.format("Score %s Frags %s Deaths %s Accuracy %s",
+		server.player_msg(sendto, string.format("Score %s Frags %s Deaths %s Accuracy %s Rank %s",
 			yellow(server.player_frags(player)),
 			green(frags),
 			red(server.player_deaths(player)),
-			yellow(server.player_accuracy(player) .. "%"))
+			yellow(server.player_accuracy(player) .. "%"),
+            blue(rank))
 		)
 		if gamemodeinfo.teams then
 			server.player_msg(sendto,string.format("Teamkills: %s",red(server.player_teamkills(player))))
@@ -60,6 +66,12 @@ commandFunction = function(cn, selection, subselection)
 	    currentgame_stats(cn, cn)
     elseif selection == "total" then
         total_stats(cn, cn)
+    elseif selection == "all" then
+        local players = server.clients()
+        table.sort(players, function(a, b) return server.player_frags(a) > server.player_frags(b) end)
+        for i, cn_ in ipairs(players) do 
+            currentgame_stats(cn, cn_)
+        end
     elseif server.valid_cn(selection) then
         if subselection == "total" then
             total_stats(cn, selection)
