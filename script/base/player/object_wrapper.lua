@@ -52,7 +52,7 @@ local methods = {
     valid           = function(obj) return server.player_sessionid(obj.cn) == obj.sessionid end
 }
 
-function server.new_player_object(cn)
+function server.new_client_object(cn)
     local object = {}
     object.cn = cn
     object.sessionid = server.player_sessionid(cn)
@@ -60,49 +60,39 @@ function server.new_player_object(cn)
     return object
 end
 
-function server.gplayers(option)
+server.new_player_object = server.new_client_object
 
-    local function next_player(plist, player)
+function client_iterator_generator(list)
+
+    local function next_client(client_list, client)
        
         local index = nil
-        if player then index = player.index end
+        if client then index = client.index end
         
-        local key, cn = next(plist, index)
+        local key, cn = next(client_list, index)
         if not key then return nil end
         
-        local nplayer = server.new_player_object(cn)
-        nplayer.index = key
+        local client_wrapper = server.new_client_object(cn)
+        client_wrapper.index = key
         
-        return nplayer
+        return client_wrapper
     end
-
-
-	local pv = nil
-
-	if not option then
-
-		pv = server.players()
-
-	elseif option == "players" or option == "0" then
-
-		pv = server.players()
-
-	elseif option == "spectators" or option == "1" then
-
-		pv = server.spectators()
-
-	elseif option == "all" or option == "3" then
-
-		pv = server.all_players()
-	end
-
-    return next_player, pv, nil
+    
+    return next_client, list, nil
 end
 
-function server.splayers()
-	return server.gplayers("spectators")
+function server.gspectators()
+    return client_iterator_generator(server.spectators())
 end
 
-function server.aplayers()
-	return server.gplayers("all")
+function server.gclients()
+    return client_iterator_generator(server.clients())
+end
+
+function server.gplayers()
+    return client_iterator_generator(server.players())
+end
+
+function server.gbots()
+    return client_iterator_generator(server.bots())
 end

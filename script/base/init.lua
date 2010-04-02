@@ -48,12 +48,13 @@ end
 
 load_module_vars("./script/module/declare")
 
+
 server.event_handler("started", function()
-    
+
     server.reload_maprotation()
     
     require("geoip").load_database(server.geoip_db_file)
-    
+
     load_once("command/_bindings")
     log_unknown_player_commands()
     
