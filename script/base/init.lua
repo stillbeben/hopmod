@@ -2,6 +2,9 @@
 package.path = package.path .. ";script/package/?.lua"
 package.cpath = package.cpath .. ";lib/lib?.so"
 
+-- Variables that needs to be defined early
+stats_sub_command = {}
+
 server.event_handler("mapchange", function()
     gamemodeinfo = server.gengamemodeinfo()
 end)
@@ -13,7 +16,6 @@ load_once("base/player/utils")
 load_once("base/player/vars")
 load_once("base/player/object_wrapper")
 load_once("base/player/query")
---load_once("base/player/global_vars")
 load_once("base/player/private_vars")
 load_once("base/player/command")
 load_once("base/logging")
@@ -47,7 +49,6 @@ local function load_module_vars(path)
 end
 
 load_module_vars("./script/module/declare")
-
 
 server.event_handler("started", function()
 

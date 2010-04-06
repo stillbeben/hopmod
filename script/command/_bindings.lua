@@ -1,3 +1,4 @@
+player_command_script("stats")
 player_command_script("info")
 player_command_script("uptime")
 player_command_script("lpc")
