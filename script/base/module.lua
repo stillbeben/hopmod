@@ -197,6 +197,8 @@ local function load_module(name)
     signal_loaded(name, filename)
 end
 
+
+
 local function load_modules_now()
 
     for i, name in ipairs(modules) do
@@ -217,6 +219,26 @@ function server.module(name)
     end
     
 end
+
+local temporary_modules = {}
+
+function server.load_temporary_module(name)
+    
+    server.module(name)
+    
+    if loaded_modules[name] then
+        temporary_modules[#temporary_modules + 1] = name
+    end
+end
+
+server.event_handler("mapchange", function()
+    
+    for _, name in ipairs(temporary_modules) do
+        server.unload_module(name)
+    end
+    
+    temporary_modules = {}
+end)
 
 server.event_handler("started", load_modules_now)
 server.event_handler("shutdown", unload_all_modules)
