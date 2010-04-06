@@ -81,7 +81,6 @@ local function create_command(name)
     player_commands[name] = command
     
     return command
-    
 end
 
 local function parse_command_list(commandlist)
@@ -97,7 +96,6 @@ local function set_commands(commandlist, fields)
             command[field_name] = field_value
         end
     end
-    
 end
 
 local function foreach_command(commandlist, fun)
@@ -106,7 +104,6 @@ local function foreach_command(commandlist, fun)
         local command = player_commands[cmdname] or create_command(cmdname)
         fun(command)
     end
-    
 end
 
 function server.enable_commands(commandlist)
@@ -116,7 +113,6 @@ function server.enable_commands(commandlist)
     foreach_command(commandlist, function(command)
         if command.control.init then command.control.init(command) end
     end)
-    
 end
 
 function server.disable_commands(commandlist)
@@ -130,9 +126,7 @@ function server.disable_commands(commandlist)
 			
 			collectgarbage()
 		end
-
     end)
-    
 end
 
 function server.admin_commands(commandlist)
@@ -238,7 +232,7 @@ function admincmd(...)
     local cn = arg[2]
     
     if tonumber(server.player_priv_code(cn)) < tonumber(server.PRIV_ADMIN) then
-        server.player_msg(cn,red("Permission denied."))
+        server.player_msg(cn, red("Permission denied."))
         return
     end
     
@@ -253,7 +247,7 @@ function mastercmd(...)
     local cn = arg[2]
     
     if tonumber(server.player_priv_code(cn)) < tonumber(server.PRIV_MASTER) then
-        server.player_msg(cn,red("Permission denied."))
+        server.player_msg(cn, red("Permission denied."))
         return
     end
     
@@ -261,3 +255,53 @@ function mastercmd(...)
     
     return func(unpack(arg))
 end
+
+player_command_function("help", function(cn)
+
+    local output = ""
+    
+    local normal = {}
+    local master = {}
+    local admin = {}
+    
+    local priv_code = server.player_priv_code(cn)
+    
+    for name, command in pairs(player_commands) do
+        if command.enabled then
+            if command.require_admin then
+                if priv_code == server.PRIV_ADMIN then
+                    admin[#admin + 1] = name
+                end
+            elseif command.require_master then
+                if priv_code >= server.PRIV_MASTER then
+                    master[#master + 1] = name
+                end
+            else
+                normal[#normal + 1] = name
+            end
+        end
+    end
+    
+    for _, name in ipairs(normal) do
+        if #output > 0 then output = output .. ", " end
+        output = output .. name
+    end
+    
+    if priv_code >= server.PRIV_MASTER then
+        for _, name in ipairs(master) do
+            if #output > 0 then output = output .. ", " end
+            output = output .. green(name)
+        end
+    end
+    
+    if priv_code == server.PRIV_ADMIN then
+        for _, name in ipairs(admin) do
+            if #output > 0 then output = output .. ", " end
+            output = output .. orange(name)
+        end
+    end
+    
+    server.player_msg(cn, output)
+end)
+
+player_commands.help.enabled = true
