@@ -133,6 +133,7 @@ void request::process_header(const char * header, std::size_t header_len, const 
 {
     if(connerr)
     {
+        m_close_connection = true;
         request::destroy(*this);
         return;
     }

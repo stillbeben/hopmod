@@ -1,14 +1,6 @@
 
 import testing ;
 
-unit-test netmask_test : 
-    netmask_test.cpp
-    /boost//headers ;
-    
-unit-test banned_networks_test : 
-    banned_networks_test.cpp
-    /boost//headers ;
-    
 unit-test timedbans_service_test : 
     timedbans_service_test.cpp
     /boost//headers ;

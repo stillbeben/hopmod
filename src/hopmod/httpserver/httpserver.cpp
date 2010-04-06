@@ -34,14 +34,17 @@ static void cleanup_client_connection(http::server::client_connection * client)
 }
 
 static void accept_handler(ip::tcp::acceptor & listener, http::server::client_connection * client, const error_code & error)
-{
+{    
     if(error)
     {
+        delete client;
+        
         if(error.value() != error::operation_aborted) 
         {
-            std::cerr<<"Error in accept handler: "<<error.message()<<std::endl;
+            std::cerr<<"Error in HTTP server accept handler: "<<error.message()<<std::endl;
+            wait_next_accept(listener);
         }
-        delete client;
+        
         return;
     }
     
@@ -76,11 +79,21 @@ void start_http_server(const char * ip, const char * port)
     
     setup_default_root();
     
+    boost::system::error_code ec;
+    
     server_acceptor = new ip::tcp::acceptor(get_main_io_service());
-    server_acceptor->open(ip::tcp::v4());
+    
+    server_acceptor->open(ip::tcp::v4(), ec);
+    if(ec)
+    {
+        std::cerr<<"start_http_server("<<ip<<", "<<port<<") failed on socket open: "<<ec.message()<<std::endl;
+        delete server_acceptor;
+        server_acceptor = NULL;
+        return;
+    }
+    
     server_acceptor->set_option(socket_base::reuse_address(true));
     
-    boost::system::error_code ec;
     server_acceptor->bind(ip::tcp::endpoint(ip::address_v4::from_string(ip), atoi(port)), ec);
     if(ec)
     {

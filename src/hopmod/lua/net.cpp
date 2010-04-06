@@ -209,14 +209,30 @@ int async_resolve(lua_State * L)
 int acceptor_listen(lua_State * L)
 {
     ip::tcp::acceptor * acceptor = reinterpret_cast<ip::tcp::acceptor *>(luaL_checkudata(L, 1, TCP_ACCEPTOR_MT));
-    acceptor->listen();
+    try
+    {
+        acceptor->listen();
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
 int acceptor_close(lua_State * L)
 {
     ip::tcp::acceptor * acceptor = reinterpret_cast<ip::tcp::acceptor *>(luaL_checkudata(L, 1, TCP_ACCEPTOR_MT));
-    acceptor->close();
+    try
+    {
+        acceptor->close();
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
@@ -367,7 +383,15 @@ int socket_gc(lua_State * L)
 
 int socket_close(lua_State * L)
 {
-    reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->close();
+    try
+    {
+        reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->close();
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
@@ -597,25 +621,57 @@ int socket_remote_endpoint(lua_State * L)
 
 int socket_cancel(lua_State * L)
 {
-    reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->cancel();
+    try
+    {
+        reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->cancel();
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
 int socket_shutdown_send(lua_State * L)
 {
-    reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_send);
+    try
+    {
+        reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_send);
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
 int socket_shutdown_receive(lua_State * L)
 {
-    reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_receive);
+    try
+    {
+        reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_receive);
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
 int socket_shutdown(lua_State * L)
 {
-    reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_both);
+    try
+    {
+        reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, BASIC_TCP_SOCKET_MT))->shutdown(ip::tcp::socket::shutdown_both);
+    }
+        catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
@@ -697,7 +753,15 @@ int udp_socket_gc(lua_State * L)
 
 int udp_socket_close(lua_State * L)
 {
-    reinterpret_cast<ip::udp::socket *>(lua_aux_checkobject(L, 1, UDP_SOCKET_MT))->close();
+    try
+    {
+        reinterpret_cast<ip::udp::socket *>(lua_aux_checkobject(L, 1, UDP_SOCKET_MT))->close();
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
@@ -716,11 +780,16 @@ int udp_socket_bind(lua_State * L)
     
     ip::udp::endpoint server_ep(ip::address_v4::from_string(ip), port);
     
-    socket->open(server_ep.protocol());
-    
     boost::system::error_code error;
-    socket->bind(server_ep, error);
     
+    socket->open(server_ep.protocol(), error);
+    if(error)
+    {
+        lua_pushstring(L, error.message().c_str());
+        return 1;
+    }
+    
+    socket->bind(server_ep, error);
     if(error)
     {
         lua_pushstring(L, error.message().c_str());
@@ -913,7 +982,14 @@ int create_tcp_client(lua_State * L)
     luaL_getmetatable(L, TCP_CLIENT_SOCKET_MT);
     lua_setmetatable(L, -2);
     
-    socket->open(ip::tcp::v4());
+    boost::system::error_code ec;
+    
+    socket->open(ip::tcp::v4(), ec);
+    if(ec)
+    {
+        luaL_error(L, "%s", ec.message().c_str());
+        return 0;
+    }
     
     // Return user-data object
     return 1;
@@ -961,7 +1037,16 @@ int client_async_connect(lua_State * L)
     lua_pushvalue(L, 4);
     int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
     
-    if(!socket->is_open()) socket->open(ip::tcp::v4());
+    if(!socket->is_open())
+    {
+        boost::system::error_code ec;
+        socket->open(ip::tcp::v4(), ec);
+        if(ec)
+        {
+            luaL_error(L, "%s", ec.message().c_str());
+            return 0;
+        }
+    }
     
     socket->async_connect(hostname, port, boost::bind(async_connect_handler, L, functionRef, _1));
     
@@ -972,7 +1057,16 @@ int tcp_client_bind(lua_State * L)
 {
     tcp_socket * socket = reinterpret_cast<tcp_socket *>(lua_aux_checkobject(L, 1, TCP_CLIENT_SOCKET_MT));
     
-    if(!socket->is_open()) socket->open(ip::tcp::v4());
+    if(!socket->is_open())
+    {
+        boost::system::error_code ec;
+        socket->open(ip::tcp::v4(), ec);
+        if(ec)
+        {
+            luaL_error(L, "%s", ec.message().c_str());
+            return 0;
+        }
+    }
     
     const char * ip = luaL_checkstring(L, 2);
     int port = luaL_checkinteger(L, 3);
@@ -987,7 +1081,7 @@ int tcp_client_bind(lua_State * L)
         return 2;
     }
     
-    socket->bind(ip::tcp::endpoint(ip::address_v4::from_string(ip), port), ec);
+    socket->bind(ip::tcp::endpoint(host, port), ec);
     if(ec)
     {
         lua_pushboolean(L, 1);
@@ -1220,14 +1314,30 @@ int local_acceptor_gc(lua_State * L)
 int local_acceptor_close(lua_State * L)
 {
     local::stream_protocol::acceptor * acceptor = reinterpret_cast<local::stream_protocol::acceptor *>(luaL_checkudata(L, 1, LOCAL_ACCEPTOR_MT));
-    acceptor->close();
+    try
+    {
+        acceptor->close();
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
 int local_acceptor_listen(lua_State * L)
 {
     local::stream_protocol::acceptor * acceptor = reinterpret_cast<local::stream_protocol::acceptor *>(luaL_checkudata(L, 1, LOCAL_ACCEPTOR_MT));
-    acceptor->listen();
+    try
+    {
+        acceptor->listen();
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
@@ -1305,25 +1415,57 @@ int local_socket_close(lua_State * L)
 
 int local_socket_cancel(lua_State * L)
 {
-    reinterpret_cast<local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->cancel();
+    try
+    {
+        reinterpret_cast<local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->cancel();
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
 int local_socket_shutdown_send(lua_State * L)
 {
-    reinterpret_cast<local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local_socket::shutdown_send);
+    try
+    {
+        reinterpret_cast<local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local_socket::shutdown_send);
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
 int local_socket_shutdown_receive(lua_State * L)
 {
-    reinterpret_cast<local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local_socket::shutdown_receive);
+    try
+    {
+        reinterpret_cast<local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local_socket::shutdown_receive);
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
 int local_socket_shutdown(lua_State * L)
 {
-    reinterpret_cast<local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local_socket::shutdown_both);
+    try
+    {
+        reinterpret_cast<local_socket *>(lua_aux_checkobject(L, 1, LOCAL_SOCKET_MT))->shutdown(local_socket::shutdown_both);
+    }
+    catch(boost::system::system_error se)
+    {
+        luaL_error(L, "%s", se.code().message().c_str());
+        return 0;
+    }
     return 0;
 }
 
