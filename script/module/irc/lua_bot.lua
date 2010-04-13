@@ -407,7 +407,7 @@ local function stats(name)
     local kpd = round(row.frags / (row.deaths or 1), 2)
     local acc = round((row.hits / row.shots)*100)
         
-    local stats_str = string.format("Name: %s Games: %i Frags: %i Deaths: %i KpD: %i Acc: %s Wins: %i Losses: %i",
+    local stats_str = string.format("Name: %s Games: %i Frags: %i Deaths: %i KpD: %d Acc: %s Wins: %i Losses: %i",
         name,
         row.games,
         row.frags,
