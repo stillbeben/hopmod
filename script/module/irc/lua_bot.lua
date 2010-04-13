@@ -392,6 +392,35 @@ local function sendAdminMessage()
     server.console(irc.command_nick, chat)
 end
 
+local function stats(name)
+    if server.stats_wrapper == nil then
+        irc:toChannel("You need to enable the stats module to use this feature!")
+    end
+        
+    local stats = server.stats_wrapper(name)
+        
+    if not stats then
+        irc:toChannel("No stats found for: " .. name .. "!")
+        return
+    end
+        
+    local kpd = round(row.frags / (row.deaths or 1), 2)
+    local acc = round((row.hits / row.shots)*100)
+        
+    local stats_str = string.format("Name: %s Games: %i Frags: %i Deaths: %i KpD: %i Acc: %s Wins: %i Losses: %i",
+        name,
+        row.games,
+        row.frags,
+        row.deaths,
+        kpd,
+        acc .. "%",
+        row.wins,
+        row.losses
+    )
+    
+    irc:toChannel(stats_str)
+end
+
 -- Command list
 irc.commands = {
     ['kick']        = function(cn, reason) server.kick(cn, 0, irc.command_nick, reason) end,
@@ -419,5 +448,6 @@ irc.commands = {
     ['unsetban']	= server.unsetban,
     ['recorddemo']	= server.recorddemo,
     ['stopdemo']	= server.stopdemo,
-    ['who']			= irc.playerList
+    ['who']			= irc.playerList,
+    ['stats']       = stats
 }

@@ -8,6 +8,10 @@ local using_mysql = (server.stats_use_mysql == 1)
 
 local backends = {}
 
+function server.stats_wrapper(name)
+    return (backends.query.player_totals(name) or nil)
+end
+
 if using_sqlite then
     
     backends.sqlite3 = loadfile("./script/module/stats/sqlite3.lua")()
