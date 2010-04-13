@@ -131,11 +131,30 @@ function irc:processData(client, data)
 	end
     
 	-- Detect a command and hand it off to the command processor
-	if string.match(data,":(.+)!.+ PRIVMSG (.+) :"..server.irc_bot_command_name.." (.+)") then
-		local nick, channel, command = string.match(data,":(.+)!.+ PRIVMSG (.+) :"..server.irc_bot_command_name.." (.+)")
-        irc.processCommand(nick, channel, command)
-		return
-	end
+    local irc_command = data
+    irc_command = irc_command:split("[^ ]+")
+    if #irc_command >= 2 and irc_command[2] == "PRIVMSG" then -- fix by Thomas, for not responding sometimes to commands
+        local nick = irc_command[1]
+              nick = nick:split("[^\!]+")
+              nick = nick[1]
+              nick = string.gsub(nick, ":", "")
+        
+        local chan = irc_command[3]
+        local args = ""
+        local bot_name = irc_command[4]
+              bot_name = string.gsub(bot_name, ":", "")
+              
+        for index, value in ipairs(irc_command) do
+            if index == 5 then
+                args = irc_command[index]
+            elseif index > 5 then
+                args = args .. " " .. irc_command[index]
+            end
+        end
+        
+        if server.irc_bot_name ~= bot_name and server.irc_bot_command_name ~= bot_name then return end
+        irc.processCommand(nick, chan, args)
+    end
 end 
 
 --Process any commands
