@@ -27,7 +27,7 @@ address_mask address_mask::operator<<(std::size_t n)const
 {
     assert(n <= 32);
     address_mask new_mask(0);
-    new_mask.m_value = m_value << n;
+    new_mask.m_value = (m_value << n) & address::UPPER_LIMIT;
     return new_mask;
 }
 

@@ -47,7 +47,7 @@ std::string address::to_string()const
 address address::operator<<(std::size_t n)const
 {
     assert(n <= 32);
-    return m_value << n;
+    return (m_value << n) & UPPER_LIMIT;
 }
 
 address address::operator>>(std::size_t n)const

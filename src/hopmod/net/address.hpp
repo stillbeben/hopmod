@@ -18,6 +18,9 @@ public:
     static const std::size_t bits = 32;
     static const std::size_t octet_parts = 4;
     
+    static const integral_type BROADCAST = 0xFFFFFFFF;
+    static const integral_type UPPER_LIMIT = 0xFFFFFFFF;
+    
     address();
     address(integral_type);
     address(octet_type, octet_type, octet_type, octet_type);

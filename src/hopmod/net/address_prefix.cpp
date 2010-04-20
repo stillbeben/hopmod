@@ -102,7 +102,7 @@ void address_prefix::to_string(cstring_buffer * output)const
     char mask[4];
     mask[0] = '\0';
     
-    std::size_t bits = m_mask.bits();
+    int bits = static_cast<int>(m_mask.bits());
     if(bits < 32) sprintf(mask, "/%i", bits);
     
     sprintf(*output, "%s%s", ip, mask);

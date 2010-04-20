@@ -2,6 +2,7 @@
 using namespace hopmod::ip;
 #include <iostream>
 #include <cassert>
+#include <limits>
 
 address_prefix ip_127_0_0_1     (address(127, 0, 0, 1), address_mask(32));
 address_prefix ip_127           (address(127, 0, 0, 0), address_mask(8));
@@ -213,6 +214,7 @@ void test_erase()
         assert(!child->next_match(&lookup));
     }
 }
+
 
 int main()
 {
