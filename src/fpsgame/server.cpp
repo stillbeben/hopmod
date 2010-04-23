@@ -1365,7 +1365,6 @@ namespace server
             gs.armour, gs.armourtype,
             gs.gunselect, GUN_PISTOL-GUN_SG+1, &gs.ammo[GUN_SG]);
         gs.lastspawn = gamemillis;
-        signal_spawn(ci->clientnum);
     }
 
     void sendwelcome(clientinfo *ci)
@@ -2592,6 +2591,7 @@ namespace server
                     putint(cm->messages, SV_SPAWN);
                     sendstate(cq->state, cm->messages);
                 });
+                signal_spawn(cq->clientnum);
                 break;
             }
             
