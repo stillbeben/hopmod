@@ -178,3 +178,5 @@ global masterauth_banned []
 global server_admin_password ""
 
 global web_admins []
+
+global mute_triggers [nigger nigga negro kike faggot motherfucker jude wichser kanake polake kinderficker "scheiss auslaender"]
