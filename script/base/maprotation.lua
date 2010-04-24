@@ -336,8 +336,10 @@ server.event_handler("disconnect", function()
             mode, map = get_nextgame(mode)
         end
         
-        server.changemap(map, mode, -1)
-        gamecount = gamecount + 1
+        server.sleep(0, function()
+            server.changemap(map, mode, -1)
+            gamecount = gamecount + 1
+        end)
     end
 
 end)
