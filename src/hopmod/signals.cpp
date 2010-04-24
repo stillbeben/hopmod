@@ -57,6 +57,7 @@ boost::signal<void (int)> signal_takeflag;
 boost::signal<void (int)> signal_dropflag;
 boost::signal<void (int)> signal_scoreflag;
 boost::signal<void (int)> signal_returnflag;
+boost::signal<void (const char *, int)> signal_scoreupdate;
 boost::signal<void ()> signal_maintenance;
 boost::signal<void (int)> signal_spawn;
 boost::signal<int (int,int,int,int), proceed> signal_damage;
@@ -348,6 +349,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_dropflag, "dropflag", normal_error_handler);
     slots.register_signal(signal_scoreflag, "scoreflag", normal_error_handler);
     slots.register_signal(signal_returnflag, "returnflag", normal_error_handler);
+    slots.register_signal(signal_scoreupdate, "scoreupdate", normal_error_handler);
     slots.register_signal(signal_spawn, "spawn", normal_error_handler);
     slots.register_signal(signal_damage, "damage", normal_error_handler);
     slots.register_signal(signal_setmaster, "setmaster", normal_error_handler);
@@ -420,6 +422,7 @@ void disconnect_all_slots()
     signal_dropflag.disconnect_all_slots();
     signal_scoreflag.disconnect_all_slots();
     signal_returnflag.disconnect_all_slots();
+    signal_scoreupdate.disconnect_all_slots();
     signal_spawn.disconnect_all_slots();
     signal_damage.disconnect_all_slots();
     

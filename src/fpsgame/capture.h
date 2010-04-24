@@ -854,6 +854,7 @@ struct captureclientmode : clientmode
         score &cs = findscore(team);
         cs.total += n;
         sendf(-1, 1, "riisi", SV_BASESCORE, base, team, cs.total);
+        signal_scoreupdate(team, cs.total);
     }
 
     void regenowners(baseinfo &b, int ticks)
@@ -989,6 +990,7 @@ struct captureclientmode : clientmode
         if(!lastteam) return;
         findscore(lastteam).total = 10000;
         sendf(-1, 1, "riisi", SV_BASESCORE, -1, lastteam, 10000);
+        signal_scoreupdate(lastteam, 10000);
         startintermission();
     }
 

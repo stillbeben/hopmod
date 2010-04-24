@@ -287,6 +287,7 @@ struct ctfclientmode : clientmode
         if(m_hold) spawnflag(goal);
         sendf(-1, 1, "rii9", SV_SCOREFLAG, ci->clientnum, relay, relay >= 0 ? ++flags[relay].version : -1, goal, ++flags[goal].version, flags[goal].spawnindex, team, score, ci->state.flags);
         signal_scoreflag(ci->clientnum);
+        signal_scoreupdate(ci->team, score);
         if(score >= FLAGLIMIT) startintermission();
     }
 

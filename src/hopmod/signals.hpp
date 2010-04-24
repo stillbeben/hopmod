@@ -90,6 +90,7 @@ extern boost::signal<void (int)>                                    signal_takef
 extern boost::signal<void (int)>                                    signal_dropflag;
 extern boost::signal<void (int)>                                    signal_scoreflag;
 extern boost::signal<void (int)>                                    signal_returnflag;
+extern boost::signal<void (const char *, int)>                      signal_scoreupdate;
 
 #endif
 
