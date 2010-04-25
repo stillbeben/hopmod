@@ -23,6 +23,7 @@ load_once("script/base/web/listener.lua")
 load_once("script/base/web/player_info.lua")
 load_once("script/base/web/team_info.lua")
 load_once("script/base/web/queryvars.lua")
+load_once("script/base/web/netstats.lua")
 
 local function unload()
     server.stop_http_server()
