@@ -1,6 +1,7 @@
 /*
     Copyright (C) 2010 Graham Daws
 */
+
 function HtmlTable(){
     
     var table = document.createElement("table");
@@ -10,6 +11,12 @@ function HtmlTable(){
     var columns = [];
     var sortPriority = [];
     
+    var thead = document.createElement("thead");
+    table.appendChild(thead);
+    
+    var tbody = document.createElement("tbody");
+    table.appendChild(tbody);
+        
     this.columns = function(fields, sortByFields){
         
         columns = fields;
@@ -20,7 +27,7 @@ function HtmlTable(){
             th.appendChild(document.createTextNode(columns[i].label));
             tr.appendChild(th);
         }
-        table.appendChild(tr);
+        thead.appendChild(tr);
         
         sortPriority = sortByFields || [];
     }
@@ -57,7 +64,7 @@ function HtmlTable(){
                 }
             }
         }
-        table.appendChild(tr);
+        tbody.appendChild(tr);
     }
     
     this.row = function(data, className){
@@ -87,6 +94,10 @@ function HtmlTable(){
             }
             insertRow(tr);
         }
+        
+        rowInterface.getRowElement = function(){
+            return tr;
+        }
 
         for(var i = 0; i < columns.length; i++){
             var td = document.createElement("td");
@@ -111,6 +122,10 @@ function HtmlTable(){
     this.attachTo = function(parent){
         parent.appendChild(table);
     }
+    
+    this.getTableElement = function(){
+        return table;
+    }
 }
 function descendingOrder(a, b){
     if(a==b) return 0;
@@ -123,3 +138,54 @@ function ascendingOrder(a, b){
     if(a < b) return 1;
     else return -1;
 }
+
+function EventDispatcher(publicInterface){
+    var self = this;
+    var listeners = {};
+    this.addListener = function(eventName, eventHandler){
+        if(listeners[eventName] === undefined) listeners[eventName] = [];
+        listeners[eventName].push(eventHandler);
+    }
+    this.signalEvent = function(){
+        var arrayOfListeners = listeners[arguments[0]];
+        if(!arrayOfListeners) return;
+        var callListenersArguments = Array.prototype.slice.call(arguments, 1);
+        $.each(arrayOfListeners, function(){
+            this.apply(publicInterface, callListenersArguments);
+        });
+    }
+    this.emptyListeners = function(eventName){
+        if(eventName){
+            listeners[eventName] = null;
+        }
+        else{
+            listeners = {};
+        }
+    }
+    if(publicInterface){
+        publicInterface.addListener = function(eventName, eventHandler){
+            self.addListener(eventName, eventHandler);
+        }
+    }
+}
+
+function isEmptyObject(object){
+    for(var x in object){return false;}
+    return true;
+}
+
+function Timer(delay, func){
+	var started = false;
+	var intervalId;
+	this.start = function(){
+		if(started) return;
+		intervalId = window.setInterval(func, delay);
+		started = true;
+	}
+	this.stop = function(){
+		if(!started) return;
+		window.clearInterval(intervalId);
+		started = false;
+	}
+}
+

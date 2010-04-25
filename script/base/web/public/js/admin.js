@@ -1,171 +1,92 @@
-/*
-    Hopmod Web Admin Control Panel
-    Copyright (C) 2010 Graham Daws
-*/
-var appTitle;
-var eventListeners = [];
-var clients = {};
-var teams = [];
-var singles = [];
-var spectators = [];
-var server = {};
-var ui = {};
-
 $(document).ready(function(){
     
-    appTitle = document.title;
+    var server = new Server;
     
-    hideServerStatus();
+    server.addListener("unauthorized", function(){
+        location.href = "/login?return=" + document.location;
+    });
     
-    createCommandShell();
-    createChatShell();
+    server.addListener("lost-connection", function(){
+        alert("Not connected");
+        $("input").attr("disabled", true);
+    });
     
-    server.updateVars = [
-        "web_admin_session_username", "servername", "gamemode", "map", "timeleft"
-    ];
+    createLoadingScreen(server);
     
-    server.update();
-    
-    clients_init();
-    clients_update();
-    
-    server_init();
-    
-    createListenerResource(eventListeners);
-    
-    $("#admin-startup").css("display", "none");
-    $("#admin-container").css("display","block");
+    server.ready(function(){
+        
+        installWidget("#chat-shell",    createChatShell,       server);
+        installWidget("#command-shell", createCommandShell,    server);
+        installWidget("#gameinfo",      createGameinfoView,    server);
+        installWidget("#netstats",      createNetstatsView,    server);
+        installWidget("#serverinfo",    createServerInfoView,  server);
+        
+        createClientTablesManager({
+            "spectators" : document.getElementById("spectators"),
+            "players"    : document.getElementById("players")
+        }, server);
+        
+        document.title = server.servername + " - " + document.title;
+        
+        $("#loading").remove();
+    });
 });
 
-function updateServerStatus(className, msg){
-    var serverStatus = $("#server-status");
-    if(!serverStatus.size()) return;
-    serverStatus.get(0).className = className;
-    serverStatus.text(msg);
-    serverStatus.show();
+function installWidget(pattern, createFunction, server){
+    $(pattern).each(function(){createFunction(this, server);});
 }
 
-function hideServerStatus(){
-    $("#server-status").hide();
-}
-
-function gotoLogin(){
-    alert("You are not logged in");
-    document.location = "/login?return=" + document.location;
-}
-
-function executeCommand(commandLine, responseHandler){
+function createLoadingScreen(server){
     
-    function success(data, textStatus){
-        hideServerStatus();
-        responseHandler(true, data);
-    }
-
-    function error(HttpObject, textStatus, errorThrown){
-        
-        switch(HttpObject.status){
-            case 0:
-            case 12029:
-                updateServerStatus("server-status-error", "Disconnected from Game Server!");
-                responseHandler(false, "<connection broken>");
-                break;
-            case 401:
-                gotoLogin();
-                break;
-            default:
-                hideServerStatus();
-                responseHandler(false, HttpObject.responseText);
-        }
-    }
-
-    $.ajax({
-        type:"POST",
-        url:"/serverexec",
-        contentType: "text/x-cubescript",
-        data: commandLine,
-        success: success,
-        error: error
-    });
-}
-
-server.event_handler = function(name, handler){
-    eventListeners.push({eventName: name, handler: handler});
-}
-
-function createCommandShell(){
-
-    var commandShell = document.getElementById("command-shell");
-    if(!commandShell) return;
-    $(commandShell).empty();
+    var div = document.createElement("div");
+    div.id = "loading";
+    div.style.backgroundColor = "#ffffff";
+    div.style.position = "absolute";
+    div.style.left = "0px";
+    div.style.top = "0px";
+    div.style.width = "100%";
+    div.style.height = "100%";
+    document.body.appendChild(div);
     
-    var heading = document.createElement("div");
-    heading.id = "command-shell-heading";
-    heading.appendChild(document.createTextNode("Command Shell"));
+    var icon = new Image();
+    icon.alt = "Loading...";
+    icon.src = "/static/presentation/loading.gif";
     
-    var outputContainer = document.createElement("div");
-    outputContainer.id = "command-shell-output";
+    var p = document.createElement("p");
+    $(p).text("Waiting for data snapshots...");
+    var ul = document.createElement("ul");
     
-    var output = document.createElement("div");
-    output.id = "command-shell-output-padding";
-    outputContainer.appendChild(output);
-    
-    var input = document.createElement("input");
-    input.type = "text";
-    
-    commandShell.appendChild(heading);
-    commandShell.appendChild(outputContainer);
-    commandShell.appendChild(input);
-    
-    $(input).keypress(function(e){
-    
-        switch(e.which){
-            case 13: // enter
-            {
-                if(this.value.length == 0) return;
-            
-                executeCommand(this.value, function(status, responseBody){
-                    
-                    var echo = document.createElement("div");
-                    echo.className = "echo-output";
-                    echo.appendChild(document.createTextNode(input.value));
-                    output.appendChild(echo);
-                    
-                    var serverResponse = document.createElement("div");
-                    
-                    if(status){
-                        serverResponse.className = "normal-output";
-                        if(!responseBody.length) serverResponse.className = "normal-no-output";
-                    }
-                    else{
-                        serverResponse.className = "error-output";
-                    }
-                    
-                    serverResponse.appendChild(document.createTextNode(responseBody));
-                    
-                    output.appendChild(serverResponse);
-                    
-                    $(outputContainer).scrollTop(output.scrollHeight);
-                    
-                    input.value = "";
-                });
-            
-                break;
+    server.addListener("loading",function(loadList){
+        $(ul).empty();
+        $.each(loadList, function(name, value){
+            if(value){
+                var li = document.createElement("li");
+                $(li).text(value);
+                ul.appendChild(li);
             }
+        });
+        if(isEmptyObject(loadList)){
+            $(p).text("Waiting for the GUI to load..");
         }
-        
     });
+    
+    div.appendChild(icon);
+    div.appendChild(p);
+    div.appendChild(ul);
 }
 
-function createChatShell(){
-
-    var chatShell = document.getElementById("chat-shell");
-    if(!chatShell) return;
-    $(chatShell).empty().addClass("text-shell");
+function createChatShell(parent, server){
+    
+    $(parent).addClass("text-shell");
     
     var heading = document.createElement("div");
     heading.id = "chat-shell-heading";
-    heading.className="text-shell-heading";
-    heading.appendChild(document.createTextNode("Chat"));
+    heading.className = "text-shell-heading";
+    $(heading).text("Chat");
+    
+    var outputContainer = document.createElement("div");
+    outputContainer.id = "chat-shell-output";
+    outputContainer.className="text-shell-output";
     
     var outputContainer = document.createElement("div");
     outputContainer.id = "chat-shell-output";
@@ -177,14 +98,16 @@ function createChatShell(){
     outputContainer.appendChild(output);
     
     var input = document.createElement("input");
+    input.id = "chat-shell-input";
+    input.className= "text-shell-input";
     input.type = "text";
     
-    chatShell.appendChild(heading);
-    chatShell.appendChild(outputContainer);
-    chatShell.appendChild(input);
+    parent.appendChild(heading);
+    parent.appendChild(outputContainer);
+    parent.appendChild(input);
     
     function addTextMessage(playerName, text, className){
-        
+    
         var message = document.createElement("p");
         message.className = "chat-shell-message";
         
@@ -212,16 +135,51 @@ function createChatShell(){
         $(outputContainer).scrollTop(output.scrollHeight);
     }
     
-    server.event_handler("text", function(cn, text){
-        var clientInfo = clients[cn];
-        if(!clientInfo) clientInfo = {name:"<unknown>"};
-        var playerName = clientInfo.name + "(" + cn + ")";
-        addTextMessage(playerName, text);
+    server.addListener("text", function(client, message){
+        var chatClass = null;
+        if(client.priv == "admin") chatClass = "chat-shell-admin";
+        else if(client.priv == "master") chatClass = "chat-shell-master";
+        addTextMessage(client.name + "(" + client.cn + ")", message, chatClass);
     });
     
-    server.event_handler("admin-message", function(admin, text){
-        addTextMessage(admin, text, "admin");
+    server.addListener("admin-message", function(admin, message){
+        addTextMessage(admin, message, "chat-shell-admin");
     });
+    
+    $(input).keypress(function(e){
+        switch(e.which){
+            case 13: // enter
+            {
+                if(this.value.length == 0) return;
+                server.executeCommand(server.makeCommand("console", server.web_admin_session_username, this.value), function(){
+                    input.value = "";
+                });
+            }
+        }
+    });
+}
+
+function createCommandShell(parent, server){
+    
+    $(parent).addClass("text-shell");
+    
+    var heading = document.createElement("div");
+    heading.id = "command-shell-heading";
+    $(heading).text("Command Shell");
+    
+    var outputContainer = document.createElement("div");
+    outputContainer.id = "command-shell-output";
+    
+    var output = document.createElement("div");
+    output.id = "command-shell-output-padding";
+    outputContainer.appendChild(output);
+    
+    var input = document.createElement("input");
+    input.type = "text";
+    
+    parent.appendChild(heading);
+    parent.appendChild(outputContainer);
+    parent.appendChild(input);
     
     $(input).keypress(function(e){
     
@@ -230,11 +188,29 @@ function createChatShell(){
             {
                 if(this.value.length == 0) return;
                 
-                executeCommand("console [" + server.web_admin_session_username + "] [" + this.value + "]", function(status, responseBody){
-                    //addTextMessage(server.web_admin_session_username, input.value);
+                server.executeCommand(this.value, function(status, responseBody){
+                    
+                    var echo = document.createElement("div");
+                    echo.className = "echo-output";
+                    echo.appendChild(document.createTextNode(input.value));
+                    output.appendChild(echo);
+                    
+                    var serverResponse = document.createElement("div");
+                    
+                    if(status){
+                        serverResponse.className = "normal-output";
+                        if(!responseBody.length) serverResponse.className = "normal-no-output";
+                    }
+                    else{
+                        serverResponse.className = "error-output";
+                    }
+                    
+                    serverResponse.appendChild(document.createTextNode(responseBody));
+                    output.appendChild(serverResponse);
+                    $(outputContainer).scrollTop(output.scrollHeight);
                     input.value = "";
                 });
-                
+            
                 break;
             }
         }
@@ -242,388 +218,422 @@ function createChatShell(){
     });
 }
 
-function createListenerResource(reactors){
+function createClientTablesManager(containerElements, server){
     
-    var reactorMap = {};
-    $.each(reactors, function(){
-        var a = reactorMap[this.eventName];
-        if(a === undefined) a = [];
-        a.push(this);
-        reactorMap[this.eventName] = a;
-    });
-    reactors = reactorMap;
+    var spectatorsTable = null;
+    var singlePlayersTables = null;
+    var teams = {};
+    var inTeammode = false;
     
-    var eventsList = "[";
-    var count = 0;
-    $.each(reactors, function(eventName){
-        if(count++ > 0) eventsList += ", ";
-        eventsList += "\"" + eventName + "\"";
-    });
-    eventsList += "]";
+    function updatePredicates(){
+        inTeammode = GamemodeInfo[server.game.gamemode].teams;
+    }
     
-    $.post("/listener", eventsList, function(response, textStatus){
-        if(textStatus != "success"){
-            updateServerStatus("server-status-error", "Failed to start event listening");
-            return;
+    updatePredicates();
+    
+    function updateClasses(client){
+        $(client.guiTableRow.getRowElement())
+            .removeClass("none")
+            .removeClass("master")
+            .removeClass("admin")
+            .removeClass("dead")
+            .removeClass("editing")
+            .removeClass("spectator")
+            .removeClass("alive")
+            .addClass(client.priv)
+            .addClass(client.status);
+    }
+    
+    function updateTableRow(client){
+        if(!client.guiTableRow) return;
+        client.guiTableRow.update(client);
+        updateClasses(client);
+    }
+    
+    function checkForEmptyTables(){
+        if(spectatorsTable && isEmptyObject(server.clients.spectators)){
+            spectatorsTable.destroy();
+            spectatorsTable = null;
         }
-        
-        eventLoop(response.listenerURI);
-    }, "json");
-
-    function eventLoop(listenerURI){
-        
-        $.getJSON(listenerURI, function(events, textStatus){
-            
-            if(textStatus != "success"){
-                updateServerStatus("server-status-error", "Event listening failure");
-                return;
-            }
-            
-            $.each(events, function(){
-                var event = this;
-                var reactor = reactors[event.name];
-                if(reactor){
-                    $.each(reactor, function(){
-                        if(this.handler) this.handler.apply(this, event.args);
-                    });
+        if(inTeammode){
+            $.each(teams, function(name){
+                if(isEmptyObject(server.clients.teams[name])){
+                    if(teams[name]){
+                        teams[name].destroy();
+                        delete teams[name];
+                    }
                 }
             });
-            
-            eventLoop(listenerURI);
+        }else{
+            if(singlePlayersTables && isEmptyObject(server.clients.players)){
+                singlePlayersTables.destroy();
+                singlePlayersTables = null;
+            }
+        }
+    }
+    
+    function removeTableRow(client){
+        if(!client.guiTableRow) return;
+        client.guiTableRow.remove();
+        delete client.guiTableRow;
+        checkForEmptyTables();
+    }
+    
+    function addPlayerTableRow(client){
+    
+        if(!containerElements.players) return;
+        
+        if(inTeammode){
+            if(!teams[client.team]){
+                
+                var table = new PlayersTable(containerElements.players);
+                teams[client.team] = table;
+                
+                var heading = document.createElement("caption");
+                heading.className = "playertable-heading";
+                $(heading).html("<span class=\"playertable-teamname\"> " + client.team + "</span>:&nbsp;<span class=\"playertable-teamscore\">0</span>");
+                $(table.getTableElement()).prepend(heading);
+                
+                if(client.team == "good"){
+                    $(heading).addClass("playertable-heading-team_good");
+                }
+                else if(client.team == "evil"){
+                    $(heading).addClass("playertable-heading-team_evil");
+                }
+                
+                updateTeamScore(client.team, server.teams.score[client.team]);
+            }
+            teams[client.team].addClient(client);
+            updateClasses(client);
+        }else{
+            if(!singlePlayersTables){
+                singlePlayersTables = new PlayersTable(containerElements.players);
+            }
+            singlePlayersTables.addClient(client);
+            updateClasses(client);
+        }
+    }
+    
+    function addSpectatorTableRow(client){
+        
+        if(!containerElements.spectators) return;
+        
+        if(!spectatorsTable){
+            spectatorsTable = new SpectatorsTable(containerElements.spectators);
+        }
+        
+        spectatorsTable.addClient(client);
+    }
+    
+    function addPlayers(players){
+        $.each(players, function(){
+            addPlayerTableRow(this);
         });
     }
-}
-
-function addClientToPlayerTable(client){
-    if(client.status != "spectator"){
-        if(isTeamMode(server.gamemode)) (teams[client.team] = teams[client.team] || []).push(client);
-        else singles.push(client);
-    }
-    else{
-        spectators.push(client);
-    }
-}
-
-function addClientToUiTable(client){
-    var table;
-    if(client.status == "spectator"){
-        if(ui.spectators) table = ui.spectators;
-    }
-    else{
-        if(isTeamMode(server.gamemode)) table = ui.teams[client.team];
-        else table = ui.players;
-    }
-    if(!table){
-        updatePlayersDiv();
-        return;
-    }
-    clients[client.cn].tableRow = table.row(client);
-    updateClientUiTableRow(clients[client.cn]);
-}
-
-function updateClientUiTableRow(client){
-    $(client.tableRow.tableRowElement)
-        .removeClass("no-priv")
-        .removeClass("master-priv")
-        .removeClass("admin-priv")
-        .addClass(getPrivilegeClassName(client.priv));
-}
-
-function clients_init(){
-
-    function onDisconnect(cn){
-        clients[cn].tableRow.remove(); 
-        clients[cn] = null;
+    
+    function updateTeamScore(team, score){
+        $(".playertable-teamscore", teams[team].getTableElement()).text(score);
     }
     
-    function onPlayerFrag(target, actor){
-        
-        var deaths = ++clients[target].deaths;
-        var frags = ++clients[actor].frags;
-        
-        var targetClient = clients[target];
-        var actorClient = clients[actor];
-        
-        targetClient.tableRow.update({deaths: deaths});
-        actorClient.tableRow.update({frags: frags});
-        
-        $(targetClient.tableRow.tableRowElement).addClass("dead");
+    var events = [
+        "rename", "spawn", "privilege", "suicide"
+    ];
+    
+    for(var i = 0; i < events.length; i++){
+        server.clients.addListener(events[i], updateTableRow);
     }
     
-    function onPlayerSpawn(cn){
-        if(clients[cn]) $(clients[cn].tableRow.tableRowElement).removeClass("dead");
-    }
-    
-    function onSpectator(cn, joined){
-        clients[cn].status = (joined ? "spectator" : "dead");
-        clients[cn].tableRow.remove();
-        resyncClientTables();
-        addClientToUiTable(clients[cn]);
-    }
-    
-    server.event_handler("connect", getSingleClientUpdate);
-    server.event_handler("disconnect", onDisconnect);
-    server.event_handler("maploaded", getSingleClientUpdate);
-    server.event_handler("rename", getSingleClientUpdate);
-    server.event_handler("spectator", onSpectator);
-    server.event_handler("mapchange", clients_update);
-    server.event_handler("frag", onPlayerFrag);
-    server.event_handler("spawn", onPlayerSpawn);
-    server.event_handler("privilege", getSingleClientUpdate);
-    server.event_handler("addbot", function(ownerCn, skill, botCn){getSingleClientUpdate(botCn);});
-    server.event_handler("botleft", onDisconnect);
-}
-
-function server_init(){
-
-    server.event_handler("timeupdate", function(timeleft){
-        server.timeleft = timeleft;
-        updateGameInfoDiv();
-    });
-
-    server.event_handler("mapchange", function(){server.update();});
-}
-
-function getSingleClientUpdate(cn){
-    $.getJSON("/clients/" + cn, function(response, textStatus){
-        if(textStatus != "success"){
-            updateServerStatus("server-status-error", "Clients update failure");
-            return;
-        }
-        cn = response.cn;
-        if(clients[cn]){
-            for(var key in response) clients[cn][key] = response[key];
-            clients[cn].tableRow.update(clients[cn]);
-            if(clients[cn].status != "dead") $(clients[cn].tableRow.tableRowElement).removeClass("dead");
-            updateClientUiTableRow(clients[cn]);
+    server.clients.addListener("connect", function(client){
+        if(client.status == "spectator"){
+            addSpectatorTableRow(client);
         }
         else{
-            clients[cn] = response;
-            addClientToPlayerTable(response);
-            addClientToUiTable(response);
+            addPlayerTableRow(client);
         }
     });
-}
-
-function resyncClientTables(){
-    spectators = [];
-    teams = {};
-    singles = [];
-    for(var cn in clients) addClientToPlayerTable(clients[cn]);
-}
-
-function clients_update(){
     
-    $.getJSON("/clients", function(response, textStatus){
+    server.clients.addListener("disconnect", removeTableRow);
+    
+    server.clients.addListener("reteam", function(client){
+        removeTableRow(client);
+        addPlayerTableRow(client);
+    });
+    
+    server.clients.addListener("frag", function(actor, target){
+        updateTableRow(actor);
+        updateTableRow(target);
+    });
+    
+    server.clients.addListener("spectator", function(client, joined){
+        removeTableRow(client);
+        if(joined){
+            addSpectatorTableRow(client);
+        }else{
+            addPlayerTableRow(client);
+        }
+    });
+    
+    server.addListener("mapchange", function(){
         
-        if(textStatus != "success"){
-            updateServerStatus("server-status-error", "Clients update failure");
-            return;
+        if(singlePlayersTables){
+            singlePlayersTables.destroy();
+            singlePlayersTables = null;
         }
         
-        spectators = [];
+        $.each(teams, function(name){
+            this.destroy();
+        });
         teams = {};
-        singles = [];
         
-        $.each(response, function(){
-            clients[this.cn] = this;
-            addClientToPlayerTable(this);
-        });
+        updatePredicates();
         
-        updatePlayersDiv();
+        addPlayers(server.clients.players);
+    });
+    
+    server.teams.addListener("scoreupdate", function(team, score){
+        updateTeamScore(team, score);
+    });
+    
+    addPlayers(server.clients.players);
+    
+    $.each(server.clients.spectators, function(){
+        addSpectatorTableRow(this);
     });
 }
 
-function swapTableRowElements(firstRow, secondRow){
-    secondRow.parentNode.insertBefore(secondRow, firstRow);
-    firstRow.parentNode.removeChild(secondRow);
-}
-
-server.update = function(){
-    
-    var queryvars = $.toJSON(this.updateVars);
-    
-    $.post("/queryvars", queryvars, function(response, textStatus){
-        
-        if(textStatus != "success"){
-            updateServerStatus("server-status-error", "Server update failure");
-            return;
-        }
-        
-        $.each(response, function(name, value){
-            server[name] = value;
-        });
-        
-        updateServerInfoDiv();
-        updateGameInfoDiv();
-        
-    }, "json");
-}
-
-function createPlayerControlLinks(data){
+function createPlayerControlLinks(client){
     var kick = document.createElement("a");
     kick.className = "kick-button";
     kick.href="#";
     kick.title="Kick";
     kick.onclick = function(){
-        var yes = confirm("You are you sure you want to kick " + data.name + "(" + data.cn + ")");
+        var yes = confirm("You are you sure you want to kick " + client.name + "(" + client.cn + ")");
         if(yes){
-            executeCommand("kick " + data.cn);
+            client.kick(1440);
         }
         return false;
     }
     return kick;
 }
 
-function createPlayersTable(parent, playersCollection, team){
-    var tableContainer = document.createElement("div");
-    tableContainer.className = "team";
-    tableContainer.id = "team-" + team;
-    var heading = document.createElement("h2");
-    heading.appendChild(document.createTextNode(team || "Players"));
-    tableContainer.appendChild(heading);
+function PlayersTable(parent){
     
     var table = new HtmlTable();
     table.columns([
-        {label:"CN", key:"cn"},
-        {label:"IP Addr", key:"ip"},
-        {label:"Name", key:"name"},
-        {label:"Ping", key:"ping"},
-        {label:"Frags", key:"frags"},
-        {label:"Deaths", key:"deaths"},
-        {label:"Teamkills", key:"teamkills"},
+        {label:"CN",            key:"cn"},
+        {label:"IP Addr",       key:"ip"},
+        {label:"Name",          key:"name"},
+        {label:"Ping",          key:"ping"},
+        {label:"Frags",         key:"frags"},
+        {label:"Deaths",        key:"deaths"},
+        {label:"Teamkills",     key:"teamkills"},
         {label:"", cellFunction: createPlayerControlLinks, className:"player-control-links"}
     ], [{key:"frags", order: descendingOrder}, {key:"deaths", order: ascendingOrder}]);
     
-    $.each(playersCollection, function(){
-        clients[this.cn].tableRow = table.row(this, getPrivilegeClassName(this.priv));
-        if(this.status == "dead") $(clients[this.cn].tableRow.tableRowElement).addClass("dead");
-    });
+    table.attachTo(parent);
     
-    table.attachTo(tableContainer);
-    parent.appendChild(tableContainer);
-    return table;
+    this.getParentElement = function(){
+        return parent;
+    }
+    
+    this.getTableElement = function(){
+        return table.getTableElement();
+    }
+    
+    this.addClient = function(client){
+        client.guiTableRow = table.row(client);
+    }
+    
+    this.removeClient = function(client){
+        client.guiTableRow.remove();
+    }
+    
+    this.destroy = function(){
+        $(table.getTableElement()).remove();
+    }
 }
 
-function createSpectatorsTable(parent, specsCollection){
-    var tableContainer = document.createElement("div");
-    tableContainer.className = "spectators";
-    var heading = document.createElement("h2");
-    heading.appendChild(document.createTextNode("Spectators"));
-    tableContainer.appendChild(heading);
+function SpectatorsTable(parent){
+    
     var table = new HtmlTable();
     table.columns([
-        {label:"CN", key:"cn"},
-        {label:"IP Addr", key:"ip"},
-        {label:"Priv", key:"priv"},
-        {label:"Name", key:"name"},
-        {label:"", cellFunction: createPlayerControlLinks, className:"player-control-links"}
+        {label:"CN",        key:"cn"},
+        {label:"IP Addr",   key:"ip"},
+        {label:"Name",      key:"name"}
     ]);
-    $.each(specsCollection, function(){
-        clients[this.cn].tableRow = table.row(this);
-    });
-    table.attachTo(tableContainer);
-    parent.appendChild(tableContainer);
-    return table;
-}
-
-function isTeamMode(gamemode){
-    switch(gamemode){
-        case "insta ctf":
-            return true;
+    table.attachTo(parent);
+    
+    var heading = document.createElement("caption");
+    heading.className = "playertable-heading";
+    $(heading).text("Spectators");
+    $(table.getTableElement()).prepend(heading);
+    
+    this.getParentElement = function(){
+        return parent;
     }
-    return false;
+    
+    this.addClient = function(client){
+        client.guiTableRow = table.row(client);
+    }
+    
+    this.removeClient = function(client){
+        client.guiTableRow.remove();
+    }
+    
+    this.destroy = function(){
+        $(parent).empty();
+    }
 }
 
-function updatePlayersDiv(){
+function createGameinfoView(parent, server){
+    
+    var map = document.createElement("span");
+    var gamemode = document.createElement("span");
+    var timeleft = document.createElement("span");
+    
+    map.id = "gameinfo-map";
+    gamemode.id = "gameinfo-gamemode";
+    timeleft.id = "gameinfo-timeleft";
+    
+    $(map).text(server.game.map);
+    $(gamemode).text(server.game.gamemode);
+    updateTimeleft(server.game.timeleft);
+    
+    parent.appendChild(gamemode);
+    parent.appendChild(document.createTextNode(": "));
+    parent.appendChild(map);
+     parent.appendChild(document.createTextNode(", "));
+    parent.appendChild(timeleft);
+    
+    server.addListener("mapchange", function(mapName, gamemodeName){
+        $(map).text(mapName);
+        $(gamemode).text(gamemodeName);
+        updateTimeleft(server.game.timeleft);
+    });
+    
+    function updateTimeleft(mins){
+        if(mins == 0){
+            $(timeleft).text("intermission");
+        }
+        else{
+            $(timeleft).text(mins + (mins != 1 ? " minutes" : " minute"));
+        }
+    }
+    
+    server.game.addListener("timeupdate", function(mins){
+        updateTimeleft(mins);
+    });
+}
 
-    var playersDiv = document.getElementById("players");
-    if(!playersDiv) return;
-    $(playersDiv).empty();
+function createNetstatsView(parent, server){
     
-    ui.spectators = null;
-    ui.teams = {};
-    ui.players = null;
+    var download_rate = document.createElement("span");
+    download_rate.id = "netstats-download-rate";
+    download_rate.title = "download rate";
     
-    if(isTeamMode(server.gamemode)){
-        $.each(teams, function(name){
-            ui.team[name] = createPlayersTable(playersDiv, this, name);
+    var download_rate_chart = document.createElement("span");
+    var download_rate_points = [];
+    
+    var upload_rate = document.createElement("span");
+    upload_rate.id = "netstats-upload-rate";
+    upload_rate.title = "upload rate";
+    
+    var upload_rate_chart = document.createElement("span");
+    var upload_rate_points = [];
+    
+    parent.appendChild(download_rate);
+    parent.appendChild(download_rate_chart);
+    
+    parent.appendChild(upload_rate);
+    parent.appendChild(upload_rate_chart);
+    
+    var pingStatsDiv = document.createElement("span");
+    
+    var minPing = document.createElement("span");
+    var avgPing = document.createElement("span");
+    var maxPing = document.createElement("span");
+    
+    pingStatsDiv.appendChild(document.createTextNode("Player pings: "));
+
+    pingStatsDiv.appendChild(minPing);
+    pingStatsDiv.appendChild(avgPing);
+    pingStatsDiv.appendChild(maxPing);
+    
+    parent.appendChild(pingStatsDiv);
+    
+    var chart_options = {
+        type : "line",
+        width : "100px",
+        lineColor: "blue"
+    }
+    
+    function updateNetstats(){
+        $.getJSON("/netstats", function(response, textStatus){
+                
+            if(textStatus != "success"){
+                return;
+            }
+
+            var value = response.download_rate/1000;
+            download_rate_points.push(value);
+            if(download_rate_points.length == 13){
+                download_rate_points.shift();
+            }
+            
+            $(download_rate).text(value + "kb/sec");
+            $(download_rate_chart).sparkline(download_rate_points, chart_options);
+            download_rate.title = "download rate\n\nDownloaded: " + response.downloaded/1000000 + "MB";
+            
+            value = response.upload_rate/1000;
+            upload_rate_points.push(value);
+            if(upload_rate_points.length == 13){
+                upload_rate_points.shift();
+            }
+            $(upload_rate).text(value + "kb/sec");
+            $(upload_rate_chart).sparkline(upload_rate_points, chart_options);
+            upload_rate.title = "upload rate\n\nUploaded: " + response.uploaded/1000000 + "MB";
+            
+            if(response.min_ping && response.avg_ping && response.max_ping){
+                $(minPing).text("min(" + response.min_ping + ")");
+                $(avgPing).text("avg(" + response.avg_ping + ")");
+                $(maxPing).text("max(" + response.max_ping + ")");
+                $(pingStatsDiv).show();
+            }
+            else{
+                $(pingStatsDiv).hide();
+            }
         });
     }
-    else{
-        if(singles.length) ui.players = createPlayersTable(playersDiv, singles);
-    }
     
-    playersDiv.appendChild(createClearDiv());
-    if(spectators.length){
-        ui.spectators = createSpectatorsTable(playersDiv, spectators);
-    }
+    updateNetstats();
+    
+    var timer = new Timer(5000, updateNetstats);
+    timer.start();
 }
 
-function updateServerInfoDiv(){
-    var infoDiv = document.getElementById("server-info");
-    if(!infoDiv) return;
-    $(infoDiv).empty();
+function createServerInfoView(parent, server){
     
-    var infoList = document.createElement("ul");
-    infoList.className = "";
+    var players = document.createElement("span");
+    var mastermode = document.createElement("span");
+    var serverName = document.createElement("span");
+    var localAddress = document.createElement("span");
     
-    function createListItem(text, id){
-        var li = document.createElement("li");
-        li.appendChild(document.createTextNode(text));
-        li.id = id;
-        infoList.appendChild(li);
+    parent.appendChild(players);
+    parent.appendChild(mastermode);
+    parent.appendChild(serverName);
+    parent.appendChild(localAddress);
+    
+    $(serverName).text(server.servername);
+    $(mastermode).text(mastermodeName[server.mastermode]);
+    $(localAddress).text(server.serverip + ":" + server.serverport);
+    
+    function updateClientCount(){
+        $(players).text(server.clients.numberOfClients + "/" + server.maxclients);
     }
     
-    document.title = server.servername + " - " + appTitle;
-    createListItem(server.servername, "server-name");
+    server.clients.addListener("connect", updateClientCount);
+    server.clients.addListener("disconnect", updateClientCount);
     
-    createListItem(appTitle, "app-title");
-    
-    infoDiv.appendChild(infoList);
+    updateClientCount();
 }
 
-function updateGameInfoDiv(){
-    var infoDiv = document.getElementById("game-info");
-    if(!infoDiv) return;
-    $(infoDiv).empty();
-    
-    var gamemode = document.createElement("span");
-    var mapname = document.createElement("span");
-    var minsleft = document.createElement("span");
-    
-    gamemode.id = "gamemode";
-    gamemode.appendChild(document.createTextNode(server.gamemode));
-    
-    mapname.id = "mapname";
-    mapname.appendChild(document.createTextNode(server.map));
-    
-    minsleft.id = "timeleft";
-    var timeleft_message = "";
-    if(server.timeleft > 0) timeleftMessage = server.timeleft + " mins left";
-    else timeleftMessage = "intermission";
-    minsleft.appendChild(document.createTextNode(timeleftMessage));
-    
-    infoDiv.appendChild(gamemode);
-    infoDiv.appendChild(document.createTextNode(" - "));
-    infoDiv.appendChild(mapname);
-    infoDiv.appendChild(document.createTextNode(" - "));
-    infoDiv.appendChild(minsleft);
-}
-
-function createClearDiv(){
-    var clear = document.createElement("div");
-    clear.className = "clear";
-    return clear;
-}
-
-function getPrivilegeClassName(privName){
-    var privClassName = "no-priv";
-    if(privName == "master"){
-        privClassName = "master-priv";
-    }
-    else if(privName == "admin"){
-        privClassName = "admin-priv";
-    }
-    return privClassName;
-}
