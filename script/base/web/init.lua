@@ -21,6 +21,7 @@ load_once("script/base/web/admin.lua")
 load_once("script/base/web/serverexec.lua")
 load_once("script/base/web/listener.lua")
 load_once("script/base/web/player_info.lua")
+load_once("script/base/web/team_info.lua")
 load_once("script/base/web/queryvars.lua")
 
 local function unload()
