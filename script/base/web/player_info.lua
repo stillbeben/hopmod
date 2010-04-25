@@ -24,6 +24,10 @@ local function player(p)
     output.misses = p:misses()
     output.shots = p:shots()
     
+    if(output.status == "spectator") then
+        output.team = nil
+    end
+    
     return output
 end
 

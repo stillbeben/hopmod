@@ -91,20 +91,20 @@ local function getLoginFormHtml(attributes)
         </script>
     </head>
     <body>
-        <div id="server-info"><span id="app-title">Cube 2 Server Control Panel</span></div>
+        <div id="loginpage">
+        <h1>%s - <span id="app-title">Cube 2 Server Control Panel</span></h2>
         <form method="post" id="login-form" name="login" action="?return=%s">
             %s
-            <fieldset>
-            <p><label for="username">Username</label><input type="text" name="username" value="%s" /></p>
-            <p><label for="password">Password</label><input type="password" name="password" /></p>
-            </fieldset>
-            <p><input type="submit" value="Login" /></p>
+            <p><label for="username">Username</label><input type="text" name="username" id="username" value="%s" /></p>
+            <p><label for="password">Password</label><input type="password" name="password" id="password" /></p>
+            <p><span class="label-space">&nbsp;</span><input type="submit" value="Login" /></p>
         </form>
+        </div>
     </body>
 </html>
     ]]
     
-    return string.format(html, attributes.returnUrl or "", failed, attributes.username or "")
+    return string.format(html, server.servername, attributes.returnUrl or "", failed, attributes.username or "")
 end
 
 http_server_root["login"] = http_server.resource({
