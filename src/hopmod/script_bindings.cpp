@@ -99,6 +99,14 @@ inline void bind_funvar(Functor fun, const char * id, script::env & environ)
     environ.bind_global_object(var, const_string::literal(id));
 }
 
+template<typename T, typename GetterFunction, typename SetterFunction>
+inline script::env_object * bind_property(GetterFunction getter, SetterFunction setter, const char * id, script::env & environ)
+{
+    observed_variable * var = new observed_variable(script::bind_property<T>(getter, setter, id, environ), id);
+    var->set_adopted();
+    environ.bind_global_object(var, const_string::literal(id));
+}
+
 } //namespace hopmod
 
 void register_server_script_bindings(script::env & env)
@@ -286,7 +294,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_const((int)SHUTDOWN_RESTART, "SHUTDOWN_RESTART", env);
     script::bind_const((int)SHUTDOWN_RELOAD, "SHUTDOWN_RELOAD", env);
     
-    script::bind_property<int>(
+    hopmod::bind_property<int>(
         boost::bind(script::property<int>::generic_getter, boost::ref(server::mastermode)),
         server::script_set_mastermode, "mastermode", env);
     
@@ -348,14 +356,14 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_freefunc(parse_player_command_line, "parse_player_command", env);
     
-    script::bind_property<unsigned int>(
+    hopmod::bind_property<unsigned int>(
         boost::bind(script::property<unsigned int>::generic_getter, maintenance_frequency),
         set_maintenance_frequency, "maintenance_frequency", env);
     
     script::bind_freefunc(file_exists, "file_exists", env);
     script::bind_freefunc(dir_exists, "dir_exists", env);
     
-    script::bind_property<bool>(
+    hopmod::bind_property<bool>(
         server::get_setmaster_autoapprove, server::enable_setmaster_autoapprove, "allow_setmaster", env);
     
     script::bind_freefunc(start_http_server, "start_http_server", env);
