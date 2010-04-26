@@ -309,10 +309,10 @@ void register_server_script_bindings(script::env & env)
     
     hopmod::bind_var(server::broadcast_mapmodified, "broadcast_mapmodified", env);
     
-    hopmod::bind_var(tx_bytes, "tx_bytes", env);
-    hopmod::bind_var(rx_bytes, "rx_bytes", env);
-    hopmod::bind_var(tx_packets, "tx_packets", env);
-    hopmod::bind_var(rx_packets, "rx_packets", env);
+    script::bind_ro_var(tx_bytes, "tx_bytes", env);
+    script::bind_ro_var(rx_bytes, "rx_bytes", env);
+    script::bind_ro_var(tx_packets, "tx_packets", env);
+    script::bind_ro_var(rx_packets, "rx_packets", env);
     
     hopmod::bind_var(server::timer_alarm_threshold, "timer_alarm_threshold", env);
     
