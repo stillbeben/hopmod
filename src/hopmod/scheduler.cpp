@@ -126,6 +126,11 @@ void sched_callback(int (* fun)(void *),void * closure)
     free_scheduled.schedule(boost::bind(fun, closure), 0);
 }
 
+void sched_callback(int (* fun)(void *), void * closure, int delay)
+{
+    free_scheduled.schedule(boost::bind(fun, closure), delay);
+}
+
 void update_scheduler(int timenow)
 {
     free_scheduled.update(timenow);

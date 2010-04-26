@@ -57,6 +57,7 @@ void register_server_script_bindings(fungu::script::env &);
 void init_scheduler();
 void update_scheduler(int);
 void sched_callback(int (*)(void *),void *);
+void sched_callback(int (*)(void *),void *, int);
 
 #include <vector>
 #include <string>
