@@ -101,6 +101,7 @@ extern boost::signal<void (int)> signal_shutdown;
 extern boost::signal<void ()> signal_shutdown_scripting;
 extern boost::signal<void ()> signal_reloadhopmod;
 extern boost::signal<void ()> signal_maintenance;
+extern boost::signal<void (const char *)> signal_varchanged;
 
 /**
     @brief Register signals with the global script::slot_factory instance.

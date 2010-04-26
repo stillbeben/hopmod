@@ -66,6 +66,7 @@ boost::signal<int (int,int), proceed> signal_pingpong;
 boost::signal<int (int,int), maxvalue> signal_respawnrequest;
 boost::signal<void ()> signal_clearbans_request;
 boost::signal<void (int, const char *, int, int, const char *)> signal_kick_request;
+boost::signal<void (const char *)> signal_varchanged;
 
 static void destroy_slot(int handle);
 namespace lua{
@@ -366,6 +367,8 @@ void register_signals(script::env & env)
     slots.register_signal(signal_clearbans_request, "clearbans_request", normal_error_handler);
     slots.register_signal(signal_kick_request, "kick_request", normal_error_handler);
     
+    slots.register_signal(signal_varchanged, "varchanged", normal_error_handler);
+    
     script::bind_freefunc(cubescript::register_event_handler, "event_handler", env);
     script::bind_freefunc(destroy_slot, "cancel_handler", env);
     
@@ -390,7 +393,6 @@ void disconnect_all_slots()
     signal_shutdown_scripting.disconnect_all_slots();
     signal_reloadhopmod.disconnect_all_slots();
     signal_maintenance.disconnect_all_slots();
-    
     signal_connecting.disconnect_all_slots();
     signal_connect.disconnect_all_slots();
     signal_disconnect.disconnect_all_slots();
@@ -433,7 +435,8 @@ void disconnect_all_slots()
     signal_scoreupdate.disconnect_all_slots();
     signal_spawn.disconnect_all_slots();
     signal_damage.disconnect_all_slots();
-    
+    signal_respawnrequest.disconnect_all_slots();
     signal_kick_request.disconnect_all_slots();
     signal_clearbans_request.disconnect_all_slots();
+    signal_varchanged.disconnect_all_slots();
 }

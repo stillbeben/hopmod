@@ -29,6 +29,78 @@ static void setup_default_arguments()
     recorddemo_defargs.push_back(static_cast<const char *>(""));
 }
 
+namespace hopmod{
+
+class observed_variable:public script::env_object
+{
+public:
+    observed_variable(script::env_object * decorated, const char *id)
+    :m_decorated(decorated), m_id(id)
+    {
+        
+    }
+    
+    script::env_object::object_type get_object_type()const
+    {
+        return m_decorated->get_object_type();
+    }
+    
+    void assign(const script::any & value)
+    {
+        m_decorated->assign(value);
+        signal_varchanged(m_id);
+    }
+    
+    script::any call(script::env_object::call_arguments & args, script::env_frame * frm)
+    {
+        script::any ret =  m_decorated->call(args, frm);
+        signal_varchanged(m_id);
+        return ret;
+    }
+    
+    script::any value()
+    {
+        return m_decorated->value();
+    }
+    
+    #ifdef FUNGU_WITH_LUA
+    void value(lua_State * L)
+    {
+        m_decorated->value(L);
+    }
+    #endif
+private:
+    script::env_object::shared_ptr m_decorated;
+    const char * m_id;
+};
+
+template<typename T>
+inline script::env_object * bind_var(T & ref, const char * id, script::env & environ)
+{
+    observed_variable * var = new observed_variable(script::bind_var(ref, id, environ), id);
+    var->set_adopted();
+    environ.bind_global_object(var, const_string::literal(id));
+    return var;
+}
+
+template<typename T>
+inline void bind_wo_var(T & ref, const char * id, script::env & environ)
+{
+    observed_variable * var = new observed_variable(script::bind_wo_var(ref, id, environ), id);
+    var->set_adopted();
+    environ.bind_global_object(var, const_string::literal(id));
+}
+
+template<typename T,typename Functor>
+inline void bind_funvar(Functor fun, const char * id, script::env & environ)
+{
+    observed_variable * var = new observed_variable(script::bind_funvar<T>(fun, id, environ), id);
+    var->set_adopted();
+    environ.bind_global_object(var, const_string::literal(id));
+}
+
+} //namespace hopmod
+
 void register_server_script_bindings(script::env & env)
 {
     setup_default_arguments();
@@ -152,47 +224,47 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::enddemorecord, "stopdemo", env);
     script::bind_freefunc(server::add_allowed_ip, "allow_ip", env);
     
-    script::bind_var(server::serverdesc, "servername", env);
+    hopmod::bind_var(server::serverdesc, "servername", env);
     script::bind_ro_var(server::smapname, "map", env);
-    script::bind_var(server::serverpass, "server_password", env);
-    script::bind_wo_var(server::adminpass, "admin_password", env);
+    hopmod::bind_var(server::serverpass, "server_password", env);
+    hopmod::bind_wo_var(server::adminpass, "admin_password", env);
     script::bind_freefunc(server::compare_admin_password, "check_admin_password", env);
     script::bind_ro_var(server::currentmaster, "master", env);
     script::bind_ro_var(server::minremain, "timeleft", env);
-    script::bind_var(server::interm, "intermission", env);
+    hopmod::bind_var(server::interm, "intermission", env);
     script::bind_ro_var(totalmillis, "uptime", env);
     script::bind_ro_var(server::gamemillis, "gamemillis", env);
     script::bind_ro_var(server::gamelimit, "gamelimit", env);
-    script::bind_var(maxclients, "maxplayers", env);
-    script::bind_var(maxclients, "maxclients", env);
-    script::bind_var(serverip, "serverip", env);
-    script::bind_var(serverport, "serverport", env);
-    script::bind_var(server::next_gamemode, "next_mode", env);
-    script::bind_var(server::next_mapname, "next_map", env);
-    script::bind_var(server::next_gametime, "next_gametime", env);
-    script::bind_var(server::reassignteams, "reassignteams", env);
-    script::bind_funvar<int>(server::getplayercount, "playercount", env);
-    script::bind_funvar<int>(server::getspeccount, "speccount", env);
-    script::bind_funvar<int>(server::getbotcount, "botcount", env);
-    script::bind_var(server::aiman::botlimit, "botlimit", env);
-    script::bind_var(server::aiman::botbalance, "botbalance", env);
-    script::bind_funvar<const char *>(server::gamemodename, "gamemode", env);
+    hopmod::bind_var(maxclients, "maxplayers", env);
+    hopmod::bind_var(maxclients, "maxclients", env);
+    hopmod::bind_var(serverip, "serverip", env);
+    hopmod::bind_var(serverport, "serverport", env);
+    hopmod::bind_var(server::next_gamemode, "next_mode", env);
+    hopmod::bind_var(server::next_mapname, "next_map", env);
+    hopmod::bind_var(server::next_gametime, "next_gametime", env);
+    hopmod::bind_var(server::reassignteams, "reassignteams", env);
+    hopmod::bind_funvar<int>(server::getplayercount, "playercount", env);
+    hopmod::bind_funvar<int>(server::getspeccount, "speccount", env);
+    hopmod::bind_funvar<int>(server::getbotcount, "botcount", env);
+    hopmod::bind_var(server::aiman::botlimit, "botlimit", env);
+    hopmod::bind_var(server::aiman::botbalance, "botbalance", env);
+    hopmod::bind_funvar<const char *>(server::gamemodename, "gamemode", env);
     
-    script::bind_var(server::allow_mm_veto, "allow_mastermode_veto", env);
-    script::bind_var(server::allow_mm_locked, "allow_mastermode_locked", env);
-    script::bind_var(server::allow_mm_private, "allow_mastermode_private", env);
+    hopmod::bind_var(server::allow_mm_veto, "allow_mastermode_veto", env);
+    hopmod::bind_var(server::allow_mm_locked, "allow_mastermode_locked", env);
+    hopmod::bind_var(server::allow_mm_private, "allow_mastermode_private", env);
     
-    script::bind_var(server::allow_item[I_SHELLS-I_SHELLS], "allow_shells", env);
-    script::bind_var(server::allow_item[I_BULLETS-I_SHELLS], "allow_bullets", env);
-    script::bind_var(server::allow_item[I_ROCKETS-I_SHELLS], "allow_rockets", env);
-    script::bind_var(server::allow_item[I_ROUNDS-I_SHELLS], "allow_rounds", env);
-    script::bind_var(server::allow_item[I_GRENADES-I_SHELLS], "allow_grenades", env);
-    script::bind_var(server::allow_item[I_CARTRIDGES-I_SHELLS], "allow_cartridges", env);
-    script::bind_var(server::allow_item[I_HEALTH-I_SHELLS], "allow_health", env);
-    script::bind_var(server::allow_item[I_BOOST-I_SHELLS], "allow_healthboost", env);
-    script::bind_var(server::allow_item[I_GREENARMOUR-I_SHELLS], "allow_greenarmour", env);
-    script::bind_var(server::allow_item[I_YELLOWARMOUR-I_SHELLS], "allow_yellowarmour", env);
-    script::bind_var(server::allow_item[I_QUAD-I_SHELLS], "allow_quad", env);
+    hopmod::bind_var(server::allow_item[I_SHELLS-I_SHELLS], "allow_shells", env);
+    hopmod::bind_var(server::allow_item[I_BULLETS-I_SHELLS], "allow_bullets", env);
+    hopmod::bind_var(server::allow_item[I_ROCKETS-I_SHELLS], "allow_rockets", env);
+    hopmod::bind_var(server::allow_item[I_ROUNDS-I_SHELLS], "allow_rounds", env);
+    hopmod::bind_var(server::allow_item[I_GRENADES-I_SHELLS], "allow_grenades", env);
+    hopmod::bind_var(server::allow_item[I_CARTRIDGES-I_SHELLS], "allow_cartridges", env);
+    hopmod::bind_var(server::allow_item[I_HEALTH-I_SHELLS], "allow_health", env);
+    hopmod::bind_var(server::allow_item[I_BOOST-I_SHELLS], "allow_healthboost", env);
+    hopmod::bind_var(server::allow_item[I_GREENARMOUR-I_SHELLS], "allow_greenarmour", env);
+    hopmod::bind_var(server::allow_item[I_YELLOWARMOUR-I_SHELLS], "allow_yellowarmour", env);
+    hopmod::bind_var(server::allow_item[I_QUAD-I_SHELLS], "allow_quad", env);
 
     script::bind_const((int)I_SHELLS, "ITEM_SHELLS", env);
     script::bind_const((int)I_BULLETS, "ITEM_BULLETS", env);
@@ -206,7 +278,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_const((int)I_YELLOWARMOUR, "ITEM_YELLOWARMOUR", env);
     script::bind_const((int)I_QUAD, "ITEM_QUAD", env);
 
-    script::bind_var(server::reservedslots, "reservedslots", env);
+    hopmod::bind_var(server::reservedslots, "reservedslots", env);
     script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
     script::bind_ro_var(reloaded, "reloaded", env);
     
@@ -218,33 +290,33 @@ void register_server_script_bindings(script::env & env)
         boost::bind(script::property<int>::generic_getter, boost::ref(server::mastermode)),
         server::script_set_mastermode, "mastermode", env);
     
-    script::bind_var(server::mastermode_owner, "mastermode_owner", env);
+    hopmod::bind_var(server::mastermode_owner, "mastermode_owner", env);
     script::bind_const((int)MM_OPEN, "MM_OPEN", env);
     script::bind_const((int)MM_VETO, "MM_VETO", env);
     script::bind_const((int)MM_LOCKED, "MM_LOCKED", env);
     script::bind_const((int)MM_PRIVATE, "MM_PRIVATE", env);
     script::bind_const((int)MM_PASSWORD, "MM_PASSWORD", env);
     
-    script::bind_var(server::sv_text_hit_length, "flood_protect_text", env);
-    script::bind_var(server::sv_sayteam_hit_length, "flood_protect_sayteam", env);
-    script::bind_var(server::sv_mapvote_hit_length, "flood_protect_mapvote", env);
-    script::bind_var(server::sv_switchname_hit_length, "flood_protect_switchname", env);
-    script::bind_var(server::sv_switchteam_hit_length, "flood_protect_switchteam", env);
-    script::bind_var(server::sv_kick_hit_length, "flood_protect_kick", env);
-    script::bind_var(server::sv_remip_hit_length, "flood_protect_remip", env);
-    script::bind_var(server::sv_newmap_hit_length, "flood_protect_newmap", env);
-    script::bind_var(server::sv_spec_hit_length, "flood_protect_spectator", env);
+    hopmod::bind_var(server::sv_text_hit_length, "flood_protect_text", env);
+    hopmod::bind_var(server::sv_sayteam_hit_length, "flood_protect_sayteam", env);
+    hopmod::bind_var(server::sv_mapvote_hit_length, "flood_protect_mapvote", env);
+    hopmod::bind_var(server::sv_switchname_hit_length, "flood_protect_switchname", env);
+    hopmod::bind_var(server::sv_switchteam_hit_length, "flood_protect_switchteam", env);
+    hopmod::bind_var(server::sv_kick_hit_length, "flood_protect_kick", env);
+    hopmod::bind_var(server::sv_remip_hit_length, "flood_protect_remip", env);
+    hopmod::bind_var(server::sv_newmap_hit_length, "flood_protect_newmap", env);
+    hopmod::bind_var(server::sv_spec_hit_length, "flood_protect_spectator", env);
     
-    script::bind_var(server::broadcast_mapmodified, "broadcast_mapmodified", env);
+    hopmod::bind_var(server::broadcast_mapmodified, "broadcast_mapmodified", env);
     
-    script::bind_var(tx_bytes, "tx_bytes", env);
-    script::bind_var(rx_bytes, "rx_bytes", env);
-    script::bind_var(tx_packets, "tx_packets", env);
-    script::bind_var(rx_packets, "rx_packets", env);
+    hopmod::bind_var(tx_bytes, "tx_bytes", env);
+    hopmod::bind_var(rx_bytes, "rx_bytes", env);
+    hopmod::bind_var(tx_packets, "tx_packets", env);
+    hopmod::bind_var(rx_packets, "rx_packets", env);
     
-    script::bind_var(server::timer_alarm_threshold, "timer_alarm_threshold", env);
+    hopmod::bind_var(server::timer_alarm_threshold, "timer_alarm_threshold", env);
     
-    script::bind_var(server::enable_extinfo, "enable_extinfo", env);
+    hopmod::bind_var(server::enable_extinfo, "enable_extinfo", env);
     
     static char cwd[1024];
     if(getcwd(cwd,sizeof(cwd)))
@@ -252,8 +324,8 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_const(getuid(), "UID", env); //FIXME user id is not constant
     
-    script::bind_var(command_prefix, "command_prefix", env);
-    script::bind_var(using_command_prefix, "use_command_prefix", env);
+    hopmod::bind_var(command_prefix, "command_prefix", env);
+    hopmod::bind_var(using_command_prefix, "use_command_prefix", env);
     
     // Utility Functions
     
