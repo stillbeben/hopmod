@@ -13,7 +13,8 @@ function Client(server){
     this.status = "";
     this.priv = "";
     this.ping = 0;
-   
+    this.is_bot = false;
+    
     this.frags = 0;
     this.deaths = 0;
     this.suicides = 0;

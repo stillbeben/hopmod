@@ -91,10 +91,19 @@ function ClientUpdateSet(server){
             self.numberOfClients = 0;
             
             $.each(response, function(){
-                self.numberOfClients++;
+                
                 var cn = this.cn;
-                self.clients[cn] = new Client(self.server);
-                self.clients[cn].cn = cn;
+                
+                if(!self.clients[cn]){
+                    self.clients[cn] = new Client(self.server);
+                    self.clients[cn].cn = cn;
+                    self.clients[cn].is_bot = cn >= 128;
+                    
+                    if(!self.clients[cn].is_bot){
+                        self.numberOfClients++;
+                    }
+                }
+                
                 updateClient(cn, this);
             });
             
@@ -110,7 +119,12 @@ function ClientUpdateSet(server){
         var client = new Client(self.server);
         client.cn = cn;
         self.clients[cn] = client;
-        self.numberOfClients++;
+        client.is_bot = cn >= 128;
+        
+        if(!client.is_bot){
+            self.numberOfClients++;
+        }
+        
         getFullClientState(cn, function(success){
             if(!success) return;
             callListeners(listeners.connect, self.clients[cn]);
@@ -121,11 +135,14 @@ function ClientUpdateSet(server){
         var client = self.clients[cn];
         client.status = "spectator";
         
+        if(!client.is_bot){
+            self.numberOfClients--;
+        }
+        
         updateClientArrays(client);
         delete self.clients[cn];
         delete self.spectators[cn];
-        self.numberOfClients--;
-        
+
         callListeners(listeners.disconnect, client);
     });
     
