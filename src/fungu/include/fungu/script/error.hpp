@@ -34,6 +34,7 @@ class file_source_context:public source_context
 {
 public:
     file_source_context(const std::string & filename);
+    file_source_context(const std::string & filename, int);
     source_context * clone()const;
     const char * get_uri_scheme()const;
     std::string get_location()const;
@@ -48,6 +49,18 @@ public:
     source_context * clone()const;
     const char * get_uri_scheme()const;
     std::string get_location()const;
+};
+
+class string_source_context:public source_context
+{
+public:
+    string_source_context(const std::string &);
+    string_source_context(const std::string &,int);
+    source_context * clone()const;
+    const char * get_uri_scheme()const;
+    std::string get_location()const;
+private:
+    std::string m_source;
 };
 
 enum error_code
