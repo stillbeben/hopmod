@@ -1053,4 +1053,60 @@ bool send_item(int type, int recipient)
     return true;
 }
 
+class player_token
+{   
+public:
+    player_token(clientinfo * ci)
+    :m_cn(ci->clientnum), m_session_id(ci->sessionid)
+    {
+        
+    }
+    
+    clientinfo * get_clientinfo()const
+    {
+        clientinfo * ci = getinfo(m_cn);
+        if(!ci) return NULL;
+        if(!ci || ci->sessionid != m_session_id) return NULL;
+        return ci;
+    }
+private:
+    int m_cn;
+    int m_session_id;       
+};
+
+int deferred_respawn_request(void * arg)
+{
+    player_token * player = reinterpret_cast<player_token *>(arg);
+    clientinfo * ci = player->get_clientinfo();
+    delete player;
+    if(!ci) return 0;
+    try_respawn(ci, ci);
+    return 0;
+}
+
+void try_respawn(clientinfo * ci, clientinfo * cq)
+{
+    if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (smode && !smode->canspawn(cq))) return;
+    if(!ci->clientmap[0] && !ci->mapcrc) 
+    {
+        ci->mapcrc = -1;
+        checkmaps();
+    }
+    if(cq->state.lastdeath)
+    {
+        int delay = signal_respawnrequest(cq->clientnum, cq->state.lastdeath);
+        
+        if(delay > 0)
+        {
+            sched_callback(deferred_respawn_request, new player_token(cq), delay);
+            return;
+        }
+        
+        flushevents(cq, cq->state.lastdeath + DEATHMILLIS);
+        cq->state.respawn();
+    }
+    cleartimedevents(cq);
+    sendspawn(cq);
+}
+
 #endif

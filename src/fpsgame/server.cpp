@@ -2552,6 +2552,7 @@ namespace server
                 break;
 
             case SV_TRYSPAWN:
+            #if 0
                 if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (smode && !smode->canspawn(cq))) break;
                 if(!ci->clientmap[0] && !ci->mapcrc) 
                 {
@@ -2565,6 +2566,8 @@ namespace server
                 }
                 cleartimedevents(cq);
                 sendspawn(cq);
+           #endif
+                try_respawn(ci, cq);
                 break;
 
             case SV_GUNSELECT:

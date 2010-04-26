@@ -63,6 +63,7 @@ boost::signal<void (int)> signal_spawn;
 boost::signal<int (int,int,int,int), proceed> signal_damage;
 boost::signal<int (int,const char*), proceed> signal_setmaster;
 boost::signal<int (int,int), proceed> signal_pingpong;
+boost::signal<int (int,int), maxvalue> signal_respawnrequest;
 boost::signal<void ()> signal_clearbans_request;
 boost::signal<void (int, const char *, int, int, const char *)> signal_kick_request;
 
@@ -140,6 +141,12 @@ static script::any normal_error_handler(script::error_trace * errinfo)
 {
     report_script_error(errinfo);
     return script::any::null_value();
+}
+
+static script::any maxvalue_error_handler(script::error_trace * errinfo)
+{
+    report_script_error(errinfo);
+    return 0;
 }
 
 namespace lua{
@@ -354,6 +361,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_damage, "damage", normal_error_handler);
     slots.register_signal(signal_setmaster, "setmaster", normal_error_handler);
     slots.register_signal(signal_pingpong, "ping/pong", normal_error_handler);
+    slots.register_signal(signal_respawnrequest, "respawn_request", maxvalue_error_handler); 
    
     slots.register_signal(signal_clearbans_request, "clearbans_request", normal_error_handler);
     slots.register_signal(signal_kick_request, "kick_request", normal_error_handler);

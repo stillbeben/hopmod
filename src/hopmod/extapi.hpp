@@ -173,6 +173,9 @@ namespace server
     
     bool send_item(int item_code, int recipient);
     
+    struct clientinfo;
+    void try_respawn(clientinfo * ci, clientinfo * cq);
+    
 } //namespace server
 
 #endif
