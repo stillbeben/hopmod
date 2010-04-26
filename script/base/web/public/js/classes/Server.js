@@ -13,6 +13,12 @@ function Server(){
         "teams"     : "Teams"
     };
     
+    var monitor_vars = {
+        maxclients : true,
+        mastermode : true,
+        servername : true
+    }
+    
     function addReady(loadingKey){
     
         delete loading[loadingKey];
@@ -82,6 +88,19 @@ function Server(){
         eventDispatcher.signalEvent("sayteam", self.clients.getClient(cn), message);
     });
     
+    event_handler("varchanged", function(varname){
+        if(monitor_vars[varname]){
+               self.getServerVariables([varname], function(success, response){
+                   if(!success) return;
+                   self[varname] = response[varname];
+                   eventDispatcher.signalEvent("varchanged", varname);
+               });
+        }
+        else{
+            eventDispatcher.signalEvent("varchanged", varname);
+        }
+    });
+    
     eventService.startListening();
     
     this.clients = new ClientUpdateSet(this);
@@ -120,7 +139,7 @@ function Server(){
             eventDispatcher.signalEvent("mapchange", map, gamemode); 
         }
     });
-    
+        
     this.executeCommand("1"); //try to trigger an error
 }
 

@@ -631,6 +631,25 @@ function createServerInfoView(parent, server){
         $(players).text(server.clients.numberOfClients + "/" + server.maxclients);
     }
     
+    function updateServerName(){
+        $(serverName).text(server.servername);
+    }
+    
+    function updateMastermode(){
+        $(mastermode).text(mastermodeName[server.mastermode]);
+    }
+    
+    var var_observers = {
+        maxclients : updateClientCount,
+        servername : updateServerName,
+        mastermode : updateMastermode
+    };
+    
+    server.addListener("varchanged", function(varname){
+        var func = var_observers[varname];
+        if(func) func();
+    });
+    
     server.clients.addListener("connect", updateClientCount);
     server.clients.addListener("disconnect", updateClientCount);
     
