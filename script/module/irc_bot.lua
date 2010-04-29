@@ -131,30 +131,11 @@ function irc:processData(client, data)
 	end
     
 	-- Detect a command and hand it off to the command processor
-    local irc_command = data
-    irc_command = irc_command:split("[^ ]+")
-    if #irc_command >= 2 and irc_command[2] == "PRIVMSG" then -- fix by Thomas, for not responding sometimes to commands
-        local nick = irc_command[1]
-              nick = nick:split("[^\!]+")
-              nick = nick[1]
-              nick = string.gsub(nick, ":", "")
-        
-        local chan = irc_command[3]
-        local args = ""
-        local bot_name = irc_command[4]
-              bot_name = string.gsub(bot_name, ":", "")
-              
-        for index, value in ipairs(irc_command) do
-            if index == 5 then
-                args = irc_command[index]
-            elseif index > 5 then
-                args = args .. " " .. irc_command[index]
-            end
-        end
-        
-        if server.irc_bot_name ~= bot_name and server.irc_bot_command_name ~= bot_name then return end
-        irc.processCommand(nick, chan, args)
-    end
+	if string.match(data,":(.+)!.+ PRIVMSG (.+) :"..server.irc_bot_command_name.." (.+)") then
+		local nick, channel, command = string.match(data,":(.+)!.+ PRIVMSG (.+) :"..server.irc_bot_command_name.." (.+)")
+        irc.processCommand(nick, channel, command)
+		return
+	end
 end 
 
 --Process any commands
@@ -392,35 +373,6 @@ local function sendAdminMessage()
     server.console(irc.command_nick, chat)
 end
 
-local function stats(name)
-    if server.stats_wrapper == nil then
-        irc:toChannel("You need to enable the stats module to use this feature!")
-    end
-        
-    local stats = server.stats_wrapper(name)
-        
-    if not stats then
-        irc:toChannel("No stats found for: " .. name .. "!")
-        return
-    end
-        
-    local kpd = round(row.frags / (row.deaths or 1), 2)
-    local acc = round((row.hits / row.shots)*100)
-        
-    local stats_str = string.format("Name: %s Games: %i Frags: %i Deaths: %i KpD: %d Acc: %s Wins: %i Losses: %i",
-        name,
-        row.games,
-        row.frags,
-        row.deaths,
-        kpd,
-        acc .. "%",
-        row.wins,
-        row.losses
-    )
-    
-    irc:toChannel(stats_str)
-end
-
 -- Command list
 irc.commands = {
     ['kick']        = function(cn, reason) server.kick(cn, 0, irc.command_nick, reason) end,
@@ -448,6 +400,5 @@ irc.commands = {
     ['unsetban']	= server.unsetban,
     ['recorddemo']	= server.recorddemo,
     ['stopdemo']	= server.stopdemo,
-    ['who']			= irc.playerList,
-    ['stats']       = stats
+    ['who']			= irc.playerList
 }
