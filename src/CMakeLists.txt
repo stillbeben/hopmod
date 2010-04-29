@@ -91,7 +91,10 @@ target_link_libraries(keygen sauertools -lz)
 add_executable(luapp hopmod/luapp.cpp)
 target_link_libraries(luapp lua boost_system lua_modules -lrt)
 
-install(TARGETS sauer_server sauertools lua_modules serverscripting scriptpipe keygen luapp
+install(TARGETS sauer_server sauertools lua_modules serverscripting scriptpipe
     RUNTIME DESTINATION ${INSTALL_RUNTIME_DESTINATION} 
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DESTINATION} 
     ARCHIVE DESTINATION ${INSTALL_ARCHIVE_DESTINATION})
+
+install(TARGETS keygen luapp
+    RUNTIME DESTINATION ${INSTALL_RUNTIME_DESTINATION}/utils)
