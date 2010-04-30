@@ -1,3 +1,6 @@
+--[[
+    Some utility functions useful for dealing with HTTP requests
+]]
 
 local function decodeQueryString(value)
     value = http_server.url_decode(value or "")
