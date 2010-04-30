@@ -34,6 +34,10 @@ table th{text-align:left;}
 .playertable-heading-team_evil{background:#2b67ff; border-bottom:solid 1px #0030A8; color:#002175;}
 #spectators table{width:100%;}
 
+#command-links{font-size:0.84em;margin:1em;}
+#command-links ul{margin:0; margin-bottom:1em; padding:0;}
+#command-links li{list-style:none; display:inline; margin-right:1em;}
+
 #chat-shell-heading{background:transparent url(balloons.png) no-repeat;}
 .chat-shell-name{float:left; width:170px; overflow:hidden; margin-right:5px; text-align:right; font-weight:bold;}
 .chat-shell-text{word-wrap:break-word;}

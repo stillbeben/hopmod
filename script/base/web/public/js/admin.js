@@ -16,6 +16,7 @@ $(document).ready(function(){
     server.ready(function(){
         
         installWidget("#chat-shell",    createChatShell,       server);
+        installWidget("#command-links", createCommandLinks,    server);
         installWidget("#command-shell", createCommandShell,    server);
         installWidget("#gameinfo",      createGameinfoView,    server);
         installWidget("#netstats",      createNetstatsView,    server);
@@ -655,4 +656,98 @@ function createServerInfoView(parent, server){
     
     updateClientCount();
 }
+
+function createCommandLinks(parent, server){
+
+    function shutdown(){
+        if(!confirm("Are you sure you want to shutdown the server now?")) return;
+        server.executeCommand("shutdown");
+    }
+    
+    function restart(){
+        if(!confirm("Are you sure you want to restart the server now?")) return;
+        server.executeCommand("restart_now");
+    }
+    
+    function reload(){
+        server.executeCommand("reloadscripts");
+    }
+    
+    var serverCommands = [
+        {label:"Update", _function:reload},
+        {label:"Restart", _function:restart},
+        {label:"Shutdown", _function:shutdown}
+    ];
+    
+    function changeMotd(){
+        var msg = prompt("Change the Message of the Day");
+        if(!msg) return;
+        server.executeCommand(server.makeCommand("motd", msgv));
+    }
+    
+    function changeServerName(){
+        var msg = prompt("Change the server name");
+        if(!msg) return;
+        server.executeCommand(server.makeCommand("servername", msgv));
+    }
+    
+    var changeMessageCommands = [
+        {label:"Server Name", _function:changeServerName},
+        {label:"MOTD", _function:changeMotd}
+    ];
+    
+    function setBannedIP(){
+        var ip = prompt("IP address (e.g. 127.0.0.1 or 127/8)");
+        if(!ip) return;
+        var bantime = prompt("Ban time (value in hours)", "-1");
+        if(!bantime) return;
+        if(bantime > 0) bantime = bantime * 3600;
+        var reason = prompt("Reason for ban");
+        if(!reason) return;
+        server.executeCommand(server.makeCommand("ban", ip, bantime, reason));
+    }
+    
+    function unsetBannedIP(){
+        var ip = prompt("IP address (e.g. 127.0.0.1 or 127/8");
+        if(!ip) return;
+        server.executeCommand(server.makeCommand("unban", ip));
+    }
+    
+    var playerCommands = [
+        {label:"Add IP ban", _function:setBannedIP},
+        {label:"Removed banned IP", _function:unsetBannedIP}
+    ];
+    
+    function createLinks(commands, groupTitle){
+        
+        var container = document.createElement("div");
+        container.className = "command-links-group";
+        
+        var ul = document.createElement("ul");
+        
+        for(var i = 0; i < commands.length; i++){
+            
+            var a = document.createElement("a");
+            $(a).text(commands[i].label);
+            a.href = "#";
+            a.onclick = commands[i]._function;
+
+            var li = document.createElement("li");
+            li.appendChild(a);
+            ul.appendChild(li);
+        }
+        
+        var heading = document.createElement("div");
+        $(heading).text(groupTitle);
+        container.appendChild(heading);
+        container.appendChild(ul);
+        
+        parent.appendChild(container);
+    }
+    
+    createLinks(serverCommands, "Server Control");
+    createLinks(changeMessageCommands, "Change Server Messages");
+    createLinks(playerCommands, "Players");
+}
+
 
