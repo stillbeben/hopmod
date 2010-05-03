@@ -31,7 +31,6 @@ local using_random_mode
 local using_random_map
 local default_gamemode = "ffa"
 local default_game_on_empty
-local random_mode_on_empty
 local using_server_maprotation
 
 local setnextmap_cmd_active = false
@@ -124,12 +123,10 @@ function server.reload_maprotation()
     smallgamesize = server.small_gamesize
     smallteamgamesize = server.small_teamgamesize
     
-    using_random_mode = (server.use_server_random_moderotation == 1)
-    using_random_map = (server.use_server_random_maprotation == 1)
+    using_random_map = (server.use_random_maprotation == 1)
     
     default_gamemode = server.default_gamemode
     default_game_on_empty = (server.default_game_on_empty == 1)
-    random_mode_on_empty = (server.random_mode_on_empty == 1)
     allowed_modes = list_to_set(server.parse_list(server["allowed_gamemodes"]))
     
     using_server_maprotation = (server.use_server_maprotation == 1)
@@ -361,20 +358,20 @@ local function nextmap_command(cn)
 
     if using_server_maprotation then
     
-        if using_random_mode then
-            server.player_msg(cn, "Note: The next mode will be chosen randomly at the end of this game, therefore the next map, too.")
-        elseif using_random_mode then
-            server.player_msg(cn, "The next map will be chosen randomly at the end of this game.")
-	elseif setnextmap_cmd_active == true then
-	    local msg = "The next map is " .. green(setnextmap_cmd_map)
-	    
-	    if setnextmap_cmd_mode == server.gamemode then
-	        msg = msg .. "."
-	    else
-	        msg = msg .. " (" .. green(setnextmap_cmd_mode) .. ")."
-	    end
-	    
-	    server.player_msg(cn, msg)
+        if setnextmap_cmd_active == true then
+            
+            local msg = "The next map is " .. green(setnextmap_cmd_map)
+	        
+	        if setnextmap_cmd_mode == server.gamemode then
+	            msg = msg .. "."
+	        else
+	            msg = msg .. " (" .. green(setnextmap_cmd_mode) .. ")."
+	        end
+	        
+	        server.player_msg(cn, msg)
+	        
+	    elseif using_random_map then
+	        server.player_msg(cn, "The next map will be chosen randomly at the end of this game.")
         else
             local nm = nextmap(tostring(server.gamemode), gamecount)
             if nm then
