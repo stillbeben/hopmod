@@ -312,24 +312,14 @@ server.event_handler("setnextgame",function()
 end)
 
 server.event_handler("disconnect", function()
-
-    if  server.playercount == 0 and 
-        server.botcount == 0 and 
-        using_server_maprotation and
-        (default_game_on_empty or random_mode_on_empty) then
-    
+  
+    if  using_server_maprotation and server.playercount == 0 and default_game_on_empty and server.gamemode ~= default_gamemode then
+        
         local mode = default_gamemode
         local map = nil
         
         if default_game_on_empty then
             mode, map = get_nextgame(mode)
-        elseif random_mode_on_empty then
-        
-            mode = allowed_modes[math.random(#allowed_modes)]
-	    
-            while mode == server.gamemode or mode == "coop edit" do
-                    mode = allowed_modes[math.random(#allowed_modes)]
-            end
         end
         
         if not map then
