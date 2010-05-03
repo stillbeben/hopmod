@@ -2107,8 +2107,6 @@ namespace server
         if(!m_mp(gamemode)) return DISC_PRIVATE;
         sendservinfo(ci);
         
-        if(!clients.length() && mapreload) selectnextgame();
-        
         return DISC_NONE;
     }
     
@@ -2399,6 +2397,8 @@ namespace server
 					"i2", 1, 1);
                 
                 if(give_admin_priv) set_player_private_admin(ci->clientnum);
+                
+                if(clients.length() == 1 && mapreload) selectnextgame();
             }
         }
         else if(chan==2)
