@@ -52,6 +52,8 @@ local methods = {
     valid           = function(obj) return server.player_sessionid(obj.cn) == obj.sessionid end
 }
 
+server.player_method = read_only(methods)
+
 function server.new_client_object(cn)
     local object = {}
     object.cn = cn

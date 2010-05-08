@@ -28,8 +28,7 @@ global allowed_gamemodes [
 ]
 
 global use_server_maprotation 1
-global use_server_random_maprotation 0
-global use_server_random_moderotation 0
+global use_random_maprotation 0
 
 global ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
 	kalking1 dock turbine fanatic_quake oddworld wake5 aard3c curvedm
@@ -180,3 +179,6 @@ global server_admin_password ""
 global web_admins []
 
 global mute_triggers [nigger nigga negro kike faggot motherfucker jude wichser kanake polake kinderficker "scheiss auslaender"]
+
+global saveconf_vars [saveconf_vars servername motd maxclients]
+

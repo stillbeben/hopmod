@@ -18,20 +18,17 @@ local allowed_modes = list_to_set(server.parse_list(server["allowed_gamemodes"])
 
 local function mapvote(cn, map, mode)
 
-    -- Admin players are free from voting restrictions
     if server.player_priv_code(cn) == server.PRIV_ADMIN then
         return
     end
     
     if deny_mapvote then
-    
         server.player_msg(cn, red("Map voting is disabled."))
         return -1
-        
 	end
     
     if not allowed_modes[mode] then
-        server.player_msg(cn, red("This server doesn't accept votes for '" .. mode .. "' game mode."))
+        server.player_msg(cn, red("Not accepting votes for '" .. mode .. "' game mode."))
         return -1
     end
     

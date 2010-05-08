@@ -15,7 +15,12 @@ local function kick_banned_players(ipmask, bantime, admin, reason)
 end
 
 function server.kick(cn, bantime, admin, reason)
-    
+
+    if server.player_isbot(cn) then
+        server.delbot(cn)
+        return
+    end
+
     if not bantime then 
         bantime = SHORT_BANTIME
     else

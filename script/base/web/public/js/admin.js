@@ -659,6 +659,30 @@ function createServerInfoView(parent, server){
 
 function createCommandLinks(parent, server){
 
+    function saveCurrentConfiguration(){
+        server.serverCalls([{return_id:"a", name:"saveconf_get_conf", args:[]}], function(success, response){
+            if(!response.a){
+                alert("An error has occurred: function not found.");
+                return;
+            }
+            if(response.a.error){
+                alert("An error has occurred: " + response.a.values[1]);
+                return;
+            }
+            var saveconf = response.a.values[1];
+            
+            var output = "";
+            $.each(saveconf, function(name, value){
+                output += name + "\t\t\t\t " + value + "\n";
+            });
+            
+            var ok = confirm("Configuration to be saved:\n\n" + output);
+            if(ok){
+                server.executeCommand("saveconf");
+            }
+        });
+    }
+
     function shutdown(){
         if(!confirm("Are you sure you want to shutdown the server now?")) return;
         server.executeCommand("shutdown");
@@ -674,6 +698,7 @@ function createCommandLinks(parent, server){
     }
     
     var serverCommands = [
+        {label:"Save Current Configuration", _function:saveCurrentConfiguration},
         {label:"Update", _function:reload},
         {label:"Restart", _function:restart},
         {label:"Shutdown", _function:shutdown}

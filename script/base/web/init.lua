@@ -16,14 +16,14 @@ http_server_root = root
 load_once("script/base/web/http/utils.lua")
 load_once("script/base/web/http/response.lua")
 load_once("script/base/web/http/request.lua")
-
 load_once("script/base/web/resource/login.lua")
 load_once("script/base/web/resource/admin.lua")
-load_once("script/base/web/resource/serverexec.lua")
 load_once("script/base/web/resource/listener.lua")
+load_once("script/base/web/resource/serverexec.lua")
+load_once("script/base/web/resource/queryvars.lua")
+load_once("script/base/web/resource/calls.lua")
 load_once("script/base/web/resource/player_info.lua")
 load_once("script/base/web/resource/team_info.lua")
-load_once("script/base/web/resource/queryvars.lua")
 load_once("script/base/web/resource/netstats.lua")
 
 local function unload()

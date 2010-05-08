@@ -116,6 +116,7 @@ function ClientUpdateSet(server){
     }
     
     event_handler("connect", function(cn){
+    
         var client = new Client(self.server);
         client.cn = cn;
         self.clients[cn] = client;
@@ -196,15 +197,16 @@ function ClientUpdateSet(server){
     });
     
     event_handler("mapchange", function(map, gamemode){
+        
         resync(function(){
             callListeners(listeners.mapchange, map, gamemode);
         });
     });
     
-    eventService.startListening();
-    
     resync(function(){
         callListeners(listeners.ready);
     });
+    
+    eventService.startListening();
 }
 

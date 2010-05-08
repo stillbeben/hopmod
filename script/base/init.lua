@@ -1,4 +1,3 @@
-
 package.path = package.path .. ";script/package/?.lua"
 package.cpath = package.cpath .. ";lib/lib?.so"
 
@@ -51,7 +50,7 @@ end
 load_module_vars("./script/module/declare")
 
 server.event_handler("started", function()
-
+    
     server.reload_maprotation()
     
     require("geoip").load_database(server.geoip_db_file)
@@ -60,9 +59,9 @@ server.event_handler("started", function()
     log_unknown_player_commands()
     
     server.log_status("-> Successfully loaded Hopmod")
-    
 end)
 
 server.event_handler("shutdown", function() 
     server.log_status("Server shutting down.")
 end)
+

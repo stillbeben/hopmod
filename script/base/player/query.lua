@@ -13,11 +13,15 @@ local players_collection_methods = {
     
         local player = arg[1]
         local player_function_name = arg[2]
-    
+        
         table.remove(arg, 2)
         
-        player[player_function_name](unpack(arg))
-    end,
+        if type(player_function_name) == "function" then
+            player_function_name(unpack(arg))
+        else
+            player[player_function_name](unpack(arg))
+        end
+    end
 }
 
 local function players_collection(collection)
