@@ -10,6 +10,7 @@
 #include "fungu/script/lua/lua_function.hpp"
 #include "fungu/script/lua/object_wrapper.hpp"
 #include "fungu/script/callargs.hpp"
+#include "fungu/script/any_variable.hpp"
 
 #include <limits>
 

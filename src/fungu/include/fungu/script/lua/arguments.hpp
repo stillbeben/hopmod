@@ -92,6 +92,7 @@ private:
 };
 
 any get_argument_value(lua_State *,int index = -1);
+env_object * lua_value_to_env_object(lua_State *, int index = -1);
 
 } //namespace lua
 } //namespace script

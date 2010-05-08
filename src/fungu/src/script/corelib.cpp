@@ -22,6 +22,10 @@
 #include "fungu/script/variable.hpp"
 #include "fungu/dynamic_cast_derived.hpp"
 
+#ifdef FUNGU_WITH_LUA
+#include "fungu/script/lua/lua_function.hpp"
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <boost/scope_exit.hpp>
 #include <string>

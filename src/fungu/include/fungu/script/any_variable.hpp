@@ -24,6 +24,7 @@ public:
     any call(call_arguments & args, env_frame * frame);    
     #ifdef FUNGU_WITH_LUA
     int call(lua_State * L);
+    void value(lua_State *);
     #endif
     any value();
     env_object * lookup_member(const_string id);

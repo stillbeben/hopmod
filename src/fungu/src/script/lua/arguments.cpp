@@ -158,7 +158,7 @@ any get_argument_value(lua_State * L, int index)
             else return any(n);
         }
         case LUA_TBOOLEAN:
-            return lua_toboolean(L, index);
+            return static_cast<bool>(lua_toboolean(L, index));
         case LUA_TSTRING:
             return const_string(lua_tostring(L, index));
         case LUA_TFUNCTION:
@@ -195,6 +195,30 @@ any get_argument_value(lua_State * L, int index)
         #endif
         default:
             return any::null_value();
+    }
+}
+
+env_object * lua_value_to_env_object(lua_State * L, int index)
+{
+    if(lua_type(L, index) == LUA_TFUNCTION)
+    {
+        env_object * obj = new lua_function(L, index);
+        obj->set_adopted();
+        return obj;
+    }
+    else
+    {
+        any_variable * var = new any_variable;
+        var->set_adopted();
+        try
+        {
+            var->assign(get_argument_value(L, index));
+        }
+        catch(error_exception)
+        {
+            delete var;
+        }
+        return var;
     }
 }
 

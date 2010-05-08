@@ -88,7 +88,7 @@ public:
     void async_send_chunk(const void * data, std::size_t datalen, CompletionHandler handler)
     {
         char buffer[32];
-        std::sprintf(buffer, "%x\r\n", datalen);
+        std::sprintf(buffer, "%x\r\n", static_cast<unsigned int>(datalen));
         
         m_sent_chunk_headers.push(buffer);
         

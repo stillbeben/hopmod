@@ -144,6 +144,11 @@ const source_context * error_trace::get_source_context()const
     return m_source_ctx;
 }
 
+const_string error_trace::get_arg()const
+{
+    return m_arg;
+}
+
 source_context::source_context()
  :m_linenum(0)
 {
@@ -169,6 +174,12 @@ file_source_context::file_source_context(const std::string & filename)
  :m_filename(filename)
 {
     
+}
+
+file_source_context::file_source_context(const std::string & filename, int lineno)
+ :m_filename(filename)
+{
+    set_line_number(lineno);
 }
 
 source_context * file_source_context::clone()const
@@ -204,6 +215,33 @@ const char * local_source_context::get_uri_scheme()const
 std::string local_source_context::get_location()const
 {
     return "";
+}
+
+string_source_context::string_source_context(const std::string & source)
+ :m_source(source)
+{
+    
+}
+
+string_source_context::string_source_context(const std::string & source, int lineno)
+ :m_source(source)
+{
+    set_line_number(lineno);
+}
+
+source_context * string_source_context::clone()const
+{
+    return new string_source_context(*this);
+}
+
+const char * string_source_context::get_uri_scheme()const
+{
+    return "string";
+}
+
+std::string string_source_context::get_location()const
+{
+    return m_source;
 }
 
 } //namespace script

@@ -25,8 +25,28 @@ inline any exec_lua(env_object::call_arguments & args,env_frame * aFrame)
 {
     const_string filename = args.safe_casted_front<const_string>();
     args.pop_front();
-    if(luaL_dofile(aFrame->get_env()->get_lua_state(), filename.copy().c_str()))
-        throw error(LUA_ERROR,boost::make_tuple(aFrame->get_env()->get_lua_state()));
+    
+    lua_State *L = aFrame->get_env()->get_lua_state();
+    int loadError = luaL_loadfile(L, filename.copy().c_str());
+    
+    if(loadError)
+    {
+        if(loadError == LUA_ERRSYNTAX)
+        {
+            throw error(LUA_ERROR, boost::make_tuple(L));
+        }
+        else
+        {
+            lua_pop(L, 1);
+            throw error(OPERATION_ERROR, boost::make_tuple(std::string("lua memory allocation error")));
+        }
+    }
+    
+    lua::lua_function func(L, -1);
+    lua_pop(L, 1);
+    
+    func.call(args, aFrame);
+    
     return any::null_value();
 }
 #endif
@@ -63,11 +83,11 @@ void register_exec_functions(env & environment)
     environment.bind_global_object(&exec_func, FUNGU_OBJECT_ID("exec"));
     
     static function<raw_function_type> exec_cubescript_func(execlib::exec_cubescript);
-    environment.bind_global_object(&exec_cubescript_func, FUNGU_OBJECT_ID("exec-cubescript"));
+    environment.bind_global_object(&exec_cubescript_func, FUNGU_OBJECT_ID("exec_cubescript"));
     
     #ifdef FUNGU_WITH_LUA
     static function<raw_function_type> exec_lua_func(execlib::exec_lua);
-    environment.bind_global_object(&exec_lua_func, FUNGU_OBJECT_ID("exec-lua"));
+    environment.bind_global_object(&exec_lua_func, FUNGU_OBJECT_ID("exec_lua"));
     #endif
 }
 

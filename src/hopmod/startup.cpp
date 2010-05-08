@@ -45,7 +45,7 @@ static void install_crash_handler()
     sigemptyset(&crash_action.sa_mask);
     crash_action.sa_handler = &server::crash_handler;
     crash_action.sa_flags = SA_RESETHAND;
-    
+
     sigaction(SIGILL,  &crash_action, NULL);
     sigaction(SIGABRT, &crash_action, NULL);
     sigaction(SIGFPE,  &crash_action, NULL);
@@ -57,7 +57,7 @@ static void install_crash_handler()
 static void load_lua_modules()
 {
     lua_State * L = get_script_env().get_lua_state();
-    
+
     lua::module::open_net(L);
     lua::module::open_timer(L);
     lua::module::open_crypto(L);
@@ -65,7 +65,7 @@ static void load_lua_modules()
     lua::module::open_geoip(L);
     lua::module::open_filesystem(L);
     lua::module::open_http_server(L);
-    
+
     lua_packlibopen(L);
 }
 
@@ -77,7 +77,7 @@ static int application_shutdown_utils_handler(int shutdownType)
 /**
     Initializes everything in hopmod. This function is called at server startup and server reload.
 
-    Things to keep in mind: 
+    Things to keep in mind:
 */
 void init_hopmod()
 {
@@ -88,17 +88,17 @@ void init_hopmod()
     server::enable_setmaster_autoapprove(false); // disable /setmaster command
     info_file("log/sauer_server.pid", "%i\n", getpid());
     install_crash_handler();
-    
+
     /*
         Scripting environment
     */
     init_scripting(); // create scripting environment
-    script::env & env = get_script_env(); 
+    script::env & env = get_script_env();
     register_server_script_bindings(env); // expose the core server api to the embedded scripting languages
     register_signals(env); // register signals with scripting environment
     init_scheduler(); // expose the scheduler functions to the scripting environment
     load_lua_modules(); // extra lua modules written for hopmod
-    
+
     /*
         Event handlers
     */
@@ -106,7 +106,7 @@ void init_hopmod()
     signal_shutdown.connect(&shutdown_scripting);
     signal_shutdown.connect(&cleanup_info_files_on_shutdown);
     signal_shutdown.connect(&application_shutdown_utils_handler);
-    
+
     /*
         Execute the first script. After this script is finished everything on
         the scripting side of hopmod should be loaded.
@@ -129,17 +129,17 @@ static void reload_hopmod_now()
         get_main_io_service().post(reload_hopmod_now);
         return;
     }
-    
+
     signal_reloadhopmod();
-    
+
     reloaded = true;
-    
+
     close_listenserver_slot.block();  // block close_listenserver_slot to keep clients connected
     signal_shutdown(SHUTDOWN_RELOAD);
     close_listenserver_slot.unblock();
-    
+
     disconnect_all_slots();
-    
+
     init_hopmod();
     server::started();
     std::cout<<"-> Reloaded Hopmod."<<std::endl;
@@ -153,12 +153,12 @@ void reload_hopmod()
 void update_hopmod()
 {
     if(reload) reload_hopmod();
-    
+
     run_script_pipe_service(totalmillis);
-    
+
     update_scheduler(totalmillis);
     cleanup_dead_slots();
-    
+
     if(maintenance_frequency != 0 && totalmillis > maintenance_time && !hasnonlocalclients())
     {
         signal_maintenance();
@@ -176,10 +176,10 @@ void started()
     */
     init_script_pipe();
     open_script_pipe("serverexec",511,get_script_env());
-    
+
     signal_started();
     if(!server::smapname[0]) selectnextgame();
-    
+
     // Restore game state and player stats after server crash
     if(access("log/restore", R_OK) == 0) restore_server("log/restore");
 }

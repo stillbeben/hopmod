@@ -20,6 +20,8 @@ using namespace fungu;
 #include <sstream>
 #include <iostream>
 #include <time.h>
+#include <sstream>
+#include <stack>
 
 extern "C"{
 #include <lua.h>
@@ -43,9 +45,6 @@ static const char * const SERVER_NAMESPACE = "server";
 
 static int server_namespace_ref = 0;
 static int server_namespace_index_ref = 0;
-
-static bool binding_object_to_lua = false;
-static bool binding_object_to_cubescript = false;
 
 void init_scripting()
 {
@@ -155,77 +154,47 @@ int server_interface_newindex(lua_State * L)
 {
     std::size_t keylen;
     const char * key = lua_tolstring(L, 2, &keylen);
-    int value_type = lua_type(L, 3);
     
-    lua_rawgeti(L, LUA_REGISTRYINDEX, server_namespace_index_ref);
-    
-    lua_pushvalue(L, 2);
-    lua_pushvalue(L, 3);
-    lua_settable(L, -3); // server.index[key]=value
-
-    if(binding_object_to_lua) return 0;
-    
-    script::env_object * hangingObj = NULL; //object to delete if exception is thrown
+    script::env_object * hangingNew = NULL; //object to delete if exception is thrown
     
     try
     {
         const_string const_string_key(key, key + keylen - 1);
         
-        switch(value_type)
+        script::env_symbol * key_symbol = env->lookup_symbol(const_string(key, key + keylen - 1));
+        
+        if(!key_symbol)
         {
-            #if 0
-            case LUA_TNIL:
+            key_symbol = env->create_symbol(const_string(std::string(key)));
+        }
+        
+        script::env_object * obj = key_symbol->get_global_object();
+        
+        if(obj)
+        {
+            obj->assign(script::lua::get_argument_value(L, 3));
+        }
+        else
+        {
+            script::env_object * obj = script::lua::lua_value_to_env_object(L, 3);
+            if(!obj)
             {
-                script::env_symbol * key_symbol = env->lookup_symbol(const_string(key, key + keylen - 1));
-                if(key_symbol) key_symbol->unset_global_object();
-                break;
+                lua_pushstring(L, "unable to create cubescript object");
+                lua_error(L);
             }
-            case LUA_TFUNCTION:
-            {
-                scoped_setting<bool> setting(binding_object_to_cubescript, true);
-                hangingObj = new script::lua::lua_function(L, 3);
-                hangingObj->set_adopted();
-                env->bind_global_object(hangingObj, const_string(std::string(key)));
-                hangingObj = NULL;
-                break;
-            }
-            #endif
-            default:
-            {
-                script::env_symbol * key_symbol = env->lookup_symbol(const_string(key, key + keylen - 1));
-                
-                if(!key_symbol)
-                {
-                    key_symbol = env->create_symbol(const_string(std::string(key)));
-                }
-                
-                script::env_object * obj = key_symbol->get_global_object();
-                
-                if(obj)
-                {
-                    obj->assign(script::lua::get_argument_value(L, 3));
-                }
-                else
-                {
-                    scoped_setting<bool> setting(binding_object_to_cubescript, true);
-                    script::any_variable * newvar = new script::any_variable;
-                    hangingObj = newvar;
-                    newvar->set_adopted();
-                    newvar->assign(script::lua::get_argument_value(L, 3));
-                    key_symbol->set_global_object(newvar);
-                    hangingObj = NULL;
-                }
-            }
+            
+            key_symbol->set_global_object(obj); // this doesn't signal the bind observers
+            bind_object_to_lua(const_string_key, obj);
         }
     }
     catch(script::error_trace * errinfo)
     {
-        delete hangingObj;
+        delete hangingNew;
         return luaL_error(L,get_script_error_message(errinfo).c_str());
     }
     catch(script::error err)
     {
-        delete hangingObj;
+        delete hangingNew;
         return luaL_error(L,err.get_error_message().c_str());
     }
     
@@ -247,13 +216,16 @@ void register_to_server_namespace(lua_State * L, lua_CFunction func, const char 
 
 void bind_object_to_lua(const_string id, script::env_object * obj)
 {
-    if(binding_object_to_cubescript) return;
     lua_State * L = env->get_lua_state();
-    assert(!binding_object_to_lua);
-    scoped_setting<bool> setting(binding_object_to_lua, true);
-    push_server_table(L);
-    script::lua::register_object(L, obj, id.copy().c_str());
-    lua_pop(L, 1);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, server_namespace_index_ref);
+        
+    lua_pushlstring(L, id.begin(), id.length());
+    
+    script::lua::push_object(L, obj);
+    
+    lua_rawset(L, -3); //server.index[key] = obj
+    
+    lua_pop(L, 1); //remove server.index ref
 }
 
 static std::string get_timestamp_string()
@@ -264,16 +236,41 @@ static std::string get_timestamp_string()
     return timestamp;
 }
 
+static std::ostream & operator<<(std::ostream & out, const script::source_context * source_location)
+{
+    if(source_location)
+    {
+        out<<source_location->get_location()<<":"<<source_location->get_line_number();
+    }
+    return out;
+}
+
 std::string get_script_error_message(script::error_trace * errinfo)
 {
-    const script::source_context * source = errinfo->get_root_info()->get_source_context();
     std::stringstream out;
     script::error error = errinfo->get_error();
-    error.get_error_message();
     
     out<<get_timestamp_string();
-    if(source) out<<source->get_location()<<":"<<source->get_line_number()<<": ";
     out<<error.get_error_message();
+    
+    const script::error_trace * trace_level = errinfo;
+    std::stack<std::string> locations;
+    
+    while(trace_level)
+    {
+        std::stringstream out;
+        out<<trace_level->get_source_context();
+        locations.push(out.str());
+        trace_level = trace_level->get_parent_info();
+    }
+    
+    if(!locations.empty()) out<<std::endl<<"Call stack:"<<std::endl;
+    
+    while(!locations.empty())
+    {
+        out<<"  "<<locations.top()<<std::endl;
+        locations.pop();
+    }
     
     delete errinfo;
     return out.str();
@@ -336,10 +333,12 @@ int parse_list(lua_State * L)
     return 1;
 }
 
-void unset_global(const char * name)
+bool unref(const char * id)
 {
-    script::env_symbol * symbol = env->lookup_symbol(const_string(name, name + strlen(name) - 1));
-    if(symbol) symbol->unset_global_object();
+    script::env_object * obj = env->lookup_global_object(const_string(id, id + strlen(id) -1));
+    if(!obj || !obj->is_adopted()) return false;
+    env->unbind_global_object(id);
+    return true;
 }
 
 int execute_cubescript_file(lua_State * L)

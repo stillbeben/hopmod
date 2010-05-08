@@ -337,7 +337,7 @@ void register_server_script_bindings(script::env & env)
     
     // Utility Functions
     
-    script::bind_freefunc(unset_global, "unset_global", env);
+    script::bind_freefunc(unref, "unref", env);
     
     script::bind_freefunc(concol, "concol", env);
     script::bind_freefunc(green, "green", env);

@@ -56,6 +56,15 @@ int any_variable::call(lua_State * L)
         return any_cast<env_object::shared_ptr>(m_any)->call(L);
     else return luaL_error(L, "not a function");
 }
+
+void any_variable::value(lua_State * L)
+{
+   if(m_procedure)
+   {
+        any_cast<env_object::shared_ptr>(m_any)->value(L);
+   }
+   else m_any.push_value(L);
+}
 #endif
 
 any any_variable::value()

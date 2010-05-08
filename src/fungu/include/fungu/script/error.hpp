@@ -125,6 +125,7 @@ public:
     const error_trace * get_parent_info()const;
     const error_trace * get_root_info()const;
     const source_context * get_source_context()const;
+    const_string get_arg()const;
 private:
     error m_key;
     error_trace * m_head_info;
