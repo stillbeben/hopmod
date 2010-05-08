@@ -211,3 +211,20 @@ Server.prototype.getServerVariables = function(varset, completionHandler){
 
 var mastermodeName = ["open", "veto", "locked", "private", "password"];
 
+Server.prototype.serverCalls = function(calls, completionHandler){
+
+    var serverObject = this;
+    
+    $.post("/calls", $.toJSON(calls), function(response, textStatus){
+        
+        if(textStatus != "success"){
+            completionHandler(false, {});
+            serverObject.signalError();
+            return;
+        }
+        
+        completionHandler(true, response);
+        
+    }, "json");
+}
+
