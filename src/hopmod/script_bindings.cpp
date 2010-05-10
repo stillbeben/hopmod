@@ -115,7 +115,6 @@ void register_server_script_bindings(script::env & env)
     
     // Player-oriented functions
     script::bind_freefunc(server::player_msg, "player_msg", env);
-    script::bind_freefunc(process_player_command, "process_player_command", env);
     script::bind_const((int)DISC_NONE, "DISC_NONE", env);
     script::bind_const((int)DISC_EOP, "DISC_EOP", env);
     script::bind_const((int)DISC_CN, "DISC_CN", env);
@@ -331,10 +330,7 @@ void register_server_script_bindings(script::env & env)
         script::bind_const((const char *)cwd, "PWD", env);
     
     script::bind_const(getuid(), "UID", env); //FIXME user id is not constant
-    
-    hopmod::bind_var(command_prefix, "command_prefix", env);
-    hopmod::bind_var(using_command_prefix, "use_command_prefix", env);
-    
+
     // Utility Functions
     
     script::bind_freefunc(unref, "unref", env);

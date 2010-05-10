@@ -18,7 +18,7 @@ server.event_handler("text", function(cn, text)
     
     local arguments = server.parse_player_command(text)
     
-    if server.use_command_prefix == true then
+    if server.command_prefix ~= "" then
         
         -- check for normal chat message
         if string.sub(text, 1, 1) ~= server.command_prefix then
@@ -29,14 +29,6 @@ server.event_handler("text", function(cn, text)
     end
     
     local command = player_commands[arguments[1]]
-    
-    if not command then
-        if server.process_player_command(cn, text) then
-            return -1
-        else 
-            return 0
-        end
-    end
     
     arguments[1] = cn
     

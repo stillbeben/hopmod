@@ -24,6 +24,7 @@ void restart_now();
 void init_scripting();
 void shutdown_scripting(int);
 fungu::script::env & get_script_env();
+void register_server_script_bindings(fungu::script::env &);
 std::string get_script_error_message(fungu::script::error_trace * errinfo);
 void report_script_error(fungu::script::error_trace *);
 void report_script_error(const char *);
@@ -44,14 +45,8 @@ bool open_script_socket(unsigned short, const char *);
 void run_script_socket_service();
 void close_script_socket(int);
 
-// Restarter
-void start_restarter();
-void stop_restarter();
-
 int get_player_id(const char * name, unsigned long ip);
 void clear_player_ids();
-
-void register_server_script_bindings(fungu::script::env &);
 
 // Scheduler Functions
 void init_scheduler();
@@ -64,10 +59,6 @@ void sched_callback(int (*)(void *),void *, int);
 
 // Player command functions and variables
 std::vector<std::string> parse_player_command_line(const char *);
-bool eval_player_command(int,const char *,const std::vector<std::string> &,fungu::script::env &);
-bool process_player_command(int,const char *);
-extern char command_prefix;
-extern bool using_command_prefix;
 
 // Text Colouring Macros
 #define GREEN "\f0"

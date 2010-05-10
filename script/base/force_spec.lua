@@ -1,6 +1,5 @@
 local force_spec_time = server.force_spec_default_time
 
-local event = {}
 local key_function = server.player_iplong
 local specs = {}
 
@@ -29,7 +28,7 @@ function server.unforce_spec(cn)
     server.unspec(cn)
 end
 
-event.spectator = server.event_handler_object("spectator", function(cn, joined)
+server.event_handler("spectator", function(cn, joined)
 
     if server.player_priv_code(cn) ~= server.PRIV_NONE then return end
     
@@ -41,8 +40,3 @@ event.spectator = server.event_handler_object("spectator", function(cn, joined)
     end
 end)
 
-local function unload()
-    event = {}
-end
-
-return {unload = unload}

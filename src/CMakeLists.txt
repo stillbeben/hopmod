@@ -71,7 +71,6 @@ SET(SAUER_SERVER_SOURCES
     hopmod/script_bindings.cpp
     hopmod/script_pipe.cpp
     hopmod/parse_player_command.cpp
-    hopmod/process_player_command.cpp
     hopmod/scheduler.cpp
     hopmod/playerid.cpp
     hopmod/restarter.cpp
@@ -82,8 +81,6 @@ SET(SAUER_SERVER_SOURCES
 
 add_executable(sauer_server ${SAUER_SERVER_SOURCES})
 target_link_libraries(sauer_server sauertools serverscripting scriptpipe enet fungu_http -lz -lrt)
-
-add_precompiled_header(sauer_server ${CMAKE_CURRENT_SOURCE_DIR}/hopmod/pch.h)
 
 add_executable(keygen hopmod/keygen.cpp)
 target_link_libraries(keygen sauertools -lz)
