@@ -74,63 +74,6 @@ static int register_event_handler(lua_State * L);
 static void cleanup(lua_State * L);
 }//namespace lua
 
-class event_handler_object
-{
-    static const char * MT;
-public:
-    event_handler_object()
-    :handler_id(-1)
-    {
-        
-    }
-    
-    static int register_class(lua_State * L)
-    {
-        luaL_newmetatable(L, MT);
-        lua_pushvalue(L, -1);
-        
-        static luaL_Reg funcs[] = {
-            {"__gc", &event_handler_object::__gc},
-            {"cancel", &event_handler_object::cancel},
-            {NULL, NULL}
-        };
-        
-        luaL_register(L, NULL, funcs);
-        
-        lua_setfield(L, -1, "__index");
-        
-        return 0;
-    }
-    
-    static int create(lua_State * L)
-    {
-        event_handler_object * self = new (lua_newuserdata(L, sizeof(event_handler_object))) event_handler_object();
-        luaL_getmetatable(L, MT);
-        lua_setmetatable(L, -2);
-        
-        lua::register_event_handler(L);
-        self->handler_id = lua_tointeger(L, -1);
-        lua_pushvalue(L, -2); //FIXME assert -2 is the event handler object
-        return 1;
-    }
-    
-    static int __gc(lua_State * L)
-    {
-        cancel(L);
-        return 0;
-    }
-    
-    static int cancel(lua_State * L)
-    {
-        event_handler_object * self = reinterpret_cast<event_handler_object *>(luaL_checkudata(L, 1, MT));
-        destroy_slot(self->handler_id);
-        return 0;
-    }
-private:
-    int handler_id;
-};
-
-const char * event_handler_object::MT = "event_handler_object";
 
 static script::any proceed_error_handler(script::error_trace * errinfo)
 {
@@ -376,9 +319,6 @@ void register_signals(script::env & env)
     register_lua_function(lua::destroy_slot, "cancel_handler");
     register_lua_function(lua::create_signal, "create_event_signal");
     register_lua_function(lua::cancel_signal, "cancel_event_signal");
-    
-    event_handler_object::register_class(env.get_lua_state());
-    register_lua_function(event_handler_object::create, "event_handler_object"); //deprecated
 }
 
 void cleanup_dead_slots()
