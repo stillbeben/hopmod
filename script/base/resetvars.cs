@@ -182,5 +182,5 @@ global mute_triggers [nigger nigga negro kike faggot motherfucker jude wichser k
 
 global saveconf_vars [saveconf_vars servername motd maxclients]
 
-global command_prefix "#"
+global command_prefixes "^[#@!]"
 

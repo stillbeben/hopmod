@@ -17,18 +17,18 @@ end
 server.event_handler("text", function(cn, text)
     
     local arguments = server.parse_player_command(text)
+    local command_prefixes = server.command_prefixes
     
-    if server.command_prefix ~= "" then
-        
-        -- check for normal chat message
-        if string.sub(text, 1, 1) ~= server.command_prefix then
-            return 0
-        end
-        
-        arguments[1] = string.sub(arguments[1],2)
+    if command_prefixes ~= "" and string.match(text, command_prefixes) then
+        arguments[1] = string.sub(arguments[1], 2)
     end
     
     local command = player_commands[arguments[1]]
+    
+    if not command then
+        server.player_msg(cn, red("Command not found."))
+        return -1
+    end
     
     arguments[1] = cn
     
