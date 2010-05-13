@@ -145,6 +145,7 @@ void filesystem_resource::get_method(http::server::request & req)
         
         if(last_modified == file_info.st_mtime)
         {
+            fclose(file);
             http::server::send_response(req, http::NOT_MODIFIED);
             return;
         }
