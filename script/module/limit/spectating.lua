@@ -73,7 +73,7 @@ event.finishedgame = server.event_handler_object("finishedgame", function()
 
 	local gamelimit = server.gamelimit
 
-	for p in server.splayers() do
+	for p in server.gspectators() do
 		p:pvars().spec_time = (p:pvars().spec_time or 0) + spectime(gamelimit, p.cn)
 	end
 

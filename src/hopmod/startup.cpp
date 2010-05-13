@@ -26,7 +26,9 @@ bool selectnextgame();
 }//namespace server
 
 int get_num_async_resolve_operations(); //defined in lua/net.cpp
-void stop_http_server(); //defined in httpserver/httpserver.cpp
+
+void start_restarter();
+void stop_restarter();
 
 extern "C"{
 int lua_packlibopen(lua_State *L);
@@ -71,7 +73,7 @@ static void load_lua_modules()
 
 static int application_shutdown_utils_handler(int shutdownType)
 {
-    stop_http_server();
+    
 }
 
 /**

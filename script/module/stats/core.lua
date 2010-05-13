@@ -59,7 +59,7 @@ function internal.setNewGame()
 end
 
 function internal.getPlayerTable(player_id)
-
+    
     player_id = tonumber(player_id)
     
     if players[player_id] then 
@@ -101,7 +101,7 @@ end
 
 function internal.updatePlayer(cn)
     
-    if server.player_vars(cn).block_stats then return {} end
+    --if server.player_vars(cn).block_stats then return {} end -- BROKEN from renaming event because of new id
     
     local player_id = server.player_id(cn)
     if players == nil or player_id == -1 then return {} end
@@ -326,7 +326,7 @@ function internal.loadEventHandlers()
         internal.addPlayer(cn)
     end)
     
-    local renaming = server.event_handler("renaming", function(cn) 
+    local renaming = server.event_handler("renaming", function(cn)
         internal.updatePlayer(cn).playing = false
     end)
     

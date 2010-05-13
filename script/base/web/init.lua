@@ -1,17 +1,23 @@
 require "http_server"
 
-server.start_http_server("0.0.0.0", server.serverport + 3)
+local LISTENER_PORT = server.serverport + 3
 
-local root = {}
+local listener, errorMessage = http_server.listener("0.0.0.0", LISTENER_PORT)
 
-http_server.set_root(http_server.resource({
+if not listener then
+    server.log_error(string.format("Unable to start HTTP server on TCP 0.0.0.0:%i (%s)", LISTENER_PORT, errorMessage))
+    return
+end
+
+http_server_root = {}
+
+listener:set_root(http_server.resource({
     resolve = function(name)
-        return root[name]
+        return http_server_root[name]
     end
 }))
 
-root.static = http_server.filesystem_resource("script/base/web/public", "index.htm")
-http_server_root = root
+http_server_root.static = http_server.filesystem_resource("script/base/web/public", "index.htm")
 
 load_once("script/base/web/http/utils.lua")
 load_once("script/base/web/http/response.lua")
@@ -26,8 +32,23 @@ load_once("script/base/web/resource/player_info.lua")
 load_once("script/base/web/resource/team_info.lua")
 load_once("script/base/web/resource/netstats.lua")
 
+local function startHttpServer()
+    
+    local started, errorMessage = listener:start(function(errorMessage)
+        server.log_error("Error in the HTTP server listener: " .. errorMessage)
+        server.log_status("Restarting HTTP server after an error occured")
+        server.sleep(0, startHttpServer)
+    end)
+    
+    if started then
+        server.log_status(string.format("HTTP server listening on TCP 0.0.0.0:%s", LISTENER_PORT))
+    end
+end
+
+startHttpServer()
+
 local function unload()
-    server.stop_http_server()
+    listener:stop()
     http_server_root = nil
 end
 

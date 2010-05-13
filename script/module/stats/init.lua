@@ -62,10 +62,8 @@ dofile("./script/module/stats/core.lua").initialize(backends,{
     })
 
 -- Load and register the #stats player command
-local stats_command = loadfile("./script/module/stats/playercmd.lua")()
+local stats_command = dofile("./script/module/stats/playercmd.lua")
 stats_command.initialize(backends)
-player_command_function("stats", stats_command.command_function)
-
 -- 
 
 if backends.query then

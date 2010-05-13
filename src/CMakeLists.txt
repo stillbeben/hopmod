@@ -74,7 +74,6 @@ SET(SAUER_SERVER_SOURCES
     hopmod/scheduler.cpp
     hopmod/playerid.cpp
     hopmod/restarter.cpp
-    hopmod/httpserver/httpserver.cpp
     hopmod/httpserver/serverexec.cpp
     hopmod/httpserver/filesystem_resource.cpp
     hopmod/httpserver/lua_module.cpp)

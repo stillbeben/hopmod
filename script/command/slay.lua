@@ -23,5 +23,4 @@ return function(cn, target)
 	end
 
 	server.player_slay(target)
-
 end

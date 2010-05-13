@@ -1,4 +1,13 @@
+#include <fungu/script.hpp>
+#include <fungu/net/http/connection.hpp>
+#include <fungu/net/http/request_line.hpp>
+#include <fungu/net/http/header.hpp>
+#include <fungu/net/http/info.hpp>
 #include <fungu/net/http/response.hpp>
+#include <boost/bind.hpp>
+#include <boost/function.hpp>
+#include <cstdio>
+
 #include "directory_resource.hpp"
 #include "proxy_resource.hpp"
 #include "filesystem_resource.hpp"
@@ -11,6 +20,12 @@ extern "C"{
 #include <lualib.h>
 #include <lauxlib.h>
 }
+
+using namespace boost::asio;
+using namespace boost::system;
+
+boost::asio::io_service & get_main_io_service();
+void setup_ext_to_ct_map();
 
 void report_script_error(const char *);
 proxy_resource & get_root_resource();
@@ -399,8 +414,9 @@ const char * filesystem_resource_wrapper::MT = "http::server::filesystem_resourc
 
 class resource_wrapper:public http::server::resource
 {
-    static const char * MT;
 public:
+    static const char * MT;
+    
     resource_wrapper()
      :m_lua(NULL),
       m_resolve_function(LUA_REFNIL),
@@ -565,26 +581,11 @@ public:
         
         return 1;
     }
-    
-    static int set_root(lua_State * L)
-    {
-        resource_wrapper * res = reinterpret_cast<resource_wrapper *>(luaL_checkudata(L, 1, MT));
-        lua_pushvalue(L, -1);
-        int ref = luaL_ref(L, LUA_REGISTRYINDEX);
-        get_root_resource().set_resource(res, boost::bind(&resource_wrapper::cleanup_root_resource, L));
-        root_resource_ref = ref;
-        return 0;
-    }
 private:
     static int __gc(lua_State * L)
     {
         reinterpret_cast<resource_wrapper *>(luaL_checkudata(L, 1, MT))->~resource_wrapper();
         return 0;
-    }
-    
-    static void cleanup_root_resource(lua_State * L)
-    {
-        luaL_unref(L, LUA_REGISTRYINDEX, root_resource_ref);
     }
     
     int m_resolve_function;
@@ -617,21 +618,202 @@ static int url_encode(lua_State * L)
     return 1;
 }
 
+class listener
+{
+public:
+    static const char * MT;
+    
+    listener(lua_State * L, const char * ip, const char * port)
+     :m_L(L), m_root_resource(NULL), m_root_resource_ref(LUA_REFNIL)
+    {
+        static directory_resource empty_resource;
+        m_root_resource = &empty_resource;
+        
+        m_ip = ip;
+        m_port = port;
+        create_acceptor(ip, port);
+    }
+    
+    ~listener()
+    {
+        delete m_acceptor;
+    }
+     
+    static int create_object(lua_State * L)
+    {
+        const char * ip = luaL_checkstring(L, 1);
+        const char * port = luaL_checkstring(L, 2);
+        
+        try
+        {
+            new (lua_newuserdata(L, sizeof(listener))) listener(L, ip, port);
+        }
+        catch(system_error se)
+        {
+            lua_pop(L, 1);
+            lua_pushnil(L);
+            lua_pushstring(L, se.code().message().c_str());
+            return 2;
+        }
+        
+        luaL_getmetatable(L, listener::MT);
+        lua_setmetatable(L, -2);
+        
+        return 1;
+    }
+    
+    static void register_class(lua_State * L)
+    {
+        luaL_newmetatable(L, MT);
+        
+        lua_pushvalue(L, -1);
+        lua_setfield(L, -1, "__index");
+        
+        static luaL_Reg funcs[] = {
+            {"__gc", &listener::__gc},
+            {"start", &listener::start},
+            {"stop", &listener::stop},
+            {"set_root", &listener::set_root},
+            {NULL, NULL}
+        };
+        
+        luaL_register(L, NULL, funcs);
+    }
+private:
+    static int __gc(lua_State * L)
+    {
+        reinterpret_cast<listener *>(luaL_checkudata(L, 1, MT))->~listener();
+        return 0;
+    }
+    
+    static int start(lua_State * L)
+    {
+        listener * self = reinterpret_cast<listener *>(luaL_checkudata(L, 1, MT));
+        
+        luaL_checktype(L, 2, LUA_TFUNCTION);
+        lua_pushvalue(L, 2);
+        self->m_start_callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+        
+        if(!self->m_acceptor)
+        {
+            try
+            {
+                self->create_acceptor(self->m_ip.c_str(), self->m_port.c_str());
+            }
+            catch(system_error se)
+            {
+                lua_pop(L, 1);
+                lua_pushboolean(L, 0);
+                lua_pushstring(L, se.code().message().c_str());
+                return 2;
+            }
+        }
+        
+        self->m_acceptor->listen();
+        self->async_accept();
+        
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+    
+    static int stop(lua_State * L)
+    {
+        listener * self = reinterpret_cast<listener *>(luaL_checkudata(L, 1, MT));
+        
+        return 0;
+    }
+    
+    static int set_root(lua_State * L)
+    {
+        listener * self = reinterpret_cast<listener *>(luaL_checkudata(L, 1, MT));
+        resource_wrapper * resource = reinterpret_cast<resource_wrapper *>(luaL_checkudata(L, 2, resource_wrapper::MT));
+        lua_pushvalue(L, -1);
+        self->m_root_resource = resource;
+        luaL_unref(L, LUA_REGISTRYINDEX, self->m_root_resource_ref);
+        self->m_root_resource_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+        return 0;
+    }
+    
+    void create_acceptor(const char * ip, const char * port)
+    {
+        m_acceptor = new ip::tcp::acceptor(get_main_io_service());
+        m_acceptor->open(ip::tcp::v4());
+        m_acceptor->set_option(socket_base::reuse_address(true));
+        m_acceptor->bind(ip::tcp::endpoint(ip::address_v4::from_string(ip), atoi(port)));
+    }
+    
+    void cleanup_client_connection(http::server::client_connection * client)
+    {
+        delete client;   
+    }
+    
+    void accept_handler(http::server::client_connection * client, const error_code & error)
+    {
+        if(error)
+        {
+            delete client;
+            
+            if(error.value() != error::operation_aborted) 
+            {
+                m_acceptor->close();
+                delete m_acceptor;
+                m_acceptor = NULL;
+                
+                lua_rawgeti(m_L, LUA_REGISTRYINDEX, m_start_callback_ref);
+                lua_pushstring(m_L, error.message().c_str());
+                if(lua_pcall(m_L, 1, 0, 0) != 0)
+                {
+                    report_script_error(lua_tostring(m_L, -1));
+                }
+            }
+            
+            return;
+        }
+        
+        http::server::request::create(*client, *m_root_resource, boost::bind(&listener::cleanup_client_connection, this, client));
+        
+        async_accept();
+    }
+    
+    void async_accept()
+    {
+        http::server::client_connection * client = new http::server::client_connection(m_acceptor->get_io_service());
+        m_acceptor->async_accept(*client, boost::bind(&listener::accept_handler, this, client, _1));
+    }
+    
+    lua_State * m_L;
+    
+    std::string m_ip;
+    std::string m_port;
+    
+    ip::tcp::acceptor * m_acceptor;
+    
+    http::server::resource * m_root_resource;
+    int m_root_resource_ref;
+    
+    int m_start_callback_ref;
+};
+
+const char * listener::MT = "http_server::listener";
+
 namespace lua{
 namespace module{
 
 void open_http_server(lua_State * L)
 {
+    http::register_standard_headers();
+    setup_ext_to_ct_map();
+    
     opened_state = L;
     root_resource_ref = LUA_REFNIL;
     
     static luaL_Reg functions[] = {
         {"resource", &resource_wrapper::create_object},
         {"filesystem_resource", &filesystem_resource_wrapper::create_object},
-        {"set_root", &resource_wrapper::set_root},
         {"response", &response_wrapper::create_object},
         {"url_decode", &url_decode},
         {"url_encode", &url_encode},
+        {"listener", &listener::create_object},
         {NULL, NULL}
     };
     
@@ -641,6 +823,7 @@ void open_http_server(lua_State * L)
     response_wrapper::register_class(L);
     resource_wrapper::register_class(L);
     filesystem_resource_wrapper::register_class(L);
+    listener::register_class(L);
 }
 
 } //namespace module
