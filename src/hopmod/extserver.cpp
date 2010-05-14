@@ -365,6 +365,16 @@ int player_health(int cn)
     return get_ci(cn)->state.health;
 }
 
+int player_armour(int cn)
+{
+    return get_ci(cn)->state.armour;
+}
+
+int player_armour_type(int cn)
+{
+    return get_ci(cn)->state.armourtype;  
+}
+
 int player_gun(int cn)
 {
     return get_ci(cn)->state.gunselect;

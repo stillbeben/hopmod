@@ -75,6 +75,8 @@ namespace server
     int player_damagewasted(int);
     int player_maxhealth(int);
     int player_health(int);
+    int player_armour(int);
+    int player_armour_type(int);
     int player_gun(int);
     int player_hits(int);
     int player_misses(int);

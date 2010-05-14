@@ -152,6 +152,10 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::player_damagewasted, "player_damagewasted", env);
     script::bind_freefunc(server::player_maxhealth, "player_maxhealth", env);
     script::bind_freefunc(server::player_health, "player_health", env);
+    script::bind_freefunc(server::player_armour, "player_armour", env);
+    script::bind_freefunc(server::player_armour_type, "player_armour_type", env);
+    script::bind_const((int)A_GREEN, "GREEN_ARMOUR", env);
+    script::bind_const((int)A_YELLOW, "YELLOW_ARMOUR", env);
     script::bind_freefunc(server::player_gun, "player_gun", env);
     script::bind_freefunc(server::player_hits, "player_hits", env);
     script::bind_freefunc(server::player_misses, "player_misses", env);
