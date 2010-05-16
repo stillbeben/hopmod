@@ -60,9 +60,19 @@ void crash_handler(int signal)
             write_teamscores = true;
         }
         
-        write(fd, &header, sizeof(header));
+        if(write(fd, &header, sizeof(header)) == -1)
+        {
+            close(fd);
+            unlink("log/restore");
+            return;
+        }
         
-        write(fd, scores.buf, scores.length() * sizeof(savedscore));
+        if(write(fd, scores.buf, scores.length() * sizeof(savedscore)) == -1)
+        {
+            close(fd);
+            unlink("log/restore");
+            return;
+        }
         
         loopv(clients)
         {
@@ -73,7 +83,12 @@ void crash_handler(int signal)
             
             score.save(clients[i]->state);
             
-            write(fd, &score, sizeof(score));
+            if(write(fd, &score, sizeof(score)) == -1)
+            {
+                close(fd);
+                unlink("log/restore");
+                return;
+            }
         }
         
         if(write_teamscores)
@@ -82,11 +97,23 @@ void crash_handler(int signal)
             
             copystring(team.name, "evil");
             team.score = smode->getteamscore("evil");
-            write(fd, &team, sizeof(team));
+            
+            if(write(fd, &team, sizeof(team)) == -1)
+            {
+                close(fd);
+                unlink("log/restore");
+                return;
+            }
             
             copystring(team.name, "good");
             team.score = smode->getteamscore("good");
-            write(fd, &team, sizeof(team));
+            
+            if(write(fd, &team, sizeof(team)) == -1)
+            {
+                close(fd);
+                unlink("log/restore");
+                return;
+            }
         }
         
         close(fd);
