@@ -267,7 +267,7 @@ struct captureclientmode : clientmode
             baseinfo &b = bases[i];
             if(b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1 && insidebase(b, player1->feetpos()) && player1->hasmaxammo(b.ammotype-1+I_SHELLS)) return;
         }
-        addmsg(SV_REPAMMO, "rc", player1);
+        addmsg(N_REPAMMO, "rc", player1);
     }
 
     void receiveammo(fpsent *d, int type)
@@ -290,7 +290,7 @@ struct captureclientmode : clientmode
             {
                 if(d->lastrepammo!=i)
                 {
-                    if(b.ammo > 0 && !player1->hasmaxammo(b.ammotype-1+I_SHELLS)) addmsg(SV_REPAMMO, "rc", d);
+                    if(b.ammo > 0 && !player1->hasmaxammo(b.ammotype-1+I_SHELLS)) addmsg(N_REPAMMO, "rc", d);
                     d->lastrepammo = i;
                 }
                 return;
@@ -573,7 +573,7 @@ struct captureclientmode : clientmode
 
     void senditems(packetbuf &p)
     {
-        putint(p, SV_BASES);
+        putint(p, N_BASES);
         putint(p, bases.length());
         loopv(bases)
         {
@@ -817,7 +817,7 @@ struct captureclientmode : clientmode
             if(b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1 && insidebase(b, ci->state.o) && !ci->state.hasmaxammo(b.ammotype-1+I_SHELLS) && b.takeammo(ci->team))
             {
                 sendbaseinfo(i);
-                sendf(-1, 1, "riii", SV_REPAMMO, ci->clientnum, b.ammotype);
+                sendf(-1, 1, "riii", N_REPAMMO, ci->clientnum, b.ammotype);
                 ci->state.addammo(b.ammotype);
                 break;
             }
@@ -853,7 +853,7 @@ struct captureclientmode : clientmode
         if(!n) return;
         score &cs = findscore(team);
         cs.total += n;
-        sendf(-1, 1, "riisi", SV_BASESCORE, base, team, cs.total);
+        sendf(-1, 1, "riisi", N_BASESCORE, base, team, cs.total);
         signal_scoreupdate(team, cs.total);
     }
 
@@ -885,7 +885,7 @@ struct captureclientmode : clientmode
                     }
                 }
                 if(notify)
-                    sendf(-1, 1, "ri6", SV_BASEREGEN, ci->clientnum, ci->state.health, ci->state.armour, b.ammotype, b.ammotype>0 ? ci->state.ammo[b.ammotype] : 0);
+                    sendf(-1, 1, "ri6", N_BASEREGEN, ci->clientnum, ci->state.health, ci->state.armour, b.ammotype, b.ammotype>0 ? ci->state.ammo[b.ammotype] : 0);
             }
         }
     }
@@ -928,7 +928,7 @@ struct captureclientmode : clientmode
     void sendbaseinfo(int i)
     {
         baseinfo &b = bases[i];
-        sendf(-1, 1, "riissii", SV_BASEINFO, i, b.owner, b.enemy, b.enemy[0] ? b.converted : 0, b.owner[0] ? b.ammo : 0);
+        sendf(-1, 1, "riissii", N_BASEINFO, i, b.owner, b.enemy, b.enemy[0] ? b.converted : 0, b.owner[0] ? b.ammo : 0);
     }
 
     void sendbases()
@@ -945,13 +945,13 @@ struct captureclientmode : clientmode
             loopv(scores)
             {
                 score &cs = scores[i];
-                putint(p, SV_BASESCORE);
+                putint(p, N_BASESCORE);
                 putint(p, -1);
                 sendstring(cs.team, p);
                 putint(p, cs.total);
             }
         }
-        putint(p, SV_BASES);
+        putint(p, N_BASES);
         putint(p, bases.length());
         loopv(bases)
         {
@@ -989,7 +989,7 @@ struct captureclientmode : clientmode
 
         if(!lastteam) return;
         findscore(lastteam).total = 10000;
-        sendf(-1, 1, "riisi", SV_BASESCORE, -1, lastteam, 10000);
+        sendf(-1, 1, "riisi", N_BASESCORE, -1, lastteam, 10000);
         signal_scoreupdate(lastteam, 10000);
         startintermission();
     }
@@ -1064,17 +1064,17 @@ struct captureclientmode : clientmode
 
 #elif SERVMODE
 
-case SV_BASES:
+case N_BASES:
     if(smode==&capturemode) capturemode.parsebases(p, (ci->state.state!=CS_SPECTATOR || ci->privilege || ci->local) && !strcmp(ci->clientmap, smapname));
     break;
 
-case SV_REPAMMO:
+case N_REPAMMO:
     if(ci->state.state!=CS_SPECTATOR && cq && smode==&capturemode) capturemode.replenishammo(cq);
     break;
 
 #else
 
-case SV_BASEINFO:
+case N_BASEINFO:
 {
     int base = getint(p);
     string owner, enemy;
@@ -1087,7 +1087,7 @@ case SV_BASEINFO:
     break;
 }
 
-case SV_BASEREGEN:
+case N_BASEREGEN:
 {
     int rcn = getint(p), health = getint(p), armour = getint(p), ammotype = getint(p), ammo = getint(p);
     fpsent *regen = rcn==player1->clientnum ? player1 : getclient(rcn);
@@ -1100,7 +1100,7 @@ case SV_BASEREGEN:
     break;
 }
 
-case SV_BASES:
+case N_BASES:
 {
     int numbases = getint(p);
     loopi(numbases)
@@ -1117,7 +1117,7 @@ case SV_BASES:
     break;
 }
 
-case SV_BASESCORE:
+case N_BASESCORE:
 {
     int base = getint(p);
     getstring(text, p);
@@ -1126,7 +1126,7 @@ case SV_BASESCORE:
     break;
 }
 
-case SV_REPAMMO:
+case N_REPAMMO:
 {
     int rcn = getint(p), ammotype = getint(p);
     fpsent *r = rcn==player1->clientnum ? player1 : getclient(rcn);

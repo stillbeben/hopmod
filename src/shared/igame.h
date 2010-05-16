@@ -100,6 +100,7 @@ namespace server
     extern void deleteclientinfo(void *ci);
     extern void serverinit();
     extern int reserveclients();
+    extern int numchannels();
     extern void clientdisconnect(int n,int reason);
     extern int clientconnect(int n, uint ip);
     extern void localdisconnect(int n);

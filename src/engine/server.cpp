@@ -104,7 +104,7 @@ int getuint(ucharbuf &p)
         n += (p.get() << 7) - 0x80;
         if(n & (1<<14)) n += (p.get() << 14) - (1<<14);
         if(n & (1<<21)) n += (p.get() << 21) - (1<<21);
-        if(n & (1<<28)) n |= 0xF0000000; 
+        if(n & (1<<28)) n |= -1<<28;
     }
     return n;
 }
@@ -887,8 +887,14 @@ void netstats_handler(const boost::system::error_code & ec)
 {
     if(ec) return;
     
-    if(nonlocalclients || bsend || brec) printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, bsend/60.0f/1024, brec/60.0f/1024);
-    bsend = brec = 0;
+    bool has_stats = nonlocalclients || serverhost->totalSentData || serverhost->totalReceivedData;
+    
+    if(has_stats) 
+    {
+        printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, serverhost->totalSentData/60.0f/1024, serverhost->totalReceivedData/60.0f/1024);
+        serverhost->totalSentData = 0;
+        serverhost->totalReceivedData = 0;
+    }
     
     netstats_timer.expires_from_now(boost::posix_time::minutes(1));
     netstats_timer.async_wait(netstats_handler);
@@ -953,6 +959,7 @@ bool setuplistenserver(bool dedicated)
     int slots = min(maxclients + server::reserveclients(), MAXCLIENTS);
     serverhost = enet_host_create(&address, slots, 0, uprate);
     if(!serverhost) return servererror(dedicated, "could not create server host");
+    enet_host_channel_limit(serverhost, server::numchannels());
     loopi(slots) serverhost->peers[i].data = NULL;
     const char * _serverip = serverip[0] == '\0' ? "0.0.0.0" : serverip;
     std::cout<<"Game server socket listening on UDP "<<_serverip<<":"<<serverport<<std::endl;

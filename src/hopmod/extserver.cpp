@@ -220,15 +220,15 @@ void player_rename(int cn, const char * newname)
     if(!safenewname[0]) copystring(safenewname, "unnamed");
     
     clientinfo * ci = get_ci(cn);
-    putuint(ci->messages, SV_SWITCHNAME);
+    putuint(ci->messages, N_SWITCHNAME);
     sendstring(safenewname, ci->messages);
     
     vector<uchar> switchname_message;
-    putuint(switchname_message, SV_SWITCHNAME);
+    putuint(switchname_message, N_SWITCHNAME);
     sendstring(safenewname, switchname_message);
     
     packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-    putuint(p, SV_CLIENT);
+    putuint(p, N_CLIENT);
     putint(p, ci->clientnum);
     putint(p, switchname_message.length());
     p.put(switchname_message.getbuf(), switchname_message.length());
@@ -481,7 +481,7 @@ void player_slay(int cn)
     clientinfo * ci = get_ci(cn);
     if(ci->state.state != CS_ALIVE) return;
     ci->state.state = CS_DEAD;
-    sendf(-1, 1, "ri2", SV_FORCEDEATH, cn);
+    sendf(-1, 1, "ri2", N_FORCEDEATH, cn);
 }
 
 bool player_changeteam(int cn,const char * newteam)
@@ -495,7 +495,7 @@ bool player_changeteam(int cn,const char * newteam)
     signal_reteam(ci->clientnum, ci->team, newteam);
     
     copystring(ci->team, newteam, MAXTEAMLEN+1);
-    sendf(-1, 1, "riis", SV_SETTEAM, cn, newteam);
+    sendf(-1, 1, "riis", N_SETTEAM, cn, newteam);
     
     if(ci->state.aitype == AI_NONE) aiman::dorefresh = true;
     
@@ -511,7 +511,7 @@ void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);
     if(!m_mp(gmode)) gmode = gamemode;
-    sendf(-1, 1, "risii", SV_MAPCHANGE, map, gmode, 1);
+    sendf(-1, 1, "risii", N_MAPCHANGE, map, gmode, 1);
     changemap(map,gmode,mins);
 }
 
@@ -628,7 +628,7 @@ void unset_player_privilege(int cn)
     
     int old_priv = ci->privilege;
     ci->privilege = PRIV_NONE;
-    sendf(ci->clientnum, 1, "ri3", SV_CURRENTMASTER, ci->clientnum, PRIV_NONE);
+    sendf(ci->clientnum, 1, "ri3", N_CURRENTMASTER, ci->clientnum, PRIV_NONE);
     
     cleanup_masterstate(ci);
     
@@ -658,7 +658,7 @@ void set_player_privilege(int cn, int priv_code, bool public_priv = false)
     }
     else
     {
-        sendf(player->clientnum, 1, "ri3", SV_CURRENTMASTER, player->clientnum, player->privilege);
+        sendf(player->clientnum, 1, "ri3", N_CURRENTMASTER, player->clientnum, player->privilege);
     }
     
     const char * change = (old_priv < player->privilege ? "raised" : "lowered");
@@ -692,13 +692,13 @@ void set_player_private_master(int cn)
 void player_freeze(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    sendf(ci->clientnum, 1, "rii", SV_PAUSEGAME, 1);
+    sendf(ci->clientnum, 1, "rii", N_PAUSEGAME, 1);
 }
 
 void player_unfreeze(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    sendf(ci->clientnum, 1, "rii", SV_PAUSEGAME, 0);
+    sendf(ci->clientnum, 1, "rii", N_PAUSEGAME, 0);
 }
 
 static void execute_addbot(int skill)
@@ -944,7 +944,7 @@ bool selectnextgame()
         if(m_mp(next_gamemode_code))
         {
             mapreload = false;
-            sendf(-1, 1, "risii", SV_MAPCHANGE, next_mapname, next_gamemode_code, 1);
+            sendf(-1, 1, "risii", N_MAPCHANGE, next_mapname, next_gamemode_code, 1);
             changemap(next_mapname, next_gamemode_code, next_gametime);
             next_gamemode[0] = '\0';
             next_mapname[0] = '\0';
@@ -953,7 +953,7 @@ bool selectnextgame()
         else
         {
             std::cerr<<next_gamemode<<" game mode is unrecognised."<<std::endl;
-            sendf(-1, 1, "ri", SV_MAPRELOAD);
+            sendf(-1, 1, "ri", N_MAPRELOAD);
         }
         return true;
     }else return false;
@@ -962,13 +962,13 @@ bool selectnextgame()
 void sendauthchallenge(int cn, int id, const char * domain, const char * challenge)
 {
     clientinfo * ci = get_ci(cn);
-    sendf(ci->clientnum, 1, "risis", SV_AUTHCHAL, domain, id, challenge);
+    sendf(ci->clientnum, 1, "risis", N_AUTHCHAL, domain, id, challenge);
 }
 
 void send_auth_request(int cn, const char * domain)
 {
     clientinfo * ci = get_ci(cn);
-    sendf(ci->clientnum, 1, "ris", SV_REQAUTH, domain);
+    sendf(ci->clientnum, 1, "ris", N_REQAUTH, domain);
 }
 
 static bool compare_player_score(const std::pair<int,int> & x, const std::pair<int,int> & y)
@@ -1058,7 +1058,7 @@ bool send_item(int type, int recipient)
     if(minremain<=0 || !sents.inrange(ent_index)) return false;
     clientinfo *ci = getinfo(recipient);
     if(!ci || (!ci->local && !ci->state.canpickup(sents[ent_index].type))) return false;
-    sendf(-1, 1, "ri3", SV_ITEMACC, ent_index, recipient);
+    sendf(-1, 1, "ri3", N_ITEMACC, ent_index, recipient);
     ci->state.pickup(sents[ent_index].type);
     return true;
 }
