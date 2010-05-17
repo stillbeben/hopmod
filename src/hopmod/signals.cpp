@@ -117,9 +117,16 @@ static int event_trigger(lua_State * L)
     
     for(lua_function_vector::const_iterator it = handlers.begin(); it != handlers.end(); it++)
     {
-        lua_rawgeti(L, LUA_REGISTRYINDEX, *it);
-        for(int i = 1; i <= argc; i++) 
+        int handler_ref = *it;
+        if(handler_ref == -1) continue;
+        
+        lua_rawgeti(L, LUA_REGISTRYINDEX, handler_ref);
+        
+        for(int i = 1; i <= argc; i++)
+        {
             lua_pushvalue(L, i);
+        }
+        
         if(lua_pcall(L, argc, 0, 0) != 0)
         {
             report_script_error(lua_tostring(L, -1));
