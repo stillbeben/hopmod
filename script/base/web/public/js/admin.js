@@ -1,5 +1,10 @@
 $(document).ready(function(){
     
+    $("#nav a").fancybox({
+        type:"iframe",
+        autoDimensions:false
+    });
+    
     var server = new Server;
     
     server.addListener("unauthorized", function(){

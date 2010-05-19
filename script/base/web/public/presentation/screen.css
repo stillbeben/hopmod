@@ -3,6 +3,7 @@ h1{font-size:1.5em;}
 .clear{clear:both; height:0; padding:0; margin:0;}
 a{color:#0077CC;}
 a:hover{color:#4A6B82;}
+a:focus{background:#DEEFF7;}
 table th{text-align:left;}
 
 .text-shell{width:100%;}
@@ -69,4 +70,8 @@ table th{text-align:left;}
 #loginpage label,
 #loginpage .label-space{display:inline-block; width:100px; margin-right:10px; text-align:right;}
 #loginpage .form-error{text-align:center; color:red; font-weight:bold;}
+
+#nav{float:right; margin:0 -0.6em 0 0; padding:0; background:#DEEFF7; -moz-border-radius-topleft:6px; -moz-border-radius-bottomleft:6px;}
+#nav li{display:inline-block; list-style:none; border-right:solid 1px #78BCDE;}
+#nav a{display:inline-block; line-height:2em; padding:0 1em 0 1em; text-decoration:none;  border-right:solid 1px #F3F9FC;}
 
