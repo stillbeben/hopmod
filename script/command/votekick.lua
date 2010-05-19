@@ -51,7 +51,7 @@ local function init()
 
 	votes = {}
 
-	events.disconnect = server.event_handler_object("disconnect", function(cn, reason)
+	events.disconnect = server.event_handler("disconnect", function(cn, reason)
 
 		if votes[cn] then
 
@@ -92,9 +92,9 @@ end
 
 local function unload()
 
-	events = {}
+	server.cancel_handler(events.disconnect)
+	
 	interval.active = false
-
 end
 
 

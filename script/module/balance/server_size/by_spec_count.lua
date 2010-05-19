@@ -1,4 +1,3 @@
-local event = {}
 local max_players = server.maxplayers
 
 local function calcOutput(players, specs)
@@ -31,7 +30,7 @@ local function isOverCapacity()
 	return calcOutput(server.playercount, server.speccount) > output_limit
 end
 
-event.spectator = server.event_handler_object("spectator", function(cn, value)
+server.event_handler("spectator", function(cn, value)
 
 	if value == 0 and isOverCapacity() then
         local sid = server.player_sessionid(cn)
@@ -45,12 +44,11 @@ event.spectator = server.event_handler_object("spectator", function(cn, value)
 	readjustCapacity()
 end)
 
-event.disconnect = server.event_handler_object("disconnect", function(cn, reason)
+server.event_handler("disconnect", function(cn, reason)
 	readjustCapacity()
 end)
 
 local function unload()
-	event = {}
 	server.maxplayers = max_players
 end
 

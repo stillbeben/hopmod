@@ -82,7 +82,7 @@ end
 function server.ip_vars(ipmask)
 
     if not ipmask then
-        return variablesByIpIndex
+        return variablesByIp
     end
     
     local matches = variablesByIpIndex[ipmask]

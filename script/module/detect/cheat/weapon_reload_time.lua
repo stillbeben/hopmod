@@ -1,4 +1,4 @@
-local event_shot = server.event_handler_object("shot",function(cn,gun,hits)
+server.event_handler("shot",function(cn,gun,hits)
 
 	if cn < 128 then
 
@@ -54,12 +54,3 @@ local event_shot = server.event_handler_object("shot",function(cn,gun,hits)
 
 end)
 
-
-local function unload()
-	
-	event_shot = nil
-
-end
-
-
-return {unload = unload}

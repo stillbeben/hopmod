@@ -1,9 +1,5 @@
-local event = {}
-
 local max_players = server.maxplayers
-
 local total_max_players = server.resize_server_mastermode_size
-
 local resize_mastermode = server.resize_server_mastermode_using_mastermode
 
 local size_gamemode = {}
@@ -23,7 +19,6 @@ size_gamemode["tactics"] = server.resize_server_gamemode_size_tactics or max_pla
 size_gamemode["instagib"] = server.resize_server_gamemode_size_instagib or max_players
 size_gamemode["coop edit"] = server.resize_server_gamemode_size_coop_edit or max_players
 
-
 local function resize_modechange(mode, mmode)
 
 	if mmode == resize_mastermode then
@@ -37,50 +32,34 @@ local function resize_modechange(mode, mmode)
 			server.maxplayers = size_gamemode[mode]
 		end
 	end
-
 end
 
-
-event.setmastermode = server.event_handler_object("setmastermode", function(cn, old, new)
-
+server.event_handler("setmastermode", function(cn, old, new)
 	server.sleep(500, function()
 		resize_modechange(server.gamemode, new)
 	end)
-
 end)
 
-event.mapchange = server.event_handler_object("mapchange", function(map, mode)
-
+event.mapchange = server.event_handler("mapchange", function(map, mode)
 	server.sleep(500, function()
 		resize_modechange(mode, server.mastermode)
 	end)
-
 end)
 
-event.disconnect = server.event_handler_object("disconnect", function(cn, reason)
-
+event.disconnect = server.event_handler("disconnect", function(cn, reason)
 	server.sleep(500, function()
 		resize_modechange(server.gamemode, server.mastermode)
 	end)
-
 end)
 
-event.started = server.event_handler_object("started", function()
-
+event.started = server.event_handler("started", function()
 	server.sleep(500, function()
 		resize_modechange(server.gamemode, server.mastermode)
 	end)
-
 end)
-
 
 local function unload()
-
-	event = {}
-
 	server.maxplayers = max_players
-
 end
-
 
 return {unload = unload}

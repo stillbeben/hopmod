@@ -4,7 +4,6 @@
     Copyright (C) 2009 Graham Daws
 ]]
 
-local events = {}
 local stats = server.player_vars_table(server.player_id)
 
 local stats_record_class = {
@@ -50,7 +49,7 @@ for _, subobject in pairs(best) do
     setmetatable(subobject, {__index = stats_record_class})
 end
 
-events.intermission = server.event_handler_object("intermission", function()
+server.event_handler("intermission", function()
 
     local totalplayercount = server.playercount + server.speccount + server.botcount
     if totalplayercount < 2 then return end
@@ -126,19 +125,18 @@ events.intermission = server.event_handler_object("intermission", function()
     end
 end)
 
-events.takeflag = server.event_handler_object("takeflag", function(cn)
+server.event_handler("takeflag", function(cn)
     local player_stats = stats.vars(cn)
     player_stats.takeflag = (player_stats.takeflag or 0) + 1
 end)
 
-events.scoreflag = server.event_handler_object("scoreflag", function(cn)
+server.event_handler("scoreflag", function(cn)
     local player_stats = stats.vars(cn)
     player_stats.scoreflag = (player_stats.scoreflag or 0) + 1
 end)
 
-events.returnflag = server.event_handler_object("returnflag", function(cn)
+server.event_handler("returnflag", function(cn)
     local player_stats = stats.vars(cn)
     player_stats.returnflag = (player_stats.returnflag or 0) + 1
 end)
 
-return {unload = function() events = nil end}

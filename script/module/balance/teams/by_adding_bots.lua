@@ -1,9 +1,7 @@
 --[[
     Auto Team Balancing Using Bots
-    
 ]]
 
-local event = {}
 local using_bots = server.teambalance_using_bots
 local using_moveblock = server.teambalance_using_moveblock
 local bots_added = 0
@@ -76,7 +74,6 @@ local function check_balance()
     else
         remove_bots()
     end
-    
 end
 
 server.event_handler("disconnect",  check_balance)

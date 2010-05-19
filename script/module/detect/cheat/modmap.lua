@@ -1,5 +1,3 @@
-local event = {}
-
 
 -- helper
 --
@@ -10,14 +8,10 @@ local function stresser(cn)
 	server.player_msg(cn,orange("You cannot play on this map!") .. " Please, wait for the next map")
 	server.player_msg(cn,"and " .. orange("re-download the game") .. " from " .. yellow("www.sauerbraten.org"))
 	server.spec(cn)
-
 end
 
-
--- events
---
 -- safe player, when he has a modmap [and mode is not coop and map is known]
-event.mapcrcfail = server.event_handler_object("mapcrcfail",function(cn)
+server.event_handler("mapcrcfail",function(cn)
 
 	if ( server.playercount > 2 ) and ( not (server.gamemode == "coop edit") ) and ( server.is_known_map(server.map) ) then
 		server.player_vars(cn).modmap = true
@@ -27,9 +21,8 @@ event.mapcrcfail = server.event_handler_object("mapcrcfail",function(cn)
 
 end)
 
-
 -- check safed player, when he tries to leave spectator
-event.spectator = server.event_handler_object("spectator",function(cn,joined)
+server.event_handler("spectator",function(cn,joined)
 
 	if ( joined == 0 ) and ( server.player_vars(cn).modmap ) then
 		stresser(cn)
@@ -37,10 +30,3 @@ event.spectator = server.event_handler_object("spectator",function(cn,joined)
 
 end)
 
-
-local function unload()
-	event = {}
-end
-
-
-return {unload = unload}

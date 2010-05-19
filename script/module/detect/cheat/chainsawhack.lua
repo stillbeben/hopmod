@@ -1,4 +1,4 @@
-local event_frag = server.event_handler_object("frag",function(tcn,acn)
+server.event_handler("frag", function(tcn,acn)
 
 	local a_pos_x,a_pos_y,a_pos_z = server.player_pos(acn)
 	local t_pos_x,t_pos_y,t_pos_z = server.player_pos(tcn)
@@ -12,17 +12,6 @@ local event_frag = server.event_handler_object("frag",function(tcn,acn)
 			server.log("WARNING: " .. server.player_name(acn) .. "(" .. acn .. ") uses a chainsaw hack.  [pj: " .. server.player_lag(acn) .. " | ping: " .. server.player_ping(acn) .. " | ip: " .. server.player_ip(acn) .. "]")
 
 		end
-
 	end
-
 end)
 
-
-local function unload()
-
-	event_frag = nil
-
-end
-
-
-return {unload = unload}

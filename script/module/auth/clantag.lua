@@ -1,6 +1,3 @@
-
-local events = {}
-
 local clans = {}
 
 function clan(description)
@@ -52,7 +49,7 @@ local function check_name(cn)
     
     local name = string.upper(server.player_name(cn))
     
-    for i, clan in pairs(clans) do
+    for _, clan in pairs(clans) do
         if string.match(name, clan.tag_pattern) then
             
             auth.send_request(cn, clan.auth_domain, function(cn, user_id, domain, status)
@@ -84,20 +81,10 @@ local function check_name(cn)
     end
 end
 
-events.connect = server.event_handler_object("connect", check_name)
-
-events.rename = server.event_handler_object("rename", check_name)
+server.event_handler("connect", check_name)
+server.event_handler("rename", check_name)
 
 if server.file_exists("conf/clans.lua") then
     script("conf/clans.lua")
 end
 
-
-local function unload()
-
-	events = {}
-
-end
-
-
-return {unload = unload}

@@ -1,20 +1,13 @@
-local event = {}
-
 local no_event_active = false
 local frag_event_active = false
 local suicide_event_active = false
 local scoreflag_event_active = false
 local resetflag_event_active = false
-
 local sudden_death_active = false
-
 local is_unload = false
 
 server.suddendeath_enabled = false
-
-
 server.suddendeath_loaded = true
-
 
 server.sleep(1000, function()	-- no event
 
@@ -43,8 +36,7 @@ server.sleep(1000, function()	-- no event
 
 end)
 
-
-event.frag = server.event_handler_object("frag", function(tcn, acn)
+server.event_handler("frag", function(tcn, acn)
 
 	if frag_event_active == true then
 		server.changetime(1)
@@ -55,8 +47,7 @@ event.frag = server.event_handler_object("frag", function(tcn, acn)
 
 end)
 
-
-event.suicide = server.event_handler_object("suicide", function(cn)
+server.event_handler("suicide", function(cn)
 
 	if suicide_event_active == true then
 		server.changetime(1)
@@ -66,8 +57,7 @@ event.suicide = server.event_handler_object("suicide", function(cn)
 
 end)
 
-
-event.scoreflag = server.event_handler_object("scoreflag", function(cn)
+server.event_handler("scoreflag", function(cn)
 
 	if scoreflag_event_active == true then
 		server.changetime(1)
@@ -77,8 +67,7 @@ event.scoreflag = server.event_handler_object("scoreflag", function(cn)
 
 end)
 
-
-event.resetflag = server.event_handler_object("resetflag", function()
+server.event_handler("resetflag", function()
 
 	if resetflag_event_active == true then
 		server.changetime(1)
@@ -88,8 +77,7 @@ event.resetflag = server.event_handler_object("resetflag", function()
 
 end)
 
-
-event.timeupdate = server.event_handler_object("timeupdate", function(mins)
+server.event_handler("timeupdate", function(mins)
 
 	if mins == 1 and sudden_death_active == false and server.suddendeath_enabled == true then
 
@@ -158,8 +146,7 @@ event.timeupdate = server.event_handler_object("timeupdate", function(mins)
 
 end)
 
-
-event.finishedgame = server.event_handler_object("finishedgame", function()
+server.event_handler("finishedgame", function()
 
 	no_event_active = false
 	frag_event_active = false
@@ -170,7 +157,6 @@ event.finishedgame = server.event_handler_object("finishedgame", function()
 	sudden_death_active = false
 
 end)
-
 
 -- A player command to enable suddendeath mode for the current map
 function server.cmd_sd(cn)
@@ -189,7 +175,6 @@ function server.cmd_sd(cn)
 
 end
 
-
 -- A player command to disable suddendeath mode for the current map
 function server.cmd_nosd(cn)
 
@@ -207,14 +192,9 @@ function server.cmd_nosd(cn)
 
 end
 
-
 local function unload()
-
 	is_unload = true
 	server.suddendeath_loaded = nil
-	event = {}
-
 end
-
 
 return {unload = unload}

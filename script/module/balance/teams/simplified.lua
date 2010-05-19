@@ -9,7 +9,6 @@
     
 ]]
 
-
 local using_moveblock = server.teambalance_using_moveblock
 local using_player_moving_balancer_when_leaving_spec = server.teambalance_using_player_moving_balancer_when_leaving_spec
 local using_text_addin = server.teambalance_using_text_addin
@@ -17,9 +16,6 @@ local using_text_addin = server.teambalance_using_text_addin
 if server.botbalance == 0 then
 	server.botbalance = 1
 end
-
-local event = {}
-
 
 local function team_size(team)
 
@@ -32,7 +28,6 @@ local function team_size(team)
 	end
 
 	return size
-
 end
 
 
@@ -43,7 +38,6 @@ local function other_team(team)
 	else
 		return "evil"
 	end
-
 end
 
 
@@ -54,16 +48,11 @@ local function fuller_team()
 	else
 		return "evil"
 	end
-
 end
-
 
 local function team_diff()
-
 	return (math.abs(team_size("good") - team_size("evil")))
-
 end
-
 
 local function unbalanced()
 
@@ -72,7 +61,6 @@ local function unbalanced()
 	else
 		return false
 	end
-
 end
 
 
@@ -83,12 +71,10 @@ local function is_enabled()
 	else
 		return false
 	end
-
 end
 
-
 if using_player_moving_balancer_when_leaving_spec == 1 then
-	event.spectator = server.event_handler_object("spectator", function(cn, joined)
+	event.spectator = server.event_handler("spectator", function(cn, joined)
 
 		if is_enabled() and joined == 0 and unbalanced() then
 			local fuller = fuller_team()
@@ -99,12 +85,10 @@ if using_player_moving_balancer_when_leaving_spec == 1 then
 				server.player_msg(cn,"You switched the team for balance")
 			end
 		end
-
 	end)
 end
 
-
-event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, old, new)
+server.event_handler("chteamrequest", function(cn, old, new)
 
 	if is_enabled() then
 		if not (new == "good" or new == "evil") then
@@ -117,12 +101,10 @@ event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, 
 			end
 		end
 	end
-
 end)
 
-
 if using_text_addin == 1 then
-	event.text = server.event_handler_object("text", function(cn, text)
+	server.event_handler("text", function(cn, text)
 
 		if is_enabled() and unbalanced() then
 			local fuller = fuller_team()
@@ -132,12 +114,10 @@ if using_text_addin == 1 then
 				server.player_msg(cn,"You switched the team for balance")
 			end
 		end
-
 	end)
 end
 
-
-event.finishedgame = server.event_handler_object("finishedgame", function()
+server.event_handler("finishedgame", function()
 
 	if is_enabled() then
 		local flag = 0
@@ -158,15 +138,5 @@ event.finishedgame = server.event_handler_object("finishedgame", function()
 			end
 		end
 	end
-
 end)
 
-
-local function unload()
-
-	event = {}
-
-end
-
-
-return {unload = unload}

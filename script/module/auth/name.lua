@@ -1,15 +1,12 @@
 local domain = server.name_reservation_domain
 local reserved_name_expire = server.reserved_name_expire
 
-local event = {}
-
 local failure_message = {}
 failure_message[auth.request_status.REQUEST_FAILED] = "You are using a reserved name."
 failure_message[auth.request_status.CHALLENGE_FAILED] = "The server failed to authenticate you for the use of the reserved name."
 failure_message[auth.request_status.RESPONSE_FAILED] = failure_message[auth.request_status.CHALLENGE_FAILED]
 failure_message[auth.request_status.TIMEOUT] = failure_message[auth.request_status.CHALLENGE_FAILED]
 failure_message["WRONG_KEY"] = "You authenticated with a key for another user."
-
 
 local function player_verified(cn)
 
@@ -90,10 +87,9 @@ local function check_name(cn)
 
 end
 
+server.event_handler("connect", check_name)
 
-event.connect = server.event_handler_object("connect", check_name)
-
-event.rename = server.event_handler_object("rename", function(cn)
+server.event_handler("rename", function(cn)
 
 	local pvars = server.player_pvars(cn)
 	local vars = server.player_vars(cn)
@@ -103,13 +99,5 @@ event.rename = server.event_handler_object("rename", function(cn)
 	pvars.reserved_name_expire = vars.reserved_name_expire
 
 	check_name(cn)
-
-end)
-
-
-local function unload()
-	event = {}
 end
 
-
-return {unload = unload}

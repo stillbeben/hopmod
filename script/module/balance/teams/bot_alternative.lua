@@ -4,7 +4,6 @@
     
 ]]
 
-
 local using_moveblock = server.teambalance_using_moveblock
 local using_player_moving_balancer_when_leaving_spec = server.teambalance_using_player_moving_balancer_when_leaving_spec
 local using_text_addin = server.teambalance_using_text_addin
@@ -15,16 +14,11 @@ if (bot_skill_high or 0) < bot_skill_low then
 	bot_skill_high = bot_skill_low
 end
 
-
 if server.botbalance == 1 then
 	server.botbalance = 0
 end
 
-
-local event = {}
-
 local is_intermission = false
-
 
 local function team_size(team)
 
@@ -37,9 +31,7 @@ local function team_size(team)
 	end
 
 	return size
-
 end
-
 
 local function team_size_with_bots(team)
 
@@ -58,9 +50,7 @@ local function team_size_with_bots(team)
 	end
 
 	return size
-
 end
-
 
 local function other_team(team)
 
@@ -69,9 +59,7 @@ local function other_team(team)
 	else
 		return "evil"
 	end
-
 end
-
 
 local function fuller_team()
 
@@ -80,16 +68,11 @@ local function fuller_team()
 	else
 		return "evil"
 	end
-
 end
-
 
 local function team_diff()
-
 	return (math.abs(team_size("good") - team_size("evil")))
-
 end
-
 
 local function unbalanced()
 
@@ -98,9 +81,7 @@ local function unbalanced()
 	else
 		return false
 	end
-
 end
-
 
 local function addbots(num)
 
@@ -117,9 +98,7 @@ local function addbots(num)
 	else
 		server.msg(string.format("The server has added %s random skilled bots to balance the teams.", orange(num)))
 	end
-
 end
-
 
 local function delbots(num)
 
@@ -131,16 +110,11 @@ local function delbots(num)
 		server.delbot()
 		server.log("Server removed bot")
 	end
-
 end
-
 
 local function remove_all_bots()
-
 	delbots(server.botcount)
-
 end
-
 
 local function balance()
 
@@ -162,9 +136,7 @@ local function balance()
 	else
 		remove_all_bots()
 	end
-
 end
-
 
 local function check_balance(option)
 
@@ -175,9 +147,7 @@ local function check_balance(option)
 	server.sleep(option,function()
 		balance()
 	end)
-
 end
-
 
 local function is_enabled()
 
@@ -186,11 +156,9 @@ local function is_enabled()
 	else
 		return false
 	end
-
 end
 
-
-event.spectator = server.event_handler_object("spectator", function(cn, joined)
+server.event_handler("spectator", function(cn, joined)
 
 	if is_enabled() then
 		if joined == 1 then
@@ -224,8 +192,7 @@ event.spectator = server.event_handler_object("spectator", function(cn, joined)
 
 end)
 
-
-event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, old, new)
+server.event_handler("chteamrequest", function(cn, old, new)
 
 	if is_enabled() then
 		if not (new == "good" or new == "evil") then
@@ -241,8 +208,7 @@ event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, 
 
 end)
 
-
-event.reteam = server.event_handler_object("reteam", function(cn, old, new)
+server.event_handler("reteam", function(cn, old, new)
 
 	if is_enabled() then
 		if (server.playercount - server.speccount) == 1 then
@@ -260,9 +226,8 @@ event.reteam = server.event_handler_object("reteam", function(cn, old, new)
 
 end)
 
-
 if using_text_addin == 1 then
-	event.text = server.event_handler_object("text", function(cn, text)
+	event.text = server.event_handler("text", function(cn, text)
 
 		if is_enabled() and unbalanced() then
 			local fuller = fuller_team()
@@ -278,8 +243,7 @@ if using_text_addin == 1 then
 	end)
 end
 
-
-event.finishedgame = server.event_handler_object("finishedgame", function()
+server.event_handler("finishedgame", function()
 
 	is_intermission = false
 
@@ -305,20 +269,16 @@ event.finishedgame = server.event_handler_object("finishedgame", function()
 
 end)
 
-
-event.intermission = server.event_handler_object("intermission", function()
+server.event_handler("intermission", function()
 
 	if is_enabled() then
 		remove_all_bots()
 	end
 
 	is_intermission = true
-
 end)
 
-
-event.mapchange = server.event_handler_object("mapchange", function(map, mode)
-
+server.event_handler("mapchange", function(map, mode)
 	if is_enabled() then
 		if (server.playercount - server.speccount) == 1 then
 			local bots = server.botcount
@@ -332,12 +292,9 @@ event.mapchange = server.event_handler_object("mapchange", function(map, mode)
 			check_balance(10000)
 		end
 	end
-
 end)
 
-
-event.connect = server.event_handler_object("connect", function(cn)
-
+server.event_handler("connect", function(cn)
 	if is_enabled() then
 		if (server.playercount - server.speccount) == 1 then
 			local bots = server.botcount
@@ -351,11 +308,9 @@ event.connect = server.event_handler_object("connect", function(cn)
 			check_balance()
 		end
 	end
-
 end)
 
-
-event.disconnect = server.event_handler_object("disconnect", function(cn, reason)
+server.event_handler("disconnect", function(cn, reason)
 
 	if is_enabled() then
 		if (server.playercount - server.speccount) == 1 then
@@ -373,8 +328,7 @@ event.disconnect = server.event_handler_object("disconnect", function(cn, reason
 
 end)
 
-
-event.setmastermode = server.event_handler_object("setmastermode", function(cn, current, new)
+server.event_handler("setmastermode", function(cn, current, new)
 
 	if is_enabled() and not new == "open" then
 
@@ -389,20 +343,13 @@ event.setmastermode = server.event_handler_object("setmastermode", function(cn, 
 		end)
 
 	end
-
 end)
 
-
 local function unload()
-
 	remove_all_bots()
-	event = {}
 	is_intermission = false
-
 end
 
-
 check_balance(1000) -- in case this module was loaded from #reload
-
 
 return {unload = unload}

@@ -4,17 +4,12 @@
 
 ]]
 
-
 local using_moveblock = server.teambalance_using_moveblock
 local using_player_moving_balancer_when_leaving_spec = server.teambalance_using_player_moving_balancer_when_leaving_spec
 local using_text_addin = server.teambalance_using_text_addin
 
-
-local event = {}
-
 local is_intermission = false
 local search_dead_player = false
-
 
 local function team_size(team)
 
@@ -29,9 +24,7 @@ local function team_size(team)
 	end
 
 	return size
-
 end
-
 
 local function other_team(team)
 
@@ -40,9 +33,7 @@ local function other_team(team)
 	else
 		return "evil"
 	end
-
 end
-
 
 local function fuller_team()
 
@@ -51,16 +42,11 @@ local function fuller_team()
 	else
 		return "evil"
 	end
-
 end
-
 
 local function team_diff()
-
 	return (math.abs(team_size("good") - team_size("evil")))
-
 end
-
 
 local function unbalanced()
 
@@ -69,9 +55,7 @@ local function unbalanced()
 	else
 		return false
 	end
-
 end
-
 
 local function move_player(cn, team)
 
@@ -83,27 +67,21 @@ local function move_player(cn, team)
 
 		check_balance(5000)
 	end
-
 end
 
-
-event.frag = server.event_handler_object("frag", function(tcn, acn)
+server.event_handler("frag", function(tcn, acn)
 
 	if search_dead_player == true then
 		move_player(tcn, fuller_team())
 	end
-
 end)
 
-
-event.suicide = server.event_handler_object("suicide", function(cn)
+server.event_handler("suicide", function(cn)
 
 	if search_dead_player == true then
 		move_player(cn, fuller_team())
 	end
-
 end)
-
 
 local function check_already_dead_players(team)
 
@@ -115,9 +93,7 @@ local function check_already_dead_players(team)
 	end
 
 	search_dead_player = true
-
 end
-
 
 local function balance()
 		   
@@ -128,9 +104,7 @@ local function balance()
 	elseif search_dead_player == true then
 		search_dead_player = false
 	end
-
 end
-
 
 local function check_balance(option)
 		   
@@ -142,9 +116,7 @@ local function check_balance(option)
 	server.sleep(option,function()
 		balance()
 	end)
-
 end
-
 
 local function is_enabled()
 
@@ -154,11 +126,9 @@ local function is_enabled()
 		search_dead_player = false
 		return false
 	end
-
 end
 
-
-event.spectator = server.event_handler_object("spectator", function(cn, joined)
+server.event_handler("spectator", function(cn, joined)
 
 	if is_enabled() then
 		if joined == 1 then
@@ -174,8 +144,7 @@ event.spectator = server.event_handler_object("spectator", function(cn, joined)
 
 end)
 
-
-event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, old, new)
+server.event_handler("chteamrequest", function(cn, old, new)
 
 	if is_enabled() then
 		if not (new == "good" or new == "evil") then
@@ -191,18 +160,15 @@ event.chteamrequest = server.event_handler_object("chteamrequest", function(cn, 
 
 end)
 
-
-event.reteam = server.event_handler_object("reteam", function(cn, old, new)
+event.reteam = server.event_handler("reteam", function(cn, old, new)
 
 	if is_enabled() then
 		check_balance()
 	end
-
 end)
 
-
 if using_text_addin == 1 then
-	event.text = server.event_handler_object("text", function(cn, text)
+	server.event_handler("text", function(cn, text)
 
 		if is_enabled() and unbalanced() then
 			local fuller = fuller_team()
@@ -217,8 +183,7 @@ if using_text_addin == 1 then
 	end)
 end
 
-
-event.finishedgame = server.event_handler_object("finishedgame", function()
+server.event_handler("finishedgame", function()
 
 	is_intermission = false
 	search_dead_player = false
@@ -245,42 +210,30 @@ event.finishedgame = server.event_handler_object("finishedgame", function()
 
 end)
 
-
-event.intermission = server.event_handler_object("intermission", function()
-
+server.event_handler("intermission", function()
 	is_intermission = true
-
 end)
 
-
-event.mapchange = server.event_handler_object("mapchange", function(map, mode)
+server.event_handler("mapchange", function(map, mode)
 
 	if is_enabled() then
 		check_balance()
 	end
-
 end)
 
-
-event.disconnect = server.event_handler_object("disconnect", function(cn, reason)
+server.event_handler("disconnect", function(cn, reason)
 
 	if is_enabled() then
 		check_balance()
 	end
-
 end)
-
 
 local function unload()
 
-	event = {}
 	is_intermission = false
 	search_dead_player = false
-
 end
 
-
 check_balance(10000) -- in case this module was loaded from #reload
-
 
 return {unload = unload}
