@@ -76,31 +76,37 @@ function ClientUpdateSet(server){
         });
     }
     
-    function resync(callback){
-    
+    function resync(callback, options){
+        
+        var addNewClient = options && options.addNewClient;
+        
         $.getJSON("/clients", function(response, textStatus){
             if(textStatus != "success"){
                 server.signalError();
                 return;
             }
             
-            self.clients = {};
             self.spectators = {};
             self.players = {};
             self.teams = {};
-            self.numberOfClients = 0;
             
             $.each(response, function(){
                 
                 var cn = this.cn;
                 
                 if(!self.clients[cn]){
-                    self.clients[cn] = new Client(self.server);
-                    self.clients[cn].cn = cn;
-                    self.clients[cn].is_bot = cn >= 128;
                     
-                    if(!self.clients[cn].is_bot){
-                        self.numberOfClients++;
+                    if(addNewClient){
+                        self.clients[cn] = new Client(self.server);
+                        self.clients[cn].cn = cn;
+                        self.clients[cn].is_bot = cn >= 128;
+
+                        if(!self.clients[cn].is_bot){
+                            self.numberOfClients++;
+                        }
+                    }
+                    else{
+                        return;
                     }
                 }
                 
@@ -133,6 +139,7 @@ function ClientUpdateSet(server){
     });
     
     event_handler("disconnect", function(cn){
+    
         var client = self.clients[cn];
         client.status = "spectator";
         
@@ -197,7 +204,6 @@ function ClientUpdateSet(server){
     });
     
     event_handler("mapchange", function(map, gamemode){
-        
         resync(function(){
             callListeners(listeners.mapchange, map, gamemode);
         });
@@ -205,6 +211,8 @@ function ClientUpdateSet(server){
     
     resync(function(){
         callListeners(listeners.ready);
+    },{
+        addNewClient:true
     });
     
     eventService.startListening();
