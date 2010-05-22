@@ -23,25 +23,28 @@ extern "C"
 #include "enet/list.h"
 #include "enet/callbacks.h"
 
-typedef enum
-{
-   ENET_VERSION = 1
-} ENetVersion;
+#define ENET_VERSION_MAJOR 1
+#define ENET_VERSION_MINOR 2
+#define ENET_VERSION_PATCH 2
+#define ENET_VERSION_CREATE(major, minor, patch) (((major)<<16) | ((minor)<<8) | (patch))
+#define ENET_VERSION ENET_VERSION_CREATE(ENET_VERSION_MAJOR, ENET_VERSION_MINOR, ENET_VERSION_PATCH)
 
-typedef enum
+typedef enet_uint32 ENetVersion;
+
+typedef enum _ENetSocketType
 {
    ENET_SOCKET_TYPE_STREAM   = 1,
    ENET_SOCKET_TYPE_DATAGRAM = 2
 } ENetSocketType;
 
-typedef enum
+typedef enum _ENetSocketWait
 {
    ENET_SOCKET_WAIT_NONE    = 0,
    ENET_SOCKET_WAIT_SEND    = (1 << 0),
    ENET_SOCKET_WAIT_RECEIVE = (1 << 1)
 } ENetSocketWait;
 
-typedef enum
+typedef enum _ENetSocketOption
 {
    ENET_SOCKOPT_NONBLOCK  = 1,
    ENET_SOCKOPT_BROADCAST = 2,
@@ -83,7 +86,7 @@ typedef struct _ENetAddress
  
    @sa ENetPacket
 */
-typedef enum
+typedef enum _ENetPacketFlag
 {
    /** packet must be received by the target peer and resend attempts should be
      * made until the packet is delivered */
@@ -161,7 +164,7 @@ typedef struct _ENetIncomingCommand
    ENetPacket *     packet;
 } ENetIncomingCommand;
 
-typedef enum
+typedef enum _ENetPeerState
 {
    ENET_PEER_STATE_DISCONNECTED                = 0,
    ENET_PEER_STATE_CONNECTING                  = 1,
@@ -226,6 +229,7 @@ typedef struct _ENetChannel
  */
 typedef struct _ENetPeer
 { 
+   ENetListNode  dispatchList;
    struct _ENetHost * host;
    enet_uint16   outgoingPeerID;
    enet_uint16   incomingPeerID;
@@ -272,6 +276,8 @@ typedef struct _ENetPeer
    ENetList      sentUnreliableCommands;
    ENetList      outgoingReliableCommands;
    ENetList      outgoingUnreliableCommands;
+   ENetList      dispatchedCommands;
+   int           needsDispatch;
    enet_uint16   incomingUnsequencedGroup;
    enet_uint16   outgoingUnsequencedGroup;
    enet_uint32   unsequencedWindow [ENET_PEER_UNSEQUENCED_WINDOW_SIZE / 32]; 
@@ -288,6 +294,7 @@ typedef struct _ENetPeer
     @sa enet_host_service()
     @sa enet_host_flush()
     @sa enet_host_broadcast()
+    @sa enet_host_channel_limit()
     @sa enet_host_bandwidth_limit()
     @sa enet_host_bandwidth_throttle()
   */
@@ -302,8 +309,9 @@ typedef struct _ENetHost
    int                recalculateBandwidthLimits;
    ENetPeer *         peers;                       /**< array of peers allocated for this host */
    size_t             peerCount;                   /**< number of peers allocated for this host */
+   size_t             channelLimit;                /**< maximum number of channels allowed for connected peers */
    enet_uint32        serviceTime;
-   ENetPeer *         lastServicedPeer;
+   ENetList           dispatchQueue;
    int                continueSending;
    size_t             packetSize;
    enet_uint16        headerFlags;
@@ -314,12 +322,16 @@ typedef struct _ENetHost
    ENetAddress        receivedAddress;
    enet_uint8         receivedData [ENET_PROTOCOL_MAXIMUM_MTU];
    size_t             receivedDataLength;
+   enet_uint32        totalSentData;               /**< total data sent, user should reset to 0 as needed to prevent overflow */
+   enet_uint32        totalSentPackets;            /**< total UDP packets sent, user should reset to 0 as needed to prevent overflow */
+   enet_uint32        totalReceivedData;           /**< total data received, user should reset to 0 as needed to prevent overflow */
+   enet_uint32        totalReceivedPackets;        /**< total UDP packets received, user should reset to 0 as needed to prevent overflow */
 } ENetHost;
 
 /**
  * An ENet event type, as specified in @ref ENetEvent.
  */
-typedef enum
+typedef enum _ENetEventType
 {
    /** no event occurred within the specified time limit */
    ENET_EVENT_TYPE_NONE       = 0,  
@@ -373,7 +385,7 @@ typedef struct _ENetEvent
 ENET_API int enet_initialize (void);
 
 /** 
-  Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in ENet. Do not use enet_initialize() if you use this variant.
+  Initializes ENet globally and supplies user-overridden callbacks. Must be called prior to using any functions in ENet. Do not use enet_initialize() if you use this variant. Make sure the ENetCallbacks structure is zeroed out so that any additional callbacks added in future versions will be properly ignored.
 
   @param version the constant ENET_VERSION should be supplied so ENet knows which version of ENetCallbacks struct to use
   @param inits user-overriden callbacks where any NULL callbacks will use ENet's defaults
@@ -463,13 +475,14 @@ ENET_API void       enet_host_destroy (ENetHost *);
 ENET_API ENetPeer * enet_host_connect (ENetHost *, const ENetAddress *, size_t);
 ENET_API int        enet_host_check_events (ENetHost *, ENetEvent *);
 ENET_API int        enet_host_service (ENetHost *, ENetEvent *, enet_uint32);
-ENET_API void        enet_host_flush (ENetHost *);
+ENET_API void       enet_host_flush (ENetHost *);
 ENET_API void       enet_host_broadcast (ENetHost *, enet_uint8, ENetPacket *);
+ENET_API void       enet_host_channel_limit (ENetHost *, size_t);
 ENET_API void       enet_host_bandwidth_limit (ENetHost *, enet_uint32, enet_uint32);
 extern   void       enet_host_bandwidth_throttle (ENetHost *);
 
 ENET_API int                 enet_peer_send (ENetPeer *, enet_uint8, ENetPacket *);
-ENET_API ENetPacket *        enet_peer_receive (ENetPeer *, enet_uint8);
+ENET_API ENetPacket *        enet_peer_receive (ENetPeer *, enet_uint8 * channelID);
 ENET_API void                enet_peer_ping (ENetPeer *);
 ENET_API void                enet_peer_reset (ENetPeer *);
 ENET_API void                enet_peer_disconnect (ENetPeer *, enet_uint32);
@@ -478,6 +491,7 @@ ENET_API void                enet_peer_disconnect_later (ENetPeer *, enet_uint32
 ENET_API void                enet_peer_throttle_configure (ENetPeer *, enet_uint32, enet_uint32, enet_uint32);
 extern int                   enet_peer_throttle (ENetPeer *, enet_uint32);
 extern void                  enet_peer_reset_queues (ENetPeer *);
+extern void                  enet_peer_setup_outgoing_command (ENetPeer *, ENetOutgoingCommand *);
 extern ENetOutgoingCommand * enet_peer_queue_outgoing_command (ENetPeer *, const ENetProtocol *, ENetPacket *, enet_uint32, enet_uint16);
 extern ENetIncomingCommand * enet_peer_queue_incoming_command (ENetPeer *, const ENetProtocol *, ENetPacket *, enet_uint32);
 extern ENetAcknowledgement * enet_peer_queue_acknowledgement (ENetPeer *, const ENetProtocol *, enet_uint16);
