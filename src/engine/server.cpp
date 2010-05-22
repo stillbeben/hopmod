@@ -957,9 +957,8 @@ bool setuplistenserver(bool dedicated)
     else copystring(serverip,"0.0.0.0");
     
     int slots = min(maxclients + server::reserveclients(), MAXCLIENTS);
-    serverhost = enet_host_create(&address, slots, 0, uprate);
+    serverhost = enet_host_create(&address, slots, server::numchannels(), 0, uprate);
     if(!serverhost) return servererror(dedicated, "could not create server host");
-    enet_host_channel_limit(serverhost, server::numchannels());
     loopi(slots) serverhost->peers[i].data = NULL;
     const char * _serverip = serverip[0] == '\0' ? "0.0.0.0" : serverip;
     std::cout<<"Game server socket listening on UDP "<<_serverip<<":"<<serverport<<std::endl;

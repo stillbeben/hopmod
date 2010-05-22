@@ -54,6 +54,7 @@ set(ENET_SOURCES
 	host.c
 	list.c
 	callbacks.c
+	compress.c
 	packet.c
 	peer.c
 	protocol.c
