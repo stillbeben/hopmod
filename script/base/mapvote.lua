@@ -33,16 +33,10 @@ local function mapvote(cn, map, mode)
     end
     
     if deny_unknown_map and mode ~= "coop edit" then
-    
-        local globalFound = server.is_known_map(map)
-        local localFound = server.is_known_map(map, mode)
         
-        if not globalFound then
-            server.player_msg(cn, red("\"" .. map .. "\" is an unknown map."))
-            return -1
-        end
+        local found = server.is_known_map(map, mode)
         
-        if not localFound then
+        if not found then
             server.player_msg(cn, red("\"" .. map .. "\" is not a map you can play in " .. mode .. "."))
             return -1
         end

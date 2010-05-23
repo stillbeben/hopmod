@@ -154,3 +154,23 @@ end
 function server.hashpassword(cn, pass)
 	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), pass))
 end
+
+-- Array of game mode names, used by the map rotation module
+gamemodes = {
+    [ 1] = "ffa",
+    [ 2] = "coop edit",
+    [ 3] = "teamplay",
+    [ 4] = "instagib",
+    [ 5] = "instagib team",
+    [ 6] = "efficiency",
+    [ 7] = "efficiency team",
+    [ 8] = "tactics",
+    [ 9] = "tactics team",
+    [10] = "capture",
+    [11] = "regen capture",
+    [12] = "ctf",
+    [13] = "insta ctf",
+    [14] = "protect",
+    [15] = "insta protect"
+}
+

@@ -111,3 +111,8 @@ function read_only(table)
     })
     return proxy
 end
+
+function table.wrapped_index(t, index, offset)
+    return t[index % #t + (offset or 0)]
+end
+

@@ -28,7 +28,14 @@ global allowed_gamemodes [
 ]
 
 global use_server_maprotation 1
-global use_random_maprotation 0
+global map_rotation_type "standard"
+
+global use_best_map_size 0
+global small_gamesize 5
+global small_teamgamesize 5
+
+global default_gamemode "ffa"
+global default_game_on_empty 0
 
 global ffa_maps [complex douze ot academy metl2 metl3 nmp8 refuge tartech
 	kalking1 dock turbine fanatic_quake oddworld wake5 aard3c curvedm
@@ -113,6 +120,8 @@ global small_protect_maps &small_ctf_maps
 global "insta protect_maps" &ctf_maps
 global "small_insta protect_maps" &small_ctf_maps
 
+global "coop edit_maps" &ffa_maps
+
 global def_ctf_maps [hallo reissen flagstone face-capture shipwreck dust2
     urban_c berlin_wall akroseum valhalla damnation mach2 redemption tejen
     europium capture_night l_ctf forge campo wdcd sacrifice core_transfer
@@ -148,14 +157,6 @@ global "def_insta protect_maps" &def_ctf_maps
 global def_game_modes [ffa teamplay instagib "instagib team" efficiency
     "efficiency team" tactics "tactics team" capture "regen capture" ctf
     "insta ctf" protect "insta protect"]
-
-global use_best_map_size 0
-global small_gamesize 5
-global small_teamgamesize 5
-
-global default_gamemode "ffa"
-global default_game_on_empty 0
-global random_mode_on_empty 0
 
 flood_protect_text 1000
 flood_protect_sayteam 1000
