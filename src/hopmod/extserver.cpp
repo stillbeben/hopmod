@@ -921,42 +921,57 @@ int recorddemo(const char * filename)
 
 int lua_gamemodeinfo(lua_State * L)
 {
+    int gamemode_argument = gamemode;
+    
+    if(lua_gettop(L) > 0 && lua_type(L, 1) == LUA_TSTRING)
+    {
+        gamemode_argument = modecode(lua_tostring(L, 1));
+        if(gamemode_argument == -1)
+        {
+            lua_pushstring(L, "unknown game mode");
+            lua_error(L);
+        }
+    }
+    
     lua_newtable(L);
     
-    lua_pushboolean(L, m_noitems);
+    lua_pushboolean(L, m_check(gamemode_argument, M_NOITEMS));
     lua_setfield(L, -2, "noitems");
     
-    lua_pushboolean(L, m_noammo);
+    lua_pushboolean(L, m_check(gamemode_argument,  M_NOAMMO|M_NOITEMS));
     lua_setfield(L, -2, "noammo");
     
-    lua_pushboolean(L, m_insta);
+    lua_pushboolean(L, m_check(gamemode_argument, M_INSTA));
     lua_setfield(L, -2, "insta");
     
-    lua_pushboolean(L, m_tactics);
+    lua_pushboolean(L, m_check(gamemode_argument, M_TACTICS));
     lua_setfield(L, -2, "tactics");
     
-    lua_pushboolean(L, m_efficiency);
+    lua_pushboolean(L, m_check(gamemode_argument, M_EFFICIENCY));
     lua_setfield(L, -2, "efficiency");
     
-    lua_pushboolean(L, m_capture);
+    lua_pushboolean(L, m_check(gamemode_argument,  M_CAPTURE));
     lua_setfield(L, -2, "capture");
     
-    lua_pushboolean(L, m_regencapture);
+    lua_pushboolean(L, m_check(gamemode_argument, M_CAPTURE | M_REGEN));
     lua_setfield(L, -2, "regencapture");
     
-    lua_pushboolean(L, m_ctf);
+    lua_pushboolean(L, m_check(gamemode_argument, M_CTF));
     lua_setfield(L, -2, "ctf");
     
-    lua_pushboolean(L, m_protect);
+    lua_pushboolean(L, m_checkall(gamemode_argument, M_CTF | M_PROTECT));
     lua_setfield(L, -2, "protect");
     
-    lua_pushboolean(L, m_teammode);
+    lua_pushboolean(L, m_checkall(gamemode_argument, M_CTF | M_HOLD));
+    lua_setfield(L, -2, "hold");
+    
+    lua_pushboolean(L, m_check(gamemode_argument, M_TEAM));
     lua_setfield(L, -2, "teams");
     
-    lua_pushboolean(L, m_overtime);
+    lua_pushboolean(L, m_check(gamemode_argument, M_OVERTIME));
     lua_setfield(L, -2, "overtime");
     
-    lua_pushboolean(L, m_timed);
+    lua_pushboolean(L, m_checknot(gamemode_argument, M_DEMO|M_EDIT|M_LOCAL));
     lua_setfield(L, -2, "timed");
     
     return 1;

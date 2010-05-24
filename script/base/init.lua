@@ -5,9 +5,9 @@ package.cpath = package.cpath .. ";lib/lib?.so"
 stats_sub_command = {}
 
 server.event_handler("mapchange", function()
-    gamemodeinfo = server.gengamemodeinfo()
+    gamemodeinfo = server.get_gamemode_info()
 end)
-gamemodeinfo = server.gengamemodeinfo()
+gamemodeinfo = server.get_gamemode_info()
 
 load_once("base/restart")
 load_once("base/kickban")

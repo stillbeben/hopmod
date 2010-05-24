@@ -204,7 +204,7 @@ void register_server_script_bindings(script::env & env)
     register_lua_function(&server::lua_bot_list, "bots");
     register_lua_function(&server::lua_client_list, "clients");
     
-    register_lua_function(&server::lua_gamemodeinfo, "gengamemodeinfo");
+    register_lua_function(&server::lua_gamemodeinfo, "get_gamemode_info");
     
     // Team-oriented functions
     script::bind_freefunc(server::team_msg,"team_msg", env);
