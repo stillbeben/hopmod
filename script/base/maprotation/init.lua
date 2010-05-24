@@ -6,7 +6,8 @@ dofile("script/base/maprotation/core.lua")
 
 local implementations = {
     standard = "script/base/maprotation/implementation/standard.lua",
-    random   = "script/base/maprotation/implementation/random.lua"
+    random   = "script/base/maprotation/implementation/random.lua",
+    size     = "script/base/maprotation/implementation/size.lua"
 }
 
 local implementation_script = implementations[server.map_rotation_type]
