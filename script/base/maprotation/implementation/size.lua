@@ -1,8 +1,8 @@
 local big_maps = {}
 local small_maps = {}
 
-local small_single_game = server.small_gamesize
-local small_team_game = server.small_teamgamesize
+local small_single_game = server.small_single_game
+local small_team_game = server.small_team_game
 
 local function get_map_rotation(selection_index, gamemode)
     

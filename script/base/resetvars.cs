@@ -30,8 +30,8 @@ global allowed_gamemodes [
 global use_server_maprotation 1
 global map_rotation_type "standard"
 
-global small_gamesize 5
-global small_teamgamesize 5
+global small_single_game 5
+global small_team_game 5
 
 exec "script/base/maprotation/maps.cs"
 
