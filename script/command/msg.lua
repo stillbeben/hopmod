@@ -20,6 +20,6 @@ return function(cn, ...)
 		end
 	end
 
-	server.msg("(" .. green("Admin Info") .. ")  " .. text)
+	server.msg("(" .. green("Admin Message") .. ")  " .. text)
 
 end
