@@ -61,7 +61,3 @@ player_command_script("unforcespec", nil, "admin")
 player_command_alias("unfspec", "unforcespec")
 player_command_script("setnextmap", nil, "admin")
 
-local eslmatch_commands = loadfile(player_command_filename("eslmatch"))()
-player_command_function("insta", eslmatch_commands.insta_cmd)
-player_command_function("effic", eslmatch_commands.effic_cmd)
-
