@@ -18,12 +18,3 @@ server.event_handler("disconnect", function()
     end
 end)
 
-server.event_handler("started", function()
-
-    if server.playercount > 0 or not map_rotation then
-        return
-    end
-    
-    change_map()
-end)
-

@@ -174,7 +174,7 @@ void register_server_script_bindings(script::env & env)
     register_lua_function((int (*)(lua_State *))&server::player_pos, "player_pos");
     script::bind_freefunc(server::send_auth_request, "send_auth_request", env);
     script::bind_freefunc(server::sendauthchallenge, "send_auth_challenge_to_client", env);
-    script::bind_freefunc(server::send_item, "send_item", env);
+    //script::bind_freefunc(server::send_item, "send_item", env);
     script::bind_freefunc(server::player_freeze, "player_freeze", env);
     script::bind_freefunc(server::player_unfreeze, "player_unfreeze", env);
     
@@ -261,7 +261,8 @@ void register_server_script_bindings(script::env & env)
     hopmod::bind_var(server::allow_mm_veto, "allow_mastermode_veto", env);
     hopmod::bind_var(server::allow_mm_locked, "allow_mastermode_locked", env);
     hopmod::bind_var(server::allow_mm_private, "allow_mastermode_private", env);
-    
+
+#if 0
     hopmod::bind_var(server::allow_item[I_SHELLS-I_SHELLS], "allow_shells", env);
     hopmod::bind_var(server::allow_item[I_BULLETS-I_SHELLS], "allow_bullets", env);
     hopmod::bind_var(server::allow_item[I_ROCKETS-I_SHELLS], "allow_rockets", env);
@@ -285,6 +286,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_const((int)I_GREENARMOUR, "ITEM_GREENARMOUR", env);
     script::bind_const((int)I_YELLOWARMOUR, "ITEM_YELLOWARMOUR", env);
     script::bind_const((int)I_QUAD, "ITEM_QUAD", env);
+#endif
 
     hopmod::bind_var(server::reservedslots, "reservedslots", env);
     script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);

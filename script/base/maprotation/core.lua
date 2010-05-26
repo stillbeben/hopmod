@@ -97,7 +97,7 @@ local function is_known_map(request_map, gamemode)
 end
 
 server.event_handler("setnextgame", function()
-
+    
     if not has_selection_functions() then
         return
     end

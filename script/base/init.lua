@@ -9,6 +9,7 @@ server.event_handler("mapchange", function()
 end)
 gamemodeinfo = server.get_gamemode_info()
 
+-- Code that should not be unloadable
 load_once("base/restart")
 load_once("base/kickban")
 load_once("base/player/utils")
@@ -18,7 +19,7 @@ load_once("base/player/query")
 load_once("base/player/private_vars")
 load_once("base/player/command")
 load_once("base/logging")
---load_once("base/maprotation") -- the reason this can be loaded now instead as a scheduled module is because of reload_maprotation is called from started event
+load_once("base/server_message")
 
 server.module("base/empty_server")
 server.module("base/maprotation/init.lua")

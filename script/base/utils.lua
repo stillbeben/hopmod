@@ -8,15 +8,6 @@ function round(num, idp)
 end
 math.round = round
 
-do
-    local triggerCallEvent = server.create_event_signal("admin-message")
-    
-    function server.console(admin, msg)
-        server.msg(string.format("Remote Admin%s: %s", magenta("("..admin..")"), green(msg)))
-        triggerCallEvent(admin, msg)
-    end
-end
-
 function server.printserverstatus(filename, filemode)
 
 	if not filemode then
