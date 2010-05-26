@@ -171,6 +171,8 @@ gamemodes = {
     [12] = "ctf",
     [13] = "insta ctf",
     [14] = "protect",
-    [15] = "insta protect"
+    [15] = "insta protect",
+    [16] = "hold",
+    [17] = "insta hold"
 }
 

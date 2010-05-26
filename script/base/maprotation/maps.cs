@@ -111,7 +111,14 @@ global big_protect_maps &big_ctf_maps
 
 global "insta protect_maps" &ctf_maps
 global "small_insta protect_maps" &small_ctf_maps
-global "big_insta protect_maps" &small_ctf_maps
+global "big_insta protect_maps" &big_ctf_maps
 
+global "hold_maps" &ctf_maps
+global "big_hold_maps" &big_ctf_maps
+global "small_hold_maps" &small_ctf_maps
+
+global "insta hold_maps" &ctf_maps
+global "big_insta hold_maps" &big_ctf_maps
+global "small_insta hold_maps" &small_ctf_maps
 
 
