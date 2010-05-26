@@ -32,6 +32,6 @@ return function(cn, tcn, ...)
 		end
 	end
 
-	server.player_msg(tcn,"(" .. green("PM") .. ")  (" .. green(server.player_name(cn)) .. " (" .. magenta(cn) .. ")): " .. text)
+    server.player_msg(tcn, string.format("PM from %s: %s", server.player_displayname(cn), green(text)))
+end
 
-end 

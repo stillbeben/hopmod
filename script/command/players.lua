@@ -6,12 +6,9 @@
 
 ]]
 
-
 return function(cn)
-
-	for p in server.gclients() do
-
-		server.player_msg(cn, "Player: " .. p:displayname() .. " Frags: " .. p:frags() .. " Deaths: " .. p:deaths() .. " Acc: " .. p:accuracy() .. "%")
+	for p in server.gplayers() do
+		server.player_msg(cn, "Player: " .. p:displayname() .. "Country:" .. geoip.ip_to_country(p:ip()) .. " Frags: " .. p:frags() .. " Deaths: " .. p:deaths() .. " Acc: " .. p:accuracy() .. "%")
 	end
-
 end
+

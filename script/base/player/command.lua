@@ -1,3 +1,4 @@
+dofile("./script/command/_help.lua")
 
 local player_commands = {}
 
@@ -19,8 +20,12 @@ server.event_handler("text", function(cn, text)
     local arguments = server.parse_player_command(text)
     local command_prefixes = server.command_prefixes
     
-    if command_prefixes ~= "" and string.match(text, command_prefixes) then
+    if command_prefixes == "" then return end
+    
+    if string.match(text, command_prefixes) then
         arguments[1] = string.sub(arguments[1], 2)
+    else
+        return
     end
     
     local command = player_commands[arguments[1]]
@@ -248,15 +253,42 @@ function mastercmd(...)
     return func(unpack(arg))
 end
 
-player_command_function("help", function(cn)
+player_command_function("help", function(cn, command)
+
+    local priv_code = server.player_priv_code(cn)
+
+    if command then
+        local command_object = player_commands[command]
+
+        if not command_object then
+            server.player_msg(cn, "Unknown command")
+            return
+        end
+        
+        local description = player_command_descriptions[command]
+        
+        local access_denied = (command_object.require_master and priv_code < server.PRIV_MASTER) or (command_object.require_admin and priv_code < server.PRIV_ADMIN)
+        
+        if access_denied then
+            server.player_msg(cn, "You don't have permission to get a description of this command")
+            return
+        end
+        
+        if not description then
+            server.player_msg(cn, "Sorry, there is no description for the #" .. command .. " command yet")
+            return
+        end
+        
+        server.player_msg(cn, string.format("#%s %s: %s", command, description[1], green(description[2])))
+        
+        return
+    end
 
     local output = ""
     
     local normal = {}
     local master = {}
     local admin = {}
-    
-    local priv_code = server.player_priv_code(cn)
     
     for name, command in pairs(player_commands) do
         if command.enabled then
@@ -275,8 +307,10 @@ player_command_function("help", function(cn)
     end
     
     for _, name in ipairs(normal) do
-        if #output > 0 then output = output .. ", " end
-        output = output .. name
+        if name ~= "help" then
+            if #output > 0 then output = output .. ", " end
+            output = output .. name
+        end
     end
     
     if priv_code >= server.PRIV_MASTER then
@@ -292,6 +326,10 @@ player_command_function("help", function(cn)
             output = output .. orange(name)
         end
     end
+    
+    local list_of_commands = output
+    
+    output = "List of commands: " .. list_of_commands .. "\nCommand descriptions: #help <command>"
     
     server.player_msg(cn, output)
 end)

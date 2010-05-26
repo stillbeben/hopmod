@@ -6,10 +6,10 @@
 
 ]]
 
+local MIN_VOTES_REQUIRED = 6
 
 local priv_master = server.PRIV_MASTER
 
-local events = {}
 local interval = {}
 interval.timer = server.votekick_ad_timer
 
@@ -51,7 +51,7 @@ local function init()
 
 	votes = {}
 
-	events.disconnect = server.event_handler("disconnect", function(cn, reason)
+	server.event_handler("disconnect", function(cn, reason)
 
 		if votes[cn] then
 
@@ -91,9 +91,6 @@ end
 
 
 local function unload()
-
-	server.cancel_handler(events.disconnect)
-	
 	interval.active = false
 end
 
@@ -149,7 +146,7 @@ local function run(cn,kick_who)
     end
     votes[kick_who].votes = votes[kick_who].votes + 1
 
-	local required_votes = round((server.playercount / 2), 0)
+	local required_votes = math.min(round((server.playercount / 2), 0), MIN_VOTES_REQUIRED)
 	local msg = green(server.player_displayname(cn)) .. " voted to kick " .. red(server.player_displayname(kick_who)) .. "\n" .. "Votes: " .. votes[kick_who].votes .. " of " .. required_votes
 
 	if server.player_priv_code(kick_who) == priv_master then

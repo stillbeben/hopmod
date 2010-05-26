@@ -6,29 +6,27 @@ function server.name_to_cn(name)
     
     name = string.lower(name)
 
-    local name_matches = 0
+    local full_matches = 0
     local first_matching_cn
     
-    for i,cn in pairs(server.players()) do
+    for _, cn in pairs(server.clients()) do
     
         if string.lower(server.player_name(cn)) == name then
         
             first_matching_cn = first_matching_cn or cn
-            name_matches = name_matches + 1
-            
+            full_matches = full_matches + 1 
         end
-        
     end
     
-    if name_matches == 1 then
+    if full_matches == 1 then
     
         return first_matching_cn
         
-    elseif name_matches == 0 then
+    elseif full_matches == 0 then
     
         local substring_matches = {}
         
-        for i,cn in pairs(server.players()) do
+        for _, cn in pairs(server.clients()) do
             
             local candidate = server.player_name(cn)
             
@@ -37,10 +35,14 @@ function server.name_to_cn(name)
             end
         end
         
+        if #substring_matches == 1 then
+            return substring_matches[1].cn
+        end
+        
         return nil, substring_matches
         
-    elseif name_matches > 1 then
-        return nil, name_matches
+    elseif full_matches > 1 then
+        return nil, full_matches
     end
     
 end
@@ -84,7 +86,7 @@ function server.name_to_cn_list_matches(cn,name)
         if type(info) == "number" then  -- Multiple name matches
 
             server.player_msg(cn, red(string.format("There are %i players here matching that name:", info)))
-	    server.disambiguate_name_list(cn,name)
+        server.disambiguate_name_list(cn,name)
 
         elseif #info == 0 then  -- no matches
 
@@ -92,18 +94,14 @@ function server.name_to_cn_list_matches(cn,name)
 
         else    -- Similar matches
 
-	    server.player_msg(cn, red("There are no players found matching that name, but here are some similar names:"))
-	    server.similar_name_list(cn, info)
-
+            server.player_msg(cn, red("There are no players found matching that name, but here are some similar names:"))
+            server.similar_name_list(cn, info)
         end
-
+        
         return nil
-
     else
-
-	return lcn
+        return lcn
     end
-
 end
 
 function server.group_players(arg1,arg2,arg3)

@@ -19,7 +19,7 @@ return function(cn, ...)
 		end
 	end
 
-	for p in server.splayers() do
+	for client in server.gspectators() do
 		server.player_msg(p.cn,"(" .. green("spec-chat") .. ")  (" .. green(server.player_name(cn)) .. " (" .. magenta(cn) .. ")): " .. text)
 	end
 
