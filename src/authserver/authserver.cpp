@@ -454,7 +454,7 @@ void checkclients()
                 c.outputpos += res;
                 if(c.outputpos>=len)
                 {
-                    c.output.setsizenodelete(0);
+                    c.output.setsize(0);
                     c.outputpos = 0;
                 }
             }
