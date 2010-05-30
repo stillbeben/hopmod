@@ -1,4 +1,4 @@
-dofile("./script/command/_help.lua")
+dofile("./script/command/_help.lua") -- Load player command descriptions
 
 local player_commands = {}
 
@@ -28,7 +28,9 @@ server.event_handler("text", function(cn, text)
         return
     end
     
-    local command = player_commands[arguments[1]]
+    local command_name = arguments[1]
+    
+    local command = player_commands[command_name]
     
     if not command then
         server.player_msg(cn, red("Command not found."))
@@ -52,9 +54,9 @@ server.event_handler("text", function(cn, text)
     local pcallret, success, errmsg = pcall(command._function, unpack(arguments))
         
     if pcallret == false then
-        -- success value is the error message returned by pcall
-        local message = success
-        send_command_error(cn, message)
+        local message = success  -- success value is the error message returned by pcall
+        server.log_error(string.format("The #%s player command failed with error: %s", command_name, message))
+        server.player_msg(cn, red("Internal error"))
     end
     
     if success == false then
@@ -335,3 +337,4 @@ player_command_function("help", function(cn, command)
 end)
 
 player_commands.help.enabled = true
+
