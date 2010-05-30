@@ -115,6 +115,11 @@ public:
     {
         return m_read_error || m_send_error;
     }
+    
+    bool is_open()const
+    {
+        return m_socket.is_open();   
+    }
 private:
     template<typename MemberFunction, typename CompletionHandler>
     class io_handler_binder

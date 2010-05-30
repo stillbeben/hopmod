@@ -51,7 +51,7 @@ request::request(connection & conn, resource & root_resource)
 request::~request()
 {
     delete [] m_raw_headers;
-    if(m_close_connection || m_connection.has_connection_error())
+    if(m_close_connection || m_connection.has_connection_error() || !m_connection.is_open())
     {
         m_connection.close();
         m_finished_callback();
