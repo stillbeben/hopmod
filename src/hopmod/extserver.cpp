@@ -74,6 +74,9 @@ void crash_handler(int signal)
             return;
         }
         
+        
+        int client_count_check = 0;
+        
         loopv(clients)
         {
             savedscore score;
@@ -89,6 +92,8 @@ void crash_handler(int signal)
                 unlink("log/restore");
                 return;
             }
+            
+            if(++client_count_check > 128) return; // data structure is corrupted
         }
         
         if(write_teamscores)
@@ -144,6 +149,14 @@ void restore_server(const char * filename)
 {
     int fd = open(filename, O_RDONLY, 0);
     if(fd == -1) return;
+    
+    struct stat file_info;
+    if(stat(filename, &file_info) == 0 && file_info.st_size > 20000000)
+    {
+        std::cerr<<"Server state recovery failed! The restore file is abnormally large which indicates that the data was corrupted."<<std::endl;
+        unlink(filename);
+        return;
+    }
     
     restore_state_header header;
     
@@ -1161,4 +1174,4 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     sendspawn(cq);
 }
 
-#endif
+#endif10000
