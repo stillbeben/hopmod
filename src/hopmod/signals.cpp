@@ -97,9 +97,10 @@ static script::any maxvalue_error_handler(script::error_trace * errinfo)
 namespace lua{
 
 typedef std::vector<int> lua_function_vector;
-static std::map<std::string, lua_function_vector> created_event_slots;
 typedef std::map<std::string, lua_function_vector>::iterator created_event_slots_iterator;
 typedef std::map<int, std::pair<lua_function_vector *, int> > handle_slot_map;
+
+static std::map<std::string, lua_function_vector> created_event_slots;
 static handle_slot_map handle_to_slot;
 static handle_resolver<created_event_slots_iterator> signal_handles;
 
@@ -223,12 +224,17 @@ static int destroy_slot(lua_State * L)
     return 0;
 }
 
+static void cleanup()
+{
+    handle_to_slot.clear();
+    created_event_slots.clear();
+}
+
 static void cleanup(lua_State * L)
 {
     for(handle_slot_map::iterator it = handle_to_slot.begin(); it != handle_to_slot.end(); it++)
         luaL_unref(L, LUA_REGISTRYINDEX, (*it->second.first)[it->second.second]);
-    handle_to_slot.clear();
-    created_event_slots.clear();
+    cleanup();
 }
 
 } //namespace lua
@@ -254,7 +260,6 @@ static void cleanup(int)
 {
     slots.clear();
     slots.deallocate_destroyed_slots();
-    lua::cleanup(env->get_lua_state());
 }
 
 void register_signals(script::env & env)
@@ -389,4 +394,6 @@ void disconnect_all_slots()
     signal_kick_request.disconnect_all_slots();
     signal_clearbans_request.disconnect_all_slots();
     signal_varchanged.disconnect_all_slots();
+    
+    lua::cleanup();
 }
