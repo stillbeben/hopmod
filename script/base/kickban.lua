@@ -1,5 +1,5 @@
 local VERY_LONG_BANTIME = 63072000
-local SHORT_BANTIME = 1440
+local SHORT_BANTIME = 14400
 
 local kick_signal = server.create_event_signal("kick")
 local temporary_bans = {}
@@ -29,19 +29,10 @@ function server.kick(cn, bantime, admin, reason)
         end
     end
     
-    reason = reason or ""
-    
-    local address = server.player_iplong(cn)
-
-    server.set_ip_var(address, "ban_expire", os.time() + bantime)
-    server.set_ip_var(address, "ban_admin", admin)
-    server.set_ip_var(address, "ban_reason", reason)
-    server.set_ip_var(address, "ban_time", os.date())
-
-    kick_banned_players(address, bantime, admin, reason)
+    server.ban(server.player_iplong(cn), bantime, admin, reason)
 end
 
-function server.ban(ipmask, bantime, reason)
+function server.ban(ipmask, bantime, admin, reason)
 
     if not bantime or bantime == -1 then
         bantime = VERY_LONG_BANTIME
@@ -49,17 +40,25 @@ function server.ban(ipmask, bantime, reason)
     
     reason = reason or ""
     
+    server.set_ip_var(ipmask, "ban_time", os.date())
     server.set_ip_var(ipmask, "ban_expire", os.time() + bantime)
+    server.set_ip_var(ipmask, "ban_admin", admin)
     server.set_ip_var(ipmask, "ban_reason", reason)
     
-    if not server.ip_vars(ipmask).ban_time then
-        server.set_ip_var(ipmask, "ban_time", os.date())
+    if bantime <= SHORT_BANTIME then
+        temporary_bans[#temporary_bans] = ipmask
     end
     
     kick_banned_players(ipmask, bantime, admin, reason)
 end
 
 function server.unban(ipmask)
+    
+    local log_message = "Removing ban on " .. net.ipmask(ipmask):to_string()
+    
+    server.log(log_message)
+    server.log_status(log_message)
+    
     server.set_ip_var(ipmask, "ban_expire", nil)
     server.set_ip_var(ipmask, "ban_admin", nil)
     server.set_ip_var(ipmask, "ban_reason", nil)
@@ -84,15 +83,32 @@ server.event_handler("clearbans_request", function()
     end
     
     temporary_bans = {}
-    
-    server.msg("Cleared all bans")
 end)
 
 server.event_handler("kick_request", function(admin_cn, admin_name, target, bantime, reason)
-
-    if bantime <= SHORT_BANTIME then
-        temporary_bans[#temporary_bans] = server.player_iplong(target)
-    end
-    
     server.kick(target, bantime, admin_name, reason)
 end)
+
+server.event_handler("started", function()
+    
+    -- Don't run on server reload
+    if server.uptime > 1 then return end 
+
+    local bancount = 0
+    
+    -- Clear temporary/near-expiry bans
+    for ipmask, vars in pairs(server.ip_vars()) do
+        if vars.ban_expire then
+            if vars.ban_expire - SHORT_BANTIME <= os.time() then
+                server.unban(ipmask)
+            else
+                bancount = bancount + 1
+            end
+        end
+    end
+    
+    if bancount > 0 then
+        server.log_status(string.format("Ban count: %i", bancount))
+    end
+end)
+
