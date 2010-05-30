@@ -618,13 +618,47 @@ static int url_encode(lua_State * L)
     return 1;
 }
 
+class listener_client_connection:public http::server::client_connection
+{
+public:
+    listener_client_connection(boost::asio::io_service & service, listener_client_connection * prev_connection)
+    :http::server::client_connection(service)
+    {
+        m_prev = prev_connection;
+        m_next = NULL;
+        
+        if(m_prev)
+        {
+            assert(prev_connection->m_next == NULL);
+            prev_connection->m_next = this;
+        }
+    }
+    
+    ~listener_client_connection()
+    {
+        if(m_prev) m_prev->m_next = m_next;
+        if(m_next) m_next->m_prev = m_prev;
+    }
+    
+    listener_client_connection * prev_client()const{return m_prev;}
+    listener_client_connection * next_client()const{return m_next;}
+private:
+    listener_client_connection * m_prev;
+    listener_client_connection * m_next;
+};
+
 class listener
 {
 public:
     static const char * MT;
     
     listener(lua_State * L, const char * ip, const char * port)
-     :m_L(L), m_root_resource(NULL), m_root_resource_ref(LUA_REFNIL)
+     :m_L(L), 
+      m_acceptor(NULL),
+      m_client_head(NULL),
+      m_client_tail(NULL),
+      m_root_resource(NULL),
+      m_root_resource_ref(LUA_REFNIL)
     {
         static directory_resource empty_resource;
         m_root_resource = &empty_resource;
@@ -636,9 +670,9 @@ public:
     
     ~listener()
     {
-        delete m_acceptor;
+        shutdown();
     }
-     
+    
     static int create_object(lua_State * L)
     {
         const char * ip = luaL_checkstring(L, 1);
@@ -709,7 +743,18 @@ private:
             }
         }
         
-        self->m_acceptor->listen();
+        try
+        {
+            self->m_acceptor->listen();
+        }
+        catch(system_error se)
+        {
+            lua_pop(L, 1);
+            lua_pushboolean(L, 0);
+            lua_pushstring(L, se.code().message().c_str());
+            return 2;
+        }
+        
         self->async_accept();
         
         lua_pushboolean(L, 1);
@@ -719,7 +764,7 @@ private:
     static int stop(lua_State * L)
     {
         listener * self = reinterpret_cast<listener *>(luaL_checkudata(L, 1, MT));
-        
+        self->shutdown();
         return 0;
     }
     
@@ -736,22 +781,27 @@ private:
     
     void create_acceptor(const char * ip, const char * port)
     {
+        delete m_acceptor;
+        
         m_acceptor = new ip::tcp::acceptor(get_main_io_service());
         m_acceptor->open(ip::tcp::v4());
         m_acceptor->set_option(socket_base::reuse_address(true));
         m_acceptor->bind(ip::tcp::endpoint(ip::address_v4::from_string(ip), atoi(port)));
     }
     
-    void cleanup_client_connection(http::server::client_connection * client)
+    void cleanup_client_connection(listener_client_connection * client)
     {
-        delete client;   
+        if(client == m_client_tail) m_client_tail = client->prev_client();
+        if(client == m_client_head) m_client_head = client->next_client();
+        
+        delete client;
     }
     
-    void accept_handler(http::server::client_connection * client, const error_code & error)
+    void accept_handler(listener_client_connection * client, const error_code & error)
     {
         if(error)
         {
-            delete client;
+            cleanup_client_connection(client);
             
             if(error.value() != error::operation_aborted) 
             {
@@ -777,8 +827,34 @@ private:
     
     void async_accept()
     {
-        http::server::client_connection * client = new http::server::client_connection(m_acceptor->get_io_service());
+        listener_client_connection * client = new listener_client_connection(m_acceptor->get_io_service(), m_client_tail);
+        
+        if(!m_client_head) m_client_head = client;
+        m_client_tail = client;
+        
         m_acceptor->async_accept(*client, boost::bind(&listener::accept_handler, this, client, _1));
+    }
+    
+    void shutdown()
+    {
+        if(!m_acceptor) return;
+        
+        boost::system::error_code ec;
+        m_acceptor->close(ec);
+        if(ec)
+        {
+            std::cerr<<"listener socket close operation failed: "<<ec.message()<<std::endl;
+        }
+        else
+        {
+            delete m_acceptor;
+            m_acceptor = NULL;
+        }
+        
+        for(listener_client_connection * client = m_client_head; client; client = client->next_client())
+        {
+            static_cast<http::connection *>(client)->close();
+        }
     }
     
     lua_State * m_L;
@@ -787,10 +863,11 @@ private:
     std::string m_port;
     
     ip::tcp::acceptor * m_acceptor;
+    listener_client_connection * m_client_head;
+    listener_client_connection * m_client_tail;
     
     http::server::resource * m_root_resource;
     int m_root_resource_ref;
-    
     int m_start_callback_ref;
 };
 
