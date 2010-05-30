@@ -11,7 +11,7 @@ local function readjustCapacity()
     if server.playercount > server.maxplayers then return end
     
 	local sc = server.speccount
-	local adminslots = server.reservedslots_occupied
+	local adminslots = server.reserved_slots_occupied
 	local pc = server.playercount - sc - adminslots
 	local extra = -1
     

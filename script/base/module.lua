@@ -115,6 +115,7 @@ function server.unload_module(name)
     
     if control.successful_startup then
         signal_unloaded(name, control.filename)
+        server.log_status("Unloaded module " .. name)
     end
 end
 
@@ -195,6 +196,10 @@ local function load_module(name)
     end
     
     signal_loaded(name, filename)
+    
+    if server.uptime > 0 then
+        server.log_status("Loaded module " .. name)
+    end
 end
 
 

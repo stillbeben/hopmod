@@ -288,8 +288,10 @@ void register_server_script_bindings(script::env & env)
     script::bind_const((int)I_QUAD, "ITEM_QUAD", env);
 #endif
 
-    hopmod::bind_var(server::reservedslots, "reservedslots", env);
-    script::bind_ro_var(server::reservedslots_use, "reservedslots_occupied", env);
+    hopmod::bind_var(server::reservedslots, "reserved_slots", env);
+    hopmod::bind_wo_var(server::slotpass, "reserved_slots_password", env);
+    script::bind_ro_var(server::reservedslots_use, "reserved_slots_occupied", env);
+    
     script::bind_ro_var(reloaded, "reloaded", env);
     
     script::bind_const((int)SHUTDOWN_NORMAL, "SHUTDOWN_NORMAL", env);

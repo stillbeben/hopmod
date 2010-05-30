@@ -1174,4 +1174,4 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     sendspawn(cq);
 }
 
-#endif10000
+#endif

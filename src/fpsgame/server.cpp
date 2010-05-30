@@ -506,6 +506,7 @@ namespace server
     int currentmaster = -1;
     bool masterupdate = false;
     string adminpass = "";
+    string slotpass = "";
     stream *mapdata = NULL;
     
     vector<uint> allowedips;
@@ -2178,7 +2179,15 @@ namespace server
             return DISC_IPBAN;
         }
         
-        if(adminpass[0] && checkpassword(ci, adminpass, pwd) && reservedslots > 0) 
+        bool is_admin = adminpass[0] && checkpassword(ci, adminpass, pwd);
+        if(is_admin)
+        {
+            ci->privilege = PRIV_ADMIN;
+        }
+        
+        bool is_reserved = slotpass[0] && checkpassword(ci, slotpass, pwd);
+        
+        if((is_admin || is_reserved) && reservedslots > 0) 
         {
             if(clientcount >= maxclients)
             {
@@ -2186,7 +2195,6 @@ namespace server
                 maxclients++;
             }
             reservedslots--;
-            ci->privilege = PRIV_ADMIN;
             ci->using_reservedslot = true;
             return DISC_NONE;
         }

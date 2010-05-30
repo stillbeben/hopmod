@@ -11,7 +11,6 @@ gamemodeinfo = server.get_gamemode_info()
 
 -- Code that should not be unloadable
 load_once("base/restart")
-load_once("base/kickban")
 load_once("base/player/utils")
 load_once("base/player/vars")
 load_once("base/player/object_wrapper")
@@ -20,6 +19,7 @@ load_once("base/player/private_vars")
 load_once("base/player/command")
 load_once("base/logging")
 load_once("base/server_message")
+load_once("base/kickban")
 
 server.module("base/empty_server")
 server.module("base/maprotation/init.lua")
