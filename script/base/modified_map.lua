@@ -1,8 +1,5 @@
 require "crypto"
 
-local SEND_TIMEOUT = 5000
-local timeouts = {}
-
 local function failed_action(cn)
     server.spec(cn)
 end

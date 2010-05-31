@@ -8,6 +8,7 @@ global geoip_db_file "share/GeoIP.dat"
 
 global allow_mapvote 1
 global mapvote_disallow_unknown_map 0
+global mapvote_disallow_excluded_map 0
 
 global allowed_gamemodes [
     "ffa"
