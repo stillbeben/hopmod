@@ -939,11 +939,7 @@ int lua_gamemodeinfo(lua_State * L)
     if(lua_gettop(L) > 0 && lua_type(L, 1) == LUA_TSTRING)
     {
         gamemode_argument = modecode(lua_tostring(L, 1));
-        if(gamemode_argument == -1)
-        {
-            lua_pushstring(L, "unknown game mode");
-            lua_error(L);
-        }
+        if(gamemode_argument == -1) return 0;
     }
     
     lua_newtable(L);

@@ -1,5 +1,6 @@
 dofile("./script/base/utils/string.lua")
 dofile("./script/base/utils/table.lua")
+dofile("./script/base/utils/gamemode.lua")
 
 -- Copied from http://lua-users.org/wiki/SimpleRound
 function round(num, idp)
@@ -90,52 +91,6 @@ function return_catch_error(fun, ...)
     return unpack(returnvals)
 end
 
-do
-    local alias_of_mode = {
-        ["instagib team"]    = "instagib team",
-        ["instateam"]        = "instagib team",
-        ["iteam"]            = "instagib team",
-        ["instagib"]         = "instagib",
-        ["insta"]            = "instagib",
-        ["insta ctf"]        = "insta ctf",
-        ["instactf"]         = "insta ctf",
-        ["ictf"]             = "insta ctf",
-        ["ctf"]              = "ctf",
-        ["insta protect"]    = "insta protect",
-        ["instaprotect"]     = "insta protect",
-        ["iprotect"]         = "insta protect",
-        ["protect"]          = "protect",
-        ["teamplay"]         = "teamplay",
-        ["ffa"]              = "ffa",
-        ["efficiency team"]  = "efficiency team",
-        ["efficteam"]        = "efficiency team",
-        ["eteam"]            = "efficiency team",
-        ["efficiency"]       = "efficiency",
-        ["effic"]            = "efficiency",
-        ["tactics team"]     = "tactics team",
-        ["tacteam"]          = "tactics team",
-        ["tteam"]            = "tactics team",
-        ["tactics"]          = "tactics",
-        ["tac"]              = "tactics",
-        ["regen capture"]    = "regen capture",
-        ["regencapture"]     = "regen capture",
-        ["regencap"]         = "regen capture",
-        ["regen"]            = "regen capture",
-        ["capture"]          = "capture",
-        ["cap"]              = "capture",
-        ["coop edit"]        = "coop edit",
-        ["coopedit"]         = "coop edit",
-        ["coop"]             = "coop edit"
-    }
-
-    function server.parse_mode(mode)
-        if mode then
-            return alias_of_mode[mode]
-        end
-        return nil
-    end
-end
-
 function server.eval_lua(str)
     local func, err = loadstring(str)
     if not func then error(err) end
@@ -145,28 +100,4 @@ end
 function server.hashpassword(cn, pass)
 	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), pass))
 end
-
--- Array of game mode names, used by the map rotation module
-gamemodes = {
-    [ 1] = "ffa",
-    [ 2] = "coop edit",
-    [ 3] = "teamplay",
-    [ 4] = "instagib",
-    [ 5] = "instagib team",
-    [ 6] = "efficiency",
-    [ 7] = "efficiency team",
-    [ 8] = "tactics",
-    [ 9] = "tactics team",
-    [10] = "capture",
-    [11] = "regen capture",
-    [12] = "ctf",
-    [13] = "insta ctf",
-    [14] = "protect",
-    [15] = "insta protect",
-    [16] = "hold",
-    [17] = "insta hold",
-    [18] = "efficiency ctf",
-    [19] = "efficiency protect",
-    [20] = "efficiency hold"
-}
 
