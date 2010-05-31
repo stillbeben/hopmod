@@ -72,7 +72,7 @@ case "$1" in
 	else
 	    out="$2"
 	fi
-	execOnServer "printserverstatus [$out]"
+	execOnServer "write_server_status [$out]"
 	sleep 1
 ;;
     'updateconf')
