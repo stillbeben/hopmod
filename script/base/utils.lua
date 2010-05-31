@@ -164,6 +164,9 @@ gamemodes = {
     [14] = "protect",
     [15] = "insta protect",
     [16] = "hold",
-    [17] = "insta hold"
+    [17] = "insta hold",
+    [18] = "efficiency ctf",
+    [19] = "efficiency protect",
+    [20] = "efficiency hold"
 }
 

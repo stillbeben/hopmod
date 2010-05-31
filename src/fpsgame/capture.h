@@ -6,7 +6,7 @@ struct captureservmode : servmode
 #else
 VARP(capturetether, 0, 1, 1);
 VARP(autorepammo, 0, 1, 1);
-VARP(basenumbers, 0, 1, 1);
+VARP(basenumbers, 0, 0, 1);
 
 struct captureclientmode : clientmode
 #endif
@@ -248,9 +248,7 @@ struct captureclientmode : clientmode
 #ifndef SERVMODE
     static const int AMMOHEIGHT = 5;
 
-    float radarscale;
-
-    captureclientmode() : captures(0), radarscale(0)
+    captureclientmode() : captures(0)
     {
         CCOMMAND(repammo, "", (captureclientmode *self), self->replenishammo());
     }
@@ -311,10 +309,10 @@ struct captureclientmode : clientmode
                 baseinfo &b = bases[i];
                 if(!insidebase(b, d->feetpos()) || (strcmp(b.owner, d->team) && strcmp(b.enemy, d->team))) continue;
                 if(d->lastbase < 0 && (lookupmaterial(d->feetpos())&MATF_CLIP) == MAT_GAMECLIP) break;
-                particle_flare(vec(b.ammopos.x, b.ammopos.y, b.ammopos.z - AMMOHEIGHT - 4.4f), pos, 0, PART_LIGHTNING, strcmp(d->team, player1->team) ? 0xFF2222 : 0x2222FF, 0.28f);
+                particle_flare(pos, vec(b.ammopos.x, b.ammopos.y, b.ammopos.z - AMMOHEIGHT - 4.4f), 0, PART_LIGHTNING, strcmp(d->team, player1->team) ? 0xFF2222 : 0x2222FF, 1.0f);
                 if(oldbase < 0)
                 {
-                    particle_fireball(pos, 4.8f, PART_EXPLOSION_NO_GLARE, 250, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 4.8f);
+                    particle_fireball(pos, 4.8f, PART_EXPLOSION, 250, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 4.8f);
                     particle_splash(PART_SPARK, 50, 250, pos, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 0.24f);
                 }
                 d->lastbase = i;
@@ -322,7 +320,7 @@ struct captureclientmode : clientmode
         }
         if(d->lastbase < 0 && oldbase >= 0)
         {
-            particle_fireball(pos, 4.8f, PART_EXPLOSION_NO_GLARE, 250, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 4.8f);
+            particle_fireball(pos, 4.8f, PART_EXPLOSION, 250, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 4.8f);
             particle_splash(PART_SPARK, 50, 250, pos, strcmp(d->team, player1->team) ? 0x802020 : 0x2020FF, 0.24f);
         }
     }
@@ -349,11 +347,11 @@ struct captureclientmode : clientmode
             baseinfo &b = bases[i];
             const char *flagname = b.owner[0] ? (strcmp(b.owner, player1->team) ? "base/red" : "base/blue") : "base/neutral";
             rendermodel(&b.light, flagname, ANIM_MAPMODEL|ANIM_LOOP, b.o, 0, 0, MDL_SHADOW | MDL_CULL_VFC | MDL_CULL_OCCLUDED);
-            float fradius = 1.0f, fheight = 0.5f; 
+            float fradius = 1.0f, fheight = 0.5f;
             regular_particle_flame(PART_FLAME, vec(b.ammopos.x, b.ammopos.y, b.ammopos.z - 4.5f), fradius, fheight, b.owner[0] ? (strcmp(b.owner, player1->team) ? 0x802020 : 0x2020FF) : 0x208020, 3, 2.0f);
             //regular_particle_flame(PART_SMOKE, vec(b.ammopos.x, b.ammopos.y, b.ammopos.z - 4.5f + 4.0f*min(fradius, fheight)), fradius, fheight, 0x303020, 1, 4.0f, 100.0f, 2000.0f, -20);
 
-//            particle_fireball(b.ammopos, 4.8f, PART_EXPLOSION_NO_GLARE, 0, b.owner[0] ? (strcmp(b.owner, player1->team) ? 0x802020 : 0x2020FF) : 0x208020, 4.8f);
+//            particle_fireball(b.ammopos, 4.8f, PART_EXPLOSION, 0, b.owner[0] ? (strcmp(b.owner, player1->team) ? 0x802020 : 0x2020FF) : 0x208020, 4.8f);
 
             if(b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1)
             {
@@ -382,19 +380,26 @@ struct captureclientmode : clientmode
             {
                 bool isowner = !strcmp(b.owner, player1->team);
                 if(b.enemy[0]) { mtype = PART_METER_VS; mcolor = 0xFF1932; mcolor2 = 0x3219FF; if(!isowner) swap(mcolor, mcolor2); }
-                formatstring(b.info)("%s: %s", b.name, b.owner); tcolor = isowner ? 0x6496FF : 0xFF4B19;
+                if(!b.name[0]) formatstring(b.info)("base %d: %s", i+1, b.owner);
+                else if(basenumbers) formatstring(b.info)("%s (%d): %s", b.name, i+1, b.owner);
+                else formatstring(b.info)("%s: %s", b.name, b.owner);
+                tcolor = isowner ? 0x6496FF : 0xFF4B19;
             }
             else if(b.enemy[0])
             {
-                formatstring(b.info)("%s: %s", b.name, b.enemy);
+                if(!b.name[0]) formatstring(b.info)("base %d: %s", i+1, b.enemy);
+                else if(basenumbers) formatstring(b.info)("%s (%d): %s", b.name, i+1, b.enemy);
+                else formatstring(b.info)("%s: %s", b.name, b.enemy);
                 if(strcmp(b.enemy, player1->team)) { tcolor = 0xFF4B19; mtype = PART_METER; mcolor = 0xFF1932; }
                 else { tcolor = 0x6496FF; mtype = PART_METER; mcolor = 0x3219FF; }
             }
+            else if(!b.name[0]) formatstring(b.info)("base %d", i+1);
+            else if(basenumbers) formatstring(b.info)("%s (%d)", b.name, i+1);
             else copystring(b.info, b.name);
 
             vec above(b.ammopos);
-            above.z += AMMOHEIGHT+1.0f;
-            particle_text(above, b.info, PART_TEXT, 1, tcolor, 2.0f);
+            above.z += AMMOHEIGHT;
+            if(b.info[0]) particle_text(above, b.info, PART_TEXT, 1, tcolor, 2.0f);
             if(mtype>=0)
             {
                 above.z += 3.0f;
@@ -424,11 +429,11 @@ struct captureclientmode : clientmode
                 case -1: if(!b.owner[0] || !strcmp(b.owner, player1->team)) continue; break;
                 case -2: if(!b.enemy[0] || !strcmp(b.enemy, player1->team)) continue; break;
             }
-            vec dir(b.o);
-            dir.sub(d->o).div(scale);
+            vec dir(d->o);
+            dir.sub(b.o).div(scale);
             float dist = dir.magnitude2(), maxdist = 1 - 0.05f - blipsize;
             if(dist >= maxdist) dir.mul(maxdist/dist);
-            dir.rotate_around_z(-d->yaw*RAD);
+            dir.rotate_around_z(-camera1->yaw*RAD);
             if(basenumbers)
             {
                 static string blip;
@@ -459,16 +464,16 @@ struct captureclientmode : clientmode
 
     int clipconsole(int w, int h)
     {
-        return w*6/40;
+        return (h*(1 + 1 + 10))/(4*10);
     }
 
     void drawminimap(fpsent *d, float x, float y, float s)
     {
         vec pos = vec(d->o).sub(minimapcenter).mul(minimapscale).add(0.5f), dir;
-        vecfromyawpitch(d->yaw, 0, 1, 0, dir);
+        vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
         float scale = calcradarscale();
         glBegin(GL_TRIANGLE_FAN);
-        loopi(16+1)
+        loopi(16)
         {
             vec tc = vec(dir).rotate_around_z(i/16.0f*2*M_PI);
             glTexCoord2f(pos.x + tc.x*scale*minimapscale.x, pos.y + tc.y*scale*minimapscale.y);
@@ -480,11 +485,11 @@ struct captureclientmode : clientmode
 
     void drawradar(float x, float y, float s)
     {
-        glBegin(GL_TRIANGLE_FAN);
+        glBegin(GL_TRIANGLE_STRIP);
         glTexCoord2f(0.0f, 0.0f); glVertex2f(x,   y);
         glTexCoord2f(1.0f, 0.0f); glVertex2f(x+s, y);
-        glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
         glTexCoord2f(0.0f, 1.0f); glVertex2f(x,   y+s);
+        glTexCoord2f(1.0f, 1.0f); glVertex2f(x+s, y+s);
         glEnd();
     }
 
@@ -560,15 +565,9 @@ struct captureclientmode : clientmode
             b.ammotype = e->attr1;
             defformatstring(alias)("base_%d", e->attr2);
             const char *name = getalias(alias);
-            if(name[0]) formatstring(b.name)("%s (%d)", name, bases.length());
-            else formatstring(b.name)("base %d", bases.length());
+            copystring(b.name, name);
             b.light = e->light;
         }
-        vec center(0, 0, 0);
-        loopv(bases) center.add(bases[i].o);
-        center.div(bases.length());
-        radarscale = 0;
-        loopv(bases) radarscale = max(radarscale, 2*center.dist(bases[i].o));
     }
 
     void senditems(packetbuf &p)
@@ -593,20 +592,24 @@ struct captureclientmode : clientmode
         {
             if(strcmp(b.owner, owner))
             {
-                conoutf(CON_GAMEINFO, "%s captured %s", owner, b.name);
+                if(!b.name[0]) conoutf(CON_GAMEINFO, "%s captured base %d", owner, i+1);
+                else if(basenumbers) conoutf(CON_GAMEINFO, "%s captured %s (%d)", owner, b.name, i+1);
+                else conoutf(CON_GAMEINFO, "%s captured %s", owner, b.name);
                 if(!strcmp(owner, player1->team)) playsound(S_V_BASECAP);
             }
         }
         else if(b.owner[0])
         {
-            conoutf(CON_GAMEINFO, "%s lost %s", b.owner, b.name);
+            if(!b.name[0]) conoutf(CON_GAMEINFO, "%s lost base %d", b.owner, i+1);
+            else if(basenumbers) conoutf(CON_GAMEINFO, "%s lost %s (%d)", b.owner, b.name, i+1);
+            else conoutf(CON_GAMEINFO, "%s lost %s", b.owner, b.name);
             if(!strcmp(b.owner, player1->team)) playsound(S_V_BASELOST);
         }
         if(strcmp(b.owner, owner)) particle_splash(PART_SPARK, 200, 250, b.ammopos, owner[0] ? (strcmp(owner, player1->team) ? 0x802020 : 0x2020FF) : 0x208020, 0.24f);
         copystring(b.owner, owner);
         copystring(b.enemy, enemy);
         b.converted = converted;
-        if(ammo>b.ammo) 
+        if(ammo>b.ammo)
         {
             playsound(S_ITEMSPAWN, &b.o);
             int icon = b.ammotype>0 && b.ammotype<=I_CARTRIDGES-I_SHELLS+1 ? itemstats[b.ammotype-1].icon : -1;
@@ -728,7 +731,7 @@ struct captureclientmode : clientmode
 			{
 				ai::interest &n = interests.add();
 				n.state = ai::AI_S_DEFEND;
-				n.node = ai::closestwaypoint(f.o, ai::NEARDIST, false);
+				n.node = ai::closestwaypoint(f.o, ai::SIGHTMIN, false);
 				n.target = j;
 				n.targtype = ai::AI_T_AFFINITY;
 				n.score = pos.squaredist(f.o)/(regen ? float(100*regen) : 1.f);

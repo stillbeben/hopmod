@@ -549,7 +549,7 @@ struct ctfclientmode : clientmode
             else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
             drawblip(d, x, y, s, i, true);
         }
-        if(d->state == CS_DEAD && !m_protect)
+        if(d->state == CS_DEAD && (m_efficiency || !m_protect))
         {
             int wait = respawnwait(d);
             if(wait>=0)
@@ -942,7 +942,7 @@ struct ctfclientmode : clientmode
 
     int respawnwait(fpsent *d)
     {
-        return m_protect ? 0 : max(0, RESPAWNSECS-(lastmillis-d->lastpain)/1000);
+        return m_efficiency || !m_protect ? max(0, RESPAWNSECS-(lastmillis-d->lastpain)/1000) : 0;
     }
 
     bool pickholdspawn(fpsent *d)
