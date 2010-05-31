@@ -50,6 +50,7 @@ boost::signal<void (int)> signal_botleft;
 boost::signal<void (int,const char *)> signal_beginrecord;
 boost::signal<void (int,int)> signal_endrecord;
 boost::signal<void (int)> signal_mapcrcfail;
+boost::signal<void (int, const char *, int)> signal_mapcrc;
 boost::signal<void (const char *,const char *)> signal_votepassed;
 boost::signal<void (int,int,int)> signal_shot;
 boost::signal<void (int)> signal_suicide;
@@ -305,7 +306,8 @@ void register_signals(script::env & env)
     slots.register_signal(signal_botleft, "botleft", normal_error_handler);
     slots.register_signal(signal_beginrecord, "beginrecord", normal_error_handler);
     slots.register_signal(signal_endrecord, "endrecord", normal_error_handler);
-    slots.register_signal(signal_mapcrcfail, "mapcrcfail", normal_error_handler);
+    //slots.register_signal(signal_mapcrcfail, "mapcrcfail", normal_error_handler);
+    slots.register_signal(signal_mapcrc, "mapcrc", normal_error_handler);
     slots.register_signal(signal_votepassed, "votepassed", normal_error_handler);
     slots.register_signal(signal_shot, "shot", normal_error_handler);
     slots.register_signal(signal_suicide, "suicide", normal_error_handler);
@@ -378,7 +380,8 @@ void disconnect_all_slots()
     signal_botleft.disconnect_all_slots();
     signal_beginrecord.disconnect_all_slots();
     signal_endrecord.disconnect_all_slots();
-    signal_mapcrcfail.disconnect_all_slots();
+    //signal_mapcrcfail.disconnect_all_slots();
+    signal_mapcrc.disconnect_all_slots();
     signal_votepassed.disconnect_all_slots();
     signal_shot.disconnect_all_slots();
     signal_suicide.disconnect_all_slots();
@@ -386,6 +389,7 @@ void disconnect_all_slots()
     signal_dropflag.disconnect_all_slots();
     signal_scoreflag.disconnect_all_slots();
     signal_returnflag.disconnect_all_slots();
+
     signal_resetflag.disconnect_all_slots();
     signal_scoreupdate.disconnect_all_slots();
     signal_spawn.disconnect_all_slots();
@@ -397,3 +401,4 @@ void disconnect_all_slots()
     
     lua::cleanup();
 }
+

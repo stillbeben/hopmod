@@ -2012,6 +2012,7 @@ namespace server
 
     void checkmaps(int req = -1)
     {
+        return; // map checking is now handled by a hopmod module
         if(m_edit || !smapname[0]) return;
         vector<crcinfo> crcs;
         int total = 0, unsent = 0, invalid = 0;
@@ -2557,7 +2558,8 @@ namespace server
                 }
                 copystring(ci->clientmap, text);
                 ci->mapcrc = text[0] ? crc : 1;
-                checkmaps();
+                signal_mapcrc(ci->clientnum, text, crc);
+                //checkmaps();
                 break;
             }
 
@@ -2598,6 +2600,11 @@ namespace server
             {
                 int ls = getint(p), gunselect = getint(p);
                 if(!cq || (cq->state.state!=CS_ALIVE && cq->state.state!=CS_DEAD) || ls!=cq->state.lifesequence || cq->state.lastspawn<0) break;
+                if(cq->mapcrc == 0 && cq->state.aitype == AI_NONE)
+                {
+                    cq->mapcrc = 1;
+                    signal_mapcrc(cq->clientnum, smapname, cq->mapcrc);
+                }
                 cq->state.lastspawn = -1;
                 cq->state.state = CS_ALIVE;
                 cq->state.gunselect = gunselect;

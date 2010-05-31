@@ -62,6 +62,7 @@ extern boost::signal<void (int,int,int)>                            signal_addbo
 extern boost::signal<void (int)>                                    signal_delbot;
 extern boost::signal<void (int)>                                    signal_botleft;
 extern boost::signal<void (int)>                                    signal_mapcrcfail;
+extern boost::signal<void (int, const char *, int)>                 signal_mapcrc;
 extern boost::signal<void (int,int)>                                signal_teamkill;
 extern boost::signal<void (int,int)>                                signal_frag;
 extern boost::signal<void (int,int,int)>                            signal_shot;
