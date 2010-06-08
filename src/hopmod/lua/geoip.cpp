@@ -6,13 +6,23 @@ extern "C"{
 #include <GeoIP.h>
 
 static GeoIP * geoip = NULL;
+static GeoIP * GeoCity = NULL;
 
-static int load_database(lua_State * L)
+static int load_geoip_database(lua_State * L)
 {
     const char * filename = luaL_checkstring(L, 1);
     if(geoip) GeoIP_delete(geoip);
     geoip = GeoIP_open(filename, GEOIP_STANDARD | GEOIP_MEMORY_CACHE);
     lua_pushboolean(L, geoip != NULL);
+    return 1;
+}
+
+static int load_geocity_database(lua_State * L)
+{
+    const char * filename = luaL_checkstring(L, 1);
+    if(GeoCity) GeoIP_delete(GeoCity);
+    GeoCity = GeoIP_open(filename, GEOIP_MEMORY_CACHE);
+    lua_pushboolean(L, GeoCity != NULL);
     return 1;
 }
 
@@ -34,15 +44,25 @@ static int ip_to_country_code(lua_State * L)
     return 1;
 }
 
+static int ip_to_city(lua_State * L)
+{
+    if(!GeoCity) return luaL_error(L, "missing GeoCity database");
+	char *city = GeoIP_record_by_addr(GeoCity, luaL_checkstring(L, 1))->city;
+    lua_pushstring(L, city);
+    return 1;
+}
+
 namespace lua{
 namespace module{
 
 void open_geoip(lua_State * L)
 {
     static luaL_Reg functions[] = {
-        {"load_database", load_database},
+        {"load_geoip_database", load_geoip_database},
+		{"load_geocity_database", load_geocity_database},
         {"ip_to_country", ip_to_country},
         {"ip_to_country_code", ip_to_country_code},
+		{"ip_to_city", ip_to_country_code},
         {NULL, NULL}
     };
     

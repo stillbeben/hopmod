@@ -57,7 +57,7 @@ server.event_handler("started", function()
     
     server.reload_maprotation()
     
-    require("geoip").load_database(server.geoip_db_file)
+    require("geoip").load_geoip_database(server.geoip_db_file)
 
     load_once("command/_bindings")
     log_unknown_player_commands()

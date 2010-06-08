@@ -65,7 +65,6 @@ static void load_lua_modules()
     lua::module::open_crypto(L);
     lua::module::open_cubescript(L);
     lua::module::open_geoip(L);
-    lua::module::open_geocity(L);
     lua::module::open_filesystem(L);
     lua::module::open_http_server(L);
 
