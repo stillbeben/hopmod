@@ -51,7 +51,6 @@ set(LUA_MODULES_SOURCES
     hopmod/lua/timer.cpp
     hopmod/lua/cubescript.cpp
     hopmod/lua/geoip.cpp
-    hopmod/lua/geocity.cpp
     hopmod/lua/filesystem.cpp
     hopmod/lua/packlib.c)
 
