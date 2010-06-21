@@ -4,6 +4,7 @@ extern "C"{
 #include <lauxlib.h>
 }
 #include <GeoIP.h>
+#include <GeoIPCity.h>
 
 static GeoIP * geoip = NULL;
 static GeoIP * GeoCity = NULL;
