@@ -19,12 +19,12 @@ namespace detail{
 #define DYNAMIC_CALL_FUNCTION(nargs) \
     template<typename FunctionTraits,typename Functor,typename ArgumentsContainer,typename Serializer> \
     inline typename ArgumentsContainer::value_type dynamic_call(Functor function, ArgumentsContainer & args, \
-    Serializer & serializer, type_tag<typename FunctionTraits::result_type>, arity_tag<nargs>)
+    Serializer & serializer, type_tag2<typename FunctionTraits::result_type, FunctionTraits>, arity_tag<nargs>)
 
 #define DYNAMIC_CALL_VOID_FUNCTION(nargs) \
     template<typename FunctionTraits,typename Functor,typename ArgumentsContainer,typename Serializer> \
     inline typename ArgumentsContainer::value_type dynamic_call(Functor function, ArgumentsContainer & args, \
-    Serializer & serializer, type_tag<void>, arity_tag<nargs>)
+    Serializer & serializer, type_tag2<void, FunctionTraits>, arity_tag<nargs>)
 
 #define DYNAMIC_CALL_ARGUMENT(name) \
     typename arg_holder<typename FunctionTraits::name##_type>::type name = serializer.deserialize(args.front(), type_tag<typename arg_holder<typename FunctionTraits::name##_type>::type>()); \
@@ -126,7 +126,7 @@ typename ArgumentsContainer::value_type dynamic_call(
     Serializer & serializer)
 {
     typedef boost::function_traits<Signature> FunctionTraits;
-    return detail::dynamic_call<FunctionTraits>(function,args,serializer,type_tag<typename FunctionTraits::result_type>(),detail::arity_tag<FunctionTraits::arity>());
+    return detail::dynamic_call<FunctionTraits>(function,args,serializer,type_tag2<typename FunctionTraits::result_type, FunctionTraits>(),detail::arity_tag<FunctionTraits::arity>());
 }
 
 } //namespace fungu
