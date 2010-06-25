@@ -288,6 +288,7 @@ namespace server
         bool maploaded;
         int rank;
         bool using_reservedslot;
+        bool allow_self_unspec;
         
         clientinfo() 
          : 
@@ -2944,14 +2945,16 @@ namespace server
             case N_SPECTATOR:
             {
                 int spectator = getint(p), val = getint(p);
-                if(!ci->privilege && (spectator!=sender || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED)) || (spectator == sender && ci->check_flooding(ci->sv_spec_hit, "switching"))) break;
+                bool self = spectator == sender;
+                if(!ci->privilege && (!self || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED) || (ci->state.state == CS_SPECTATOR && !val && !ci->allow_self_unspec) || ci->check_flooding(ci->sv_spec_hit, "switching"))) break;
                 clientinfo *spinfo = (clientinfo *)getclientinfo(spectator); // no bots
                 if(val && spinfo && spinfo != ci && spinfo->privilege && ci->privilege < PRIV_ADMIN)
                 {
                     ci->sendprivtext(RED "You cannot spec that player because they have an above normal privilege.");
                     break;
                 }
-                setspectator(spinfo,val);
+                spinfo->allow_self_unspec = self && spinfo->state.state!=CS_SPECTATOR && val;
+                setspectator(spinfo, val);
                 break;
             }
 

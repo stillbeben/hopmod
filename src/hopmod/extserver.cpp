@@ -583,7 +583,9 @@ void team_msg(const char * team,const char * msg)
 
 void player_spec(int cn)
 {
-    setspectator(get_ci(cn), true);
+    clientinfo * ci = get_ci(cn);
+    ci->allow_self_unspec = false;
+    setspectator(ci, true);
 }
 
 void player_unspec(int cn)
