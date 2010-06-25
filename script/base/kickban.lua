@@ -83,6 +83,8 @@ server.event_handler("clearbans_request", function()
     end
     
     temporary_bans = {}
+    
+    server.msg("cleared all bans")
 end)
 
 server.event_handler("kick_request", function(admin_cn, admin_name, target, bantime, reason)
