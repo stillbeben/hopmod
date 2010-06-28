@@ -11,6 +11,7 @@
 namespace fungu{
 
 template<typename T> struct type_tag{};
+template<typename T, typename Y> struct type_tag2{};
 
 } //namespace fungu
 
