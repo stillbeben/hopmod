@@ -88,7 +88,6 @@ server.event_handler("clearbans_request", function()
 end)
 
 server.event_handler("kick_request", function(admin_cn, admin_name, bantime, target, reason)
-    if not server.valid_cn(cn) then return end
     server.kick(target, bantime, admin_name, reason)
 end)
 
