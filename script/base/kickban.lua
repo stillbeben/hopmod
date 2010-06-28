@@ -16,11 +16,6 @@ end
 
 function server.kick(cn, bantime, admin, reason)
 
-    if server.player_isbot(cn) then
-        server.delbot(cn)
-        return
-    end
-
     if not bantime then 
         bantime = SHORT_BANTIME
     else
@@ -87,7 +82,7 @@ server.event_handler("clearbans_request", function()
     server.msg("cleared all bans")
 end)
 
-server.event_handler("kick_request", function(admin_cn, admin_name, target, bantime, reason)
+server.event_handler("kick_request", function(admin_cn, admin_name, bantime, target, reason)
     server.kick(target, bantime, admin_name, reason)
 end)
 
