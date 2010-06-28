@@ -10,7 +10,7 @@
 local invadmin_domains = table_unique(server.parse_list(server["invadmin_domains"])) or ""
 
 
-local function set_invadmin(cn,name)
+local function set_invisible_admin(cn,name)
 
 	server.set_invisible_admin(cn)
     
@@ -39,7 +39,7 @@ local function run(cn,pw)
 
 		if server.check_admin_password(pw) then
 
-			set_invadmin(cn)
+			set_invisible_admin(cn)
 		end
 
 	else
@@ -54,7 +54,7 @@ local function run(cn,pw)
 					return
 				end
 
-				set_invadmin(cn, user_id)
+				set_invisible_admin(cn, user_id)
 
 			end)
 
