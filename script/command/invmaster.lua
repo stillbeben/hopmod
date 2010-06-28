@@ -10,9 +10,9 @@
 local invmaster_domains = table_unique(server.parse_list(server["invmaster_domains"])) or ""
 
 
-local function set_invmaster(cn,name)
+local function set_invisible_master(cn,name)
 
-	server.set_invmaster(cn)
+	server.set_invisible_master(cn)
 	server.player_msg(cn,"Your rights have been raised to invisible-master.")
 
 	if not name then
@@ -38,7 +38,7 @@ local function run(cn,pw)
 
 		if server.check_admin_password(pw) then
 
-			set_invmaster(cn)
+			set_invisible_master(cn)
 		end
 
 	else
@@ -53,7 +53,7 @@ local function run(cn,pw)
 					return
 				end
 
-				set_invmaster(cn, user_id)
+				set_invisible_master(cn, user_id)
 
 			end)
 
