@@ -56,7 +56,7 @@ address_prefix address_prefix::parse(const char * str)
         
         if(new_token)
         {
-            if(*(str+1)=='\0') throw;
+            if(*(str+1)=='\0') throw std::bad_cast();
             *current_token = str_copy_p + 1;
             c = '\0';
         }
