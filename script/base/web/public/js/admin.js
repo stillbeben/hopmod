@@ -465,7 +465,8 @@ function SpectatorsTable(parent){
     table.columns([
         {label:"CN",        key:"cn"},
         {label:"IP Addr",   key:"ip"},
-        {label:"Name",      key:"name"}
+        {label:"Name",      key:"name"},
+        {label:"", cellFunction: createPlayerControlLinks, className:"player-control-links"}
     ]);
     table.attachTo(parent);
     
@@ -718,7 +719,7 @@ function createCommandLinks(parent, server){
     function changeServerName(){
         var msg = prompt("Change the server name");
         if(!msg) return;
-        server.executeCommand(server.makeCommand("servername", msgv));
+        server.executeCommand(server.makeCommand("servername", msg));
     }
     
     var changeMessageCommands = [
@@ -745,7 +746,7 @@ function createCommandLinks(parent, server){
     
     var playerCommands = [
         {label:"Add IP ban", _function:setBannedIP},
-        {label:"Removed banned IP", _function:unsetBannedIP}
+        {label:"Remove IP ban", _function:unsetBannedIP}
     ];
     
     function createLinks(commands, groupTitle){
