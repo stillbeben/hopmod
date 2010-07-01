@@ -29,7 +29,7 @@ server.event_handler("setmaster", function(cn, hash)
         if priv == "admin" then admin_count = admin_count + 1 end
     end
 
-    if hash == "" and (server.allow_setmaster or not server.use_master_auth) and master_count == 0 and admin_count == 0 then
+    if hash == "" and server.allow_setmaster and master_count == 0 and admin_count == 0 then
         server.setmaster(cn)
         return -1
     end

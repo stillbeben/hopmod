@@ -54,7 +54,6 @@ global publicserver 1
 global masterserver "sauerbraten.org"
 global masterserverport 28787
 
-global use_master_auth 1
 global masterauth_banned []
 global server_admin_password ""
 
