@@ -14,6 +14,7 @@ end)
 
 
 server.event_handler("setmaster", function(cn, hash)
+
     if (hash == "" and server.player_priv(cn) ~= "none") or server.player_priv(cn) ~= "none" then
         server.unsetpriv(cn) 
         return -1
@@ -37,7 +38,7 @@ server.event_handler("setmaster", function(cn, hash)
         return -1 
     end
 
-    if server.hashpassword(cn, server.server_admin_password) == hash then
+    if server.hashpassword(cn, server.admin_password) == hash then
         if admin_count == 0 then
             server.setadmin(cn) 
         else

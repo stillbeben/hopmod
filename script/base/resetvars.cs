@@ -66,3 +66,5 @@ global saveconf_vars [saveconf_vars servername motd maxclients]
 
 global command_prefixes "^^[#@!]"
 
+global admin_password ""
+
