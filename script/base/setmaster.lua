@@ -1,15 +1,15 @@
 -- Setmaster
 -- (c) 2010 Thomas
 
-
-local setmaster_abuse = { }
+local failed = { }
+local FAILED_LIMIT = 5
 
 server.event_handler("connect", function(cn)
-    setmaster_abuse[cn] = 0
+    failed[cn] = 0
 end)
 
 server.event_handler("disconnect", function(cn)
-    setmaster_abuse[cn] = nil
+    failed[cn] = nil
 end)
 
 server.event_handler("setmaster", function(cn, hash, set)
@@ -27,7 +27,7 @@ server.event_handler("setmaster", function(cn, hash, set)
         return -1
     end
     
-    if no_hash then
+    if no_hash or failed[cn] == FAILED_LIMIT then
         return -1 
     end
     
@@ -38,13 +38,13 @@ server.event_handler("setmaster", function(cn, hash, set)
             server.set_invisible_admin(cn)
         end
     else
-        server.log(string.format("Player: %s(%i) IP: %s -- tried to use setmaster with a wrong password.", server.player_name(cn), cn, server.player_ip(cn)))
-        setmaster_abuse[cn] = setmaster_abuse[cn] + 1
-        if setmaster_abuse[cn] >= 2 then
-            server.kick(cn, 300, "", red() .. "for trying to bruteforce the admin password") 
-            return -1
+        server.log(string.format("Player: %s(%i) IP: %s -- failed setmaster login!", server.player_name(cn), cn, server.player_ip(cn)))
+        
+        failed[cn] = failed[cn] + 1
+        
+        if failed[cn] == FAILED_LIMIT then
+            server.player_msg(cn, red("WARNING: no longer accepting your setmaster requests"))
         end
-		server.player_msg(cn, red() .. "WARNING: " .. white() .. "Please don't try to bruteforce the admin password!\nYou will be" .. red() .. " kicked " .. white() .. "after next failed attempt!")
     end
     
     return -1
