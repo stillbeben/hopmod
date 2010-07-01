@@ -2397,14 +2397,15 @@ namespace server
                 
                 if(mastermode>=MM_LOCKED && !was_playing) ci->state.state = CS_SPECTATOR;
                 else ci->state.state = CS_DEAD;
+                
                 if(currentmaster>=0) masterupdate = true; //FIXME send N_CURRENTMASTER packet directly to client
                 ci->state.lasttimeplayed = lastmillis;
 
                 const char *worst = m_teammode ? chooseworstteam(text, ci) : NULL;
                 copystring(ci->team, worst ? worst : "good", MAXTEAMLEN+1);
-
+                
                 sendwelcome(ci);
-                if(restorescore(ci)) sendresume(ci);
+                if(restoredscore) sendresume(ci);
                 sendinitclient(ci);
 
                 aiman::addclient(ci);
