@@ -13,12 +13,12 @@ auth.directory.domain{
 local banned = list_to_set(table_unique(server.parse_list(server.masterauth_banned)))
 
 auth.listener("", function(cn, user_id, domain, status)
-    
+
     if status ~= auth.request_status.SUCCESS then return end
     
-    local admin_present = server.master ~= -1 and server.player_priv_code(server.master) == server.PRIV_ADMIN
+    local no_admin = server.master == -1 or server.player_priv_code(server.master) ~= server.PRIV_ADMIN
     
-    if server.player_priv_code(cn) == 0 and not admin_present and server.use_master_auth == 1 then
+    if server.player_priv_code(cn) == 0 and no_admin then
         
         local name = server.player_name(cn)
         
