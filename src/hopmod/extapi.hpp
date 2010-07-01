@@ -25,7 +25,6 @@ namespace server
     extern string adminpass;
     extern string slotpass;
     extern int currentmaster;
-    extern int minremain;
     extern int interm;
     extern bool reassignteams;
     extern int gamemillis;
@@ -120,6 +119,8 @@ namespace server
     void kick(int cn,int time,const std::string & admin,const std::string & reason);
     void disconnect(int cn, int code, const std::string & reason);
     void changetime(int remaining);
+    int get_minutes_left();
+    void set_minutes_left(int);
     void changemap(const char * map,const char * mode,int mins);
     int modecode(const char * modename);
     int getplayercount();

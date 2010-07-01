@@ -238,7 +238,7 @@ void register_server_script_bindings(script::env & env)
     hopmod::bind_wo_var(server::adminpass, "admin_password", env);
     script::bind_freefunc(server::compare_admin_password, "check_admin_password", env);
     script::bind_ro_var(server::currentmaster, "master", env);
-    script::bind_ro_var(server::minremain, "timeleft", env);
+    hopmod::bind_property<int>(server::get_minutes_left, server::set_minutes_left, "timeleft", env);
     hopmod::bind_var(server::interm, "intermission", env);
     script::bind_ro_var(totalmillis, "uptime", env);
     script::bind_ro_var(server::gamemillis, "gamemillis", env);

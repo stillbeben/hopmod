@@ -231,7 +231,17 @@ void disconnect(int cn, int code, const std::string & reason)
 void changetime(int remaining)
 {
     gamelimit = gamemillis + remaining;
-    if(!gamepaused) checkintermission();
+    if(remaining > 0) sendf(-1, 1, "ri2", N_TIMEUP, remaining / 1000);
+}
+
+int get_minutes_left()
+{
+    return (gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000);
+}
+
+void set_minutes_left(int mins)
+{
+    changetime(mins * 1000 * 60);
 }
 
 void player_msg(int cn,const char * text)
@@ -1108,7 +1118,7 @@ bool get_setmaster_autoapprove()
 bool send_item(int type, int recipient) 
 {
     int ent_index = sents_type_index[type];
-    if(minremain<=0 || !sents.inrange(ent_index)) return false;
+    if(interm > 0 || !sents.inrange(ent_index)) return false;
     clientinfo *ci = getinfo(recipient);
     if(!ci || (!ci->local && !ci->state.canpickup(sents[ent_index].type))) return false;
     sendf(-1, 1, "ri3", N_ITEMACC, ent_index, recipient);

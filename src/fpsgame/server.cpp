@@ -500,7 +500,7 @@ namespace server
     
     string serverdesc = "", serverpass = "";
     string smapname = "";
-    int interm = 0, minremain = 0;
+    int interm = 0;
     bool mapreload = false;
     enet_uint32 lastsend = 0;
     int mastermode = MM_OPEN, mastermask = MM_PRIVSERV, mastermode_owner = -1, mastermode_mtime = 0;
@@ -722,7 +722,7 @@ namespace server
         
     bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it
     {
-        if(minremain<=0 || !sents.inrange(i) || !sents[i].spawned) return false;
+        if(gamemillis>=gamelimit || !sents.inrange(i) || !sents[i].spawned) return false;
         clientinfo *ci = getinfo(sender);
         if(!ci || (!ci->local && !ci->state.canpickup(sents[i].type))) return false;
         sents[i].spawned = false;
@@ -1187,7 +1187,7 @@ namespace server
     {
         if(ci && ci->local) return type;
         // only allow edit messages in coop-edit mode
-        if(type>=N_EDITMODE && type<=N_EDITVAR && !m_edit) return -1;
+        if(type>=N_EDITENT && type<=N_EDITVAR && !m_edit) return -1;
         // server only messages
         static const int servtypes[] = { N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPRELOAD, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTFX, N_EXPLODEFX, N_DIED, N_SPAWNSTATE, N_FORCEDEATH, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_BASESCORE, N_BASEINFO, N_BASEREGEN, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_INVISFLAG, N_CLIENT, N_AUTHCHAL, N_INITAI };
         if(ci)
@@ -1411,7 +1411,7 @@ namespace server
 
     int welcomepacket(packetbuf &p, clientinfo *ci)
     {
-        int hasmap = (m_edit && (clients.length()>1 || (ci && ci->local))) || (smapname[0] && (minremain>0 || (ci && ci->state.state==CS_SPECTATOR) || numclients(ci && ci->local ? ci->clientnum : -1)));
+        int hasmap = (m_edit && (clients.length()>1 || (ci && ci->local))) || (smapname[0] && (gamemillis<gamelimit || (ci && ci->state.state==CS_SPECTATOR) || numclients(ci && ci->local ? ci->clientnum : -1)));
         putint(p, N_WELCOME);
         putint(p, hasmap);
         if(hasmap)
@@ -1423,7 +1423,7 @@ namespace server
             if(!ci || (m_timed && smapname[0]))
             {
                 putint(p, N_TIMEUP);
-                putint(p, minremain);
+                putint(p, gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
             }
             if(!notgotitems)
             {
@@ -1435,6 +1435,14 @@ namespace server
                 }
                 putint(p, -1);
             }
+        }
+        if(currentmaster >= 0 || mastermode != MM_OPEN)
+        {
+            putint(p, N_CURRENTMASTER);
+            putint(p, currentmaster);
+            clientinfo *m = currentmaster >= 0 ? getinfo(currentmaster) : NULL;
+            putint(p, m ? m->privilege : 0);
+            putint(p, mastermode);
         }
         if(gamepaused)
         {
@@ -1538,8 +1546,7 @@ namespace server
         mapreload = false;
         gamemode = mode;
         gamemillis = 0;
-        minremain = (mins == -1 ? (m_overtime ? 15 : 10) : mins);
-        gamelimit = minremain*60000;
+        gamelimit = (mins == -1 ? (m_overtime ? 15 : 10) : mins) * 60000;
         interm = 0;
         nextexceeded = 0;
         copystring(smapname, s);
@@ -1561,7 +1568,7 @@ namespace server
         else smode = NULL;
         if(smode) smode->reset(false);
 
-        if(m_timed && smapname[0]) sendf(-1, 1, "ri2", N_TIMEUP, minremain);
+        if(m_timed && smapname[0]) sendf(-1, 1, "ri2", N_TIMEUP, gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
         loopv(clients)
         {
             clientinfo *ci = clients[i];
@@ -1673,9 +1680,10 @@ namespace server
 
     void checkintermission()
     {
+    /*
         if(minremain>0)
         {
-            minremain = gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
+            int minremain = gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
             
             int newvalue = signal_timeupdate(minremain);
             
@@ -1688,8 +1696,10 @@ namespace server
             sendf(-1, 1, "ri2", N_TIMEUP, minremain);
             if(!minremain && smode) smode->intermission();
         }
-        if(!interm && minremain<=0)
+      */  
+        if(gamemillis >= gamelimit && !interm)
         {
+            sendf(-1, 1, "ri2", N_TIMEUP, 0);
             interm = gamemillis+10000;
             calc_player_ranks();
             signal_intermission();
@@ -1931,7 +1941,7 @@ namespace server
         if(!gamepaused) gamemillis += curtime;
         
         if(m_demo) readdemo();
-        else if(!gamepaused && minremain>0)
+        else if(!gamepaused && gamemillis < gamelimit)
         {
             processevents();
             if(curtime) 
@@ -1982,12 +1992,13 @@ namespace server
             masterupdate = false; 
         } 
 
-        if(!gamepaused && m_timed && (gamelimit - gamemillis + 60000 - 1)/60000 != minremain ) checkintermission();
+        //if(!gamepaused && m_timed && (gamelimit - gamemillis + 60000 - 1)/60000 != minremain ) checkintermission();
+        if(!gamepaused && m_timed && smapname[0] && gamemillis-curtime>0) checkintermission();
         
-        if(interm && gamemillis>interm)
+        if(interm > 0 && gamemillis>interm)
         {
             if(demorecord) enddemorecord();
-            interm = 0;
+            interm = -1;
             checkvotes(true);
         }
         
@@ -2913,8 +2924,9 @@ namespace server
                         {
                             loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
                         }
-                        defformatstring(s)("mastermode is now %s (%d)", mastermodename(mastermode), mastermode);
-                        sendservmsg(s);
+                        sendf(-1, 1, "rii", N_MASTERMODE, mastermode);
+                        //defformatstring(s)("mastermode is now %s (%d)", mastermodename(mastermode), mastermode);
+                        //sendservmsg(s);
                     }
                     else
                     {
@@ -3194,7 +3206,7 @@ namespace server
         putint(p, 5);                   // number of attrs following
         putint(p, PROTOCOL_VERSION);    // a // generic attributes, passed back below
         putint(p, gamemode);            // b
-        putint(p, minremain);           // c
+        putint(p, max((gamelimit - gamemillis)/1000, 0));
         putint(p, (clients <= maxclients ? maxclients : clients));
         putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : (mastermode || mastermask&MM_AUTOAPPROVE ? mastermode : MM_AUTH)));
         sendstring(smapname, p);
