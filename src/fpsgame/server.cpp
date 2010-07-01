@@ -1073,7 +1073,7 @@ namespace server
     {
         update_mastermask();
         
-        if (!authname && signal_setmaster(ci->clientnum, pass/*hash*/) == -1) return;  
+        if (!authname && signal_setmaster(ci->clientnum, pass/*hash*/, val) == -1) return;  
         
         //FIXME this should really be an assertion check
         if(authname && !val) return;

@@ -69,7 +69,7 @@ extern boost::signal<void (int,int,int)>                            signal_shot;
 extern boost::signal<void (int)>                                    signal_suicide;
 extern boost::signal<void (int)>                                    signal_spawn;
 extern boost::signal<int (int, int, int, int), proceed>             signal_damage;
-extern boost::signal<int (int,const char*), proceed>                signal_setmaster;
+extern boost::signal<int (int,const char*,bool), proceed>           signal_setmaster;
 extern boost::signal<int (int,int), proceed>                        signal_pingpong;
 extern boost::signal<int (int,int), maxvalue>                       signal_respawnrequest;
 

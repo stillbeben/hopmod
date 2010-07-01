@@ -12,34 +12,27 @@ server.event_handler("disconnect", function(cn)
     setmaster_abuse[cn] = nil
 end)
 
+server.event_handler("setmaster", function(cn, hash, set)
 
-server.event_handler("setmaster", function(cn, hash)
-
-    if (hash == "" and server.player_priv(cn) ~= "none") or server.player_priv(cn) ~= "none" then
-        server.unsetpriv(cn) 
+    if not set then
+         server.unsetpriv(cn)
         return -1
     end
 
-    local admin_count = 0
-    local master_count = 0
-
-    for _, cn in ipairs(server.clients()) do 
-        local priv = server.player_priv(cn)
-        if priv == "master" then master_count = master_count + 1 end
-        if priv == "admin" then admin_count = admin_count + 1 end
-    end
-
-    if hash == "" and server.allow_setmaster and master_count == 0 and admin_count == 0 then
+    local no_hash = hash == ""
+    local no_master = server.master == -1
+    
+    if no_hash and no_master and server.allow_setmaster then
         server.setmaster(cn)
         return -1
     end
-
-    if hash == "" then 
+    
+    if no_hash then
         return -1 
     end
-
+    
     if server.hashpassword(cn, server.admin_password) == hash then
-        if admin_count == 0 then
+        if no_master then
             server.setadmin(cn) 
         else
             server.set_invisible_admin(cn)
@@ -56,3 +49,4 @@ server.event_handler("setmaster", function(cn, hash)
     
     return -1
 end)
+

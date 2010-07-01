@@ -63,7 +63,7 @@ boost::signal<void (const char *, int)> signal_scoreupdate;
 boost::signal<void ()> signal_maintenance;
 boost::signal<void (int)> signal_spawn;
 boost::signal<int (int,int,int,int), proceed> signal_damage;
-boost::signal<int (int,const char*), proceed> signal_setmaster;
+boost::signal<int (int,const char*, bool), proceed> signal_setmaster;
 boost::signal<int (int,int), proceed> signal_pingpong;
 boost::signal<int (int,int), maxvalue> signal_respawnrequest;
 boost::signal<void ()> signal_clearbans_request;
