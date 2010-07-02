@@ -481,7 +481,7 @@ namespace server
     
     bool notgotitems = true;        // true when map has changed and waiting for clients to send item
     int gamemode = 0;
-    int gamemillis = 0, gamelimit = 0, nextexceeded = 0;
+    int gamemillis = 0, gamelimit = 0, nextexceeded = 0, last_timeupdate = 0;
     bool gamepaused = false;
     int pausegame_owner = -1;
     bool reassignteams = true;
@@ -1992,6 +1992,12 @@ namespace server
             masterupdate = false; 
         } 
 
+        if(gamemillis - last_timeupdate > 60000)
+        {
+            signal_timeupdate(get_minutes_left());
+            last_timeupdate = gamemillis;
+        }
+        
         //if(!gamepaused && m_timed && (gamelimit - gamemillis + 60000 - 1)/60000 != minremain ) checkintermission();
         if(!gamepaused && m_timed && smapname[0] && gamemillis-curtime>0) checkintermission();
         
