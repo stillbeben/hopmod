@@ -11,7 +11,7 @@ function msg_admins(cn, msg)
 end
 
 server.event_handler("text", function(cn, text)
-    if server.player_status_code(cn) == server.SPECTATOR and server.player_priv_code(cn) ~= server.PRIV_ADMIN then
+    if server.player_status_code(cn) == server.SPECTATOR and server.player_priv_code(cn) ~= server.PRIV_ADMIN and server.paused == 0 then
         msg_admins(cn, text)
         return -1
     end
