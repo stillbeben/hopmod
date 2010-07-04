@@ -329,6 +329,7 @@ function createClientTablesManager(containerElements, server){
         }
         
         spectatorsTable.addClient(client);
+        updateClasses(client);
     }
     
     function addPlayers(players){
