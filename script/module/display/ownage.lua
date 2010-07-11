@@ -91,7 +91,7 @@ local function send_multikills_message(target_cn, target_vars, actor_cn, actor_v
             
         elseif actor_multikills > 3 then
         
-            server.player_msg(actor_cn, yellow("You scored ") ..  orange(string.format("%i MULTPLE KILLS!!",actor_multikills)))
+            server.player_msg(actor_cn, yellow("You scored ") ..  orange(string.format("%i MULTIPLE KILLS!!",actor_multikills)))
             
         end
         
