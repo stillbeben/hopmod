@@ -2,8 +2,8 @@ if server.use_server_map_rotation == 0 then
     return
 end
 
+dofile("script/base/maprotation/supported_maps.lua")
 dofile("script/base/maprotation/core.lua")
-dofile("script/base/maprotation/supported_maps.lua") -- Not used by this module
 
 local implementations = {
     standard = "script/base/maprotation/implementation/standard.lua",

@@ -132,7 +132,19 @@ local function load_from_lists(var_prefix)
             error("Expected a list of maps to exist at " .. varname)
         end
         
-        maps[gamemode] = table_unique(parse(list))
+        local provisional = parse(list)
+        local rotation = {}
+        
+        for _, mapname in pairs(provisional) do
+            
+            if supported_maps[mapname] then
+                rotation[#rotation + 1] = mapname
+            else
+                server.log_error(string.format("Excluding unknown map %s in %s maps rotation.", mapname, varname))
+            end
+        end
+        
+        maps[gamemode] = rotation
     end
     
     return maps
