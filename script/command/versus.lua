@@ -65,11 +65,11 @@ end
 
 local function onIntermission()
 
-    if server.player_frags(player1_cn) > server.player_frags(player2_cn) then
+    if server.player_score(player1_cn) > server.player_score(player2_cn) then
     
         server.msg(green("--[ 1on1 Game ended - " .. green(server.player_name(player1_cn)) .. " won the Game!"))       
     
-    elseif server.player_frags(player1_cn) < server.player_frags(player2_cn) then
+    elseif server.player_score(player1_cn) < server.player_score(player2_cn) then
     
         server.msg(green("--[ 1on1 Game ended - " .. green(server.player_name(player2_cn)) .. " won the Game!"))
     else
