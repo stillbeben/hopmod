@@ -25,14 +25,13 @@ local function total_stats(sendto, player)
     local acc = round((row.hits / row.shots)*100)
     --TODO colour kpd and acc green or red depending on how good the values are relative to avg values
     
-    server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s Losses: %s",
+    server.player_msg(sendto, string.format("Games %s Frags %s Deaths %s Kpd %s Accuracy %s Wins %s",
         yellow  (row.games),
         green   (row.frags),
         red     (row.deaths),
         yellow  (kpd),
         yellow  (acc .. "%"),
-        green   (row.wins),
-        red     (row.losses)))
+        green   (row.wins))
 end
 
 stats_sub_command["total"] = function(cn, player)

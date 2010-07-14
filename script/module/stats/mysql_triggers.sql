@@ -23,7 +23,6 @@ FOR EACH ROW BEGIN
         damage = damage + new.damage,
         damagewasted = damagewasted + new.damagewasted,
         wins = wins + (new.win and new.finished),
-        losses = losses + (new.win = 0 and new.finished),
         games = games + 1,
         withdraws = withdraws + (new.finished = 0),
         timeplayed = timeplayed + new.timeplayed
@@ -42,7 +41,6 @@ FOR EACH ROW BEGIN
         misses = misses - old.misses,
         shots = shots - old.shots,
         wins = wins - old.win,
-        losses = losses - (old.win = 0),
         games = games - 1,
         withdraws = withdraws - (old.finished = 0)
         WHERE name = old.name;

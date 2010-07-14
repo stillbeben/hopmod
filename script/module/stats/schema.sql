@@ -61,7 +61,6 @@ CREATE TABLE IF NOT EXISTS playertotals (
     damage              INTEGER DEFAULT 0,
     damagewasted        INTEGER DEFAULT 0,
     wins                INTEGER DEFAULT 0,
-    losses              INTEGER DEFAULT 0,
     games               INTEGER DEFAULT 0,
     withdraws           INTEGER DEFAULT 0,
     timeplayed          INTEGER DEFAULT 0
@@ -90,7 +89,6 @@ BEGIN
         misses = misses - old.misses,
         shots = shots - old.shots,
         wins = wins - old.win,
-        losses = losses - (old.win = 0),
         games = games - 1,
         withdraws = withdraws - (old.finished = 0)
         WHERE name = old.name;
@@ -114,9 +112,9 @@ BEGIN
         damage = damage + new.damage,
         damagewasted = damagewasted + new.damagewasted,
         wins = wins + (new.win and new.finished),
-        losses = losses + (new.win = 0 and new.finished),
         games = games + 1,
         withdraws = withdraws + (new.finished = 0),
         timeplayed = timeplayed + new.timeplayed
         WHERE name = new.name;
 END;
+
