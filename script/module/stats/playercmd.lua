@@ -31,7 +31,7 @@ local function total_stats(sendto, player)
         red     (row.deaths),
         yellow  (kpd),
         yellow  (acc .. "%"),
-        green   (row.wins))
+        green   (row.wins)))
 end
 
 stats_sub_command["total"] = function(cn, player)

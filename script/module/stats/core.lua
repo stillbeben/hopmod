@@ -9,7 +9,7 @@
     
         * Data is stored in a local table and is updated whenever a player
           leaves the game. At the end of the game, references to the data are
-          given to the backend database objects for permanant storage.
+          given to the backend database objects for permanent storage.
           
         * Player data is associated by name and ip, if a player renames or
           changes IP address then a new record is created.
@@ -42,6 +42,20 @@ local game = nil
 local players = nil
 local internal = {}
 
+local fields = {
+    teamkills       = server.player_teamkills,
+    score           = server.player_score,
+    frags           = server.player_frags,
+    deaths          = server.player_deaths,
+    suicides        = server.player_suicides,
+    hits            = server.player_hits,
+    misses          = server.player_misses,
+    shots           = server.player_shots,
+    damage          = server.player_damage,
+    damagewasted    = server.player_damagewasted,
+    timeplayed      = server.player_timeplayed
+}
+
 local auth_domain
 
 function internal.setNewGame()
@@ -68,14 +82,6 @@ function internal.getPlayerTable(player_id)
     
     players[player_id] = {
         team_id     = 0,
-        score       = 0, 
-        frags       = 0, 
-        deaths      = 0, 
-        suicides    = 0, 
-        hits        = 0, 
-        misses      = 0,
-        shots       = 0, 
-        damage      = 0, 
         playing     = true, 
         timeplayed  = 0, 
         finished    = false, 
@@ -115,25 +121,9 @@ function internal.updatePlayer(cn)
     t.ipaddrlong = server.player_iplong(cn)
     t.country = geoip.ip_to_country_code(server.player_ip(cn))
 
-    local frags = server.player_frags(cn)
-    local suicides = server.player_suicides(cn)
-    local teamkills = server.player_teamkills(cn)
-    
-    t.score = frags
-    
-    -- sauer bug: frags decremented for every suicide and teamkill
-    frags = frags + suicides + teamkills
-    t.frags = frags
-    
-    t.teamkills = server.player_teamkills(cn)
-    t.suicides = suicides
-    t.deaths = server.player_deaths(cn)
-    t.hits = server.player_hits(cn)
-    t.misses = server.player_misses(cn)
-    t.shots = server.player_shots(cn)
-    t.damage = server.player_damage(cn)
-    t.damagewasted = server.player_damagewasted(cn)
-    t.timeplayed = server.player_timeplayed(cn)
+    for field, field_update in pairs(fields) do
+        t[field] = field_update(cn)
+    end
     
     return t
 end
@@ -141,6 +131,11 @@ end
 function internal.addPlayer(cn)
 
     local t = internal.updatePlayer(cn)
+    
+    -- Remember the initial stats so they can be subtracted from the final stats at the end of the game
+    for field in pairs(fields) do
+        t["minus_" .. field] = t[field]
+    end
     
     local spec = server.player_status_code(cn) == server.SPECTATOR
     t.playing = not spec
@@ -186,11 +181,19 @@ end
 
 function internal.commit()
     
-    if game == nil or players == nil then return end
+    if not game or not players then 
+        return
+    end
     
     local function final_update(cn)
     
         local playerData = internal.updatePlayer(cn)
+        
+        for field in pairs(fields) do
+            playerData[field] = playerData[field] - playerData["minus_" .. field]
+        end
+        
+        server.player_msg(cn, "Frags: " .. playerData.frags)
         
         playerData.finished = playerData.playing
         playerData.win = server.player_win(cn)
