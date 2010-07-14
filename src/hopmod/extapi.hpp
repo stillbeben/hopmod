@@ -67,6 +67,7 @@ namespace server
     const char * player_status(int);
     int player_status_code(int);
     int player_frags(int);
+    int player_score(int);
     int player_real_frags(int);
     int player_deaths(int);
     int player_suicides(int);

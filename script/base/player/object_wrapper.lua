@@ -15,6 +15,7 @@ local methods = {
     status          = function(obj) return server.player_status(obj.cn) end,
     status_code     = function(obj) return server.player_status_code(obj.cn) end,
     frags           = function(obj) return server.player_frags(obj.cn) end,
+    score           = function(obj) return server.player_score(obj.cn) end,
     deaths          = function(obj) return server.player_deaths(obj.cn) end,
     suicides        = function(obj) return server.player_suicides(obj.cn) end,
     teamkills       = function(obj) return server.player_teamkills(obj.cn) end,

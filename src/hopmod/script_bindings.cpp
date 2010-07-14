@@ -144,7 +144,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::player_status, "player_status", env);
     script::bind_freefunc(server::player_status_code, "player_status_code", env);
     script::bind_freefunc(server::player_frags, "player_frags", env);
-    script::bind_freefunc(server::player_real_frags, "player_real_frags", env);
+    script::bind_freefunc(server::player_score, "player_score", env);
     script::bind_freefunc(server::player_deaths, "player_deaths", env);
     script::bind_freefunc(server::player_suicides, "player_suicides", env);
     script::bind_freefunc(server::player_teamkills, "player_teamkills", env);

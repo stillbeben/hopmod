@@ -19,13 +19,11 @@ end
 
 local function current_stats(sendTo, player)
 
-    local frags = server.player_frags(player) + server.player_suicides(player) + server.player_teamkills(player)
-
     if player ~= sendTo then
         server.player_msg(sendTo, string.format("Current game stats for %s:", server.player_displayname(player)))
     end
     
-    local stats = string.format("Score %s Frags %s Deaths %s Accuracy %s", yellow(server.player_frags(player)), green(frags), red(server.player_deaths(player)), yellow(server.player_accuracy(player) .. "%"))
+    local stats = string.format("Score %s Frags %s Deaths %s Accuracy %s", yellow(server.player_score(player)), green(server.player_frags(player)), red(server.player_deaths(player)), yellow(server.player_accuracy(player) .. "%"))
     server.player_msg(sendTo, stats)
     
     if gamemodeinfo.teams then

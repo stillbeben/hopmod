@@ -372,13 +372,13 @@ int player_lag(int cn)
 
 int player_frags(int cn)
 {
-    return get_ci(cn)->state.frags;
-}
-
-int player_real_frags(int cn)
-{
     clientinfo * ci = get_ci(cn);
     return ci->state.frags + ci->state.suicides + ci->state.teamkills;
+}
+
+int player_score(int cn)
+{
+    return get_ci(cn)->state.frags;
 }
 
 int player_deaths(int cn)
