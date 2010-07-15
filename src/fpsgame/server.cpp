@@ -2410,6 +2410,8 @@ namespace server
                 const char *worst = m_teammode ? chooseworstteam(text, ci) : NULL;
                 copystring(ci->team, worst ? worst : "good", MAXTEAMLEN+1);
                 
+                if(clients.length() == 1 && mapreload) selectnextgame();
+                
                 sendwelcome(ci);
                 if(restoredscore) sendresume(ci);
                 sendinitclient(ci);
@@ -2421,8 +2423,6 @@ namespace server
                 signal_connect(ci->clientnum);
 				                
                 if(give_admin_priv) set_player_private_admin(ci->clientnum);
-                
-                if(clients.length() == 1 && mapreload) selectnextgame();
             }
         }
         else if(chan==2)
