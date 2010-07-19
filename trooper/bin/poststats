@@ -1,0 +1,38 @@
+#!/bin/sh
+
+for line in `cat conf/poststats.conf`; do
+  eval $line
+done
+
+if [ -z $URL ]
+then
+    echo "conf/poststats.conf needs to be configured before you can use this script."
+    exit 1
+fi
+
+HTTPS_OPTIONS=""
+if [ "$USE_HTTPS" -eq "1" ]
+then
+    HTTPS_OPTIONS="--ca-certificate=$ROOT_CERTIFICATE --private-key=$PRIVATE_KEY --certificate=$CLIENT_CERTIFICATE"
+fi
+
+HTTP_AUTH_OPTIONS=""
+if [ "$USE_HTTP_AUTH" -eq "1" ]
+then
+    HTTP_AUTH_OPTIONS="--http-user=$HTTP_AUTH_USERNAME --http-password=$HTTP_AUTH_PASSWORD"
+fi
+
+for gs in $( ls log/game ); do
+    
+    GAMESTATSFILE="log/game/$gs"
+    
+	WGET_OUTPUT=$(2>&1 wget --header "Content-Type: text/json" --post-file=$GAMESTATSFILE $HTTPS_OPTIONS $HTTP_AUTH_OPTIONS -O /dev/stdout $URL)
+    WGET_STATUS=$?
+    
+    if [ $WGET_STATUS == 0 ]; then
+        echo "$GAMESTATSFILE SENT"
+        rm $GAMESTATSFILE
+    else
+        echo "$0: Error sending $GAMESTATSFILE to server ($URL): $WGET_OUTPUT" > /dev/stderr
+    fi
+done
