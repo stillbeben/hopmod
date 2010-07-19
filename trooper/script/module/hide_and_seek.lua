@@ -142,7 +142,7 @@ server.event_handler("connect", function(cn)
     if hide_and_seek == false then return end
     server.spec(cn)
 
-    local str = "\f3PLEASE READ: "..orange().."This server is currently running the Hide and Seek mode, make sure you have the current map and understand how the mode works, before you are asking to be unspecced! thank you! [NOTE: THIS IS _NOT_ AN OFFICIAL GAMEMODE]"
+    local str = "\f3PLEASE READ: "..orange().."This server is currently running the Hide and Seek mode, make sure you have the current map and understand how the mode works, before you are asking to be unspecced! thank you!"
 
     server.sleep(5000, function() 
         if server.valid_cn(cn) then
