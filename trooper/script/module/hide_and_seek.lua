@@ -504,7 +504,6 @@ function server.playercmd_has(cn, enable)
             server.player_msg(cn, red("Hide & Seek already running."))
             return
         end
-        hide_and_seek_mode = enable
         server.broadcast_mapmodified = false
         hide_and_seek = true
         server.hide_and_seek = 1 -- changes weapon ammo amount
@@ -560,6 +559,20 @@ function server.playercmd_add(cn, cnadd)
     else 
         server.player_msg(cn, red() .. cnadd .. " isn't a valid cn.")
     end
+end
+
+function server.playercmd_fog(cn, enable)
+    enable = tonumber(enable)
+    if not (server.player_priv_code(cn) >= server.PRIV_MASTER or server.player_status(cn) ~= "spectator") then
+        warn(cn, "Permission denied.")
+        return
+    end
+    if enable > 0 then
+        hide_and_seek_mode = 1
+        server.msg(blue() .. "Fog enabled!")
+    end
+        hide_and_seek_mode = 0
+        server.msg(blue() .. "Fog disabled!")
 end
 
 -- vi: sts=4 sw=4 expandtab
