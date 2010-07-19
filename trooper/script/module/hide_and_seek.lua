@@ -198,7 +198,9 @@ local function check_game(check_only)
         for i, cn_ in ipairs(server.clients()) do
             fog(cn_)   
         end
-        server.sleep(5, function() server.changetime(0) end)
+        if server.playercount > 1 then
+            server.sleep(5, function() server.changetime(0) end)
+        end
         return false
     end
 
