@@ -264,10 +264,9 @@ server.event_handler("intermission", function(actor, client)
         server.no_spawn(cn, 1)
     end
 
-       
-    server.intermission = server.gamemillis + 10000
+    server.intermission = server.gamemillis + 10000  -- unneeded ???
     
-    local starttime = round((server.intermission - server.gamemillis))
+    local starttime = round((server.intermission - server.gamemillis)) -- always 10000 ???
     
     server.sleep((starttime - 10), function() -- riscy, but should work :P
         if (server.uptime - last_mapvote) > 10000 then -- check if master/admin changed map
@@ -300,14 +299,6 @@ server.event_handler("mapchange", function()
 
     reset_on_mapchange() 
 end)
-
-server.event_handler("spectator", function(cn, join)
-    if hide_and_seek == false then return end
-    if join == 0 then
-        relocate_players()
-    end
-end)
-
 
 server.event_handler("reteam", function(cn, old, new)
     if hide_and_seek == false then return end
@@ -465,7 +456,7 @@ function server.playercmd_add(cn, cnadd)
     cnadd = tonumber(cnadd)
     if server.valid_cn(cnadd) then
         if server.player_status(cnadd) ~= "spectator" then
-            server.player_msg(cn, red() .. server.player_name(cnadd) .. " isn't a spectator, you cant add this player.")
+            server.player_msg(cn, red() .. server.player_name(cnadd) .. " isn't a spectator, you can't add this player.")
             return
         else
             server.msg(red() .. server.player_name(cn) .. blue() .. " added " .. red() .. server.player_name(cnadd) ..  blue() .. " to the waitlist!")
