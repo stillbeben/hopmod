@@ -1,6 +1,6 @@
 
 #define EXT_ACK                         -1
-#define EXT_VERSION                     104
+#define EXT_VERSION                     105
 #define EXT_NO_ERROR                    0
 #define EXT_ERROR                       1
 #define EXT_PLAYERSTATS_RESP_IDS        -10
@@ -47,7 +47,7 @@
         putint(q, ci->state.health);
         putint(q, ci->state.armour);
         putint(q, ci->state.gunselect);
-        putint(q, currentmaster == ci->clientnum ? ci->privilege : PRIV_NONE);
+        putint(q, ci->privilege);
         putint(q, ci->state.state);
         uint ip = getclientip(ci->clientnum);
         q.put((uchar*)&ip, 3);
