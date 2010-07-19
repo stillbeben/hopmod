@@ -254,7 +254,7 @@ server.event_handler("maploaded", function(cn)
 	PLAYER_ACTIVE[cn] = true
 
 	local canstart = true
-	for _, cn_ in ipairs(server.clients()) do
+	for _, cn_ in ipairs(server.players()) do
 		if PLAYER_ACTIVE[cn_] == nil then
 			canstart = false 
 		end
