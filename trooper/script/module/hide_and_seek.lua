@@ -170,7 +170,7 @@ server.event_handler("damage", function(client, actor)
 	end
 	if (server.uptime - last_warn[actor]) > 10000 or set then
 		server.player_msg(actor, red() .. "You are not allowed to attack the seek Player!!!")
-		last_warn = server.uptime
+		last_warn[actor] = server.uptime
 	end 
         return -1       
     end
