@@ -12,6 +12,7 @@ GAME_ACTIVE = false
 PLAYER_SWITCHED = false
 hah_active_player_spawn_tries = 0
 caught_players = { }
+server_change_team_request = { } 
 
 function reset_on_mapchange()
     hah_actor_frags = 0
@@ -22,6 +23,7 @@ function reset_on_mapchange()
     PLAYER_SWITCHED = false
     hah_active_player_spawn_tries = 0
     caught_players = { }
+    server_change_team_request = { } 
 end
 
 local function setteam(cn)
@@ -38,6 +40,7 @@ local function setteam(cn)
     end
     
     if server.player_team(cn) ~= jointeam then    
+        server_change_team_request[cn] = true 
         server.changeteam(cn, jointeam)
     end
     
@@ -119,6 +122,7 @@ server.event_handler("frag", function(client, actor)
             end
             count = count - 1
             server.msg(green() .. server.player_name(actor) .. " got " .. server.player_name(client) .. " - " .. count .. " Players left!")
+            server_change_team_request[cn] = true 
             server.changeteam(client, hah_seek_team)
             caught_players[client] = true
             if count == 0 then
@@ -157,6 +161,11 @@ end)
 
 server.event_handler("reteam", function(cn, old, new)
     if hide_and_seek == false then return end
+    if server_change_team_request[cn] == true then
+        server_change_team_request[cn] = false
+        return
+    end
+    server_change_team_request[cn] = true 
     server.changeteam(cn, old)
     server.player_msg(cn, red() .. "You can't switch the team!")
 end)
