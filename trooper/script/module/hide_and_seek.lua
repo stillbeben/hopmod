@@ -1,7 +1,6 @@
 -- (c) 2010 by |DM|Thomas & |noVI:pure_ascii
 
 hide_and_seek = false
-local hide_and_seek_mode = 1
 local hah_active_player = -1
 local hah_seek_team = ""
 local hah_next_player = -1
@@ -21,28 +20,74 @@ local player_waitlist = { }
 local last_warn = { }
 local is_intermission = false
 
+local fog_enabled = false
 
-local function fog(cn) 
-    if not hide_and_seek_mode == 1 or cn >= 128 then return end
-    local enable = (server.player_team(cn) == hah_seek_team and server.player_status(cn) ~= "spectator")
-    if enable then
-        server.editvar(cn, "fog", 200)
-        server.editvar(cn, "fogcolour", 0)
-    else
-        server.editvar(cn, "fog", 999999)
-        server.editvar(cn, "fogcolour", 0)
-    end
-    server.sleep(1, function()
-        local i = 0
-        while (i < 10) do
-            server.player_msg(cn, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-            i = i + 1
-        end
-    end)
-end
+local START_AVERAGE = 200
+local MAX_CAMP_VALUE = 50
+local average_distances = {}
+local last_positions = {}
+local camp_warn = {}
+local camp_check = false
 
 local function warn(cn, msg) 
     server.player_msg(cn, red() .. "WARNING: " .. white() .. msg)
+end
+
+local function check_camper(cn)
+    if hide_and_seek == false then return end
+    if is_intermission then return end
+    if not camp_check then return end
+    if not server.valid_cn(cn) then return end
+    if server.player_team(cn) ~= "seek" then 
+
+        local player_id = server.player_sessionid(cn)
+
+        local x, y, z = server.player_pos(cn)
+        local last_pos = last_positions[player_id] or {x = x, y = y, z = z}
+
+        local distance = math.sqrt((x - last_pos.x)^2 + (y - last_pos.y)^2 + (z - last_pos.z)^2)
+        average_distances[player_id] = ((average_distances[player_id] or START_AVERAGE)/2) + (distance/2)
+
+        last_positions[player_id] = {x = x, y = y, z = z}
+
+        if average_distances[player_id] <= MAX_CAMP_VALUE then
+            warn(cn, "You have to move, or you will be relocated!")
+            if camp_warn[player_id] ~= nil then
+                camp_warn[player_id] = camp_warn[player_id] + 1
+                if camp_warn[player_id] == 3 then
+                    camp_warn[player_id] = nil
+                    average_distances[player_id] = nil
+                    server.player_slay(cn)
+                    server.spawn_player(cn)
+                    server.msg(string.format("%s was relocated for camping!", server.player_displayname(cn)))
+                end
+            else
+                camp_warn[player_id] = 1
+            end
+
+        end
+
+    end
+    server.sleep(10000, function() check_camper(cn) end)
+end
+
+local function fog(cn) 
+     if not fog_enabled or cn >= 128 then return end
+     local enable = (server.player_team(cn) == hah_seek_team and server.player_status(cn) ~= "spectator")
+     if enable then
+         server.editvar(cn, "fog", 400)
+         server.editvar(cn, "fogcolour", 0)
+     else
+         server.editvar(cn, "fog", 999999)
+         server.editvar(cn, "fogcolour", 0)
+     end
+     server.sleep(1, function()
+         local i = 0
+         while (i < 10) do
+             server.player_msg(cn, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+             i = i + 1
+         end
+     end)
 end
 
 local function reset_on_mapchange()
@@ -479,6 +524,9 @@ server.event_handler("maploaded", function(cn)
                     server.msg(yellow() .. "Seek Player spawned!")
                     can_vote = true
                     server.changetime(1000*60*has_time) -- reset time
+                    for i, cn_ in ipairs(server.players()) do 
+                        check_camper(cn_)
+                    end  
                 end
             end)
         end)
@@ -570,16 +618,36 @@ end
 
 function server.playercmd_fog(cn, enable)
     enable = tonumber(enable)
-    if not (server.player_priv_code(cn) >= server.PRIV_MASTER or server.player_status(cn) ~= "spectator") then
+    if not (server.player_priv_code(cn) >= server.PRIV_MASTER) then
         warn(cn, "Permission denied.")
         return
     end
     if enable > 0 then
-        hide_and_seek_mode = 1
+        fog_enabled = true
         server.msg(blue() .. "Fog enabled!")
     else
-        hide_and_seek_mode = 0
+        fog_enabled = false
         server.msg(blue() .. "Fog disabled!")
+    end
+end
+
+function server.playercmd_move(cn, enable)
+    enable = tonumber(enable)
+    if not (server.player_priv_code(cn) >= server.PRIV_MASTER) then
+        warn(cn, "Permission denied.")
+        return
+    end
+    if enable > 0 then
+        if not camp_check then
+            for i, cn_ in ipairs(server.players()) do 
+                check_camper(cn_)
+            end  
+        end
+        camp_check = true
+        server.msg(blue() .. "Camp check enabled!")
+    else
+        camp_check = false
+        server.msg(blue() .. "Camp check disabled!")
     end
 end
 
