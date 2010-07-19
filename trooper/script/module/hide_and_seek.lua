@@ -13,7 +13,8 @@ local GAME_ACTIVE = false
 local caught_players = { }
 local server_change_team_request = { } 
 local can_vote = true
-local has_time = 12 -- 12 minutes
+local has_time = 7 -- minutes
+local hide_time = 20 -- seconds
 local last_mapvote = server.uptime
 local player_stats = { }
 local player_waitlist = { }
@@ -285,9 +286,9 @@ server.event_handler("suicide", function(cn)
         server.changeteam(cn, hah_seek_team)
         fog(cn, true)
         if not can_vote then -- became a seeker before main seeker spawned
-            server.sleep(5, function() warn(cn, "Spawn delayed for 10 seconds!") end)
+            server.sleep(5, function() warn(cn, "Spawn delayed for " .. hide_time " seconds!") end)
             server.no_spawn(cn, 1)
-            server.sleep(10000, function()
+            server.sleep(hide_time * 1000, function()
                 if server.valid_cn(cn) then
                     server.no_spawn(cn, 0)
                     server.spawn_player(cn)
@@ -438,7 +439,7 @@ server.event_handler("maploaded", function(cn)
             end
             
             if check_game(true) then -- check if seeker isnt disconnected ...
-                server.msg(green() .. "Go and hide, the seek player will spawn in 10 seconds!") 
+                server.msg(green() .. "Go and hide, the seek player will spawn in " .. hide_time .. " seconds!") 
             else
                 return -- TODO: does this help ???
             end 
@@ -449,28 +450,28 @@ server.event_handler("maploaded", function(cn)
                  hah_active_player = hah_next_player
             end
             
-            server.sleep(5000, function()
+            server.sleep((hide_time - 5) * 1000, function()
                 if check_game(true) then 
                     server.msg(blue() .. "5 seconds, run!") 
                 end
             end)
-            server.sleep(7000, function()
+            server.sleep((hide_time - 3) * 1000, function()
                 if check_game(true) then 
                     server.msg(red() .. "3 seconds...")
                 end 
             end)
-            server.sleep(8000, function()
+            server.sleep((hide_time - 2) * 1000, function()
                 if check_game(true) then 
                     server.msg(red() .. "2 seconds...") 
                 end
             end)
-            server.sleep(9000, function()
+            server.sleep((hide_time - 1) * 1000, function()
                 if check_game(true) then 
                     server.msg(red() .. "1 second....") 
                 end
                 stop_kill_event = true
             end)
-            server.sleep(10000, function()
+            server.sleep(hide_time * 1000, function()
                 if check_game(true) then 
                     server.no_spawn(hah_active_player, 0) -- allow seek player to spawn
                     server.spawn_player(hah_active_player) -- spawn seek player
