@@ -101,6 +101,11 @@ end
 
 local function check_game(check_only)
 
+    if not GAME_ACTIVE then
+        print("check_game called when game not active")
+        return false
+    end
+
     local hide = 0
     local seek = 0
 
@@ -254,6 +259,8 @@ end)
 server.event_handler("intermission", function(actor, client)
     if hide_and_seek == false then return end
 
+    GAME_ACTIVE = false
+
     local mapping = {}        -- continuous table needed for sorting
     for k, v in pairs(player_stats) do table.insert(mapping, k) end
     if #mapping > 0 then      -- # also only works on continuous tables
@@ -275,9 +282,9 @@ server.event_handler("intermission", function(actor, client)
         server.no_spawn(cn, 1)
     end
 
-    server.intermission = server.gamemillis + 10000  -- unneeded ???
+    server.intermission = server.gamemillis + 10000  -- TODO: unneeded ???
     
-    local starttime = round((server.intermission - server.gamemillis)) -- always 10000 ???
+    local starttime = round((server.intermission - server.gamemillis)) -- TODO: always 10000 ???
     
     server.sleep((starttime - 10), function() -- riscy, but should work :P
         if (server.uptime - last_mapvote) > 10000 then -- check if master/admin changed map
@@ -377,7 +384,7 @@ server.event_handler("maploaded", function(cn)
             if check_game(true) then -- check if seeker isnt disconnected ...
                 server.msg(green() .. "Go and hide, the seek player will spawn in 10 seconds!") 
             else
-                return
+                return -- TODO: does this help ???
             end 
             
             if server.player_status(hah_next_player) == "spectator" then
