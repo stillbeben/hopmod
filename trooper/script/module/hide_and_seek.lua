@@ -16,6 +16,7 @@ local has_time = 12 -- 12 minutes
 local last_mapvote = server.uptime
 local player_stats = { }
 local player_waitlist = { }
+local last_warn = { }
 
 local function reset_on_mapchange()
     hah_actor_frags = 0
@@ -28,6 +29,7 @@ local function reset_on_mapchange()
     server_change_team_request = { } 
     can_vote = false
     player_stats = { }
+    last_warn = { }
 end
 
 local function setteam(cn)
@@ -149,11 +151,27 @@ server.event_handler("damage", function(client, actor)
         return -1
     end
     if server.player_team(actor) == server.player_team(client) and actor ~= client then
-        server.player_msg(actor, red() .. "You can't frag your teammates in this mode!")
+	local set = false
+	if last_team_fire_warn[actor] == nil then 
+		last_warn = server.uptime
+		set = true
+	end
+	if (server.uptime - last_warn[actor]) > 10000 or set then
+		server.player_msg(actor, red() .. "You can't frag your teammates in this mode!")
+		last_warn = server.uptime
+	end
         return -1
     end
     if server.player_team(actor) ~= hah_seek_team and actor ~= hah_active_player and client ~= actor then
-        server.player_msg(actor, red() .. "You are not allowed to attack the seek Player!!!")
+	local set = false
+	if last_team_fire_warn[actor] == nil then 
+		last_warn = server.uptime
+		set = true
+	end
+	if (server.uptime - last_warn[actor]) > 10000 or set then
+		server.player_msg(actor, red() .. "You are not allowed to attack the seek Player!!!")
+		last_warn = server.uptime
+	end 
         return -1       
     end
 end)
