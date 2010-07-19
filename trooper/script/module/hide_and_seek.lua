@@ -284,10 +284,12 @@ server.event_handler("mapchange", function()
 	
 	for k, v in pairs(player_waitlist) do 
 		if player_waitlist[k] ~= nil then -- to be sure
-			server.unspec(k)
-			server.sleep(500, function() 
-				server.msg(blue() .. "Unspecced: " .. red() .. server.player_name(k))
-			end)
+			if server.is_valid_cn(k) then
+				server.unspec(k)
+				server.sleep(500, function() 
+					server.msg(blue() .. "Unspecced: " .. red() .. server.player_name(k))
+				end)
+			end
 			player_waitlist[k] = nil
 		end
 	end
