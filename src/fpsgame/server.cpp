@@ -590,13 +590,49 @@ namespace server
     captureservmode capturemode;
     ctfservmode ctfmode;
     servmode *smode = NULL;
-
-#ifndef STANDALONE
-    ICOMMAND(serverdesc, "s", (char *s), copystring(serverdesc, s));
-    ICOMMAND(serverpass, "s", (char *s), copystring(serverpass, s));
-    ICOMMAND(adminpass, "s", (char *s), copystring(adminpass, s));
-#endif
-
+    
+    bool canspawnitem(int type) { return !m_noitems && (type>=I_SHELLS && type<=I_QUAD && (!m_noammo || type<I_SHELLS || type>I_CARTRIDGES)); }
+    
+    int numclients(int exclude, bool nospec, bool noai);
+    
+    int spawntime(int type)
+    {
+        if(m_classicsp) return INT_MAX;
+        int np = numclients(-1, true, false);
+        np = np<3 ? 4 : (np>4 ? 2 : 3);         // spawn times are dependent on number of players
+        int sec = 0;
+        switch(type)
+        {
+            case I_SHELLS:
+            case I_BULLETS:
+            case I_ROCKETS:
+            case I_ROUNDS:
+            case I_GRENADES:
+            case I_CARTRIDGES: sec = np*4; break;
+            case I_HEALTH: sec = np*5; break;
+            case I_GREENARMOUR:
+            case I_YELLOWARMOUR: sec = 20; break;
+            case I_BOOST:
+            case I_QUAD: sec = 40+rnd(40); break;
+        }
+        return sec*1000;
+    }
+    
+    bool delayspawn(int type)
+    {
+        switch(type)
+        {
+            case I_GREENARMOUR:
+            case I_YELLOWARMOUR:
+                return !m_classicsp;
+            case I_BOOST:
+            case I_QUAD:
+                return true;
+            default:
+                return false;
+        }
+    }
+    
     vector<server_entity> sents;
     int sents_type_index[MAXENTTYPES];
     vector<savedscore> scores;
@@ -695,31 +731,6 @@ namespace server
         return cname[cidx];
     }
 
-    bool canspawnitem(int type) { return !m_noitems && (type>=I_SHELLS && type<=I_QUAD && (!m_noammo || type<I_SHELLS || type>I_CARTRIDGES) && allow_item[type - I_SHELLS]);}
-
-    int spawntime(int type)
-    {
-        if(m_classicsp) return INT_MAX;
-        int np = numclients(-1, true, false);
-        np = np<3 ? 4 : (np>4 ? 2 : 3);         // spawn times are dependent on number of players
-        int sec = 0;
-        switch(type)
-        {
-            case I_SHELLS:
-            case I_BULLETS:
-            case I_ROCKETS:
-            case I_ROUNDS:
-            case I_GRENADES:
-            case I_CARTRIDGES: sec = np*4; break;
-            case I_HEALTH: sec = np*5; break;
-            case I_GREENARMOUR:
-            case I_YELLOWARMOUR: sec = 20; break;
-            case I_BOOST:
-            case I_QUAD: sec = 40+rnd(40); break;
-        }
-        return sec*1000;
-    }
-        
     bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it
     {
         if(gamemillis>=gamelimit || !sents.inrange(i) || !sents[i].spawned) return false;
@@ -2842,7 +2853,7 @@ namespace server
                     sents_type_index[sents[n].type] = n;
                     if(canspawnitem(sents[n].type))
                     {
-                        if(m_mp(gamemode) && (sents[n].type==I_QUAD || sents[n].type==I_BOOST)) sents[n].spawntime = spawntime(sents[n].type);
+                        if(m_mp(gamemode) && delayspawn(sents[n].type)) sents[n].spawntime = spawntime(sents[n].type);
                         else sents[n].spawned = true;
                     }
                 }
