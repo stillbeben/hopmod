@@ -4,6 +4,8 @@
 
 #include "game.h"
 
+int HIDE_AND_SEEK = 1;
+
 #include "hopmod/extapi.hpp"
 #include "hopmod/hopmod.hpp"
 #include "hopmod/bans.hpp"
@@ -1288,6 +1290,25 @@ namespace server
     void sendspawn(clientinfo *ci, bool skip_ev=false)
     {
         if (ci->no_spawn == 1) return;
+
+        if (HIDE_AND_SEEK) {
+
+            ci->state.addammo(GUN_SG);
+            ci->state.ammo[GUN_SG] = 60;
+
+            ci->state.addammo(GUN_RL);
+            ci->state.ammo[GUN_RL] = 20;
+
+            ci->state.addammo(GUN_CG);
+            ci->state.ammo[GUN_CG] = 120;
+
+            ci->state.addammo(GUN_RIFLE);
+            ci->state.ammo[GUN_RIFLE] = 30;
+			
+			ci->state.addammo(GUN_GL);
+            ci->state.ammo[GUN_GL] = 20;	
+			
+        }     
 
         gamestate &gs = ci->state;
         
