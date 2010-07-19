@@ -270,7 +270,6 @@ server.event_handler("maploaded", function(cn)
 		for i, cn_ in ipairs(server.clients()) do
 			if cn_ ~= hah_active_player then
 				server.no_spawn(cn_, 0)
-				server.spawn_player(cn_)
 			end
 		end		
 
