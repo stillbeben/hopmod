@@ -152,7 +152,7 @@ server.event_handler("damage", function(client, actor)
     end
     if server.player_team(actor) == server.player_team(client) and actor ~= client then
 	local set = false
-	if last_team_fire_warn[actor] == nil then 
+	if last_warn[actor] == nil then 
 		last_warn[actor] = server.uptime
 		set = true
 	end
@@ -164,7 +164,7 @@ server.event_handler("damage", function(client, actor)
     end
     if server.player_team(actor) ~= hah_seek_team and actor ~= hah_active_player and client ~= actor then
 	local set = false
-	if last_team_fire_warn[actor] == nil then 
+	if last_warn[actor] == nil then 
 		last_warn[actor] = server.uptime
 		set = true
 	end
