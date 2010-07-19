@@ -30,6 +30,8 @@ namespace server
     extern int gamemillis;
     extern int gamelimit;
     extern bool gamepaused;
+
+    extern int hide_and_seek; //MOD
     
     extern int mastermode;
     extern int mastermode_owner;

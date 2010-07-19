@@ -250,8 +250,7 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_var(server::broadcast_mapmodified, "broadcast_mapmodified", env);
 
-    extern int HIDE_AND_SEEK;
-    script::bind_var(HIDE_AND_SEEK, "HIDE_AND_SEEK", env);// MOD
+    script::bind_var(server::hide_and_seek, "hide_and_seek", env); //MOD
     
     script::bind_var(tx_bytes, "tx_bytes", env);
     script::bind_var(rx_bytes, "rx_bytes", env);

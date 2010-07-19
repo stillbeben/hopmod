@@ -450,7 +450,7 @@ function server.playercmd_has(cn, enable)
         end
         server.broadcast_mapmodified = false
         hide_and_seek = true
-        --server.HIDE_AND_SEEK = 1 -- enable this function if you want to get banned from masterserver, changes weapon ammo amount
+        server.hide_and_seek = 1 -- enable this function if you want to get banned from masterserver, changes weapon ammo amount
         server.mastermode = 2
         server.msg("mastermode is now locked (2)")
         server.msg(green() .. "Hide and Seek Mode enabled!")
@@ -465,7 +465,7 @@ function server.playercmd_has(cn, enable)
             return
         end
         server.broadcast_mapmodified = true
-        --server.HIDE_AND_SEEK = 0
+        server.hide_and_seek = 0
         server.msg(blue() .. "Hide and Seek Mode disabled!")
         server.mastermode = 0
         server.msg("mastermode is now open (0)")
