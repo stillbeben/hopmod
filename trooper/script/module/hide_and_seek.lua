@@ -253,11 +253,12 @@ server.event_handler("frag", function(client, actor)
         
             server_change_team_request[client] = true 
             server.changeteam(client, hah_seek_team)
+            fog(client)
 
             caught_players[client] = true
             if count == 0 then
                 for i, cn_ in ipairs(server.clients()) do
-                    fog(cn_)   
+                    fog(cn_)    -- TODO: why here?
                 end
                 server.sleep(5, function() server.changetime(0) end)
             end
@@ -286,7 +287,7 @@ server.event_handler("suicide", function(cn)
         server.changeteam(cn, hah_seek_team)
         fog(cn, true)
         if not can_vote then -- became a seeker before main seeker spawned
-            server.sleep(5, function() warn(cn, "Spawn delayed for " .. hide_time " seconds!") end)
+            server.sleep(5, function() warn(cn, "Spawn delayed for " .. hide_time .. " seconds!") end)
             server.no_spawn(cn, 1)
             server.sleep(hide_time * 1000, function()
                 if server.valid_cn(cn) then
@@ -546,6 +547,7 @@ function server.playercmd_add(cn, cnadd)
     if server.valid_cn(cnadd) then
         if player_waitlist[cnadd] ~= nil then
             warn(cn, server.player_name(cnadd) .. " is already on the waitlist.")
+            return
         end       
         if server.player_status(cnadd) ~= "spectator" then
             warn(cn, server.player_name(cnadd) .. " isn't a spectator, you can't add this player.")
@@ -553,7 +555,11 @@ function server.playercmd_add(cn, cnadd)
         else
             server.msg(red() .. server.player_name(cn) .. blue() .. " added " .. red() .. server.player_name(cnadd) ..  blue() .. " to the waitlist!")
             server.player_msg(cnadd, blue() .. "You will be unspecced automaticly after this game by the server!")
-            server.player_msg(cnadd, blue() .. "You will be unspecced automaticly after this game by the server!")
+            server.sleep(5000, function()
+                if server.valid_cn(cnadd) then 
+                    server.player_msg(cnadd, blue() .. "You will be unspecced automaticly after this game by the server!")
+                end
+            end)
 
             player_waitlist[cnadd] = true
         end
