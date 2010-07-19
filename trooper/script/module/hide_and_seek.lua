@@ -153,7 +153,7 @@ server.event_handler("damage", function(client, actor)
     if server.player_team(actor) == server.player_team(client) and actor ~= client then
 	local set = false
 	if last_team_fire_warn[actor] == nil then 
-		last_warn = server.uptime
+		last_warn[actor] = server.uptime
 		set = true
 	end
 	if (server.uptime - last_warn[actor]) > 10000 or set then
