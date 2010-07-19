@@ -158,14 +158,14 @@ server.event_handler("damage", function(client, actor)
 	end
 	if (server.uptime - last_warn[actor]) > 10000 or set then
 		server.player_msg(actor, red() .. "You can't frag your teammates in this mode!")
-		last_warn = server.uptime
+		last_warn[actor] = server.uptime
 	end
         return -1
     end
     if server.player_team(actor) ~= hah_seek_team and actor ~= hah_active_player and client ~= actor then
 	local set = false
 	if last_team_fire_warn[actor] == nil then 
-		last_warn = server.uptime
+		last_warn[actor] = server.uptime
 		set = true
 	end
 	if (server.uptime - last_warn[actor]) > 10000 or set then
