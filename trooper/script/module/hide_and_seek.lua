@@ -570,9 +570,10 @@ function server.playercmd_fog(cn, enable)
     if enable > 0 then
         hide_and_seek_mode = 1
         server.msg(blue() .. "Fog enabled!")
-    end
+    else
         hide_and_seek_mode = 0
         server.msg(blue() .. "Fog disabled!")
+    end
 end
 
 -- vi: sts=4 sw=4 expandtab
