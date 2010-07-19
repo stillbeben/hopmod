@@ -137,11 +137,23 @@ server.event_handler("connect", function(cn)
     if hide_and_seek == false then return end
     server.spec(cn)
 
-    local str = "\f3PLEASE READ: "..orange().."This server is currently running the Hide and Seek mode, make sure you have the current map and understand how the mode works, before you are asking to be unspecced! thank you! [NOTE: THIS IS _NOT_ A OFFICIAL GAMEMODE]"
+    local str = "\f3PLEASE READ: "..orange().."This server is currently running the Hide and Seek mode, make sure you have the current map and understand how the mode works, before you are asking to be unspecced! thank you! [NOTE: THIS IS _NOT_ AN OFFICIAL GAMEMODE]"
 
-    server.sleep(3000, function() server.player_msg(cn, str) end)
-    server.sleep(5000, function() server.player_msg(cn, str) end)
-    server.sleep(7000, function() server.player_msg(cn, str) end)
+    server.sleep(5000, function() 
+        if server.valid_cn(cn) then
+            server.player_msg(cn, str) 
+        end
+    end)
+    server.sleep(30000, function()
+        if server.valid_cn(cn) then
+            server.player_msg(cn, str) 
+        end
+    end)
+    server.sleep(60000, function()
+        if server.valid_cn(cn) then
+            server.player_msg(cn, str) 
+        end
+    end)
 
 end)
 
@@ -252,7 +264,7 @@ server.event_handler("intermission", function(actor, client)
 
         for k, cn in ipairs(mapping) do 
             if server.valid_cn(cn) then
-                best_msg[k] = red(server.player_name(cn) .. "(" .. player_stats[cn] .. ")" )
+                table.insert(best_msg, red(server.player_name(cn) .. "(" .. player_stats[cn] .. ")"))
             end
         end  
 
