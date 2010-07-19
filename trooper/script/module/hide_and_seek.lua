@@ -312,19 +312,14 @@ end)
 
 server.event_handler("mapvote", function(cn, map, mode)
     if hide_and_seek == false then return end
-    if server.player_priv(cn) ~= "master" and server.player_priv(cn) ~= "admin" then
-        server.player_msg(cn, red() .. "Only Master/Admin can set a Map!")
+    if can_vote == false then
+        server.player_msg(cn, red() .. "Please wait until the seek player spawned for a new mapvote!")
         return -1
-    else    
-        if can_vote == false then
-            server.player_msg(cn, red() .. "Please wait until the seek player spawned for a new mapvote!")
-            return -1
-        else
-            --if mode ~= "teamplay" then
-            --  server.player_msg(cn, red() .. "Hide and Seek can only be played in Teamplay-Mode!")
-            --  return -1
-            --end
-        end
+    else
+        --if mode ~= "teamplay" then
+        --  server.player_msg(cn, red() .. "Hide and Seek can only be played in Teamplay-Mode!")
+        --  return -1
+        --end
     end
     last_mapvote = server.uptime
 end)
@@ -425,11 +420,15 @@ end)
 
 function server.playercmd_has(cn, enable)
     enable = tonumber(enable)
-    if server.player_priv(cn) ~= "master" and server.player_priv(cn) ~= "admin" then
-        server.player_msg(cn, red() .. "You need master/admin to enable/disable hide and seek!")
+    if not (server.player_priv_code(cn) >= server.PRIV_MASTER or server.player_status(cn) ~= "spectator") then
+        server.player_msg(cn, red("Permission denied."))
         return
     end
     if enable == 1 then
+        if hide_and_seek == true then
+            server.player_msg(cn, red("Hide & Seek already running."))
+            return
+        end
         server.broadcast_mapmodified = false
         hide_and_seek = true
         --server.HIDE_AND_SEEK = 1 -- enable this function if you want to get banned from masterserver, changes weapon ammo amount
@@ -438,19 +437,31 @@ function server.playercmd_has(cn, enable)
         server.msg(green() .. "Hide and Seek Mode enabled!")
         can_vote = true
     else
+        if hide_and_seek == false then
+            server.player_msg(cn, red("Hide & Seek not running."))
+            return
+        end
+        if not (server.player_priv_code(cn) >= server.PRIV_MASTER) then
+            server.player_msg(cn, red("Permission denied."))
+            return
+        end
         server.broadcast_mapmodified = true
         --server.HIDE_AND_SEEK = 0
         server.msg(blue() .. "Hide and Seek Mode disabled!")
         server.mastermode = 0
+        server.msg("mastermode is now open (0)")
         hide_and_seek = false
     end
 end
 
 function server.playercmd_add(cn, cnadd)
     if not hide_and_seek then return end
-    if server.player_priv(cn) ~= "master" and server.player_priv(cn) ~= "admin" then
-        server.player_msg(cn, red() .. "You need master/admin for this command!")
+    if not (server.player_priv_code(cn) >= server.PRIV_MASTER or server.player_status(cn) ~= "spectator") then
+        server.player_msg(cn, red("Permission denied."))
         return
+    end
+    if cnadd == nil then
+        cnadd = cn
     end
     cnadd = tonumber(cnadd)
     if server.valid_cn(cnadd) then
@@ -470,3 +481,4 @@ function server.playercmd_add(cn, cnadd)
 end
 
 -- vi: sts=4 sw=4 expandtab
+               
