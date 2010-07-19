@@ -323,6 +323,9 @@ end)
 
 function server.playercmd_has(cn, enable)
     enable = tonumber(enable)
+    if server.player_priv(cn) ~= "master" and server.player_priv(cn) ~= "admin" then
+	server.player_msg(cn, red() .. "You need master/admin to enable/disable hide and seek!")
+    end
     if enable == 1 then
 	server.broadcast_mapmodified = false
         hide_and_seek = true
