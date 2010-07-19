@@ -296,7 +296,7 @@ server.event_handler("suicide", function(cn)
         end
         caught_players[cn] = true
         if count == 0 then
-            server.changetime(0)
+            server.sleep(5, function() server.changetime(0) end)
         end
     end
 end)
