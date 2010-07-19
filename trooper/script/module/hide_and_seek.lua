@@ -268,7 +268,7 @@ server.event_handler("maploaded", function(cn)
         server.msg(red() .. "Maploading finished!")
 
 		for i, cn_ in ipairs(server.clients()) do
-			if server.player_status(cn_) ~= "spectator" and cn_ ~= hah_active_player then
+			if cn_ ~= hah_active_player then
 				server.no_spawn(cn_, 0)
 				server.spawn_player(cn_)
 			end
@@ -283,8 +283,8 @@ server.event_handler("maploaded", function(cn)
 				 relocate_vars(true)
 			end
         
-			for i, cn_ in ipairs(server.clients()) do
-				if server.player_status(cn_) ~= "spectator" and cn_ ~= hah_active_player then
+			for i, cn_ in ipairs(server.players()) do
+				if cn_ ~= hah_active_player then
 					server.spawn_player(cn_)
 				end
 			end
