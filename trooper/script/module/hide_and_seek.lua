@@ -1,6 +1,7 @@
 -- (c) 2010 by |DM|Thomas & |noVI:pure_ascii
 
 hide_and_seek = false
+local hide_and_seek_mode = 1
 local hah_active_player = -1
 local hah_seek_team = ""
 local hah_next_player = -1
@@ -17,6 +18,31 @@ local last_mapvote = server.uptime
 local player_stats = { }
 local player_waitlist = { }
 local last_warn = { }
+local is_intermission = false
+
+
+local function fog(cn) 
+    if not hide_and_seek_mode == 1 or cn >= 128 then return end
+    local enable = (server.player_team(cn) == hah_seek_team and server.player_status(cn) ~= "spectator")
+    if enable then
+        server.editvar(cn, "fog", 200)
+        server.editvar(cn, "fogcolour", 0)
+    else
+        server.editvar(cn, "fog", 999999)
+        server.editvar(cn, "fogcolour", 0)
+    end
+    server.sleep(1, function()
+        local i = 0
+        while (i < 10) do
+            server.player_msg(cn, "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+            i = i + 1
+        end
+    end)
+end
+
+local function warn(cn, msg) 
+    server.player_msg(cn, red() .. "WARNING: " .. white() .. msg)
+end
 
 local function reset_on_mapchange()
     hah_actor_frags = 0
@@ -30,6 +56,7 @@ local function reset_on_mapchange()
     can_vote = false
     player_stats = { }
     last_warn = { }
+    is_intermission = false
 end
 
 local function setteam(cn)
@@ -118,11 +145,14 @@ local function check_game(check_only)
         end
     end
 
-    if hide == 0 or seek == 0 then
+    if hide == 0 or seek == 0 and not is_intermission then
         if not check_only then
             server.msg(green() .. "No players left, game ended.")
         end
-        server.changetime(0)
+        for i, cn_ in ipairs(server.clients()) do
+            fog(cn_)   
+        end
+        server.sleep(5, function() server.changetime(0) end)
         return false
     end
 
@@ -133,6 +163,7 @@ server.event_handler("spectator", function(cn, val)
     if hide_and_seek == false then return end
     if val == 0 then
         setteam(cn)
+        fog(cn)
     else
         check_game()
     end
@@ -174,7 +205,7 @@ server.event_handler("damage", function(client, actor)
             set = true
         end
         if (server.uptime - last_warn[actor]) > 10000 or set then
-            server.player_msg(actor, red() .. "You can't frag your teammates in this mode!")
+            warn(actor,  "You can't frag your teammates in this mode!")
             last_warn[actor] = server.uptime
         end
         return -1
@@ -186,7 +217,7 @@ server.event_handler("damage", function(client, actor)
             set = true
         end
         if (server.uptime - last_warn[actor]) > 10000 or set then
-            server.player_msg(actor, red() .. "You are not allowed to attack the seek Player!!!")
+            warn(actor, "You are not allowed to attack the seek Player!!!")
             last_warn[actor] = server.uptime
         end 
         return -1       
@@ -224,7 +255,10 @@ server.event_handler("frag", function(client, actor)
 
             caught_players[client] = true
             if count == 0 then
-                server.changetime(0)
+                for i, cn_ in ipairs(server.clients()) do
+                    fog(cn_)   
+                end
+                server.sleep(5, function() server.changetime(0) end)
             end
         end
     end
@@ -249,6 +283,17 @@ server.event_handler("suicide", function(cn)
         server.msg(green() .. server.player_name(cn) .. " suicided and became a seeker - " .. count .. " Players left!")
         server_change_team_request[cn] = true 
         server.changeteam(cn, hah_seek_team)
+        fog(cn, true)
+        if not can_vote then -- became a seeker before main seeker spawned
+            server.sleep(5, function() warn(cn, "Spawn delayed for 10 seconds!") end)
+            server.no_spawn(cn, 1)
+            server.sleep(10000, function()
+                if server.valid_cn(cn) then
+                    server.no_spawn(cn, 0)
+                    server.spawn_player(cn)
+                end
+            end)
+        end
         caught_players[cn] = true
         if count == 0 then
             server.changetime(0)
@@ -260,6 +305,7 @@ server.event_handler("intermission", function(actor, client)
     if hide_and_seek == false then return end
 
     GAME_ACTIVE = false
+    is_intermission = true
 
     local mapping = {}        -- continuous table needed for sorting
     for k, v in pairs(player_stats) do table.insert(mapping, k) end
@@ -335,10 +381,14 @@ server.event_handler("mapvote", function(cn, map, mode)
         server.player_msg(cn, red() .. "Please wait until the seek player spawned for a new mapvote!")
         return -1
     else
-        --if mode ~= "teamplay" then
+        -- if mode ~= "teamplay" then
         --  server.player_msg(cn, red() .. "Hide and Seek can only be played in Teamplay-Mode!")
         --  return -1
         --end
+        if not string.find(mode, "team") then
+            server.player_msg(cn, red() .. "Hide & Seek can only be played in Team-Modes!")
+            return -1
+        end
     end
     last_mapvote = server.uptime
 end)
@@ -361,7 +411,7 @@ server.event_handler("maploaded", function(cn)
         end
     end
     
-    if canstart then
+    if canstart and not is_intermission then
         GAME_ACTIVE = true
        
         
@@ -374,9 +424,15 @@ server.event_handler("maploaded", function(cn)
                 server.no_spawn(cn_, 0)
                 server.spawn_player(cn_)
             end
-        end     
+        end  
 
-        server.sleep(0, function()
+        for i, cn_ in ipairs(server.clients()) do
+            fog(cn_)   
+        end
+
+        
+
+        server.sleep(10, function()
             if server.player_status(hah_active_player) == "spectator" then
                 relocate_vars(true)
             end
@@ -440,17 +496,18 @@ end)
 function server.playercmd_has(cn, enable)
     enable = tonumber(enable)
     if not (server.player_priv_code(cn) >= server.PRIV_MASTER or server.player_status(cn) ~= "spectator") then
-        server.player_msg(cn, red("Permission denied."))
+        warn(cn, "Permission denied.")
         return
     end
-    if enable == 1 then
+    if enable > 0 then
         if hide_and_seek == true then
             server.player_msg(cn, red("Hide & Seek already running."))
             return
         end
+        hide_and_seek_mode = enable
         server.broadcast_mapmodified = false
         hide_and_seek = true
-        server.hide_and_seek = 1 -- enable this function if you want to get banned from masterserver, changes weapon ammo amount
+        server.hide_and_seek = 1 -- changes weapon ammo amount
         server.mastermode = 2
         server.msg("mastermode is now locked (2)")
         server.msg(green() .. "Hide and Seek Mode enabled!")
@@ -470,13 +527,16 @@ function server.playercmd_has(cn, enable)
         server.mastermode = 0
         server.msg("mastermode is now open (0)")
         hide_and_seek = false
+        for i, cn_ in ipairs(server.clients()) do
+            server.no_spawn(cn_, 0)
+        end
     end
 end
 
 function server.playercmd_add(cn, cnadd)
     if not hide_and_seek then return end
     if not (server.player_priv_code(cn) >= server.PRIV_MASTER or server.player_status(cn) ~= "spectator") then
-        server.player_msg(cn, red("Permission denied."))
+        warn(cn, "Permission denied.")
         return
     end
     if cnadd == nil then
@@ -484,13 +544,16 @@ function server.playercmd_add(cn, cnadd)
     end
     cnadd = tonumber(cnadd)
     if server.valid_cn(cnadd) then
+        if player_waitlist[cnadd] ~= nil then
+            warn(cn, server.player_name(cnadd) .. " is already on the waitlist.")
+        end       
         if server.player_status(cnadd) ~= "spectator" then
-            server.player_msg(cn, red() .. server.player_name(cnadd) .. " isn't a spectator, you can't add this player.")
+            warn(cn, server.player_name(cnadd) .. " isn't a spectator, you can't add this player.")
             return
         else
             server.msg(red() .. server.player_name(cn) .. blue() .. " added " .. red() .. server.player_name(cnadd) ..  blue() .. " to the waitlist!")
-            server.player_msg(cnadd, blue () .. "You will be unspecced automaticly after this game by the server!")
-            server.player_msg(cnadd, blue () .. "You will be unspecced automaticly after this game by the server!")
+            server.player_msg(cnadd, blue() .. "You will be unspecced automaticly after this game by the server!")
+            server.player_msg(cnadd, blue() .. "You will be unspecced automaticly after this game by the server!")
 
             player_waitlist[cnadd] = true
         end

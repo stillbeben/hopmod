@@ -1165,4 +1165,11 @@ void spawn_player(int cn)// MOD
      sendspawn(ci, true);
 }
 
+void editvar(int cn, const char *var, int value) 
+{
+    clientinfo *ci = getinfo(cn);
+    if (!ci) return;
+    sendf(cn, 1, "ri5si", SV_CLIENT, cn, 100/*should be safe*/, SV_EDITVAR, ID_VAR, var, value);
+}
+
 #endif

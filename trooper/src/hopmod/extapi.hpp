@@ -61,6 +61,7 @@ namespace server
     void no_spawn(int, int);// MOD
     int is_valid_cn(int cn);// MOD
     void spawn_player(int);// MOD
+    void editvar(int cn, const char *var, int value);// MOD
     std::string player_displayname(int);
     const char * player_team(int);
     const char * player_privilege(int);
