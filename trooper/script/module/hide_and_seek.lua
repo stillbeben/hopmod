@@ -48,7 +48,7 @@ local function setteam(cn)
 end
 
 local function relocate_players()
-    if server.is_valid_cn(hah_active_player) then
+    if server.valid_cn(hah_active_player) then
         hah_seek_team = server.player_team(hah_active_player)
     end
     for i, cn in ipairs(server.players()) do
@@ -57,12 +57,12 @@ local function relocate_players()
 end
 
 local function relocate_vars(set_seek)
-    if server.is_valid_cn(hah_next_player) == 0 then
+    if not server.valid_cn(hah_next_player) then
            	if #server.players() == 0 then
 			server.msg("failed to get seek player.")
 			return
 		end
-		while server.is_valid_cn(hah_next_player) == 0 do
+		while not server.valid_cn(hah_next_player) do
 			for i, cn_ in ipairs(server.players()) do
 				if math.random(0, 1) == 1 then
 					hah_next_player = cn_
@@ -75,7 +75,7 @@ local function relocate_vars(set_seek)
 		
     end
 	
-	if seet_seek ~= nil then
+	if set_seek ~= nil then
 		if set_seek == true then
 			return 
 		end
@@ -276,15 +276,13 @@ server.event_handler("intermission", function(actor, client)
     end)
 end)
 
-ALREADY_DONE = false
-
 server.event_handler("mapchange", function()
 	if hide_and_seek == false then return end
     	server.msg(green() .. "waiting for clients to load the map...")
 	
 	for k, v in pairs(player_waitlist) do 
 		if player_waitlist[k] ~= nil then -- to be sure
-			if server.is_valid_cn(k) == 1 then
+			if server.valid_cn(k) then
 				server.unspec(k)
 				server.sleep(500, function() 
 					server.msg(blue() .. "Unspecced: " .. red() .. server.player_name(k))
@@ -468,7 +466,7 @@ function server.playercmd_add(cn, cnadd)
 	cnadd = tonumber(cnadd)
 	if server.valid_cn(cnadd) then
 		if server.player_status(cnadd) ~= "spectator" then
-			server.player_msg(cn, red() .. server.player_name(cnadd) .. " isnt a spectator, you cant add this player.")
+			server.player_msg(cn, red() .. server.player_name(cnadd) .. " isn't a spectator, you cant add this player.")
 			return
 		else
 			server.msg(red() .. server.player_name(cn) .. blue() .. " added " .. red() .. server.player_name(cnadd) ..  blue() .. " to the waitlist!")
@@ -477,5 +475,7 @@ function server.playercmd_add(cn, cnadd)
 
 			player_waitlist[cnadd] = true
 		end
+        else 
+	    server.player_msg(cn, red() .. cnadd .. " isn't a valid cn.")
 	end
 end
