@@ -451,9 +451,9 @@ function server.playercmd_add(cn, cnadd)
 			server.player_msg(cn, red() .. server.player_name(cnadd) .. " isnt a spectator, you cant add this player.")
 			return
 		else
-			server.msg(red() .. server.player_name(cn) .. blue() .. "added " .. red() .. server.player_name(cnadd) ..  blue() .. " to the waitlist!")
-			server.player_msg(cn, blue () .. "You will be unspecced automaticly after this game by the server!")
-			server.player_msg(cn, blue () .. "You will be unspecced automaticly after this game by the server!")
+			server.msg(red() .. server.player_name(cn) .. blue() .. " added " .. red() .. server.player_name(cnadd) ..  blue() .. " to the waitlist!")
+			server.player_msg(cnadd, blue () .. "You will be unspecced automaticly after this game by the server!")
+			server.player_msg(cnadd, blue () .. "You will be unspecced automaticly after this game by the server!")
 
 			player_waitlist[cnadd] = true
 		end
