@@ -57,6 +57,9 @@ void register_server_script_bindings(script::env & env)
     script::bind_var(server::kick_bannedip_group, "kick_bannedip_group", env);
     script::bind_freefunc(server::player_name, "player_name", env);
     script::bind_freefunc(server::player_rename, "player_rename", env);
+    script::bind_freefunc(server::no_spawn, "no_spawn", env);// MOD
+    script::bind_freefunc(server::spawn_player, "spawn_player", env);// MOD
+    script::bind_freefunc(server::is_valid_cn, "is_valid_cn", env);// MOD   
     script::bind_freefunc(server::player_displayname, "player_displayname", env);
     script::bind_freefunc(server::player_team, "player_team", env);
     script::bind_freefunc(server::player_privilege, "player_priv", env);

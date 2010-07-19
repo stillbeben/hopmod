@@ -543,7 +543,7 @@ int player_win(int cn)
 void player_slay(int cn)
 {
     clientinfo * ci = get_ci(cn);
-    if(ci->state.state != CS_ALIVE) return;
+    //if(ci->state.state != CS_ALIVE) return;
     ci->state.state = CS_DEAD;
     sendf(-1, 1, "ri2", SV_FORCEDEATH, cn);
 }
@@ -1142,6 +1142,27 @@ bool send_item(int type, int recipient)
     sendf(-1, 1, "ri3", SV_ITEMACC, ent_index, recipient);
     ci->state.pickup(sents[ent_index].type);
     return true;
+}
+
+void no_spawn(int cn, int canspawn)// MOD
+{
+    clientinfo *ci = getinfo(cn);
+    if (!ci) return;
+    ci->no_spawn = canspawn;
+}
+
+int is_valid_cn(int cn)// MOD
+{
+    clientinfo *ci = getinfo(cn);
+    if (!ci) return 0;
+    return 1;
+}
+
+void spawn_player(int cn)// MOD
+{
+     clientinfo *ci = getinfo(cn);
+     if (!ci) return;
+     sendspawn(ci, true);
 }
 
 #endif

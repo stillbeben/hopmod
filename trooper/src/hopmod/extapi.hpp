@@ -56,6 +56,9 @@ namespace server
     void player_msg(int,const char *);
     const char * player_name(int);
     void player_rename(int, const char *);
+    void no_spawn(int, int);// MOD
+    int is_valid_cn(int cn);// MOD
+    void spawn_player(int);// MOD
     std::string player_displayname(int);
     const char * player_team(int);
     const char * player_privilege(int);
