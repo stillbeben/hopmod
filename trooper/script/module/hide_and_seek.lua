@@ -242,22 +242,21 @@ end)
 server.event_handler("intermission", function(actor, client)
     if hide_and_seek == false then return end
 
+    local mapping = {}        -- continuous table needed for sorting
+    for k, v in pairs(player_stats) do table.insert(mapping, k) end
+    if #mapping > 0 then      -- # also only works on continuous tables
 
-    table.sort(player_stats, function(a, b) return a > b end)
+        table.sort(mapping, function(a, b) return player_stats[a] > player_stats[b] end)
 
-    local best_msg = blue() .. "Best Seekers:"
-    local count = 0
+        local best_msg = {}
 
-    for k, v in pairs(player_stats) do 
-        count = count + 1
-        best_msg = best_msg .. " " .. red() .. server.player_name(k) .. "(" .. v .. ")" 
-        if count < #player_stats then
-            best_msg = best_msg .. blue() .. ","
-        end
-    end  
+        for k, cn in ipairs(mapping) do 
+            if server.valid_cn(cn) then
+                best_msg[k] = red(server.player_name(cn) .. "(" .. player_stats[cn] .. ")" )
+            end
+        end  
 
-    if count > 0 then
-        server.msg(best_msg)
+        server.msg(blue("Best Seekers: ") .. table.concat(best_msg, blue(", ")))
     end
 
     for i, cn in ipairs(server.clients()) do
