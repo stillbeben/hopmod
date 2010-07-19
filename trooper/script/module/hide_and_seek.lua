@@ -391,6 +391,12 @@ end)
 server.event_handler("mapchange", function()
     if hide_and_seek == false then return end
         server.msg(green() .. "waiting for clients to load the map...")
+
+    if server.is_known_map(server.map) then
+        server.broadcast_mapmodified = true
+    else 
+        server.broadcast_mapmodified = false
+    end
     
     for k, v in pairs(player_waitlist) do 
         if player_waitlist[k] ~= nil then -- to be sure
@@ -556,7 +562,6 @@ function server.playercmd_has(cn, enable)
             server.player_msg(cn, red("Hide & Seek already running."))
             return
         end
-        server.broadcast_mapmodified = false
         hide_and_seek = true
         server.hide_and_seek = 1 -- changes weapon ammo amount
         server.mastermode = 2
