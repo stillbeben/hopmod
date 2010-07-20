@@ -26,6 +26,11 @@ global allowed_gamemodes [
     "insta ctf"
     "protect"
     "insta protect"
+    "hold"
+    "insta hold"
+    "efficiency ctf"
+    "efficiency protect"
+    "efficiency hold"
 ]
 
 global use_server_maprotation 1
