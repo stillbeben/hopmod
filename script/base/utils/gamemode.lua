@@ -57,3 +57,32 @@ do
     end
 end
 
+do
+    local modes = {
+        ["ffa"]                 = true,
+        ["coop edit"]           = true,
+        ["teamplay"]            = true,
+        ["instagib"]            = true,
+        ["instagib team"]       = true,
+        ["efficiency"]          = true,
+        ["efficiency team"]     = true,
+        ["tactics"]             = true,
+        ["tactics teams"]       = true,
+        ["capture"]             = true,
+        ["regen capture"]       = true,
+        ["ctf"]                 = true,
+        ["insta ctf"]           = true,
+        ["protect"]             = true,
+        ["insta protect"]       = true,
+        ["hold"]                = true,
+        ["insta hold"]          = true,
+        ["efficiency ctf"]      = true,
+        ["efficiency protect"]  = true,
+        ["efficiency hold"]     = true
+    }
+        
+    function server.valid_gamemode(input)
+        return modes[input] == true
+    end
+end
+
