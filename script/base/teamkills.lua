@@ -6,7 +6,7 @@ local function createDamageHandler()
     assert(damageEventHandler == nil)
     damageEventHandler = server.event_handler("damage", function(target, actor, damage, gun)
         if target ~= actor and server.player_team(actor) == server.player_team(target) then
-            if server.player_teamkills(actor) >= (server.player_real_frags(actor) * LIMIT) then
+            if server.player_teamkills(actor) >= (server.player_frags(actor) * LIMIT) then
                 return -1
             end
         end
