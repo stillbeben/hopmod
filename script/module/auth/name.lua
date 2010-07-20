@@ -10,7 +10,7 @@ failure_message["WRONG_KEY"] = "You authenticated with a key for another user."
 
 local function player_verified(cn)
 
-	local pvars = server.player_pvars(cn)
+	local pvars = server.player_vars(cn)
 
 	return pvars.name_verified and pvars.reserved_name and pvars.nameprotect_wanted_authname and pvars.reserved_name_expire and string.lower(pvars.reserved_name) == string.lower(pvars.nameprotect_wanted_authname) and tonumber(server.uptime) < pvars.reserved_name_expire
 
@@ -22,7 +22,7 @@ local function check_name(cn)
 	local name = server.player_name(cn)
 
 	if not player_verified(cn) then 
-		server.player_pvars(cn).nameprotect_wanted_authname = name
+		server.player_vars(cn).nameprotect_wanted_authname = name
 
 		auth.query_id(string.lower(name), domain, function(result)
 
@@ -33,7 +33,7 @@ local function check_name(cn)
 			if result == true then
 				auth.send_request(cn, domain, function(cn, user_id, domain, status)
 
-					local pvars = server.player_pvars(cn)
+					local pvars = server.player_vars(cn)
 
 					if status == auth.request_status.SUCCESS then
 						if string.lower(pvars.nameprotect_wanted_authname) == string.lower(user_id) then
@@ -88,16 +88,4 @@ local function check_name(cn)
 end
 
 server.event_handler("connect", check_name)
-
-server.event_handler("rename", function(cn)
-
-	local pvars = server.player_pvars(cn)
-	local vars = server.player_vars(cn)
-
-	pvars.name_verified = vars.name_verified
-	pvars.reserved_name = vars.reserved_name
-	pvars.reserved_name_expire = vars.reserved_name_expire
-
-	check_name(cn)
-end
 
