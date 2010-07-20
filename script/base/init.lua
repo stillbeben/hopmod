@@ -23,6 +23,7 @@ load_once("base/kickban")
 
 server.module("base/empty_server")
 server.module("base/maprotation/init.lua")
+server.module("base/normalize")
 server.module("base/modified_map")
 server.module("base/banner")
 server.module("base/mute")
