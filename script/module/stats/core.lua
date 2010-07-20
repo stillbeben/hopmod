@@ -69,6 +69,7 @@ function internal.setNewGame()
     }
     
     players = {}
+    
     -- players table will be populated by the addPlayer function which will be called on active event for each player
 end
 
@@ -325,6 +326,10 @@ function internal.loadEventHandlers()
     local finishedgame = server.event_handler("finishedgame", internal.commit)
     local mapchange = server.event_handler("mapchange", internal.setNewGame)
     
+    if server.mapname then
+        internal.setNextGame()
+    end
+    
     local _rename = server.event_handler("rename", function(cn)
         internal.addPlayer(cn)
     end)
@@ -393,3 +398,4 @@ end
 server.shutdown_stats = internal.shutdown
 
 return {initialize = internal.initialize, shutdown = internal.shutdown}
+
