@@ -2978,7 +2978,8 @@ namespace server
                 bool self = spectator == sender;
                 if(!ci->privilege && (!self || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED) || (ci->state.state == CS_SPECTATOR && !val && !ci->allow_self_unspec) || ci->check_flooding(ci->sv_spec_hit, "switching"))) break;
                 clientinfo *spinfo = (clientinfo *)getclientinfo(spectator); // no bots
-                if(val && spinfo && spinfo != ci && spinfo->privilege && ci->privilege < PRIV_ADMIN)
+                if(!spinfo) break;
+                if(val && spinfo != ci && spinfo->privilege && ci->privilege < PRIV_ADMIN)
                 {
                     ci->sendprivtext(RED "You cannot spec that player because they have an above normal privilege.");
                     break;

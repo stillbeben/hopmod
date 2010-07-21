@@ -57,7 +57,7 @@ static int call_error_handler(lua_State * L)
     error error_object(LUA_ERROR, boost::make_tuple(L));
     
     lua_Debug ar;
-    error_trace * parent;
+    error_trace * parent = NULL;
     
     if(lua_getstack(L, 1, &ar))
     {
