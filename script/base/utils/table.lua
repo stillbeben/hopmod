@@ -116,3 +116,24 @@ function table.wrapped_index(t, index, offset)
     return t[index % #t + (offset or 0)]
 end
 
+function table.has_fields(t, ...)
+    for index in ipairs(arg) do
+        if not t[arg[index]] then
+            print("not have " .. name)
+            return false
+        end        
+    end    
+    return true
+end
+
+function table.missing_fields(t, ...)
+    table.remove(arg)
+    local missing = {}
+    for index in ipairs(arg) do
+        if not t[arg[index]] then
+            missing[#missing + 1] = name
+        end        
+    end
+    return missing
+end
+

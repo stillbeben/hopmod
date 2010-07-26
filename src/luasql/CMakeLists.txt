@@ -1,10 +1,21 @@
-
 set(MYSQL_DIR "/usr/local/mysql" CACHE STRING "Directory of MySQL installation")
+
+set(LUASQL_MYSQL_LIBRARY luasql_mysql CACHE INTERNAL "luasql_mysql library")
 
 include_directories(${LUA_INCLUDE_DIR} ${MYSQL_DIR}/include)
 link_directories(${MYSQL_DIR}/lib)
 
-add_library(luasql_mysql SHARED src/luasql.c src/ls_mysql.c)
-target_link_libraries(luasql_mysql -lz -lmysqlclient lua)
+set(SOURCES
+    src/luasql.c
+    src/ls_mysql.c)
 
-install(TARGETS luasql_mysql LIBRARY DESTINATION ${INSTALL_LIBRARY_DESTINATION})
+add_library(${LUASQL_MYSQL_LIBRARY} SHARED src/luasql.c src/ls_mysql.c)
+target_link_libraries(${LUASQL_MYSQL_LIBRARY} -lz -lmysqlclient ${LUA_LIBRARY})
+
+install(TARGETS 
+            ${LUASQL_MYSQL_LIBRARY}
+        LIBRARY DESTINATION 
+            ${INSTALL_LIBRARY_DIR}
+        ARCHIVE DESTINATION
+            ${INSTALL_ARCHIVE_DIR})
+

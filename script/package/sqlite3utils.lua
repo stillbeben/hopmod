@@ -1,5 +1,3 @@
-
-require("sqlite3")
 require("io")
 require("string")
 
@@ -12,10 +10,18 @@ local type = type
 
 module("sqlite3utils")
 
-function createMissingTables(schemafilename, db)
+function first_row(statement)
+    statement:reset()
+    if statement:step() ~= sqlite3.ROW then
+        return nil
+    end
+    return statement:get_named_values()
+end
+
+function create_missing_tables(schemafilename, db, dbfilename)
     
-    schemafile,err = io.open(schemafilename)
-    if not schemafile then return nil,err end
+    local schemafile, err = io.open(schemafilename)
+    if not schemafile then return nil, err end
     
     local schema = sqlite3.open_memory()
     schema:exec("BEGIN TRANSACTION")
@@ -24,28 +30,33 @@ function createMissingTables(schemafilename, db)
     
     db:exec("BEGIN TRANSACTION")
     
-    for row in schema:rows("SELECT * FROM sqlite_master") do
+    for row in schema:rows("SELECT name, type, sql FROM sqlite_master") do
     
-        --FIXME find a way to reset prepared statement
+        local row_name = row[1]
+        local row_type = row[2]
+        local row_sql = row[3]
+    
         local search_for_table,perr = db:prepare("SELECT count(*) as count FROM sqlite_master WHERE name = ?")
-        search_for_table:bind(row.name)
+        search_for_table:bind_values(row_name)
         
-        local table_count,perr = search_for_table:first_row()
+        local table_count,perr = first_row(search_for_table)
         if table_count.count == 0 then
             
-            print(string.format("Updating database %s: adding %s %s.", db.filename, row.name, row.type))
+            print(string.format("Updating database %s: adding %s %s.", dbfilename, row_name, row_type))
             
-            db:exec(row.sql)
+            db:exec(row_sql)
             
         else -- table found, check columns
             
             local existing_cols = {}
             
-            for table_column in db:rows(string.format("PRAGMA table_info(%s)", row.name)) do
+            for table_column in db:nrows(string.format("PRAGMA table_info(%s)", row_name)) do
+                local table_column_name = table_column[2]
+                
                 existing_cols[table_column.name] = table_column
             end
             
-            for table_column in schema:rows(string.format("PRAGMA table_info(%s)", row.name)) do
+            for table_column in schema:nrows(string.format("PRAGMA table_info(%s)", row_name)) do
                 
                 if not existing_cols[table_column.name] then
                     
@@ -61,9 +72,9 @@ function createMissingTables(schemafilename, db)
                         end
                     end
                     
-                    print(string.format("Updating %s table in database %s: adding %s column.", row.name, db.filename, table_column.name))
+                    print(string.format("Updating %s table in database %s: adding %s column.", row_name, db.filename, table_column.name))
                     
-                    db:exec(string.format("ALTER TABLE %s ADD COLUMN %s", row.name, column_def))
+                    db:exec(string.format("ALTER TABLE %s ADD COLUMN %s", row_name, column_def))
                     
                 end
             end
@@ -73,8 +84,8 @@ function createMissingTables(schemafilename, db)
     db:exec("COMMIT TRANSACTION")
 end
 
--- BROKEN
-function reinstallTriggers(schemafilename, db)
+--[[
+function BROKEN_reinstall_triggers(schemafilename, db)
     
     schemafile,err = io.open(schemafilename)
     if not schemafile then return nil,err end
@@ -94,3 +105,4 @@ function reinstallTriggers(schemafilename, db)
     db:exec("COMMIT TRANSACTION")
     
 end
+]]

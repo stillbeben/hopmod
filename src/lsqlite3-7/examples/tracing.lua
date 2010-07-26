@@ -1,10 +1,9 @@
-require "path"
-require "sqlite3"
 
+require("lsqlite3")
 
 local db = sqlite3.open_memory()
 
-db:set_trace_handler( function(sql)
+db:trace( function(ud, sql)
   print("Sqlite Trace:", sql)
 end )
 

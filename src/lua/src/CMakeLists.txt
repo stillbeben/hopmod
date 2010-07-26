@@ -1,5 +1,13 @@
 
-set(SOURCES
+set(LUA_LIBRARY 
+    lua 
+    CACHE INTERNAL "lua library")
+
+set(LUA_INCLUDE_DIRS 
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    CACHE INTERNAL "lua include directory")
+    
+set(LUA_SOURCES
     lapi.c      
     lcode.c   
     ldo.c    
@@ -31,15 +39,21 @@ set(SOURCES
     lvm.c
 )
 
-add_library(lua SHARED ${SOURCES})
+add_library(${LUA_LIBRARY} SHARED ${LUA_SOURCES})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES Linux)
     add_definitions(-DLUA_USE_LINUX)
-    target_link_libraries(lua dl)
+    target_link_libraries(${LUA_LIBRARY} -ldl)
 endif(${CMAKE_SYSTEM_NAME} MATCHES Linux)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES BSD)
     add_definitions(-DLUA_USE_POSIX -DLUA_USE_DLOPEN)
 endif(${CMAKE_SYSTEM_NAME} MATCHES BSD)
 
-install(TARGETS lua LIBRARY DESTINATION ${INSTALL_LIBRARY_DESTINATION})
+install(TARGETS 
+            ${LUA_LIBRARY}
+        LIBRARY DESTINATION
+            ${INSTALL_LIBRARY_DIR}
+        ARCHIVE DESTINATION
+            ${INSTALL_ARCHIVE_DIR})
+

@@ -1,10 +1,7 @@
 
-require "path"
-require "sqlite3"
-
+require("lsqlite3")
 
 local db = assert( sqlite3:open_memory() )
-
 
 assert( db:exec[[
 
@@ -59,12 +56,16 @@ assert( db:exec[[
 
 local function customer_name(id)
   local stmt = db:prepare("SELECT name FROM customer WHERE id = ?")
-  return stmt:bind(id):first_cols()
+  stmt:bind_values(id)
+  stmt:step()
+  local r = stmt:get_uvalues()
+  stmt:finalize()
+  return r
 end
 
 
 local function all_invoices()
-  return db:rows("SELECT id, customer, title FROM invoice")
+  return db:nrows("SELECT id, customer, title FROM invoice")
 end
 
 
@@ -75,7 +76,9 @@ local function all_articles(invoice)
 
     -- Get the articles that are contained in the invoice table itself.
     stmt = db:prepare("SELECT article1, price1, article2, price2 FROM invoice WHERE id = ?")
-    row = stmt:bind(invoice):first_row() 
+    stmt:bind_values(invoice)
+    stmt:step()
+    row = stmt:get_named_values()
 
     -- Every Invoice has at least one article.
     coroutine.yield(row.article1, row.price1)
@@ -90,8 +93,9 @@ local function all_articles(invoice)
       -- more articles in the overflow table? We will see...
 
       stmt = db:prepare("SELECT article, price FROM invoice_overflow WHERE invoice = ? ORDER BY id")
-
-      for row in stmt:bind(invoice):rows() do
+      stmt:bind_values(invoice)
+      
+      for row in stmt:nrows() do
         coroutine.yield(row.article, row.price)
       end
     end

@@ -1,6 +1,4 @@
-cmake_minimum_required(VERSION 2.6)
-
-project(enet)
+project(enet C)
 
 option(USE_CRC32 "Whether to use CRC32 packet verification")
 
@@ -50,6 +48,14 @@ if(HAS_SOCKLEN_T)
     add_definitions(-DHAS_SOCKLEN_T)
 endif(HAS_SOCKLEN_T)
 
+set(ENET_LIBRARY 
+    enet 
+    CACHE INTERNAL "enet library")
+
+set(ENET_INCLUDE_DIRS 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    CACHE INTERNAL "enet public include directories")
+
 set(ENET_SOURCES
 	host.c
 	list.c
@@ -61,10 +67,14 @@ set(ENET_SOURCES
 	unix.c
 	win32.c)
 
-include_directories(include)
+include_directories(${ENET_INCLUDE_DIRS})
 
-add_library(enet STATIC ${ENET_SOURCES})
+add_library(${ENET_LIBRARY} STATIC ${ENET_SOURCES})
 
-install(TARGETS enet LIBRARY DESTINATION ${INSTALL_LIBRARY_DESTINATION} ARCHIVE DESTINATION ${INSTALL_LIBRARY_DESTINATION})
+install(TARGETS 
+            ${ENET_LIBARY} 
+       LIBRARY DESTINATION
+            ${INSTALL_LIBRARY_DIR} 
+       ARCHIVE DESTINATION
+            ${INSTALL_LIBRARY_DIR})
 
-set(ENET_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include PARENT_SCOPE)

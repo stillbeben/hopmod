@@ -173,7 +173,9 @@ local function load_module(name)
     
     local success, control = return_catch_error(runScript, filename)
     
-    if not success then control = nil end
+    if not success then
+        control = nil
+    end
     
     control = control or {}
     control.filename = filename

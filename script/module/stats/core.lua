@@ -32,11 +32,10 @@
     
     CONTRIBUTIONS
         * server.stats_overwrite_name_with_authname feature by Zombie
-    
-    TODO
 ]]
 
 require "geoip"
+dofile("./script/module/stats/test_backend.lua")
 
 local game = nil
 local players = nil
@@ -82,7 +81,6 @@ function internal.getPlayerTable(player_id)
     end
     
     players[player_id] = {
-        team_id     = 0,
         playing     = true, 
         timeplayed  = 0, 
         finished    = false, 
@@ -193,9 +191,7 @@ function internal.commit()
         for field in pairs(fields) do
             playerData[field] = playerData[field] - playerData["minus_" .. field]
         end
-        
-        server.player_msg(cn, "Frags: " .. playerData.frags)
-        
+
         playerData.finished = playerData.playing
         playerData.win = server.player_win(cn)
         playerData.rank = server.player_rank(cn)
@@ -259,15 +255,10 @@ function internal.commit()
         players = nil
         return
     end
-    
-    local query_backend = internal.backends.query
-    internal.backends.query = nil
-    
+
     for _, backend in pairs(internal.backends) do
         catch_error(backend.commit_game, game, players, teams)
     end
-    
-    internal.backends.query = query_backend
     
     game = nil
     players = nil
@@ -370,7 +361,7 @@ function internal.loadEventHandlers()
     
 end
 
-function internal.initialize(tableOfBackends, settings)
+function internal.initialize(commit_backends, query_backend, settings)
     
     internal.loadEventHandlers()
     
@@ -378,7 +369,8 @@ function internal.initialize(tableOfBackends, settings)
         internal.loadAuthHandlers(settings.auth_domain)
     end
     
-    internal.backends = tableOfBackends
+    internal.backends = commit_backends
+    internal.query_backend = query_backend
     internal.supported_gamemodes = settings.gamemodes
 end
 
@@ -392,10 +384,20 @@ function internal.shutdown()
     
     internal = nil
     server.shutdown_stats = nil
-    
 end
 
 server.shutdown_stats = internal.shutdown
+
+function server.stats_commit_test_games()
+    
+    local function committer(game, players, teams)    
+        for _, backend in pairs(internal.backends) do
+            catch_error(backend.commit_game, game, players, teams)
+        end
+    end
+    
+    commit_test_game_1(committer)
+end
 
 return {initialize = internal.initialize, shutdown = internal.shutdown}
 

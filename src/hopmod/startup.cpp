@@ -15,6 +15,12 @@ using namespace fungu;
 #include <signal.h>
 #include <iostream>
 
+#ifdef HAS_LSQLITE3
+extern "C"{
+int luaopen_lsqlite3(lua_State * L);
+}
+#endif
+
 namespace server{
 void enable_setmaster_autoapprove(bool);
 void crash_handler(int signal);
@@ -55,7 +61,7 @@ static void install_crash_handler()
     sigaction(SIGSEGV, &crash_action, NULL);
     sigaction(SIGSYS,  &crash_action, NULL);
 }
-
+    
 static void load_lua_modules()
 {
     lua_State * L = get_script_env().get_lua_state();
@@ -67,8 +73,12 @@ static void load_lua_modules()
     lua::module::open_geoip(L);
     lua::module::open_filesystem(L);
     lua::module::open_http_server(L);
-
+    
     lua_packlibopen(L);
+    
+    #ifdef HAS_LSQLITE3
+    luaopen_lsqlite3(L);
+    #endif
 }
 
 static int application_shutdown_utils_handler(int shutdownType)
@@ -78,8 +88,6 @@ static int application_shutdown_utils_handler(int shutdownType)
 
 /**
     Initializes everything in hopmod. This function is called at server startup and server reload.
-
-    Things to keep in mind:
 */
 void init_hopmod()
 {

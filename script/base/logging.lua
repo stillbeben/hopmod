@@ -4,6 +4,7 @@ require "geoip"
 local logfile = io.open("log/server.log","a+")
 
 function log(msg)
+    assert(msg ~= nil)
     logfile:write(os.date("[%a %d %b %X] ",os.time()))
     logfile:write(msg)
     logfile:write("\n")
@@ -13,6 +14,7 @@ end
 server.log = log
 
 function server.log_error(msg)
+    assert(msg ~= nil)
     io.stderr:write(os.date("[%a %d %b %X] ",os.time()))
     io.stderr:write(msg)
     io.stderr:write("\n")

@@ -1,7 +1,5 @@
 
-require "path"
-require "sqlite3"
-
+require("lsqlite3")
 
 local db = sqlite3.open_memory()
 
@@ -13,6 +11,6 @@ db:exec[[
   INSERT INTO test VALUES (NULL, 'Hello Sqlite3')
 ]]
 
-for row in db:rows("SELECT * FROM test") do
+for row in db:nrows("SELECT * FROM test") do
   print(row.id, row.content)
 end

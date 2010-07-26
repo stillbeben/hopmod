@@ -412,12 +412,12 @@ tc_mt = {
 
 function wrap(name, ...)
   if is_function(name) then
-    table.insert(arg, 1, name)
+    table.insert({...}, 1, name)
     name = "Anonymous Testcase"
   end
   
   local tc = TestCase(name)
-  for index, test in ipairs(arg) do
+  for index, test in ipairs({...}) do
     tc["Test #"..index] = test
   end
   return tc

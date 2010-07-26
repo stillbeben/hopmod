@@ -2,11 +2,10 @@ add_subdirectory(enet)
 add_subdirectory(lua)
 add_subdirectory(boost)
 add_subdirectory(fungu)
-add_subdirectory(lua-sqlite3)
+add_subdirectory(lsqlite3-7)
 add_subdirectory(authserver EXCLUDE_FROM_ALL)
 add_subdirectory(luasql EXCLUDE_FROM_ALL)
 
-include(PCHSupport)
 include(CheckLibraryExists)
 
 check_library_exists(GeoIP GeoIP_open "" GEOIP_EXISTS)
@@ -18,20 +17,24 @@ if(NOT ${GEOIP_EXISTS})
     message(FATAL_ERROR "missing required library: GeoIP")
 endif(NOT ${GEOIP_EXISTS})
 
+if(NOT ${ZLIB_EXISTS})
+    message(FATAL_ERROR "missing required library: ZLIB")
+endif(NOT ${ZLIB_EXISTS})
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/shared
     ${CMAKE_CURRENT_SOURCE_DIR}/fpsgame
     ${CMAKE_CURRENT_SOURCE_DIR}/hopmod
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${ENET_INCLUDE_DIR}
-    ${LUA_INCLUDE_DIR}
-    ${BOOST_INCLUDE_DIR}
-    ${FUNGU_INCLUDE_DIR})
+    ${ENET_INCLUDE_DIRS}
+    ${LUA_INCLUDE_DIRS}
+    ${BOOST_INCLUDE_DIRS}
+    ${FUNGU_INCLUDE_DIRS})
 
-add_definitions(-DSTANDALONE -DFUNGU_WITH_LUA -DHOPMOD_GAMESERVER_EVENTS)
+add_definitions(-DSTANDALONE -DFUNGU_WITH_LUA -DHOPMOD_GAMESERVER_EVENTS ${LSQLITE3_DEFINITIONS})
 
-set(SCRIPTING_LIBRARIES lua fungu_script)
+set(SCRIPTING_LIBRARIES ${LUA_LIBRARY} ${FUNGU_STRING_LIBRARY} ${FUNGU_SCRIPT_LIBRARY})
 
 set(SAUERTOOLS_SOURCES
     shared/tools.cpp
@@ -55,15 +58,15 @@ set(LUA_MODULES_SOURCES
     hopmod/lua/packlib.c)
 
 add_library(lua_modules STATIC ${LUA_MODULES_SOURCES})
-target_link_libraries(lua_modules -lGeoIP -pthread sauertools ${SCRIPTING_LIBRARIES})
+target_link_libraries(lua_modules -lGeoIP sauertools ${SCRIPTING_LIBRARIES})
 
 add_library(serverscripting STATIC hopmod/scripting.cpp hopmod/signals.cpp)
-target_link_libraries(serverscripting lua_modules boost_signals boost_system ${SCRIPTING_LIBRARIES})
+target_link_libraries(serverscripting lua_modules ${BOOST_SIGNALS_LIBRARY} ${BOOST_SYSTEM_LIBRARY} ${SCRIPTING_LIBRARIES})
 
 add_library(scriptpipe STATIC hopmod/script_pipe.cpp)
 target_link_libraries(scriptpipe serverscripting)
 
-SET(SAUER_SERVER_SOURCES
+SET(GAME_SERVER_SOURCES
     engine/server.cpp
     fpsgame/server.cpp
     hopmod/startup.cpp
@@ -78,19 +81,28 @@ SET(SAUER_SERVER_SOURCES
     hopmod/httpserver/filesystem_resource.cpp
     hopmod/httpserver/lua_module.cpp)
 
-add_executable(sauer_server ${SAUER_SERVER_SOURCES})
-target_link_libraries(sauer_server sauertools serverscripting scriptpipe enet fungu_http -lz -lrt)
+add_definitions(${LSQLITE3_DEFINITIONS})
+add_executable(sauer_server ${GAME_SERVER_SOURCES})
+target_link_libraries(sauer_server sauertools serverscripting lua_modules ${LSQLITE3_LIBRARY} scriptpipe ${ENET_LIBRARY} ${FUNGU_HTTP_LIBRARY} -lz -lrt)
 
 add_executable(keygen hopmod/keygen.cpp)
-target_link_libraries(keygen sauertools -lz)
+target_link_libraries(keygen sauertools)
 
 add_executable(luapp hopmod/luapp.cpp)
-target_link_libraries(luapp lua boost_system lua_modules -lrt)
+target_link_libraries(luapp ${LUA_LIBRARY} ${BOOST_SYSTEM_LIBRARY} lua_modules -lrt)
 
-install(TARGETS sauer_server sauertools lua_modules serverscripting scriptpipe
-    RUNTIME DESTINATION ${INSTALL_RUNTIME_DESTINATION} 
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DESTINATION} 
-    ARCHIVE DESTINATION ${INSTALL_ARCHIVE_DESTINATION})
+install(TARGETS 
+            sauer_server
+            sauertools
+            lua_modules
+            serverscripting
+            scriptpipe
+        RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR} 
+        LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} 
+        ARCHIVE DESTINATION ${INSTALL_ARCHIVE_DIR})
 
-install(TARGETS keygen luapp
-    RUNTIME DESTINATION ${INSTALL_RUNTIME_DESTINATION}/utils)
+install(TARGETS 
+            keygen
+            luapp
+        RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}/utils)
+

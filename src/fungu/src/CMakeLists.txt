@@ -1,7 +1,15 @@
+include_directories(${FUNGU_INCLUDE_DIRS} ${BOOST_INCLUDE_DIRS})
+
+set(FUNGU_STRING_LIBRARY fungu_string 
+    CACHE INTERNAL "fungu_string library")
+
+add_library(${FUNGU_STRING_LIBRARY} STATIC string.cpp)
+
 add_subdirectory(script)
 add_subdirectory(net)
 
-include_directories(../include ${BOOST_INCLUDE_DIR})
-add_library(fungu_string STATIC string.cpp)
+install(TARGETS
+            ${FUNGU_STRING_LIBRARY}
+        ARCHIVE DESTINATION
+            ${INSTALL_ARCHIVE_DIR})
 
-install(TARGETS fungu_string ARCHIVE DESTINATION ${INSTALL_ARCHIVE_DESTINATION})
