@@ -547,7 +547,7 @@ bool player_changeteam(int cn,const char * newteam)
     signal_reteam(ci->clientnum, ci->team, newteam);
     
     copystring(ci->team, newteam, MAXTEAMLEN+1);
-    sendf(-1, 1, "riis", N_SETTEAM, cn, newteam);
+    sendf(-1, 1, "riisi", N_SETTEAM, cn, newteam, 3);
     
     if(ci->state.aitype == AI_NONE) aiman::dorefresh = true;
     
@@ -1182,6 +1182,34 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     }
     cleartimedevents(cq);
     sendspawn(cq);
+}
+
+void no_spawn(int cn, int canspawn)// MOD
+{
+    clientinfo *ci = getinfo(cn);
+    if (!ci) return;
+    ci->no_spawn = canspawn;
+}
+
+int is_valid_cn(int cn)// MOD
+{
+    clientinfo *ci = getinfo(cn);
+    if (!ci) return 0;
+    return 1;
+}
+
+void spawn_player(int cn)// MOD
+{
+     clientinfo *ci = getinfo(cn);
+     if (!ci) return;
+     sendspawn(ci, true);
+}
+
+void editvar(int cn, const char *var, int value) 
+{
+    clientinfo *ci = getinfo(cn);
+    if (!ci) return;
+    sendf(cn, 1, "ri5si", N_CLIENT, cn, 100/*should be safe*/, N_EDITVAR, ID_VAR, var, value);
 }
 
 #endif

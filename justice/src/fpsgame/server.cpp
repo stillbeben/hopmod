@@ -271,6 +271,7 @@ namespace server
         int ping, lastpingupdate, lastposupdate, lag, aireinit;
         string clientmap;
         int mapcrc;
+	int no_spawn;// MOD
         bool warned, gameclip;
         ENetPacket *clipboard;
         int lastclipboard, needclipboard;
@@ -509,6 +510,8 @@ namespace server
     string adminpass = "";
     string slotpass = "";
     stream *mapdata = NULL;
+    
+    int hide_and_seek = 0; //MOD
     
     vector<uint> allowedips;
     
@@ -1368,8 +1371,10 @@ namespace server
         gs.lifesequence = (gs.lifesequence + 1)&0x7F;
     }
 
-    void sendspawn(clientinfo *ci)
+    void sendspawn(clientinfo *ci, bool skip_ev=false)
     {
+        if (ci->no_spawn == 1) return; //MOD
+      
         gamestate &gs = ci->state;
         spawnstate(ci);
         sendf(ci->ownernum, 1, "rii7v", N_SPAWNSTATE, ci->clientnum, gs.lifesequence,
@@ -1578,6 +1583,8 @@ namespace server
         else if(m_ctf) smode = &ctfmode;
         else smode = NULL;
         if(smode) smode->reset(false);
+	
+	signal_mapchange(smapname,modename(gamemode,"unknown"));// MOD
 
         if(m_timed && smapname[0]) sendf(-1, 1, "ri2", N_TIMEUP, gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
         loopv(clients)
@@ -1599,8 +1606,6 @@ namespace server
             demonextmatch = false;
             setupdemorecord();
         }
-        
-        signal_mapchange(smapname,modename(gamemode,"unknown"));
     }
 
     struct votecount
@@ -2806,7 +2811,7 @@ namespace server
                     
                     if(!cancel)
                     {
-                        if(ci->state.state==CS_ALIVE) suicide(ci);
+                        //if(ci->state.state==CS_ALIVE) suicide(ci); //MOD
                         string oldteam;
                         copystring(oldteam, ci->team);
                         copystring(ci->team, text);

@@ -31,6 +31,8 @@ namespace server
     extern int gamelimit;
     extern bool gamepaused;
     
+    extern int hide_and_seek; //MOD
+    
     extern int mastermode;
     extern int mastermode_owner;
     extern string next_gamemode;
@@ -55,6 +57,10 @@ namespace server
     void player_msg(int,const char *);
     const char * player_name(int);
     void player_rename(int, const char *);
+    void no_spawn(int, int);// MOD
+    int is_valid_cn(int cn);// MOD
+    void spawn_player(int);// MOD
+    void editvar(int cn, const char *var, int value);// MOD
     std::string player_displayname(int);
     const char * player_team(int);
     const char * player_privilege(int);

@@ -126,6 +126,10 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc(server::disconnect, "disconnect", env);
     script::bind_freefunc(server::player_name, "player_name", env);
     script::bind_freefunc(server::player_rename, "player_rename", env);
+    script::bind_freefunc(server::no_spawn, "no_spawn", env);// MOD
+    script::bind_freefunc(server::spawn_player, "spawn_player", env);// MOD
+    script::bind_freefunc(server::is_valid_cn, "is_valid_cn", env);// MOD   
+    script::bind_freefunc(server::editvar, "editvar", env);// MOD   
     script::bind_freefunc(server::player_displayname, "player_displayname", env);
     script::bind_freefunc(server::player_team, "player_team", env);
     script::bind_freefunc(server::player_privilege, "player_priv", env);
@@ -320,6 +324,8 @@ void register_server_script_bindings(script::env & env)
     hopmod::bind_var(server::sv_spec_hit_length, "flood_protect_spectator", env);
     
     hopmod::bind_var(server::broadcast_mapmodified, "broadcast_mapmodified", env);
+    
+    script::bind_var(server::hide_and_seek, "hide_and_seek", env); //MOD
     
     script::bind_ro_var(tx_bytes, "tx_bytes", env);
     script::bind_ro_var(rx_bytes, "rx_bytes", env);

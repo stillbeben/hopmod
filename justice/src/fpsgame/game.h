@@ -346,6 +346,10 @@ static const struct guninfo { short sound, attackdelay, damage, projspeed, part,
 
 #include "ai.h"
 
+namespace server {
+  extern int hide_and_seek; //MOD
+}
+
 // inherited by fpsent and server clients
 struct fpsstate
 {
@@ -452,23 +456,20 @@ struct fpsstate
         }
         else if(m_tactics)
         {
-            armourtype = A_GREEN;
-            armour = 100;
-            ammo[GUN_PISTOL] = 40;
-            int spawngun1 = rnd(5)+1, spawngun2;
-            gunselect = spawngun1;
-            baseammo(spawngun1, m_noitems ? 2 : 1);
-            do spawngun2 = rnd(5)+1; while(spawngun1==spawngun2);
-            baseammo(spawngun2, m_noitems ? 2 : 1);
-            if(m_noitems) ammo[GUN_GL] += 1;
+	    
         }
         else if(m_efficiency)
         {
-            armourtype = A_GREEN;
+	    armourtype = A_GREEN;
             armour = 100;
-            loopi(5) baseammo(i+1);
-            gunselect = GUN_CG;
-            ammo[GUN_CG] /= 2;
+            if (server::hide_and_seek) { //MOD
+                loopi(5) baseammo(i+1, 10);
+                gunselect = GUN_GL;
+            } else {
+                loopi(5) baseammo(i+1);
+                gunselect = GUN_CG;
+                ammo[GUN_CG] /= 2;
+            }
         }
         else if(m_ctf)
         {
