@@ -21,7 +21,6 @@ load_once("base/logging")
 load_once("base/server_message")
 load_once("base/kickban")
 
-server.module("base/empty_server")
 server.module("base/maprotation/init.lua")
 server.module("base/normalize")
 server.module("base/modified_map")

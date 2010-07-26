@@ -22,7 +22,7 @@ server.event_handler("setmaster", function(cn, hash, set)
     local no_hash = hash == ""
     local no_master = server.master == -1
     
-    if no_hash and no_master and server.allow_setmaster then
+    if no_hash and no_master and server.allow_setmaster == 1 then
         server.setmaster(cn)
         return -1
     end
