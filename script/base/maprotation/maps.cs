@@ -7,6 +7,7 @@ global ffa_maps [
     aqueducts konkuri-to moonlite darkdeath castle_trap orion katrez_d thor 
     frostbyte ogrosupply ksauer1 kmap5 thetowers guacamole tejen hades orbe
     paradigm wdcd stemple corruption lostinspace shadowed metl4 ruby deathtek
+    suburb
 ]
 
 global small_ffa_maps [
@@ -20,7 +21,7 @@ global big_ffa_maps [
     wake5 park refuge curvedm kalking1 fragplaza pgdm neondevastation memento 
     neonpanic shindou DM_BS1 shinmei1 osiris injustice akaritori aqueducts
     konkuri-to moonlite darkdeath castle_trap orion thetowers hades paradigm 
-    wdcd stemple corruption lostinspace shadowed ruby deathtek orbe
+    wdcd stemple corruption lostinspace shadowed ruby deathtek orbe suburb
 ]
 
 global instagib_maps [
@@ -52,7 +53,7 @@ global capture_maps [
     paradigm corruption asteroids ogrosupply reissen akroseum duomo frostbyte
     c_egypt caribbean dust2 campo killcore3 damnation arabic cwcastle mercury
     core_transfer forge tortuga core_refuge infamy tejen capture_night river_c
-    serenity
+    serenity suburb xenon
 ]
 
 global small_capture_maps [
@@ -66,14 +67,14 @@ global big_capture_maps [
     ph-capture hades fc4 relic abbey venice paradigm corruption ogrosupply
     reissen akroseum duomo c_egypt caribbean dust2 campo killcore3 damnation
     arabic cwcastle mercury core_transfer forge tortuga core_refuge infamy tejen
-    capture_night river_c serenity
+    capture_night river_c serenity suburb xenon
 ]
 
 global ctf_maps [
     hallo flagstone tempest capture_night reissen tejen shipwreck authentic
     urban_c bt_falls l_ctf face-capture valhalla mbt1 mach2 dust2 berlin_wall
     mercury akroseum europium redemption damnation forge campo nitro core_refuge
-    wdcd desecration sacrifice core_transfer recovery infamy tortuga abbey
+    wdcd desecration sacrifice core_transfer recovery infamy tortuga abbey xenon
 ]
 
 global small_ctf_maps [
@@ -85,7 +86,7 @@ global big_ctf_maps [
     hallo flagstone tempest capture_night reissen tejen shipwreck authentic
     urban_c bt_falls l_ctf face-capture valhalla mbt1 mach2 dust2 berlin_wall
     mercury akroseum europium redemption damnation forge campo nitro core_refuge
-    wdcd desecration sacrifice core_transfer recovery infamy tortuga abbey
+    wdcd desecration sacrifice core_transfer recovery infamy tortuga abbey xenon
 ]
 
 global "coop edit_maps" &ffa_maps
