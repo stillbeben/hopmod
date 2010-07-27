@@ -60,6 +60,6 @@ server.event_handler("connecting", function(cn, host, name, hash)
 end)
 
 server.event_handler("setmaster", function(cn, hash, set)
-    setmaster(cn, hash, hash)
+    setmaster(cn, hash, 1)
 end)
 
