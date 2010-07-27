@@ -2209,11 +2209,7 @@ namespace server
             return DISC_IPBAN;
         }
         
-        bool is_admin = adminpass[0] && checkpassword(ci, adminpass, pwd);
-        if(is_admin)
-        {
-            ci->privilege = PRIV_ADMIN;
-        }
+        bool is_admin = ci->privilege == PRIV_ADMIN;
         
         bool is_reserved = slotpass[0] && checkpassword(ci, slotpass, pwd);
         
