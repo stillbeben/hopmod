@@ -265,9 +265,6 @@ namespace server
         vector<uchar> position, messages;
         int posoff, poslen, msgoff, msglen;
         vector<clientinfo *> bots;
-        uint authreq;
-        string authname;
-        string authdomain;
         int ping, lastpingupdate, lastposupdate, lag, aireinit;
         string clientmap;
         int mapcrc;
@@ -390,7 +387,6 @@ namespace server
             playermodel = -1;
             privilege = PRIV_NONE;
             connected = local = false;
-            authreq = 0;
             position.setsize(0);
             messages.setsize(0);
             ping = 0;
@@ -1080,83 +1076,14 @@ namespace server
         if(ci->state.state==CS_SPECTATOR && !ci->local) aiman::removeai(ci);
     }
 
-    void setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL)
+    void setmaster(clientinfo *ci, bool request_claim_master, const char * hashed_password = "", const char *authname = NULL)
     {
+        assert(!authname);
         update_mastermask();
-        
-        if (!authname && signal_setmaster(ci->clientnum, pass/*hash*/, val) == -1) return;  
-        
-        //FIXME this should really be an assertion check
-        if(authname && !val) return;
-        
-        int old_privilege = ci->privilege;
-        
-        const char *name = "";
-        if(val)
-        {
-            bool haspass = adminpass[0] && checkpassword(ci, adminpass, pass);
-            if(ci->privilege)
-            {
-                //there is no server password or client is already admin and
-                //has password or client is master and has incorrect password
-                if(!adminpass[0] || haspass==(ci->privilege==PRIV_ADMIN)) return;
-            }
-            else if(ci->state.state==CS_SPECTATOR && !haspass && !authname && !ci->local) return;
-            if(currentmaster != -1)
-            {
-                clientinfo * existing = getinfo(currentmaster);
-                if(haspass) existing->privilege = PRIV_NONE;
-                else if(existing->privilege >= PRIV_ADMIN) return;
-            }
-            if(haspass) ci->privilege = PRIV_ADMIN;
-            else if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege && !ci->local)
-            {
-                sendf(ci->clientnum, 1, "ris", N_SERVMSG, "This server requires you to use the \"/auth\" command to gain master.");
-                return;
-            }
-            else
-            {
-                if(authname && currentmaster != -1) getinfo(currentmaster)->privilege = PRIV_NONE;
-                ci->privilege = PRIV_MASTER;
-            }
-            name = privname(ci->privilege);
-        }
-        else
-        {
-            if(!ci->privilege) return;
-            name = privname(ci->privilege);
-            revokemaster(ci);
-            if(mastermode_owner == ci->clientnum)
-            {
-                mastermode = MM_OPEN;
-                mastermode_owner = -1;
-                mastermode_mtime = totalmillis;
-                allowedips.shrink(0);
-            }
-        }
-        //mastermode = MM_OPEN;
-        //allowedips.setsize(0);
-        string msg;
-        if(val && authname) formatstring(msg)("%s claimed %s as '\fs\f5%s\fr'", colorname(ci), name, authname);
-        else formatstring(msg)("%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
-        sendservmsg(msg);
-        
-        if(gamepaused && currentmaster == pausegame_owner) pausegame(false);
-        
-        currentmaster = val ? ci->clientnum : -1;
-        masterupdate = true;
-        #if 0
-        if(gamepaused)
-        {
-            int admins = 0;
-            loopv(clients) if(clients[i]->privilege >= PRIV_ADMIN || clients[i]->local) admins++;
-            if(!admins) pausegame(false);
-        }
-        #endif
-        
-        signal_privilege(ci->clientnum, old_privilege, ci->privilege);
+        signal_setmaster(ci->clientnum, hashed_password, request_claim_master);
+        return;
     }
-
+    
     savedscore &findscore(clientinfo *ci, bool insert)
     {
         uint ip = getclientip(ci->clientnum);
@@ -1721,7 +1648,11 @@ namespace server
 
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0))
     {
-        if(signal_damage(target->clientnum, actor->clientnum, damage, gun) == -1) return;
+        if(signal_damage(target->clientnum, actor->clientnum, damage, gun) == -1){
+            std::cerr<<"Blocking damage"<<std::endl;
+            return;
+        }
+        
         gamestate &ts = target->state;
         ts.dodamage(damage);
         actor->state.damage += damage;
@@ -2039,64 +1970,6 @@ namespace server
         }
     };
 
-    void checkmaps(int req = -1)
-    {
-        return; // map checking is now handled by a hopmod module
-        if(m_edit || !smapname[0]) return;
-        vector<crcinfo> crcs;
-        int total = 0, unsent = 0, invalid = 0;
-        loopv(clients)
-        {
-            clientinfo *ci = clients[i];
-            if(ci->state.state==CS_SPECTATOR || ci->state.aitype != AI_NONE) continue;
-            total++;
-            if(!ci->clientmap[0])
-            {
-                if(ci->mapcrc < 0) invalid++;
-                else if(!ci->mapcrc) unsent++;
-            }
-            else
-            {
-                crcinfo *match = NULL;
-                loopvj(crcs) if(crcs[j].crc == ci->mapcrc) { match = &crcs[j]; break; }
-                if(!match) crcs.add(crcinfo(ci->mapcrc, 1)); 
-                else match->matches++;
-            }
-        }
-        if(total - unsent < min(total, 4)) return;
-        crcs.sort(crcinfo::compare);
-        string msg;
-        loopv(clients) 
-        {
-            clientinfo *ci = clients[i];
-            if(ci->state.state==CS_SPECTATOR || ci->state.aitype != AI_NONE || ci->clientmap[0] || ci->mapcrc >= 0 || (req < 0 && ci->warned)) continue; 
-            if(broadcast_mapmodified)
-            {
-                formatstring(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
-                sendf(req, 1, "ris", N_SERVMSG, msg);
-                if(req < 0) ci->warned = true;
-            }
-            signal_mapcrcfail(ci->clientnum);
-        }
-        if(crcs.empty() || crcs.length() < 2) return;
-        loopv(crcs)
-        {
-            crcinfo &info = crcs[i];
-            if(i || info.matches <= crcs[i+1].matches) loopvj(clients)
-            {
-                clientinfo *ci = clients[j];
-                if(ci->state.state==CS_SPECTATOR || ci->state.aitype != AI_NONE || !ci->clientmap[0] || ci->mapcrc != info.crc || (req < 0 && ci->warned)) continue;
-                if(broadcast_mapmodified)
-                {
-                    formatstring(msg)("%s has modified map \"%s\"", colorname(ci), smapname);
-                    sendf(req, 1, "ris", N_SERVMSG, msg);
-                    if(req < 0) ci->warned = true;
-                }
-                signal_mapcrcfail(ci->clientnum);
-            }
-        }
-    }
-
     void sendservinfo(clientinfo *ci)
     {
         sendf(ci->clientnum, 1, "ri5s", N_SERVINFO, ci->clientnum, PROTOCOL_VERSION, ci->sessionid, serverpass[0] ? 1 : 0, serverdesc);
@@ -2248,67 +2121,19 @@ namespace server
         clientinfo *ci = getinfo(n);
         return ci && ci->connected;
     }
-
-    clientinfo *findauth(uint id)
-    {
-        loopv(clients) if(clients[i]->authreq == id) return clients[i];
-        return NULL;
-    }
-
-    void authfailed(uint id)
-    {
-        clientinfo *ci = findauth(id);
-        if(!ci) return;
-        ci->authreq = 0;
-    }
-
-    void authsucceeded(uint id)
-    {
-        clientinfo *ci = findauth(id);
-        if(!ci) return;
-        ci->authreq = 0;
-    }
-
-    void authchallenged(uint id, const char *val)
-    {
-        clientinfo *ci = findauth(id);
-        if(!ci) return;
-        sendf(ci->clientnum, 1, "risis", N_AUTHCHAL, (ci->authdomain ? ci->authdomain : ""), id, val);
-    }
-
-    uint nextauthreq = 0;
-
+    
     void tryauth(clientinfo *ci, const char * domain, const char * user)
     {
-        if(!nextauthreq) nextauthreq = 1;
-        ci->authreq = nextauthreq++;
-        filtertext(ci->authname, user, false, 100);
-        filtertext(ci->authdomain, domain, false, 100);
-        copystring(ci->authdomain, domain);
-        
         signal_authreq(ci->clientnum, user, domain);
     }
 
     void answerchallenge(clientinfo *ci, uint id, char *val)
     {
-        //if(ci->authreq != id) return;
         for(char *s = val; *s; s++)
         {
             if(!isxdigit(*s)) { *s = '\0'; break; }
         }
         signal_authrep(ci->clientnum, id, val);
-    }
-
-    void processmasterinput(const char *cmd, int cmdlen, const char *args)
-    {
-        uint id;
-        string val;
-        if(sscanf(cmd, "failauth %u", &id) == 1)
-            authfailed(id);
-        else if(sscanf(cmd, "succauth %u", &id) == 1)
-            authsucceeded(id);
-        else if(sscanf(cmd, "chalauth %u %s", &id, val) == 2)
-            authchallenged(id, val);
     }
 
     void receivefile(int sender, uchar *data, int len)
@@ -2346,7 +2171,6 @@ namespace server
         
         if(spinfo->state.state!=CS_SPECTATOR && val)
         {
-            //if(spinfo->state.state==CS_ALIVE) suicide(spinfo);
             if(smode) smode->leavegame(spinfo);
             spinfo->state.state = CS_SPECTATOR;
             spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
@@ -2358,7 +2182,6 @@ namespace server
             spinfo->state.respawn();
             spinfo->state.lasttimeplayed = lastmillis;
             aiman::addclient(spinfo);
-            if(spinfo->clientmap[0] || spinfo->mapcrc) checkmaps();
         }
         sendf(-1, 1, "ri3", N_SPECTATOR, spinfo->clientnum, val);
         
@@ -2585,12 +2408,11 @@ namespace server
                 copystring(ci->clientmap, text);
                 ci->mapcrc = text[0] ? crc : 1;
                 signal_mapcrc(ci->clientnum, text, crc);
-                //checkmaps();
                 break;
             }
 
             case N_CHECKMAPS:
-                checkmaps(sender);
+                //TODO reply with a failure message
                 break;
 
             case N_TRYSPAWN:

@@ -173,7 +173,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_freefunc((std::vector<float>(*)(int))server::player_pos, "player_pos", env);
     register_lua_function((int (*)(lua_State *))&server::player_pos, "player_pos");
     script::bind_freefunc(server::send_auth_request, "send_auth_request", env);
-    script::bind_freefunc(server::sendauthchallenge, "send_auth_challenge_to_client", env);
+    script::bind_freefunc(server::send_auth_challenge, "send_auth_challenge_to_client", env);
     //script::bind_freefunc(server::send_item, "send_item", env);
     script::bind_freefunc(server::player_freeze, "player_freeze", env);
     script::bind_freefunc(server::player_unfreeze, "player_unfreeze", env);
@@ -262,32 +262,6 @@ void register_server_script_bindings(script::env & env)
     hopmod::bind_var(server::allow_mm_locked, "allow_mastermode_locked", env);
     hopmod::bind_var(server::allow_mm_private, "allow_mastermode_private", env);
 
-#if 0
-    hopmod::bind_var(server::allow_item[I_SHELLS-I_SHELLS], "allow_shells", env);
-    hopmod::bind_var(server::allow_item[I_BULLETS-I_SHELLS], "allow_bullets", env);
-    hopmod::bind_var(server::allow_item[I_ROCKETS-I_SHELLS], "allow_rockets", env);
-    hopmod::bind_var(server::allow_item[I_ROUNDS-I_SHELLS], "allow_rounds", env);
-    hopmod::bind_var(server::allow_item[I_GRENADES-I_SHELLS], "allow_grenades", env);
-    hopmod::bind_var(server::allow_item[I_CARTRIDGES-I_SHELLS], "allow_cartridges", env);
-    hopmod::bind_var(server::allow_item[I_HEALTH-I_SHELLS], "allow_health", env);
-    hopmod::bind_var(server::allow_item[I_BOOST-I_SHELLS], "allow_healthboost", env);
-    hopmod::bind_var(server::allow_item[I_GREENARMOUR-I_SHELLS], "allow_greenarmour", env);
-    hopmod::bind_var(server::allow_item[I_YELLOWARMOUR-I_SHELLS], "allow_yellowarmour", env);
-    hopmod::bind_var(server::allow_item[I_QUAD-I_SHELLS], "allow_quad", env);
-
-    script::bind_const((int)I_SHELLS, "ITEM_SHELLS", env);
-    script::bind_const((int)I_BULLETS, "ITEM_BULLETS", env);
-    script::bind_const((int)I_ROCKETS, "ITEM_ROCKETS", env);
-    script::bind_const((int)I_ROUNDS, "ITEM_ROUNDS", env);
-    script::bind_const((int)I_GRENADES, "ITEM_GRENADES", env);
-    script::bind_const((int)I_CARTRIDGES, "ITEM_CARTRIDGES", env);
-    script::bind_const((int)I_HEALTH, "ITEM_HEALTH", env);
-    script::bind_const((int)I_BOOST, "ITEM_HEALTHBOOST", env);
-    script::bind_const((int)I_GREENARMOUR, "ITEM_GREENARMOUR", env);
-    script::bind_const((int)I_YELLOWARMOUR, "ITEM_YELLOWARMOUR", env);
-    script::bind_const((int)I_QUAD, "ITEM_QUAD", env);
-#endif
-
     hopmod::bind_var(server::reservedslots, "reserved_slots", env);
     hopmod::bind_wo_var(server::slotpass, "reserved_slots_password", env);
     script::bind_ro_var(server::reservedslots_use, "reserved_slots_occupied", env);
@@ -318,8 +292,6 @@ void register_server_script_bindings(script::env & env)
     hopmod::bind_var(server::sv_remip_hit_length, "flood_protect_remip", env);
     hopmod::bind_var(server::sv_newmap_hit_length, "flood_protect_newmap", env);
     hopmod::bind_var(server::sv_spec_hit_length, "flood_protect_spectator", env);
-    
-    hopmod::bind_var(server::broadcast_mapmodified, "broadcast_mapmodified", env);
     
     script::bind_ro_var(tx_bytes, "tx_bytes", env);
     script::bind_ro_var(rx_bytes, "rx_bytes", env);
@@ -363,7 +335,4 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_freefunc(file_exists, "file_exists", env);
     script::bind_freefunc(dir_exists, "dir_exists", env);
-    
-    hopmod::bind_property<bool>(
-        server::get_setmaster_autoapprove, server::enable_setmaster_autoapprove, "allow_setmaster", env);
 }

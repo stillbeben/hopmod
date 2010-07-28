@@ -170,7 +170,7 @@ namespace server
     
     void sendservmsg(const char *);
     
-    void sendauthchallenge(int,int,const char *,const char *);
+    void send_auth_challenge(int,int,const char *,const char *);
     void send_auth_request(int, const char *);
     
     void enable_setmaster_autoapprove(bool);

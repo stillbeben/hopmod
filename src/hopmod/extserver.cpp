@@ -1024,7 +1024,7 @@ bool selectnextgame()
     }else return false;
 }
 
-void sendauthchallenge(int cn, int id, const char * domain, const char * challenge)
+void send_auth_challenge(int cn, int id, const char * domain, const char * challenge)
 {
     clientinfo * ci = get_ci(cn);
     sendf(ci->clientnum, 1, "risis", N_AUTHCHAL, domain, id, challenge);
@@ -1165,7 +1165,6 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     if(!ci->clientmap[0] && !ci->mapcrc) 
     {
         ci->mapcrc = -1;
-        checkmaps();
     }
     if(cq->state.lastdeath)
     {
