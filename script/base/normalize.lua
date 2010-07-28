@@ -14,26 +14,14 @@ if not server.valid_gamemode(server.default_gamemode) then
 end
 
 local DEFAULT_GAMEMODE = server.default_gamemode
-local queued = false
 
 local function changemap()
-    
-    if queued then
-        return
-    end
-    
     local nextmap = map_rotation.get_map_name(DEFAULT_GAMEMODE)
-    
-    server.sleep(0, function()
-        server.changemap(nextmap, DEFAULT_GAMEMODE)
-        queued = false
-    end)
-    
-    queued = true
+    server.changemap(nextmap, DEFAULT_GAMEMODE)
 end
 
 server.event_handler("disconnect", function(cn)
-    if server.playercount + server.speccount == 0 and server.gamemode ~= DEFAULT_GAMEMODE then
+    if server.playercount + server.speccount == 0 and server.player_isbot(cn) == false and server.gamemode ~= DEFAULT_GAMEMODE then
          changemap()
     end
 end)
