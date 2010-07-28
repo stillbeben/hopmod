@@ -20,6 +20,7 @@ local function cancelDamageHandler()
 end
 
 server.event_handler("mapchange", function()
+    
     if gamemodeinfo.teams then
         if not damageEventHandler then
             createDamageHandler()
@@ -31,4 +32,3 @@ server.event_handler("mapchange", function()
     end
 end)
 
-createDamageHandler()
