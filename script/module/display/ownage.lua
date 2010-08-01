@@ -26,9 +26,9 @@
 local killingspree_message = {}
 killingspree_message[5]  = yellow("%s is on a ") .. orange("KILLING SPREE!!")
 killingspree_message[10] = yellow("%s is on a ") .. orange("RAMPAGE!!")
-killingspree_message[15] = yellow("%s is ") .. orange("DOMINATING!!")
-killingspree_message[20] = yellow("%s is ") .. orange("UNSTOPPABLE!!")
-killingspree_message[30] = yellow("%s is ") .. orange("GODLIKE!!")
+killingspree_message[15] = yellow("%s is ")      .. orange("DOMINATING!!")
+killingspree_message[20] = yellow("%s is ")      .. orange("UNSTOPPABLE!!")
+killingspree_message[30] = yellow("%s is ")      .. orange("GODLIKE!!")
 
 local broadcast_minimum = 10
 local long_killingspree = 15
@@ -120,7 +120,12 @@ end)
 
 server.event_handler("finishedgame",function()
     first_frag = true
-    -- Killing-spree and Multikills player variables are automatically cleared by the server
+    
+    for player in server.gplayers() do
+        player:vars().killingspree = 0
+        player:vars().multikills = 1
+    end
+    
 end)
 
 server.event_handler("suicide", function(cn)
