@@ -682,7 +682,7 @@ void unset_player_privilege(int cn)
     
     int old_priv = ci->privilege;
     ci->privilege = PRIV_NONE;
-    sendf(ci->clientnum, 1, "ri3", N_CURRENTMASTER, ci->clientnum, PRIV_NONE);
+    sendf(ci->clientnum, 1, "ri4", N_CURRENTMASTER, ci->clientnum, PRIV_NONE, mastermode);
     
     cleanup_masterstate(ci);
     

@@ -1928,8 +1928,8 @@ namespace server
             loopv(clients)
             {
                 if(clients[i]->state.aitype != AI_NONE) continue;
-                if(clients[i]->privilege) sendf(clients[i]->clientnum, 1, "ri3", N_CURRENTMASTER, clients[i]->clientnum, clients[i]->privilege);
-                else sendf(clients[i]->clientnum, 1, "ri3", N_CURRENTMASTER, currentmaster, m ? m->privilege : 0);
+                if(clients[i]->privilege) sendf(clients[i]->clientnum, 1, "ri4", N_CURRENTMASTER, clients[i]->clientnum, clients[i]->privilege, mastermode);
+                else sendf(clients[i]->clientnum, 1, "ri4", N_CURRENTMASTER, currentmaster, m ? m->privilege : 0, mastermode);
             }
             masterupdate = false; 
         } 
@@ -2107,9 +2107,6 @@ namespace server
         }
         
         uint ip = getclientip(ci->clientnum);
-        
-        //bans.update(totalmillis); //needed for some obscure case (cant remember why), TODO check why this is needed
-        //if(bans.is_banned(netmask(ip))) return DISC_IPBAN;
         
         if(mastermode>=MM_PRIVATE && allowedips.find(ip)<0) return DISC_PRIVATE;
         
