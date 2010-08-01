@@ -12,7 +12,7 @@ server.event_handler("mapcrc", function(cn, map, crc)
     
     local map_info = supported_maps[map]
         
-    if not map_info then
+    if not map_info or not map_info.crc then
         return
     end
 
