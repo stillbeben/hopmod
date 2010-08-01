@@ -1,0 +1,134 @@
+#!/bin/sh
+#
+# Hopmod Auth Server Control Script
+#
+
+################################################################################
+
+f_starter=$(basename $0)
+d_main=$(dirname $(dirname $(readlink -f $0)))
+
+cd $d_main
+
+if [ ! -d bin ] || [ ! -d log ] || [ ! -d conf ] || [ ! -d script ]
+then
+    echo "Incomplete Installation! bin/, log/, conf/ or script/ are missing."
+    exit 1    
+fi
+
+################################################################################
+
+. bin/env.sh
+
+v_remove_status_log=n
+
+################################################################################
+
+p_exec() {
+
+    if [ -p authexec ]
+    then
+        echo "$1" > authexec
+    else
+	return 1
+    fi
+    
+    return 0
+}
+
+################################################################################
+
+p_start() {
+
+    if [ -p authexec ]
+    then
+        return 1
+    fi
+    
+    # enable core dump
+    ulimit -c unlimited
+    
+    # cleanup and initiation
+    rm -f log/authstatus.log
+    touch log/authstatus.log
+    touch log/autherror.log
+    
+    ERROR_START=
+    if uname | grep -q "BSD"
+    then
+	ERROR_START=$(stat -f %Sp log/autherror.log)
+    else
+	ERROR_START=$(stat -c %s log/autherror.log)
+    fi
+    
+    ERROR_START=$(( $ERROR_START + 1 ))
+    
+    # start the game server as a background process
+    nohup bin/sauer_authserver ${AUTHSERVER_OPTIONS} 1>log/authstatus.log 2>>log/autherror.log </dev/null &
+    
+    #wait for server to start up and print the initial status messages
+    until $(cat log/authstatus.log | grep -q *READY*)
+    do
+        #stop if server has terminated
+        jobs %- > /dev/null 2>&1
+        RUNNING=$?
+        if [ "$RUNNING" = "1" ]
+        then
+            break
+        fi
+    done
+    
+    tail -c +$ERROR_START log/autherror.log
+    cat log/authstatus.log
+    
+    if [ "$v_remove_status_log" = "y" ]
+    then
+	rm log/authstatus.log
+    fi
+    
+    return 0
+}
+
+p_stop() {
+
+    if ! p_exec shutdown
+    then
+	return 1
+    fi
+    
+    return 0
+}
+
+################################################################################
+
+if [ "x$2" = "x--no-statuslog" ]
+then
+    v_remove_status_log=y
+fi
+
+case "$1" in
+    'stop')
+        p_stop
+    ;;
+    'restart')
+	p_stop
+	sleep 1
+	p_start
+    ;;
+    'help')
+	echo "usage: $0 [start] [--no-statuslos]"
+	echo "       $0 stop"
+	echo "       $0 restart"
+    ;;
+    '--no-statuslog')
+	exec $d_main/bin/$f_starter start $*
+    ;;
+    'start'|*)
+        if ! p_start
+        then
+    	    echo "It appears the auth server is already running."
+    	fi
+    ;;
+esac
+
+exit 0
