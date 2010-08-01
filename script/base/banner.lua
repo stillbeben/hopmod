@@ -25,16 +25,18 @@ local function onConnect(cn)
     
     if show_country_message and #country > 0 then
         
-        local connect_info = string.format("%s connected from %s.", green(server.player_displayname(cn)), green(country))
-        local extra_info = " (IP: " .. green(server.player_ip(cn)) .. ")"
+        local normal_message = string.format("%s connected from %s.", green(server.player_displayname(cn)), green(country))
+        local admin_message = normal_message .. " (IP: " .. green(server.player_ip(cn)) .. ")"
         
         for _, cn in ipairs(server.clients()) do
             
+            local message = normal_message
+            
             if server.player_priv_code(cn) == server.PRIV_ADMIN then
-                connect_info = connect_info .. extra_info
+                message = admin_message
             end
             
-            server.player_msg(cn, connect_info)
+            server.player_msg(cn, message)
         end
     end
 end
