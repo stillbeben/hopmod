@@ -5,8 +5,17 @@
 
 ################################################################################
 
+v_system=$(uname)
+
 f_starter=$(basename $0)
-d_main=$(dirname $(dirname $(readlink -f $0)))
+d_main=$(pwd)
+
+if echo $v_system | grep -q "BSD"
+then
+    d_main=$(dirname $(cd $(dirname $0) ; pwd))
+else
+    d_main=$(dirname $(dirname $(readlink -f $0)))
+fi
 
 cd $d_main
 
@@ -54,7 +63,7 @@ p_start() {
     touch log/autherror.log
     
     ERROR_START=
-    if uname | grep -q "BSD"
+    if echo $v_system | grep -q "BSD"
     then
 	ERROR_START=$(stat -f %Sp log/autherror.log)
     else
