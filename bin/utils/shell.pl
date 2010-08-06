@@ -18,7 +18,7 @@ while ( defined ($_ = $term->readline($prompt)) ) {
 sub toserverpipe {
         my $content = shift;
         my $connection = LWP::UserAgent->new();
-        my $post = HTTP::Request->new(POST => "http://127.0.0.1:7894/serverexec");
+        my $post = HTTP::Request->new(POST => "http://127.0.0.1:28788/serverexec");
         $post->content_type("text/x-cubescript");
         $post->content($content);
 	my $response = $connection->request($post);

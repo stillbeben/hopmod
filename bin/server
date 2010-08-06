@@ -8,7 +8,7 @@
 v_system=$(uname)
 
 f_starter=$(basename $0)
-d_main=$(pwd)
+d_main=
 
 if echo $v_system | grep -q "BSD"
 then
@@ -28,6 +28,8 @@ fi
 ################################################################################
 
 . bin/env.sh
+
+v_remove_status_log=n
 
 ################################################################################
 
@@ -87,6 +89,11 @@ p_start_server() {
     
     tail -c +$ERROR_START log/error.log
     cat log/status.log
+    
+    if [ "$v_remove_status_log" = "y" ]
+    then
+        rm log/status.log
+    fi
     
     return 0
 }
@@ -231,6 +238,11 @@ case "$1" in
 		fi
 	    ;;
 	    *)
+		if [ "x$2" = "x--no-statuslog" ]
+                then
+                    v_remove_status_log=y
+                fi
+                
 		if ! p_start_server
 		then
 		    echo "It appears the game server is already running."
@@ -263,7 +275,7 @@ case "$1" in
 	fi
     ;;
     'help')
-	echo "usage: $0 [start]"
+	echo "usage: $0 [start] [--no-statuslog]"
 	echo "       $0 [start] luapp luafile"
 	echo "       $0 [start] shell [ruby|perl]"
 	echo ""

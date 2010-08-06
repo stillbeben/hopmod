@@ -3,8 +3,6 @@ require "crypto"
 
 local databases = {}
 local base_dir
-local sqlite_synchronous = ((server.sqlite3_synchronous or 0) == 1)
-local sqlite_exclusive_locking = ((server.sqlite3_exclusive_locking or 0) == 1)
 
 local msg = {}
 msg.no_domain = "Domain, %s does not exist."
@@ -52,14 +50,9 @@ local function open_db(domain)
 	    return err
 	end
 	
-	if sqlite_synchronous
-	then
-	    sqlite3utils.set_sqlite3_synchronous_pragma(databases[domain].handler, sqlite_synchronous)
-	end
-	if sqlite_exclusive_locking
-	then
-	    sqlite3utils.set_sqlite3_exclusive_locking(databases[domain].handler)
-	end
+-- TODO
+--	sqlite3utils.set_sqlite3_synchronous_pragma(databases[domain].handler, value)
+--	sqlite3utils.set_sqlite3_exclusive_locking(databases[domain].handler)
 	
 	databases[domain].insert = {}
 	databases[domain].insert.user = databases[domain].handler:prepare("INSERT INTO users (name, domain_id, pubkey) VALUES(:name, :domain_id, :pubkey)")

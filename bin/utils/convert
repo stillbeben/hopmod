@@ -2,14 +2,6 @@
 #
 ################################################################################
 
-if [ ! -p authexec ]
-then
-    echo "authserver must run with the backend, you plan to use."
-    exit 1
-fi
-
-################################################################################
-
 p_exec() {
 
     if [ -p authexec ]
@@ -35,6 +27,15 @@ p_help() {
     echo " from the given type btw. from an old schema or file with direct added users"
     echo " to the backend, that the authserver is using, now"
 }
+
+################################################################################
+
+if [ ! -p authexec ]
+then
+    p_help
+    echo "authserver must run with the backend, you plan to use."
+    exit 1
+fi
 
 ################################################################################
 

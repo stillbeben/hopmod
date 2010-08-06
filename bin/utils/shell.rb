@@ -86,7 +86,7 @@ rescue Interrupt
     
 end
 
-DEFAULT_PORT = 7894
+DEFAULT_PORT = 28788
 portfile = nil
 
 if File.readable? "log/sauer_server_http.port"

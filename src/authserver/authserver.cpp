@@ -499,21 +499,6 @@ static void _shutdown()
 {
     shutdown_from_signal(SIGTERM);
 }
-/*
-bool file_exists(const char * name)
-{
-    struct stat info;
-    if(stat(name, &info)==0) return !(info.st_mode & S_IFDIR);
-    else return false;
-}
-
-bool dir_exists(const char * name)
-{
-    struct stat info;
-    if(stat(name, &info)==0) return info.st_mode & S_IFDIR;
-    else return false;
-}
-*/
 
 int main(int argc, char **argv)
 {

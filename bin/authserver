@@ -8,7 +8,7 @@
 v_system=$(uname)
 
 f_starter=$(basename $0)
-d_main=$(pwd)
+d_main=
 
 if echo $v_system | grep -q "BSD"
 then
@@ -145,11 +145,11 @@ p_help() {
     echo "       $0 manage domain change sensitivity <name> [case_insensitive]"
     echo "       $0 manage list domains"
     echo "       $0 manage list users <domain>"
-    echo "       $0 convert old text"
-    echo "       $0 convert old sqlite"
-    echo "       $0 convert text"
-    echo "       $0 convert sqlite"
-    echo "       $0 convert mysql"
+    echo "       $0 convert old text   <textfile>"
+    echo "       $0 convert old sqlite <sqlitefile>"
+    echo "       $0 convert text   <textfile>"
+    echo "       $0 convert sqlite <sqlitefiles-dir>"
+    echo "       $0 convert mysql <hostname> <username> <password> <database>"
 }
 
 ################################################################################
