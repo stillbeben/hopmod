@@ -3,6 +3,8 @@ require "crypto"
 
 local databases = {}
 local base_dir
+local sqlite_synchronous = ((server.sqlite3_synchronous or 0) == 1)
+local sqlite_exclusive_locking = ((server.sqlite3_exclusive_locking or 0) == 1)
 
 local msg = {}
 msg.no_domain = "Domain, %s does not exist."
@@ -13,7 +15,6 @@ msg.same = "%s is named %s."
 msg.sqlite_no_select = "Fetching %s failed."
 
 
--- nil, err or file, nil
 local function create_db()
 
     local name = crypto.md5sum(os.date("%s%N"))
@@ -38,7 +39,6 @@ local function create_db()
     return file
 end
 
--- nil or err
 local function open_db(domain)
 
     if databases[domain]
@@ -50,9 +50,14 @@ local function open_db(domain)
 	    return err
 	end
 	
--- TODO
---	sqlite3utils.set_sqlite3_synchronous_pragma(databases[domain].handler, value)
---	sqlite3utils.set_sqlite3_exclusive_locking(databases[domain].handler)
+	if sqlite_synchronous
+	then
+	    sqlite3utils.set_sqlite3_synchronous_pragma(databases[domain].handler, sqlite_synchronous)
+	end
+	if sqlite_exclusive_locking
+	then
+	    sqlite3utils.set_sqlite3_exclusive_locking(databases[domain].handler)
+	end
 	
 	databases[domain].insert = {}
 	databases[domain].insert.user = databases[domain].handler:prepare("INSERT INTO users (name, domain_id, pubkey) VALUES(:name, :domain_id, :pubkey)")
@@ -67,11 +72,6 @@ local function open_db(domain)
 	end
 	
 	databases[domain].delete = {}
---	databases[domain].delete.domain = databases[domain].handler:prepare("DELETE FROM domains WHERE id = :domain_id")
---	if not databases[domain].delete.domain
---        then
---    	    return databases[domain].handler:error_message()
---	end
 	databases[domain].delete.user = databases[domain].handler:prepare("DELETE FROM users WHERE domain_id = :domain_id AND name = :name")
 	if not databases[domain].delete.user
         then
@@ -89,11 +89,6 @@ local function open_db(domain)
         then
     	    return databases[domain].handler:error_message()
 	end
---	databases[domain].update.user_domain = databases[domain].handler:prepare("UPDATE users SET domain_id = :new_domain_id WHERE domain_id = :domain_id AND name = :name")
---	if not databases[domain].update.user_domain
---        then
---    	    return databases[domain].handler:error_message()
---	end
 	databases[domain].update.domain_case_insensitive = databases[domain].handler:prepare("UPDATE domains SET case_insensitive = :case_insensitive WHERE id = :domain_id")
 	if not databases[domain].update.domain_case_insensitive
         then
@@ -138,7 +133,6 @@ local function open_db(domain)
     return
 end
 
--- nil or id
 local function domain_id(domain)
 
     if databases[domain]
@@ -250,15 +244,8 @@ local function add_domain(domain, case_insensitive)
     return
 end
 
---local function del_domain(domain_id, domain)
 local function del_domain(domain)
 
---    databases[domain].handler:exec("BEGIN TRANSACTION")
---    databases[domain].delete.domain:bind_names{["domain_id"] = domain_id}
---    databases[domain].delete.domain:step()
---    databases[domain].delete.domain:reset()
---    databases[domain].handler:exec("COMMIT TRANSACTION")
-    
     databases[domain].handler:close()
     os.execute("rm -f " .. databases[domain].file .. " &")
     databases[domain] = nil
@@ -560,7 +547,6 @@ local function external_del_domain(domain)
     
     local users = list_users(did, domain, "no_key")
     
---    local err = del_domain(did, domain)
     local err = del_domain(domain)
     if err
     then
@@ -661,7 +647,6 @@ local function external_change_domain_name(domain, new_domain)
         add_user(name, new_did, key, new_domain)
     end
     
---    del_domain(did, domain)
     del_domain(domain)
     
     return users
