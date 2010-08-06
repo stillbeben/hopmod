@@ -2,18 +2,6 @@ require "sqlite3utils"
 
 local db, insert_game, insert_team, insert_player, select_player_totals, find_names_by_ip
 
--- TODO move to sqlite3utils
-local function set_sqlite3_synchronous_pragma(db, value)
-    
-    local accepted = {[0] = true, [1] = true, [2] = true, ["OFF"] = true, ["NORMAL"] = true, ["FULL"] = true}
-    
-    if not accepted[value] then
-        error("Unrecognised value set for stats_sqlite_synchronous variable.")
-    end
-    
-    db:exec("PRAGMA synchronous = " .. value)
-end
-
 local function open(settings)
 
     db = sqlite3.open(settings.filename)
@@ -26,10 +14,10 @@ local function open(settings)
     end
     
     if settings.exclusive_locking == 1 then
-        db:exec("PRAGMA locking_mode=EXCLUSIVE")
+        sqlite3utils.set_sqlite3_exclusive_locking(db)
     end
     
-    set_sqlite3_synchronous_pragma(db, settings.synchronous)
+    sqlite3utils.set_sqlite3_synchronous_pragma(db, settings.synchronous)
     
     insert_game = db:prepare[[
         INSERT INTO games (

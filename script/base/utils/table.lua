@@ -4,7 +4,7 @@
 function table_count(tt, item)
     local count
     count = 0
-    for ii,xx in pairs(tt) do
+    for _,xx in pairs(tt) do
         if item == xx then count = count + 1 end
     end
     return count
@@ -25,7 +25,7 @@ end
 function table_unique(tt)
     local newtable
     newtable = {}
-    for ii,xx in ipairs(tt) do
+    for _,xx in ipairs(tt) do
         if(table_count(newtable, xx) == 0) then
             newtable[#newtable+1] = xx
         end
@@ -54,7 +54,7 @@ end
 
 function map_to_array(map)
     local result = {}
-    for i,v in pairs(map) do
+    for _,v in pairs(map) do
         table.insert(result, v)
     end
     return result

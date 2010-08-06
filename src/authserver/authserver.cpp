@@ -3,6 +3,10 @@
 #include "cube.h"
 #include "hopmod/hopmod.hpp"
 #include "hopmod/string_var.hpp"
+#include "hopmod/utils.hpp"
+
+#include "hopmod/lua/modules.hpp"
+#include "hopmod/main_io_service.hpp"
 
 #include <enet/time.h>
 #include <signal.h>
@@ -13,6 +17,12 @@
 
 #include <fungu/script.hpp>
 using namespace fungu;
+
+#ifdef HAS_LSQLITE3
+extern "C"{
+    int luaopen_lsqlite3(lua_State * L);
+}
+#endif
 
 #define INPUT_LIMIT 4096
 #define OUTPUT_LIMIT (64*1024)
@@ -489,6 +499,21 @@ static void _shutdown()
 {
     shutdown_from_signal(SIGTERM);
 }
+/*
+bool file_exists(const char * name)
+{
+    struct stat info;
+    if(stat(name, &info)==0) return !(info.st_mode & S_IFDIR);
+    else return false;
+}
+
+bool dir_exists(const char * name)
+{
+    struct stat info;
+    if(stat(name, &info)==0) return info.st_mode & S_IFDIR;
+    else return false;
+}
+*/
 
 int main(int argc, char **argv)
 {
@@ -507,6 +532,13 @@ int main(int argc, char **argv)
     script::env & e = get_script_env();
     lua_State * L = e.get_lua_state();
     
+    lua::module::open_filesystem(L);
+    lua::module::open_crypto(L);
+    
+    #ifdef HAS_LSQLITE3
+    luaopen_lsqlite3(L);
+    #endif
+    
     script::bind_var(port, "serverport", e);
     script::bind_var(ip, "serverip", e);
     
@@ -514,8 +546,11 @@ int main(int argc, char **argv)
     script::bind_freefunc(deleteuser, "deleteuser", e);
     script::bind_freefunc(clearusers, "clearusers", e);
     
-    script::bind_freefunc(log_status, "log", e);
-    script::bind_freefunc(log_error, "logerror", e);
+    script::bind_freefunc(log_status, "log_status", e);
+    script::bind_freefunc(log_error, "log_error", e);
+    
+    script::bind_freefunc(file_exists, "file_exists", e);
+    script::bind_freefunc(dir_exists, "dir_exists", e);
     
     script::bind_freefunc(_shutdown, "shutdown", e);
     
@@ -526,7 +561,7 @@ int main(int argc, char **argv)
     init_script_pipe();
     open_script_pipe("authexec", 511, e);
     
-    if(luaL_dofile(L, "./script/base/auth/server_init.lua")==1)
+    if(luaL_dofile(L, "./script/base/auth/server/init.lua")==1)
         log_error(lua_tostring(L, -1));
     
     setupserver(port, (ip[0] ? ip : NULL));

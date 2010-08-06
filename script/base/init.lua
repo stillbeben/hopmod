@@ -18,6 +18,7 @@ load_once("base/player/query")
 load_once("base/player/private_vars")
 load_once("base/player/command")
 load_once("base/logging")
+load_once("base/logging_server")
 load_once("base/server_message")
 load_once("base/kickban")
 

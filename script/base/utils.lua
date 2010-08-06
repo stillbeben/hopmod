@@ -40,8 +40,17 @@ function server.hashpassword(cn, pass)
 	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), pass))
 end
 
-dofile("./script/base/utils/string.lua")
-dofile("./script/base/utils/table.lua")
-dofile("./script/base/utils/gamemode.lua")
-dofile("./script/base/utils/apps.lua")
 
+local filesystem = require "filesystem"
+local utils_dir = "./script/base/utils"
+
+for filetype, filename in filesystem.dir(utils_dir)
+do
+    local fullfilename = utils_dir .. "/" .. filename
+    
+--    if filetype == filesystem.FILE and filename:match(".lua$")
+    if filetype == 0 and filename:match(".lua$")
+    then
+	dofile(fullfilename)
+    end
+end

@@ -110,12 +110,79 @@ p_stop() {
 
 ################################################################################
 
-if [ "x$2" = "x--no-statuslog" ]
-then
-    v_remove_status_log=y
-fi
+p_keygen() {
+
+    exec bin/utils/keygen
+}
+
+p_luapp() {
+
+    exec bin/utils/luapp "$*"
+}
+
+p_convert() {
+
+    exec bin/utils/convert "$1" "$2" "$3" "$4" "$5"
+}
+
+################################################################################
+
+p_help() {
+
+    echo "usage: $0 [start] [--no-statuslog]"
+    echo "       $0 [start] luapp <luafile>"
+    echo "       $0 [start] keygen"
+    echo "       $0 stop"
+    echo "       $0 restart"
+    echo "       $0 manage user add <name> <domain> <pubkey>"
+    echo "       $0 manage user del <name> <domain>"
+    echo "       $0 manage user change name   <name> <domain> <new_name>"
+    echo "       $0 manage user change key    <name> <domain> <pubkey>"
+    echo "       $0 manage user change domain <name> <domain> <new_domain>"
+    echo "       $0 manage domain add <name> [case_insensitive]"
+    echo "       $0 manage domain del <name>"
+    echo "       $0 manage domain change name        <name> <new_name>"
+    echo "       $0 manage domain change sensitivity <name> [case_insensitive]"
+    echo "       $0 manage list domains"
+    echo "       $0 manage list users <domain>"
+    echo "       $0 convert old text"
+    echo "       $0 convert old sqlite"
+    echo "       $0 convert text"
+    echo "       $0 convert sqlite"
+    echo "       $0 convert mysql"
+}
+
+################################################################################
 
 case "$1" in
+    'start')
+	case "$2" in
+	    'luapp')
+                if [ "x$3" = "x" ]
+                then
+                    p_help
+                    exit 2
+                fi
+                
+                shift 2
+                p_luapp "$*"
+            ;;
+            'keygen')
+        	p_keygen
+    	    ;;
+            *)
+        	if [ "x$2" = "x--no-statuslog" ]
+		then
+		    v_remove_status_log=y
+		fi
+		
+    		if ! p_start
+    		then
+    		    echo "It appears the auth server is already running."
+    		fi
+	    ;;
+	esac
+    ;;
     'stop')
         p_stop
     ;;
@@ -124,19 +191,168 @@ case "$1" in
 	sleep 1
 	p_start
     ;;
+    'manage')
+	case "$2" in
+	    'user')
+		case "$3" in
+		    'add')
+			if [ "x$6" = "x" ] || [ "x$5" = "x" ] || [ "x$4" = "x" ]
+			then
+			    p_help
+			    exit 2
+			fi
+			
+			p_exec "add_user \"$4\" \"$5\" \"$6\""
+		    ;;
+		    'del')
+			if [ "x$5" = "x" ] || [ "x$4" = "x" ]
+			then
+			    p_help
+			    exit 2
+			fi
+			
+			p_exec "del_user \"$4\" \"$5\""
+		    ;;
+		    'change')
+			case "$4" in
+			    'name')
+				if [ "x$7" = "x" ] || [ "x$6" = "x" ] || [ "x$5" = "x" ]
+				then
+				    p_help
+				    exit 2
+				fi
+				
+				p_exec "change_user_name \"$5\" \"$6\" \"$7\""
+			    ;;
+			    'key')
+				if [ "x$7" = "x" ] || [ "x$6" = "x" ] || [ "x$5" = "x" ]
+				then
+				    p_help
+				    exit 2
+				fi
+				
+				p_exec "change_user_key \"$5\" \"$6\" \"$7\""
+			    ;;
+			    'domain')
+				if [ "x$7" = "x" ] || [ "x$6" = "x" ] || [ "x$5" = "x" ]
+				then
+				    p_help
+				    exit 2
+				fi
+				
+				p_exec "change_user_domain \"$5\" \"$6\" \"$7\""
+			    ;;
+			    *)
+				p_help
+				exit 2
+			    ;;
+			esac
+		    ;;
+		    *)
+			p_help
+			exit 2
+		    ;;
+		esac
+	    ;;
+	    'domain')
+		case "$3" in
+		    'add')
+			if [ "x$4" = "x" ]
+			then
+			    p_help
+			    exit 2
+			fi
+			
+			if [ ! "x$5" = "x" ]
+			then
+			    p_exec "add_domain \"$4\" \"$5\""
+			else
+			    p_exec "add_domain \"$4\""
+			fi
+		    ;;
+		    'del')
+			if [ "x$4" = "x" ]
+			then
+			    p_help
+			    exit 2
+			fi
+			
+			p_exec "del_domain \"$4\""
+		    ;;
+		    'change')
+			case "$4" in
+			    'name')
+				if [ "x$6" = "x" ] || [ "x$5" = "x" ]
+				then
+				    p_help
+				    exit 2
+				fi
+				
+				p_exec "change_domain_name \"$5\" \"$6\""
+			    ;;
+			    'sensitivity')
+				if [ "x$5" = "x" ]
+				then
+				    p_help
+				    exit 2
+				fi
+				
+				if [ ! "x$6" = "x" ]
+				then
+				    p_exec "change_domain_sensitivity \"$5\" \"$6\""
+				else
+				    p_exec "change_domain_sensitivity \"$4\""
+				fi
+			    ;;
+			    *)
+				p_help
+				exit 2
+			    ;;
+			esac
+		    ;;
+		    *)
+			p_help
+			exit 2
+		    ;;
+		esac
+	    ;;
+	    'list')
+		case "$3" in
+		    'domains')
+			p_exec "list_domains"
+		    ;;
+		    'users')
+			if [ "x$4" = "x" ]
+			then
+			    p_help
+			    exit 2
+			fi
+			
+			p_exec "list_users \"$4\""
+		    ;;
+		    *)
+			p_help
+			exit 2
+		    ;;
+		esac
+	    ;;
+	    *)
+		p_help
+		exit 2
+	    ;;
+	esac
+    ;;
+    'convert')
+	p_convert "$2" "$3" "$4" "$5" "$6"
+    ;;
     'help')
-	echo "usage: $0 [start] [--no-statuslos]"
-	echo "       $0 stop"
-	echo "       $0 restart"
+	p_help
     ;;
     '--no-statuslog')
 	exec $d_main/bin/$f_starter start $*
     ;;
-    'start'|*)
-        if ! p_start
-        then
-    	    echo "It appears the auth server is already running."
-    	fi
+    *)
+	exec $d_main/bin/$f_starter start $*
     ;;
 esac
 

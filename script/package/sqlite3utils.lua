@@ -106,3 +106,19 @@ function BROKEN_reinstall_triggers(schemafilename, db)
     
 end
 ]]
+
+function set_sqlite3_synchronous_pragma(db, value)
+
+    local accepted = {[0] = true, [1] = true, [2] = true, ["OFF"] = true, ["NORMAL"] = true, ["FULL"] = true}
+    
+    if not accepted[value] then
+        error("Unrecognised value set for stats_sqlite_synchronous variable.")
+    end
+    
+    db:exec("PRAGMA synchronous = " .. value)
+end
+
+function set_sqlite3_exclusive_locking(db)
+
+    db:exec("PRAGMA locking_mode=EXCLUSIVE")
+end

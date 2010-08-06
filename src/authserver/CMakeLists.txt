@@ -8,10 +8,10 @@ include_directories(
     ${BOOST_INCLUDE_DIRS}
     ${FUNGU_INCLUDE_DIRS})
 
-add_definitions(-DSTANDALONE -DFUNGU_WITH_LUA -DHOPMOD_AUTHSERVER_EVENTS)
+add_definitions(-DSTANDALONE -DFUNGU_WITH_LUA -DHOPMOD_AUTHSERVER_EVENTS ${LSQLITE3_DEFINITIONS})
 
 add_executable(sauer_authserver authserver.cpp)
-target_link_libraries(sauer_authserver sauertools serverscripting scriptpipe enet)
+target_link_libraries(sauer_authserver sauertools serverscripting scriptpipe enet ${LSQLITE3_LIBRARY})
 
 install(TARGETS
             sauer_authserver
