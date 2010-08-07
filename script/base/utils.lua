@@ -41,16 +41,23 @@ function server.hashpassword(cn, pass)
 end
 
 
-local filesystem = require "filesystem"
-local utils_dir = "./script/base/utils"
+--local filesystem = require "filesystem"
+--local utils_dir = "./script/base/utils"
+--
+--for filetype, filename in filesystem.dir(utils_dir)
+--do
+--    local fullfilename = utils_dir .. "/" .. filename
+--    
+----    if filetype == filesystem.FILE and filename:match(".lua$")
+--    if filetype == 0 and filename:match(".lua$")
+--    then
+--	dofile(fullfilename)
+--    end
+--end
 
-for filetype, filename in filesystem.dir(utils_dir)
-do
-    local fullfilename = utils_dir .. "/" .. filename
-    
---    if filetype == filesystem.FILE and filename:match(".lua$")
-    if filetype == 0 and filename:match(".lua$")
-    then
-	dofile(fullfilename)
-    end
-end
+dofile("./script/base/utils/apps.lua")
+dofile("./script/base/utils/file.lua")
+dofile("./script/base/utils/gamemode.lua")
+dofile("./script/base/utils/mysql.lua")
+dofile("./script/base/utils/string.lua")
+dofile("./script/base/utils/table.lua")
