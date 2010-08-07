@@ -1,6 +1,8 @@
 package.path = package.path .. ";script/package/?.lua"
 package.cpath = package.cpath .. ";lib/lib?.so"
 
+server.is_authserver = 1
+
 dofile("./script/base/logging.lua")
 dofile("./script/base/utils.lua")
 

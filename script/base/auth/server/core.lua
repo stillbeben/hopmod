@@ -41,6 +41,18 @@
 
 function server.add_user(name, domain, pubkey)
 
+    if string.len(name) > 15
+    then
+	server.log_error("add_user: " .. name .. " is too long. (Maximum 15 characters.)")
+	return
+    end
+    
+    if name == "unnamed" or name == "bot"
+    then
+	server.log_error("add_user: 'unnamed' and 'bot' are not allowed as usernames.")
+	return
+    end
+    
     if not internal.domains[domain]
     then
 	server.log_error("add_user: Domain, " .. domain .. " doesn't exist.")

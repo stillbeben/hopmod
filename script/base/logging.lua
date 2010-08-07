@@ -1,4 +1,10 @@
-local logfile = io.open("log/server.log","a+")
+local filename = "server"
+if (server.is_authserver or 0) == 1
+then
+    filename = "authserver"
+end
+
+local logfile = io.open("log/" .. filename .. ".log","a+")
 
 function server.log(msg)
 

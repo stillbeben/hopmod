@@ -148,7 +148,11 @@ case "$1" in
         sed -i 's/case_insensitive//' $d_tmp/do
         sed -i '/^[[:space:]]*$/d' $d_tmp/do
         sed -i '/^$/d' $d_tmp/do
-        sed -i 's/^/add_domain /g' $d_tmp/do
+        sed -i 's/	/ /g' $d_tmp/do
+        sed -i 's/[[:space:]]+/ /g' $d_tmp/do
+        sed -i 's/ /" "/g' $d_tmp/do
+        sed -i 's/$/"/g' $d_tmp/do
+        sed -i 's/^/add_domain "/g' $d_tmp/do
         
         cat $d_tmp/do > authexec
         
@@ -158,7 +162,11 @@ case "$1" in
         sed -i 's/users.pubkey//' $d_tmp/do2
         sed -i '/^[[:space:]]*$/d' $d_tmp/do2
         sed -i '/^$/d' $d_tmp/do2
-        sed -i 's/^/add_user /g' $d_tmp/do2
+        sed -i 's/	/ /g' $d_tmp/do2
+        sed -i 's/[[:space:]]+/ /g' $d_tmp/do2
+        sed -i 's/ /" "/g' $d_tmp/do2
+        sed -i 's/$/"/g' $d_tmp/do2
+        sed -i 's/^/add_user "/g' $d_tmp/do2
         
         cat $d_tmp/do2 > authexec
         

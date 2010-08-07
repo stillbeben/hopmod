@@ -90,7 +90,8 @@ end
 
 function mysql.reopen(connection)
 
-    if not connection.handler and not mysql.open(connection) then
+    if not connection.handler and not mysql.open(connection)
+    then
        return
     end
     

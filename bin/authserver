@@ -112,7 +112,21 @@ p_stop() {
 
 p_keygen() {
 
-    exec bin/utils/keygen
+    v_priv=
+    v_pub=
+    for k in $(bin/utils/keygen)
+    do
+	if [ "x$v_priv" = "x" ]
+	then
+	    v_priv=$k
+	else
+	    v_pub=$k
+	    break
+	fi
+    done
+    
+    echo "private key: $v_priv"
+    echo "public key:  $v_pub"
 }
 
 p_luapp() {
@@ -131,9 +145,9 @@ p_help() {
 
     echo "usage: $0 [start] [--no-statuslog]"
     echo "       $0 [start] luapp <luafile>"
-    echo "       $0 [start] keygen"
     echo "       $0 stop"
     echo "       $0 restart"
+    echo "       $0 manage [gen[erate]] key"
     echo "       $0 manage user add <name> <domain> <pubkey>"
     echo "       $0 manage user del <name> <domain>"
     echo "       $0 manage user change name   <name> <domain> <new_name>"
@@ -167,9 +181,6 @@ case "$1" in
                 shift 2
                 p_luapp "$*"
             ;;
-            'keygen')
-        	p_keygen
-    	    ;;
             *)
         	if [ "x$2" = "x--no-statuslog" ]
 		then
@@ -193,6 +204,12 @@ case "$1" in
     ;;
     'manage')
 	case "$2" in
+	    'generate'|'gen')
+		p_keygen
+    	    ;;
+            'key')
+        	exec $d_main/bin/$f_starter manage generate key
+    	    ;;
 	    'user')
 		case "$3" in
 		    'add')
