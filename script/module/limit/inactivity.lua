@@ -26,11 +26,12 @@ server.interval(interval_time, function()
 	    local spec_player
 	    
 	    local last_x, last_y, last_z = p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z
+	    local con_time = p:connection_time()
 	    
 	    if not (last_x and last_y and last_z)
 	    then
 	        p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z = p:pos()
-	        p:vars().spec_inactives_pos_time = p:connection_time()
+	        p:vars().spec_inactives_pos_time = con_time
 	    else
 	        local x, y, z = p:pos()
 		
@@ -38,7 +39,7 @@ server.interval(interval_time, function()
 		then
 		    local last_time = p:vars().spec_inactives_pos_time
 		    
-		    if p:connection_time() - last_time >= inactive_time
+		    if con_time - last_time >= inactive_time
 		    then
 			spec_player = true
 			
@@ -51,8 +52,8 @@ server.interval(interval_time, function()
 			p:vars().spec_inactives_pos_time = nil
 		    end
 		else
-		    p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z = nil, nil, nil
-		    p:vars().spec_inactives_pos_time = nil
+		    p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z = x, y, z
+	    	    p:vars().spec_inactives_pos_time = con_time
 		end
 	    end
 	    
@@ -71,7 +72,6 @@ local function unload()
     is_unload = true
     
     for p in server.gclients() do
-	p:vars().spec_inactives_deathtime = nil
 	p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z = nil, nil, nil
 	p:vars().spec_inactives_pos_time = nil
     end
