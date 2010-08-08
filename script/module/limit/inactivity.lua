@@ -2,15 +2,35 @@
     A script to move inactive players to spectators
 ]]
 
-local interval_time = server.spec_inactives_check_time
+local interval_time = server.inactivity_check_time
 if interval_time <= 0 then
     interval_time = 60000
 end
-local inactive_time = round((server.spec_inactives_time / 1000), 0)
-local death_only = server.spec_inactives_death_only == 1
+local inactive_time = round((server.inactivity_time / 1000), 0)
+local death_only = server.inactivity_death_only == 1
 
 local is_unload
 
+
+local function unset_vars(cn)
+
+    server.player_vars(cn).inactivity_pos_x = nil
+    server.player_vars(cn).inactivity_pos_y = nil
+    server.player_vars(cn).inactivity_pos_z = nil
+    server.player_vars(cn).inactivity_pos_time = nil
+end
+
+local function unset_vars_all()
+
+    for p in server.gclients() do
+	unset_vars(p.cn)
+    end
+end
+
+
+server.event_handler("disconnect", unset_vars)
+
+server.event_handler("mapchange", unset_vars_all)
 
 server.interval(interval_time, function()
 
@@ -25,19 +45,19 @@ server.interval(interval_time, function()
 	do
 	    local spec_player
 	    
-	    local last_x, last_y, last_z = p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z
+	    local last_x, last_y, last_z = p:vars().inactivity_pos_x, p:vars().inactivity_pos_y, p:vars().inactivity_pos_z
 	    local con_time = p:connection_time()
 	    
 	    if not (last_x and last_y and last_z)
 	    then
-	        p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z = p:pos()
-	        p:vars().spec_inactives_pos_time = con_time
+	        p:vars().inactivity_pos_x, p:vars().inactivity_pos_y, p:vars().inactivity_pos_z = p:pos()
+	        p:vars().inactivity_pos_time = con_time
 	    else
 	        local x, y, z = p:pos()
 		
 		if (last_x == x) and (last_y == y) and (last_z == z)
 		then
-		    local last_time = p:vars().spec_inactives_pos_time
+		    local last_time = p:vars().inactivity_pos_time
 		    
 		    if con_time - last_time >= inactive_time
 		    then
@@ -48,12 +68,11 @@ server.interval(interval_time, function()
 			    spec_player = nil
 			end
 			
-			p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z = nil, nil, nil
-			p:vars().spec_inactives_pos_time = nil
+			unset_vars(p.cn)
 		    end
 		else
-		    p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z = x, y, z
-	    	    p:vars().spec_inactives_pos_time = con_time
+		    p:vars().inactivity_pos_x, p:vars().inactivity_pos_y, p:vars().inactivity_pos_z = x, y, z
+	    	    p:vars().inactivity_pos_time = con_time
 		end
 	    end
 	    
@@ -71,10 +90,7 @@ local function unload()
 
     is_unload = true
     
-    for p in server.gclients() do
-	p:vars().spec_inactives_pos_x, p:vars().spec_inactives_pos_y, p:vars().spec_inactives_pos_z = nil, nil, nil
-	p:vars().spec_inactives_pos_time = nil
-    end
+    unset_vars_all()
 end
 
 
