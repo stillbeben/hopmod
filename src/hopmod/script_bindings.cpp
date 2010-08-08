@@ -185,6 +185,7 @@ void register_server_script_bindings(script::env & env)
     script::bind_const((int)CS_SPECTATOR, "SPECTATOR", env);
     script::bind_const((int)CS_EDITING, "EDITING", env);
     script::bind_freefunc(server::player_connection_time, "player_connection_time", env);
+    script::bind_freefunc(server::player_force_spec, "force_spec", env);
     script::bind_freefunc(server::player_spec, "spec", env);
     script::bind_freefunc(server::player_unspec, "unspec", env);
     script::bind_freefunc(server::unsetmaster, "unsetmaster", env);

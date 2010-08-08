@@ -37,6 +37,7 @@ local methods = {
     isbot           = function(obj) return server.player_isbot(obj.cn) end,
     mapcrc          = function(obj) return server.player_mapcrc(obj.cn) end,
     connection_time = function(obj) return server.player_connection_time(obj.cn) end,
+    force_spec      = function(obj) return server.force_spec(obj.cn) end,
     spec            = function(obj) return server.spec(obj.cn) end,
     unspec          = function(obj) return server.unspec(obj.cn) end,
     setadmin        = function(obj) return server.setadmin(obj.cn) end,

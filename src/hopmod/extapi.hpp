@@ -86,6 +86,7 @@ namespace server
     int player_connection_time(int);
     int player_timeplayed(int);
     int player_win(int);
+    void player_force_spec(int);
     void player_spec(int);
     void player_unspec(int);
     int player_bots(int);

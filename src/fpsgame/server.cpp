@@ -2799,7 +2799,8 @@ namespace server
                     ci->sendprivtext(RED "You cannot spec that player because they have an above normal privilege.");
                     break;
                 }
-                spinfo->allow_self_unspec = self && spinfo->state.state!=CS_SPECTATOR && val;
+                //spinfo->allow_self_unspec = self && spinfo->state.state!=CS_SPECTATOR && val;
+                spinfo->allow_self_unspec = self && val;
                 setspectator(spinfo, val);
                 break;
             }
