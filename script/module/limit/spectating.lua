@@ -6,7 +6,6 @@
 --]]--------------------------------------------------------------------------
 
 local max_spec_time = server.spectating_limit
-local max_spec_time_when_server_empty = server.spectating_limit_when_server_empty
 
 
 local function unset_mem(cn)
@@ -37,18 +36,11 @@ local function chat(cn)
     end
 end
 
-local function check_spec_times(is_empty)
+local function check_spec_times()
 
-    local max_stime = max_spec_time
-    
-    if is_empty
-    then
-	max_stime = max_spec_time_when_server_empty
-    end
-    
     for p in server.gspectators()
     do
-	if ((p:vars().spectating_time or 0) > max_stime) and ((p:vars().spectating_last_chat or 0) < (p:connection_time() - 300000))	-- 5 minutes ago
+	if ((p:vars().spectating_time or 0) > max_spec_time) and ((p:vars().spectating_last_chat or 0) < (p:connection_time() - 300000))	-- 5 minutes ago
 	then
 	    kick(p.cn)
 	end
@@ -80,9 +72,6 @@ server.event_handler("finishedgame", function()
 	if server.playercount >= server.maxclients
 	then
 	    check_spec_times()
-	elseif (server.playercount - server.speccount) == 0
-	then
-	    check_spec_times("is_empty")
 	end
     end
 end)
