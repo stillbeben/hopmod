@@ -5,90 +5,91 @@
 --
 --]]--------------------------------------------------------------------------
 
-local diff = server.kickspec_players_diff
-local max_spec_time = server.kickspec_max_time
-local max_spec_time_when_server_empty = server.kickspec_max_spec_time_when_server_empty
-local interval_check_time = server.kickspec_interval_check_time
-local is_unload = false
+local max_spec_time = server.spectating_limit
+local max_spec_time_when_server_empty = server.spectating_limit_when_server_empty
 
--- maptime - timeplayed = return [in seconds]
-local function spectime(maptime, cn)
-	return (maptime - (server.player_timeplayed(cn) * 1000))
+
+local function unset_mem(cn)
+
+    server.player_vars(cn).spectating_time = nil
+    server.player_vars(cn).spectating_last_chat = nil
 end
 
--- kick and clear mem-place
+local function unset_mem_all()
+
+    for p in server.gspectators()
+    do
+	unset_mem(p.cn)
+    end
+end
+
 local function kick(cn)
-	server.kick(cn, "0", "server", "spec-time too high")
-	server.player_pvars(cn).spec_time = nil
+
+    unset_mem(cn)
+    server.disconnect(cn, server.DISC_TIMEOUT, "too long inactive in spec")
 end
 
--- spec time check
+local function chat(cn)
+
+    if server.player_status_code(cn) == server.SPECTATOR
+    then
+	server.player_vars(cn).spectating_last_chat = server.player_connection_time(cn)
+    end
+end
+
 local function check_spec_times(is_empty)
 
-	local max_stime = max_spec_time
-
-	if is_empty then
-		max_stime = max_spec_time_when_server_empty
+    local max_stime = max_spec_time
+    
+    if is_empty
+    then
+	max_stime = max_spec_time_when_server_empty
+    end
+    
+    for p in server.gspectators()
+    do
+	if ((p:vars().spectating_time or 0) > max_stime) and ((p:vars().spectating_last_chat or 0) < (p:connection_time() - 300000))	-- 5 minutes ago
+	then
+	    kick(p.cn)
 	end
-
-	for p in server.splayers() do
-		if (p:pvars().spec_time or 0) > max_stime then
-			kick(p.cn)
-		end
-	end
+    end
 end
 
-server.event_handler("disconnect", function(cn, reason)
-	server.player_pvars(cn).spec_time = nil
-end)
 
--- notice new spectators, remove leaving persons
+server.event_handler("disconnect", unset_mem)
+
 server.event_handler("spectator", function(cn, joined)
 
-	if joined == 0 then
-		server.player_pvars(cn).spec_time = nil
-	end
+    if joined == 0
+    then
+	unset_mem(cn)
+    end
 end)
 
--- set the spectimes on "intermission"
 server.event_handler("finishedgame", function()
 
-	local gamelimit = server.gamelimit
-
-	for p in server.gspectators() do
-		p:pvars().spec_time = (p:pvars().spec_time or 0) + spectime(gamelimit, p.cn)
-	end
-end)
-
--- check spec times every X minutes
-server.interval(interval_check_time, function()
-
-	if is_unload == true then
-		return -1
-	end
-
-	local pdiff = diff
-	if (server.maxclients - pdiff) >= server.maxclients then
-		pdiff = server.maxclients - 1
-	end
-
-	if server.mastermode == 0 and server.playercount > (server.maxclients - pdiff) then
-		check_spec_times()
-	end
-
-	if (server.playercount - server.speccount) == 0 then
-		check_spec_times("is_empty")
-	end
-end)
-
--- unloader
-local function unload()
-
-	is_unload = true
+    if (server.mastermode == 0) or (server.mastermode == 1)
+    then
+	local gamemillis = server.gamemillis
 	
-	for p in server.aplayers() do
-		p:pvars().spec_time = nil
+	for p in server.gspectators()
+	do
+	    p:vars().spectating_time = (p:vars().spectating_time or 0) + gamemillis - (p:timeplayed() * 1000)
 	end
-end
+	
+	if server.playercount >= server.maxclients
+	then
+	    check_spec_times()
+	elseif (server.playercount - server.speccount) == 0
+	then
+	    check_spec_times("is_empty")
+	end
+    end
+end)
 
-return {unload = unload}
+server.event_handler("text", chat)
+
+server.event_handler("sayteam", chat)
+
+
+return {unload = unset_mem_all}
