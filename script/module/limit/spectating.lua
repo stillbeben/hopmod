@@ -58,7 +58,7 @@ server.event_handler("finishedgame", function()
 	    do
 		if ((p:vars().spectating_time or 0) > max_spec_time) and ((p:vars().spectating_last_chat or 0) < (p:connection_time() - 300))	-- 5 minutes ago
 		then
-		    p:msg(red("Server will disconnect you, because all slots are being used and you seem to be inactive."))
+		    p:msg("Server disconnected you, because all slots are being used and you seem to be inactive as spectator.")
 		    
 		    local obj = p
 		    server.sleep(500, function()	-- else the player will be disconnected before the player_msg has reached the target
@@ -66,7 +66,7 @@ server.event_handler("finishedgame", function()
 			if obj:valid()
 			then
 			    unset_mem(obj.cn)
-			    server.disconnect(obj.cn, server.DISC_TIMEOUT, "too long inactive in spec")
+			    obj:disconnect(server.DISC_TIMEOUT, "too long inactive in spec")
 			end
 		    end)
 		end

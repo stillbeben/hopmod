@@ -78,8 +78,9 @@ server.interval(interval_time, function()
 	    
 	    if spec_player
 	    then
+		p:msg("Server moved you to spectators, because you seem to be inactive - type '/spectator 0' to rejoin the game.")
 		p:spec()
-		p:msg("Server moved you to spectators, because you seem to be inactive - type " .. yellow("/spectator 0") .. " to rejoin the game.")
+		server.log("Server moved " .. p:name() .. " to spectator, because of inactivity.")
 	    end
 	end
     end
