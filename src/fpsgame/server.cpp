@@ -1649,7 +1649,6 @@ namespace server
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0))
     {
         if(signal_damage(target->clientnum, actor->clientnum, damage, gun) == -1){
-            std::cerr<<"Blocking damage"<<std::endl;
             return;
         }
         
