@@ -2573,33 +2573,37 @@ namespace server
 
             case N_SWITCHNAME:
             {
-                QUEUE_MSG;
                 getstring(text, p);
                 filtertext(text, text, false, MAXNAMELEN);
                 if(!text[0]) copystring(text, "unnamed");
-                if(strcmp(ci->name,text)!=0)
+		
+		string oldname;
+                copystring(oldname, ci->name);
+		
+		bool allow_rename = strcmp(ci->name, text) && signal_allow_rename(ci->clientnum, text) != -1;
+	
+                if(allow_rename)
                 {
-                    if(ci->check_flooding(ci->sv_switchname_hit, "switching name", false))
-                    {
-                        //kick(ci->clientnum, 60, "server", "renaming too quickly");
-                        return;
-                    }
-                    
+		    copystring(ci->name, text);
+		  
                     int futureId = get_player_id(text, getclientip(ci->clientnum));
                     signal_renaming(ci->clientnum, futureId);
                     ci->playerid = futureId;
-                    
-                    string oldname;
-                    copystring(oldname, ci->name);
-                    copystring(ci->name,text);
-                    
-                    signal_rename(ci->clientnum, oldname, ci->name);
+                    	
+		    signal_rename(ci->clientnum, oldname, ci->name);
+		    
+		    QUEUE_MSG;
+		    QUEUE_STR(ci->name);
                 }
-                
-                QUEUE_STR(ci->name);
+                else 
+		{
+		    if (strcmp(ci->name, text))
+			player_rename(ci->clientnum, oldname, false);
+		}
                 
                 break;
             }
+
 
             case N_SWITCHMODEL:
             {
