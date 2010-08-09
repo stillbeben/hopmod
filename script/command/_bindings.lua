@@ -36,7 +36,7 @@ player_command_script("motd",        nil, "admin")
 player_command_script("group",       nil, "admin")
 player_command_script("ban",         nil, "admin")
 player_command_script("persist",     nil, "admin")
-
+player_command_script("noties",      nil, "admin")
 player_command_script("traffic",     nil, "admin")
 player_command_script("unban",       nil, "admin")
 player_command_script("permban",     nil, "admin")
