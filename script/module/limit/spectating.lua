@@ -22,28 +22,11 @@ local function unset_mem_all()
     end
 end
 
-local function kick(cn)
-
-    unset_mem(cn)
-    server.disconnect(cn, server.DISC_TIMEOUT, "too long inactive in spec")
-end
-
 local function chat(cn)
 
     if server.player_status_code(cn) == server.SPECTATOR
     then
 	server.player_vars(cn).spectating_last_chat = server.player_connection_time(cn)
-    end
-end
-
-local function check_spec_times()
-
-    for p in server.gspectators()
-    do
-	if ((p:vars().spectating_time or 0) > max_spec_time) and ((p:vars().spectating_last_chat or 0) < (p:connection_time() - 300000))	-- 5 minutes ago
-	then
-	    kick(p.cn)
-	end
     end
 end
 
@@ -71,7 +54,23 @@ server.event_handler("finishedgame", function()
 	
 	if server.playercount >= server.maxclients
 	then
-	    check_spec_times()
+	    for p in server.gspectators()
+	    do
+		if ((p:vars().spectating_time or 0) > max_spec_time) and ((p:vars().spectating_last_chat or 0) < (p:connection_time() - 300))	-- 5 minutes ago
+		then
+		    p:msg(red("Server will disconnect you, because all slots are being used and you seem to be inactive."))
+		    
+		    local obj = p
+		    server.sleep(500, function()	-- else the player will be disconnected before the player_msg has reached the target
+		    
+			if obj:valid()
+			then
+			    unset_mem(obj.cn)
+			    server.disconnect(obj.cn, server.DISC_TIMEOUT, "too long inactive in spec")
+			end
+		    end)
+		end
+	    end
 	end
     end
 end)
