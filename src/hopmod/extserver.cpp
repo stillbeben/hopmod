@@ -294,7 +294,8 @@ void player_rename(int cn, const char * newname, bool pub)
     
     copystring(ci->name, safenewname, MAXNAMELEN+1);
     
-    //signal_rename(ci->clientnum, oldname, ci->name);
+    if (pub) 
+      signal_rename(ci->clientnum, oldname, ci->name);
 }
 std::string player_displayname(int cn)
 {
