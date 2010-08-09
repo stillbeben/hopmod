@@ -1,16 +1,13 @@
 --[[
-    Idea was seen on and copied from PSL
-    (do i need to write that? ...)
-    
-    like suddendeath: game will not end, while there is no winner
-    increases game time by one minute until there is a winner
+    like suddendeath: game will not end, while there is no clear ranking order
+    increasess game time by one minute
     
     command function: no_ties(enable)
 	to enable (enable = true)/ disable (enable = nil)
 	no_ties(true) has no effect on the current map, when maptime < 1
 ]]
 
-local default_enabled = (server.no_ties_enabled_by_default or 0) == 1
+local default_enabled = server.no_ties_enabled_by_default == 1
 
 local is_active
 local is_new_map

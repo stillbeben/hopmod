@@ -4,34 +4,30 @@
 ]]
 
 
-local msg = {}
-msg.info = "#noties [0|off|1|on]"
-msg.no_module = "no_tie module is not loaded"
-msg.enabled = "no ties module enabled."
-msg.disabled = "no ties module disabled."
+local msg_info = "#noties [0|off|1|on]"
 
 
 return function(cn, option)
 
     if not server.no_ties
     then
-	return false, msg.no_module
+	return false, "no_tie module is not loaded."
     end
     
     if not option
     then
-	return false, msg.info
+	return false, msg_info
     end
     
     if (option == "0") or (option == "off")
     then
 	server.no_ties()
-	server.player_msg(cn, msg.disabled)
+	server.player_msg(cn, "no ties module disabled.")
     elseif (option == "1") or (option == "on")
     then
 	server.no_ties(true)
-	server.player_msg(cn, msg.enabled)
+	server.player_msg(cn, "no ties module enabled.")
     else
-	return false, msg.info
+	return false, msg_info
     end
 end
