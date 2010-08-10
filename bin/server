@@ -6,9 +6,9 @@
 ################################################################################
 
 # refuse root
-if [ "x${UID}" = "x0" ]
+if [ "x${UID}" = "x0" ] || [ "x$(whoami)" = "xroot" ]
 then
-    echo "You cannot start the server as root!"
+    echo "You cannot use the server as root!"
     exit 1
 fi
 

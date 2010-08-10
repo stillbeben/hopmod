@@ -17,8 +17,6 @@ local msg_overtime = "One minute overtime!"
 
 function server.no_ties(enable)
 
-    is_tie = nil
-    
     if not enable
     then
 	is_active = nil
@@ -43,7 +41,7 @@ end)
 
 server.event_handler("timeupdate", function(mins)
 
-    if is_active and not gamemodeinfo.edit and (mins == 1)
+    if (mins == 1) and is_active and not gamemodeinfo.edit
     then
 	is_new_map = nil
 	
@@ -66,6 +64,11 @@ server.event_handler("timeupdate", function(mins)
 				break
 			    end
 			end
+			
+			if is_tie
+			then
+			    break
+			end
 		    end
 		else
     		    for player in server.gplayers()
@@ -80,6 +83,11 @@ server.event_handler("timeupdate", function(mins)
 				is_tie = true
 				break
 			    end
+			end
+			
+			if is_tie
+			then
+			    break
 			end
 		    end
 		end
