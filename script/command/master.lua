@@ -30,7 +30,7 @@ local function run(cn)
 
 				local admin_present = server.master ~= -1 and server.player_priv_code(server.master) == server.PRIV_ADMIN
 
-				if server.player_priv_code(cn) == 0 and not admin_present and server.use_master_auth == 1 then
+				if server.player_priv_code(cn) == 0 and not admin_present then
 
 					server.setmaster(cn)
 					server.msg(server.player_displayname(cn) .. " claimed master as '" .. magenta(user_id) .. "'")
