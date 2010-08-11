@@ -26,7 +26,7 @@ function server.write_server_status(filename, filemode)
 
 		local player_rows = "CN LAG PING IP CO NAME TIME STATE PRIV\n"
 
-		for p in server.gclients() do
+		for p in server.gall() do
 
 			local country = geoip.ip_to_country_code(p:ip())
 			if #country == 0 then country = "?" end

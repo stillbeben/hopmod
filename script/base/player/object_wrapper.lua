@@ -90,14 +90,26 @@ function server.gspectators()
     return client_iterator_generator(server.spectators())
 end
 
-function server.gclients()
-    return client_iterator_generator(server.clients())
-end
-
 function server.gplayers()
     return client_iterator_generator(server.players())
 end
 
+function server.gclients()
+
+    local all = server.players()
+    
+    for _, cn in pairs(server.spectators())
+    do
+	table.insert(all, cn)
+    end
+    
+    return client_iterator_generator(all)
+end
+
 function server.gbots()
     return client_iterator_generator(server.bots())
+end
+
+function server.gall()
+    return client_iterator_generator(server.clients())
 end
