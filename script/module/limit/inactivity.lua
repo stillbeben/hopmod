@@ -32,6 +32,8 @@ server.event_handler("disconnect", unset_vars)
 
 server.event_handler("mapchange", unset_vars_all)
 
+server.event_handler("spectator", unset_vars)
+
 server.interval(interval_time, function()
 
     if is_unload
