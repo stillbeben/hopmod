@@ -22,7 +22,7 @@ end
 
 local function unset_vars_all()
 
-    for p in server.gclients() do
+    for p in server.gplayers() do
 	unset_vars(p.cn)
     end
 end
