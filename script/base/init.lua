@@ -17,10 +17,10 @@ load_once("base/player/object_wrapper")
 load_once("base/player/query")
 load_once("base/player/private_vars")
 load_once("base/player/command")
+load_once("base/kickban")
 load_once("base/logging")
 load_once("base/logging_server")
 load_once("base/server_message")
-load_once("base/kickban")
 
 server.module("base/maprotation/init.lua")
 server.module("base/normalize")
@@ -45,7 +45,7 @@ local function load_module_vars(path)
 	
         if (filetype == filesystem.DIRECTORY) and (filename ~= "." and filename ~= "..") then
             load_module_vars(fullfilename)
-        elseif filetype == filesystem.FILE and filename:match(".vars$") then
+	elseif filetype == filesystem.FILE and filename:match(".vars$") then
             server.execute_cubescript_file(fullfilename)
         end
     end

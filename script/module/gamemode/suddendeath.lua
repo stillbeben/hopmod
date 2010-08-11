@@ -2,6 +2,8 @@
     suddendeath mode: game will not end while there is a tie
     so far there is a tie when timelimit is reached, the next score will clearify
     
+    works in duels and team games with 2 teams
+    
     command function: suddendeath(enable)
     to enable (enable = true)/ disable (enable = nil)
     to enable has no effect on the current map, when maptime < 1 min
