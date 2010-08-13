@@ -1,5 +1,11 @@
 #!/bin/sh
 
+if [ "x$1" = "x" ]
+then
+    echo "usage: $0 <new server directory>"
+    exit 1
+fi
+
 DEST=$1
 
 mkdir -p $DEST

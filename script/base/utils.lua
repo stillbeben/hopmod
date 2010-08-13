@@ -48,7 +48,7 @@ for filetype, filename in filesystem.dir(utils_dir)
 do
     local fullfilename = utils_dir .. "/" .. filename
     
-    if filetype == filesystem.FILE and filename:match(".lua$")
+    if (filetype == filesystem.FILE or filetype == filesystem.UNKNOWN) and filename:match(".lua$")
     then
 	dofile(fullfilename)
     end

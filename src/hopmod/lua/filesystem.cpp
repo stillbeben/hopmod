@@ -86,6 +86,9 @@ void open_filesystem(lua_State * L)
     
     luaL_register(L, "filesystem", functions);
     
+    lua_pushinteger(L, DT_UNKNOWN);
+    lua_setfield(L, -2, "UNKNOWN");
+    
     lua_pushinteger(L, DT_FIFO);
     lua_setfield(L, -2, "FIFO");
     
