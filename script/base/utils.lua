@@ -40,7 +40,7 @@ function server.hashpassword(cn, password)
 	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), password))
 end
 
-dofile("./script/base/utils/app.lua")
+dofile("./script/base/utils/apps.lua")
 dofile("./script/base/utils/file.lua")
 dofile("./script/base/utils/gamemode.lua")
 dofile("./script/base/utils/mysql.lua")
