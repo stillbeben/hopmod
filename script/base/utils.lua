@@ -36,20 +36,14 @@ function server.eval_lua(str)
     return func()
 end
 
-function server.hashpassword(cn, pass)
-	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), pass))
+function server.hashpassword(cn, password)
+	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), password))
 end
 
+dofile("./script/base/utils/app.lua")
+dofile("./script/base/utils/file.lua")
+dofile("./script/base/utils/gamemode.lua")
+dofile("./script/base/utils/mysql.lua")
+dofile("./script/base/utils/string.lua")
+dofile("./script/base/utils/table.lua")
 
-local filesystem = require "filesystem"
-local utils_dir = "./script/base/utils"
-
-for filetype, filename in filesystem.dir(utils_dir)
-do
-    local fullfilename = utils_dir .. "/" .. filename
-    
-    if (filetype == filesystem.FILE or filetype == filesystem.UNKNOWN) and filename:match(".lua$")
-    then
-	dofile(fullfilename)
-    end
-end
