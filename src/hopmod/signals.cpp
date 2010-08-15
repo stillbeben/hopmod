@@ -23,7 +23,7 @@ boost::signal<void (int)> signal_connect;
 boost::signal<void (int,const char *)> signal_disconnect;
 boost::signal<void (const char *,const char *)> signal_failedconnect;
 boost::signal<void (int)> signal_maploaded;
-boost::signal<int (int,const char *)>  signal_allow_rename;
+boost::signal<int (int,const char *), proceed>  signal_allow_rename;
 boost::signal<void (int,const char *,const char *)> signal_rename;
 boost::signal<void (int,int)> signal_renaming;
 boost::signal<void (int,const char *,const char *)> signal_reteam;
