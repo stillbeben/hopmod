@@ -4,6 +4,8 @@ extern "C"{
 #include <lauxlib.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
 }
 #include <string> // Find out why placement new depends on a stdlib header
 
@@ -43,8 +45,23 @@ public:
         if(!self->m_dir) return 0;
         struct dirent * entry = readdir(self->m_dir);
         if(!entry) return 0;
-        lua_pushinteger(L, entry->d_type);
+        
+        struct stat info;
+        stat(entry->d_name, &info);
+             
+        unsigned char file_type = DT_UNKNOWN;
+
+        if (info.st_mode & S_IFREG)      file_type = DT_REG;
+        else if(info.st_mode & S_IFDIR)  file_type = DT_DIR;
+        else if(info.st_mode & S_IFIFO)  file_type = DT_FIFO;
+        else if(info.st_mode & S_IFLNK)  file_type = DT_LNK;
+        else if(info.st_mode & S_IFBLK)  file_type = DT_BLK;
+        else if(info.st_mode & S_IFCHR)  file_type = DT_CHR;
+        else if(info.st_mode & S_IFSOCK) file_type = DT_SOCK;
+        
+        lua_pushinteger(L, file_type);
         lua_pushstring(L, entry->d_name);
+        
         return 2;
     }
     
