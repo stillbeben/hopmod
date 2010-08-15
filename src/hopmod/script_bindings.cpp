@@ -16,6 +16,10 @@ static std::vector<script::any> changemap_defargs;
 static std::vector<script::any> recorddemo_defargs;
 extern bool reloaded; //startup.cpp
 
+namespace server{
+    extern int spectator_delay;
+ }
+
 static void setup_default_arguments()
 {    
     changemap_defargs.clear();
@@ -336,4 +340,7 @@ void register_server_script_bindings(script::env & env)
     
     script::bind_freefunc(file_exists, "file_exists", env);
     script::bind_freefunc(dir_exists, "dir_exists", env);
+    
+    script::bind_var(server::spectator_delay, "spectator_delay", env);
 }
+

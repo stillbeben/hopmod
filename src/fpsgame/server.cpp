@@ -56,6 +56,16 @@ namespace server
 
     static const int DEATHMILLIS = 300;
     
+    int spectator_delay = 0;
+    struct delayed_sendpacket
+    {
+        int     time;
+        int     channel;
+        void *  data;
+        int     length;
+    };
+    vector<delayed_sendpacket> delayed_sendpackets;
+    
     struct clientinfo;
     
     struct gameevent
@@ -436,6 +446,11 @@ namespace server
             addr.host = getclientip(clientnum);
             return ((enet_address_get_host_ip(&addr, hostname_buffer, sizeof(hostname_buffer)) == 0) ? hostname_buffer : "unknown");
         }
+        
+        bool is_delayed_spectator()const
+        {
+            return spectator_delay && state.state == CS_SPECTATOR && privilege != PRIV_ADMIN;
+        }
     };
     
     struct worldstate
@@ -510,6 +525,7 @@ namespace server
     
     vector<clientinfo *> connects, clients, bots;
     vector<worldstate *> worldstates;
+    
     bool reliablemessages = false;
 
     bool broadcast_mapmodified = true;
@@ -839,9 +855,24 @@ namespace server
         demorecord->write(data, len);
     }
 
+    void write_delayed_broadcast(int chan, void * data, int len)
+    {
+        if(!spectator_delay || interm) return;
+        
+        delayed_sendpacket sendpacket;
+        sendpacket.time = totalmillis + spectator_delay;
+        sendpacket.channel = chan;
+        sendpacket.data = malloc(len);
+        memcpy(sendpacket.data, data, len);
+        sendpacket.length = len;
+        
+        delayed_sendpackets.add(sendpacket);
+    }
+
     void recordpacket(int chan, void *data, int len)
     {
         writedemo(chan, data, len);
+        write_delayed_broadcast(chan, data, len);
     }
 
     void enddemorecord()
@@ -1213,6 +1244,7 @@ namespace server
             }
         }
         int psize = ws.positions.length(), msize = ws.messages.length();
+        
         if(psize)
         {
             recordpacket(0, ws.positions.getbuf(), psize);
@@ -1231,7 +1263,7 @@ namespace server
         if(psize || msize) loopv(clients)
         {
             clientinfo &ci = *clients[i];
-            if(ci.state.aitype != AI_NONE) continue;
+            if(ci.state.aitype != AI_NONE || ci.is_delayed_spectator()) continue;
             ENetPacket *packet;
             if(psize && (ci.posoff<0 || psize-ci.poslen>0))
             {
@@ -1265,13 +1297,36 @@ namespace server
             return true;
         }
     }
+    
+    void free_packet_data(ENetPacket * packet)
+    {
+        free(packet->data);
+    }
 
     bool sendpackets(bool force)
     {
         if(clients.empty() || (!hasnonlocalclients() && !demorecord)) return false;
+        
+        if(delayed_sendpackets.length() && totalmillis >= delayed_sendpackets[0].time)
+        {
+            int flags = (delayed_sendpackets[0].channel == 1 ? ENET_PACKET_FLAG_RELIABLE : 0);
+            ENetPacket * packet = enet_packet_create(delayed_sendpackets[0].data, delayed_sendpackets[0].length, flags | ENET_PACKET_FLAG_NO_ALLOCATE);
+            packet->freeCallback = free_packet_data;
+            
+            loopv(clients)
+            {
+                clientinfo &ci = *clients[i];
+                if(!ci.is_delayed_spectator()) continue;
+                sendpacket(ci.clientnum, delayed_sendpackets[0].channel, packet);
+            }
+            
+            delayed_sendpackets.remove(0);
+        }
+        
         enet_uint32 curtime = enet_time_get()-lastsend;
         if(curtime<33 && !force) return false;
         bool flush = buildworldstate();
+        
         lastsend += curtime - (curtime%33);
         return flush;
     }
@@ -1942,8 +1997,9 @@ namespace server
         //if(!gamepaused && m_timed && (gamelimit - gamemillis + 60000 - 1)/60000 != minremain ) checkintermission();
         if(!gamepaused && m_timed && smapname[0] && gamemillis-curtime>0) checkintermission();
         
-        if(interm > 0 && gamemillis>interm)
+        if(interm > 0 && gamemillis > interm + spectator_delay && delayed_sendpackets.length() == 0)
         {
+            spectator_delay = 0;
             if(demorecord) enddemorecord();
             interm = -1;
             checkvotes(true);
@@ -2115,7 +2171,7 @@ namespace server
     bool allowbroadcast(int n)
     {
         clientinfo *ci = getinfo(n);
-        return ci && ci->connected;
+        return ci && ci->connected && !ci->is_delayed_spectator();
     }
     
     void tryauth(clientinfo *ci, const char * domain, const char * user)
@@ -2545,7 +2601,7 @@ namespace server
                         break;
                     }
                     
-                    if(signal_text(ci->clientnum, text) != -1)
+                    if(signal_text(ci->clientnum, text) != -1 && !ci->is_delayed_spectator())
                     {
                         QUEUE_AI;
                         QUEUE_INT(N_TEXT);
@@ -2576,30 +2632,30 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text, false, MAXNAMELEN);
                 if(!text[0]) copystring(text, "unnamed");
-		
-		string oldname;
+		        
+                string oldname;
                 copystring(oldname, ci->name);
-		
-		bool allow_rename = strcmp(ci->name, text) && signal_allow_rename(ci->clientnum, text) != -1;
-	
+                
+                bool allow_rename = strcmp(ci->name, text) && signal_allow_rename(ci->clientnum, text) != -1;
+                
                 if(allow_rename)
                 {
-		    copystring(ci->name, text);
-		  
+                    copystring(ci->name, text);
+                    
                     int futureId = get_player_id(text, getclientip(ci->clientnum));
                     signal_renaming(ci->clientnum, futureId);
                     ci->playerid = futureId;
-                    	
-		    signal_rename(ci->clientnum, oldname, ci->name);
-		    
-		    QUEUE_MSG;
-		    QUEUE_STR(ci->name);
+                    
+                    signal_rename(ci->clientnum, oldname, ci->name);
+
+                    QUEUE_MSG;
+                    QUEUE_STR(ci->name);
                 }
                 else 
-		{
-		    if (strcmp(ci->name, text))
-			player_rename(ci->clientnum, oldname, false);
-		}
+                {
+                    if (strcmp(ci->name, text))
+                        player_rename(ci->clientnum, oldname, false);
+                }
                 
                 break;
             }
