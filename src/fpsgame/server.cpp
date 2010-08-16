@@ -263,7 +263,7 @@ namespace server
     
     struct clientinfo
     {
-        int clientnum, ownernum, connectmillis, sessionid, overflow, playerid;
+        int clientnum, ownernum, connectmillis, specmillis, sessionid, overflow, playerid;
         string name, team, mapvote;
         int playermodel;
         int modevote;
@@ -281,7 +281,7 @@ namespace server
         bool warned, gameclip;
         ENetPacket *clipboard;
         int lastclipboard, needclipboard;
-
+        
         freqlimit sv_text_hit;
         freqlimit sv_sayteam_hit;
         freqlimit sv_mapvote_hit;
@@ -375,6 +375,7 @@ namespace server
             warned = false;
             gameclip = false;
             rank = 0;
+            specmillis = -1;
         }
 
         void reassign()
@@ -1316,7 +1317,7 @@ namespace server
             loopv(clients)
             {
                 clientinfo &ci = *clients[i];
-                if(!ci.is_delayed_spectator()) continue;
+                if(!ci.is_delayed_spectator() || ci.specmillis + spectator_delay > totalmillis) continue;
                 sendpacket(ci.clientnum, delayed_sendpackets[0].channel, packet);
             }
             
@@ -1416,7 +1417,9 @@ namespace server
             if(!ci || (m_timed && smapname[0]))
             {
                 putint(p, N_TIMEUP);
-                putint(p, gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
+                int timeleft = gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0;
+                if(spectator_delay && timeleft > spectator_delay) timeleft += spectator_delay/1000;
+                putint(p, timeleft);
             }
             if(!notgotitems)
             {
@@ -2225,6 +2228,7 @@ namespace server
         {
             if(smode) smode->leavegame(spinfo);
             spinfo->state.state = CS_SPECTATOR;
+            spinfo->specmillis = totalmillis;
             spinfo->state.timeplayed += lastmillis - spinfo->state.lasttimeplayed;
             if(!spinfo->local && !spinfo->privilege) aiman::removeai(spinfo);
         }
@@ -2236,6 +2240,12 @@ namespace server
             aiman::addclient(spinfo);
         }
         sendf(-1, 1, "ri3", N_SPECTATOR, spinfo->clientnum, val);
+        
+        if(spectator_delay)
+        {
+            sendf(spinfo->clientnum, 1, "ri3", N_SPECTATOR, spinfo->clientnum, val);
+            sendf(spinfo->clientnum, 1, "ri2", N_TIMEUP, (gamelimit - gamemillis + spectator_delay)/1000);
+        }
         
         signal_spectator(spinfo->clientnum, val);
     }
@@ -2283,7 +2293,11 @@ namespace server
                 bool restoredscore = restorescore(ci);
                 bool was_playing = restoredscore && ci->state.state != CS_SPECTATOR && ci->state.disconnecttime > mastermode_mtime;
                 
-                if(mastermode>=MM_LOCKED && !was_playing) ci->state.state = CS_SPECTATOR;
+                if(mastermode>=MM_LOCKED && !was_playing) 
+                {
+                    ci->state.state = CS_SPECTATOR;
+                    ci->specmillis = totalmillis;
+                }
                 else ci->state.state = CS_DEAD;
                 
                 if(currentmaster>=0) masterupdate = true; //FIXME send N_CURRENTMASTER packet directly to client
