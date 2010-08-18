@@ -6,6 +6,8 @@ extern "C"{
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <cstring>
 }
 #include <string> // Find out why placement new depends on a stdlib header
 
@@ -17,11 +19,16 @@ public:
     directory_iterator(const char * dirname)
     {
         m_dir = opendir(dirname);
+        
+        main_dir = new char[strlen(dirname)+1];
+        strcpy(main_dir, dirname);
     }
     
     ~directory_iterator()
     {
         if(m_dir) closedir(m_dir);
+        
+        delete [] main_dir;
     }
     
     static void create_metatable(lua_State * L)
@@ -46,19 +53,26 @@ public:
         struct dirent * entry = readdir(self->m_dir);
         if(!entry) return 0;
         
+	unsigned int len = (strlen(self->main_dir) + 2) + strlen(&entry->d_name[0]);
+	char * file = new char[len];
+	strcpy(file,self->main_dir);
+	strcat(file, "/");
+	strcat(file, entry->d_name);
+	
         struct stat info;
-        stat(entry->d_name, &info);
-             
-        unsigned char file_type = DT_UNKNOWN;
-
-        if (info.st_mode & S_IFREG)      file_type = DT_REG;
-        else if(info.st_mode & S_IFDIR)  file_type = DT_DIR;
-        else if(info.st_mode & S_IFIFO)  file_type = DT_FIFO;
-        else if(info.st_mode & S_IFLNK)  file_type = DT_LNK;
-        else if(info.st_mode & S_IFBLK)  file_type = DT_BLK;
-        else if(info.st_mode & S_IFCHR)  file_type = DT_CHR;
-        else if(info.st_mode & S_IFSOCK) file_type = DT_SOCK;
+        if (stat(file, &info)) return 0;
         
+        delete file;
+        
+        unsigned char file_type = DT_UNKNOWN;
+        if (S_ISREG(info.st_mode))       file_type = DT_REG;
+        else if (S_ISDIR(info.st_mode))  file_type = DT_DIR;
+        else if (S_ISFIFO(info.st_mode)) file_type = DT_FIFO;
+        else if (S_ISLNK(info.st_mode))  file_type = DT_LNK;
+        else if (S_ISBLK(info.st_mode))  file_type = DT_BLK;
+        else if (S_ISCHR(info.st_mode))  file_type = DT_CHR;
+        else if (S_ISSOCK(info.st_mode)) file_type = DT_SOCK;
+	
         lua_pushinteger(L, file_type);
         lua_pushstring(L, entry->d_name);
         
@@ -73,6 +87,7 @@ private:
     }
     
     DIR * m_dir;
+    char * main_dir;
 };
 
 const char * directory_iterator::MT = "directory_iterator";
@@ -102,9 +117,6 @@ void open_filesystem(lua_State * L)
     };
     
     luaL_register(L, "filesystem", functions);
-    
-    lua_pushinteger(L, DT_UNKNOWN);
-    lua_setfield(L, -2, "UNKNOWN");
     
     lua_pushinteger(L, DT_FIFO);
     lua_setfield(L, -2, "FIFO");

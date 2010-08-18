@@ -45,7 +45,7 @@ local function load_module_vars(path)
 	
         if (filetype == filesystem.DIRECTORY) and (filename ~= "." and filename ~= "..") then
             load_module_vars(fullfilename)
-	elseif (filetype == filesystem.FILE or filetype == filesystem.UNKNOWN) and filename:match(".vars$") then
+	elseif filetype == filesystem.FILE and filename:match(".vars$") then
             server.execute_cubescript_file(fullfilename)
         end
     end
