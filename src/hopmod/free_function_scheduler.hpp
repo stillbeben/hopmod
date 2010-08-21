@@ -84,6 +84,7 @@ public:
     {
         m_jobs.clear();
         m_jobs_queue = jobs_queue();
+        m_next_job = NULL;
     }
     
     void cancel(int job_id)
