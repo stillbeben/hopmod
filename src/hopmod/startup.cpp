@@ -15,6 +15,8 @@ using namespace fungu;
 #include <signal.h>
 #include <iostream>
 
+#include <boost/thread.hpp>
+
 #ifdef HAS_LSQLITE3
 extern "C"{
 int luaopen_lsqlite3(lua_State * L);
@@ -46,6 +48,8 @@ static bool reload = false;
 unsigned int maintenance_frequency;
 static int maintenance_time = 0;
 bool reloaded = false;
+
+static boost::thread::id main_thread;
 
 static void install_crash_handler()
 {
@@ -91,6 +95,8 @@ static int application_shutdown_utils_handler(int shutdownType)
 */
 void init_hopmod()
 {
+    main_thread = boost::this_thread::get_id();
+    
     /*
         Misc
     */
@@ -196,6 +202,8 @@ void started()
 
 void shutdown()
 {
+    if(boost::this_thread::get_id() != main_thread) return;
+       
     signal_shutdown(SHUTDOWN_NORMAL);
     stop_restarter();
     exit(0);

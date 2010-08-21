@@ -58,7 +58,7 @@ set(LUA_MODULES_SOURCES
     hopmod/lua/packlib.c)
 
 add_library(lua_modules STATIC ${LUA_MODULES_SOURCES})
-target_link_libraries(lua_modules -lGeoIP sauertools ${SCRIPTING_LIBRARIES})
+target_link_libraries(lua_modules -lGeoIP -pthread sauertools ${SCRIPTING_LIBRARIES})
 
 add_library(serverscripting STATIC hopmod/scripting.cpp hopmod/signals.cpp)
 target_link_libraries(serverscripting lua_modules ${BOOST_SIGNALS_LIBRARY} ${BOOST_SYSTEM_LIBRARY} ${SCRIPTING_LIBRARIES})
@@ -83,7 +83,7 @@ SET(GAME_SERVER_SOURCES
 
 add_definitions(${LSQLITE3_DEFINITIONS})
 add_executable(sauer_server ${GAME_SERVER_SOURCES})
-target_link_libraries(sauer_server sauertools serverscripting lua_modules ${LSQLITE3_LIBRARY} scriptpipe ${ENET_LIBRARY} ${FUNGU_HTTP_LIBRARY} -lz -lrt)
+target_link_libraries(sauer_server sauertools serverscripting lua_modules ${BOOST_THREAD_LIBRARY} ${LSQLITE3_LIBRARY} scriptpipe ${ENET_LIBRARY} ${FUNGU_HTTP_LIBRARY} -lz -lrt)
 
 add_executable(keygen hopmod/keygen.cpp)
 target_link_libraries(keygen sauertools)
