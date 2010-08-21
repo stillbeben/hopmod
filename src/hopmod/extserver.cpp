@@ -162,7 +162,7 @@ void restore_server(const char * filename)
     
     int readlen = read(fd, &header, sizeof(header));
     
-    if(readlen == -1)
+    if(readlen < sizeof(header))
     {
         close(fd);
         return;
@@ -178,7 +178,7 @@ void restore_server(const char * filename)
     {
         savedscore playerscore;
         readlen = read(fd, &playerscore, sizeof(savedscore));
-        if(readlen == -1)
+        if(readlen < sizeof(savedscore))
         {
             close(fd);
             return;
@@ -190,7 +190,7 @@ void restore_server(const char * filename)
     {
         restore_teamscore team;
         readlen = read(fd, &team, sizeof(team));
-        if(readlen == -1)
+        if(readlen < sizeof(team))
         {
             close(fd);
             return;
@@ -613,6 +613,16 @@ void player_spec(int cn)
 void player_unspec(int cn)
 {
     setspectator(get_ci(cn), false);
+}
+
+void spec_all()
+{
+    loopv(clients)
+    {
+        clientinfo * ci = clients[i];
+        if(ci->state.aitype != AI_NONE || ci->state.state == CS_SPECTATOR) continue;
+        player_spec(ci->clientnum);
+    }
 }
 
 int player_bots(int cn)
