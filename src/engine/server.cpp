@@ -683,8 +683,7 @@ bool setuplistenserver(bool dedicated)
     }
     else copystring(serverip,"0.0.0.0");
     
-    int slots = min(maxclients + server::reserveclients(), MAXCLIENTS);
-    serverhost = enet_host_create(&address, slots, server::numchannels(), 0, uprate);
+    serverhost = enet_host_create(&address, MAXCLIENTS, server::numchannels(), 0, uprate);
     if(!serverhost) return servererror(dedicated, "could not create server host");
     loopi(slots) serverhost->peers[i].data = NULL;
     const char * _serverip = serverip[0] == '\0' ? "0.0.0.0" : serverip;
@@ -772,10 +771,10 @@ int prog_argc;
 char * const * prog_argv;
 
 int main(int argc, char* argv[])
-{   
+{
     prog_argc = argc;
     prog_argv = argv;
-    
+ 
     if(enet_initialize()<0) fatal("Unable to initialise network module");
     atexit(enet_deinitialize);
     enet_time_set(0);
