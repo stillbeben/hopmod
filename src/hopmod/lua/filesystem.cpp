@@ -19,15 +19,14 @@ public:
     {
         m_dir = opendir(dirname);
         
-        main_dir = new char[strlen(dirname)+1];
-        strcpy(main_dir, dirname);
+        m_dir_path = new char[strlen(dirname) + 1];
+        strcpy(m_dir_path, dirname);
     }
     
     ~directory_iterator()
     {
         if(m_dir) closedir(m_dir);
-        
-        delete [] main_dir;
+        delete [] m_dir_path;
     }
     
     static void create_metatable(lua_State * L)
@@ -52,16 +51,13 @@ public:
         struct dirent * entry = readdir(self->m_dir);
         if(!entry) return 0;
         
-	unsigned int len = (strlen(self->main_dir) + 2) + strlen(&entry->d_name[0]);
-	char * file = new char[len];
-	strcpy(file,self->main_dir);
-	strcat(file, "/");
-	strcat(file, entry->d_name);
-	
+	    std::string filename;
+	    filename  = self->m_dir_path;
+	    filename += "/";
+	    filename += entry->d_name; 
+	    
         struct stat info;
-        if (stat(file, &info)) return 0;
-        
-        delete file;
+        if (stat(filename.c_str(), &info)) return 0;
         
         unsigned char file_type = DT_UNKNOWN;
         if (S_ISREG(info.st_mode))       file_type = DT_REG;
@@ -86,7 +82,7 @@ private:
     }
     
     DIR * m_dir;
-    char * main_dir;
+    char * m_dir_path;
 };
 
 const char * directory_iterator::MT = "directory_iterator";
