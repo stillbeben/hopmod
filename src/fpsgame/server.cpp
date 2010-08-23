@@ -1418,7 +1418,7 @@ namespace server
             {
                 putint(p, N_TIMEUP);
                 int timeleft = gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0;
-                if(spectator_delay && timeleft > spectator_delay) timeleft += spectator_delay/1000;
+                if(spectator_delay) timeleft += spectator_delay/1000;
                 putint(p, timeleft);
             }
             if(!notgotitems)
@@ -2661,8 +2661,8 @@ namespace server
                     ci->playerid = futureId;
                     
                     signal_rename(ci->clientnum, oldname, ci->name);
-
-                    QUEUE_MSG;
+                    
+                    QUEUE_INT(N_SWITCHNAME);
                     QUEUE_STR(ci->name);
                 }
                 else 
