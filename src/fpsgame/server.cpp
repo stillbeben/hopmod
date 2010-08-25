@@ -279,7 +279,7 @@ namespace server
         string clientmap;
         int mapcrc;
         bool warned, gameclip;
-        ENetPacket *clipboard;
+        ENetPacket *getdemo, *getmap, *clipboard;
         int lastclipboard, needclipboard;
         
         freqlimit sv_text_hit;
@@ -299,6 +299,8 @@ namespace server
         
         clientinfo() 
          : 
+		   demo(NULL),
+		   getmap(NULL),
            clipboard(NULL),
            sv_text_hit(sv_text_hit_length),
            sv_sayteam_hit(sv_sayteam_hit_length),
@@ -979,13 +981,33 @@ namespace server
             sendservmsg(msg);
         }
     }
-
-    void senddemo(int cn, int num)
+	
+    static void freegetmap(ENetPacket *packet)
     {
+        loopv(clients)
+        {
+            clientinfo *ci = clients[i];
+            if(ci->getmap == packet) ci->getmap = NULL;
+        }
+    }
+
+    static void freegetdemo(ENetPacket *packet)
+    {
+        loopv(clients)
+        {
+            clientinfo *ci = clients[i];
+            if(ci->getdemo == packet) ci->getdemo = NULL;
+        }
+    }
+
+    void senddemo(clientinfo *ci, int num)
+    {
+        if(ci->getdemo) return;
         if(!num) num = demos.length();
         if(!demos.inrange(num-1)) return;
         demofile &d = demos[num-1];
-        sendf(cn, 2, "rim", N_SENDDEMO, d.len, d.data); 
+        if((ci->getdemo = sendf(ci->clientnum, 2, "rim", N_SENDDEMO, d.len, d.data)))
+            ci->getdemo->freeCallback = freegetdemo;
     }
 
     void enddemoplayback()
@@ -2933,19 +2955,21 @@ namespace server
             case N_GETDEMO:
             {
                 int n = getint(p);
-                if(!ci->privilege  && !ci->local && ci->state.state==CS_SPECTATOR) break;
-                senddemo(sender, n);
+                if(!ci->privilege && !ci->local && ci->state.state==CS_SPECTATOR) break;
+                senddemo(ci, n);
                 break;
             }
 
             case N_GETMAP:
-                if(mapdata)
+                if(!mapdata) sendf(sender, 1, "ris", N_SERVMSG, "no map to send");
+                else if(ci->getmap) sendf(sender, 1, "ris", N_SERVMSG, "already sending map");
+                else
                 {
                     sendf(sender, 1, "ris", N_SERVMSG, "server sending map...");
-                    sendfile(sender, 2, mapdata, "ri", N_SENDMAP);
+                    if((ci->getmap = sendfile(sender, 2, mapdata, "ri", N_SENDMAP)))
+                        ci->getmap->freeCallback = freegetmap;
                     ci->needclipboard = totalmillis;
                 }
-                else sendf(sender, 1, "ris", N_SERVMSG, "no map to send");
                 break;
 
             case N_NEWMAP:
