@@ -65,9 +65,9 @@ function server.unban(ipmask)
     server.set_ip_var(ipmask, "ban_time", nil)
 end
 
-server.event_handler("connecting", function(cn, hostname, name, password)
+server.event_handler("connecting", function(cn, hostname, name, password, reserved_slot)
     local bantime = server.ip_vars(hostname).ban_expire
-    if bantime then
+    if bantime and not reserved_slot then
         if bantime > os.time() then
             return -1
         else
