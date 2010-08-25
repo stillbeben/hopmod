@@ -299,8 +299,8 @@ namespace server
         
         clientinfo() 
          : 
-		   demo(NULL),
-		   getmap(NULL),
+           getdemo(NULL),
+           getmap(NULL),
            clipboard(NULL),
            sv_text_hit(sv_text_hit_length),
            sv_sayteam_hit(sv_sayteam_hit_length),
