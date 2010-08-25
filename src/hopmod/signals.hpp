@@ -40,7 +40,7 @@ struct maxvalue
 
 #ifdef HOPMOD_GAMESERVER_EVENTS
 // Player Events
-extern boost::signal<int (int, const char *, const char *, const char *), proceed>     signal_connecting;
+extern boost::signal<int (int, const char *, const char *, const char *, bool), proceed>     signal_connecting;
 extern boost::signal<void (int)>                                    signal_connect;
 extern boost::signal<void (int,const char *)>                       signal_disconnect;
 extern boost::signal<void (const char *,const char *)>              signal_failedconnect;

@@ -53,9 +53,10 @@ server.event_handler("connect", function(cn)
     failed[cn] = 0
 end)
 
-server.event_handler("connecting", function(cn, host, name, hash)
+server.event_handler("connecting", function(cn, host, name, hash, reserved_slot)
+	if reserved_slot then return end
     if hash ~= "" then
-	setmaster(cn, hash, 1)
+		setmaster(cn, hash, 1)
     end
 end)
 

@@ -2156,15 +2156,16 @@ namespace server
         if(ci->local) return DISC_NONE;
         if(!m_mp(gamemode)) return DISC_PRIVATE;
         int clientcount = numclients(-1, false, true);
+
+        bool is_reserved = slotpass[0] && checkpassword(ci, slotpass, pwd);
         
-        if(signal_connecting(ci->clientnum, ci->hostname(), ci->name, pwd) == -1)
+        if(signal_connecting(ci->clientnum, ci->hostname(), ci->name, pwd, is_reserved) == -1)
         {
             return DISC_IPBAN;
         }
         
         bool is_admin = ci->privilege == PRIV_ADMIN;
         
-        bool is_reserved = slotpass[0] && checkpassword(ci, slotpass, pwd);
         
         if((is_admin || is_reserved) && reservedslots > 0) 
         {

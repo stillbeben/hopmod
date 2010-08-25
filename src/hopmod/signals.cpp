@@ -18,7 +18,7 @@ boost::signal<void (int)> signal_shutdown;
 boost::signal<void ()> signal_shutdown_scripting;
 boost::signal<void ()> signal_reloadhopmod;
 
-boost::signal<int (int, const char *, const char *, const char *), proceed> signal_connecting;
+boost::signal<int (int, const char *, const char *, const char *, bool), proceed> signal_connecting;
 boost::signal<void (int)> signal_connect;
 boost::signal<void (int,const char *)> signal_disconnect;
 boost::signal<void (const char *,const char *)> signal_failedconnect;
