@@ -206,22 +206,32 @@ struct disconnect_info
 {
     int cn;
     int code;
+    int session_id;
     std::string reason;
 };
 
 static int execute_disconnect(void * info_vptr)
 {
     disconnect_info * info = reinterpret_cast<disconnect_info *>(info_vptr);
-    clientinfo * ci = get_ci(info->cn);
+    clientinfo * ci = reinterpret_cast<clientinfo *>(getclientinfo(info->cn));
+    if(!ci || ci->sessionid != info->session_id)
+    {
+        delete info;
+        return 0;
+    }
     ci->disconnect_reason = info->reason;
     disconnect_client(info->cn, info->code);
+    delete info;
     return 0;
 }
 
 void disconnect(int cn, int code, const std::string & reason)
 {
+    clientinfo * ci = get_ci(cn);
+
     disconnect_info * info = new disconnect_info;
     info->cn = cn;
+    info->session_id = ci->sessionid;
     info->code = code;
     info->reason = reason;
     
