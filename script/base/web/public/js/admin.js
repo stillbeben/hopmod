@@ -1,5 +1,9 @@
 $(document).ready(function(){
-    
+    setTimeout(initWebAdmin, 1);
+});
+
+function initWebAdmin(){
+        
     $("#nav a").fancybox({
         type:"iframe",
         autoDimensions:false
@@ -36,7 +40,7 @@ $(document).ready(function(){
         
         $("#loading").remove();
     });
-});
+}
 
 function installWidget(pattern, createFunction, server){
     $(pattern).each(function(){createFunction(this, server);});
