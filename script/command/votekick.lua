@@ -25,7 +25,7 @@ local function check_kick(cn)
 	if votes[cn].votes >= required_votes then
 
 		server.kick(cn,3600,"server","votekick")
-		server.msg("Vote passed to kick player %s",green(server.display_name(cn)))
+		server.msg("Vote passed to kick player %s",green(server.player_displayname(cn)))
 	end
 
 end
