@@ -3,7 +3,7 @@ package.cpath = package.cpath .. ";lib/lib?.so"
 
 server.is_authserver = 1
 
-dofile("./script/base/logging.lua")
+dofile("./script/base/logging_base.lua")
 dofile("./script/base/utils.lua")
 
 dofile("./script/base/auth/server/core.lua")

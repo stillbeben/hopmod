@@ -5,6 +5,7 @@ local failed = { }
 local FAILED_LIMIT = 5
 
 local function setmaster(cn, hash, set)
+
     if not set then
          server.unsetpriv(cn)
         return -1

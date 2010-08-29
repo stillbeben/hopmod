@@ -131,10 +131,8 @@ supported_maps = {
     ["powerplant"] = {crc = "03593fcb2bed248f514ba131a526e0c03e951b9f74a123e0"},
     ["relic"] = {crc = "9d9fdb17ecf5c14ea2686612d37ce638d3b7273cb9233614"},
     ["justice"] = {crc = "cfca0d17c2ff22c0e37d82bc966cd81f4a7d228cc3503907"},
-    ["industry"] = {crc = "a182d4598fc0857dd5c943825a50dd33352865437faca6bc"}
+    ["industry"] = {crc = "a182d4598fc0857dd5c943825a50dd33352865437faca6bc"},
 }
-
-
 
 --[[local output = ""
 for mapname in pairs(supported_maps) do    
