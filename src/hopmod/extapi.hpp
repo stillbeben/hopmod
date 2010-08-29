@@ -30,6 +30,7 @@ namespace server
     extern int gamemillis;
     extern int gamelimit;
     extern bool gamepaused;
+    extern int gamemode;
     
     extern int mastermode;
     extern int mastermode_owner;
@@ -89,6 +90,7 @@ namespace server
     void player_force_spec(int);
     void player_spec(int);
     void player_unspec(int);
+    void spec_all();
     int player_bots(int);
     int player_pos(lua_State *);
     std::vector<float> player_pos(int);
@@ -122,6 +124,7 @@ namespace server
     void disconnect(int cn, int code, const std::string & reason);
     void changetime(int remaining);
     int get_minutes_left();
+    int get_seconds_left();
     void set_minutes_left(int);
     void changemap(const char * map,const char * mode,int mins);
     int modecode(const char * modename);

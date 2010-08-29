@@ -32,7 +32,7 @@ boost::signal<int (int,const char *), proceed> signal_text;
 boost::signal<int (int,const char *), proceed> signal_sayteam;
 boost::signal<void ()> signal_intermission;
 boost::signal<void ()> signal_finishedgame;
-boost::signal<int (int),maxvalue> signal_timeupdate;
+boost::signal<void (int,int)> signal_timeupdate;
 boost::signal<void (const char *,const char *)> signal_mapchange;
 boost::signal<int (int,const char *,const char *), proceed> signal_mapvote;
 boost::signal<void ()> signal_setnextgame;

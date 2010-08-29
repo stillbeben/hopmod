@@ -80,7 +80,7 @@ extern boost::signal<void (int, const char *, int, int, const char *)>  signal_k
 // Game Events
 extern boost::signal<void ()>                                       signal_intermission;
 extern boost::signal<void ()>                                       signal_finishedgame;
-extern boost::signal<int (int),maxvalue>                            signal_timeupdate;
+extern boost::signal<void (int,int)>                                signal_timeupdate;
 extern boost::signal<void (const char *,const char *)>              signal_mapchange;
 extern boost::signal<void ()>                                       signal_setnextgame;
 extern boost::signal<void ()>                                       signal_gamepaused;

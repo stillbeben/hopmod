@@ -34,8 +34,6 @@ public:
             successor->m_prefix = m_prefix;
             successor->m_prefix <<= common_prefix.mask();
             
-            bool first_bit = successor->m_prefix.value().first_bit();
-            
             successor->m_value = m_value;
             successor->m_child[0] = m_child[0];
             successor->m_child[1] = m_child[1];
@@ -44,7 +42,7 @@ public:
             m_child[1] = NULL;
             m_value = default_value;
             
-            m_child[first_bit] = successor;
+            m_child[successor->m_prefix.value().first_bit()] = successor;
         }
         
         m_prefix = common_prefix;

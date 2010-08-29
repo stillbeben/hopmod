@@ -12,6 +12,11 @@
 using namespace fungu;
 #include <unistd.h>
 
+// External
+bool start_packet_capturing(const char * filename, const char * map, const char * mode);
+void stop_packet_capturing();
+bool start_capture_replay(const char * filename);
+
 static std::vector<script::any> changemap_defargs;
 static std::vector<script::any> recorddemo_defargs;
 extern bool reloaded; //startup.cpp

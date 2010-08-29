@@ -242,13 +242,18 @@ void changetime(int remaining)
 {
     gamelimit = gamemillis + remaining;
     if(remaining > 0) sendf(-1, 1, "ri2", N_TIMEUP, remaining / 1000);
-    last_timeupdate = gamemillis;
-    signal_timeupdate(get_minutes_left());
+    next_timeupdate = gamemillis + (remaining % (60*1000));
+    if(gamemillis < next_timeupdate) signal_timeupdate(get_minutes_left(), get_seconds_left());
 }
 
 int get_minutes_left()
 {
     return (gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000);
+}
+
+int get_seconds_left()
+{
+    return (gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis) / 1000);
 }
 
 void set_minutes_left(int mins)
