@@ -747,7 +747,7 @@ void set_player_privilege(int cn, int priv_code, bool public_priv = false)
     }
     else
     {
-        sendf(player->clientnum, 1, "ri3", N_CURRENTMASTER, player->clientnum, player->privilege);
+        sendf(player->clientnum, 1, "ri4", N_CURRENTMASTER, player->clientnum, player->privilege, mastermode);
     }
     
     const char * change = (old_priv < player->privilege ? "raised" : "lowered");

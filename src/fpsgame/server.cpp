@@ -495,7 +495,7 @@ namespace server
     
     bool notgotitems = true;        // true when map has changed and waiting for clients to send item
     int gamemode = 0;
-    int gamemillis = 0, gamelimit = 0, nextexceeded = 0, last_timeupdate = 0;
+    int gamemillis = 0, gamelimit = 0, nextexceeded = 0, next_timeupdate = 0;
     bool gamepaused = false;
     int pausegame_owner = -1;
     bool reassignteams = true;
@@ -1698,25 +1698,11 @@ namespace server
 
     void checkintermission()
     {
-    /*
-        if(minremain>0)
-        {
-            int minremain = gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000;
-            
-            int newvalue = signal_timeupdate(minremain);
-            
-            if(newvalue != minremain && newvalue >= 0)
-            {
-                gamelimit = gamemillis + (newvalue * 1000 * 60);
-                minremain = newvalue;
-            }
-            
-            sendf(-1, 1, "ri2", N_TIMEUP, minremain);
-            if(!minremain && smode) smode->intermission();
-        }
-      */  
         if(gamemillis >= gamelimit && !interm)
         {
+            signal_timeupdate(0, 0);
+            if(gamemillis < gamelimit) return;
+            
             sendf(-1, 1, "ri2", N_TIMEUP, 0);
             interm = gamemillis+10000;
             calc_player_ranks();
@@ -2013,13 +1999,12 @@ namespace server
             masterupdate = false; 
         } 
 
-        if(gamemillis - last_timeupdate > 60000)
+        if(gamemillis > next_timeupdate)
         {
-            signal_timeupdate(get_minutes_left());
-            last_timeupdate = gamemillis;
+            signal_timeupdate(get_minutes_left(), get_seconds_left());
+            next_timeupdate = gamemillis + 60000;
         }
         
-        //if(!gamepaused && m_timed && (gamelimit - gamemillis + 60000 - 1)/60000 != minremain ) checkintermission();
         if(!gamepaused && m_timed && smapname[0] && gamemillis-curtime>0) checkintermission();
         
         if(interm > 0 && gamemillis > interm + spectator_delay && delayed_sendpackets.length() == 0)
@@ -2300,9 +2285,6 @@ namespace server
                     return;
                 }
 
-                bool give_admin_priv = ci->privilege == PRIV_ADMIN;
-                ci->privilege = PRIV_NONE;
-
                 ci->playermodel = getint(p);
                 ci->playerid = get_player_id(ci->name, getclientip(ci->clientnum));
                 
@@ -2340,8 +2322,6 @@ namespace server
                 if(m_demo) setupdemoplayback();
                 
                 signal_connect(ci->clientnum);
-				                
-                if(give_admin_priv) set_player_private_admin(ci->clientnum);
             }
         }
         else if(chan==2)
