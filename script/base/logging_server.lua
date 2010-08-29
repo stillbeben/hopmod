@@ -119,11 +119,7 @@ server.event_handler("setmastermode", function(cn, oldmode, newmode)
 end)
 
 server.event_handler("privilege", function(cn, oldpriv, curpriv)
-    
-    local change = "lowered"
-    if oldpriv < curpriv then change = "raised" end
-    
-    log(string.format("%s(%i) %s %s", server.player_name(cn), cn, change, server.player_priv(cn)))
+    log(string.format("%s(%i) %s to %s", server.player_name(cn), cn, _if(oldpriv < curpriv, "raised", "lowered"), server.player_priv(cn)))
 end)
 
 server.event_handler("spectator", function(cn, value)
