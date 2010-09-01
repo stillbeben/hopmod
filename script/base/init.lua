@@ -32,6 +32,7 @@ server.module("base/register_server")
 server.module("base/web/init")
 server.module("base/teamkills")
 server.module("base/setmaster")
+server.module("base/global_bans")
 
 -- Load module configuration variables
 local function load_module_vars(path)
