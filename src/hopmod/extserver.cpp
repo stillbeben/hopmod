@@ -251,14 +251,19 @@ int get_minutes_left()
     return (gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis + 60000 - 1)/60000);
 }
 
+void set_minutes_left(int mins)
+{
+    changetime(mins * 1000 * 60);
+}
+
 int get_seconds_left()
 {
     return (gamemillis>=gamelimit ? 0 : (gamelimit - gamemillis) / 1000);
 }
 
-void set_minutes_left(int mins)
+void set_seconds_left(int seconds)
 {
-    changetime(mins * 1000 * 60);
+    changetime(seconds * 1000);
 }
 
 void player_msg(int cn,const char * text)

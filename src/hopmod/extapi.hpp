@@ -124,8 +124,9 @@ namespace server
     void disconnect(int cn, int code, const std::string & reason);
     void changetime(int remaining);
     int get_minutes_left();
-    int get_seconds_left();
     void set_minutes_left(int);
+    int get_seconds_left();
+    void set_seconds_left(int);
     void changemap(const char * map,const char * mode,int mins);
     int modecode(const char * modename);
     int getplayercount();

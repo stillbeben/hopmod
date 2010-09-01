@@ -12,11 +12,6 @@
 using namespace fungu;
 #include <unistd.h>
 
-// External
-bool start_packet_capturing(const char * filename, const char * map, const char * mode);
-void stop_packet_capturing();
-bool start_capture_replay(const char * filename);
-
 static std::vector<script::any> changemap_defargs;
 static std::vector<script::any> recorddemo_defargs;
 extern bool reloaded; //startup.cpp
@@ -249,6 +244,7 @@ void register_server_script_bindings(script::env & env)
     //script::bind_freefunc(server::compare_admin_password, "check_admin_password", env);
     script::bind_ro_var(server::currentmaster, "master", env);
     hopmod::bind_property<int>(server::get_minutes_left, server::set_minutes_left, "timeleft", env);
+    hopmod::bind_property<int>(server::get_seconds_left, server::set_seconds_left, "seconds_left", env);
     hopmod::bind_var(server::interm, "intermission", env);
     script::bind_ro_var(totalmillis, "uptime", env);
     script::bind_ro_var(server::gamemillis, "gamemillis", env);
