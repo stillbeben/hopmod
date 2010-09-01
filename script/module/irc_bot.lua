@@ -176,7 +176,7 @@ function irc:playerList()
 	counter = nil 
 	output = ""
     
-    for player in server.aplayers() do
+    for player in server.gplayers('all') do
         if counter == nil then counter = 0 end
         counter = counter + 1
         output = output .. string.format("\00312%s\003(%s) ", player:displayname(), player.cn)
