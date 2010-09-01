@@ -32,6 +32,7 @@ load_once("script/base/web/resource/player_info.lua")
 load_once("script/base/web/resource/team_info.lua")
 load_once("script/base/web/resource/netstats.lua")
 load_once("script/base/web/resource/ipvars.lua")
+load_once("script/base/web/resource/error_log.lua")
 
 local function startHttpServer()
     
