@@ -189,3 +189,8 @@ function Timer(delay, func){
 	}
 }
 
+function leadingZero(x){
+    if(x < 10 && x > -1) return "0" + x;
+    else return x;
+}
+

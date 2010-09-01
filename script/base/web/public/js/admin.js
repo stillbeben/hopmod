@@ -509,32 +509,37 @@ function createGameinfoView(parent, server){
     
     $(map).text(server.game.map);
     $(gamemode).text(server.game.gamemode);
-    updateTimeleft(server.game.timeleft);
+    var countdownTimer = new Timer(1000, updateTimeleft);
+    countdownTimer.start();
     
     parent.appendChild(gamemode);
     parent.appendChild(document.createTextNode(": "));
     parent.appendChild(map);
-     parent.appendChild(document.createTextNode(", "));
+    parent.appendChild(document.createTextNode(", "));
     parent.appendChild(timeleft);
     
     server.addListener("mapchange", function(mapName, gamemodeName){
         $(map).text(mapName);
         $(gamemode).text(gamemodeName);
-        updateTimeleft(server.game.timeleft);
     });
     
-    function updateTimeleft(mins){
-        if(mins == 0){
+    function updateTimeleft(){
+        
+        var seconds = server.game.getTotalSecondsLeft();
+
+        if(seconds === undefined){
+            $(timeleft).text("unknown");
+            return;
+        }
+        
+        if(seconds == 0){
             $(timeleft).text("intermission");
         }
         else{
-            $(timeleft).text(mins + (mins != 1 ? " minutes" : " minute"));
+            $(timeleft).text(Math.floor(seconds / 60) + ":" + leadingZero(Math.floor(seconds % 60)));
         }
     }
     
-    server.game.addListener("timeupdate", function(mins){
-        updateTimeleft(mins);
-    });
 }
 
 function createNetstatsView(parent, server){

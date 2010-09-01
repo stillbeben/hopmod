@@ -5,6 +5,8 @@ function Game(server){
     this.server = server;
     this.teams = {};
     
+    var lastTimeupdate = null;
+    
     var eventService = new EventDemultiplexer();
     var eventDispatcher = new EventDispatcher(this);
     
@@ -12,8 +14,12 @@ function Game(server){
         eventService.addListener(name, func);
     }
     
+    function getTimeNow(){
+        return (new Date()).getTime();
+    }
+    
     function getFullGameState(callback){
-        server.getServerVariables(["gamemode", "map", "timeleft"], function(success, response){
+        server.getServerVariables(["gamemode", "map", "seconds_left"], function(success, response){
             if(!success){
                 if(callback) callback.apply(self, [false]);
                 return;
@@ -21,25 +27,35 @@ function Game(server){
             $.each(response, function(name, value){
                 self[name] = value;
             });
+            
+            if(self.seconds_left != null){
+                lastTimeupdate = getTimeNow();
+            }
+            
             if(callback) callback.apply(self, [true]);
         });
     }
     
     this.update = getFullGameState;
     
-    event_handler("timeupdate", function(timeleft){
-        self.timeleft = timeleft;
-        eventDispatcher.signalEvent("timeupdate", timeleft);
-    });
+    this.getTotalSecondsLeft = function(){
+        if(!lastTimeupdate) return;
+        return Math.max(self.seconds_left - (getTimeNow() - lastTimeupdate)/1000, 0);
+    }
+    
+    function changeTimeLeft(minutesRemaining, secondsRemaining){
+        self.timeleft = minutesRemaining;
+        self.seconds_left = secondsRemaining;
+        lastTimeupdate = getTimeNow();
+        eventDispatcher.signalEvent("timeupdate", minutesRemaining, secondsRemaining);
+    }
+    
+    event_handler("timeupdate", changeTimeLeft);
     
     event_handler("mapchange", function(map, gamemode){
         getFullGameState(function(){
              eventDispatcher.signalEvent("mapchange", map, gamemode);
         });
-    });
-    
-    event_handler("timeupdate", function(mins){
-        eventDispatcher.signalEvent("timeupdate", mins);
     });
     
     eventService.startListening();
