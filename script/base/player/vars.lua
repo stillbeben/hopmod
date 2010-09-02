@@ -8,6 +8,11 @@ local variablesByIp = {}
 local variablesByIpIndex = net.ipmask_table()
 local variablesById = {}
 
+for _, cn in ipairs(server.clients()) do
+    local id = server.player_id(cn)
+    variablesById[id] = {}
+end
+
 local lastsave = 0
 
 local function checkValue(value)
