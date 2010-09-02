@@ -113,4 +113,3 @@ server.event_handler("started", function()
         server.log_status(string.format("Ban count: %i", bancount))
     end
 end)
-
