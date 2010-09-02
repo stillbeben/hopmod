@@ -46,7 +46,7 @@ function server.ban(ipmask, bantime, admin, reason)
     server.set_ip_var(ipmask, "ban_reason", reason)
     
     if bantime <= SHORT_BANTIME then
-        temporary_bans[#temporary_bans] = ipmask
+        table.insert(temporary_bans, ipmask)
     end
     
     kick_banned_players(ipmask, bantime, admin, reason)
