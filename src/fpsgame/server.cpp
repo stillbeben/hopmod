@@ -1608,6 +1608,8 @@ namespace server
         }
         
         signal_mapchange(smapname,modename(gamemode,"unknown"));
+        
+        next_timeupdate = 0; //as soon as possible
     }
 
     struct votecount
@@ -3119,7 +3121,7 @@ namespace server
         putint(p, gamemode);            // b
         putint(p, max((gamelimit - gamemillis)/1000, 0));
         putint(p, (clients <= maxclients ? maxclients : clients));
-        putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : (mastermode || mastermask&MM_AUTOAPPROVE ? mastermode : MM_AUTH)));
+        putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : mastermode));
         sendstring(smapname, p);
         sendstring(serverdesc, p);
         sendserverinforeply(p);
