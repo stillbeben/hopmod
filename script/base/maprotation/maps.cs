@@ -141,9 +141,9 @@ global "insta hold_maps" &capture_maps
 global "big_insta hold_maps" &big_capture_maps
 global "small_insta hold_maps" &small_capture_maps
 
-global "efficiency ctf_maps" &capture_maps
-global "big_efficiency ctf_maps" &big_capture_maps
-global "small_efficiency ctf_maps" &small_capture_maps
+global "efficiency ctf_maps" &ctf_maps
+global "big_efficiency ctf_maps" &big_ctf_maps
+global "small_efficiency ctf_maps" &small_ctf_maps
 
 global "efficiency protect_maps" &capture_maps
 global "big_efficiency protect_maps" &big_capture_maps
