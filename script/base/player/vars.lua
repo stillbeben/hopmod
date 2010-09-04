@@ -5,6 +5,7 @@ local VARS_FILE = "log/vars"
 local MINIMUM_UPDATE_INTERVAL = 1000 * 60 * 60
 
 local variablesByIp = {}
+local ipVariableNamesIndex = {}
 local variablesByIpIndex = net.ipmask_table()
 local variablesById = {}
 
@@ -76,12 +77,24 @@ function server.set_ip_var(ipmask, name, value)
     
     vars[name] = value
     
-    for _, cn in ipairs(server.clients()) do
-        if net.ipmask(ipmask) == net.ipmask(server.player_iplong(cn)) then
-            local id = server.player_id(cn)
-            variablesById[id][name] = value
+    -- Add variable instance to the variable names index
+    local instances = ipVariableNamesIndex[name]
+    if not instances then
+        instances = {}
+        ipVariableNamesIndex[name] = instances
+    end
+    instances[#instances + 1] = {ipmask, value, vars}
+    
+    -- Set as player variable for matching players currently connected
+    for client in server.gclients() do
+        if net.ipmask(ipmask) == net.ipmask(client:iplong()) then
+            variablesById[client:id()][name] = value
         end
     end
+end
+
+function server.ip_var_instances(name)
+    return ipVariableNamesIndex[name]
 end
 
 function server.ip_vars(ipmask)
