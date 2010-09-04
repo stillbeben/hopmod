@@ -209,6 +209,9 @@ function get(resource, callback, state)
                         end
                         
                         get(headers["location"], callback, state)
+                        
+                        client:close()
+                        return
                     end
                     
                     local read_body = body_readers[headers["transfer-encoding"] or "identity"]
