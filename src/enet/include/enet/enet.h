@@ -290,17 +290,17 @@ typedef struct _ENetPeer
  */
 typedef struct _ENetCompressor
 {
-   /**< Context data for the compressor. Must be non-NULL. */
+   /** Context data for the compressor. Must be non-NULL. */
    void * context;
-   /**< Compresses from inBuffers[0..inBufferCount-1], containing inLimit bytes, to outData, outputting at most outLimit bytes. Should return 0 on failure. */
+   /** Compresses from inBuffers[0:inBufferCount-1], containing inLimit bytes, to outData, outputting at most outLimit bytes. Should return 0 on failure. */
    size_t (ENET_CALLBACK * compress) (void * context, const ENetBuffer * inBuffers, size_t inBufferCount, size_t inLimit, enet_uint8 * outData, size_t outLimit);
-   /**< Decompresses from inData, containing inLimit bytes, to outData, outputting at most outLimit bytes. Should return 0 on failure. */
+   /** Decompresses from inData, containing inLimit bytes, to outData, outputting at most outLimit bytes. Should return 0 on failure. */
    size_t (ENET_CALLBACK * decompress) (void * context, const enet_uint8 * inData, size_t inLimit, enet_uint8 * outData, size_t outLimit);
-   /**< Destroys the context when compression is disabled or the host is destroyed. May be NULL. */
+   /** Destroys the context when compression is disabled or the host is destroyed. May be NULL. */
    void (ENET_CALLBACK * destroy) (void * context);
 } ENetCompressor;
 
-/** Callback that computes the checksum of the data held in buffers [0..bufferCount-1] */
+/** Callback that computes the checksum of the data held in buffers[0:bufferCount-1] */
 typedef enet_uint32 (ENET_CALLBACK * ENetChecksumCallback) (const ENetBuffer * buffers, size_t bufferCount);
  
 /** An ENet host for communicating with peers.
@@ -522,6 +522,8 @@ extern void                  enet_peer_setup_outgoing_command (ENetPeer *, ENetO
 extern ENetOutgoingCommand * enet_peer_queue_outgoing_command (ENetPeer *, const ENetProtocol *, ENetPacket *, enet_uint32, enet_uint16);
 extern ENetIncomingCommand * enet_peer_queue_incoming_command (ENetPeer *, const ENetProtocol *, ENetPacket *, enet_uint32);
 extern ENetAcknowledgement * enet_peer_queue_acknowledgement (ENetPeer *, const ENetProtocol *, enet_uint16);
+extern void                  enet_peer_dispatch_incoming_unreliable_commands (ENetPeer *, ENetChannel *);
+extern void                  enet_peer_dispatch_incoming_reliable_commands (ENetPeer *, ENetChannel *);
 
 ENET_API void * enet_range_coder_create (void);
 ENET_API void   enet_range_coder_destroy (void *);
