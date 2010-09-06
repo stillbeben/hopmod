@@ -6,7 +6,7 @@ end
 
 server.event_handler("mapcrc", function(cn, map, crc)
 
-    if map ~= server.map then
+    if map ~= server.map or server.gamemode == "coop edit" then
         return
     end
     
