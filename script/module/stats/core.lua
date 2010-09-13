@@ -69,8 +69,6 @@ function internal.setNewGame()
     
     players = {}
     
-    print("setNewGame")
-    
     -- players table will be populated by the addPlayer function which will be called on active event for each player
 end
 
