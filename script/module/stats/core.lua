@@ -69,6 +69,8 @@ function internal.setNewGame()
     
     players = {}
     
+    print("setNewGame")
+    
     -- players table will be populated by the addPlayer function which will be called on active event for each player
 end
 
@@ -316,10 +318,7 @@ function internal.loadEventHandlers()
     
     local finishedgame = server.event_handler("finishedgame", internal.commit)
     local mapchange = server.event_handler("mapchange", internal.setNewGame)
-    
-    if server.mapname then
-        internal.setNextGame()
-    end
+    internal.setNewGame()
     
     local _rename = server.event_handler("rename", function(cn)
         internal.addPlayer(cn)
@@ -363,10 +362,30 @@ end
 
 function internal.initialize(commit_backends, query_backend, settings)
     
-    internal.loadEventHandlers()
-    
-    if settings.using_auth == 1 then
-        internal.loadAuthHandlers(settings.auth_domain)
+    do
+        local mapchange_handler
+        local connect_handler
+        
+        connect_handler = server.event_handler("connect", function(cn)
+            server.player_msg(cn, red("Stats are disabled for this match"))
+        end)
+        
+        mapchange_handler = server.event_handler("mapchange", function()
+            
+            server.cancel_handler(mapchange_handler)
+            server.cancel_handler(connect_handler)
+            
+            internal.loadEventHandlers()
+            
+            if settings.using_auth == 1 then
+                internal.loadAuthHandlers(settings.auth_domain)
+            end
+            
+            server.sleep(10000, function() server.msg(green("Stats enabled")) end)
+        end)
+        
+        -- Give a message to current players after reloadscripts() called
+        server.msg(red("Sorry, stats have been disabled for this match"))
     end
     
     internal.backends = commit_backends
