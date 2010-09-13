@@ -27,7 +27,7 @@ server.event_handler("disconnect", function(cn)
 end)
 
 -- Server started
-if not server.mapname then
+if #server.map == 0 then
     changemap()
 end
 
