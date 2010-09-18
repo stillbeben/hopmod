@@ -6,7 +6,7 @@ COMPILEDIR="release_build"
 COMPILEFLAGS=""
 BUILDTYPE="release"
 if [ "$ARG_LENGTH" > 1 -a "$2" = "debug" ]; then
-  COMPILEDIR="debug_build"
+  COMPILEDIR="debug-build"
   COMPILEFLAGS="-D CMAKE_BUILD_TYPE=DEBUG"
   BUILDTYPE="debug"
 fi
