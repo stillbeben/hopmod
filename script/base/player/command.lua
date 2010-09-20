@@ -88,7 +88,7 @@ end
 
 local function set_commands(commandlist, fields)
 
-    for i, cmdname in pairs(parse_command_list(commandlist)) do
+    for _, cmdname in pairs(parse_command_list(commandlist)) do
         local command = player_commands[cmdname] or create_command(cmdname)
         
         for field_name, field_value in pairs(fields) do

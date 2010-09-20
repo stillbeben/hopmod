@@ -9,11 +9,9 @@ function server.name_to_cn(name)
     local full_matches = 0
     local first_matching_cn
     
-    for _, cn in pairs(server.clients()) do
-    
-        if string.lower(server.player_name(cn)) == name then
-        
-            first_matching_cn = first_matching_cn or cn
+    for p in server.gclients() do
+        if string.lower(p:name()) == name then
+            first_matching_cn = first_matching_cn or p.cn
             full_matches = full_matches + 1 
         end
     end
@@ -26,12 +24,11 @@ function server.name_to_cn(name)
     
         local substring_matches = {}
         
-        for _, cn in pairs(server.clients()) do
-            
-            local candidate = server.player_name(cn)
+        for p in server.gclients() do
+            local candidate = p:name()
             
             if string.find(string.lower(candidate), name) then
-                table.insert(substring_matches, {name=candidate,cn=cn})
+                table.insert(substring_matches, {name=candidate,cn=p.cn})
             end
         end
         
@@ -53,7 +50,7 @@ function server.disambiguate_name_list(cn, name)
 
 	name = string.lower(name)
 
-	for p in server.gplayers() do
+	for p in server.gclients() do
 		local pname = p:name()
 
 		if name == string.lower(pname) then
@@ -86,7 +83,7 @@ function server.name_to_cn_list_matches(cn,name)
         if type(info) == "number" then  -- Multiple name matches
 
             server.player_msg(cn, red(string.format("There are %i players here matching that name:", info)))
-        server.disambiguate_name_list(cn,name)
+    	    server.disambiguate_name_list(cn,name)
 
         elseif #info == 0 then  -- no matches
 
@@ -110,14 +107,14 @@ function server.group_players(arg1,arg2,arg3)
         return -1
     end
 
-    local tag = nil
-    local team = nil
+    local tag
+    local team
 
     if arg1 == "all" then
 	if not arg2 then
             return -1
 	end
-
+	
 	tag = arg2
 
 	if arg3 then
@@ -125,10 +122,10 @@ function server.group_players(arg1,arg2,arg3)
 	else
             team = tag
         end
-
-	for j,cn in ipairs(server.spectators()) do
-            if string.find(server.player_name(cn),tag) then
-                server.unspec(cn)
+	
+	for s in server.gspectators() do
+            if string.find(s:name(),tag) then
+                s:unspec()
             end
         end
     else
@@ -146,9 +143,7 @@ function server.group_players(arg1,arg2,arg3)
             p:changeteam(team)
         end
     end
-    
 end
-
 
 function server.is_bot(cn)
     return cn > 127
@@ -160,24 +155,16 @@ function server.is_teamkill(player1, player2)
     return false
 end
 
-function server.all_players()
-	local output = server.players()
-	for _, cn in ipairs(server.spectators()) do
-        table.insert(output, cn)
-	end
-	return output
-end
-
 function server.valid_cn(cn)
     return server.player_id(tonumber(cn) or -1) ~= -1
 end
 
 function server.specall()
-    for _,cn in ipairs(server.players()) do server.spec(cn) end
+    for p in server.gplayers() do p:spec() end
 end
 
 function server.unspecall()
-    for _,cn in ipairs(server.spectators()) do server.unspec(cn) end
+    for s in server.gspectators() do s:unspec() end
 end
 
 function print_displaynamelist(clientnums)
@@ -186,4 +173,26 @@ function print_displaynamelist(clientnums)
         table.insert(names, server.player_displayname(cn))
     end
     return print_list(unpack(names))
+end
+
+function server.admin_msg(msg)
+
+    for p in server.gclients()
+    do
+	if p:priv_code() == server.PRIV_ADMIN
+	then
+	    p:msg(magenta(msg))
+	end
+    end
+end
+
+function server.master_msg(msg)
+
+    for p in server.gclients()
+    do
+	if p:priv_code() >= server.PRIV_MASTER
+	then
+	    p:msg(magenta(msg))
+	end
+    end
 end

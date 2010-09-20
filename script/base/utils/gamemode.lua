@@ -24,28 +24,44 @@ gamemodes = {
 
 do
     local mode_aliases = {
-        ["instateam"]        = "instagib team",
-        ["iteam"]            = "instagib team",
-        ["insta"]            = "instagib",
-        ["instactf"]         = "insta ctf",
-        ["ictf"]             = "insta ctf",
-        ["ctf"]              = "ctf",
-        ["instaprotect"]     = "insta protect",
-        ["iprotect"]         = "insta protect",
-        ["efficteam"]        = "efficiency team",
-        ["eteam"]            = "efficiency team",
-        ["efficiency"]       = "efficiency",
-        ["effic"]            = "efficiency",
-        ["tacteam"]          = "tactics team",
-        ["tteam"]            = "tactics team",
-        ["tactics"]          = "tactics",
-        ["tac"]              = "tactics",
-        ["regencapture"]     = "regen capture",
-        ["regencap"]         = "regen capture",
-        ["regen"]            = "regen capture",
-        ["cap"]              = "capture",
-        ["coopedit"]         = "coop edit",
-        ["coop"]             = "coop edit"
+	["coopedit"]		= "coop edit",
+        ["coop"]		= "coop edit",
+        ["tplay"]		= "teamplay",
+        ["tffa"]		= "teamplay",
+        ["insta"]		= "instagib",
+        ["instagibteam"]	= "instagib team",
+        ["instateam"]		= "instagib team",
+        ["iteam"]		= "instagib team",
+        ["effic"]		= "efficiency",
+        ["efficiencyteam"]	= "efficiency team",
+        ["efficteam"]		= "efficiency team",
+        ["eteam"]		= "efficiency team",
+        ["tac"]			= "tactics",
+        ["tacticsteam"]		= "tactics team",
+        ["tacteam"]		= "tactics team",
+        ["tteam"]		= "tactics team",
+        ["cap"]			= "capture",
+        ["regencapture"]	= "regen capture",
+        ["regencap"]		= "regen capture",
+        ["regen"]		= "regen capture",
+        ["instagibctf"]		= "insta ctf",
+        ["instactf"]		= "insta ctf",
+        ["ictf"]		= "insta ctf",
+        ["instagibprotect"]	= "insta protect",
+        ["instaprotect"]	= "insta protect",
+        ["iprotect"]		= "insta protect",
+        ["instgibhold"]		= "insta hold",
+        ["instahold"]		= "insta hold",
+        ["ihold"]		= "insta hold",
+        ["efficiencyctf"]	= "efficiency ctf",
+        ["efficctf"]		= "efficiency ctf",
+        ["ectf"]		= "efficiency ctf",
+        ["efficiencyprotect"]	= "efficiency protect",
+        ["efficprotect"]	= "efficiency protect",
+        ["eprotect"]		= "efficiency protect",
+        ["efficiencyhold"]	= "efficiency hold",
+        ["effichold"]		= "efficiency hold",
+        ["ehold"]		= "efficiency hold"
     }
     
     function server.parse_mode(mode)
@@ -85,4 +101,3 @@ do
         return modes[input] == true
     end
 end
-

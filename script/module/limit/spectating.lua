@@ -43,7 +43,7 @@ end)
 
 server.event_handler("finishedgame", function()
 
-    if (server.mastermode == 0) or (server.mastermode == 1)
+    if server.mastermode < 2
     then
 	local gamemillis = server.gamemillis
 	

@@ -47,7 +47,7 @@ local function find_script(filename)
     
     local real_filename
     
-    for i, path in ipairs(script_paths) do
+    for _, path in ipairs(script_paths) do
         
         local candidateFilename = string.format(path, filename)
         
@@ -208,7 +208,7 @@ end
 
 local function load_modules_now()
 
-    for i, name in ipairs(modules) do
+    for _, name in ipairs(modules) do
         load_module(name)
     end
     

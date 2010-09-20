@@ -27,14 +27,14 @@ local function call_listeners(cn, user_id, domain, status)
 
     local listeners = domain_listeners[domain] or {}
     
-    for i, listener in ipairs(listeners) do
+    for _, listener in ipairs(listeners) do
         catch_error(listener, cn, user_id, domain, status)
     end
     
     -- Run-once/temporary listeners created for auth requests initiated by a server module
     listeners = clients[cn].listeners[domain] or {}
     
-    for i, listener in ipairs(listeners) do
+    for _, listener in ipairs(listeners) do
         catch_error(listener, cn, user_id, domain, status)
     end
     

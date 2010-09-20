@@ -21,7 +21,8 @@ local function changemap()
 end
 
 server.event_handler("disconnect", function(cn)
-    if server.playercount + server.speccount == 0 and server.player_isbot(cn) == false and server.gamemode ~= DEFAULT_GAMEMODE then
+-- playercount includes speccount
+    if server.playercount == 0 and server.player_isbot(cn) == false and server.gamemode ~= DEFAULT_GAMEMODE then
          changemap()
     end
 end)

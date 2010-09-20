@@ -46,11 +46,6 @@ local methods = {
     set_invadmin    = function(obj) return server.set_invadmin(obj.cn) end,
     unset_invadmin  = function(obj) return server.unset_invadmin(obj.cn) end,
     vars            = function(obj) return server.player_vars(obj.cn) end,
-    pvars           = function(obj) return server.player_pvars(obj.cn) end,
-    var             = function(obj, name, value, defvalue) return server.player_var(obj.cn, name, value, defvalue) end,
-    pvar            = function(obj, name, value, defvalue) return server.player_pvar(obj.cn, name, value, defvalue) end,
-    hasvar          = function(obj, name) return server.player_hasvar(obj.cn, name) end,
-    haspvar         = function(obj, name) return server.player_haspvar(obj.cn, name) end,
     pos             = function(obj) return server.player_pos(obj.cn) end,
     valid           = function(obj) return server.player_sessionid(obj.cn) == obj.sessionid end
 }

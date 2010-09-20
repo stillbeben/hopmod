@@ -162,7 +162,7 @@ local function client_constructor()
         
         read_failed = true
         
-        for i,request in pairs(pending_requests) do
+        for _, request in pairs(pending_requests) do
             request:process_failure()
         end
 

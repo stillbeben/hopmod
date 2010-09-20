@@ -17,7 +17,7 @@ local function check_add_table(description, required_fields)
         error("expected table")
     end
     
-    for i,v in ipairs(required_fields) do
+    for _, v in ipairs(required_fields) do
         if not description[v] then
             error("missing " .. v)
         end
