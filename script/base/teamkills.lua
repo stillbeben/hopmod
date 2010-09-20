@@ -21,7 +21,7 @@ end
 
 server.event_handler("mapchange", function()
     
-    if gamemodeinfo.teams then
+    if gamemodeinfo.teams and (server.mastermode < 2) then
         if not damageEventHandler then
             createDamageHandler()
         end
@@ -32,3 +32,20 @@ server.event_handler("mapchange", function()
     end
 end)
 
+server.event_handler("setmastermode", function()
+
+    server.sleep(500, function()
+    
+        if gamemodeinfo.teams then
+	    if server.mastermode < 2 then
+		if not damageEventHandler then
+		    createDamageHandler()
+		end
+	    else
+		if damageEventHandler then
+		    cancelDamageHandler()
+		end
+	    end
+	end
+    end)
+end)
