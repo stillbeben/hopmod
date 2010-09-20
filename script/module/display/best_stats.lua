@@ -78,12 +78,12 @@ server.event_handler("intermission", function()
         
     end
     
-    for p in server.gplayers("all") do
+    for p in server.gplayers() do
         update_stats(p)
     end
     
-    for _,cn in ipairs(server.bots()) do
-        update_stats(server.new_player_object(cn))
+    for b in server.gbots() do
+	update_stats(b)
     end
     
     if best.kpd.value then
