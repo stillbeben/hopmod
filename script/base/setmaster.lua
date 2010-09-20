@@ -42,10 +42,6 @@ local function setmaster(cn, hash, set)
     return -1
 end
 
-server.event_handler("connect", function(cn)
-    failed[cn] = 0
-end)
-
 server.event_handler("disconnect", function(cn)
     failed[cn] = nil
 end)
