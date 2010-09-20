@@ -85,7 +85,11 @@ local function send_multikills_message(target_cn, target_vars, actor_cn, actor_v
         local actor_multikills = (actor_vars.multikills or 1) + 1
         actor_vars.multikills = actor_multikills
         
-        if actor_multikills == 3 then
+        if (actor_multikills == 2) and gamemodeinfo.insta then
+        
+            server.player_msg(actor_cn, yellow("You scored a ") .. orange("DOUBLE KILL!!"))
+        
+        elseif actor_multikills == 3 then
         
             server.player_msg(actor_cn, yellow("You scored a ") .. orange("TRIPLE KILL!!"))
             
