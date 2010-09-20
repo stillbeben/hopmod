@@ -4,11 +4,13 @@
 --
 --]]--------------------------------------------------------------------------
 
-local is_recording = false
+local is_recording
+
 
 local function start_recording(map, mode)
-    
-	if mode == "coop edit" or server.playercount == 0 and is_recording then
+
+    if gamemodeinfo.edit or (server.playercount < 2) or is_recording
+    then
         return
     end
     
@@ -24,21 +26,28 @@ server.event_handler("mapchange", start_recording)
 
 server.event_handler("connect", function(cn)
 
-	if server.playercount == 2 then
-		start_recording(server.map, server.gamemode)
-	end
+    if server.playercount == 2
+    then
+	start_recording(server.map, server.gamemode)
+    end
 end)
 
 server.event_handler("disconnect", function(cn, reason)
 
-	if server.playercount == 0 and is_recording == true then
-		server.stopdemo()
-		is_recording = false
-	end
+    if (server.playercount == 0) and is_recording
+    then
+	server.stopdemo()
+	is_recording = nil
+    end
 end)
 
 server.event_handler("finishedgame", function()
-	is_recording = false
+
+    is_recording = nil
 end)
 
-return {unload = function() end}
+
+return {unload = function()
+
+    is_recording = nil
+end}
