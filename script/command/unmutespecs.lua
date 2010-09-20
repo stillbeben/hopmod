@@ -1,9 +1,9 @@
 
 return function()
     
-    if not server.unmute_spectators then
-        return false, "mute module not loaded"
+    if not server.mute_spectators then
+        return false, "mute spectator module not loaded"
     end
     
-    server.unmute_spectators()
+    server.mute_spectators()
 end
