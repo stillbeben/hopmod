@@ -6,33 +6,51 @@ local interval_time = server.inactivity_check_time
 if interval_time <= 0 then
     interval_time = 60000
 end
-local inactive_time = round((server.inactivity_time / 1000), 0)
+local inactive_time = server.inactivity_time
 local death_only = server.inactivity_death_only == 1
 
 local is_unload
 
 
-local function unset_vars(cn)
+local function clean(cn)
 
-    server.player_vars(cn).inactivity_pos_x = nil
-    server.player_vars(cn).inactivity_pos_y = nil
-    server.player_vars(cn).inactivity_pos_z = nil
-    server.player_vars(cn).inactivity_pos_time = nil
+    server.player_vars(cn).inactivity_x = nil
+    server.player_vars(cn).inactivity_y = nil
+    server.player_vars(cn).inactivity_z = nil
+    server.player_vars(cn).inactivity_time = nil
 end
 
-local function unset_vars_all()
+local function mrproper()
 
     for p in server.gplayers() do
-	unset_vars(p.cn)
+	clean(p.cn)
     end
 end
 
+local function update(cn)
 
-server.event_handler("disconnect", unset_vars)
+    server.player_vars(cn).inactivity_x, server.player_vars(cn).inactivity_y, server.player_vars(cn).inactivity_z = server.player_pos(cn)
+    server.player_vars(cn).inactivity_time = server.gamemillis
+end
 
-server.event_handler("mapchange", unset_vars_all)
 
-server.event_handler("spectator", unset_vars)
+server.event_handler("disconnect", clean)
+
+server.event_handler("finishedgame", mrproper)
+
+server.event_handler("spectator", function(cn, joined)
+
+    if joined == 1
+    then
+	clean(cn)
+    else
+	update(cn)
+    end
+end)
+
+server.event_handler("frag", update)	-- function(tcn, acn)
+
+server.event_handler("suicide", update)
 
 server.interval(interval_time, function()
 
@@ -41,60 +59,41 @@ server.interval(interval_time, function()
 	return -1
     end
     
-    if (server.mastermode == 0) or (server.mastermode == 1)
+    if server.mastermode < 2
     then
 	for p in server.gplayers()
 	do
-	    local spec_player
-	    
-	    local last_x, last_y, last_z = p:vars().inactivity_pos_x, p:vars().inactivity_pos_y, p:vars().inactivity_pos_z
-	    local con_time = p:connection_time()
-	    
-	    if not (last_x and last_y and last_z)
-	    then
-	        p:vars().inactivity_pos_x, p:vars().inactivity_pos_y, p:vars().inactivity_pos_z = p:pos()
-	        p:vars().inactivity_pos_time = con_time
-	    else
-	        local x, y, z = p:pos()
+	    local last_x, last_y, last_z = p:vars().inactivity_x, p:vars().inactivity_y, p:vars().inactivity_z
+            
+            if not (last_x and last_y and last_z)
+            then
+        	update(p.cn)
+            else
+        	local x, y, z = p:pos()
 		
 		if (last_x == x) and (last_y == y) and (last_z == z)
-		then
-		    local last_time = p:vars().inactivity_pos_time
-		    
-		    if con_time - last_time >= inactive_time
-		    then
-			spec_player = true
-			
-			if death_only and not (p:status_code() == server.DEAD)
-			then
-			    spec_player = nil
-			end
-			
-			unset_vars(p.cn)
+        	then
+        	    local last_time = p:vars().inactivity_time
+		    local con_time = server.gamemillis
+        	
+        	    if ((con_time - last_time) >= inactive_time) and (not death_only or (p:status_code() == server.DEAD))
+        	    then
+	    		p:msg("Server moved you to spectators, because you seem to be inactive - type '/spectator 0' to rejoin the game.")
+			p:spec()
+			server.log("Server moved " .. p:name() .. " to spectator, because of inactivity.")
 		    end
 		else
-		    p:vars().inactivity_pos_x, p:vars().inactivity_pos_y, p:vars().inactivity_pos_z = x, y, z
-	    	    p:vars().inactivity_pos_time = con_time
+		    update(p.cn)
 		end
-	    end
-	    
-	    if spec_player
-	    then
-		p:msg("Server moved you to spectators, because you seem to be inactive - type '/spectator 0' to rejoin the game.")
-		p:spec()
-		server.log("Server moved " .. p:name() .. " to spectator, because of inactivity.")
 	    end
 	end
     end
 end)
 
 
-local function unload()
+return {unload = function()
 
     is_unload = true
     
-    unset_vars_all()
-end
-
-
-return {unload = unload}
+    mrproper()
+end}
