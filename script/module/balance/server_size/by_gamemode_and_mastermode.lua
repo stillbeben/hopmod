@@ -1,5 +1,8 @@
 local max_players = server.maxplayers
 
+local total_max_players = server.resize_server_mastermode_size
+local resize_mastermode = server.resize_server_mastermode_using_mastermode
+
 local size_gamemode = {
     ["regen capture"]		= server.resize_server_gamemode_size_regen_capture	or max_players,
     ["capture"]			= server.resize_server_gamemode_size_capture		or max_players,
@@ -28,16 +31,23 @@ local function resize()
 
     server.sleep(500, function()
     
-	server.maxplayers = size_gamemode[server.gamemode]
+	if server.mastermode == resize_mastermode
+	then
+	    server.maxplayers = total_max_players
+	else
+	    server.maxplayers = size_gamemode[server.gamemode]
+	end
     end)
 end
 
+
+server.event_handler("setmastermode", resize)
 
 server.event_handler("mapchange", resize)
 
 server.event_handler("disconnect", resize)
 
-server.event_handler("started", resize)
+server.event_handler_object("started", resize)
 
 
 return {unload = function()
