@@ -108,3 +108,32 @@ end
 function server.gall()
     return client_iterator_generator(server.clients())
 end
+
+function server.gteamplayers(team, with_specs, with_bots)
+
+    local all = server.team_players(team)
+    
+    if with_specs
+    then
+	for _, cn in pairs(server.spectators())
+	do
+	    if server.player_team(cn) == team
+	    then
+		table.insert(all, cn)
+	    end
+	end
+    end
+    
+    if with_bots
+    then
+	for _, cn in pairs(server.bots())
+	do
+	    if server.player_team(cn) == team
+	    then
+		table.insert(all, cn)
+	    end
+	end
+    end
+    
+    return client_iterator_generator(all)
+end
