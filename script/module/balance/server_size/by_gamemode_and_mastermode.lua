@@ -26,28 +26,44 @@ local size_gamemode = {
     ["coop edit"]		= server.resize_server_gamemode_size_coop_edit		or max_players
 }
 
+local mm_map = {
+    open	= 0,
+    veto	= 1,
+    locked	= 2,
+    private	= 3
+}
 
-local function resize()
 
-    server.sleep(500, function()
-    
-	if server.mastermode == resize_mastermode
-	then
-	    server.maxplayers = total_max_players
-	else
-	    server.maxplayers = size_gamemode[server.gamemode]
-	end
-    end)
+local function resize(mm, mode)
+
+    if mm == resize_mastermode
+    then
+        server.maxplayers = total_max_players
+    else
+        server.maxplayers = size_gamemode[mode]
+    end
 end
 
 
-server.event_handler("setmastermode", resize)
+server.event_handler("setmastermode", function(_, _, new)
 
-server.event_handler("mapchange", resize)
+    resize(mm_map[new], server.gamemode)
+end)
 
-server.event_handler("disconnect", resize)
+server.event_handler("mapchange", function(_, mode)
 
-server.event_handler_object("started", resize)
+    resize(mode)
+end)
+
+server.event_handler("disconnect", function()
+
+    resize(server.mastermode, server.gamemode)
+end)
+
+server.event_handler("started", function()
+
+    resize(server.mastermode, server.gamemode)
+end)
 
 
 return {unload = function()

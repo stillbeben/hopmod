@@ -1,10 +1,9 @@
 --[[
     suddendeath mode: game will not end while there is a tie
-    so far there is a tie when timelimit is reached, the next score will clearify
+    so far there will be a tie when timelimit is reached, the next score will clearify and stop the game
     
     command function: suddendeath(enable)
     to enable (enable = true)/ disable (enable = nil)
-    to enable has no effect on the current map, when maptime < 1 min
 ]]
 
 local default_enabled = server.suddendeath_enabled_by_default == 1
@@ -18,7 +17,7 @@ local mode = {}
 -- capture:	scoreupdate event
 -- ctf:		scoreflag event
 -- protect:	scoreflag, resetflag events
-local map_mode = {
+local mode_map = {
     ["ffa"]			= "ffa",
     ["teamplay"]		= "ffa",
     ["tactics"]			= "ffa",
@@ -41,19 +40,6 @@ local map_mode = {
 }
 
 local msg_start = "Suddendeath - next score wins!"
-
-
-server.suddendeath = function(enable)
-
-    clean()
-    
-    if not enable
-    then
-	is_enabled = nil
-    else
-	is_enabled = true
-    end
-end
 
 
 local function clean()
@@ -142,7 +128,7 @@ server.event_handler("timeupdate", function(mins, secs)
 	then
 	    server.changetime(60000)
 	    server.msg(msg_start)
-	    mode[map_mode[server.gamemode]] = true
+	    mode[mode_map[server.gamemode]] = true
 	    is_active = true
 	end
     end
@@ -162,6 +148,19 @@ server.event_handler("connect", function()
         is_enabled = default_enabled
     end
 end)
+
+
+server.suddendeath = function(enable)
+
+    clean()
+    
+    if not enable
+    then
+	is_enabled = nil
+    else
+	is_enabled = true
+    end
+end
 
 
 return {unload = function()
