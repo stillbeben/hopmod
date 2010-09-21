@@ -38,7 +38,8 @@ boost::signal<int (int,const char *,const char *), proceed> signal_mapvote;
 boost::signal<void ()> signal_setnextgame;
 boost::signal<void ()> signal_gamepaused;
 boost::signal<void ()> signal_gameresumed;
-boost::signal<int (int, const char *,const char *),proceed> signal_setmastermode;
+boost::signal<int (int, const char *, const char *), proceed> signal_setmastermode_request;
+boost::signal<int (int, const char *, const char *)> signal_setmastermode;
 boost::signal<void (int,int)> signal_spectator;
 boost::signal<void (int,int,int)> signal_privilege;
 boost::signal<void (int,int)> signal_teamkill;
@@ -295,6 +296,7 @@ void register_signals(script::env & env)
     slots.register_signal(signal_setnextgame, "setnextgame", normal_error_handler);
     slots.register_signal(signal_gamepaused, "gamepaused", normal_error_handler);
     slots.register_signal(signal_gameresumed, "gameresumed", normal_error_handler);
+    slots.register_signal(signal_setmastermode_request, "setmastermode_request", proceed_error_handler);
     slots.register_signal(signal_setmastermode, "setmastermode", proceed_error_handler);
     slots.register_signal(signal_spectator, "spectator", normal_error_handler);
     slots.register_signal(signal_privilege, "privilege", normal_error_handler);
@@ -369,6 +371,7 @@ void disconnect_all_slots()
     signal_setnextgame.disconnect_all_slots();
     signal_gamepaused.disconnect_all_slots();
     signal_gameresumed.disconnect_all_slots();
+    signal_setmastermode_request.disconnect_all_slots();
     signal_setmastermode.disconnect_all_slots();
     signal_spectator.disconnect_all_slots();
     signal_privilege.disconnect_all_slots();
