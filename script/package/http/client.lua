@@ -5,7 +5,13 @@
 local net = require "net"
 local url = require "url"
 local string = require "string"
+local table = require "table"
+local pairs = pairs
 local tonumber = tonumber
+local read_only = read_only
+local type = type
+local print = print
+local debug = debug
 
 module "http.client"
 
@@ -147,7 +153,7 @@ local body_readers = {
 local function is_redirect(status_code)
     if string.sub(status_code,1,1) ~= "3" then return false end
     return status_code == "301" or status_code == "302" or status_code == "303"
-end 
+end
 
 function get(resource, callback, state)
     
@@ -233,10 +239,299 @@ function get(resource, callback, state)
                             response_status = status_code,
                             headers = headers
                         })
+                        
+                        client:close()
                     end)
                 end)
             end)
         end)
     end)
+end
+
+function input_stream(content_type, content_length, data_source)
+    
+    if type(data_source) == "string" then
+    
+        local value = data_source
+        
+        data_source = function()
+            if not value then
+                return nil, 0
+            end
+            local tmp = value
+            value = nil
+            return tmp, #tmp
+        end
+        
+        if not content_length or content_length > #value then
+            content_length = #value
+        end
+        
+        if not content_type then
+            content_type = "text/plain"
+        end
+    end
+    
+    if not content_type then
+        content_type = "application/octet-stream"
+    end
+    
+    return {
+        info = read_only({
+            content_type = content_type,
+            content_length = content_length
+        }),
+        read = data_source
+    }
+end
+
+local function send_body(connection, input_stream, callback)
+    local data, data_length = input_stream.read()
+    if data then
+        connection.socket:async_send(data, function(error_message)
+            if error_message then
+                callback({socket_error = error_message})
+                return
+            end
+            send_body(connection, input_stream, callback)
+        end)
+    else
+        if data_length == nil then
+            connection.close()
+            callback({io_error = "error while reading body"})
+            return
+        end
+        callback()
+    end
+end
+
+local function read_response(connection, options)
+    
+    local socket = connection.socket
+    local completion_handler = options.complete
+    
+    read_status_line(socket, function(version, status_code, errors)
+        
+        if errors then
+            completion_handler(nil, errors)
+            connection.cancel_everything()
+            return
+        end
+        
+        read_headers(socket, function(headers, errors)
+            
+            if errors then
+                completion_handler(nil, errors)
+                connection.cancel_everything()
+                return
+            end
+            
+            local read_body = body_readers[headers["transfer-encoding"] or "identity"]
+            
+            if not read_body then
+                callback(nil,{http_error = string.format("client doesn't support %s transfer encoding", headers["transfer-encoding"])})
+                return
+            end
+            
+            read_body(socket, headers, function(body, errors)
+                
+                if errors then
+                    completion_handler(nil, errors)
+                    connection.cancel_everything()
+                    return
+                end
+                
+                completion_handler(body, {
+                    version = version,
+                    response_status = status_code,
+                    headers = headers
+                })
+                
+                connection.next_response()
+            end)
+        end)
+    end)
+end
+
+local function request(connection, options)
+
+    if not connection.socket then
+        options.complete({socket_error = options.socket_error})
+        connection.next_request()
+        return
+    end
+    
+    local socket = connection.socket
+    local next_request = connection.next_request
+    local ready_to_read = connection.ready_to_read
+    local body_sender
+    
+    local method = options.method
+    local path = options.path
+    local headers = options.headers
+    local body = options.body
+    local completion_handler = options.complete
+    
+    if method == "POST" or method == "PUT" and body then
+        headers["Content-Type"] = body.info.content_type
+        if body.info.content_length then
+            headers["Content-Length"] = body.info.content_length
+            body_sender = send_body
+        else
+            headers["Transfer-Encoding"] = "chunked"
+            body_sender = nil
+            error("chunked transfer encoding is unsupported")
+        end
+    else
+        body = nil
+        body_sender = function(connection, input_stream, callback) callback() end
+    end
+    
+    local request = method .. " " .. path .. " HTTP/1.1\r\n"
+    
+    for name, value in pairs(headers) do
+        request = request .. name .. ": " .. value .. "\r\n"
+    end
+    
+    request = request .. "\r\n"
+
+    socket:async_send(request, function(error_message)
+        
+        if error_message then
+            completion_handler(nil, {socket_error = error_message})
+            connection.cancel_everything()
+            return
+        end
+        
+        body_sender(connection, body, function(errors)
+            
+            if errors then
+                completion_handler(nil, errors)
+                connection.cancel_everything()
+                return
+            end
+            
+            ready_to_read(function(errors)
+                
+                if errors then
+                    -- Another request failed while reading the response and then cancel_everything was called
+                    completion_handler(nil, errors)
+                    return
+                end
+                
+                read_response(connection, options)
+            end)
+            
+            connection.next_request()
+        end)
+    end)
+end
+
+function connection(hostname, port)
+    
+    local client = net.tcp_client()
+    local connection_error_message
+    local closed_connection = false
+    local connected = false
+    local pending_requests = {}
+    local read_queue = {}
+    local next_request
+    
+    local function close()
+        client:close()
+        connected = false
+        closed_connection = true
+        connection_error_message = connection_error_message or "connection was shutdown"
+    end
+    
+    local function cancel_everything()
+    
+        if not connected then
+            return
+        end
+        
+        close()
+        
+        local error_info = {socket_error = connection_error_message}
+        
+        for _, reader in pairs(read_queue) do
+            reader(error_info)
+        end
+        read_queue = {}
+        
+        for _, request in pairs(pending_requests) do
+            request.complete(nil, error_info)
+        end
+        pending_requests = {}
+    end
+    
+    local function ready_to_read(callback)
+        table.remove(pending_requests, 1)
+        read_queue[#read_queue +1] = callback
+        
+        if #read_queue == 1 then
+            callback()
+        end
+    end
+    
+    local function next_response()
+        
+        table.remove(read_queue, 1)
+        
+        if #read_queue == 0 then
+            return
+        end
+        
+        read_queue[1]()
+    end
+    
+    local function next_request()
+        
+        if #pending_requests == 0 then
+            return
+        end
+        
+        local request_options = pending_requests[1]
+        
+        request({
+            socket = client,
+            cancel_everything = cancel_everything,
+            next_request = next_request,
+            ready_to_read = ready_to_read,
+            next_response = next_response}, request_options)
+    end
+    
+    client:async_connect(hostname, port, function(error_message)
+          
+        if error_message then
+            connection_error_message = error_message
+            closed_connection = true
+        else
+            connected = true
+        end
+        
+        next_request()
+    end)
+    
+    local function queue_request(_, options)
+    
+        local function host_port_value()
+            if port ~= 80 then return ":" .. port else return "" end
+        end
+        
+        options.method = options.method or "GET"
+        options.headers = options.headers or {}
+        options.headers.Host = hostname .. host_port_value()
+        
+        pending_requests[#pending_requests + 1] = options
+        if #pending_requests == 1 and connected then
+            next_request()
+        end
+    end
+    
+    return {
+        request = queue_request,
+        close = close
+    }
 end
 
