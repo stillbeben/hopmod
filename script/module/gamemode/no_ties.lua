@@ -4,7 +4,6 @@
     
     command function: no_ties(enable)
 	to enable (enable = true)/ disable (enable = nil)
-	no_ties(true) has no effect on the current map, when maptime < 1
 ]]
 
 local default_enabled = server.no_ties_enabled_by_default == 1

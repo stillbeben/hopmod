@@ -83,7 +83,7 @@ do
         ["efficiency"]          = true,
         ["efficiency team"]     = true,
         ["tactics"]             = true,
-        ["tactics teams"]       = true,
+        ["tactics team"]        = true,
         ["capture"]             = true,
         ["regen capture"]       = true,
         ["ctf"]                 = true,

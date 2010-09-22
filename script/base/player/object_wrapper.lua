@@ -109,6 +109,18 @@ function server.gall()
     return client_iterator_generator(server.clients())
 end
 
+function server.gallplayers()
+
+    local all = server.players()
+    
+    for _, cn in pairs(server.bots())
+    do
+	table.insert(all, cn)
+    end
+    
+    return client_iterator_generator(all)
+end
+
 function server.gteamplayers(team, with_specs, with_bots)
 
     local all = server.team_players(team)

@@ -136,4 +136,10 @@ end)
 return {unload = function()
 
     server.name_protection_loaded = nil
+    
+    for p in server.gall()
+    do
+	p:vars().nameprotect_wanted_authname	= nil
+	p:vars().reserved_name			= nil
+    end
 end}

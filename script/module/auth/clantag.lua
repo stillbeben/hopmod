@@ -62,41 +62,42 @@ end
 
 local function check_name(cn)
 
-    local name	= string.lower(server.player_name(cn))
-    local sid	= server.player_sessionid(cn)
-    
-    for _, clan in pairs(clans)
-    do
-        if string.match(name, clan.tag_pattern)
-        then
-            auth.send_request(cn, clan.auth_domain, function(cn, user_id, domain, status)
-    	    
-    		if not (sid == server.player_sessionid(cn))
-    		then
-    		    return
-    		end
+    if not server.is_bot(cn)
+    then
+	local name	= string.lower(server.player_name(cn))
+	local sid	= server.player_sessionid(cn)
+	
+	for _, clan in pairs(clans)
+	do
+    	    if string.match(name, clan.tag_pattern)
+    	    then
+        	auth.send_request(cn, clan.auth_domain, function(cn, user_id, domain, status)
     		
-                if status == auth.request_status.SUCCESS
-                then
-                    server.log(string.format("%s(%i) authenticated as '%s' to use reserved clan tag.", server.player_name(cn), cn, user_id))
-                    
-                    server.player_vars(cn).reserved_tag = clan.tag_pattern
-                end
-                
-                if status == auth.request_status.SUCCESS or status == auth.request_status.CANCELLED
-                then
-            	    return
-            	end
-                
-                server.player_msg(cn, " ")
-                server.player_msg(cn, red(string.format(failure_message[status], clan.name)))
-                
-                server.player_rename(cn, "unnamed", true)
-                
-                server.player_msg(cn, " ")
-                server.player_msg(cn, "You have used a reserved clan tag. Server has renamed you to 'unnamed'.")
-            end)
-        end
+    		    if not (sid == server.player_sessionid(cn))
+    		    then
+    			return
+    		    end
+    		    
+            	    if status == auth.request_status.SUCCESS
+            	    then
+                	server.log(string.format("%s(%i) authenticated as '%s' to use reserved clan tag.", server.player_name(cn), cn, user_id))
+                    	server.player_vars(cn).reserved_tag = clan.tag_pattern
+            	    end
+            	    
+            	    if status == auth.request_status.SUCCESS or status == auth.request_status.CANCELLED
+            	    then
+            		return
+            	    end
+            	    
+            	    server.player_msg(cn, " ")
+            	    server.player_msg(cn, red(string.format(failure_message[status], clan.name)))
+            	    
+            	    server.player_rename(cn, "unnamed", true)
+            	    
+            	    server.player_msg(cn, "Server has renamed you to 'unnamed'.")
+        	end)
+    	    end
+	end
     end
 end
 
@@ -119,4 +120,9 @@ end
 return {unload = function()
 
     server.unref("is_clan_registrated")
+    
+    for p in server.gall()
+    do
+	p:vars().reserved_tag = nil
+    end
 end}
