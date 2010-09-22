@@ -9,7 +9,7 @@ fhandle:close()
 
 local function is_banned_name(name)
 	local name = string.upper(name)
-	for i, ban_name in ipairs(banned_names) do
+	for _, ban_name in ipairs(banned_names) do
 		local ban_name = string.upper(ban_name)
 		if string.find(name, ban_name) then
 			return true
@@ -18,14 +18,14 @@ local function is_banned_name(name)
 	return false
 end
 
-server.event_handler("connecting", function(ip, name)
+server.event_handler("connecting", function(cn, ip, name)
 	if is_banned_name(name) then
-		return -1	
+		return -1
 	end
 end)
 
 server.event_handler("rename", function(cn, old, new)
 	if is_banned_name(new) then
-		server.disconnect(cn, 3, red() .. " for using a offensive name")
+		server.player_rename(cn, "unnamed", true)
 	end
 end)
