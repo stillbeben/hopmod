@@ -187,7 +187,13 @@ function get(resource, callback, state)
             host_field = host_field .. ":" .. resource.port
         end
         
-        local request = "GET " .. url.build_path(url.parse_path(resource.path)) .. " HTTP/1.1\r\nHost: " .. host_field .. "\r\nConnection: close\r\n\r\n"
+        local path = url.build_path(url.parse_path(resource.path))
+        
+        if resource.query then
+            path = path .. "?" .. resource.query
+        end
+        
+        local request = "GET " .. path .. " HTTP/1.1\r\nHost: " .. host_field .. "\r\nConnection: close\r\n\r\n"
         
         client:async_send(request, function(error_message)
 
