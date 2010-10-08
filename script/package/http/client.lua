@@ -64,6 +64,11 @@ local function read_body(socket, headers, callback)
         return
     end
     
+    if content_length == 0 then
+        callback("")
+        return
+    end
+    
     local buffer = net.buffer(content_length)
     
     socket:async_read(buffer, function(error_message)
