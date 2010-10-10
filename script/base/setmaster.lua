@@ -4,6 +4,10 @@
 local failed = { }
 local FAILED_LIMIT = 5
 
+local function update_display_open()
+    server.display_open = server.allow_setmaster == 1
+end
+
 local function setmaster(cn, hash, set)
 
     if not set then
@@ -60,4 +64,10 @@ end)
 server.event_handler("setmaster", function(cn, hash, set)
     setmaster(cn, hash, set)
 end)
+
+server.event_handler("mapchange", function()
+    update_display_open()
+end)
+
+update_display_open()
 
