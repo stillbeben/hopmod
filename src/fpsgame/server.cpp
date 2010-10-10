@@ -500,6 +500,7 @@ namespace server
     int pausegame_owner = -1;
     bool reassignteams = true;
     
+    bool display_open = false;
     bool allow_mm_veto = false;
     bool allow_mm_locked = false;
     bool allow_mm_private = false;
@@ -3122,7 +3123,7 @@ namespace server
         putint(p, gamemode);            // b
         putint(p, max((gamelimit - gamemillis)/1000, 0));
         putint(p, (clients <= maxclients ? maxclients : clients));
-        putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : mastermode));
+        putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : (mastermode || display_open ? mastermode : MM_AUTH) ));
         sendstring(smapname, p);
         sendstring(serverdesc, p);
         sendserverinforeply(p);

@@ -41,6 +41,7 @@ namespace server
     extern int reservedslots;
     extern int reservedslots_use;
     
+    extern bool display_open;
     extern bool allow_mm_veto;
     extern bool allow_mm_locked;
     extern bool allow_mm_private;
