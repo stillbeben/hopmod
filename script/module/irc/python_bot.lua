@@ -37,74 +37,74 @@ end
 local allow_stream = false
 
 local function process_irc_command(data)
-      local data = string.sub(data, 0, string.len(data)-2) -- skip \n
-      if string.find(data, "pass:") then
-	    local pass = string.gsub(data, "pass:", "")
-	    if pass ~= server.irc_socket_password then
+	local data = string.sub(data, 0, string.len(data)-2) -- skip \n
+    if string.find(data, "pass:") then
+		local pass = string.gsub(data, "pass:", "")
+		if pass ~= server.irc_socket_password then
 			allow_stream = false
 			sendmsg("pass:wrong password")
 			client_bot:close()
-	    else
+		else
 			allow_stream = true
-	    end
-      end 
+		end
+	end
 
 
-      if not allow_stream == true then return end
 
-      -- DO NOT ADD ANYTHING ABOVE!!!! 
+	if not allow_stream == true then return end
+
+	-- DO NOT ADD ANYTHING ABOVE!!!! 
 
 
-      if string.find(data, "code:") then
-		  local xchan = Split(data, " ")
-		  chan = xchan[1]
+	if string.find(data, "code:") then
+		local xchan = Split(data, " ")
+		chan = xchan[1]
 		  
-		  local tmp = ""
-		  for i, t in ipairs(xchan) do
-			  if i > 1 then
-			tmp = tmp .. " " .. t
-			  end
-		  end
+		local tmp = ""
+		for i, t in ipairs(xchan) do
+			if i > 1 then
+				tmp = tmp .. " " .. t
+			end
+		end
 		
-		  local code = string.gsub(tmp, "code:", "")
+		local code = string.gsub(tmp, "code:", "")
 
 
-		  local pcallret, success, errmsg = pcall(loadstring(code))
-		  if success ~= nil then
+		local pcallret, success, errmsg = pcall(loadstring(code))
+		if success ~= nil then
 			sendmsg("error while executing code: "..success)
 			if dm_log ~= nil then
 				log("irc error -> " .. success) 
 			end
-		  else
-			  log(string.format("irc -> executed: [[ %s ]]", code))
-		  end
-      end
+		else
+			log(string.format("irc -> executed: [[ %s ]]", code))
+		end
+	end
 
-    if data == "ping" then
+	if data == "ping" then
 		sendmsg("pong")
-    end
+	end
 end
 
 
 local function ircreadloop()
-  client_bot:async_read_until("\n", function(data)
-     if data then
-         process_irc_command(data)
-	 ircreadloop()
-     end
-  end)
+	client_bot:async_read_until("\n", function(data)
+	if data then
+		process_irc_command(data)
+		ircreadloop()
+	end
+	end)
 end
 
 local function accept_next(acceptor)
-    acceptor:async_accept(function(client)
+	acceptor:async_accept(function(client)
+		client_bot = client
 
-	client_bot = client
-
-	--sendmsg("1:connection accepted, waiting for password.")
-	allow_stream = false
-	ircreadloop()
-        
-        accept_next(acceptor)
+		--sendmsg("1:connection accepted, waiting for password.")
+		allow_stream = false
+		ircreadloop()
+			
+		accept_next(acceptor)
     end)
 end
 
@@ -118,8 +118,6 @@ end)
 
 server.event_handler("connect", function (cn)
 
-    if logged_in_spy[tonumber(cn)] == true then return end
-
     local ip = server.player_ip(cn)
     local country = geoip.ip_to_country(ip) 
 
@@ -129,8 +127,6 @@ server.event_handler("connect", function (cn)
 end)
 
 server.event_handler("disconnect", function (cn,reason)
-
-    if logged_in_spy[tonumber(cn)] == true then return end
 
     local reason_tag = ""
     local ip = ""
@@ -235,27 +231,6 @@ end)
 server.event_handler("gamepaused", function() sendmsg("\0034PAUSE\003    game is paused")end)
 server.event_handler("gameresumed", function() sendmsg("\0034RESM\003    game is resumed") end)
 
-server.event_handler("user_login", function(cn, level, group, id, name)
-	if logged_in_user[cn] == "" then
-		sendmsg(string.format("0%s(%i) 7logged in", server.player_name(cn), cn))
-	end
-end)
-
-server.event_handler("stats_done", function(millis, ts)
-    sendmsg("7wrote stats(" .. millis .. "ms) => http://dm-clan.ath.cx/scoreboard/details.php?game="..ts)
-end)
-
-
-server.event_handler("user_logout", function(cn)
-    sendmsg(string.format("0%s(%i) 7logged out.", server.player_name(cn), cn))
-end)
-
-
-
-server.event_handler("user_login_failed", function(cn, level, group, id, name)
-   sendmsg(string.format("%s failed to login", server.player_name(cn)))
-end)
-
 server.event_handler("addbot", function(cn,skill,owner)
     local addedby = "server"
     if cn ~= -1 then addedby = "\00312" .. server.player_name(cn) .. string.format("(%i)\003", cn) end
@@ -267,11 +242,11 @@ server.event_handler("delbot", function(cn)
 end)
 
 server.event_handler("beginrecord", function(id,filename)
-    --sendmsg(string.format("\00312DEMOSTART\003    Recording game to %s",filename))
+    sendmsg(string.format("\00312DEMOSTART\003    Recording game to %s",filename))
 end)
 
 server.event_handler("endrecord", function(id, size)
-   -- sendmsg(string.format("\00312DEMOEND\003    finished recording game (%s file size)",format_filesize(tonumber(size))))
+   sendmsg(string.format("\00312DEMOEND\003    finished recording game (%s file size)",format_filesize(tonumber(size))))
 end)
 
 server.event_handler("mapcrcfail", function(cn) 
