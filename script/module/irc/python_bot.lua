@@ -112,8 +112,26 @@ accept_next(acceptor)
 
 end)
 
+-- IRC Functions
 
--- ADD GAMEEVENTS HERE
+local function irc_color_white(str) return string.format("0%s", str) end
+local function irc_color_black(str) return string.format("1%s", str) end
+local function irc_color_navy(str) return string.format("2%s", str) end
+local function irc_color_green(str) return string.format("3%s", str) end
+local function irc_color_red(str) return string.format("4%s", str) end
+local function irc_color_brown(str) return string.format("5%s", str) end
+local function irc_color_purple(str) return string.format("6%s", str) end
+local function irc_color_orange(str) return string.format("7%s", str) end
+local function irc_color_yellow(str) return string.format("8%s", str) end
+local function irc_color_bright_green(str) return string.format("9%s", str) end
+local function irc_color_light_blue(str) return string.format("10%s", str) end
+local function irc_color_neon(str) return string.format("11%s", str) end
+local function irc_color_blue(str) return string.format("12%s", str) end
+local function irc_color_pink(str) return string.format("13%s", str) end
+local function irc_color_grey(str) return string.format("14%s", str) end
+local function irc_color_light_grey(str) return string.format("15%s", str) end
+
+-- GAMEEVENTS
 
 
 server.event_handler("connect", function (cn)
