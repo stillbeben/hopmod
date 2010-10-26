@@ -124,7 +124,7 @@ local function irc_color_brown(str) return string.format("5%s", str) end
 local function irc_color_purple(str) return string.format("6%s", str) end
 local function irc_color_orange(str) return string.format("7%s", str) end
 local function irc_color_yellow(str) return string.format("8%s", str) end
-local function irc_color_bright_green(str) return string.format("9%s", str) end
+local function irc_color_light_green(str) return string.format("9%s", str) end
 local function irc_color_light_blue(str) return string.format("10%s", str) end
 local function irc_color_neon(str) return string.format("11%s", str) end
 local function irc_color_blue(str) return string.format("12%s", str) end
@@ -197,12 +197,16 @@ server.event_handler("text", function(cn, msg)
     
     local mute_tag = ""
     if server.is_muted(cn) then mute_tag = "(muted)" end
+<<<<<<< .mine
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i): ")..irc_color_neon("%s%s"),server.player_name(cn),cn,mute_tag,msg))
+=======
 	if server.player_name(cn) == "|DM|beast" then
 		if msg == "q:D" then
 			msg = "i love drugs"
 		end
 	end
     sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i): ")..irc_color_neon("%s%s"),server.player_name(cn),cn,mute_tag,msg))
+>>>>>>> .r2020
 end)
 
 server.event_handler("sayteam", function(cn, msg)
