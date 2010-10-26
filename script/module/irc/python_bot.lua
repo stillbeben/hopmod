@@ -24,9 +24,10 @@ acceptor:listen()
 
 local client_bot = net.tcp_client()
 
-local chan 
+local chan = ""
 
 function sendmsg(msg) -- required to send an response to the client-bot
+	if not allow_stream then return end
     if chan ~= "" then
 		chan = chan .. " "
     end
@@ -141,8 +142,9 @@ server.event_handler("connect", function (cn)
 
     if country == "" then country = "unknown" end
 
-    sendmsg(string.format("7CONNECT: 10%s(%i)7 Country:10 %s",server.player_name(cn),cn,country)) 
+    sendmsg(string.format(irc_color_orange("CONNECT: ")..irc_color_green("%s ")..irc_color_grey("(%i) ")..irc_color_orange("COUNTRY: ")..irc_color_brown("%s"),server.player_name(cn),cn,country)) 
 end)
+
 
 server.event_handler("disconnect", function (cn,reason)
 
@@ -162,7 +164,7 @@ server.event_handler("disconnect", function (cn,reason)
 		reason = "normal"
     end
 
-    sendmsg(string.format("7DISCONNECT: 10%s(%i) 3- 7REASON: 10%s", server.player_name(cn), cn, reason))
+    sendmsg(string.format(irc_color_orange("DISCONNECT: ")..irc_color_green("%s ")..irc_color_grey("(%i) ")..irc_color_orange("REASON: ")..irc_color_brown("%s"), server.player_name(cn), cn, reason))
 end)
 
 server.event_handler("kick", function(cn, bantime, admin, reason)
@@ -173,15 +175,15 @@ server.event_handler("kick", function(cn, bantime, admin, reason)
     local action_tag = "kicked"
     if tonumber(bantime) < 0 then action_tag = "kicked and permanently banned" end
     
-    sendmsg(string.format("4KICK: 14%s(%i/%s) 4was %s by %s reason: %s",server.player_name(cn),cn,server.player_ip(cn),action_tag,admin,reason_tag))
+    sendmsg(string.format(irc_color_red("%s(%i/%s) was %s by %s reason: %s"),server.player_name(cn),cn,server.player_ip(cn),action_tag,admin,reason_tag))
 end)
 
 server.event_handler("rename",function(cn, oldname, newname)
-    sendmsg(string.format("4%s(%i)14 renamed to 4%s",oldname,cn,newname))
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("renamed to ")..irc_color_orange("%s"),oldname,cn,newname))
 end)
 
 server.event_handler("reteam",function(cn, oldteam, newteam)
-    sendmsg(string.format("14TEAMCHANGE: %s(%i) -> %s",server.player_name(cn),cn,newteam))
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("switched to team ")..irc_color_orange("%s"),server.player_name(cn),cn,newteam))
 end)
 
 server.event_handler("text", function(cn, msg)
@@ -195,15 +197,20 @@ server.event_handler("text", function(cn, msg)
     
     local mute_tag = ""
     if server.is_muted(cn) then mute_tag = "(muted)" end
-    sendmsg(string.format("9%s(%i): %s %s",server.player_name(cn),cn,mute_tag,msg))
+	if server.player_name(cn) == "|DM|beast" then
+		if msg == "q:D" then
+			msg = "i love drugs"
+		end
+	end
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i): ")..irc_color_neon("%s%s"),server.player_name(cn),cn,mute_tag,msg))
 end)
 
 server.event_handler("sayteam", function(cn, msg)
-    sendmsg(string.format("9%s(%i)//team:0 %s",server.player_name(cn),cn,msg))
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i)[team]: ")..irc_color_neon("%s"),server.player_name(cn),cn,msg))
 end)
 
 server.event_handler("mapvote", function(cn, map, mode)
-    sendmsg(string.format("\0033MAPVOTE\003    \00312%s(%i)\003 suggests \0037%s\003 on map \0037%s",server.player_name(cn),cn,mode,map))
+    sendmsg(string.format(irc_color_orange("MAPVOTE: ")..irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_orange("MODE: ")..irc_color_neon("%s ")..irc_color_orange("MAP: ")..irc_color_neon("%s"),server.player_name(cn),cn,mode,map))
 end)
 
 local MAPNAME = ""
@@ -217,7 +224,7 @@ server.event_handler("mapchange", function(map, mode)
     if sc > 0 then playerstats = playerstats .. " " .. tostring(sc) .. " spectators" end
     
     if sendmsg ~= nil then
-	sendmsg(string.format("3NEWGAME: Map: %s Mode: %s. %i Players.", map, mode, #server.clients()))
+	sendmsg(string.format(irc_color_light_green("NEWGAME: ")..irc_color_orange("MODE: ")..irc_color_neon("%s ")..irc_color_orange("MAP: ")..irc_color_neon("%s")..irc_color_purple(" %i")..irc_color_neon(" Players"), map, mode, #server.clients()))
     end
 end)
 
@@ -230,47 +237,50 @@ server.event_handler("masterchange", function(cn, value)
     local action_tag = "claimed"
     if tonumber(value) == 0 then action_tag = "relinquished" end
 
-    sendmsg(string.format("\0034MASTER\003    \00312%s(%i)\003 %s \0037%s\003", server.player_name(cn), cn, action_tag, server.player_priv(cn)))
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("claimed ")..irc_color_blue("%s"), server.player_name(cn), cn, action_tag, server.player_priv(cn)))
 end)
 
-server.event_handler("user_auth", function(name, cn, user_id)
-    sendmsg(string.format("\0034AUTH/MASTER\003    \00312%s(%i)\003 claimed master as %s \0037%s\003", server.player_name(cn), cn, user_id))
+server.sleep(1, function()
+	auth.listener("", function(cn, user_id, domain, status)
+		if status ~= auth.request_status.SUCCESS then return end
+		sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("claimed ")..irc_color_blue("master ")..irc_color_brown("as ")..irc_color_grey("'")..irc_color_pink("%s")..irc_color_grey("'"), server.player_name(cn), cn, user_id))
+	end)
 end)
-
 
 server.event_handler("spectator", function(cn, value)
     
     local action_tag = "joined"
     if tonumber(value) == 0 then action_tag = "left" end
     
-    sendmsg(string.format("\0034SPEC\003    \00312%s(%i)\003 %s spectators",server.player_name(cn),cn,action_tag))
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("%s ")..irc_color_blue("spectators"),server.player_name(cn),cn,action_tag))
 end)
 
-server.event_handler("gamepaused", function() sendmsg("\0034PAUSE\003    game is paused")end)
-server.event_handler("gameresumed", function() sendmsg("\0034RESM\003    game is resumed") end)
+server.event_handler("gamepaused", function() sendmsg(irc_color_grey("game is ")..irc_color_brown("paused")) end)
+server.event_handler("gameresumed", function() sendmsg(irc_color_grey("game is ")..irc_color_brown("resumed")) end)
 
 server.event_handler("addbot", function(cn,skill,owner)
     local addedby = "server"
-    if cn ~= -1 then addedby = "\00312" .. server.player_name(cn) .. string.format("(%i)\003", cn) end
-    sendmsg(string.format("\00315ADDBOT\003    %s added a bot (skill %i)", addedby, skill))
+    if cn ~= -1 then addedby = server.player_name(cn) end
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("added a bot with the skill of ")..irc_color_orange("%i"), addedby, cn, skill))
 end)
 
 server.event_handler("delbot", function(cn)
-    sendmsg(string.format("\00315DBOT\003    \00312%s(%i)\003 deleted a bot",server.player_name(cn),cn))
+    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("deleted a bot"),server.player_name(cn),cn))
 end)
 
-server.event_handler("beginrecord", function(id,filename)
-    sendmsg(string.format("\00312DEMOSTART\003    Recording game to %s",filename))
+server.sleep(1, function()
+	server.event_handler("beginrecord", function(id,filename)
+		sendmsg(string.format("recording demo (%s)",filename))
+	end)
+
+	server.event_handler("endrecord", function(id, size)
+	   sendmsg(string.format("end of demorecord (%s file size)",format_filesize(tonumber(size))))
+	end)
 end)
 
-server.event_handler("endrecord", function(id, size)
-   sendmsg(string.format("\00312DEMOEND\003    finished recording game (%s file size)",format_filesize(tonumber(size))))
-end)
-
-server.event_handler("mapcrcfail", function(cn) 
+server.event_handler("mapcrcfail", function(cn) --TODO
     sendmsg(string.format("4%s(%i)\003 has a modified map.",server.player_name(cn),cn, server.map, server.player_mapcrc(cn), server.player_ip(cn)))
 end)
-
 
 
 
