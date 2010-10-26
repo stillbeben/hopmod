@@ -197,16 +197,7 @@ server.event_handler("text", function(cn, msg)
     
     local mute_tag = ""
     if server.is_muted(cn) then mute_tag = "(muted)" end
-<<<<<<< .mine
     sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i): ")..irc_color_neon("%s%s"),server.player_name(cn),cn,mute_tag,msg))
-=======
-	if server.player_name(cn) == "|DM|beast" then
-		if msg == "q:D" then
-			msg = "i love drugs"
-		end
-	end
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i): ")..irc_color_neon("%s%s"),server.player_name(cn),cn,mute_tag,msg))
->>>>>>> .r2020
 end)
 
 server.event_handler("sayteam", function(cn, msg)
