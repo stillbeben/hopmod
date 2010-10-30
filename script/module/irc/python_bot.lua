@@ -58,7 +58,7 @@ local function process_irc_command(data)
 
 
 	if string.find(data, "code:") then
-		local xchan = Split(data, " ")
+		local xchan = strSplit(data, " ")
 		chan = xchan[1]
 		  
 		local tmp = ""
