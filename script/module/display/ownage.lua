@@ -128,6 +128,7 @@ server.event_handler("finishedgame",function()
     for player in server.gplayers() do
         player:vars().killingspree = 0
         player:vars().multikills = 1
+        player:vars().lastkill = 0
     end
     
 end)
