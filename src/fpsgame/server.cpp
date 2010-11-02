@@ -2484,7 +2484,7 @@ namespace server
             }
 
             case N_CHECKMAPS:
-                //TODO reply with a failure message
+                signal_checkmaps(sender);
                 break;
 
             case N_TRYSPAWN:
