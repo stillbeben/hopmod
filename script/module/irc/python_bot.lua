@@ -9,6 +9,25 @@ The SocketListener will wait on the serverport + 10 (for example 28785 + 10 = 28
 
 --]]
 
+-- IRC Functions
+
+local function irc_color_white(str) return string.format("0%s", str) end
+local function irc_color_black(str) return string.format("1%s", str) end
+local function irc_color_navy(str) return string.format("2%s", str) end
+local function irc_color_green(str) return string.format("3%s", str) end
+local function irc_color_red(str) return string.format("4%s", str) end
+local function irc_color_brown(str) return string.format("5%s", str) end
+local function irc_color_purple(str) return string.format("6%s", str) end
+local function irc_color_orange(str) return string.format("7%s", str) end
+local function irc_color_yellow(str) return string.format("8%s", str) end
+local function irc_color_light_green(str) return string.format("9%s", str) end
+local function irc_color_light_blue(str) return string.format("10%s", str) end
+local function irc_color_neon(str) return string.format("11%s", str) end
+local function irc_color_blue(str) return string.format("12%s", str) end
+local function irc_color_pink(str) return string.format("13%s", str) end
+local function irc_color_grey(str) return string.format("14%s", str) end
+local function irc_color_light_grey(str) return string.format("15%s", str) end
+
 if server.irc_socket_password == nil then
 	server.irc_socket_password = ""
 end
@@ -19,12 +38,13 @@ if server.irc_socket_password == "" then error("please set a password for the ir
 
 require("net")
 
-local acceptor = net.tcp_acceptor("0.0.0.0", server.serverport+10)
+acceptor = net.tcp_acceptor("0.0.0.0", server.serverport+10)
 acceptor:listen()
 
 local client_bot = net.tcp_client()
 
 local chan = ""
+local allow_stream = false
 
 function sendmsg(msg) -- required to send an response to the client-bot
 	if not allow_stream then return end
@@ -35,7 +55,7 @@ function sendmsg(msg) -- required to send an response to the client-bot
     chan = ""
 end
 
-local allow_stream = false
+
 
 local function process_irc_command(data)
 	local data = string.sub(data, 0, string.len(data)-2) -- skip \n
@@ -74,11 +94,9 @@ local function process_irc_command(data)
 		local pcallret, success, errmsg = pcall(loadstring(code))
 		if success ~= nil then
 			sendmsg("error while executing code: "..success)
-			if dm_log ~= nil then
-				log("irc error -> " .. success) 
-			end
+			server.log("irc error -> " .. success) 
 		else
-			log(string.format("irc -> executed: [[ %s ]]", code))
+			server.log(string.format("irc -> executed: [[ %s ]]", code))
 		end
 	end
 
@@ -112,25 +130,6 @@ end
 accept_next(acceptor)
 
 end)
-
--- IRC Functions
-
-local function irc_color_white(str) return string.format("0%s", str) end
-local function irc_color_black(str) return string.format("1%s", str) end
-local function irc_color_navy(str) return string.format("2%s", str) end
-local function irc_color_green(str) return string.format("3%s", str) end
-local function irc_color_red(str) return string.format("4%s", str) end
-local function irc_color_brown(str) return string.format("5%s", str) end
-local function irc_color_purple(str) return string.format("6%s", str) end
-local function irc_color_orange(str) return string.format("7%s", str) end
-local function irc_color_yellow(str) return string.format("8%s", str) end
-local function irc_color_light_green(str) return string.format("9%s", str) end
-local function irc_color_light_blue(str) return string.format("10%s", str) end
-local function irc_color_neon(str) return string.format("11%s", str) end
-local function irc_color_blue(str) return string.format("12%s", str) end
-local function irc_color_pink(str) return string.format("13%s", str) end
-local function irc_color_grey(str) return string.format("14%s", str) end
-local function irc_color_light_grey(str) return string.format("15%s", str) end
 
 -- GAMEEVENTS
 
