@@ -24,22 +24,22 @@ def f(server_write, args, nickname, **_):
 server['say'] = f
 
 
-def f(server_write, args, **_):
+def f(server_write, args, nickname, **_):
     server_write('''\
-			code:local cn = %s\
+			code:local cn = tonumber('%s')\
 			if server.valid_cn(cn) then\
-				server.kick(cn, 9999, 0, 0)\
+				server.kick(cn, 9999, "%s", "kicked by a remote admin.")\
 			else\
 				sendmsg("player not found")\
 			end\
 			\
 			\
-			''' % args)
+			''' % args, nickname)
 server['kick'] = f
 
 def f(server_write, args, **_):
     server_write('''\
-			code:local cn = %s\
+			code:local cn = tonumber('%s')\
 			if server.valid_cn(cn) then\
 				sendmsg("Name: "..server.player_name(cn).." Frags: "..server.player_frags(cn).." Deaths: "..server.player_deaths(cn).."  Accuracy: "..server.player_accuracy(cn)..string.char(37).." Ping: "..server.player_ping(cn).." Country: "..geoip.ip_to_country(server.player_ip(cn)))\
 			else\
@@ -52,7 +52,7 @@ server['stats'] = f
 
 def f(server_write, args, **_):
     server_write('''\
-			code:local cn = %s; local min = %s;\
+			code:local cn = tonumber('%s'); local min = tonumber('%s');\
 			if server.valid_cn(cn) then\
 				server.mute(cn, min)\
 				sendmsg("muted " .. server.player_name(cn) .. " for " .. min .. " minutes")
@@ -66,7 +66,7 @@ server['mute'] = f
 
 def f(server_write, args, **_):
     server_write('''\
-			code:local cn = %s;\
+			code:local cn = tonumber('%s');\
 			if server.valid_cn(cn) then\
 				server.unmute(cn)\
 				sendmsg("unmuted " .. server.player_name(cn))
@@ -82,7 +82,7 @@ server['unmute'] = f
 
 def f(server_write, args, **_):
     server_write('''\
-			code:local cn = %s;\
+			code:local cn = tonumber('%s');\
 			if server.valid_cn(cn) then\
 				server.disconnect(cn, 10, "disconnect by a admin")\
 			else\
@@ -96,7 +96,7 @@ server['disconnect'] = f
 
 def f(server_write, args, **_):
     server_write('''\
-			code:local cn = %s;\
+			code:local cn = tonumber('%s');\
 			if server.valid_cn(cn) then\
 				server.spec(cn)\
 			else\
@@ -109,7 +109,7 @@ server['spec'] = f
 
 def f(server_write, args, **_):
     server_write('''\
-			code:local cn = %s;\
+			code:local cn = tonumber('%s');\
 			if server.valid_cn(cn) then\
 				server.unspec(cn)\
 			else\
@@ -134,7 +134,7 @@ server['resume'] = f
 
 def f(server_write, args, **_):
     server_write('''\
-			code:local cn = %s;\
+			code:local cn = tonumber('%s');\
 			if server.valid_cn(cn) then\
 				sendmsg("IP: "..server.player_ip(cn))\
 			else\
@@ -155,6 +155,6 @@ server['map'] = f
 def f(server_write, args, **_):
     server_write('''\
 			code:\
-				server.changetime(%s*1000*60)\
+				server.changetime(tonumber('%s')*1000*60)\
 			''' % args)
 server['changetime'] = f

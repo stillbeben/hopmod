@@ -84,10 +84,6 @@ class HMIRCClient(irc.IRCClient):
             if mode == 'o' and args[n] != self.nickname:
                 (self.admins.discard, self.admins.add)[set](args[n])
 
-    def irc_INVITE(self, sender, params):
-        print params[1]
-        self.join(params[1])
-
     def write(self, message, admin_channel=False):
         if not message:
             return
