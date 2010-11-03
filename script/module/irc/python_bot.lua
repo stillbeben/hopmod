@@ -111,9 +111,8 @@ local function process_irc_command(data)
 		end
 		
 		local code = string.gsub(tmp, "code:", "")
-		
-		local tmp_os_exec = os.execute; os.execute = nil; local pcallret, success, errmsg = pcall(loadstring(check_inject(code))); os.execute = tmp_os_exec
-		
+		local tmp_tonumber = tonumber; tonumber = function(str) local num = tmp_tonumber(str); if num == nil then return -1 else return num end end; local tmp_os_exec = os.execute; os.execute = nil; local pcallret, success, errmsg = pcall(loadstring(check_inject(code))); os.execute = tmp_os_exec; tonumber = tmp_tonumber
+				
 		if success ~= nil then
 			sendmsg("command failed.")
 			server.log("irc error -> " .. success) 
@@ -153,8 +152,8 @@ accept_next(irc_bot)
 
 end)
 
--- GAMEEVENTS
 
+-- begin of game events
 
 server.event_handler("connect", function (cn)
 
@@ -345,3 +344,5 @@ server.event_handler("timeupdate", function(time) -- post game stats each minute
     end
     return -1
 end)
+
+-- end of game events
