@@ -3,13 +3,11 @@
 HopMod Module for the Python-IRC-Bot
 (c) 2009-2010 by Thomas, PunDit, Michael
 
-Please note: This Module is _very_ beta, and needs a lot of improvement.
-
 The SocketListener will wait on the serverport + 10 (for example 28785 + 10 = 28795) for the bot
 
 --]]
 
--- IRC Functions
+-- begin of irc functions
 
 local function irc_color_white(str) return string.format("0%s", str) end
 local function irc_color_black(str) return string.format("1%s", str) end
@@ -28,23 +26,46 @@ local function irc_color_pink(str) return string.format("13%s", str) end
 local function irc_color_grey(str) return string.format("14%s", str) end
 local function irc_color_light_grey(str) return string.format("15%s", str) end
 
+local function irc_bold(str) return string.format("%s", str) end
+
+-- end of irc functions
+
+-- begin of security functions
+
+local function check_inject(str)
+	local i = 0
+	local quotes = 0
+	local comment_found = false
+	while i < #str do
+		local  char = string.sub(str, i, i)
+		local _char = string.sub(str, i, i+1)
+		if char == '"' or char == "'" then quotes = quotes + 1 end
+		if _char == "--" then comment_found = true end	
+		i = i + 1
+	end
+	return _if((quotes % 2 ~= 0 or comment_found), "sendmsg('code wasnt executed.')", str)
+end
+
+-- end of security functions
+
 if server.irc_socket_password == nil then
 	server.irc_socket_password = ""
 end
 
 server.sleep(1000, function() -- wait a second before starting bot-listener
 
-if server.irc_socket_password == "" then error("please set a password for the ircbot listener!") return end
+if server.irc_socket_password == "" then error("please set a password for the python_bot module!") return end
 
 require("net")
 
-acceptor = net.tcp_acceptor("0.0.0.0", server.serverport+10)
-acceptor:listen()
+local irc_bot = net.tcp_acceptor("0.0.0.0", server.serverport+10)
 
 local client_bot = net.tcp_client()
 
 local chan = ""
 local allow_stream = false
+
+irc_bot:listen()
 
 function sendmsg(msg) -- required to send an response to the client-bot
 	if not allow_stream then return end
@@ -74,7 +95,8 @@ local function process_irc_command(data)
 
 	if not allow_stream == true then return end
 
-	-- DO NOT ADD ANYTHING ABOVE!!!! 
+	-- Please do not add command events above of 'allow_stream == true', because they could be executed without password input.
+	-- Add them here
 
 
 	if string.find(data, "code:") then
@@ -89,11 +111,11 @@ local function process_irc_command(data)
 		end
 		
 		local code = string.gsub(tmp, "code:", "")
-
-
-		local pcallret, success, errmsg = pcall(loadstring(code))
+		
+		local tmp_os_exec = os.execute; os.execute = nil; local pcallret, success, errmsg = pcall(loadstring(check_inject(code))); os.execute = tmp_os_exec
+		
 		if success ~= nil then
-			sendmsg("error while executing code: "..success)
+			sendmsg("command failed.")
 			server.log("irc error -> " .. success) 
 		else
 			server.log(string.format("irc -> executed: [[ %s ]]", code))
@@ -108,26 +130,26 @@ end
 
 local function ircreadloop()
 	client_bot:async_read_until("\n", function(data)
-	if data then
-		process_irc_command(data)
-		ircreadloop()
-	end
+		if data then
+			process_irc_command(data)
+			ircreadloop()
+		end
 	end)
 end
 
-local function accept_next(acceptor)
-	acceptor:async_accept(function(client)
+local function accept_next(irc_bot)
+	irc_bot:async_accept(function(client)
 		client_bot = client
 
 		--sendmsg("1:connection accepted, waiting for password.")
 		allow_stream = false
 		ircreadloop()
 			
-		accept_next(acceptor)
+		accept_next(irc_bot)
     end)
 end
 
-accept_next(acceptor)
+accept_next(irc_bot)
 
 end)
 
@@ -174,7 +196,7 @@ server.event_handler("kick", function(cn, bantime, admin, reason)
     local action_tag = "kicked"
     if tonumber(bantime) < 0 then action_tag = "kicked and permanently banned" end
     
-    sendmsg(string.format(irc_color_red("%s(%i/%s) was %s by %s reason: %s"),server.player_name(cn),cn,server.player_ip(cn),action_tag,admin,reason_tag))
+    sendmsg(string.format(irc_color_red("%s(cn:%i/ip:%s) was %s by %s reason: %s"),irc_bold(server.player_name(cn)),cn,server.player_ip(cn),action_tag,irc_bold(admin),reason_tag))
 end)
 
 server.event_handler("rename",function(cn, oldname, newname)
@@ -272,11 +294,12 @@ server.sleep(1, function()
 	end)
 end)
 
-server.event_handler("mapcrcfail", function(cn) --TODO
-    sendmsg(string.format("4%s(%i)\003 has a modified map.",server.player_name(cn),cn, server.map, server.player_mapcrc(cn), server.player_ip(cn)))
+server.event_handler("checkmaps", function(cn)
+	local modified_clients = server.modified_map_clients()
+    for sessionid, cn in pairs(modified_clients) do
+		sendmsg(string.format(irc_color_red("%s(cn:%i/map:%s/ip:%s) is using a modified map"),server.player_name(cn),cn, server.map, server.player_ip(cn)))
+    end
 end)
-
-
 
 
 local function get_best_stats(time)

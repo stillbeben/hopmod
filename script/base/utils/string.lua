@@ -176,3 +176,13 @@ function strSplit(str, delim, maxNb)
     end
     return result
 end
+
+function strJoin(delimiter, list)
+  local string = list[1]
+  if #list >= 2 then
+	  for i = 2, #list do 
+		string = string .. delimiter .. list[i] 
+	  end
+  end
+  return string
+end

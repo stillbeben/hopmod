@@ -1,6 +1,9 @@
 require "crypto"
 
 local modified_clients = {}
+function server.modified_map_clients()
+	return modified_clients
+end
 
 local function failed_action(cn)
     server.force_spec(cn)
