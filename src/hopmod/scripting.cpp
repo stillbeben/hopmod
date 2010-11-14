@@ -31,6 +31,7 @@ extern "C"{
 
 static void create_server_namespace(lua_State *);
 static void bind_object_to_lua(const_string, script::env_object *);
+static void unbind_object(const_string, script::env_object *);
 static inline int server_interface_index(lua_State *);
 static inline int server_interface_newindex(lua_State *);
 static inline void push_server_table(lua_State *);
@@ -64,6 +65,8 @@ void init_scripting()
     // Global objects created and bound in our CubeScript environment are also
     // bound to the Lua environment in the server namespace.
     env->set_bind_observer(bind_object_to_lua);
+    
+    env->set_unbind_observer(unbind_object);
     
     // Required for Lua to call CubeScript functions
     lua_pushlightuserdata(L, env);
@@ -226,6 +229,15 @@ void bind_object_to_lua(const_string id, script::env_object * obj)
     lua_rawset(L, -3); //server.index[key] = obj
     
     lua_pop(L, 1); //remove server.index ref
+}
+
+void unbind_object(const_string id, script::env_object * obj)
+{
+    lua_State * L = env->get_lua_state();
+    lua_rawgeti(L, LUA_REGISTRYINDEX, server_namespace_index_ref);
+    lua_pushlstring(L, id.begin(), id.length());
+    lua_pushnil(L);
+    lua_rawset(L, -3);
 }
 
 static std::string get_timestamp_string()

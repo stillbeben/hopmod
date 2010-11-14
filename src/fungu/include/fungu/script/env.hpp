@@ -128,11 +128,21 @@ public:
         return old_function;
     }
     
+    template<typename ObserverFunction>
+    observer_function set_unbind_observer(ObserverFunction new_function)
+    {
+        observer_function old_function = m_unbind_observer;
+        m_unbind_observer = new_function;
+        return old_function;
+    }
+    
     /**
         @brief Unset observer function set by set_bind_observer method.
         @return The observer function that was set, returned as a boost::function2<void, const_string, object *> object.
     */
     observer_function unset_bind_observer();
+    
+    observer_function unset_unbind_observer();
     
     #ifdef FUNGU_WITH_LUA
     /**
@@ -186,6 +196,7 @@ private:
     int m_recursion_limit;
     
     observer_function m_bind_observer;
+    observer_function m_unbind_observer;
     
     #ifdef FUNGU_WITH_LUA
     lua_State * m_lua_state;

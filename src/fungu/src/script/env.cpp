@@ -78,6 +78,7 @@ void env::bind_global_object(env_object * obj, const_string id)
 void env::unbind_global_object(const_string id)
 {
     env_symbol * sym = create_symbol(id);
+    if(m_unbind_observer) m_unbind_observer(id, sym->get_global_object());
     sym->unset_global_object();
 }
 
@@ -93,6 +94,13 @@ env::observer_function env::unset_bind_observer()
     observer_function old_function = m_bind_observer;
     m_bind_observer = observer_function();
     return old_function;
+}
+
+env::observer_function env::unset_unbind_observer()
+{
+    observer_function old_function = m_unbind_observer;
+    m_unbind_observer = observer_function();
+    return old_function;   
 }
 
 #ifdef FUNGU_WITH_LUA
