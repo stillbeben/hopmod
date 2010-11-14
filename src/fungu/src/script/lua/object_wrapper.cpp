@@ -14,15 +14,32 @@ namespace detail{
 
 int object_wrapper(lua_State * L)
 {
-    env_object * obj = reinterpret_cast<env_object *>(lua_touserdata(L, lua_upvalueindex(1)));
-    return obj->call(L);
+    env_object ** obj = reinterpret_cast<env_object **>(lua_touserdata(L, lua_upvalueindex(1)));
+    return (*obj)->call(L);
+}
+
+static int __gc(lua_State * L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    env_object ** hold_ptr = reinterpret_cast<env_object **>(lua_touserdata(L, 1));
+    (*hold_ptr)->unref();
 }
 
 } //namespace detail
 
 void push_object(lua_State * L, env_object * obj)
 {
-    lua_pushlightuserdata(L, obj);
+    env_object ** hold_ptr = reinterpret_cast<env_object **>(lua_newuserdata(L, sizeof(env_object *)));
+    *hold_ptr = obj;
+    obj->add_ref();
+    
+    lua_newtable(L);
+    lua_pushstring(L, "__gc");
+    lua_pushcfunction(L, detail::__gc);
+    lua_settable(L, -3);
+    
+    lua_setmetatable(L, -2);
+    
     lua_pushcclosure(L, &detail::object_wrapper, 1);
 }
 
@@ -48,9 +65,9 @@ env_object * get_object(lua_State * L,int index)
     lua_CFunction func = lua_tocfunction(L,index);
     if(!func || func != (const void *)&detail::object_wrapper) return NULL;
     lua_getupvalue(L,index,1);
-    env_object * obj = reinterpret_cast<env_object *>(lua_touserdata(L,-1));
+    env_object ** obj = reinterpret_cast<env_object **>(lua_touserdata(L,-1));
     lua_pop(L,1);
-    return obj;
+    return *obj;
 }
 
 } //namespace lua
