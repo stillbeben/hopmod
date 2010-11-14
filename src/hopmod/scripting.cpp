@@ -39,6 +39,7 @@ static inline void register_to_server_namespace(lua_State *,lua_CFunction,const 
 static int parse_list(lua_State *);
 static int execute_cubescript_file(lua_State * L);
 static int make_var(lua_State * L);
+static int unref_user_defined_vars(lua_State * L);
 
 static script::env * env = NULL;
 
@@ -46,6 +47,7 @@ static const char * const SERVER_NAMESPACE = "server";
 
 static int server_namespace_ref = 0;
 static int server_namespace_index_ref = 0;
+static int user_defined_variables = 0;
 
 void init_scripting()
 {
@@ -65,7 +67,6 @@ void init_scripting()
     // Global objects created and bound in our CubeScript environment are also
     // bound to the Lua environment in the server namespace.
     env->set_bind_observer(bind_object_to_lua);
-    
     env->set_unbind_observer(unbind_object);
     
     // Required for Lua to call CubeScript functions
@@ -78,6 +79,7 @@ void init_scripting()
     register_lua_function(&parse_list, "parse_list");
     register_lua_function(&execute_cubescript_file, "execute_cubescript_file");
     register_lua_function(&make_var, "make_var");
+    register_lua_function(&unref_user_defined_vars, "unref_user_defined_vars");
 }
 
 static void create_server_namespace(lua_State * L)
@@ -108,6 +110,9 @@ static void create_server_namespace(lua_State * L)
     
     server_namespace_index_ref = luaL_ref(L, LUA_REGISTRYINDEX);
     
+    lua_newtable(L);
+    user_defined_variables = luaL_ref(L, LUA_REGISTRYINDEX);
+    
     lua_pop(L, 1); // pop server table
 }
 
@@ -133,7 +138,7 @@ script::env & get_script_env()
     return *env;
 }
 
-// index(table, key) metamethod for the server table
+// The server table's __index metatable function
 int server_interface_index(lua_State * L)
 {
     const char * key = lua_tostring(L, 2);
@@ -152,7 +157,7 @@ int server_interface_index(lua_State * L)
     return 1;
 }
 
-// newindex(table, key, value) metamethod for the server table
+// The server table's __newindex metatable function
 int server_interface_newindex(lua_State * L) 
 {
     std::size_t keylen;
@@ -188,6 +193,11 @@ int server_interface_newindex(lua_State * L)
             
             key_symbol->set_global_object(obj); // this doesn't signal the bind observers
             bind_object_to_lua(const_string_key, obj);
+            
+            lua_rawgeti(L, LUA_REGISTRYINDEX, user_defined_variables);
+            lua_pushstring(L, key);
+            lua_pushboolean(L, 1);
+            lua_settable(L, -3);
         }
     }
     catch(script::error_trace * errinfo)
@@ -221,14 +231,11 @@ void bind_object_to_lua(const_string id, script::env_object * obj)
 {
     lua_State * L = env->get_lua_state();
     lua_rawgeti(L, LUA_REGISTRYINDEX, server_namespace_index_ref);
-        
     lua_pushlstring(L, id.begin(), id.length());
-    
     script::lua::push_object(L, obj);
-    
-    lua_rawset(L, -3); //server.index[key] = obj
-    
-    lua_pop(L, 1); //remove server.index ref
+    lua_rawset(L, -3);
+    lua_pop(L, 1);
+    //TODO add ref to obj
 }
 
 void unbind_object(const_string id, script::env_object * obj)
@@ -238,6 +245,7 @@ void unbind_object(const_string id, script::env_object * obj)
     lua_pushlstring(L, id.begin(), id.length());
     lua_pushnil(L);
     lua_rawset(L, -3);
+    lua_pop(L, 1);
 }
 
 static std::string get_timestamp_string()
@@ -351,6 +359,22 @@ bool unref(const char * id)
     if(!obj || !obj->is_adopted()) return false;
     env->unbind_global_object(id);
     return true;
+}
+
+int unref_user_defined_vars(lua_State * L)
+{
+    lua_rawgeti(L, LUA_REGISTRYINDEX, user_defined_variables);
+    int t = lua_gettop(L);
+    lua_pushnil(L);
+    while (lua_next(L, t) != 0)
+    {
+        unref(lua_tostring(L, -2));
+        lua_pop(L, 1);
+    }
+    
+    lua_pushinteger(L, user_defined_variables);
+    lua_newtable(L);
+    lua_settable(L, LUA_REGISTRYINDEX);
 }
 
 int execute_cubescript_file(lua_State * L)
