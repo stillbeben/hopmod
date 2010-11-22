@@ -50,13 +50,10 @@ server.event_handler("disconnect", function(cn)
     failed[cn] = nil
 end)
 
-server.event_handler("connect", function(cn)
-    failed[cn] = 0
-end)
-
 server.event_handler("connecting", function(cn, host, name, hash, reserved_slot)
 	if reserved_slot then return end
     if hash ~= "" then
+	    failed[cn] = 0
 		setmaster(cn, hash, 1)
     end
 end)
