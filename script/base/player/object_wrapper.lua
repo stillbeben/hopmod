@@ -43,8 +43,8 @@ local methods = {
     unspec          = function(obj) return server.unspec(obj.cn) end,
     setadmin        = function(obj) return server.setadmin(obj.cn) end,
     setmaster       = function(obj) return server.setmaster(obj.cn) end,
-    set_invadmin    = function(obj) return server.set_invadmin(obj.cn) end,
-    unset_invadmin  = function(obj) return server.unset_invadmin(obj.cn) end,
+    set_invadmin    = function(obj) return server.set_invisible_admin(obj.cn) end,
+    set_invisible_admin = function(obj) return server.set_inivisible_admin(obj.cn) end,
     vars            = function(obj) return server.player_vars(obj.cn) end,
     pos             = function(obj) return server.player_pos(obj.cn) end,
     valid           = function(obj) return server.player_sessionid(obj.cn) == obj.sessionid end
