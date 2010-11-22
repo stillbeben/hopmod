@@ -19,15 +19,17 @@ end
 server.event_handler("shutdown", bind(logfile.close, logfile))
 
 if not server.is_authserver then
+
     function server.log_status(msg)
-	print(msg)
+        print(msg)
     end
     
     function server.log_error(msg)
-	assert(msg ~= nil)
-	io.stderr:write(os.date("[%a %d %b %X] ",os.time()))
-	io.stderr:write(msg)
-	io.stderr:write("\n")
-	io.stderr:flush()
+        assert(msg ~= nil)
+        io.stderr:write(os.date("[%a %d %b %X] ",os.time()))
+        io.stderr:write(msg)
+        io.stderr:write("\n")
+        io.stderr:flush()
     end
 end
+
