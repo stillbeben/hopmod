@@ -6,6 +6,8 @@
  *   Distributed under a BSD style license (see accompanying file LICENSE.txt)
  */
 
+#include <iostream>
+
 namespace fungu{
 namespace script{
 namespace lua{
@@ -22,7 +24,7 @@ static int __gc(lua_State * L)
 {
     luaL_checktype(L, 1, LUA_TUSERDATA);
     env_object ** hold_ptr = reinterpret_cast<env_object **>(lua_touserdata(L, 1));
-    (*hold_ptr)->unref();
+    intrusive_ptr_release(*hold_ptr);
 }
 
 } //namespace detail
