@@ -3,46 +3,15 @@
 	A player command to send a name of a found cheater to the log
 
 ]]
-
-
 local events = {}
-local interval = {}
-interval.timer = server.cheater_ad_timer
-
 local usage = "#cheater <cn>|\"<name>\""
 
-
 local function init()
-
-	if not (interval.timer == 0) then
-
-		interval.active = true
-
-		server.interval(interval.timer,function()
-
-			if interval.active == false then
-
-				return -1
-			end
-
-			if (tonumber(server.playercount) > 2) and (tonumber(server.mastermode) == 0) then
-
-				server.msg("If you suspect a cheater type " .. yellow("#cheater \"name\"") .. " or " .. yellow("#cheater CN") .. " to notify an admin.")
-			end
-
-		end)
-
-	end
-
 end
 
 
 local function unload()
-
-	interval.active = false
-
 end
-
 
 local function run(cn,cheat)
 
