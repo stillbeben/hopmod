@@ -32,7 +32,7 @@ inline void load_corelib(env & environment)
     
     script::corelib::register_math_functions(environment);
     script::corelib::register_controlflow_functions(environment);
-    script::corelib::register_alias_functions(environment);
+    //script::corelib::register_alias_functions(environment);
     script::corelib::register_anonfunc_functions(environment);
     script::corelib::register_exec_functions(environment);
     script::corelib::register_string_functions(environment);
