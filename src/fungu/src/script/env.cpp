@@ -40,6 +40,8 @@ env::~env()
 {
     for(boost::unordered_map<const_string, env_symbol *>::iterator it = m_symbol.begin();
         it != m_symbol.end(); ++it) delete it->second;
+    
+    delete m_source_ctx;
 }
 
 env_symbol * env::lookup_symbol(const_string id)const
