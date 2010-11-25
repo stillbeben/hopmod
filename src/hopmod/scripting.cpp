@@ -235,7 +235,6 @@ void bind_object_to_lua(const_string id, script::env_object * obj)
     script::lua::push_object(L, obj);
     lua_rawset(L, -3);
     lua_pop(L, 1);
-    //TODO add ref to obj
 }
 
 void unbind_object(const_string id, script::env_object * obj)
@@ -375,6 +374,8 @@ int unref_user_defined_vars(lua_State * L)
     lua_pushinteger(L, user_defined_variables);
     lua_newtable(L);
     lua_settable(L, LUA_REGISTRYINDEX);
+    
+    return 0;
 }
 
 int execute_cubescript_file(lua_State * L)

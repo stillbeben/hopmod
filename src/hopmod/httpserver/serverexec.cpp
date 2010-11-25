@@ -14,9 +14,9 @@ class script_post:public stream::char_vector_sink
 {
 public:
     script_post(http::server::request & req)
-     :m_request(req),
-      m_response(NULL),
-      stream::char_vector_sink(req.get_content_length())
+     :stream::char_vector_sink(req.get_content_length()),
+      m_request(req),
+      m_response(NULL)
     {
         m_request.async_read_content(*this, boost::bind(&script_post::read_content_completed, this, _1));
     }

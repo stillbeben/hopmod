@@ -160,9 +160,9 @@ void restore_server(const char * filename)
     
     restore_state_header header;
     
-    int readlen = read(fd, &header, sizeof(header));
+    ssize_t readlen = read(fd, &header, sizeof(header));
     
-    if(readlen < sizeof(header))
+    if(readlen < static_cast<ssize_t>(sizeof(header)))
     {
         close(fd);
         return;
@@ -178,7 +178,7 @@ void restore_server(const char * filename)
     {
         savedscore playerscore;
         readlen = read(fd, &playerscore, sizeof(savedscore));
-        if(readlen < sizeof(savedscore))
+        if(readlen < static_cast<ssize_t>(sizeof(savedscore)))
         {
             close(fd);
             return;
@@ -190,7 +190,7 @@ void restore_server(const char * filename)
     {
         restore_teamscore team;
         readlen = read(fd, &team, sizeof(team));
-        if(readlen < sizeof(team))
+        if(readlen < static_cast<ssize_t>(sizeof(team)))
         {
             close(fd);
             return;

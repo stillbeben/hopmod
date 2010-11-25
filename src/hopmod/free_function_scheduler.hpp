@@ -16,7 +16,7 @@ class free_function_scheduler
     typedef std::priority_queue<jobs_queue_entry> jobs_queue;
 public:
     free_function_scheduler()
-    :m_last_update(0), m_job_id(0)
+    :m_job_id(0), m_last_update(0)
     {
         
     }

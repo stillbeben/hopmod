@@ -106,6 +106,7 @@ inline script::env_object * bind_property(GetterFunction getter, SetterFunction 
     observed_variable * var = new observed_variable(script::bind_property<T>(getter, setter, id, environ), id);
     var->set_adopted();
     environ.bind_global_object(var, const_string::literal(id));
+    return var;
 }
 
 } //namespace hopmod

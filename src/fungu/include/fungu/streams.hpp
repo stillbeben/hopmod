@@ -134,6 +134,7 @@ public:
     {
         m_vector.resize(m_vector.size() + datalen);
         std::copy(data, data + datalen, m_vector.end() - datalen);
+        return datalen;
     }
     const char * data()const{return &(*m_vector.begin());}
     std::size_t size()const{return m_vector.size();}

@@ -75,7 +75,6 @@ boost::signal<void (const char *)> signal_varchanged;
 static void destroy_slot(int handle);
 namespace lua{
 static int register_event_handler(lua_State * L);
-static void cleanup(lua_State * L);
 }//namespace lua
 
 

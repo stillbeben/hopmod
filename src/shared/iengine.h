@@ -316,7 +316,6 @@ inline const char * disconnect_reason(int code)
         "kicked/banned", "tag type", "ip is banned", 
         "server is in private mode", "server FULL (maxclients)", 
         "connection timed out", "overflow" };
-    assert(code >= 0 && code < (sizeof(reasons)/sizeof(char *)));
     if(code < 0) return "";
     return reasons[code % (sizeof(reasons)/sizeof(char *))];
 }

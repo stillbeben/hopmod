@@ -295,7 +295,7 @@ private:
         bool completed = false;
         std::string error_message;
         std::string source;
-        int line;
+        int line = -1;
         
         try
         {

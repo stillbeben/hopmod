@@ -20,7 +20,7 @@ public:
     
     bool operator<(const global_player_id & x)const
     {
-        return ip < x.ip || ip == x.ip && name < x.name;
+        return ip < x.ip || (ip == x.ip && name < x.name);
     }
     
     std::string name;
