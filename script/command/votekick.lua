@@ -9,10 +9,6 @@
 local MIN_VOTES_REQUIRED = 6
 
 local priv_master = server.PRIV_MASTER
-
-local interval = {}
-interval.timer = server.votekick_ad_timer
-
 local votes = {}
 
 local usage = "#votekick <cn>|\"<name>\""
@@ -66,32 +62,11 @@ local function init()
 		end
 
 	end)
-
-	if not (interval.timer == 0) then
-
-		interval.active = true
-
-		server.interval(interval.timer,function()
-
-			if interval.active == false then
-
-				return -1
-			end
-
-			if server.playercount > 2 and tonumber(server.mastermode) == 0 then
-
-				server.msg("If you see a cheater type: " .. yellow("#votekick \"name\"") .. " or " .. yellow("#votekick CN") .. ".")
-			end
-
-		end)
-
-	end
-
 end
 
 
 local function unload()
-	interval.active = false
+	
 end
 
 
