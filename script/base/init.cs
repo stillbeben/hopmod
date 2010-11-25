@@ -2,7 +2,7 @@
 # to exist. This is the first script to be executed by the game server.
 
 // Some utility functions that should be in utils.cs
-do = [arg1]
+//do = [arg1]
 
 //global execCubeScriptFile &exec-cubescript
 global execIfFound (func [filename] [
