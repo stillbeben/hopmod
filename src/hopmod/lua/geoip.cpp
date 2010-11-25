@@ -63,7 +63,7 @@ void open_geoip(lua_State * L)
 		{"load_geocity_database", load_geocity_database},
         {"ip_to_country", ip_to_country},
         {"ip_to_country_code", ip_to_country_code},
-		{"ip_to_city", ip_to_country_code},
+		{"ip_to_city", ip_to_city},
         {NULL, NULL}
     };
     
