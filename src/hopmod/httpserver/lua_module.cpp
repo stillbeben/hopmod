@@ -391,6 +391,8 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        
+        return 1;
     }
     
     static int create_object(lua_State * L)
@@ -418,12 +420,12 @@ public:
     static const char * MT;
     
     resource_wrapper()
-     :m_lua(NULL),
-      m_resolve_function(LUA_REFNIL),
+     :m_resolve_function(LUA_REFNIL),
       m_get_function(LUA_REFNIL),
       m_put_function(LUA_REFNIL),
       m_post_function(LUA_REFNIL),
-      m_delete_function(LUA_REFNIL)
+      m_delete_function(LUA_REFNIL),
+      m_lua(NULL)
     {
         
     }
