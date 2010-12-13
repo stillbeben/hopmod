@@ -24,7 +24,6 @@ int luaopen_lsqlite3(lua_State * L);
 #endif
 
 namespace server{
-void enable_setmaster_autoapprove(bool);
 void started();
 void sendservmsg(const char *);
 extern string smapname;
@@ -79,7 +78,6 @@ void init_hopmod()
         Misc
     */
     set_maintenance_frequency(86400000); // signal maintenance event every 24 hours
-    server::enable_setmaster_autoapprove(false); // disable /setmaster command
     info_file("log/sauer_server.pid", "%i\n", getpid());
 
     /*

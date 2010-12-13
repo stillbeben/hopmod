@@ -634,16 +634,6 @@ void deletebot(int cn)
     get_main_io_service().post(boost::bind(&execute_deletebot, cn));
 }
 
-void enable_master_auth(bool enable)
-{
-    mastermask = (enable ? mastermask & ~MM_AUTOAPPROVE : mastermask | MM_AUTOAPPROVE);
-}
-
-bool using_master_auth()
-{
-    return !(mastermask & MM_AUTOAPPROVE);
-}
-
 void update_mastermask()
 {
     bool autoapprove = mastermask & MM_AUTOAPPROVE;
@@ -956,16 +946,6 @@ void suicide(int cn)
 bool compare_admin_password(const char * x)
 {
     return !strcmp(x, adminpass);
-}
-
-void enable_setmaster_autoapprove(bool enable)
-{
-    mastermask = (!enable ? mastermask & ~MM_AUTOAPPROVE : mastermask | MM_AUTOAPPROVE);
-}
-
-bool get_setmaster_autoapprove()
-{
-    return mastermask & MM_AUTOAPPROVE;
 }
 
 bool send_item(int type, int recipient) 

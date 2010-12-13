@@ -135,8 +135,6 @@ namespace server
     int getspeccount();
     void addbot(int);
     void deletebot(int);
-    void enable_master_auth(bool);
-    bool using_master_auth();
     void update_mastermask();
     const char * gamemodename();
     int lua_gamemodeinfo(lua_State *);
@@ -178,9 +176,6 @@ namespace server
     
     void send_auth_challenge(int,int,const char *,const char *);
     void send_auth_request(int, const char *);
-    
-    void enable_setmaster_autoapprove(bool);
-    bool get_setmaster_autoapprove();
     
     bool send_item(int item_code, int recipient);
     
