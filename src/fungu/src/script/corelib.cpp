@@ -13,7 +13,6 @@
 #include "fungu/script/env.hpp"
 #include "fungu/script/code_block.hpp"
 #include "fungu/script/function.hpp"
-#include "fungu/script/env_module.hpp"
 #include "fungu/script/parse_array.hpp"
 #include "fungu/script/any_variable.hpp"
 #include "fungu/script/nullary_setter.hpp"
@@ -39,7 +38,6 @@
 #include <math.h>
 #include <string.h>
 
-#include "corelib/alias.cpp"
 #include "corelib/anonymous_function.cpp"
 #include "corelib/controlflow.cpp"
 #include "corelib/datetime.cpp"
@@ -48,3 +46,4 @@
 #include "corelib/maths.cpp"
 #include "corelib/string.cpp"
 #include "corelib/vector.cpp"
+

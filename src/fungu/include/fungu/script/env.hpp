@@ -37,7 +37,6 @@ class source_context;
 class env
 {
 public:
-    static const int max_modules = 4;
     static const int recursion_limit = 1000;
     
     typedef boost::function2<void, const_string, env_object *> observer_function;
@@ -155,40 +154,6 @@ public:
     */
     void set_lua_state(lua_State * state);
     #endif
-        
-    template<typename ModuleClass>
-    ModuleClass * get_module_instance()const
-    {
-        int id = ModuleClass::get_module_id();
-        assert(id >= 0 && id < max_modules);
-        void * vptr = m_module[id];
-        if(!vptr) return NULL;
-        return reinterpret_cast<ModuleClass *>(vptr);
-    }
-    
-    template<typename ModuleClass>
-    void set_module_instance(ModuleClass * mod)
-    {
-        int id = ModuleClass::get_module_id();
-        assert(id >= 0 && id < max_modules);
-        m_module[id] = mod;
-    }
-    
-    template<typename ModuleClass>
-    void unset_module_instance()
-    {
-        int id = ModuleClass::get_module_id();
-        assert(id >= 0 && id < max_modules);
-        m_module[id] = NULL;
-    }
-    
-    static int generate_module_id()
-    {
-        static int module_count = 0;
-        assert(module_count < max_modules); //increase max_modules if this ever fails
-        return module_count++;
-    }
-    
 private:
     boost::unordered_map<const_string, env_symbol *> m_symbol;
     
@@ -201,8 +166,6 @@ private:
     #ifdef FUNGU_WITH_LUA
     lua_State * m_lua_state;
     #endif
-    
-    void * m_module[max_modules];
 };
 
 void initialize_library();
