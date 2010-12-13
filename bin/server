@@ -251,7 +251,13 @@ case "$1" in
                 then
                     v_remove_status_log=y
                 fi
-                
+        
+        if [ ! -x bin/sauer_server ]
+        then
+            echo "Cannot find or execute bin/sauer_server"
+            exit 1
+        fi
+        
 		if ! p_start_server
 		then
 		    echo "It appears the game server is already running."
