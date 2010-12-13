@@ -3,7 +3,7 @@
 	A player command to execute a script on the server
 
 ]]
-
+require "cubescript"
 
 return function(cn, ...)
 
@@ -20,10 +20,11 @@ return function(cn, ...)
 	end
 
 	if code == "" then
-
 		return false, "#eval <code>"
 	end
 
-	server.player_msg(cn, server["do"](code) or "")
-
+	--server.player_msg(cn, server["do"](code) or "")
+    
+	server.player_msg(cn, cubescript.eval_string(code) or "")
 end
+
