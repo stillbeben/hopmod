@@ -25,8 +25,6 @@ int luaopen_lsqlite3(lua_State * L);
 
 namespace server{
 void enable_setmaster_autoapprove(bool);
-void crash_handler(int signal);
-void restore_server(const char * filename);
 void started();
 void sendservmsg(const char *);
 extern string smapname;
@@ -51,21 +49,6 @@ bool reloaded = false;
 
 static boost::thread::id main_thread;
 
-static void install_crash_handler()
-{
-    struct sigaction crash_action;
-    sigemptyset(&crash_action.sa_mask);
-    crash_action.sa_handler = &server::crash_handler;
-    crash_action.sa_flags = SA_RESETHAND;
-
-    sigaction(SIGILL,  &crash_action, NULL);
-    sigaction(SIGABRT, &crash_action, NULL);
-    sigaction(SIGFPE,  &crash_action, NULL);
-    sigaction(SIGBUS,  &crash_action, NULL);
-    sigaction(SIGSEGV, &crash_action, NULL);
-    sigaction(SIGSYS,  &crash_action, NULL);
-}
-    
 static void load_lua_modules()
 {
     lua_State * L = get_script_env().get_lua_state();
@@ -98,7 +81,6 @@ void init_hopmod()
     set_maintenance_frequency(86400000); // signal maintenance event every 24 hours
     server::enable_setmaster_autoapprove(false); // disable /setmaster command
     info_file("log/sauer_server.pid", "%i\n", getpid());
-    install_crash_handler();
 
     /*
         Scripting environment
@@ -189,9 +171,6 @@ void started()
 
     signal_started();
     if(!server::smapname[0]) selectnextgame();
-
-    // Restore game state and player stats after server crash
-    if(access("log/restore", R_OK) == 0) restore_server("log/restore");
 }
 
 void shutdown()
