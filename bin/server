@@ -82,9 +82,9 @@ p_start_server() {
     ERROR_START=$(( $ERROR_START + 1 ))
     
     # start the game server as a background process
-    nohup bin/sauer_server ${SERVER_OPTIONS} 1>log/status.log 2>>log/error.log </dev/null &
+    nohup bin/monitor bin/sauer_server ${SERVER_OPTIONS} 1>log/status.log 2>>log/error.log </dev/null &
     
-    #wait for server to start up and print the initial status messages
+    # wait for server to start up and print the initial status messages
     until $(cat log/status.log | grep -q *READY*)
     do
         #stop if server has terminated
@@ -255,6 +255,12 @@ case "$1" in
         if [ ! -x bin/sauer_server ]
         then
             echo "Cannot find or execute bin/sauer_server"
+            exit 1
+        fi
+        
+        if [ ! -x bin/monitor ]
+        then
+            echo "Cannot find or execute bin/monitor"
             exit 1
         fi
         
