@@ -42,9 +42,21 @@ server.event_handler("shot",function(cn,gun,hits)
 		end
 
 		if server.player_vars(cn).cdr_last_shot and ((gametime - server.player_vars(cn).cdr_last_shot) < reload_limit) then
-
-			server.log("WARNING: " .. server.player_name(cn) .. "(" .. cn .. ")'s weapon reload time is too low.  [pj: " .. server.player_lag(cn) .. " | ping: " .. server.player_ping(cn) .. " | weapon: " .. gun .. " | ip: " .. server.player_ip(cn) .. "]")
-
+		    
+            local message = string.gsub(
+                "WARNING: $name ($cn)'s weapon reload time is too low ($reload_time should be $reload_limit). [pj: $pj | ping: $ping | weapon: $weapon | ip: $ip]",
+                "%$([%w_]+)", {
+                name = server.player_name(cn),
+                cn = cn,
+                reload_time = (gametime - server.player_vars(cn).cdr_last_shot),
+                reload_limit = reload_limit,
+                pj = server.player_lag(cn),
+                ping = server.player_ping(cn),
+                weapon = gun,
+                ip = server.player_ip(cn)
+            })
+            
+            server.log(message)
 		end
 
 		server.player_vars(cn).cdr_last_shot = gametime
