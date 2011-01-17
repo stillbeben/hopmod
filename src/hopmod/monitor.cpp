@@ -10,6 +10,8 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+extern char ** environ;
+
 static void create_process(const std::string & program, 
                            const std::vector<std::string> & arguments)
 {
