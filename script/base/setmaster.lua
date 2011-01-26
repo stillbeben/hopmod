@@ -36,7 +36,7 @@ local function setmaster(cn, hash, set)
     else
         server.log(string.format("Player: %s(%i) IP: %s -- failed setmaster login!", server.player_name(cn), cn, server.player_ip(cn)))
         
-        failed[cn] = failed[cn] + 1
+        failed[cn] = (failed[cn] or 0) + 1
         
         if failed[cn] == FAILED_LIMIT then
             server.player_msg(cn, red("WARNING: no longer accepting your setmaster requests"))
