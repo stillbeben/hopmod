@@ -182,9 +182,9 @@ void started()
 void shutdown()
 {
     if(boost::this_thread::get_id() != main_thread) return;
-       
-    signal_shutdown(SHUTDOWN_NORMAL);
+    
     event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_NORMAL)));
+    signal_shutdown(SHUTDOWN_NORMAL);
     stop_restarter();
     exit(0);
 }
@@ -195,8 +195,8 @@ void restart_now()
 {
     server::sendservmsg("Server restarting...");
     start_restarter();
-    signal_shutdown(SHUTDOWN_RESTART);
     event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_RESTART)));
+    signal_shutdown(SHUTDOWN_RESTART);
     exit(0);
 }
 
