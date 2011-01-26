@@ -2,21 +2,17 @@
 #include "pch.hpp"
 #endif
 
+#include <boost/bind.hpp>
 #include "hopmod.hpp"
 #include "lib/free_function_scheduler.hpp"
-
-#include <fungu/script.hpp>
-#include <fungu/script/lua/lua_function.hpp>
-using namespace fungu;
 
 static free_function_scheduler free_scheduled;
 
 static int sched_free_lua_function(lua_State * L, bool);
 int sched_free_lua_sleep(lua_State *);
 int sched_free_lua_interval(lua_State *);
-static script::any sched_free_cs_function(bool, script::env_object::call_arguments &, script::env_frame *);
-static void cancel_free_scheduled(int);
 void cancel_timer(int);
+static void cancel_free_scheduled(int);
 
 void init_scheduler()
 {
@@ -28,38 +24,46 @@ void cancel_free_scheduled(int)
     free_scheduled.cancel_all();
 }
 
-int call_lua_function(script::env_object::shared_ptr func, script::env * e)
+static int call_scheduled_function(lua_State * L, int function_ref, bool repeat)
 {
-    try
+    lua_rawgeti(L, LUA_REGISTRYINDEX, function_ref);
+    
+    lua::event_environment & listeners = event_listeners();
+    
+    int status = 1;
+    
+    if(repeat)
     {
-        script::env_frame frame(e);
-        std::vector<script::any> args;
-        script::callargs empty(args);
-        return script::lexical_cast<int>(func->call(empty,&frame));
+        listeners.add_listener("interval");
+        
+        if(event_interval(listeners, boost::make_tuple()))
+            status = -1;
+         
+        listeners.clear_listeners("interval");
     }
-    catch(script::error err)
+    else
     {
-        script::source_context * ctx = (e->get_source_context() ? e->get_source_context()->clone() : NULL);
-        report_script_error(new script::error_trace(err,const_string(), ctx));
-        return -1;
+        listeners.add_listener("sleep");
+        event_sleep(listeners, boost::make_tuple());
+        
+        listeners.clear_listeners("sleep");
+        luaL_unref(L, LUA_REGISTRYINDEX, function_ref);
     }
-    catch(script::error_trace * errinfo)
-    {
-        report_script_error(errinfo);
-        return -1;
-    }
+    
+    return status;
 }
 
 int sched_free_lua_function(lua_State * L, bool repeat)
 {
     int countdown = luaL_checkint(L, 1);
+    
     luaL_checktype(L, 2, LUA_TFUNCTION);
     lua_pushvalue(L, 2);
     
-    script::env_object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
-    luaFunctionObject->set_adopted();
+    int function_ref = luaL_ref(L, LUA_REGISTRYINDEX);    
     
-    int id = free_scheduled.schedule(boost::bind(call_lua_function, luaFunctionObject, &get_script_env()), countdown, repeat);
+    int id = free_scheduled.schedule(boost::bind(&call_scheduled_function, L, function_ref, repeat), countdown, repeat);
+    
     lua_pushinteger(L, id);
     return 1;
 }
@@ -72,40 +76,6 @@ int sched_free_lua_sleep(lua_State * L)
 int sched_free_lua_interval(lua_State * L)
 {
     return sched_free_lua_function(L, true);
-}
-
-int call_cs_function(script::code_block code, script::env * e)
-{
-    script::env_frame frame(e);
-    
-    try
-    {
-        return script::lexical_cast<int>(code.eval_each_expression(&frame));
-    }
-    catch(script::error err)
-    {
-        report_script_error(new script::error_trace(err,const_string(),code.get_source_context()->clone()));
-        return -1;
-    }
-    catch(script::error_trace * errinfo)
-    {
-        report_script_error(errinfo);
-        return -1;
-    }
-}
-
-script::any sched_free_cs_function(bool repeat, script::env_object::call_arguments & args, script::env_frame * frame)
-{
-    script::callargs_serializer cs(args, frame);
-    
-    int countdown = cs.deserialize(args.front(),type_tag<int>());
-    args.pop_front();
-    
-    script::code_block code = cs.deserialize(args.front(),type_tag<script::code_block>());
-    args.pop_front();
-    
-    int id = free_scheduled.schedule(boost::bind(call_cs_function, code, frame->get_env()), countdown, repeat);
-    return id;
 }
 
 void sched_callback(int (* fun)(void *),void * closure)
