@@ -164,5 +164,10 @@ void event_environment::clear_listeners(const char * event_id)
     lua_pop(L, 1);
 }
 
+lua_State * event_environment::lua_state()
+{
+    return m_state;
+}
+
 } //namespace lua
 

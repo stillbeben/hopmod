@@ -34,6 +34,7 @@ public:
     void add_listener(const char * event_id);
     void add_listener(const char * event_id, lua_CFunction);
     void clear_listeners(const char * event_id);
+    lua_State * lua_state();
 private:
     lua_State * m_state;
     int m_text_id_index;
