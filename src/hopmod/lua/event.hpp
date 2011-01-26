@@ -74,7 +74,16 @@ public:
                 if(lua_pcall(L, boost::tuples::length<Tuple>::value, 1, error_function) == 0)
                     prevent_default = prevent_default || lua_toboolean(L, -1);
                 else
+                {
+                    if(lua_type(L, -1) == LUA_TTABLE)
+                    {
+                        lua_pushinteger(L, 1);
+                        lua_gettable(L, -2);
+                        lua_replace(L, -2);
+                    }
+                    
                     environment.log_error(text_id(), lua_tostring(L, -1));
+                }
             }
             lua_pop(L, 1);
         }
