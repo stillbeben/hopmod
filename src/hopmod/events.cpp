@@ -19,8 +19,8 @@ lua::event< boost::tuple<int, const char *, const char *> >          event_setma
 lua::event< boost::tuple<int,int> >                                  event_spectator("spectator");
 lua::event< boost::tuple<int,int,int> >                              event_privilege("privilege");
 lua::event< boost::tuple<int,int> >                                  event_teamkill("teamkill");
-lua::event< boost::tuple<int,const char *,const char *> >            event_authreq("authreq");
-lua::event< boost::tuple<int,int,const char *> >                     event_authrep("authrep");
+lua::event< boost::tuple<int,const char *,const char *> >            event_authreq("request_auth_challenge");
+lua::event< boost::tuple<int,int,const char *> >                     event_authrep("auth_challenge_response");
 lua::event< boost::tuple<int,int,int> >                              event_addbot("addbot");
 lua::event< boost::tuple<int> >                                      event_delbot("delbot");
 lua::event< boost::tuple<int> >                                      event_botleft("botleft");
