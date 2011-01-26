@@ -46,6 +46,13 @@ static void bind_function(lua_State * L, int table, const char * name, lua_CFunc
 
 void bind_core_functions(lua_State * L, int T)
 {
+    bind_function(L, T, "player_msg", server::player_msg);
+    bind_function(L, T, "player_name", server::player_name);
+    bind_function(L, T, "player_rename", server::player_rename);
+    bind_function(L, T, "player_displayname", server::player_displayname);
+    bind_function(L, T, "player_team", server::player_team);
+    bind_function(L, T, "player_priv", server::player_privilege);
+    bind_function(L, T, "player_priv_code", server::player_privilege_code);
     bind_function(L, T, "player_id", server::player_id);
     bind_function(L, T, "clear_player_ids", clear_player_ids);
     bind_function(L, T, "player_sessionid", server::player_sessionid);
@@ -86,6 +93,7 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "player_unfreeze", server::player_unfreeze);
     bind_function(L, T, "player_connection_time", server::player_connection_time);
     
+    bind_function(L, T, "disconnect", server::disconnect);
     bind_function(L, T, "force_spec", server::player_force_spec);
     bind_function(L, T, "spec", server::player_spec);
     bind_function(L, T, "unspec", server::player_unspec);
