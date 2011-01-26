@@ -37,6 +37,7 @@ void push(lua_State * L, const std::vector<T> & value)
 }
 
 inline void push(lua_State *, boost::tuples::null_type){}
+inline void push(lua_State *, boost::tuple<>){}
 
 template<typename Tuple>
 void push(lua_State * L, const Tuple & value)
