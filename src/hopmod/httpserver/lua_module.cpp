@@ -1,4 +1,3 @@
-#include <fungu/script.hpp>
 #include <fungu/net/http/connection.hpp>
 #include <fungu/net/http/request_line.hpp>
 #include <fungu/net/http/header.hpp>
@@ -7,19 +6,16 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <cstdio>
+#include <iostream>
+
+#include <lua.hpp>
+#include "lua/event.hpp"
+lua::event_environment & event_listeners();
 
 #include "directory_resource.hpp"
 #include "proxy_resource.hpp"
 #include "filesystem_resource.hpp"
 using namespace fungu;
-
-#include <iostream>
-
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
 
 using namespace boost::asio;
 using namespace boost::system;
@@ -27,7 +23,6 @@ using namespace boost::system;
 boost::asio::io_service & get_main_io_service();
 void setup_ext_to_ct_map();
 
-void report_script_error(const char *);
 proxy_resource & get_root_resource();
 
 static int root_resource_ref = LUA_REFNIL;
@@ -142,7 +137,7 @@ private:
         delete sink;
         
         if(lua_pcall(L, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(L, -1));
+            event_listeners().log_error("httpserver_async_read_content", lua_tostring(L, -1));
     }
     
     static int async_read_content(lua_State * L)
@@ -268,7 +263,7 @@ private:
         lua_pushboolean(L, sent);
         
         if(lua_pcall(L, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(L, -1));
+            event_listeners().log_error("httpserver_send_header", lua_tostring(L, -1));
         
         if(m_content_length == 0) m_response = NULL;
     }
@@ -309,7 +304,7 @@ private:
         lua_pushboolean(L, sent);
         
         if(lua_pcall(L, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(L, -1));
+            event_listeners().log_error("httpserver_send_body", lua_tostring(L, -1));
         
         delete m_response;
         m_response = NULL;
@@ -451,7 +446,7 @@ public:
         
         if(lua_pcall(m_lua, 1, 1, 0) != 0)
         {
-            report_script_error(lua_tostring(m_lua, -1));
+            event_listeners().log_error("httpserver_resource_resolve", lua_tostring(m_lua, -1));
             return NULL;
         }
         else
@@ -474,7 +469,7 @@ public:
         request_wrapper::create_object(m_lua, req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(m_lua, -1));
+            event_listeners().log_error("httpserver_resource_get", lua_tostring(m_lua, -1));
     }
     
     void put_method(http::server::request & req)
@@ -489,7 +484,7 @@ public:
         request_wrapper::create_object(m_lua, req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(m_lua, -1));
+            event_listeners().log_error("httpserver_resource_put", lua_tostring(m_lua, -1));
     }
     
     void post_method(http::server::request & req)
@@ -504,7 +499,7 @@ public:
         request_wrapper::create_object(m_lua, req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(m_lua, -1));
+            event_listeners().log_error("httpserver_resource_post", lua_tostring(m_lua, -1));
     }
     
     void delete_method(http::server::request & req)
@@ -519,7 +514,7 @@ public:
         request_wrapper::create_object(m_lua, req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(m_lua, -1));
+            event_listeners().log_error("httpserver_resource_delete", lua_tostring(m_lua, -1));
     }
     
     static void register_class(lua_State * L)
@@ -820,7 +815,7 @@ private:
                 lua_pushstring(m_L, error.message().c_str());
                 if(lua_pcall(m_L, 1, 0, 0) != 0)
                 {
-                    report_script_error(lua_tostring(m_L, -1));
+                    event_listeners().log_error("httpserver_accept", lua_tostring(m_L, -1));
                 }
             }
             
