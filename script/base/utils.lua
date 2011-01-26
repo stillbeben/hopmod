@@ -1,3 +1,32 @@
+function mins(value)
+    return value * 1000 * 60
+end
+
+function secs(value)
+    return value * 1000
+end
+
+function concol(colour_code, text)
+    return "\fs\f" .. colour_code .. text .. "\fr"
+end
+
+function bind_concol(colour_code)
+    return function(text)
+        return concol(colour_code, text)
+    end
+end
+
+green    = bind_concol(0)
+info     = bind_concol(1)
+err      = bind_concol(3)
+grey     = bind_concol(4)
+magenta  = bind_concol(5)
+orange   = bind_concol(6)
+gameplay = bind_concol(2)
+red      = bind_concol(3)
+blue     = bind_concol(1)
+yellow   = bind_concol(2)
+
 -- Copied from http://lua-users.org/wiki/SimpleRound
 function math.round(num, idp)
   local mult = 10^(idp or 0)
