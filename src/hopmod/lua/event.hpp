@@ -26,6 +26,7 @@ public:
     void register_event_idents(event_base **);
     lua_State * push_listeners_table(const char * text_id, int num_id);
     void report_error(const char * text_id, const char * message);
+    bool is_ready();
 private:
     lua_State * m_state;
     int m_text_id_index;
@@ -44,6 +45,8 @@ public:
     
     bool operator()(event_environment & environment, const Tuple & args)
     {
+        if(environment.is_ready() == false) return false;
+        
         lua_State * L = environment.push_listeners_table(text_id(), numeric_id());
         assert(L && lua_type(L, -1) == LUA_TTABLE);
            

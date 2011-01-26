@@ -94,5 +94,10 @@ void event_environment::report_error(const char * text_id, const char * error_me
     
 }
 
+bool event_environment::is_ready()
+{
+    return m_state;
+}
+
 } //namespace lua
 
