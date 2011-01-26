@@ -17,6 +17,7 @@ end
 
 local function remove_listener(connection_id)
     local connection = connections[connection_id]
+    if not connection then return end
     table.remove(connection[1], connection[2])
     connections[connection_id] = nil
 end
