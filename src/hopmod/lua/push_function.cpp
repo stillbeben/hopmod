@@ -74,7 +74,11 @@ lua_Number to(lua_State * L, int index, return_tag<lua_Number>)
 
 bool to(lua_State * L, int index, return_tag<bool>)
 {
-    luaL_checktype(L, index, LUA_TBOOLEAN);
+    luaL_checkany(L, index);
+    
+    if(lua_type(L, index) == LUA_TNUMBER && lua_tointeger(L, index) == 0)
+        return false;
+    
     return static_cast<bool>(lua_toboolean(L, index));
 }
 
