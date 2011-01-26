@@ -115,11 +115,11 @@ void event_environment::log_error(const char * text_id, const char * error_messa
     assert(is_ready());
     
     std::stringstream format;
-    format<<"@"<<text_id<<": "<<error_message;
+    format<<"Error on "<<text_id<<" event: "<<error_message<<std::endl;
     
     if(m_log_error_function)
         m_log_error_function(format.str().c_str());
-    else std::cerr<<format;
+    else std::cerr<<format.str();
 }
 
 bool event_environment::is_ready()

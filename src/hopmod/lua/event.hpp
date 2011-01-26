@@ -61,6 +61,8 @@ public:
         bool using_error_function = environment.push_error_function();
         int error_function = (using_error_function ? lua_gettop(L) : 0);
         
+        lua_pushvalue(L, -2);
+        
         bool prevent_default = false;
         
         lua_pushnil(L);
@@ -77,10 +79,7 @@ public:
             lua_pop(L, 1);
         }
         
-        if(using_error_function)
-            lua_pop(L, 1);
-        
-        lua_pop(L, 1);
+        lua_pop(L, 2 + (using_error_function ? 1 : 0));
         
         return prevent_default;
     }
