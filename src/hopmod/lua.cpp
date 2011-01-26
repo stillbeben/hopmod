@@ -5,6 +5,7 @@
 #include "lua/modules.hpp"
 
 static void load_lua_modules();
+static int on_error(lua_State *);
 
 static lua_State * L = NULL;
 static lua::event_environment * event_environment = NULL;
@@ -29,7 +30,7 @@ void init_lua()
     lua_settable(L, -3); // Add vars table to core table
     lua_setglobal(L, "core"); // Add core table to global table
     
-    event_environment = new lua::event_environment(L);
+    event_environment = new lua::event_environment(L, NULL, on_error);
     register_event_idents(*event_environment); // Setup and populate the event table
     
     load_lua_modules();
@@ -70,5 +71,28 @@ lua::event_environment & event_listeners()
     static lua::event_environment unready_event_environment;
     if(!event_environment) return unready_event_environment;
     return *event_environment;
+}
+
+int on_error(lua_State * L)
+{
+    lua_getglobal(L, "debug");
+    if(lua_type(L, -1) != LUA_TTABLE)
+    {
+        lua_pop(L, 1);
+        return 1;
+    }
+    
+    lua_getfield(L, -1, "traceback");
+    if(lua_type(L, -1) != LUA_TFUNCTION)
+    {
+        lua_pop(L, 1);
+        return 1;
+    }
+    
+    lua_pushvalue(L, -3);
+    lua_pushinteger(L, 2);
+    lua_pcall(L, 2, 1, 0);
+    
+    return 1;
 }
 

@@ -57,7 +57,6 @@ void init_hopmod()
     static const char * INIT_SCRIPT = "script/base/new-init.lua";
     
     lua_State * L = get_lua_state();
-     std::cout<<"stack size "<<lua_gettop(L)<<std::endl;
     if(luaL_loadfile(L, INIT_SCRIPT) == 0)
     {
         event_listeners().add_listener("init"); // Take the value of the top of the stack to add
