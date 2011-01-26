@@ -939,6 +939,11 @@ void script_set_mastermode(int value)
     }
 }
 
+int get_mastermode()
+{
+    return mastermode;
+}
+
 void add_allowed_ip(const char * hostname)
 {
     ENetAddress addr;

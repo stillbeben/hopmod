@@ -376,5 +376,7 @@ void bind_core_variables(lua_State * L, int T)
         
     bind_var(L, T, "timer_alarm_threshold", server::timer_alarm_threshold);
     bind_var(L, T, "enable_extinfo", server::enable_extinfo);
+    
+    bind_prop<int>(L, T, "mastermode", server::get_mastermode, server::script_set_mastermode);
 }
 
