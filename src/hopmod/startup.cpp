@@ -7,6 +7,9 @@
 #include "lua/modules.hpp"
 #include "main_io_service.hpp"
 
+#include "events.hpp"
+lua::event_environment & event_listeners();
+
 #include <fungu/script/env.hpp>
 #include <fungu/script/execute.hpp>
 #include <fungu/script/error.hpp>
@@ -121,9 +124,12 @@ static void reload_hopmod_now()
     }
 
     signal_reloadhopmod();
+    event_reloadhopmod(event_listeners(), boost::make_tuple());
 
     reloaded = true;
 
+    event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_RELOAD)));
+    
     close_listenserver_slot.block();  // block close_listenserver_slot to keep clients connected
     signal_shutdown(SHUTDOWN_RELOAD);
     close_listenserver_slot.unblock();
@@ -152,6 +158,7 @@ void update_hopmod()
     if(maintenance_frequency != 0 && totalmillis > maintenance_time && !hasnonlocalclients())
     {
         signal_maintenance();
+        event_maintenance(event_listeners(), boost::make_tuple());
         maintenance_time = totalmillis + maintenance_frequency;
     }
 }
@@ -168,6 +175,7 @@ void started()
     open_script_pipe("serverexec",511,get_script_env());
 
     signal_started();
+    event_started(event_listeners(), boost::make_tuple());
     if(!server::smapname[0]) selectnextgame();
 }
 
@@ -176,6 +184,7 @@ void shutdown()
     if(boost::this_thread::get_id() != main_thread) return;
        
     signal_shutdown(SHUTDOWN_NORMAL);
+    event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_NORMAL)));
     stop_restarter();
     exit(0);
 }
@@ -187,6 +196,7 @@ void restart_now()
     server::sendservmsg("Server restarting...");
     start_restarter();
     signal_shutdown(SHUTDOWN_RESTART);
+    event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_RESTART)));
     exit(0);
 }
 

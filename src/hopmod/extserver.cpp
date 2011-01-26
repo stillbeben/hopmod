@@ -54,7 +54,11 @@ void changetime(int remaining)
     gamelimit = gamemillis + remaining;
     if(remaining > 0) sendf(-1, 1, "ri2", N_TIMEUP, remaining / 1000);
     next_timeupdate = gamemillis + (remaining % (60*1000));
-    if(gamemillis < next_timeupdate) signal_timeupdate(get_minutes_left(), get_seconds_left());
+    if(gamemillis < next_timeupdate)
+    {
+        signal_timeupdate(get_minutes_left(), get_seconds_left());
+        event_timeupdate(event_listeners(), boost::make_tuple(get_minutes_left(), get_seconds_left()));
+    }
 }
 
 int get_minutes_left()
@@ -125,9 +129,13 @@ void player_rename(int cn, const char * newname, bool pub)
     
     copystring(ci->name, safenewname, MAXNAMELEN+1);
     
-    if (pub) 
+    if (pub)
+    {
       signal_rename(ci->clientnum, oldname, ci->name);
+      event_rename(event_listeners(), boost::make_tuple(ci->clientnum, oldname, ci->name));
+    }
 }
+
 std::string player_displayname(int cn)
 {
     clientinfo * ci = get_ci(cn);
@@ -375,10 +383,15 @@ bool player_changeteam(int cn,const char * newteam)
     clientinfo * ci = get_ci(cn);
     
     if(!m_teammode || (smode && !smode->canchangeteam(ci, ci->team, newteam)) ||
-        signal_chteamrequest(cn, ci->team, newteam) == -1) return false;
+        signal_chteamrequest(cn, ci->team, newteam) == -1 ||
+        event_chteamrequest(event_listeners(), boost::make_tuple(cn, ci->team, newteam))) 
+    {
+        return false;
+    }
     
     if(smode || ci->state.state==CS_ALIVE) suicide(ci);
     signal_reteam(ci->clientnum, ci->team, newteam);
+    event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, ci->team, newteam));
     
     copystring(ci->team, newteam, MAXTEAMLEN+1);
     sendf(-1, 1, "riis", N_SETTEAM, cn, newteam);
@@ -517,6 +530,7 @@ void unsetmaster()
         cleanup_masterstate(master);
         
         signal_privilege(oldmaster, old_priv, PRIV_NONE);
+        event_privilege(event_listeners(), boost::make_tuple(oldmaster, old_priv, static_cast<int>(PRIV_NONE)));
     }
 }
 
@@ -538,6 +552,7 @@ void unset_player_privilege(int cn)
     cleanup_masterstate(ci);
     
     signal_privilege(cn, old_priv, PRIV_NONE);
+    event_privilege(event_listeners(), boost::make_tuple(cn, old_priv, static_cast<int>(PRIV_NONE)));
 }
 
 void set_player_privilege(int cn, int priv_code, bool public_priv = false)
@@ -571,6 +586,7 @@ void set_player_privilege(int cn, int priv_code, bool public_priv = false)
     player->sendprivtext(msg);
     
     signal_privilege(cn, old_priv, player->privilege);
+    event_privilege(event_listeners(), boost::make_tuple(cn, old_priv, player->privilege));
 }
 
 bool set_player_master(int cn)
@@ -611,6 +627,7 @@ static void execute_addbot(int skill)
     clientinfo * owner = aiman::addai(skill, -1);
     if(!owner) return;
     signal_addbot(-1, skill, owner->clientnum);
+    event_addbot(event_listeners(), boost::make_tuple(-1, skill, owner->clientnum));
     return;
 }
 
@@ -844,6 +861,7 @@ int lua_gamemodeinfo(lua_State * L)
 bool selectnextgame()
 {
     signal_setnextgame();
+    event_setnextgame(event_listeners(), boost::make_tuple());
     if(next_gamemode[0] && next_mapname[0])
     {
         int next_gamemode_code = modecode(next_gamemode);
@@ -1000,6 +1018,7 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     if(cq->state.lastdeath)
     {
         int delay = signal_respawnrequest(cq->clientnum, cq->state.lastdeath);
+        //FIXME need a workaround for event_respawnrequest
         
         if(delay > 0)
         {

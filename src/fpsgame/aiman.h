@@ -59,6 +59,7 @@ namespace aiman
                 copystring(bot->team, t.team, MAXTEAMLEN+1);
                 sendf(-1, 1, "riisi", N_SETTEAM, bot->clientnum, bot->team, 0);
                 signal_reteam(bot->clientnum, oldteam, bot->team);
+                event_reteam(event_listeners(), boost::make_tuple(bot->clientnum, oldteam, bot->team));
             }
             else teams.remove(0, 1);
         }
@@ -134,6 +135,7 @@ namespace aiman
         dorefresh = true;
         
         signal_connect(ci->clientnum);
+        event_connect(event_listeners(), boost::make_tuple(ci->clientnum));
         
 		return ci;
 	}
@@ -145,7 +147,9 @@ namespace aiman
         if(smode) smode->leavegame(ci, true);
         sendf(-1, 1, "ri2", N_CDIS, ci->clientnum);
         signal_botleft(ci->clientnum);
+        event_botleft(event_listeners(), boost::make_tuple(ci->clientnum));
         signal_disconnect(ci->clientnum,"");
+        event_disconnect(event_listeners(), boost::make_tuple(ci->clientnum, ""));
         clientinfo *owner = (clientinfo *)getclientinfo(ci->ownernum);
         if(owner) owner->bots.removeobj(ci);
         clients.removeobj(ci);
@@ -245,14 +249,22 @@ namespace aiman
         if(!ci->local && !ci->privilege) return;
         clientinfo * boti = addai(skill, !ci->local && ci->privilege < PRIV_ADMIN ? botlimit : -1);
         if(!boti) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to create or assign bot");
-        else signal_addbot(ci->clientnum, skill, boti->clientnum);
+        else
+        {
+            signal_addbot(ci->clientnum, skill, boti->clientnum);
+            event_addbot(event_listeners(), boost::make_tuple(ci->clientnum, skill, boti->clientnum));
+        }
 	}
     
 	void reqdel(clientinfo *ci)
 	{
         if(!ci->local && !ci->privilege) return;
         if(!deleteai()) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to remove any bots");
-        else signal_delbot(ci->clientnum);
+        else
+        {
+            signal_delbot(ci->clientnum);
+            event_delbot(event_listeners(), boost::make_tuple(ci->clientnum));
+        }
 	}
 
     void setbotlimit(clientinfo *ci, int limit)

@@ -858,6 +858,7 @@ struct captureclientmode : clientmode
         cs.total += n;
         sendf(-1, 1, "riisi", N_BASESCORE, base, team, cs.total);
         signal_scoreupdate(team, cs.total);
+        event_scoreupdate(event_listeners(), boost::make_tuple(team, cs.total));
     }
 
     void regenowners(baseinfo &b, int ticks)
@@ -994,6 +995,7 @@ struct captureclientmode : clientmode
         findscore(lastteam).total = 10000;
         sendf(-1, 1, "riisi", N_BASESCORE, -1, lastteam, 10000);
         signal_scoreupdate(lastteam, 10000);
+        event_scoreupdate(event_listeners(), boost::make_tuple(lastteam, 10000));
         startintermission();
     }
 
