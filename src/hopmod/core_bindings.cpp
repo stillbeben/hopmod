@@ -141,17 +141,9 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "file_exists", file_exists);
     bind_function(L, T, "dir_exists", dir_exists);
     
-    int parse_list(lua_State *);
-    int execute_cubescript_file(lua_State *);
-    int make_var(lua_State *);
-    int unref_user_defined_vars(lua_State *);
     int sched_free_lua_sleep(lua_State *);
     int sched_free_lua_interval(lua_State *);
     void cancel_timer(int);
-    
-    bind_function(L, T, "parse_list", parse_list);
-    bind_function(L, T, "make_var", make_var);
-    bind_function(L, T, "unref_user_defined_vars", unref_user_defined_vars);
     
     bind_function(L, T, "sleep", sched_free_lua_sleep);
     bind_function(L, T, "interval", sched_free_lua_interval);
