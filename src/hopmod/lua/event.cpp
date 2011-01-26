@@ -45,6 +45,12 @@ event_environment::event_environment(lua_State * L,
     m_numeric_id_index = luaL_ref(L, LUA_REGISTRYINDEX);
 }
 
+event_environment::event_environment()
+ :m_state(NULL), m_log_error_function(NULL), m_error_function(NULL)
+{
+    
+}
+
 void event_environment::register_event_idents(event_base ** events)
 {
     lua_State * L = m_state;
@@ -90,9 +96,8 @@ lua_State * event_environment::push_listeners_table(const char * text_id, int nu
     
     lua_pushinteger(m_state, num_id);
     lua_gettable(m_state, -2);
+    assert(lua_type(m_state, -1) == LUA_TTABLE);    
     lua_replace(m_state, bottom);
-
-    assert(lua_type(m_state, -1) == LUA_TTABLE);
     
     return m_state;
 }
@@ -120,6 +125,33 @@ void event_environment::log_error(const char * text_id, const char * error_messa
 bool event_environment::is_ready()
 {
     return m_state;
+}
+
+void event_environment::add_listener(const char * event_id)
+{
+    assert(lua_type(m_state, -1) == LUA_TFUNCTION);
+    
+    lua_State * L = m_state;
+    
+    lua_rawgeti(L, LUA_REGISTRYINDEX, m_text_id_index);
+    lua_pushstring(L, event_id);
+    lua_gettable(L, -2);
+    
+    if(lua_type(L, -1) != LUA_TTABLE) return;
+
+    std::size_t listener_table_length = lua_objlen(L, -1);
+    
+    lua_pushinteger(L, listener_table_length + 1);
+    lua_pushvalue(L, -4);
+    lua_settable(L, -3);
+    
+    lua_pop(L, 2);
+}
+
+void event_environment::add_listener(const char * event_id, lua_CFunction function)
+{
+    lua_pushcfunction(m_state, function);
+    add_listener(event_id);
 }
 
 } //namespace lua

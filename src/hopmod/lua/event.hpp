@@ -25,11 +25,14 @@ public:
     event_environment(lua_State *, 
                       void (* log_error_function)(const char *) = NULL, 
                       lua_CFunction error_function = NULL);
+    event_environment();
+    bool is_ready();
     void register_event_idents(event_base **);
     lua_State * push_listeners_table(const char * text_id, int num_id);
     bool push_error_function();
     void log_error(const char * text_id, const char * message);
-    bool is_ready();
+    void add_listener(const char * event_id);
+    void add_listener(const char * event_id, lua_CFunction);
 private:
     lua_State * m_state;
     int m_text_id_index;
@@ -76,6 +79,8 @@ public:
         
         if(using_error_function)
             lua_pop(L, 1);
+        
+        lua_pop(L, 1);
         
         return prevent_default;
     }
