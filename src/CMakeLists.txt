@@ -49,6 +49,7 @@ add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 
 set(LUA_MODULES_SOURCES
     hopmod/lib/md5.c
+    hopmod/lua/push_function.cpp
     hopmod/lua/modules/crypto.cpp    
     hopmod/lua/modules/net.cpp
     hopmod/lua/modules/timer.cpp
@@ -79,7 +80,10 @@ SET(GAME_SERVER_SOURCES
     hopmod/restarter.cpp
     hopmod/httpserver/serverexec.cpp
     hopmod/httpserver/filesystem_resource.cpp
-    hopmod/httpserver/lua_module.cpp)
+    hopmod/httpserver/lua_module.cpp
+    
+    hopmod/core_bindings.cpp
+    )
 
 add_definitions(${LSQLITE3_DEFINITIONS})
 add_executable(sauer_server ${GAME_SERVER_SOURCES})

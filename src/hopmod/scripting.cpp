@@ -49,6 +49,10 @@ static int server_namespace_ref = 0;
 static int server_namespace_index_ref = 0;
 static int user_defined_variables = 0;
 
+void bind_core_functions(lua_State *, int);
+void bind_core_constants(lua_State *, int);
+void bind_core_variables(lua_State *, int);
+
 void init_scripting()
 {
     script::initialize_library();
@@ -62,6 +66,16 @@ void init_scripting()
     // Initialize our Lua environment
     lua_State * L = luaL_newstate();
     luaL_openlibs(L);
+    
+    
+    lua_newtable(L);
+    int core_table = lua_gettop(L);
+    bind_core_functions(L, core_table);
+    bind_core_constants(L, core_table);
+    bind_core_variables(L, core_table);
+    lua_setglobal(L, "core");
+
+
     env->set_lua_state(L);
     
     // Global objects created and bound in our CubeScript environment are also

@@ -1,0 +1,360 @@
+#include "cube.h"
+#include "game.h"
+#include "hopmod.hpp"
+#include "extapi.hpp"
+extern bool reloaded; // Defined in startup.cpp
+
+/* Forward declaration of Lua value io functions */
+#include "lua/push_function_fwd.hpp"
+namespace lua{
+void push(lua_State * L, string value);
+void push(lua_State * L, __uid_t value);
+} //namespace lua
+
+#include "lua/push_function.hpp"
+#include <iostream>
+#include <vector>
+
+/*
+    Lua value io functions for cube2 types
+*/
+namespace lua{
+void push(lua_State * L, string value)
+{
+    lua_pushstring(L, value);   
+}
+void push(lua_State * L, __uid_t value)
+{
+    lua_pushinteger(L, value);
+}
+} //namespace lua
+
+template<typename FunctionPointerType>
+static void bind_function(lua_State * L, int table, const char * name, FunctionPointerType function)
+{
+    lua_pushstring(L, name);
+    lua::push_function(L, function);
+    lua_settable(L, table);
+}
+
+static void bind_function(lua_State * L, int table, const char * name, lua_CFunction function)
+{
+    lua_pushstring(L, name);
+    lua_pushcfunction(L, function);
+    lua_settable(L, table);
+}
+
+void bind_core_functions(lua_State * L, int T)
+{
+    bind_function(L, T, "player_id", server::player_id);
+    bind_function(L, T, "clear_player_ids", clear_player_ids);
+    bind_function(L, T, "player_sessionid", server::player_sessionid);
+    bind_function(L, T, "player_ping", server::player_ping);
+    bind_function(L, T, "player_ping_update", server::player_ping_update);
+    bind_function(L, T, "player_lag", server::player_lag);
+    bind_function(L, T, "player_ip", server::player_ip);
+    bind_function(L, T, "player_iplong", server::player_iplong);
+    bind_function(L, T, "player_status", server::player_status);
+    bind_function(L, T, "player_status_code", server::player_status_code);
+    bind_function(L, T, "player_frags", server::player_frags);
+    bind_function(L, T, "player_score", server::player_score);
+    bind_function(L, T, "player_deaths", server::player_deaths);
+    bind_function(L, T, "player_suicides", server::player_suicides);
+    bind_function(L, T, "player_teamkills", server::player_teamkills);
+    bind_function(L, T, "player_damage", server::player_damage);
+    bind_function(L, T, "player_damagewasted", server::player_damagewasted);
+    bind_function(L, T, "player_maxhealth", server::player_maxhealth);
+    bind_function(L, T, "player_health", server::player_health);
+    bind_function(L, T, "player_armour", server::player_armour);
+    bind_function(L, T, "player_armour_type", server::player_armour_type);
+    bind_function(L, T, "player_gun", server::player_gun);
+    bind_function(L, T, "player_hits", server::player_hits);
+    bind_function(L, T, "player_misses", server::player_misses);
+    bind_function(L, T, "player_shots", server::player_shots);
+    bind_function(L, T, "player_accuracy", server::player_accuracy);
+    bind_function(L, T, "player_timeplayed", server::player_timeplayed);
+    bind_function(L, T, "player_win", server::player_win);
+    bind_function(L, T, "player_slay", server::player_slay);
+    bind_function(L, T, "player_suicide", (void (*)(int))server::suicide);
+    bind_function(L, T, "changeteam", server::player_changeteam);
+    bind_function(L, T, "player_bots", server::player_bots);
+    bind_function(L, T, "player_rank", server::player_rank);
+    bind_function(L, T, "player_isbot", server::player_isbot);
+    bind_function(L, T, "player_mapcrc", server::player_mapcrc);
+    bind_function(L, T, "player_pos", (std::vector<float>(*)(int))server::player_pos);
+    bind_function(L, T, "player_freeze", server::player_freeze);
+    bind_function(L, T, "player_unfreeze", server::player_unfreeze);
+    bind_function(L, T, "player_connection_time", server::player_connection_time);
+    
+    bind_function(L, T, "force_spec", server::player_force_spec);
+    bind_function(L, T, "spec", server::player_spec);
+    bind_function(L, T, "unspec", server::player_unspec);
+    bind_function(L, T, "unsetmaster", server::unsetmaster);
+    bind_function(L, T, "setmaster", server::set_player_master);
+    bind_function(L, T, "setadmin", server::set_player_admin);
+    bind_function(L, T, "set_invisible_admin", server::set_player_private_admin);
+    bind_function(L, T, "set_invisible_master", server::set_player_private_master);
+    bind_function(L, T, "unsetpriv", server::unset_player_privilege);
+    
+    bind_function(L, T, "send_auth_request", server::send_auth_request);
+    bind_function(L, T, "send_auth_challenge_to_client", server::send_auth_challenge);
+    
+    bind_function(L, T, "players", server::cs_player_list);
+    bind_function(L, T, "spectators", server::cs_spec_list);
+    bind_function(L, T, "bots", server::cs_bot_list);
+    bind_function(L, T, "clients", server::cs_client_list);
+    
+    bind_function(L, T, "teams", server::get_teams);
+    bind_function(L, T, "team_msg", server::team_msg);
+    bind_function(L, T, "team_score", server::get_team_score);
+    bind_function(L, T, "team_win", server::team_win);
+    bind_function(L, T, "team_draw", server::team_draw);
+    bind_function(L, T, "team_players", server::get_team_players);
+    bind_function(L, T, "teamsize", server::team_size);
+    
+    bind_function(L, T, "get_gamemode_info", server::lua_gamemodeinfo);
+    bind_function(L, T, "pausegame", server::pausegame);
+    
+    bind_function(L, T, "msg", server::sendservmsg);
+
+    bind_function(L, T, "changetime", server::changetime);
+    bind_function(L, T, "changemap", server::changemap);
+    bind_function(L, T, "addbot", server::addbot);
+    bind_function(L, T, "delbot", server::deletebot);
+    bind_function(L, T, "recorddemo", server::recorddemo);
+    bind_function(L, T, "stopdemo", server::enddemorecord);
+    bind_function(L, T, "allow_ip", server::add_allowed_ip);
+    bind_function(L, T, "shutdown", server::shutdown);
+    bind_function(L, T, "restart_now", restart_now);
+    bind_function(L, T, "reloadscripts", reload_hopmod);
+    
+    /*bind_function(L, T, "concol", concol);
+    bind_function(L, T, "green", green);
+    bind_function(L, T, "info", info);
+    bind_function(L, T, "err", err);
+    bind_function(L, T, "grey", grey);
+    bind_function(L, T, "magenta", magenta);
+    bind_function(L, T, "orange", orange);
+    bind_function(L, T, "gameplay", gameplay);
+    bind_function(L, T, "red", red);
+    bind_function(L, T, "blue", blue);
+    bind_function(L, T, "yellow", yellow);
+    
+    bind_function(L, T, "mins", mins);
+    bind_function(L, T, "secs", secs);*/
+    
+    bind_function(L, T, "parse_player_command", parse_player_command_line);
+    
+    bind_function(L, T, "file_exists", file_exists);
+    bind_function(L, T, "dir_exists", dir_exists);
+}
+
+template<int Constant>
+static int get_constant(lua_State * L)
+{
+    if(lua_gettop(L)) luaL_error(L, "cannot set constant");
+    lua_pushinteger(L, Constant);
+    return 1;   
+}
+
+void bind_core_constants(lua_State * L, int T)
+{    
+    bind_function(L, T, "DISC_NONE", get_constant<DISC_NONE>);
+    bind_function(L, T, "DISC_EOP", get_constant<DISC_EOP>);
+    bind_function(L, T, "DISC_CN", get_constant<DISC_CN>);
+    bind_function(L, T, "DISC_KICK", get_constant<DISC_KICK>);
+    bind_function(L, T, "DISC_TAGT", get_constant<DISC_TAGT>);
+    bind_function(L, T, "DISC_IPBAN", get_constant<DISC_IPBAN>);
+    bind_function(L, T, "DISC_PRIVATE", get_constant<DISC_PRIVATE>);
+    bind_function(L, T, "DISC_MAXCLIENTS", get_constant<DISC_MAXCLIENTS>);
+    bind_function(L, T, "DISC_TIMEOUT", get_constant<DISC_TIMEOUT>);
+    bind_function(L, T, "DISC_OVERFLOW", get_constant<DISC_OVERFLOW>);
+    bind_function(L, T, "DISC_NUM", get_constant<DISC_NUM>);
+    
+    bind_function(L, T, "DISC_NONE", get_constant<DISC_NONE>);
+    bind_function(L, T, "DISC_EOP", get_constant<DISC_EOP>);
+    bind_function(L, T, "DISC_CN", get_constant<DISC_CN>);
+    bind_function(L, T, "DISC_KICK", get_constant<DISC_KICK>);
+    bind_function(L, T, "DISC_TAGT", get_constant<DISC_TAGT>);
+    bind_function(L, T, "DISC_IPBAN", get_constant<DISC_IPBAN>);
+    bind_function(L, T, "DISC_PRIVATE", get_constant<DISC_PRIVATE>);
+    bind_function(L, T, "DISC_MAXCLIENTS", get_constant<DISC_MAXCLIENTS>);
+    bind_function(L, T, "DISC_TIMEOUT", get_constant<DISC_TIMEOUT>);
+    bind_function(L, T, "DISC_OVERFLOW", get_constant<DISC_OVERFLOW>);
+    bind_function(L, T, "DISC_NUM", get_constant<DISC_NUM>);
+
+    bind_function(L, T, "PRIV_NONE", get_constant<PRIV_NONE>);
+    bind_function(L, T, "PRIV_MASTER", get_constant<PRIV_MASTER>);
+    bind_function(L, T, "PRIV_ADMIN", get_constant<PRIV_ADMIN>);
+
+    bind_function(L, T, "GREEN_ARMOUR", get_constant<A_GREEN>);
+    bind_function(L, T, "YELLOW_ARMOUR", get_constant<A_YELLOW>);
+
+    bind_function(L, T, "ALIVE", get_constant<CS_ALIVE>);
+    bind_function(L, T, "DEAD", get_constant<CS_DEAD>);
+    bind_function(L, T, "SPAWNING", get_constant<CS_SPAWNING>);
+    bind_function(L, T, "LAGGED", get_constant<CS_LAGGED>);
+    bind_function(L, T, "SPECTATOR", get_constant<CS_SPECTATOR>);
+    bind_function(L, T, "EDITING", get_constant<CS_EDITING>);
+    
+    bind_function(L, T, "MM_OPEN", get_constant<MM_OPEN>);
+    bind_function(L, T, "MM_VETO", get_constant<MM_VETO>);
+    bind_function(L, T, "MM_LOCKED", get_constant<MM_LOCKED>);
+    bind_function(L, T, "MM_PRIVATE", get_constant<MM_PRIVATE>);
+    bind_function(L, T, "MM_PASSWORD", get_constant<MM_PASSWORD>);
+}
+
+template<typename T, bool READ_ONLY, bool WRITE_ONLY>
+static int variable_accessor(lua_State * L)
+{
+    T * var = reinterpret_cast<T *>(lua_touserdata(L, lua_upvalueindex(1)));
+    if(lua_gettop(L) > 0) // Set variable
+    {
+        if(READ_ONLY) luaL_error(L, "variable is read-only");
+        *var = lua::to(L, 1, lua::return_tag<T>());
+        return 0;
+    }
+    else // Get variable
+    {
+        if(WRITE_ONLY) luaL_error(L, "variable is write-only");
+        lua::push(L, *var);
+        return 1;
+    }
+}
+
+template<bool READ_ONLY, bool WRITE_ONLY>
+static int string_accessor(lua_State * L)
+{
+    char * var = reinterpret_cast<char *>(lua_touserdata(L, lua_upvalueindex(1)));
+    if(lua_gettop(L) > 0) // Set variable
+    {
+        if(READ_ONLY) luaL_error(L, "variable is read-only");
+        copystring(var, lua_tostring(L, 1));
+        return 0;
+    }
+    else // Get variable
+    {
+        if(WRITE_ONLY) luaL_error(L, "variable is write-only");
+        lua::push(L, var);
+        return 1;
+    }
+}
+
+template<typename T>
+static void bind_var(lua_State * L, int table, const char * name, T & var)
+{
+    lua_pushstring(L, name);
+    lua_pushlightuserdata(L, &var);
+    lua_pushcclosure(L, variable_accessor<T, false, false>, 1);
+    lua_settable(L, table);
+}
+
+static void bind_var(lua_State * L, int table, const char * name, string var)
+{
+    lua_pushstring(L, name);
+    lua_pushlightuserdata(L, var);
+    lua_pushcclosure(L, string_accessor<false, false>, 1);
+    lua_settable(L, table);
+}
+
+template<typename T>
+static void bind_ro_var(lua_State * L, int table, const char * name, T & var)
+{
+    lua_pushstring(L, name);
+    lua_pushlightuserdata(L, &var);
+    lua_pushcclosure(L, variable_accessor<T, true, false>, 1);
+    lua_settable(L, table);
+}
+
+static void bind_ro_var(lua_State * L, int table, const char * name, string var)
+{
+    lua_pushstring(L, name);
+    lua_pushlightuserdata(L, var);
+    lua_pushcclosure(L, string_accessor<true, false>, 1);
+    lua_settable(L, table);
+}
+
+template<typename T>
+static void bind_wo_var(lua_State * L, int table, const char * name, T & var)
+{
+    lua_pushstring(L, name);
+    lua_pushlightuserdata(L, &var);
+    lua_pushcclosure(L, variable_accessor<T, false, true>, 1);
+    lua_settable(L, table);
+}
+
+static void bind_wo_var(lua_State * L, int table, const char * name, string var)
+{
+    lua_pushstring(L, name);
+    lua_pushlightuserdata(L, var);
+    lua_pushcclosure(L, string_accessor<false, true>, 1);
+    lua_settable(L, table);
+}
+
+template<typename T>
+static int property_accessor(lua_State * L)
+{
+    T (* get)() = reinterpret_cast<T (*)()>(lua_touserdata(L, lua_upvalueindex(1)));
+    void (* set)(T) = reinterpret_cast<void (*)(T)>(lua_touserdata(L, lua_upvalueindex(2)));
+    if(lua_gettop(L) > 0)
+    {
+        if(!set) luaL_error(L, "cannot set value");
+        set(lua::to(L, 1, lua::return_tag<T>()));
+        return 0;
+    }
+    else
+    {
+        if(!get) luaL_error(L, "cannot get value");
+        lua::push(L, get());
+        return 1;
+    }
+}
+
+template<typename T>
+static void bind_prop(lua_State * L, int table, const char * name, T (* get)(), void (* set)(T))
+{
+    lua_pushstring(L, name);
+    lua_pushlightuserdata(L, reinterpret_cast<void *>(get));
+    lua_pushlightuserdata(L, reinterpret_cast<void *>(set));
+    lua_pushcclosure(L, property_accessor<T>, 2);
+    lua_settable(L, table);
+}
+
+void bind_core_variables(lua_State * L, int T)
+{
+    bind_ro_var(L, T, "paused", server::gamepaused);
+    bind_var(L, T, "servername", server::serverdesc);
+    bind_ro_var(L, T, "map", server::smapname);
+    bind_var(L, T, "server_password", server::serverpass);
+    bind_ro_var(L, T, "master", server::currentmaster);
+    bind_prop(L, T, "timeleft", server::get_minutes_left, server::set_minutes_left);
+    bind_prop(L, T, "seconds_left", server::get_seconds_left, server::set_seconds_left);
+    bind_var(L, T, "intermission", server::interm);
+    bind_ro_var(L, T, "uptime", totalmillis);
+    bind_ro_var(L, T, "gamemillis", server::gamemillis);
+    bind_ro_var(L, T, "gamelimit", server::gamelimit);
+    bind_var(L, T, "maxplayers", maxclients);
+    bind_var(L, T, "maxclients", maxclients);
+    bind_var(L, T, "serverip", serverip);
+    bind_var(L, T, "serverport", serverport);
+    bind_var(L, T, "next_mode", server::next_gamemode);
+    bind_var(L, T, "next_map", server::next_mapname);
+    bind_var(L, T, "next_gametime", server::next_gametime);
+    bind_var(L, T, "reassignteams", server::reassignteams);
+    bind_prop<int>(L, T, "playercount", server::getplayercount, NULL);
+    bind_prop<int>(L, T, "speccount", server::getspeccount, NULL);
+    bind_prop<int>(L, T, "gotcount", server::getbotcount, NULL);
+    bind_var(L, T, "botlimit", server::aiman::botlimit);
+    bind_var(L, T, "botbalance", server::aiman::botbalance);
+    bind_prop<const char *>(L, T, "gamemode", server::gamemodename, NULL);
+    bind_var(L, T, "display_open", server::display_open);
+    bind_var(L, T, "allow_mastermode_veto", server::allow_mm_veto);
+    bind_var(L, T, "allow_mastermode_locked", server::allow_mm_locked);
+    bind_var(L, T, "allow_mastermode_private", server::allow_mm_private);
+    bind_var(L, T, "reserved_slots", server::reservedslots);
+    bind_wo_var(L, T, "reserved_slots_password", server::slotpass);
+    bind_ro_var(L, T, "reserved_slots_occupied", server::reservedslots_use);
+    bind_ro_var(L, T, "reloaded", reloaded);
+    bind_prop<__uid_t>(L, T, "UID", getuid, NULL);
+}
+
