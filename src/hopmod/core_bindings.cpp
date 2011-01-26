@@ -359,5 +359,23 @@ void bind_core_variables(lua_State * L, int T)
     bind_ro_var(L, T, "reloaded", reloaded);
     bind_prop<__uid_t>(L, T, "UID", getuid, NULL);
     bind_var(L, T, "spectator_delay", server::spectator_delay);
+    
+    bind_var(L, T, "flood_protect_text", server::sv_text_hit_length);
+    bind_var(L, T, "flood_protect_sayteam", server::sv_sayteam_hit_length);
+    bind_var(L, T, "flood_protect_mapvote", server::sv_mapvote_hit_length);
+    bind_var(L, T, "flood_protect_switchname", server::sv_switchname_hit_length);
+    bind_var(L, T, "flood_protect_switchteam", server::sv_switchteam_hit_length);
+    bind_var(L, T, "flood_protect_kick", server::sv_kick_hit_length);
+    bind_var(L, T, "flood_protect_remip", server::sv_remip_hit_length);
+    bind_var(L, T, "flood_protect_newmap", server::sv_newmap_hit_length);
+    bind_var(L, T, "flood_protect_spectator", server::sv_spec_hit_length);
+    
+    bind_ro_var(L, T, "tx_bytes", tx_bytes);
+    bind_ro_var(L, T, "rx_bytes", rx_bytes);
+    bind_ro_var(L, T, "tx_packets", tx_packets);
+    bind_ro_var(L, T, "rx_packets", rx_packets);
+        
+    bind_var(L, T, "timer_alarm_threshold", server::timer_alarm_threshold);
+    bind_var(L, T, "enable_extinfo", server::enable_extinfo);
 }
 
