@@ -5,7 +5,7 @@ local content_handler = {}
 
 content_handler["text/x-cubescript"] = function(request, code)
     
-    local result, errorMessage = cubescript.eval_string(code)
+    local error_message, result = cubescript.eval_string(code)
     
     result = tostring(result)
     
@@ -13,9 +13,10 @@ content_handler["text/x-cubescript"] = function(request, code)
     
     --if #result == 0 then responseStatus = 204 end
     
-    if errorMessage then
+    if error_message then
+        server.log_error("http resource serverexec error: " .. error_message .. "\n<!-- start code -->\n" .. code .. "\n<!-- end code -->")
         responseStatus = 400
-        result = errorMessage
+        result = error_message
     end
     
     local response = http_server.response(request, responseStatus)
@@ -23,7 +24,7 @@ content_handler["text/x-cubescript"] = function(request, code)
     
     response:set_content_length(#result)
     response:send_header()
-    
+
     if #result > 0 then
         response:send_body(result)
     end
