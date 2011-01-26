@@ -42,6 +42,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
     
     static int next(lua_State * L)
@@ -124,6 +125,8 @@ void open_filesystem(lua_State * L)
     
     lua_pushinteger(L, DT_SOCK);
     lua_setfield(L, -2, "SOCKET");
+    
+    lua_pop(L, 1);
         
     directory_iterator::create_metatable(L);
 }

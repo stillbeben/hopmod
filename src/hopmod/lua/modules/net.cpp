@@ -373,6 +373,7 @@ void create_acceptor_metatable(lua_State * L)
     };
     
     luaL_register(L, NULL, funcs);
+    lua_pop(L, 1);
 }
 
 int socket_gc(lua_State * L)
@@ -743,6 +744,7 @@ void create_basic_socket_metatable(lua_State * L)
     };
     
     luaL_register(L, NULL, funcs);
+    lua_pop(L, 1);
 }
 
 int udp_socket_gc(lua_State * L)
@@ -972,6 +974,7 @@ void create_udp_socket_metatable(lua_State * L)
     };
     
     luaL_register(L, NULL, funcs);
+    lua_pop(L, 1);
 }
 
 int create_tcp_client(lua_State * L)
@@ -1108,6 +1111,7 @@ void create_client_socket_metatable(lua_State * L)
     luaL_register(L, NULL, funcs);
     
     lua_setfield(L, -1, "__index");
+    lua_pop(L, 1);
 }
 
 int buffer_to_string(lua_State * L)
@@ -1301,6 +1305,7 @@ void create_buffer_metatable(lua_State * L)
     };
     
     luaL_register(L, NULL, funcs);
+    lua_pop(L, 1);
 }
 
 int local_acceptor_gc(lua_State * L)
@@ -1399,6 +1404,7 @@ void create_local_acceptor_metatable(lua_State * L)
     };
     
     luaL_register(L, NULL, funcs);
+    lua_pop(L, 1);
 }
 
 int local_socket_gc(lua_State * L)
@@ -1602,6 +1608,7 @@ void create_local_socket_metatable(lua_State * L)
     };
     
     luaL_register(L, NULL, funcs);
+    lua_pop(L, 1);
 }
 
 int local_socket_client_async_connect(lua_State * L)
@@ -1650,6 +1657,7 @@ void create_local_socket_client_metatable(lua_State * L)
     luaL_register(L, NULL, funcs);
     
     lua_setfield(L, -1, "__index");
+    lua_pop(L, 1);
 }
 
 int create_local_client(lua_State * L)
@@ -1687,6 +1695,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
     
     static int create_object(lua_State * L)
@@ -1774,6 +1783,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
     
     static int create_object(lua_State * L)

@@ -68,6 +68,7 @@ void open_geoip(lua_State * L)
     };
     
     luaL_register(L, "geoip", functions);
+    lua_pop(L, 1);
 }
 
 } //namespace module

@@ -34,10 +34,12 @@ public:
             {NULL, NULL}
         };
         
-        lua_pushvalue(L, -1);
         luaL_register(L, NULL, funcs);
         
-        lua_setfield(L, -1, "__index");
+        lua_pushvalue(L, -1);
+        lua_setfield(L, -2, "__index");
+        
+        lua_pop(L, 1);
         
         return 0;
     }
@@ -135,10 +137,11 @@ public:
             {NULL, NULL}
         };
         
-        lua_pushvalue(L, -1);
         luaL_register(L, NULL, funcs);
+        lua_pushvalue(L, -1);
+        lua_setfield(L, -2, "__index");
         
-        lua_setfield(L, -1, "__index");
+        lua_pop(L, 1);
     }
 
     static int create(lua_State * L)
@@ -179,6 +182,7 @@ void open_timer(lua_State * L)
     };
     
     luaL_register(L, "timer", functions);
+    lua_pop(L, 1);
     
     deadline_timer_wrapper::register_class(L);
     usec_timer_wrapper::register_class(L);

@@ -82,6 +82,7 @@ static void create_env_metatable(lua_State * L)
     };
     
     luaL_register(L, NULL, funcs);
+    lua_pop(L, 1);
 }
 
 static int eval_file(lua_State * L)
@@ -172,6 +173,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
 private:
     static int __gc(lua_State * L)
@@ -263,6 +265,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
 private:
     static void parsed_expression(script::expression * expr, script::env_frame * frame, void * parser_object)
@@ -371,6 +374,7 @@ void open_cubescript(lua_State * L)
     };
     
     luaL_register(L, "cubescript", functions);
+    lua_pop(L, 1);
     
     create_env_metatable(L);
     parser::create_metatable(L);

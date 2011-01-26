@@ -56,6 +56,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
 private:
     static int __gc(lua_State * L)
@@ -119,6 +120,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
 private:
     static int __gc(lua_State * L)
@@ -269,6 +271,8 @@ void open_crypto(lua_State * L)
     luaL_register(L, NULL, ecc_functions);
     
     lua_setfield(L, -2, "sauerecc");
+    
+    lua_pop(L, 1);
     
     ecc::key::register_class(L);
     ecc::challenge::register_class(L);

@@ -70,6 +70,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
     
     static request_wrapper * get(lua_State * L, int narg)
@@ -227,6 +228,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
 private:
     static int __gc(lua_State * L)
@@ -391,6 +393,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
         
         return 1;
     }
@@ -532,6 +535,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
     
     static int create_object(lua_State * L)
@@ -714,6 +718,7 @@ public:
         };
         
         luaL_register(L, NULL, funcs);
+        lua_pop(L, 1);
     }
 private:
     static int __gc(lua_State * L)
@@ -897,6 +902,7 @@ void open_http_server(lua_State * L)
     };
     
     luaL_register(L, "http_server", functions);
+    lua_pop(L, 1);
     
     request_wrapper::register_class(L);
     response_wrapper::register_class(L);
