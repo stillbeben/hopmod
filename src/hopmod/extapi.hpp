@@ -52,6 +52,8 @@ namespace server
     
     extern bool enable_extinfo;
     
+    extern int spectator_delay;
+    
     int player_sessionid(int);
     int player_id(int);
     void player_msg(int,const char *);
