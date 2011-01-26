@@ -32,9 +32,9 @@ include_directories(
     ${BOOST_INCLUDE_DIRS}
     ${FUNGU_INCLUDE_DIRS})
 
-add_definitions(-Wall -DSTANDALONE -DFUNGU_WITH_LUA -DHOPMOD_GAMESERVER_EVENTS ${LSQLITE3_DEFINITIONS})
+add_definitions(-Wall -DSTANDALONE -DHOPMOD_GAMESERVER_EVENTS ${LSQLITE3_DEFINITIONS})
 
-set(SCRIPTING_LIBRARIES ${LUA_LIBRARY} ${FUNGU_STRING_LIBRARY} ${FUNGU_SCRIPT_LIBRARY})
+set(SCRIPTING_LIBRARIES ${LUA_LIBRARY} ${FUNGU_STRING_LIBRARY})
 
 set(SAUERTOOLS_SOURCES
     shared/tools.cpp
@@ -69,39 +69,38 @@ target_link_libraries(lua_modules -lGeoIP -pthread sauertools ${SCRIPTING_LIBRAR
 add_library(serverscripting STATIC hopmod/scripting.cpp hopmod/signals.cpp)
 target_link_libraries(serverscripting lua_modules ${BOOST_SIGNALS_LIBRARY} ${BOOST_SYSTEM_LIBRARY} ${SCRIPTING_LIBRARIES})
 
-add_library(scriptpipe STATIC hopmod/script_pipe.cpp)
-target_link_libraries(scriptpipe serverscripting)
+#add_library(scriptpipe STATIC hopmod/script_pipe.cpp)
+#target_link_libraries(scriptpipe serverscripting)
 
 SET(GAME_SERVER_SOURCES
     engine/server.cpp
     fpsgame/server.cpp
     hopmod/startup.cpp
     hopmod/scripting.cpp
-    hopmod/script_bindings.cpp
-    hopmod/script_pipe.cpp
+    #hopmod/script_pipe.cpp
     hopmod/parse_player_command.cpp
     hopmod/scheduler.cpp
     hopmod/playerid.cpp
     hopmod/restarter.cpp
-    hopmod/httpserver/serverexec.cpp
     hopmod/httpserver/filesystem_resource.cpp
     hopmod/httpserver/lua_module.cpp
     
     hopmod/lua.cpp
     hopmod/core_bindings.cpp
     hopmod/lua/event.cpp
+    hopmod/lua/library_extensions.cpp
     hopmod/events.cpp
     )
 
 add_definitions(${LSQLITE3_DEFINITIONS})
 add_executable(sauer_server ${GAME_SERVER_SOURCES})
-target_link_libraries(sauer_server sauertools serverscripting lua_modules ${BOOST_THREAD_LIBRARY} ${LSQLITE3_LIBRARY} scriptpipe ${ENET_LIBRARY} ${FUNGU_HTTP_LIBRARY} -lz -lrt)
+target_link_libraries(sauer_server sauertools serverscripting lua_modules ${BOOST_THREAD_LIBRARY} ${LSQLITE3_LIBRARY} ${ENET_LIBRARY} ${FUNGU_HTTP_LIBRARY} -lz -lrt)
 
 add_executable(keygen hopmod/standalone/keygen.cpp)
 target_link_libraries(keygen sauertools)
 
-add_executable(luapp hopmod/standalone/luapp.cpp)
-target_link_libraries(luapp ${LUA_LIBRARY} ${BOOST_SYSTEM_LIBRARY} lua_modules -lrt)
+#add_executable(luapp hopmod/standalone/luapp.cpp)
+#target_link_libraries(luapp ${LUA_LIBRARY} ${BOOST_SYSTEM_LIBRARY} lua_modules -lrt)
 
 add_executable(monitor hopmod/standalone/monitor.cpp hopmod/lib/program_arguments.cpp)
 
@@ -110,7 +109,6 @@ install(TARGETS
             sauertools
             lua_modules
             serverscripting
-            scriptpipe
             monitor
         RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR} 
         LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} 
@@ -118,7 +116,6 @@ install(TARGETS
 
 install(TARGETS 
             keygen
-            luapp
         RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}/utils)
 
 install(FILES 

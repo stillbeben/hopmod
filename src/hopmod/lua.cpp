@@ -1,11 +1,14 @@
 #include <cassert>
 #include <lua.hpp>
+#include <iostream>
 #include "core_bindings.hpp"
 #include "events.hpp"
 #include "lua/modules.hpp"
+#include "lua/library_extensions.hpp"
 
 static void load_lua_modules();
 static int on_error(lua_State *);
+static void load_extra_os_functions(lua_State *);
 
 static lua_State * L = NULL;
 static lua::event_environment * event_environment = NULL;
@@ -14,6 +17,8 @@ void init_lua()
 {
     L = luaL_newstate();
     luaL_openlibs(L);
+    
+    load_extra_os_functions(L);
     
     lua_newtable(L);
     int core_table = lua_gettop(L);
@@ -43,6 +48,23 @@ void shutdown_lua()
     
     event_environment = NULL;
     L = NULL;
+}
+
+void load_extra_os_functions(lua_State * L)
+{
+    lua_getglobal(L, "os");
+    
+    if(lua_type(L, -1) != LUA_TTABLE)
+    {
+        std::cerr<<"Lua init error: the os table is not loaded"<<std::endl;
+        return;
+    }
+    
+    lua_pushliteral(L, "getcwd");
+    lua_pushcfunction(L, lua::getcwd);
+    lua_settable(L, -3);
+    
+    lua_pop(L, 1);
 }
 
 lua_State * get_lua_state()
