@@ -48,14 +48,14 @@ set(SAUERTOOLS_SOURCES
 add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 
 set(LUA_MODULES_SOURCES
-    hopmod/lua/crypto.cpp
     hopmod/lib/md5.c
-    hopmod/lua/net.cpp
-    hopmod/lua/timer.cpp
-    hopmod/lua/cubescript.cpp
-    hopmod/lua/geoip.cpp
-    hopmod/lua/filesystem.cpp
-    hopmod/lua/packlib.c)
+    hopmod/lua/modules/crypto.cpp    
+    hopmod/lua/modules/net.cpp
+    hopmod/lua/modules/timer.cpp
+    hopmod/lua/modules/cubescript.cpp
+    hopmod/lua/modules/geoip.cpp
+    hopmod/lua/modules/filesystem.cpp
+    hopmod/lua/modules/packlib.c)
 
 add_library(lua_modules STATIC ${LUA_MODULES_SOURCES})
 target_link_libraries(lua_modules -lGeoIP -pthread sauertools ${SCRIPTING_LIBRARIES})

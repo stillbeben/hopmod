@@ -1,5 +1,5 @@
-#include "../crypto.hpp"
-#include "../lib/md5.h"
+#include "../../crypto.hpp"
+#include "../../lib/md5.h"
 
 #include <string>
 #include <stdio.h>
