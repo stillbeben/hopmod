@@ -124,7 +124,7 @@ namespace server
     
     void pausegame(bool);
     void kick(int cn,int time,const std::string & admin,const std::string & reason);
-    void disconnect(int cn, int code, const std::string & reason);
+    void disconnect(int cn, int code, std::string reason);
     void changetime(int remaining);
     int get_minutes_left();
     void set_minutes_left(int);

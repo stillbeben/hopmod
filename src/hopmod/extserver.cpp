@@ -36,7 +36,7 @@ static int execute_disconnect(void * info_vptr)
     return 0;
 }
 
-void disconnect(int cn, int code, const std::string & reason)
+void disconnect(int cn, int code, std::string reason)
 {
     clientinfo * ci = get_ci(cn);
 
