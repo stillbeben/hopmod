@@ -21,6 +21,8 @@ exec_handler["vars"] = library.exec_cubescript
 
 --[[ Backwards compatibility stuff (deprecated) ]]
 
+core.parse_list = library.parse_array
+
 execIfFound = exec_if_found
 
 library.global = function(name, value)
