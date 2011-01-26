@@ -1,12 +1,9 @@
 #include "../../utils.hpp"
 
 #include <ctime>
-
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
+#include <lua.hpp>
+#include "lua/event.hpp"
+lua::event_environment & event_listeners();
 
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/conversion.hpp>
@@ -14,7 +11,6 @@ extern "C"{
 using namespace boost::asio;
 
 boost::asio::io_service & get_main_io_service();
-void report_script_error(const char *);
 
 class deadline_timer_wrapper:public deadline_timer
 {
@@ -116,7 +112,7 @@ private:
         }
         
         if(lua_pcall(L, nargs, 0, 0) != 0)
-            report_script_error(lua_tostring(L, -1));
+            event_listeners().log_error("timer", lua_tostring(L, -1));
     }
 };
 

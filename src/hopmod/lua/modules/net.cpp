@@ -11,15 +11,12 @@ using namespace boost::asio;
 #include "../../net/prefix_tree.hpp"
 #include <boost/bind/protect.hpp>
 
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
+#include <lua.hpp>
+#include "lua/event.hpp"
 
 // External
 boost::asio::io_service & get_main_io_service();
-void report_script_error(const char *);
+lua::event_environment & event_listeners();
 
 static const char * TCP_ACCEPTOR_MT = "lnetlib_tcp_acceptor";
 static const char * BASIC_TCP_SOCKET_MT = "lnetlib_basic_tcp_socket";
@@ -184,14 +181,14 @@ void resolve_handler(lua_State * L, int luaFunctionCbRef, const boost::system::e
         }
         
         if(lua_pcall(lua_state, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(lua_state, -1));
+            event_listeners().log_error("net_resolve", lua_tostring(lua_state, -1));
     }
     else
     {
         lua_pushstring(lua_state, ec.message().c_str());
         
         if(lua_pcall(lua_state, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(lua_state, -1));
+             event_listeners().log_error("net_resolve", lua_tostring(lua_state, -1));
     }
 }
 
@@ -254,12 +251,12 @@ void async_accept_handler(lua_State * L, int luaFunctionCbRef, int socketRef, bo
         lua_pushstring(lua_state, error.message().c_str());
         
         if(lua_pcall(lua_state, 2, 0, 0) != 0)
-            report_script_error(lua_tostring(lua_state, -1));
+            event_listeners().log_error("net_accept", lua_tostring(lua_state, -1));
     }
     else
     {
         if(lua_pcall(lua_state, 1, 0, 0) != 0)
-            report_script_error(lua_tostring(lua_state, -1));
+             event_listeners().log_error("net_accept", lua_tostring(lua_state, -1));
     }
 }
 
@@ -413,7 +410,7 @@ void async_send_handler(lua_State * L, int functionRef, int stringRef, const boo
     lua_pushinteger(lua_state, len);
     
     if(lua_pcall(lua_state, 2, 0, 0) != 0)
-        report_script_error(lua_tostring(lua_state, -1));
+         event_listeners().log_error("net_send", lua_tostring(lua_state, -1));
 }
 
 int socket_async_send_buffer(lua_State *);
@@ -459,7 +456,7 @@ void async_read_until_handler(lua_State * L, int functionRef, boost::asio::strea
     }
     
     if(lua_pcall(lua_state, 2, 0, 0) != 0)
-        report_script_error(lua_tostring(lua_state, -1));
+         event_listeners().log_error("net_read_until", lua_tostring(lua_state, -1));
 }
 
 int socket_async_read_until(lua_State * L)
@@ -501,7 +498,7 @@ void async_read_handler(lua_State * L, int functionRef, streambuf * socketbuf, l
     }
     
     if(lua_pcall(lua_state, nargs, 0, 0) != 0)
-        report_script_error(lua_tostring(lua_state, -1));
+        event_listeners().log_error("net_read", lua_tostring(lua_state, -1));
     
     luaL_unref(lua_state, LUA_REGISTRYINDEX, bufferRef);
 }
@@ -554,7 +551,8 @@ void async_send_buffer_handler(lua_State * L, int functionRef, lnetlib_buffer * 
     else buf->consumed += written;
     
     if(lua_pcall(lua_state, nargs, 0, 0) != 0)
-        report_script_error(lua_tostring(lua_state, -1));
+        event_listeners().log_error("net_send_buffer", lua_tostring(lua_state, -1));
+
     
     luaL_unref(lua_state, LUA_REGISTRYINDEX, bufferRef);
 }
@@ -826,7 +824,7 @@ void async_read_from_handler(lua_State * L, int functionRef, lnetlib_buffer * rb
     }
     
     if(lua_pcall(lua_state, nargs, 0, 0) != 0)
-        report_script_error(lua_tostring(lua_state, -1));
+         event_listeners().log_error("net_read_from", lua_tostring(lua_state, -1));
     
     luaL_unref(lua_state, LUA_REGISTRYINDEX, bufferRef);
 }
@@ -1026,7 +1024,7 @@ void async_connect_handler(lua_State * L, int functionRef, const boost::system::
     }
     
     if(lua_pcall(lua_state, nargs, 0, 0) != 0)
-        report_script_error(lua_tostring(lua_state, -1));
+         event_listeners().log_error("net_connect", lua_tostring(lua_state, -1));
 }
 
 int client_async_connect(lua_State * L)
