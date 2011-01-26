@@ -22,15 +22,20 @@ private:
 class event_environment
 {
 public:
-    event_environment(lua_State *);
+    event_environment(lua_State *, 
+                      void (* log_error_function)(const char *) = NULL, 
+                      lua_CFunction error_function = NULL);
     void register_event_idents(event_base **);
     lua_State * push_listeners_table(const char * text_id, int num_id);
-    void report_error(const char * text_id, const char * message);
+    bool push_error_function();
+    void log_error(const char * text_id, const char * message);
     bool is_ready();
 private:
     lua_State * m_state;
     int m_text_id_index;
     int m_numeric_id_index;
+    void (* m_log_error_function)(const char *);
+    lua_CFunction m_error_function;
 };
 
 template<typename Tuple>
@@ -49,7 +54,10 @@ public:
         
         lua_State * L = environment.push_listeners_table(text_id(), numeric_id());
         assert(L && lua_type(L, -1) == LUA_TTABLE);
-           
+        
+        bool using_error_function = environment.push_error_function();
+        int error_function = (using_error_function ? lua_gettop(L) : 0);
+        
         bool prevent_default = false;
         
         lua_pushnil(L);
@@ -58,13 +66,17 @@ public:
             if(lua_type(L, -1) == LUA_TFUNCTION)
             {
                 lua::push(L, args);
-                if(lua_pcall(L, boost::tuples::length<Tuple>::value, 1, 0) == 0)
-                    prevent_default = prevent_default || lua_toboolean(L, -1);   
+                if(lua_pcall(L, boost::tuples::length<Tuple>::value, 1, error_function) == 0)
+                    prevent_default = prevent_default || lua_toboolean(L, -1);
                 else
-                    environment.report_error(text_id(), lua_tostring(L, -1));
+                    environment.log_error(text_id(), lua_tostring(L, -1));
             }
             lua_pop(L, 1);
         }
+        
+        if(using_error_function)
+            lua_pop(L, 1);
+        
         return prevent_default;
     }
 };

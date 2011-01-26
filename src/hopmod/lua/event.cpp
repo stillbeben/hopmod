@@ -1,10 +1,12 @@
 #include "event.hpp"
 #include <iostream>
+#include <sstream>
 
 namespace lua{
 
 event_base::event_base(const char * text_id, int numeric_id)
- :m_text_id(text_id), m_numeric_id(numeric_id)
+ :m_text_id(text_id), 
+  m_numeric_id(numeric_id)
 {
     if(m_numeric_id == -1)
         m_numeric_id = assign_numeric_id();
@@ -27,8 +29,12 @@ int event_base::assign_numeric_id()
     return id;
 }
 
-event_environment::event_environment(lua_State * L)
- :m_state(L)
+event_environment::event_environment(lua_State * L,
+                                     void (* log_error_function)(const char *),
+                                     lua_CFunction error_function)
+ :m_state(L),
+  m_log_error_function(log_error_function),
+  m_error_function(error_function)
 {
     lua_newtable(L);
     lua_pushvalue(L, -1);
@@ -75,6 +81,8 @@ void event_environment::register_event_idents(event_base ** events)
 
 lua_State * event_environment::push_listeners_table(const char * text_id, int num_id)
 {
+    assert(is_ready());
+    
     lua_rawgeti(m_state, LUA_REGISTRYINDEX, m_numeric_id_index);
     assert(lua_type(m_state, -1) == LUA_TTABLE);
     
@@ -89,9 +97,24 @@ lua_State * event_environment::push_listeners_table(const char * text_id, int nu
     return m_state;
 }
 
-void event_environment::report_error(const char * text_id, const char * error_message)
+bool event_environment::push_error_function()
 {
+    assert(is_ready());
+    if(!m_error_function) return false;
+    lua_pushcfunction(m_state, m_error_function);
+    return true;
+}
+
+void event_environment::log_error(const char * text_id, const char * error_message)
+{
+    assert(is_ready());
     
+    std::stringstream format;
+    format<<"@"<<text_id<<": "<<error_message;
+    
+    if(m_log_error_function)
+        m_log_error_function(format.str().c_str());
+    else std::cerr<<format;
 }
 
 bool event_environment::is_ready()
