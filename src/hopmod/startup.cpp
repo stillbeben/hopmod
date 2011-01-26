@@ -140,8 +140,11 @@ void shutdown()
 {
     if(boost::this_thread::get_id() != main_thread) return;
     
+    stopgameserver(SHUTDOWN_NORMAL);
+    
     event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_NORMAL)));
     signal_shutdown(SHUTDOWN_NORMAL);
+    
     stop_restarter();
     exit(0);
 }
