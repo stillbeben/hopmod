@@ -266,6 +266,8 @@ static void cleanup(int)
 
 void register_signals(script::env & env)
 {
+    return;
+    
     ::env = &env;
     
     signal_shutdown.connect(&cleanup, boost::signals::at_front);
