@@ -128,25 +128,27 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "restart_now", restart_now);
     bind_function(L, T, "reloadscripts", reload_hopmod);
     
-    /*bind_function(L, T, "concol", concol);
-    bind_function(L, T, "green", green);
-    bind_function(L, T, "info", info);
-    bind_function(L, T, "err", err);
-    bind_function(L, T, "grey", grey);
-    bind_function(L, T, "magenta", magenta);
-    bind_function(L, T, "orange", orange);
-    bind_function(L, T, "gameplay", gameplay);
-    bind_function(L, T, "red", red);
-    bind_function(L, T, "blue", blue);
-    bind_function(L, T, "yellow", yellow);
-    
-    bind_function(L, T, "mins", mins);
-    bind_function(L, T, "secs", secs);*/
-    
     bind_function(L, T, "parse_player_command", parse_player_command_line);
     
     bind_function(L, T, "file_exists", file_exists);
     bind_function(L, T, "dir_exists", dir_exists);
+    
+    int parse_list(lua_State *);
+    int execute_cubescript_file(lua_State *);
+    int make_var(lua_State *);
+    int unref_user_defined_vars(lua_State *);
+    int sched_free_lua_sleep(lua_State *);
+    int sched_free_lua_interval(lua_State *);
+    void cancel_timer(int);
+    
+    bind_function(L, T, "parse_list", parse_list);
+    bind_function(L, T, "execute_cubescript_file", execute_cubescript_file);
+    bind_function(L, T, "make_var", make_var);
+    bind_function(L, T, "unref_user_defined_vars", unref_user_defined_vars);
+    
+    bind_function(L, T, "sleep", sched_free_lua_sleep);
+    bind_function(L, T, "interval", sched_free_lua_interval);
+    bind_function(L, T, "cancel_timer", cancel_timer);
 }
 
 template<int Constant>
