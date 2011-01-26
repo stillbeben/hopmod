@@ -83,6 +83,8 @@ SET(GAME_SERVER_SOURCES
     hopmod/httpserver/lua_module.cpp
     
     hopmod/core_bindings.cpp
+    hopmod/lua/event.cpp
+    hopmod/events.cpp
     )
 
 add_definitions(${LSQLITE3_DEFINITIONS})
