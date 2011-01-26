@@ -14,6 +14,7 @@ lua::event< boost::tuple<int,const char *> >                         event_text(
 lua::event< boost::tuple<int,const char *> >                         event_sayteam("sayteam");
 lua::event< boost::tuple<int,const char *,const char *> >            event_mapvote("mapvote");
 lua::event< boost::tuple<int, const char *,const char *> >           event_setmastermode("setmastermode");
+lua::event< boost::tuple<int, const char *, const char *> >          event_setmastermode_request("setmastermode_request");
 lua::event< boost::tuple<int,int> >                                  event_spectator("spectator");
 lua::event< boost::tuple<int,int,int> >                              event_privilege("privilege");
 lua::event< boost::tuple<int,int> >                                  event_teamkill("teamkill");
@@ -74,6 +75,7 @@ void register_event_idents(lua::event_environment & env)
         & event_sayteam,
         & event_mapvote,
         & event_setmastermode,
+        & event_setmastermode_request,
         & event_spectator,
         & event_privilege,
         & event_teamkill,
