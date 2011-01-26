@@ -142,7 +142,6 @@ void bind_core_functions(lua_State * L, int T)
     void cancel_timer(int);
     
     bind_function(L, T, "parse_list", parse_list);
-    bind_function(L, T, "execute_cubescript_file", execute_cubescript_file);
     bind_function(L, T, "make_var", make_var);
     bind_function(L, T, "unref_user_defined_vars", unref_user_defined_vars);
     
