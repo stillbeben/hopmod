@@ -46,7 +46,7 @@ public:
     {
         lua_State * L = environment.push_listeners_table(text_id(), numeric_id());
         assert(L && lua_type(L, -1) == LUA_TTABLE);
-        
+           
         bool prevent_default = false;
         
         lua_pushnil(L);
@@ -54,6 +54,7 @@ public:
         {
             if(lua_type(L, -1) == LUA_TFUNCTION)
             {
+                
                 lua_pushvalue(L, -3);
                 lua::push(L, args);
                 if(lua_pcall(L, 1 + boost::tuples::length<Tuple>::value, 1, 0) == 0)
