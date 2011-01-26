@@ -8,6 +8,7 @@
 #include "hopmod.hpp"
 #include "lib/scoped_setting.hpp"
 #include "signals.hpp"
+#include "events.hpp"
 #include <fungu/script.hpp>
 #include <fungu/script/lua/object_wrapper.hpp>
 #include <fungu/script/lua/lua_function.hpp>
@@ -53,6 +54,13 @@ void bind_core_functions(lua_State *, int);
 void bind_core_constants(lua_State *, int);
 void bind_core_variables(lua_State *, int);
 
+static lua::event_environment * event_environment = NULL;
+
+lua::event_environment & event_listeners()
+{
+    return *event_environment;
+}
+
 void init_scripting()
 {
     script::initialize_library();
@@ -81,7 +89,9 @@ void init_scripting()
     
     lua_setglobal(L, "core");
 
-
+    event_environment = new lua::event_environment(L);
+    register_event_idents(*event_environment);
+    
     env->set_lua_state(L);
     
     // Global objects created and bound in our CubeScript environment are also
