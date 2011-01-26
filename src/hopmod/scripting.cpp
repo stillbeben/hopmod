@@ -71,8 +71,14 @@ void init_scripting()
     lua_newtable(L);
     int core_table = lua_gettop(L);
     bind_core_functions(L, core_table);
-    bind_core_constants(L, core_table);
-    bind_core_variables(L, core_table);
+    
+    lua_pushliteral(L, "vars");
+    lua_newtable(L);
+    int vars_table = lua_gettop(L);
+    bind_core_constants(L, vars_table);
+    bind_core_variables(L, vars_table);
+    lua_settable(L, -3);
+    
     lua_setglobal(L, "core");
 
 
