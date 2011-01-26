@@ -7,7 +7,7 @@
 #include <iostream>
 #include <boost/asio.hpp>
 using namespace boost::asio;
-#include "buffered_socket.hpp"
+#include "../lib/buffered_socket.hpp"
 #include "../net/prefix_tree.hpp"
 #include <boost/bind/protect.hpp>
 

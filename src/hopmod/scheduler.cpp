@@ -3,7 +3,7 @@
 #endif
 
 #include "hopmod.hpp"
-#include "free_function_scheduler.hpp"
+#include "lib/free_function_scheduler.hpp"
 
 #include <fungu/script.hpp>
 #include <fungu/script/lua/lua_function.hpp>

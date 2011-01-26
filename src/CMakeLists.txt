@@ -49,7 +49,7 @@ add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 
 set(LUA_MODULES_SOURCES
     hopmod/lua/crypto.cpp
-    hopmod/md5.c
+    hopmod/lib/md5.c
     hopmod/lua/net.cpp
     hopmod/lua/timer.cpp
     hopmod/lua/cubescript.cpp
@@ -85,13 +85,13 @@ add_definitions(${LSQLITE3_DEFINITIONS})
 add_executable(sauer_server ${GAME_SERVER_SOURCES})
 target_link_libraries(sauer_server sauertools serverscripting lua_modules ${BOOST_THREAD_LIBRARY} ${LSQLITE3_LIBRARY} scriptpipe ${ENET_LIBRARY} ${FUNGU_HTTP_LIBRARY} -lz -lrt)
 
-add_executable(keygen hopmod/keygen.cpp)
+add_executable(keygen hopmod/standalone/keygen.cpp)
 target_link_libraries(keygen sauertools)
 
-add_executable(luapp hopmod/luapp.cpp)
+add_executable(luapp hopmod/standalone/luapp.cpp)
 target_link_libraries(luapp ${LUA_LIBRARY} ${BOOST_SYSTEM_LIBRARY} lua_modules -lrt)
 
-add_executable(monitor hopmod/monitor.cpp hopmod/program_arguments.cpp)
+add_executable(monitor hopmod/standalone/monitor.cpp hopmod/lib/program_arguments.cpp)
 
 install(TARGETS 
             sauer_server

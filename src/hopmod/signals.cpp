@@ -3,7 +3,7 @@
 #endif
 
 #include "hopmod.hpp"
-#include "handle_resolver.hpp"
+#include "lib/handle_resolver.hpp"
 
 #include <fungu/script.hpp>
 #include <fungu/script/slot_factory.hpp>

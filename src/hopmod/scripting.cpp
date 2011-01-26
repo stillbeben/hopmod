@@ -6,7 +6,7 @@
 #endif
 
 #include "hopmod.hpp"
-#include "scoped_setting.hpp"
+#include "lib/scoped_setting.hpp"
 #include "signals.hpp"
 #include <fungu/script.hpp>
 #include <fungu/script/lua/object_wrapper.hpp>
