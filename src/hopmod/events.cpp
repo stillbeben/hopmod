@@ -1,5 +1,6 @@
 #include "lua/event.hpp"
 
+lua::event< boost::tuple<> >                                         event_init("init");
 lua::event< boost::tuple<int, const char *, const char *, const char *, bool> >  event_connecting("connecting");
 lua::event< boost::tuple<int> >                                      event_connect("connect");
 lua::event< boost::tuple<int,const char *> >                         event_disconnect("disconnect");
@@ -61,6 +62,7 @@ lua::event< boost::tuple<const char *> >                             event_varch
 void register_event_idents(lua::event_environment & env)
 {
     lua::event_base * events[] = {
+        & event_init,
         & event_connecting,
         & event_connect,
         & event_disconnect,

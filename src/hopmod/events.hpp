@@ -3,6 +3,7 @@
 
 #include "lua/event.hpp"
 
+extern lua::event< boost::tuple<> >                                         event_init;
 extern lua::event< boost::tuple<int, const char *, const char *, const char *, bool> >  event_connecting;
 extern lua::event< boost::tuple<int> >                                      event_connect;
 extern lua::event< boost::tuple<int,const char *> >                         event_disconnect;
