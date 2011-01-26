@@ -54,10 +54,8 @@ public:
         {
             if(lua_type(L, -1) == LUA_TFUNCTION)
             {
-                
-                lua_pushvalue(L, -3);
                 lua::push(L, args);
-                if(lua_pcall(L, 1 + boost::tuples::length<Tuple>::value, 1, 0) == 0)
+                if(lua_pcall(L, boost::tuples::length<Tuple>::value, 1, 0) == 0)
                     prevent_default = prevent_default || lua_toboolean(L, -1);   
                 else
                     environment.report_error(text_id(), lua_tostring(L, -1));
