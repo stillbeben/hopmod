@@ -37,29 +37,18 @@ static inline int server_interface_index(lua_State *);
 static inline int server_interface_newindex(lua_State *);
 static inline void push_server_table(lua_State *);
 static inline void register_to_server_namespace(lua_State *,lua_CFunction,const char *);
-static int parse_list(lua_State *);
-static int execute_cubescript_file(lua_State * L);
-static int make_var(lua_State * L);
-static int unref_user_defined_vars(lua_State * L);
+int parse_list(lua_State *);
+int execute_cubescript_file(lua_State * L);
+int make_var(lua_State * L);
+int unref_user_defined_vars(lua_State * L);
 
 static script::env * env = NULL;
 
-static const char * const SERVER_NAMESPACE = "server";
+static const char * const SERVER_NAMESPACE = "serverdep";
 
 static int server_namespace_ref = 0;
 static int server_namespace_index_ref = 0;
 static int user_defined_variables = 0;
-
-void bind_core_functions(lua_State *, int);
-void bind_core_constants(lua_State *, int);
-void bind_core_variables(lua_State *, int);
-
-static lua::event_environment * event_environment = NULL;
-
-lua::event_environment & event_listeners()
-{
-    return *event_environment;
-}
 
 void init_scripting()
 {
@@ -75,23 +64,6 @@ void init_scripting()
     lua_State * L = luaL_newstate();
     luaL_openlibs(L);
     
-    
-    lua_newtable(L);
-    int core_table = lua_gettop(L);
-    bind_core_functions(L, core_table);
-    
-    lua_pushliteral(L, "vars");
-    lua_newtable(L);
-    int vars_table = lua_gettop(L);
-    bind_core_constants(L, vars_table);
-    bind_core_variables(L, vars_table);
-    lua_settable(L, -3);
-    
-    lua_setglobal(L, "core");
-
-    event_environment = new lua::event_environment(L);
-    register_event_idents(*event_environment);
-    
     env->set_lua_state(L);
     
     // Global objects created and bound in our CubeScript environment are also
@@ -106,6 +78,7 @@ void init_scripting()
     create_server_namespace(L);
 
     // Utility functions
+    
     register_lua_function(&parse_list, "parse_list");
     register_lua_function(&execute_cubescript_file, "execute_cubescript_file");
     register_lua_function(&make_var, "make_var");
@@ -260,11 +233,13 @@ void register_to_server_namespace(lua_State * L, lua_CFunction func, const char 
 void bind_object_to_lua(const_string id, script::env_object * obj)
 {
     lua_State * L = env->get_lua_state();
-    lua_rawgeti(L, LUA_REGISTRYINDEX, server_namespace_index_ref);
+    //lua_rawgeti(L, LUA_REGISTRYINDEX, server_namespace_index_ref);
     lua_pushlstring(L, id.begin(), id.length());
     script::lua::push_object(L, obj);
-    lua_rawset(L, -3);
-    lua_pop(L, 1);
+    lua_setglobal(L, "core");
+    
+    //lua_rawset(L, -3);
+    //lua_pop(L, 1);
 }
 
 void unbind_object(const_string id, script::env_object * obj)

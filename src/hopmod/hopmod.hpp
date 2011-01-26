@@ -14,6 +14,7 @@ class error_trace;
 
 #include "signals.hpp"
 #include "utils.hpp"
+#include "events.hpp"
 
 void init_hopmod();
 void reload_hopmod();
@@ -21,6 +22,11 @@ void update_hopmod();
 void restart_now();
 
 // Scripting functions
+void init_lua();
+void shutdown_lua();
+lua_State * get_lua_state();
+lua::event_environment & event_listeners();
+
 void init_scripting();
 void shutdown_scripting(int);
 fungu::script::env & get_script_env();

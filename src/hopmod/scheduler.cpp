@@ -12,26 +12,14 @@ using namespace fungu;
 static free_function_scheduler free_scheduled;
 
 static int sched_free_lua_function(lua_State * L, bool);
-static inline int sched_free_lua_sleep(lua_State *);
-static inline int sched_free_lua_interval(lua_State *);
+int sched_free_lua_sleep(lua_State *);
+int sched_free_lua_interval(lua_State *);
 static script::any sched_free_cs_function(bool, script::env_object::call_arguments &, script::env_frame *);
 static void cancel_free_scheduled(int);
-static void cancel_timer(int);
+void cancel_timer(int);
 
 void init_scheduler()
 {
-    static script::function<script::raw_function_type> free_sleep(boost::bind(sched_free_cs_function, false, _1, _2));
-    get_script_env().bind_global_object(&free_sleep, FUNGU_OBJECT_ID("sleep"));
-    
-    static script::function<script::raw_function_type> free_interval(boost::bind(sched_free_cs_function, true, _1, _2));
-    get_script_env().bind_global_object(&free_interval, FUNGU_OBJECT_ID("interval"));
-    
-    static script::function<void (int)> cancel_timer_func(cancel_timer);
-    get_script_env().bind_global_object(&cancel_timer_func, FUNGU_OBJECT_ID("cancel_timer"));
-    
-    register_lua_function(sched_free_lua_sleep, "sleep");
-    register_lua_function(sched_free_lua_interval, "interval");
-    
     signal_shutdown.connect(cancel_free_scheduled, boost::signals::at_front);
 }
 
@@ -136,7 +124,7 @@ void update_scheduler(int timenow)
     free_scheduled.update(timenow);
 }
 
-static void cancel_timer(int job_id)
+void cancel_timer(int job_id)
 {
     free_scheduled.cancel(job_id);
 }

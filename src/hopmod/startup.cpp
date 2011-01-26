@@ -4,11 +4,7 @@
 
 #include "cube.h"
 #include "hopmod.hpp"
-#include "lua/modules.hpp"
 #include "main_io_service.hpp"
-
-#include "events.hpp"
-lua::event_environment & event_listeners();
 
 #include <fungu/script/env.hpp>
 #include <fungu/script/execute.hpp>
@@ -19,12 +15,6 @@ using namespace fungu;
 #include <iostream>
 
 #include <boost/thread.hpp>
-
-#ifdef HAS_LSQLITE3
-extern "C"{
-int luaopen_lsqlite3(lua_State * L);
-}
-#endif
 
 namespace server{
 void started();
@@ -38,10 +28,6 @@ int get_num_async_resolve_operations(); //defined in lua/net.cpp
 void start_restarter();
 void stop_restarter();
 
-extern "C"{
-int lua_packlibopen(lua_State *L);
-} //extern "C"
-
 static boost::signals::connection close_listenserver_slot;
 static bool reload = false;
 
@@ -51,67 +37,39 @@ bool reloaded = false;
 
 static boost::thread::id main_thread;
 
-static void load_lua_modules()
-{
-    lua_State * L = get_script_env().get_lua_state();
-
-    lua::module::open_net(L);
-    lua::module::open_timer(L);
-    lua::module::open_crypto(L);
-    lua::module::open_cubescript(L);
-    lua::module::open_geoip(L);
-    lua::module::open_filesystem(L);
-    lua::module::open_http_server(L);
-    
-    lua_packlibopen(L);
-    
-    #ifdef HAS_LSQLITE3
-    luaopen_lsqlite3(L);
-    #endif
-}
-
 /**
     Initializes everything in hopmod. This function is called at server startup and server reload.
 */
 void init_hopmod()
 {
     main_thread = boost::this_thread::get_id();
-    
-    /*
-        Misc
-    */
-    set_maintenance_frequency(86400000); // signal maintenance event every 24 hours
-    info_file("log/sauer_server.pid", "%i\n", getpid());
 
-    /*
-        Scripting environment
-    */
-    init_scripting(); // create scripting environment
-    script::env & env = get_script_env();
-    register_server_script_bindings(env); // expose the core server api to the embedded scripting languages
-    register_signals(env); // register signals with scripting environment
-    init_scheduler(); // expose the scheduler functions to the scripting environment
-    load_lua_modules(); // extra lua modules written for hopmod
-
-    /*
-        Event handlers
-    */
     close_listenserver_slot = signal_shutdown.connect(&stopgameserver);
-    signal_shutdown.connect(&shutdown_scripting);
+    signal_shutdown.connect(boost::bind(&shutdown_lua));
     signal_shutdown.connect(&cleanup_info_files_on_shutdown);
-
-    /*
-        Execute the first script. After this script is finished everything on
-        the scripting side of hopmod should be loaded.
-    */
-    try
+        
+    info_file("log/sauer_server.pid", "%i\n", getpid());
+    set_maintenance_frequency(1000*60*60*24);
+    
+    init_scheduler();
+    init_lua();
+    
+    static const char * INIT_SCRIPT = "script/base/new-init.lua";
+    
+    lua_State * L = get_lua_state();
+     std::cout<<"stack size "<<lua_gettop(L)<<std::endl;
+    if(luaL_loadfile(L, INIT_SCRIPT) == 0)
     {
-        fungu::script::execute_file("script/base/init.cs", get_script_env());
+        event_listeners().add_listener("init"); // Take the value of the top of the stack to add
+        // to the init listeners table
     }
-    catch(fungu::script::error_trace * error)
+    else
     {
-        report_script_error(error);
+        std::cerr<<"error during initialization: "<<lua_tostring(L, -1)<<std::endl;
+        lua_pop(L, 1);
     }
+    
+    event_init(event_listeners(), boost::make_tuple());
 }
 
 static void reload_hopmod_now()
@@ -171,8 +129,8 @@ void started()
         Startup the serverexec named pipe service. The service runs by polling
         from update_hopmod().
     */
-    init_script_pipe();
-    open_script_pipe("serverexec",511,get_script_env());
+    //init_script_pipe();
+    //open_script_pipe("serverexec",511,get_script_env());
 
     signal_started();
     event_started(event_listeners(), boost::make_tuple());

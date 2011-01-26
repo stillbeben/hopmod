@@ -82,9 +82,13 @@ SET(GAME_SERVER_SOURCES
     hopmod/httpserver/filesystem_resource.cpp
     hopmod/httpserver/lua_module.cpp
     
+    hopmod/lua.cpp
     hopmod/core_bindings.cpp
     hopmod/lua/event.cpp
     hopmod/events.cpp
+    hopmod/cubescript/cubescript.cpp
+    hopmod/cubescript/lua_command_stack.cpp
+    hopmod/cubescript/lua/pcall.cpp
     )
 
 add_definitions(${LSQLITE3_DEFINITIONS})
