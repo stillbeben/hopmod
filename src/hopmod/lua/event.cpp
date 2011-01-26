@@ -154,5 +154,15 @@ void event_environment::add_listener(const char * event_id, lua_CFunction functi
     add_listener(event_id);
 }
 
+void event_environment::clear_listeners(const char * event_id)
+{
+    lua_State * L = m_state;
+    lua_rawgeti(L, LUA_REGISTRYINDEX, m_text_id_index);
+    lua_pushstring(L, event_id);
+    lua_newtable(L);
+    lua_settable(L, -3);
+    lua_pop(L, 1);
+}
+
 } //namespace lua
 
