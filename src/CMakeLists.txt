@@ -53,7 +53,12 @@ set(LUA_MODULES_SOURCES
     hopmod/lua/modules/crypto.cpp    
     hopmod/lua/modules/net.cpp
     hopmod/lua/modules/timer.cpp
+    
     hopmod/lua/modules/cubescript.cpp
+    hopmod/cubescript/cubescript.cpp
+    hopmod/cubescript/lua_command_stack.cpp
+    hopmod/cubescript/lua/pcall.cpp
+    
     hopmod/lua/modules/geoip.cpp
     hopmod/lua/modules/filesystem.cpp
     hopmod/lua/modules/packlib.c)
@@ -86,9 +91,6 @@ SET(GAME_SERVER_SOURCES
     hopmod/core_bindings.cpp
     hopmod/lua/event.cpp
     hopmod/events.cpp
-    hopmod/cubescript/cubescript.cpp
-    hopmod/cubescript/lua_command_stack.cpp
-    hopmod/cubescript/lua/pcall.cpp
     )
 
 add_definitions(${LSQLITE3_DEFINITIONS})
@@ -118,4 +120,8 @@ install(TARGETS
             keygen
             luapp
         RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}/utils)
+
+install(FILES 
+            hopmod/cubescript/cubescript_library.lua 
+        DESTINATION ${PROJECT_SOURCE_DIR}/script/package)
 
