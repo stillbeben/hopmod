@@ -106,12 +106,9 @@ void reload_hopmod()
 void update_hopmod()
 {
     if(reload) reload_hopmod();
-
-    run_script_pipe_service(totalmillis);
-
+    
     update_scheduler(totalmillis);
-    cleanup_dead_slots();
-
+    
     if(maintenance_frequency != 0 && totalmillis > maintenance_time && !hasnonlocalclients())
     {
         signal_maintenance();
