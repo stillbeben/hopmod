@@ -908,7 +908,6 @@ namespace server
         demotmp->read(d.data, len);
         DELETEP(demotmp);
         
-        signal_endrecord(demo_id,len);
         event_endrecord(event_listeners(), boost::make_tuple(demo_id, len));
     }
 
@@ -954,7 +953,6 @@ namespace server
         welcomepacket(p, NULL);
         writedemo(1, p.buf, p.len);
 
-        signal_beginrecord(demo_id, filename);
         event_beginrecord(event_listeners(), boost::make_tuple(demo_id, filename));
 
         return demo_id;
@@ -1112,12 +1110,10 @@ namespace server
         sendf(-1, 1, "rii", N_PAUSEGAME, gamepaused ? 1 : 0);
         if(gamepaused)
         {
-            signal_gamepaused();
             event_gamepaused(event_listeners(), boost::make_tuple());
         }
         else
         {
-            signal_gameresumed();
             event_gameresumed(event_listeners(), boost::make_tuple());
         }
     }
@@ -1147,7 +1143,6 @@ namespace server
     {
         assert(!authname);
         update_mastermask();
-        signal_setmaster(ci->clientnum, hashed_password, request_claim_master);
         event_setmaster(event_listeners(), boost::make_tuple(ci->clientnum, hashed_password, request_claim_master));
         return;
     }
@@ -1568,7 +1563,6 @@ namespace server
     void changemap(const char *s, int mode,int mins = -1)
     {
         calc_player_ranks();
-        signal_finishedgame();
         event_finishedgame(event_listeners(), boost::make_tuple());
         
         stopdemo();
@@ -1622,7 +1616,6 @@ namespace server
             setupdemorecord();
         }
         
-        signal_mapchange(smapname,modename(gamemode,"unknown"));
         event_mapchange(event_listeners(), boost::make_tuple(smapname, modename(gamemode,"unknown")));
         
         next_timeupdate = 0; //as soon as possible
@@ -1664,7 +1657,6 @@ namespace server
             if(best && (best->count > (force ? 1 : maxvotes/2)))
             {
                 sendservmsg(force ? "vote passed by default" : "vote passed by majority");
-                signal_votepassed(best->map, modename(best->mode));
                 event_votepassed(event_listeners(), boost::make_tuple(best->map, modename(best->mode)));
                 sendf(-1, 1, "risii", N_MAPCHANGE, best->map, best->mode, 1);
                 changemap(best->map, best->mode);
@@ -1719,14 +1711,12 @@ namespace server
     {
         if(gamemillis >= gamelimit && !interm)
         {
-            signal_timeupdate(0, 0);
             event_timeupdate(event_listeners(), boost::make_tuple(0, 0));
             if(gamemillis < gamelimit) return;
             
             sendf(-1, 1, "ri2", N_TIMEUP, 0);
             interm = gamemillis+10000;
             calc_player_ranks();
-            signal_intermission();
             event_intermission(event_listeners(), boost::make_tuple());
         }
     }
@@ -1735,10 +1725,6 @@ namespace server
 
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int gun, const vec &hitpush = vec(0, 0, 0))
     {
-        if(signal_damage(target->clientnum, actor->clientnum, damage, gun) == -1){
-            return;
-        }
-        
         if(event_damage(event_listeners(), boost::make_tuple(target->clientnum, actor->clientnum, damage, gun)))
         {
             return;
@@ -1762,7 +1748,6 @@ namespace server
             if(actor!=target && isteam(actor->team, target->team))
             {
                 actor->state.teamkills++;
-                signal_teamkill(actor->clientnum, target->clientnum);
                 event_teamkill(event_listeners(), boost::make_tuple(actor->clientnum, target->clientnum));
             }
             int fragvalue = smode ? smode->fragvalue(target, actor) : (target==actor || isteam(target->team, actor->team) ? -1 : 1);
@@ -1774,7 +1759,6 @@ namespace server
                 else { friends = 1; enemies = clients.length()-1; }
                 actor->state.effectiveness += fragvalue*friends/float(max(enemies, 1));
             }
-            signal_frag(target->clientnum, actor->clientnum);
             event_frag(event_listeners(), boost::make_tuple(target->clientnum, actor->clientnum));
             sendf(-1, 1, "ri4", N_DIED, target->clientnum, actor->clientnum, actor->state.frags);
             target->position.setsize(0);
@@ -1798,7 +1782,6 @@ namespace server
         if(smode) smode->died(ci, NULL);
         gs.state = CS_DEAD;
         gs.respawn();
-        signal_suicide(ci->clientnum);
         event_suicide(event_listeners(), boost::make_tuple(ci->clientnum));
     }
 
@@ -1895,7 +1878,6 @@ namespace server
         
         gs.misses += (gs.hits - old_hits == 0);
         
-        signal_shot(ci->clientnum, gun, gs.hits - old_hits);
         event_shot(event_listeners(), boost::make_tuple(ci->clientnum, gun, gs.hits - old_hits));
     }
 
@@ -2031,7 +2013,6 @@ namespace server
 
         if(gamemillis > next_timeupdate)
         {
-            signal_timeupdate(get_minutes_left(), get_seconds_left());
             event_timeupdate(event_listeners(), boost::make_tuple(get_minutes_left(), get_seconds_left()));
             next_timeupdate = gamemillis + 60000;
         }
@@ -2073,7 +2054,6 @@ namespace server
 
     void noclients()
     {
-        signal_clearbans_request();
         event_clearbans_request(event_listeners(), boost::make_tuple());
         aiman::clearai();
     }
@@ -2154,7 +2134,6 @@ namespace server
             reservedslots_use -= reservedslots_use > 0;
             reservedslots += ci->using_reservedslot;
             
-            signal_disconnect(n, disc_reason_msg);
             event_disconnect(event_listeners(), boost::make_tuple(n, disc_reason_msg));
             
             if(clients.empty()) noclients();
@@ -2162,7 +2141,6 @@ namespace server
         }
         else
         {
-            signal_failedconnect(ci->hostname(), disc_reason_msg);
             event_failedconnect(event_listeners(), boost::make_tuple(ci->hostname(), disc_reason_msg));
             connects.removeobj(ci);
         }
@@ -2177,11 +2155,6 @@ namespace server
         int clientcount = numclients(-1, false, true);
 
         bool is_reserved = slotpass[0] && checkpassword(ci, slotpass, pwd);
-        
-        if(signal_connecting(ci->clientnum, ci->hostname(), ci->name, pwd, is_reserved) == -1)
-        {
-            return DISC_IPBAN;
-        }
         
         if(event_connecting(event_listeners(), boost::make_tuple(ci->clientnum, ci->hostname(), ci->name, pwd, is_reserved)))
         {
@@ -2226,7 +2199,6 @@ namespace server
     
     void tryauth(clientinfo *ci, const char * domain, const char * user)
     {
-        signal_authreq(ci->clientnum, user, domain);
         event_authreq(event_listeners(), boost::make_tuple(ci->clientnum, user, domain));
     }
 
@@ -2236,7 +2208,6 @@ namespace server
         {
             if(!isxdigit(*s)) { *s = '\0'; break; }
         }
-        signal_authrep(ci->clientnum, id, val);
         event_authrep(event_listeners(), boost::make_tuple(ci->clientnum, id, val));
     }
 
@@ -2296,7 +2267,6 @@ namespace server
             sendf(spinfo->clientnum, 1, "ri2", N_TIMEUP, (gamelimit - gamemillis + spectator_delay)/1000);
         }
         
-        signal_spectator(spinfo->clientnum, val);
         event_spectator(event_listeners(), boost::make_tuple(spinfo->clientnum, val));
     }
 
@@ -2363,7 +2333,6 @@ namespace server
 
                 if(m_demo) setupdemoplayback();
                 
-                signal_connect(ci->clientnum);
                 event_connect(event_listeners(), boost::make_tuple(ci->clientnum));
                 
             }
@@ -2429,7 +2398,6 @@ namespace server
                     {
                         cp->lastposupdate = totalmillis - 30;
                         cp->maploaded = true;
-                        signal_maploaded(cp->clientnum);
                         event_maploaded(event_listeners(), boost::make_tuple(cp->clientnum));
                     }
                     
@@ -2521,13 +2489,11 @@ namespace server
                 }
                 copystring(ci->clientmap, text);
                 ci->mapcrc = text[0] ? crc : 1;
-                signal_mapcrc(ci->clientnum, text, crc);
                 event_mapcrc(event_listeners(), boost::make_tuple(ci->clientnum, text, crc));
                 break;
             }
 
             case N_CHECKMAPS:
-                signal_checkmaps(sender);
                 event_checkmaps(event_listeners(), boost::make_tuple(sender));
                 break;
 
@@ -2567,7 +2533,6 @@ namespace server
                 if(cq->mapcrc == 0 && cq->state.aitype == AI_NONE)
                 {
                     cq->mapcrc = 1;
-                    signal_mapcrc(cq->clientnum, smapname, cq->mapcrc);
                     event_mapcrc(event_listeners(), boost::make_tuple(cq->clientnum, smapname, cq->mapcrc));
                 }
                 cq->state.lastspawn = -1;
@@ -2580,7 +2545,6 @@ namespace server
                     putint(cm->messages, N_SPAWN);
                     sendstate(cq->state, cm->messages);
                 });
-                signal_spawn(cq->clientnum);
                 event_spawn(event_listeners(), boost::make_tuple(cq->clientnum));
                 break;
             }
@@ -2667,8 +2631,7 @@ namespace server
                         break;
                     }
                     
-                    if( signal_text(ci->clientnum, text) != -1 && 
-                        event_text(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false && 
+                    if( event_text(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false && 
                         !ci->is_delayed_spectator())
                     {
                         QUEUE_AI;
@@ -2683,8 +2646,7 @@ namespace server
             {
                 getstring(text, p);
                 if(!ci || !cq || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_teammode || !cq->team[0] || ci->check_flooding(ci->sv_sayteam_hit,"sending text")) break;
-                if(signal_sayteam(ci->clientnum,text)!=-1 &&
-                   event_sayteam(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false)
+                if(event_sayteam(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false)
                 {
                     loopv(clients)
                     {
@@ -2706,7 +2668,6 @@ namespace server
                 copystring(oldname, ci->name);
                 
                 bool allow_rename = strcmp(ci->name, text) && 
-                    signal_allow_rename(ci->clientnum, text) != -1 &&
                     event_allow_rename(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false;
                 
                 if(allow_rename)
@@ -2714,12 +2675,10 @@ namespace server
                     copystring(ci->name, text);
                     
                     int futureId = get_player_id(text, getclientip(ci->clientnum));
-                    signal_renaming(ci->clientnum, futureId);
                     event_renaming(event_listeners(), boost::make_tuple(ci->clientnum, futureId));
                     
                     ci->playerid = futureId;
                     
-                    signal_rename(ci->clientnum, oldname, ci->name);
                     event_rename(event_listeners(), boost::make_tuple(ci->clientnum, oldname, ci->name));
                     
                     QUEUE_INT(N_SWITCHNAME);
@@ -2750,7 +2709,6 @@ namespace server
                 {
                     bool cancel = ci->check_flooding(ci->sv_switchteam_hit,"switching teams") || 
                         (smode && !smode->canchangeteam(ci, ci->team, text)) ||
-                        signal_chteamrequest(ci->clientnum, ci->team, text) == -1 ||
                         event_chteamrequest(event_listeners(), boost::make_tuple(ci->clientnum, ci->team, text));
                     
                     if(!cancel)
@@ -2761,7 +2719,6 @@ namespace server
                         copystring(ci->team, text);
                         aiman::changeteam(ci);
                         sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
-                        signal_reteam(ci->clientnum, oldteam, text);
                         event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, oldteam, text));
                     }
                     else sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
@@ -2776,7 +2733,6 @@ namespace server
                 int reqmode = getint(p);
                 if(!ci->local && !m_mp(reqmode)) reqmode = 0;
                 if(!ci->check_flooding(ci->sv_mapvote_hit,"map voting") &&
-                   signal_mapvote(ci->clientnum, text, modename(reqmode,"unknown")) != -1 &&
                    event_mapvote(event_listeners(), boost::make_tuple(ci->clientnum, text, modename(reqmode, "unknown"))) == false) 
                 {
                     vote(text, reqmode, sender);
@@ -2857,7 +2813,6 @@ namespace server
                 if(!ci->maploaded && totalmillis - ci->connectmillis > 2000)
                 {
                     ci->maploaded = true;
-                    signal_maploaded(ci->clientnum);
                     event_maploaded(event_listeners(), boost::make_tuple(ci->clientnum));
                 }
                 if(ci) ci->lastpingupdate = totalmillis; 
@@ -2886,12 +2841,10 @@ namespace server
                 {
                     if((ci->privilege>=PRIV_ADMIN || ci->local) || (mastermask&(1<<mm)))
                     {
-                        if(signal_setmastermode_request(ci->clientnum, mastermodename(mastermode), mastermodename(mm)) == -1 ||
-                           event_setmastermode_request(event_listeners(), boost::make_tuple(ci->clientnum, mastermodename(mastermode), mastermodename(mm))))
+                        if(event_setmastermode_request(event_listeners(), boost::make_tuple(ci->clientnum, mastermodename(mastermode), mastermodename(mm))))
                         {
                             break;
                         }
-                        signal_setmastermode(ci->clientnum, mastermodename(mastermode), mastermodename(mm));
                         event_setmastermode(event_listeners(), boost::make_tuple(ci->clientnum, mastermodename(mastermode), mastermodename(mm)));
                         mastermode = mm;
                         mastermode_owner = ci->clientnum;
@@ -2918,7 +2871,6 @@ namespace server
             {
                 if(ci->privilege)
                 {
-                    signal_clearbans_request();
                     event_clearbans_request(event_listeners(), boost::make_tuple());
                 }
                 break;
@@ -2930,7 +2882,6 @@ namespace server
                 if(ci->privilege && ci->clientnum != victim && getclientinfo(victim))
                 {
                     if(ci->privilege < PRIV_ADMIN && ci->check_flooding(ci->sv_kick_hit, "kicking")) break;
-                    signal_kick_request(ci->clientnum, ci->name, 14400, victim, "");
                     event_kick_request(event_listeners(), boost::make_tuple(ci->clientnum, ci->name, 14400, victim, ""));
                 }
                 break;
@@ -2963,11 +2914,9 @@ namespace server
                 clientinfo *wi = getinfo(who);
                 if(!wi || !strcmp(wi->team, text)) break;
                 if((!smode || smode->canchangeteam(wi, wi->team, text)) && 
-                    signal_chteamrequest(wi->clientnum,wi->team,text) != -1 &&
                     event_chteamrequest(event_listeners(), boost::make_tuple(wi->clientnum, wi->team, text)) == false)
                 {
                     if(smode && wi->state.state==CS_ALIVE) suicide(wi);
-                    signal_reteam(wi->clientnum, wi->team, text);
                     event_reteam(event_listeners(), boost::make_tuple(wi->clientnum, wi->team, text));
                     copystring(wi->team, text, MAXTEAMLEN+1);
                 }

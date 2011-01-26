@@ -58,7 +58,7 @@ namespace aiman
                 copystring(oldteam, bot->team, MAXTEAMLEN+1);
                 copystring(bot->team, t.team, MAXTEAMLEN+1);
                 sendf(-1, 1, "riisi", N_SETTEAM, bot->clientnum, bot->team, 0);
-                signal_reteam(bot->clientnum, oldteam, bot->team);
+                
                 event_reteam(event_listeners(), boost::make_tuple(bot->clientnum, oldteam, bot->team));
             }
             else teams.remove(0, 1);
@@ -134,7 +134,6 @@ namespace aiman
         ci->sessionid = (rnd(0x1000000)*((totalmillis%10000)+1))&0xFFFFFF;
         dorefresh = true;
         
-        signal_connect(ci->clientnum);
         event_connect(event_listeners(), boost::make_tuple(ci->clientnum));
         
 		return ci;
@@ -146,9 +145,7 @@ namespace aiman
         if(!bots.inrange(cn)) return;
         if(smode) smode->leavegame(ci, true);
         sendf(-1, 1, "ri2", N_CDIS, ci->clientnum);
-        signal_botleft(ci->clientnum);
         event_botleft(event_listeners(), boost::make_tuple(ci->clientnum));
-        signal_disconnect(ci->clientnum,"");
         event_disconnect(event_listeners(), boost::make_tuple(ci->clientnum, ""));
         clientinfo *owner = (clientinfo *)getclientinfo(ci->ownernum);
         if(owner) owner->bots.removeobj(ci);
@@ -251,7 +248,6 @@ namespace aiman
         if(!boti) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to create or assign bot");
         else
         {
-            signal_addbot(ci->clientnum, skill, boti->clientnum);
             event_addbot(event_listeners(), boost::make_tuple(ci->clientnum, skill, boti->clientnum));
         }
 	}
@@ -262,7 +258,6 @@ namespace aiman
         if(!deleteai()) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to remove any bots");
         else
         {
-            signal_delbot(ci->clientnum);
             event_delbot(event_listeners(), boost::make_tuple(ci->clientnum));
         }
 	}
