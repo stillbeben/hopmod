@@ -1011,21 +1011,22 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     }
     if(cq->state.lastdeath)
     {
-        //int delay = signal_respawnrequest(cq->clientnum, cq->state.lastdeath);
-        //FIXME need a workaround for event_respawnrequest
-        
-        /*
-        if(false)
+        if(event_respawnrequest(event_listeners(), boost::make_tuple(cq->clientnum, cq->state.lastdeath)))
         {
-            sched_callback(deferred_respawn_request, new player_token(cq), delay);
             return;
-        }*/
+        }
         
         flushevents(cq, cq->state.lastdeath + DEATHMILLIS);
         cq->state.respawn();
     }
     cleartimedevents(cq);
     sendspawn(cq);
+}
+
+void player_respawn(int cn)
+{
+    clientinfo * ci = getinfo(cn);
+    try_respawn(ci, ci);
 }
 
 #endif

@@ -110,6 +110,7 @@ namespace server
     void set_player_privilege(int, int);
     void player_freeze(int);
     void player_unfreeze(int);
+    void player_respawn(int);
     
     void team_msg(const char *,const char *);
     std::vector<std::string> get_teams();
