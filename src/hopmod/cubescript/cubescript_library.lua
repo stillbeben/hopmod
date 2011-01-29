@@ -25,7 +25,9 @@ setmetatable(env, {__index = _G})
 
 -- Private utility functions
 
-local function parse_array(input_string)
+local function parse_array(input_string, environment, silent_error)
+    
+    environment = environment or env
     
     input_string = input_string .. "\n"
     
@@ -67,8 +69,8 @@ local function parse_array(input_string)
         call = function(index)
             
             local function_calls = {
-                ["@"] = env["@"],
-                ["$"] = env["$"]
+                ["@"] = environment["@"],
+                ["$"] = environment["$"]
             }
             
             local function_call = function_calls[node[1]]
@@ -87,7 +89,11 @@ local function parse_array(input_string)
     local error_message = cubescript.eval(input_string, cubescript.command_stack(processing))
     
     if error_message then
-        error(error_message .. "\n" .. debug.traceback())
+        if not silent_error then
+            error(error_message .. "\n" .. debug.traceback())
+        else
+            return nil, error_message
+        end
     end
     
     return root
