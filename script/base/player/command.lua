@@ -1,4 +1,4 @@
-dofile("./script/command/_help.lua") -- Load player command descriptions
+exec("command/_help.lua") -- Load player command descriptions
 
 local player_commands = {}
 
@@ -15,17 +15,38 @@ local function send_command_error(cn, errmsg)
     server.player_msg(cn, red(message))
 end
 
+local command_prefixes = {}
+
+local function load_command_prefixes()
+    local array = cubescript.library.parse_array(server.command_prefixes)
+    for _,value in pairs(array) do
+        command_prefixes[value] = true
+    end    
+end
+load_command_prefixes()
+
 server.event_handler("text", function(cn, text)
     
-    local arguments = server.parse_player_command(text)
-    local command_prefixes = server.command_prefixes
-    
-    if command_prefixes == "" then return end
-    
-    if string.match(text, command_prefixes) then
-        arguments[1] = string.sub(arguments[1], 2)
-    else
+    if not command_prefixes[string.sub(text, 1, 1)] then
         return
+    end
+    
+    text = string.sub(text, 2)
+    
+    local function array_concat()
+        error("@ not supported in player commands")
+    end
+    
+    local function array_get()
+        error("$ not supported in player commands")
+    end
+
+    local arguments, error_message = 
+        cubescript.library.parse_array(text, {["$"] = array_get, ["@"] = array_concat}, true)
+
+    if not arguments then
+        server.player_msg(cn, red("Command syntax error: " .. error_message))
+        return -1        
     end
     
     local command_name = arguments[1]
