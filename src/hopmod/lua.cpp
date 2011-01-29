@@ -64,6 +64,14 @@ void load_extra_os_functions(lua_State * L)
     lua_pushcfunction(L, lua::getcwd);
     lua_settable(L, -3);
     
+    lua_pushliteral(L, "mkfifo");
+    lua_pushcfunction(L, lua::mkfifo);
+    lua_settable(L, -3);
+    
+    lua_pushliteral(L, "open_fifo");
+    lua_pushcfunction(L, lua::open_fifo);
+    lua_settable(L, -3);
+    
     lua_pop(L, 1);
 }
 
