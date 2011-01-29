@@ -19,6 +19,13 @@ end
 
 exec_handler["vars"] = library.exec_cubescript
 
+
+function cubescript.eval_string(code)
+    return cubescript.eval(code .. "\n", library)
+end
+
+cubescript.library = library
+
 --[[ Backwards compatibility stuff (deprecated) ]]
 
 core.parse_list = library.parse_array
@@ -35,9 +42,5 @@ library.global = function(name, value)
             return property_value
         end
     end
-end
-
-function cubescript.eval_string(code)
-    return cubescript.eval(code .. "\n", library)
 end
 
