@@ -14,6 +14,10 @@ void push(lua_State * L, __uid_t value);
 #include "lua/push_function.hpp"
 #include <iostream>
 #include <vector>
+#include <string>
+
+// Functions prototypes that don't belong to any header files
+std::vector<std::string> parse_player_command_line(const char *);
 
 /*
     Lua value io functions for cube2 types

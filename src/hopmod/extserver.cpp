@@ -639,7 +639,7 @@ static void execute_deletebot(int cn)
 void deletebot(int cn)
 {
     if(get_ci(cn)->state.aitype == AI_NONE) 
-        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("not a bot player")));
+        luaL_error(get_lua_state(), "not a bot player");
     get_main_io_service().post(boost::bind(&execute_deletebot, cn));
 }
 
@@ -948,7 +948,7 @@ void add_allowed_ip(const char * hostname)
 {
     ENetAddress addr;
     if(enet_address_set_host(&addr, hostname) != 0)
-        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("invalid hostname given")));
+        luaL_error(get_lua_state(), "invalid hostname given");
     allowedips.add(addr.host);
 }
 

@@ -74,3 +74,4 @@ global admin_password ""
 global allow_setmaster 0
 
 global irc_socket_password ""
+

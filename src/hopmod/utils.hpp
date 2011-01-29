@@ -4,21 +4,6 @@
 #include <time.h>
 #include <string>
 
-std::string concol(int code, const std::string & msg);
-std::string green(const std::string & msg);
-std::string info(const std::string & msg);
-std::string err(const std::string & msg);
-std::string grey(const std::string & msg);
-std::string magenta(const std::string & msg);
-std::string orange(const std::string & msg);
-std::string gameplay(const std::string & msg);
-std::string red(const std::string & msg);
-std::string blue(const std::string & msg);
-std::string yellow(const std::string & msg);
-
-int secs(int ms);
-int mins(int ms);
-
 class timer
 {
 public:
@@ -46,4 +31,14 @@ bool info_file(const char *, const char *, ...);
 void cleanup_info_files();
 void cleanup_info_files_on_shutdown(int);
 
+// Text Colouring Macros
+#define GREEN "\f0"
+#define BLUE "\f1"
+#define YELLOW "\f2"
+#define RED "\f3"
+#define GREY "\f4"
+#define MAGENTA "\f5"
+#define ORANGE "\f6"
+
 #endif
+

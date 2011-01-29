@@ -90,9 +90,13 @@ static void reload_hopmod_now()
     close_listenserver_slot.block();  // block close_listenserver_slot to keep clients connected
     signal_shutdown(SHUTDOWN_RELOAD);
     close_listenserver_slot.unblock();
-
-    disconnect_all_slots();
-
+    
+    signal_started.disconnect_all_slots();
+    signal_shutdown.disconnect_all_slots();
+    signal_shutdown_scripting.disconnect_all_slots();
+    signal_reloadhopmod.disconnect_all_slots();
+    signal_maintenance.disconnect_all_slots();
+    
     init_hopmod();
     server::started();
     std::cout<<"-> Reloaded Hopmod."<<std::endl;
