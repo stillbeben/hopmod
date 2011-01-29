@@ -26,6 +26,7 @@ static const char * UDP_SOCKET_MT = "lnetlib_udp_socket";
 static const char * LOCAL_SOCKET_MT = "lnetlib_local_socket";
 static const char * LOCAL_ACCEPTOR_MT = "lnetlib_local_acceptor";
 static const char * LOCAL_SOCKET_CLIENT_MT = "lnetlib_local_client";
+static const char * FILE_STREAM_MT = "lnetlib_file_stream";
 
 static lua_State * lua_state;
 static io_service * main_io;
@@ -1670,6 +1671,178 @@ int create_local_client(lua_State * L)
     return 1;
 }
 
+static int file_stream_gc(lua_State * L)
+{
+    posix::stream_descriptor * file_stream = reinterpret_cast<posix::stream_descriptor *>(lua_aux_checkobject(L, 1, FILE_STREAM_MT));
+    file_stream->~basic_stream_descriptor();
+    return 0;
+}
+
+void file_stream_async_read_until_handler(lua_State * L, 
+    streambuf * buffer, int function_ref, const boost::system::error_code& ec, 
+    std::size_t bytes_transferred)
+{
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L!=lua_state) return;
+    #endif
+    
+    L = lua_state;
+    
+    lua_rawgeti(L, LUA_REGISTRYINDEX, function_ref);
+    luaL_unref(L, LUA_REGISTRYINDEX, function_ref);
+    
+    if(!ec)
+    {
+        lua_pushlstring(L, boost::asio::buffer_cast<const char *>(*buffer->data().begin()), bytes_transferred);
+        buffer->consume(bytes_transferred);
+        lua_pushnil(lua_state);
+    }
+    else
+    {
+        lua_pushnil(L);
+        lua_pushstring(L, ec.message().c_str());
+    }
+    
+    if(lua_pcall(L, 2, 0, 0) != 0)
+         event_listeners().log_error("file_stream_async_read_until", lua_tostring(L, -1));
+    
+    delete buffer;
+}
+
+static int file_stream_async_read_until(lua_State * L)
+{
+    posix::stream_descriptor * file_stream = reinterpret_cast<posix::stream_descriptor *>(lua_aux_checkobject(L, 1, FILE_STREAM_MT));
+    
+    const char * delim = luaL_checkstring(L, 2);
+    
+    luaL_checktype(L, 3, LUA_TFUNCTION);
+    lua_pushvalue(L, 3);
+    int function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    streambuf * buffer = new streambuf;
+    
+    async_read_until(*file_stream, *buffer, delim, 
+        boost::bind(file_stream_async_read_until_handler, L, buffer, function_ref, _1, _2));
+    
+    return 0;
+}
+
+static void file_stream_async_read_some_handler(lua_State * L, int function_ref, char * char_buffer,
+    const boost::system::error_code& error, std::size_t bytes_transferred)
+{
+    #ifndef DISABLE_RELOADSCRIPTS
+    if(L!=lua_state) return;
+    #endif
+    
+    L = lua_state;
+    
+    lua_rawgeti(L, LUA_REGISTRYINDEX, function_ref);
+    luaL_unref(L, LUA_REGISTRYINDEX, function_ref);
+    
+    if(!error)
+    {
+        lua_pushlstring(L, char_buffer, bytes_transferred);
+        lua_pushnil(lua_state);
+    }
+    else
+    {
+        lua_pushnil(L);
+        lua_pushstring(L, error.message().c_str());
+    }
+    
+    if(lua_pcall(L, 2, 0, 0) != 0)
+         event_listeners().log_error("file_stream_async_read_some", lua_tostring(L, -1));
+    
+    delete [] char_buffer;
+}
+
+static int file_stream_async_read_some(lua_State * L)
+{
+    posix::stream_descriptor * file_stream = reinterpret_cast<posix::stream_descriptor *>(lua_aux_checkobject(L, 1, FILE_STREAM_MT));
+    
+    int max_length = luaL_checkint(L, 2);
+    
+    luaL_checktype(L, 3, LUA_TFUNCTION);
+    lua_pushvalue(L, 3);
+    int function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    
+    char * char_buffer;
+    try
+    {
+        char_buffer = new char[max_length];
+    }
+    catch(std::bad_alloc)
+    {
+        luaL_error(L, "memory allocation error");
+    }
+    
+    file_stream->async_read_some(buffer(char_buffer, max_length), boost::bind(file_stream_async_read_some_handler, L, function_ref, char_buffer, _1, _2));
+    
+    return 0;
+}
+
+static int file_stream_cancel(lua_State * L)
+{
+    posix::stream_descriptor * file_stream = reinterpret_cast<posix::stream_descriptor *>(lua_aux_checkobject(L, 1, FILE_STREAM_MT));
+    try
+    {
+        file_stream->cancel();
+    }
+    catch(const boost::system::system_error & error)
+    {
+        return luaL_argerror(L, 2, error.code().message().c_str());
+    }
+    return 0;
+}
+
+
+static int file_stream_close(lua_State * L)
+{
+    posix::stream_descriptor * file_stream = reinterpret_cast<posix::stream_descriptor *>(lua_aux_checkobject(L, 1, FILE_STREAM_MT));
+    try
+    {
+        file_stream->close();
+    }
+    catch(const boost::system::system_error & error)
+    {
+        return luaL_argerror(L, 2, error.code().message().c_str());
+    }
+    return 0;
+}
+
+void create_file_stream_metatable(lua_State * L)
+{
+    luaL_newmetatable(L, FILE_STREAM_MT);
+    lua_pushvalue(L, -1);
+    
+    static luaL_Reg funcs[] = {
+        {"__gc", file_stream_gc},
+        {"async_read_until", file_stream_async_read_until},
+        {"async_read_some", file_stream_async_read_some},
+        {"cancel", file_stream_cancel},
+        {"close", file_stream_close},
+        {NULL, NULL}
+    };
+    
+    luaL_register(L, NULL, funcs);
+    
+    lua_setfield(L, -1, "__index");
+    lua_pop(L, 1);
+}
+
+static int create_file_stream(lua_State * L)
+{
+    int fd = luaL_checkint(L, 1);
+    posix::stream_descriptor * file_stream = new (lua_newuserdata(L, sizeof(posix::stream_descriptor))) posix::stream_descriptor(*main_io, fd);
+    luaL_getmetatable(L, FILE_STREAM_MT);
+    lua_setmetatable(L, -2);
+    
+    posix::stream_descriptor::non_blocking_io command(true);
+    file_stream->io_control(command);
+    
+    return 1;
+}
+
 class netmask_wrapper:public hopmod::ip::address_prefix
 {
 public:
@@ -1891,6 +2064,7 @@ void open_net(lua_State * L)
     create_local_acceptor_metatable(lua_state);
     create_local_socket_metatable(lua_state);
     create_local_socket_client_metatable(lua_state);
+    create_file_stream_metatable(lua_state);
     
     netmask_wrapper::register_class(lua_state);
     netmask_table::register_class(lua_state);
@@ -1905,6 +2079,7 @@ void open_net(lua_State * L)
         {"buffer", create_buffer},
         {"ipmask", netmask_wrapper::create_object},
         {"ipmask_table", netmask_table::create_object},
+        {"file_stream", create_file_stream},
         {NULL, NULL}
     };
     
