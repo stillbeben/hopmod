@@ -154,14 +154,25 @@ void event_environment::add_listener(const char * event_id, lua_CFunction functi
     add_listener(event_id);
 }
 
-void event_environment::clear_listeners(const char * event_id)
+void event_environment::clear_listeners(const event_base & event)
 {
     lua_State * L = m_state;
+    
     lua_rawgeti(L, LUA_REGISTRYINDEX, m_text_id_index);
-    lua_pushstring(L, event_id);
+    
     lua_newtable(L);
+    
+    lua_pushstring(L, event.text_id());
+    lua_pushvalue(L, -2);
+    lua_settable(L, -4);
+    
+    lua_rawgeti(L, LUA_REGISTRYINDEX, m_numeric_id_index);
+    
+    lua_pushinteger(L, event.numeric_id());
+    lua_pushvalue(L, -3);
     lua_settable(L, -3);
-    lua_pop(L, 1);
+    
+    lua_pop(L, 2);
 }
 
 lua_State * event_environment::lua_state()

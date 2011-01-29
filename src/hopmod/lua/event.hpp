@@ -33,7 +33,7 @@ public:
     void log_error(const char * text_id, const char * message);
     void add_listener(const char * event_id);
     void add_listener(const char * event_id, lua_CFunction);
-    void clear_listeners(const char * event_id);
+    void clear_listeners(const event_base &);
     lua_State * lua_state();
 private:
     lua_State * m_state;
