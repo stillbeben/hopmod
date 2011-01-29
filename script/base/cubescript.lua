@@ -37,6 +37,7 @@ library.global = function(name, value)
     core.vars[name] = function(value)
         if value then
             property_value = value
+            event_listener.trigger_event("varchanged", name)
             return value
         else
             return property_value

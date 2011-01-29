@@ -160,6 +160,15 @@ end)
 server.event_handler("varchanged", function(name)
     if not after_startup then return end
     local message = string.format("Changed %s to %s", name, tostring(server[name]))
+    
+    local censored_var = {
+        admin_password = true
+    }
+
+    if censored_var[name] then
+        message = "Changed " .. name
+    end
+        
     log(message)
     server.log_status(message)
 end)
