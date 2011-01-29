@@ -4,14 +4,9 @@
 
 #include "game.h"
 
-#include "hopmod/extapi.hpp"
 #include "hopmod/hopmod.hpp"
-#include "hopmod/utils.hpp"
-#include "hopmod/events.hpp"
+#include "hopmod/extapi.hpp"
 lua::event_environment & event_listeners();
-
-#include <fungu/script/error.hpp>
-#include <fungu/script/lexical_cast.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/asio.hpp>
@@ -25,12 +20,6 @@ boost::asio::io_service & get_main_io_service();
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
 
 namespace game
 {         
@@ -568,7 +557,7 @@ namespace server
     clientinfo * get_ci(int cn)
     {
         clientinfo * ci = getinfo(cn);
-        if(!ci) throw fungu::script::error(fungu::script::OPERATION_ERROR,boost::make_tuple(std::string("invalid cn")));
+        luaL_error(get_lua_state(), "invalid cn");
         return ci;
     }
     
