@@ -23,10 +23,16 @@ setmetatable(server,{
         local existing_property = properties[key]
         
         if existing_property and type(existing_property) == "function" then
-            return existing_property(value)
+            existing_property(value)
         end
         
         core[key] = value
     end
 });
+
+server.event_handler = event_listener.add
+server.cancel_handler = event_listener.remove
+server.cancel_handlers = event_listener.clear_all
+server.create_event_signal = event_listener.create_event
+server.cancel_event_signal = event_listener.destroy_event
 

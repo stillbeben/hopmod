@@ -44,12 +44,13 @@ local function destroy_event(event_id)
     event[event_id] = nil
 end
 
-server.event_handler = add_listener
-server.cancel_handler = remove_listener
-server.cancel_handlers = clear_listeners
-
-server.create_event_signal = create_event
-server.cancel_event_signal = destroy_event
+event_listener = {
+    add = add_listener,
+    remove = remove_listener,
+    clear_all = clear_listeners,
+    create_event = create_event,
+    destroy_event = destroy_event
+}
 
 on = add_listener
 

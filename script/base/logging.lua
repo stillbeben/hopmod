@@ -1,6 +1,7 @@
 require "geoip"
 dofile("script/base/logging_base.lua")
 
+local after_startup = false
 local log = server.log
 
 local function log_usednames(cn)
@@ -143,6 +144,10 @@ server.event_handler("mapcrcfail", function(cn)
     log_usednames(cn)
 end)
 
+server.event_handler("started", function()
+    after_startup = true
+end)
+
 server.event_handler("shutdown", function(shutdown_type)
     
     if shutdown_type == server.SHUTDOWN_NORMAL then
@@ -150,6 +155,13 @@ server.event_handler("shutdown", function(shutdown_type)
     elseif shutdown_type == server.SHUTDOWN_RESTART then
         log("server restarting")
     end
+end)
+
+server.event_handler("varchanged", function(name)
+    if not after_startup then return end
+    local message = string.format("Changed %s to %s", name, tostring(server[name]))
+    log(message)
+    server.log_status(message)
 end)
 
 if server.reloaded then

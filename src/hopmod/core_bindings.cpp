@@ -211,6 +211,7 @@ static int variable_accessor(lua_State * L)
     {
         if(READ_ONLY) luaL_error(L, "variable is read-only");
         *var = lua::to(L, 1, lua::return_tag<T>());
+        event_varchanged(event_listeners(), boost::make_tuple(lua_tostring(L, lua_upvalueindex(2))));
         return 0;
     }
     else // Get variable
@@ -229,6 +230,7 @@ static int string_accessor(lua_State * L)
     {
         if(READ_ONLY) luaL_error(L, "variable is read-only");
         copystring(var, lua_tostring(L, 1));
+        event_varchanged(event_listeners(), boost::make_tuple(lua_tostring(L, lua_upvalueindex(2))));
         return 0;
     }
     else // Get variable
@@ -244,7 +246,8 @@ static void bind_var(lua_State * L, int table, const char * name, T & var)
 {
     lua_pushstring(L, name);
     lua_pushlightuserdata(L, &var);
-    lua_pushcclosure(L, variable_accessor<T, false, false>, 1);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, variable_accessor<T, false, false>, 2);
     lua_settable(L, table);
 }
 
@@ -252,7 +255,8 @@ static void bind_var(lua_State * L, int table, const char * name, string var)
 {
     lua_pushstring(L, name);
     lua_pushlightuserdata(L, var);
-    lua_pushcclosure(L, string_accessor<false, false>, 1);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, string_accessor<false, false>, 2);
     lua_settable(L, table);
 }
 
@@ -261,7 +265,8 @@ static void bind_ro_var(lua_State * L, int table, const char * name, T & var)
 {
     lua_pushstring(L, name);
     lua_pushlightuserdata(L, &var);
-    lua_pushcclosure(L, variable_accessor<T, true, false>, 1);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, variable_accessor<T, true, false>, 2);
     lua_settable(L, table);
 }
 
@@ -269,7 +274,8 @@ static void bind_ro_var(lua_State * L, int table, const char * name, string var)
 {
     lua_pushstring(L, name);
     lua_pushlightuserdata(L, var);
-    lua_pushcclosure(L, string_accessor<true, false>, 1);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, string_accessor<true, false>, 2);
     lua_settable(L, table);
 }
 
@@ -278,7 +284,8 @@ static void bind_wo_var(lua_State * L, int table, const char * name, T & var)
 {
     lua_pushstring(L, name);
     lua_pushlightuserdata(L, &var);
-    lua_pushcclosure(L, variable_accessor<T, false, true>, 1);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, variable_accessor<T, false, true>, 2);
     lua_settable(L, table);
 }
 
@@ -286,7 +293,8 @@ static void bind_wo_var(lua_State * L, int table, const char * name, string var)
 {
     lua_pushstring(L, name);
     lua_pushlightuserdata(L, var);
-    lua_pushcclosure(L, string_accessor<false, true>, 1);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, string_accessor<false, true>, 2);
     lua_settable(L, table);
 }
 
@@ -299,6 +307,7 @@ static int property_accessor(lua_State * L)
     {
         if(!set) luaL_error(L, "cannot set value");
         set(lua::to(L, 1, lua::return_tag<T>()));
+        event_varchanged(event_listeners(), boost::make_tuple(lua_tostring(L, lua_upvalueindex(3))));
         return 0;
     }
     else
@@ -315,7 +324,8 @@ static void bind_prop(lua_State * L, int table, const char * name, T (* get)(), 
     lua_pushstring(L, name);
     lua_pushlightuserdata(L, reinterpret_cast<void *>(get));
     lua_pushlightuserdata(L, reinterpret_cast<void *>(set));
-    lua_pushcclosure(L, property_accessor<T>, 2);
+    lua_pushstring(L, name);
+    lua_pushcclosure(L, property_accessor<T>, 3);
     lua_settable(L, table);
 }
 
