@@ -54,7 +54,7 @@ void init_hopmod()
     init_scheduler();
     init_lua();
     
-    static const char * INIT_SCRIPT = "script/base/new-init.lua";
+    static const char * INIT_SCRIPT = "script/base/init.lua";
     
     lua_State * L = get_lua_state();
     if(luaL_loadfile(L, INIT_SCRIPT) == 0)
