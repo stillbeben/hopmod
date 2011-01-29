@@ -348,7 +348,7 @@ void bind_core_variables(lua_State * L, int T)
     bind_var(L, T, "reassignteams", server::reassignteams);
     bind_prop<int>(L, T, "playercount", server::getplayercount, NULL);
     bind_prop<int>(L, T, "speccount", server::getspeccount, NULL);
-    bind_prop<int>(L, T, "gotcount", server::getbotcount, NULL);
+    bind_prop<int>(L, T, "botcount", server::getbotcount, NULL);
     bind_var(L, T, "botlimit", server::aiman::botlimit);
     bind_var(L, T, "botbalance", server::aiman::botbalance);
     bind_prop<const char *>(L, T, "gamemode", server::gamemodename, NULL);
