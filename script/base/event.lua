@@ -53,10 +53,6 @@ local function create_event(event_id)
     
     return function(...)
         trigger_event(event_id, unpack(arg))
-        local listeners = event[event_id]
-        for _, listener in pairs(listeners) do
-            listener(unpack(arg))
-        end
     end
 end
 
