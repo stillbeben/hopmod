@@ -25,6 +25,11 @@ void init_scheduler();
 void update_scheduler(int);
 void sched_callback(int (*)(void *),void *);
 void sched_callback(int (*)(void *),void *, int);
+void cancel_timer(int);
+namespace lua{
+int sleep(lua_State *);
+int interval(lua_State *L);
+} //namespace lua
 
 extern unsigned int maintenance_frequency;
 void set_maintenance_frequency(unsigned int);

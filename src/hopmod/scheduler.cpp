@@ -6,11 +6,9 @@
 #include "hopmod.hpp"
 #include "lib/free_function_scheduler.hpp"
 
-static free_function_scheduler free_scheduled;
+#include <iostream>
 
-static int sched_free_lua_function(lua_State * L, bool);
-int sched_free_lua_sleep(lua_State *);
-int sched_free_lua_interval(lua_State *);
+static free_function_scheduler free_scheduled;
 void cancel_timer(int);
 static void cancel_free_scheduled(int);
 
@@ -23,6 +21,8 @@ void cancel_free_scheduled(int)
 {
     free_scheduled.cancel_all();
 }
+
+namespace lua{
 
 static int call_scheduled_function(lua_State * L, int function_ref, bool repeat)
 {
@@ -39,28 +39,27 @@ static int call_scheduled_function(lua_State * L, int function_ref, bool repeat)
         if(event_interval(listeners, boost::make_tuple()))
             status = -1;
          
-        listeners.clear_listeners("interval");
+        listeners.clear_listeners(event_interval);
     }
     else
-    {
+    {   
         listeners.add_listener("sleep");
         event_sleep(listeners, boost::make_tuple());
         
-        listeners.clear_listeners("sleep");
+        listeners.clear_listeners(event_sleep);
         luaL_unref(L, LUA_REGISTRYINDEX, function_ref);
     }
     
     return status;
 }
 
-int sched_free_lua_function(lua_State * L, bool repeat)
+static int schedule_callback(lua_State * L, bool repeat)
 {
     int countdown = luaL_checkint(L, 1);
     
     luaL_checktype(L, 2, LUA_TFUNCTION);
-    lua_pushvalue(L, 2);
     
-    int function_ref = luaL_ref(L, LUA_REGISTRYINDEX);    
+    int function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
     
     int id = free_scheduled.schedule(boost::bind(&call_scheduled_function, L, function_ref, repeat), countdown, repeat);
     
@@ -68,15 +67,17 @@ int sched_free_lua_function(lua_State * L, bool repeat)
     return 1;
 }
 
-int sched_free_lua_sleep(lua_State * L)
+int sleep(lua_State * L)
 {
-    return sched_free_lua_function(L, false);
+    return schedule_callback(L, false);
 }
 
-int sched_free_lua_interval(lua_State * L)
+int interval(lua_State * L)
 {
-    return sched_free_lua_function(L, true);
+    return schedule_callback(L, true);
 }
+
+} //namespace lua
 
 void sched_callback(int (* fun)(void *),void * closure)
 {
@@ -98,3 +99,4 @@ void cancel_timer(int job_id)
 {
     free_scheduled.cancel(job_id);
 }
+
