@@ -1833,12 +1833,30 @@ void create_file_stream_metatable(lua_State * L)
 static int create_file_stream(lua_State * L)
 {
     int fd = luaL_checkint(L, 1);
-    posix::stream_descriptor * file_stream = new (lua_newuserdata(L, sizeof(posix::stream_descriptor))) posix::stream_descriptor(*main_io, fd);
+    
+    posix::stream_descriptor * file_stream;
+    
+    try
+    {
+        file_stream = new (lua_newuserdata(L, sizeof(posix::stream_descriptor))) posix::stream_descriptor(*main_io, fd);
+    }
+    catch(const boost::system::system_error & error)
+    {
+        return luaL_error(L, "%s", error.code().message().c_str());
+    }
+    
     luaL_getmetatable(L, FILE_STREAM_MT);
     lua_setmetatable(L, -2);
     
-    posix::stream_descriptor::non_blocking_io command(true);
-    file_stream->io_control(command);
+    try
+    {
+        posix::stream_descriptor::non_blocking_io command(true);
+        file_stream->io_control(command);
+    }
+    catch(const boost::system::system_error & error)
+    {
+        return luaL_error(L, "%s", error.code().message().c_str());
+    }
     
     return 1;
 }
