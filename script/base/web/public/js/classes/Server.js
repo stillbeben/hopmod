@@ -187,7 +187,12 @@ Server.prototype.executeCommand = function(commandLine, responseHandler){
 Server.prototype.makeCommand = function(){
     var commandLine = "";
     for(var i = 0; i < arguments.length; i++){
-        commandLine += (i > 0 ? " " : "") + "[" + arguments[i] + "]";
+        var argument = arguments[i];
+        if(argument.match(/[\r\n ;$@\/#"]/m)){
+            argument = argument.replace(/([\r\n"])/gm, "\\$1");
+            argument = "\"" + argument + "\"";
+        }
+        commandLine += (i > 0 ? " " : "") + argument;
     }
     return commandLine;
 }
