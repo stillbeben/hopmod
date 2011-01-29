@@ -166,6 +166,27 @@ static int on_runtime_error(lua_State * L)
     return 1;
 }
 
+static void process_error_value(lua_State * L, int bottom)
+{
+    const char * error_message_c_str = NULL;
+    
+    if(lua_type(L, -1) == LUA_TTABLE)
+    {
+        lua_pushinteger(L, 1);
+        lua_gettable(L, -2);
+    }
+    
+    error_message_c_str = lua_tostring(L, -1);
+    
+    std::string error_message;
+    if(error_message_c_str)
+        error_message = error_message_c_str;
+    
+    lua_pop(L, lua_gettop(L) - bottom);
+    
+    throw command_error(error_message);
+}
+
 void lua_command_stack::call(std::size_t index)
 {
     std::size_t top = lua_gettop(m_state);
@@ -182,26 +203,7 @@ void lua_command_stack::call(std::size_t index)
     
     lua_remove(m_state, 1);
     
-    if(status != 0)
-    {
-        const char * error_message_c_str = NULL;
-        
-        if(lua_type(m_state, -1) == LUA_TTABLE)
-        {
-            lua_pushinteger(m_state, 1);
-            lua_gettable(m_state, -2);
-        }
-        
-        error_message_c_str = lua_tostring(m_state, -1);
-        
-        std::string error_message;
-        if(error_message_c_str)
-            error_message = error_message_c_str;
-        
-        lua_pop(m_state, lua_gettop(m_state) - index);
-        
-        throw command_error(error_message);
-    }
+    if(status != 0) process_error_value(m_state, index);
 }
 
 namespace lua{
@@ -369,7 +371,7 @@ void proxy_command_stack::call(std::size_t index)
     lua_pushinteger(m_state, index);
     
     if(::lua::pcall(m_state, 1, 0) != 0)
-        throw command_error("internal error in call command");
+        process_error_value(m_state, lua_gettop(m_state));
 }
 
 const char * proxy_command_stack::CLASS_NAME = "command_stack";
