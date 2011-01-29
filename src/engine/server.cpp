@@ -571,22 +571,28 @@ void serverhost_process_event(ENetEvent & event)
     }
 }
 
+
+void serverhost_input(boost::system::error_code error,const size_t s);
+
 void service_serverhost()
 {
     ENetEvent event;
-    while(enet_host_service(serverhost, &event, 0) == 1)
+    
+    int status;
+    while((status = enet_host_service(serverhost, &event, 0)) == 1)
     {
         serverhost_process_event(event);
     }
     
     if(server::sendpackets()) enet_host_flush(serverhost); //treat EWOULDBLOCK as packet loss
+    
+    if(status != -1) serverhost_socket.async_receive(null_buffers(), serverhost_input);
 }
 
 void serverhost_input(boost::system::error_code error,const size_t s)
 {
     if(error) return;
     service_serverhost();
-    serverhost_socket.async_receive(null_buffers(), serverhost_input);
 }
 
 void serverinfo_input(int fd)
