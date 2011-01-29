@@ -557,7 +557,7 @@ namespace server
     clientinfo * get_ci(int cn)
     {
         clientinfo * ci = getinfo(cn);
-        luaL_error(get_lua_state(), "invalid cn");
+        if(!ci) luaL_error(get_lua_state(), "invalid cn");
         return ci;
     }
     
