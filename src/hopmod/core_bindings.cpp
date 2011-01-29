@@ -88,7 +88,6 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "player_bots", server::player_bots);
     bind_function(L, T, "player_rank", server::player_rank);
     bind_function(L, T, "player_isbot", server::player_isbot);
-    bind_function(L, T, "player_mapcrc", server::player_mapcrc);
     bind_function(L, T, "player_pos", (std::vector<float>(*)(int))server::player_pos);
     bind_function(L, T, "player_freeze", server::player_freeze);
     bind_function(L, T, "player_unfreeze", server::player_unfreeze);

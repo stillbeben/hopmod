@@ -400,8 +400,6 @@ bool player_changeteam(int cn,const char * newteam)
 int player_rank(int cn){return get_ci(cn)->rank;}
 bool player_isbot(int cn){return get_ci(cn)->state.aitype != AI_NONE;}
 
-int player_mapcrc(int cn){return get_ci(cn)->mapcrc;}
-
 void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);

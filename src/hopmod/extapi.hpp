@@ -107,7 +107,6 @@ namespace server
     void set_player_private_admin(int);
     void set_player_private_master(int);
     void unset_player_privilege(int);
-    int player_mapcrc(int);
     void set_player_privilege(int, int);
     void player_freeze(int);
     void player_unfreeze(int);
