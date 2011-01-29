@@ -146,6 +146,8 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "sleep", sched_free_lua_sleep);
     bind_function(L, T, "interval", sched_free_lua_interval);
     bind_function(L, T, "cancel_timer", cancel_timer);
+    
+    bind_function(L, T, "log_event_error", log_event_error);
 }
 
 template<int Constant>

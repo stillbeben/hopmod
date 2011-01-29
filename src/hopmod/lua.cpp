@@ -148,3 +148,8 @@ int on_error(lua_State * L)
     return 1;
 }
 
+void log_event_error(const char * event_id, const char * error_message)
+{
+    event_listeners().log_error(event_id, error_message);
+}
+

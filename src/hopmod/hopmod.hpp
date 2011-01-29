@@ -15,6 +15,7 @@ void init_lua();
 void shutdown_lua();
 lua_State * get_lua_state();
 lua::event_environment & event_listeners();
+void log_event_error(const char * event_id, const char * error_message);
 
 int get_player_id(const char * name, unsigned long ip);
 void clear_player_ids();
