@@ -2,7 +2,7 @@
 local connections = {}
 
 local function add_listener(event_id, listener_function)
-
+    
     local listeners = event[event_id]
 
     if not listeners then
@@ -28,11 +28,31 @@ local function clear_listeners()
     end
 end
 
+local function trigger_event(event_id, ...)
+
+    local listeners = event[event_id]
+    if not listeners then return end
+    
+    local prevent_default = false
+    
+    for _, listener in pairs(listeners) do
+        local pcall_status, result = pcall(listener, unpack(arg))
+        if not pcall_status then
+            server.log_event_error(event_id, result or "unknown error")
+        else
+            prevent_default = prevent_default or (result == true)
+        end
+    end
+    
+    return prevent_default
+end
+
 local function create_event(event_id)
     
     event[event_id] = {}
     
     return function(...)
+        trigger_event(event_id, unpack(arg))
         local listeners = event[event_id]
         for _, listener in pairs(listeners) do
             listener(unpack(arg))
@@ -49,7 +69,8 @@ event_listener = {
     remove = remove_listener,
     clear_all = clear_listeners,
     create_event = create_event,
-    destroy_event = destroy_event
+    destroy_event = destroy_event,
+    trigger_event = trigger_event
 }
 
 on = add_listener
