@@ -3,6 +3,7 @@ add_subdirectory(lua)
 add_subdirectory(boost)
 add_subdirectory(fungu)
 add_subdirectory(lsqlite3-7)
+add_subdirectory(hopmod/standalone/luapp)
 add_subdirectory(authserver EXCLUDE_FROM_ALL)
 add_subdirectory(luasql EXCLUDE_FROM_ALL)
 
@@ -32,7 +33,7 @@ include_directories(
     ${BOOST_INCLUDE_DIRS}
     ${FUNGU_INCLUDE_DIRS})
 
-add_definitions(-Wall -DSTANDALONE -DHOPMOD_GAMESERVER_EVENTS ${LSQLITE3_DEFINITIONS})
+add_definitions(-Wall -DSTANDALONE ${LSQLITE3_DEFINITIONS})
 
 set(SCRIPTING_LIBRARIES ${LUA_LIBRARY} ${FUNGU_STRING_LIBRARY})
 
@@ -69,16 +70,10 @@ target_link_libraries(lua_modules -lGeoIP -pthread sauertools ${SCRIPTING_LIBRAR
 add_library(serverscripting STATIC hopmod/scripting.cpp hopmod/signals.cpp)
 target_link_libraries(serverscripting lua_modules ${BOOST_SIGNALS_LIBRARY} ${BOOST_SYSTEM_LIBRARY} ${SCRIPTING_LIBRARIES})
 
-#add_library(scriptpipe STATIC hopmod/script_pipe.cpp)
-#target_link_libraries(scriptpipe serverscripting)
-
 SET(GAME_SERVER_SOURCES
     engine/server.cpp
     fpsgame/server.cpp
     hopmod/startup.cpp
-    hopmod/scripting.cpp
-    #hopmod/script_pipe.cpp
-    hopmod/parse_player_command.cpp
     hopmod/scheduler.cpp
     hopmod/playerid.cpp
     hopmod/restarter.cpp
@@ -98,9 +93,6 @@ target_link_libraries(sauer_server sauertools serverscripting lua_modules ${BOOS
 
 add_executable(keygen hopmod/standalone/keygen.cpp)
 target_link_libraries(keygen sauertools)
-
-#add_executable(luapp hopmod/standalone/luapp.cpp)
-#target_link_libraries(luapp ${LUA_LIBRARY} ${BOOST_SYSTEM_LIBRARY} lua_modules -lrt)
 
 add_executable(monitor hopmod/standalone/monitor.cpp hopmod/lib/program_arguments.cpp)
 

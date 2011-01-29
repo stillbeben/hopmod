@@ -20,11 +20,12 @@ void init_lua()
     
     load_extra_os_functions(L);
     
+#ifndef NO_CORE_TABLE
     lua_newtable(L);
     int core_table = lua_gettop(L);
     
     bind_core_functions(L, core_table);
-    
+
     lua_pushliteral(L, "vars");
     lua_newtable(L);
     int vars_table = lua_gettop(L);
@@ -34,10 +35,14 @@ void init_lua()
     
     lua_settable(L, -3); // Add vars table to core table
     lua_setglobal(L, "core"); // Add core table to global table
+#endif
     
     event_environment = new lua::event_environment(L, NULL, on_error);
+
+#ifndef NO_EVENTS
     register_event_idents(*event_environment); // Setup and populate the event table
-    
+#endif
+
     load_lua_modules();
 }
 

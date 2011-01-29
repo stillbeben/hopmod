@@ -16,9 +16,6 @@ void push(lua_State * L, __uid_t value);
 #include <vector>
 #include <string>
 
-// Functions prototypes that don't belong to any header files
-std::vector<std::string> parse_player_command_line(const char *);
-
 /*
     Lua value io functions for cube2 types
 */
@@ -139,8 +136,6 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "shutdown", server::shutdown);
     bind_function(L, T, "restart_now", restart_now);
     bind_function(L, T, "reloadscripts", reload_hopmod);
-    
-    bind_function(L, T, "parse_player_command", parse_player_command_line);
     
     bind_function(L, T, "file_exists", file_exists);
     bind_function(L, T, "dir_exists", dir_exists);

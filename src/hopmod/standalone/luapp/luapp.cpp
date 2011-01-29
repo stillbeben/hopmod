@@ -1,36 +1,16 @@
+#include <lua.hpp>
+#include "lua/modules.hpp"
+#include "lua/event.hpp"
+#include "hopmod.hpp"
 #include <iostream>
-#include <fungu/script.hpp>
-using namespace fungu;
 #include <boost/asio.hpp>
 using namespace boost::asio;
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
-#include "lua/modules.hpp"
-
-extern "C"{
-int lua_packlibopen(lua_State *L);
-}
 
 static io_service main_io_service;
-static lua_State * L = NULL;
-static script::env cubescript_env;
 
 io_service & get_main_io_service()
 {
     return main_io_service;
-}
-
-void report_script_error(const char * msg)
-{
-    std::cerr<<msg<<std::endl;
-}
-
-script::env & get_script_env()
-{
-    return cubescript_env;
 }
 
 int main(int argc, char ** argv)
@@ -43,16 +23,8 @@ int main(int argc, char ** argv)
     
     const char * script = argv[1];
     
-    L = luaL_newstate();
-    luaL_openlibs(L);
-    
-    lua::module::open_net(L);
-    lua::module::open_timer(L);
-    lua::module::open_crypto(L);
-    lua::module::open_cubescript(L);
-    lua::module::open_geoip(L);
-    lua::module::open_filesystem(L);
-    lua_packlibopen(L);
+    init_lua();
+    lua_State * L = get_lua_state();
     
     switch(luaL_loadfile(L, script))
     {
@@ -94,3 +66,4 @@ int main(int argc, char ** argv)
     
     return 0;
 }
+
