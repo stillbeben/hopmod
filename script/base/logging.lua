@@ -158,17 +158,25 @@ server.event_handler("shutdown", function(shutdown_type)
 end)
 
 server.event_handler("varchanged", function(name)
+
     if not after_startup then return end
     local message = string.format("Changed %s to %s", name, tostring(server[name]))
     
-    local censored_var = {
+    local censored = {
         admin_password = true
     }
+    
+    local hide = {
+        next_mode = true,
+        next_map = true
+    }
 
-    if censored_var[name] then
+    if hide[name] then return end
+    
+    if censored[name] then
         message = "Changed " .. name
     end
-        
+    
     log(message)
     server.log_status(message)
 end)
