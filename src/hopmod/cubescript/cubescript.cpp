@@ -79,13 +79,6 @@ static const token_id symbols[] =
     ERROR, ERROR, ERROR, ERROR, ERROR, ERROR, ERROR, ERROR};
 } //namespace expression
 
-enum word_type{
-    WORD_INTEGER = 0,
-    WORD_REAL    = 1,
-    WORD_STRING  = 2
-};
-
-
 static void throw_unexpected(char c, const char * where)
 {
     char buf[2];
@@ -122,11 +115,29 @@ static void throw_unexpected(char c, const char * where)
     throw parse_error(format.str());
 }
 
+enum word_type{
+    WORD_INTEGER = 0,
+    WORD_REAL    = 1,
+    WORD_STRING  = 2
+};
+
+enum parse_number_state
+{
+    NAN = 0,
+    START_NUMBER,
+    INTEGER,
+    REAL,
+    START_EXPONENT,
+    EXPONENT_DIGITS
+};
+
 void eval_word(const char ** source_begin, 
                const char * source_end, command_stack & command)
 {
     const char * start = *source_begin;
+    
     word_type type = WORD_INTEGER;
+    parse_number_state number_parsing_stage = START_NUMBER;
     
     for(const char * cursor = start; cursor != source_end; cursor++)
     {
@@ -141,6 +152,8 @@ void eval_word(const char ** source_begin,
             
             if(token_id != expression::ERROR && cursor != start) 
             {
+                if(number_parsing_stage == NAN) type = WORD_STRING;
+                
                 switch(type)
                 {
                     case WORD_INTEGER:
@@ -171,12 +184,37 @@ void eval_word(const char ** source_begin,
             }
         }
         
-        if(type != WORD_STRING && !(c >= '0' && c <= '9') && c != '-' &&
-          (cursor == *source_begin || c != 'e'))
+        switch(number_parsing_stage)
         {
-            if(c == '.') type = WORD_REAL;
-            else type = WORD_STRING;
+            case START_NUMBER:
+                number_parsing_stage = ((c >= '0' && c <= '9') || c == '-' ? INTEGER : NAN);
+                break;
+            case INTEGER:
+                if(c >= '0' && c <= '9') break;
+                if(c == '.')
+                {
+                    number_parsing_stage = REAL;
+                    type = WORD_REAL;
+                }
+                else if(c == 'e' || c == 'E')
+                    number_parsing_stage = START_EXPONENT;
+                else number_parsing_stage = NAN;
+                break;
+            case REAL:
+                if(c >= '0' && c <= '9') break;
+                number_parsing_stage = (c == 'e' || c == 'E' ? START_EXPONENT : NAN);
+                break;
+            case START_EXPONENT:
+                number_parsing_stage = 
+                    ((c >='0' && c<='9') || c== '-' || c=='+' ? EXPONENT_DIGITS : NAN);
+                break;
+            case EXPONENT_DIGITS:
+                if(!(c >= '0' && c <= '9')) 
+                    number_parsing_stage = NAN;
+                break;
+            default:;
         }
+        
     }
     
     *source_begin = source_end;
