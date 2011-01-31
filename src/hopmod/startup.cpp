@@ -73,13 +73,6 @@ void init_hopmod()
 
 static void reload_hopmod_now()
 {
-    if(get_num_async_resolve_operations())
-    {
-        //Reload scripts delayed due to pending async resolve operations. Rescheduling reload...
-        get_main_io_service().post(reload_hopmod_now);
-        return;
-    }
-
     signal_reloadhopmod();
     event_reloadhopmod(event_listeners(), boost::make_tuple());
 
@@ -91,7 +84,6 @@ static void reload_hopmod_now()
     signal_shutdown(SHUTDOWN_RELOAD);
     close_listenserver_slot.unblock();
     
-    signal_started.disconnect_all_slots();
     signal_shutdown.disconnect_all_slots();
     signal_shutdown_scripting.disconnect_all_slots();
     signal_reloadhopmod.disconnect_all_slots();
@@ -125,14 +117,6 @@ namespace server{
 
 void started()
 {
-    /*
-        Startup the serverexec named pipe service. The service runs by polling
-        from update_hopmod().
-    */
-    //init_script_pipe();
-    //open_script_pipe("serverexec",511,get_script_env());
-
-    signal_started();
     event_started(event_listeners(), boost::make_tuple());
     if(!server::smapname[0]) selectnextgame();
 }

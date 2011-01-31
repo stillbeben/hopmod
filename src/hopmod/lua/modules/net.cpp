@@ -31,13 +31,6 @@ static const char * FILE_STREAM_MT = "lnetlib_file_stream";
 static io_service * main_io;
 static int library_instance = 0;
 
-static int async_resolve_operations = 0;
-
-int get_num_async_resolve_operations()
-{
-    return async_resolve_operations;
-}
-
 class tcp_socket: public ip::tcp::socket, 
                   public buffered_reading<ip::tcp::socket>
 {
@@ -61,15 +54,12 @@ private:
     {
         ip::tcp::resolver::query query(hostname, port);
         m_resolver.async_resolve(query, boost::bind(&tcp_socket::resolve_handler<ConnectHandler>, this, library_instance, handler, _1, _2));
-        async_resolve_operations++;
     }
     
     template<typename ConnectHandler>
     void resolve_handler(int instance, ConnectHandler handler, 
         const boost::system::error_code error, ip::tcp::resolver::iterator addresses)
     {
-        async_resolve_operations--;
-        
         if(instance != library_instance) return;
         
         if(error)
