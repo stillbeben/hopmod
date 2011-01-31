@@ -97,7 +97,6 @@ namespace server
     void spec_all();
     int player_bots(int);
     int player_pos(lua_State *);
-    std::vector<float> player_pos(int);
     void unsetmaster();
     bool set_player_master(int);
     void set_player_admin(int);

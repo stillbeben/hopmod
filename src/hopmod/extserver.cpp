@@ -479,16 +479,6 @@ int player_pos(lua_State * L)
     return 3;
 }
 
-std::vector<float> player_pos(int cn)
-{
-    vec pos = get_ci(cn)->state.o;
-    std::vector<float> result(3);
-    result[0] = pos.x;
-    result[1] = pos.y;
-    result[2] = pos.z;
-    return result;
-}
-
 void cleanup_masterstate(clientinfo * master)
 {
     int cn = master->clientnum;
