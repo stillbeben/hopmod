@@ -1,19 +1,10 @@
 #include "cube.h"
 #include "hopmod.hpp"
+#include "extapi.hpp"
 #include "main_io_service.hpp"
 #include <signal.h>
 #include <iostream>
 #include <boost/thread.hpp>
-
-namespace server{
-    void started();
-    void sendservmsg(const char *);
-    extern string smapname;
-    bool selectnextgame();
-} //namespace server
-
-void start_restarter();
-void stop_restarter();
 
 static boost::signals::connection close_listenserver_slot;
 static bool reload = false;

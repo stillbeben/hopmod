@@ -927,6 +927,8 @@ void calc_player_ranks()
 
 void script_set_mastermode(int value)
 {
+    int old_mastermode = mastermode;
+    
     mastermode = value;
     mastermode_owner = -1;
     mastermode_mtime = totalmillis;
@@ -935,6 +937,8 @@ void script_set_mastermode(int value)
     {
         loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
     }
+    
+    event_setmastermode(event_listeners(), boost::make_tuple(-1, mastermodename(old_mastermode), mastermodename(value)));
 }
 
 int get_mastermode()

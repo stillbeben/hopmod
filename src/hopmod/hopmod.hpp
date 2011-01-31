@@ -31,8 +31,8 @@ int sleep(lua_State *);
 int interval(lua_State *L);
 } //namespace lua
 
-extern unsigned int maintenance_frequency;
-void set_maintenance_frequency(unsigned int);
+void start_restarter();
+void stop_restarter();
 
 enum{
     SHUTDOWN_NORMAL,

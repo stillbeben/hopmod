@@ -54,6 +54,7 @@ namespace server
     
     extern int spectator_delay;
     
+    void started();
     int player_sessionid(int);
     int player_id(int);
     void player_msg(int,const char *);
