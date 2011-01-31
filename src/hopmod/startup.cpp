@@ -1,38 +1,22 @@
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "pch.hpp"
-#endif
-
 #include "cube.h"
 #include "hopmod.hpp"
 #include "main_io_service.hpp"
-
-#include <fungu/script/env.hpp>
-#include <fungu/script/execute.hpp>
-#include <fungu/script/error.hpp>
-using namespace fungu;
-
 #include <signal.h>
 #include <iostream>
-
 #include <boost/thread.hpp>
 
 namespace server{
-void started();
-void sendservmsg(const char *);
-extern string smapname;
-bool selectnextgame();
-}//namespace server
-
-int get_num_async_resolve_operations(); //defined in lua/net.cpp
+    void started();
+    void sendservmsg(const char *);
+    extern string smapname;
+    bool selectnextgame();
+} //namespace server
 
 void start_restarter();
 void stop_restarter();
 
 static boost::signals::connection close_listenserver_slot;
 static bool reload = false;
-
-unsigned int maintenance_frequency;
-static int maintenance_time = 0;
 bool reloaded = false;
 
 static boost::thread::id main_thread;
@@ -49,7 +33,6 @@ void init_hopmod()
     signal_shutdown.connect(&cleanup_info_files_on_shutdown);
         
     info_file("log/sauer_server.pid", "%i\n", getpid());
-    set_maintenance_frequency(1000*60*60*24);
     
     init_scheduler();
     init_lua();
@@ -87,8 +70,7 @@ static void reload_hopmod_now()
     signal_shutdown.disconnect_all_slots();
     signal_shutdown_scripting.disconnect_all_slots();
     signal_reloadhopmod.disconnect_all_slots();
-    signal_maintenance.disconnect_all_slots();
-    
+
     init_hopmod();
     server::started();
     std::cout<<"-> Reloaded Hopmod."<<std::endl;
@@ -104,13 +86,6 @@ void update_hopmod()
     if(reload) reload_hopmod();
     
     update_scheduler(totalmillis);
-    
-    if(maintenance_frequency != 0 && totalmillis > maintenance_time && !hasnonlocalclients())
-    {
-        signal_maintenance();
-        event_maintenance(event_listeners(), boost::make_tuple());
-        maintenance_time = totalmillis + maintenance_frequency;
-    }
 }
 
 namespace server{
@@ -145,8 +120,3 @@ void restart_now()
     exit(0);
 }
 
-void set_maintenance_frequency(unsigned int frequency)
-{
-    maintenance_frequency = frequency;
-    maintenance_time = totalmillis + frequency;
-}

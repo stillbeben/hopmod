@@ -60,7 +60,6 @@ extern lua::event< boost::tuple<> >                                         even
 extern lua::event< boost::tuple<int> >                                      event_shutdown;
 extern lua::event< boost::tuple<> >                                         event_shutdown_scripting;
 extern lua::event< boost::tuple<> >                                         event_reloadhopmod;
-extern lua::event< boost::tuple<> >                                         event_maintenance;
 extern lua::event< boost::tuple<const char *> >                             event_varchanged;
 extern lua::event< boost::tuple<> >                                         event_sleep;
 extern lua::event< boost::tuple<> >                                         event_interval;

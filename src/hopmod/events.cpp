@@ -56,7 +56,6 @@ lua::event< boost::tuple<> >                                         event_start
 lua::event< boost::tuple<int> >                                      event_shutdown("shutdown");
 lua::event< boost::tuple<> >                                         event_shutdown_scripting("shutdown_scripting");
 lua::event< boost::tuple<> >                                         event_reloadhopmod("reloadhopmod");
-lua::event< boost::tuple<> >                                         event_maintenance("maintenance");
 lua::event< boost::tuple<const char *> >                             event_varchanged("varchanged");
 lua::event< boost::tuple<> >                                         event_sleep("sleep");
 lua::event< boost::tuple<> >                                         event_interval("interval");
@@ -120,7 +119,6 @@ void register_event_idents(lua::event_environment & env)
         & event_shutdown,
         & event_shutdown_scripting,
         & event_reloadhopmod,
-        & event_maintenance,
         & event_varchanged,
         & event_sleep,
         & event_interval,
