@@ -1,15 +1,17 @@
-local LIMIT = 0.25 -- the number of teamkills a player is entitled to make is proportional to their number of frags
+local LIMIT = 0.25
 
-local damageEventHandler = nil
-
-local mm_map = {
-    locked	= 2,
-    private	= 3
+local excluded_mastermode = {
+    locked	= true,
+    private	= true
 }
 
-local function createDamageHandler()
-    assert(damageEventHandler == nil)
-    damageEventHandler = server.event_handler("damage", function(target, actor, damage, gun)
+local damage_handler = nil
+
+local function create_damage_handler()
+
+    if damage_handler then return end
+    
+    damage_handler = server.event_handler("damage", function(target, actor, damage, gun)
         if target ~= actor and server.player_team(actor) == server.player_team(target) then
             if server.player_teamkills(actor) >= (server.player_frags(actor) * LIMIT) then
                 return -1
@@ -18,36 +20,24 @@ local function createDamageHandler()
     end)
 end
 
-local function cancelDamageHandler()
-    assert(damageEventHandler ~= nil)
-    server.cancel_handler(damageEventHandler)
-    damageEventHandler = nil
+local function destroy_damage_handler()
+    if not damage_handler then return end
+    server.cancel_handler(damage_handler)
+    damage_handler = nil
 end
 
-server.event_handler("mapchange", function()
-    
-    if gamemodeinfo.teams and (server.mastermode < 2) then
-        if not damageEventHandler then
-            createDamageHandler()
-        end
+local function update_activation()
+
+    local enable = create_damage_handler
+    local disable = destroy_damage_handler
+
+    if gamemodeinfo.teams and not excluded_mastermode[server.mastermode] then
+        enable()
     else
-        if damageEventHandler then
-            cancelDamageHandler()
-        end
+        disable()
     end
-end)
+end
 
-server.event_handler("setmastermode", function(_, _, new)
+server.event_handler("mapchange", update_activation)
+server.event_handler("setmastermode", update_activation)
 
-    if gamemodeinfo.teams then
-        if mm_map[new] then
-    	    if damageEventHandler then
-		cancelDamageHandler()
-	    end
-	else
-	    if not damageEventHandler then
-	        createDamageHandler()
-	    end
-	end
-    end
-end)
