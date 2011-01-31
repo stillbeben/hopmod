@@ -40,11 +40,16 @@ function server.ban(ipmask, bantime, admin, reason, name)
     
     reason = reason or ""
 	
+	server.store_ipvars_on_update(false)
+	 
     server.set_ip_var(ipmask, "ban_name", name)
     server.set_ip_var(ipmask, "ban_time", os.date())
     server.set_ip_var(ipmask, "ban_expire", os.time() + bantime)
     server.set_ip_var(ipmask, "ban_admin", admin)
     server.set_ip_var(ipmask, "ban_reason", reason)
+    
+    server.store_ipvars_on_update(true)
+    server.store_ipvars()
     
     if bantime <= SHORT_BANTIME then
         table.insert(temporary_bans, ipmask)
@@ -60,22 +65,36 @@ function server.unban(ipmask)
     server.log(log_message)
     server.log_status(log_message)
 	
+	server.store_ipvars_on_update(false)
+	
 	server.set_ip_var(ipmask, "ban_name", nil)    
     server.set_ip_var(ipmask, "ban_expire", nil)
     server.set_ip_var(ipmask, "ban_admin", nil)
     server.set_ip_var(ipmask, "ban_reason", nil)
     server.set_ip_var(ipmask, "ban_time", nil)
+    
+    server.store_ipvars_on_update(true)
+    server.store_ipvars()
 end
+
+local function is_banned(ipmask)
+    local bantime = server.ip_vars(ipmask).ban_expire
+    if bantime and not reserved_slot then
+        if bantime > os.time() then
+            return true
+        else
+            server.unban(ipmask)
+            return false
+        end
+    end
+end
+
+server.is_banned = is_banned
 
 server.event_handler("connecting", function(cn, hostname, name, password, reserved_slot)
     if server.player_priv_code(cn) ~= server.PRIV_NONE then return end
-    local bantime = server.ip_vars(hostname).ban_expire
-    if bantime and not reserved_slot then
-        if bantime > os.time() then
-            return -1
-        else
-            server.unban(hostname)
-        end
+    if is_banned(hostname) then
+        return -1
     end
 end)
 
@@ -98,17 +117,19 @@ server.event_handler("started", function()
     
     -- Don't run on server reload
     if server.uptime > 1 then return end 
-
+    
     local bancount = 0
     
-    -- Clear temporary/near-expiry bans
-    for ipmask, vars in pairs(server.ip_vars()) do
-        if vars.ban_expire then
-            if vars.ban_expire - SHORT_BANTIME <= os.time() then
-                server.unban(ipmask)
-            else
-                bancount = bancount + 1
-            end
+    -- Remove expired bans
+    for _, ban in pairs(server.ip_var_instances("ban_expire")) do
+        
+        local ipmask = ban[1]
+        local expire = ban[2]
+        
+        if expire - SHORT_BANTIME <= os.time() then
+            server.unban(ipmask)
+        else
+            bancount = bancount + 1
         end
     end
     
