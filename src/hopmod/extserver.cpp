@@ -1023,4 +1023,6 @@ void player_respawn(int cn)
     try_respawn(ci, ci);
 }
 
+#include <static_item_functions.h>
+
 #endif

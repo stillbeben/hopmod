@@ -368,6 +368,12 @@ void bind_core_variables(lua_State * L, int T)
     bind_ro_var(L, T, "reloaded", reloaded);
     bind_prop<__uid_t>(L, T, "UID", getuid, NULL);
     bind_var(L, T, "spectator_delay", server::spectator_delay);
+	
+    bind_var(L, T, "add_item", server::add_item);
+    bind_var(L, T, "add_flag", server::add_flag);
+    bind_var(L, T, "prepare_hold_mode", server::prepare_hold_mode);
+    bind_var(L, T, "add_base", server::add_base);
+    bind_var(L, T, "prepare_capture_mode", server::prepare_capture_mode);
     
     bind_var(L, T, "flood_protect_text", server::sv_text_hit_length);
     bind_var(L, T, "flood_protect_sayteam", server::sv_sayteam_hit_length);

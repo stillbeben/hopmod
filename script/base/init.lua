@@ -36,6 +36,8 @@ load_once("base/setmaster")
 load_once("base/kickban")
 load_once("base/logging")
 load_once("base/server_message")
+load_once("base/static_items")
+
 
 server.module("base/maprotation/init.lua")
 server.module("base/normalize")
