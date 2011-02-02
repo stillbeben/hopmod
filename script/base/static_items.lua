@@ -84,9 +84,9 @@ function server.load_map_bases()
 		local base = strSplit(bases[i], ":")
 
 		local type = base[1]
-		local x = flag[2] 
-		local y = flag[3]
-		local z = flag[4] 
+		local x = base[2] 
+		local y = base[3]
+		local z = base[4] 
 		
 		server.add_base(type, x, y, z)
 		

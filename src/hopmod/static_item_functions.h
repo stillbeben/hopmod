@@ -29,6 +29,7 @@ void add_flag(int num, int team, int y) // ctf flags
 
 void prepare_hold_mode()
 {
+	if (!m_hold) return;
     if(ctfmode.holdspawns.length()) while(ctfmode.flags.length() < ctfmode.HOLDFLAGS)
     {
         int i = ctfmode.flags.length();
@@ -41,6 +42,7 @@ void prepare_hold_mode()
 
 void add_base(int type, int x, int y, int z) // capture bases
 {
+	if (!m_capture) return;
     int ammotype = type;
     vec o;
     o[0] = max(x/DMF, 0.0f);
@@ -53,6 +55,7 @@ void add_base(int type, int x, int y, int z) // capture bases
 
 void prepare_capture_mode()
 {
+	if (!m_capture) return;
     capturemode.sendbases();
     loopv(clients) if(clients[i]->state.state==CS_ALIVE) capturemode.entergame(clients[i]);
 }
