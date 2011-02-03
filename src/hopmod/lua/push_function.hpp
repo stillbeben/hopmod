@@ -12,6 +12,7 @@ namespace lua{
 
 template<int Arity> struct arity_tag{};
 template<typename T> struct return_tag{};
+template<typename T, typename FT> struct wrapper_return_tag{};
 
 void push(lua_State *, bool);
 void push(lua_State *, int);
@@ -56,7 +57,7 @@ const char *  to(lua_State * L, int index, return_tag<const char *>);
 std::string   to(lua_State * L, int index, return_tag<std::string>);
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_type>, arity_tag<0>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<typename FunctionTraits::result_type, FunctionTraits>, arity_tag<0>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -66,7 +67,7 @@ int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<0>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<void, FunctionTraits>, arity_tag<0>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -76,7 +77,7 @@ int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<0>)
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_type>, arity_tag<1>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<typename FunctionTraits::result_type, FunctionTraits>, arity_tag<1>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -86,7 +87,7 @@ int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<1>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<void, FunctionTraits>, arity_tag<1>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -96,7 +97,7 @@ int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<1>)
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_type>, arity_tag<2>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<typename FunctionTraits::result_type, FunctionTraits>, arity_tag<2>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -108,7 +109,7 @@ int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<2>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<void, FunctionTraits>, arity_tag<2>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -120,7 +121,7 @@ int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<2>)
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_type>, arity_tag<3>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<typename FunctionTraits::result_type, FunctionTraits>, arity_tag<3>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -133,7 +134,7 @@ int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<3>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<void, FunctionTraits>, arity_tag<3>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -146,7 +147,7 @@ int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<3>)
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_type>, arity_tag<4>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<typename FunctionTraits::result_type, FunctionTraits>, arity_tag<4>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -160,7 +161,7 @@ int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<4>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<void, FunctionTraits>, arity_tag<4>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -174,7 +175,7 @@ int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<4>)
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_type>, arity_tag<5>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<typename FunctionTraits::result_type, FunctionTraits>, arity_tag<5>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -189,7 +190,7 @@ int free_func_wrapper(lua_State * L, return_tag<typename FunctionTraits::result_
 }
 
 template<typename FunctionPointerType, typename FunctionTraits>
-int free_func_wrapper(lua_State * L, return_tag<void>, arity_tag<5>)
+int free_func_wrapper(lua_State * L, wrapper_return_tag<void, FunctionTraits>, arity_tag<5>)
 {
     FunctionPointerType function = 
         reinterpret_cast<FunctionPointerType>(
@@ -210,7 +211,7 @@ int free_func_wrapper(lua_State * L)
     typedef boost::function_traits<FunctionType> FunctionTraits;
     return free_func_wrapper<FunctionPointerType, FunctionTraits>(
         L, 
-        return_tag<typename FunctionTraits::result_type>(),
+        wrapper_return_tag<typename FunctionTraits::result_type, FunctionTraits>(),
         arity_tag<FunctionTraits::arity>());
 }
 
