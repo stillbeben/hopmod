@@ -45,3 +45,17 @@ library.global = function(name, value)
     end
 end
 
+library.interval = function(time, func)
+    if type(func) == "string" then
+        func = library.func("", func)
+    end
+    return server.interval(time, func) 
+end
+
+library.sleep = function(time, func)
+    if type(func) == "string" then
+        func = library.func("", func)
+    end
+    return server.sleep(time, func)
+end
+
