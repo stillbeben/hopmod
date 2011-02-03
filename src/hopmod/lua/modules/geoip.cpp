@@ -1,10 +1,7 @@
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
+#include <lua.hpp>
 #include <GeoIP.h>
 #include <GeoIPCity.h>
+#include "module.hpp"
 
 static GeoIP * geoip = NULL;
 static GeoIP * GeoCity = NULL;
@@ -53,6 +50,13 @@ static int ip_to_city(lua_State * L)
     return 1;
 }
 
+static int shutdown_geoip(lua_State * L)
+{
+    GeoIP_delete(geoip);
+    GeoIP_delete(GeoCity);
+    return 0;
+}
+
 namespace lua{
 namespace module{
 
@@ -69,7 +73,10 @@ void open_geoip(lua_State * L)
     
     luaL_register(L, "geoip", functions);
     lua_pop(L, 1);
+    
+    lua::on_shutdown(L, shutdown_geoip);
 }
 
 } //namespace module
 } //namespace lua
+

@@ -51,6 +51,7 @@ add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 set(LUA_MODULES_SOURCES
     hopmod/lib/md5.c
     hopmod/lua/push_function.cpp
+    hopmod/lua/modules/module.cpp
     hopmod/lua/modules/crypto.cpp    
     hopmod/lua/modules/net.cpp
     hopmod/lua/modules/timer.cpp

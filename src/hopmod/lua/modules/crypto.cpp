@@ -3,11 +3,8 @@
 
 #include <string>
 #include <stdio.h>
-extern "C"{
-#include <lua.h>
-#include <lualib.h>
-#include <lauxlib.h>
-}
+#include <lua.hpp>
+#include "module.hpp"
 
 static FILE * urandom = NULL;
 
@@ -237,6 +234,13 @@ static int tigersum(lua_State * L)
     return 1;
 }
 
+
+static int shutdown_crypto(lua_State * L)
+{
+    fclose(urandom);
+    return 0;   
+}
+
 namespace lua{
 namespace module{
 
@@ -276,6 +280,8 @@ void open_crypto(lua_State * L)
     
     ecc::key::register_class(L);
     ecc::challenge::register_class(L);
+    
+    lua::on_shutdown(L, shutdown_crypto);
 }
 
 } //namespace module
