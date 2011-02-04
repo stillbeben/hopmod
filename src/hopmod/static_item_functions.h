@@ -31,7 +31,6 @@ void add_flag(int num, int team, int y) // ctf flags
 void prepare_hold_mode()
 {
     if (!m_hold || gamemillis) return;
-    sendservmsg("\f3hold");
     if(ctfmode.holdspawns.length()) while(ctfmode.flags.length() < ctfmode.HOLDFLAGS)
     {
         int i = ctfmode.flags.length();
