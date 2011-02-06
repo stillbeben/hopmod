@@ -19,7 +19,7 @@ void init_scheduler()
 
 void cancel_free_scheduled(int)
 {
-    //free_scheduled.cancel_all();
+    free_scheduled.cancel_all();
 }
 
 namespace lua{
@@ -42,7 +42,7 @@ static int call_scheduled_function(lua_State * L, int function_ref, bool repeat)
         listeners.clear_listeners(event_interval);
     }
     else
-    {   
+    {
         listeners.add_listener("sleep");
         event_sleep(listeners, boost::make_tuple());
         
