@@ -54,6 +54,8 @@ static int shutdown_geoip(lua_State * L)
 {
     GeoIP_delete(geoip);
     GeoIP_delete(GeoCity);
+    geoip = NULL;
+    GeoCity = NULL;
     return 0;
 }
 
