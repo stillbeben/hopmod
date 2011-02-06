@@ -196,14 +196,25 @@ ip::udp::socket info_socket(main_io_service);
 ip::udp::socket laninfo_socket(main_io_service);
 
 deadline_timer update_timer(main_io_service);
-deadline_timer register_timer(main_io_service);
 deadline_timer netstats_timer(main_io_service);
 
 void stopgameserver(int)
 {
     kicknonlocalclients(DISC_NONE);
     
-    serverhost_socket.cancel();
+    boost::system::error_code error;
+    
+    serverhost_socket.close(error);
+    if(error)
+        std::cerr<<"Error while trying to close game server socket: "<<error.message()<<std::endl;
+    
+    info_socket.close(error);
+    if(error)
+        std::cerr<<"Error while trying to close server info socket: "<<error.message()<<std::endl;
+    
+    laninfo_socket.close(error);
+    if(error)
+        std::cerr<<"Error while trying to close the server info lan socket: "<<error.message()<<std::endl;
     
     if(serverhost)
     {
@@ -212,16 +223,18 @@ void stopgameserver(int)
         serverhost = NULL;
     }
     
-    info_socket.cancel();
-    laninfo_socket.cancel();
-    
     if(pongsock != ENET_SOCKET_NULL) enet_socket_destroy(pongsock);
     if(lansock != ENET_SOCKET_NULL) enet_socket_destroy(lansock);
     pongsock = lansock = ENET_SOCKET_NULL;
     
-    update_timer.cancel();
-    register_timer.cancel();
-    netstats_timer.cancel();
+    update_timer.cancel(error);
+    if(error)
+        std::cerr<<"Error while trying to stop the update timer: "<<error.message()<<std::endl;
+    
+    netstats_timer.cancel(error);
+    if(error)
+        std::cerr<<"Error while trying to stop the net stats timer: "<<error.message()<<std::endl;
+    
 }
 
 void process(ENetPacket *packet, int sender, int chan);
@@ -509,7 +522,7 @@ static void check_timeouts()
 
 void update_server(const boost::system::error_code & error)
 {
-    if(error) return;
+    if(error == boost::asio::error::operation_aborted || error) return;
     
     update_timer.expires_from_now(boost::posix_time::milliseconds(5));
     update_timer.async_wait(update_server);
