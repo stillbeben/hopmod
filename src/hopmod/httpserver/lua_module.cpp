@@ -10,6 +10,8 @@
 
 #include <lua.hpp>
 #include "lua/event.hpp"
+#include "lua/modules/module.hpp"
+
 lua::event_environment & event_listeners();
 
 #include "directory_resource.hpp"
@@ -28,13 +30,24 @@ proxy_resource & get_root_resource();
 static int root_resource_ref = LUA_REFNIL;
 static lua_State * opened_state = NULL;
 
+static int library_instance = 0;
+
 class request_wrapper
 {
     static const char * MT;
 public:
-    request_wrapper(http::server::request & req):m_request(req){}
+    request_wrapper(http::server::request * req)
+        :m_request(req)
+    {
+        
+    }
     
-    static int create_object(lua_State * L, http::server::request & req)
+    ~request_wrapper()
+    {
+        if(m_request) http::server::request::destroy(*m_request);
+    }
+    
+    static int create_object(lua_State * L, http::server::request * req)
     {
         new (lua_newuserdata(L, sizeof(request_wrapper))) request_wrapper(req);
         luaL_getmetatable(L, request_wrapper::MT);
@@ -68,65 +81,73 @@ public:
         lua_pop(L, 1);
     }
     
-    static request_wrapper * get(lua_State * L, int narg)
+    static http::server::request * handover_request(lua_State * L, int narg)
+    {
+        request_wrapper * object = instance(L, narg);
+        http::server::request * request = object->m_request;
+        object->m_request = NULL;
+        return request;
+    }
+private:
+    static request_wrapper * instance(lua_State * L, int narg)
     {
         return reinterpret_cast<request_wrapper *>(luaL_checkudata(L, narg, MT));
     }
     
-    static http::server::request & get_request(lua_State * L, int narg)
+    static request_wrapper * safe_instance(lua_State * L, int narg)
     {
-        return get(L, narg)->m_request;
+        request_wrapper * object = instance(L, narg);
+        if(!object->m_request) luaL_error(L, "request object has expired");
+        return object;
     }
-private:
+    
     static int __gc(lua_State * L)
     {
-        reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT))->~request_wrapper();
+        instance(L, 1)->~request_wrapper();
         return 0;
     }
     
     static int get_content_length(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
-        lua_pushinteger(L, req->m_request.get_content_length());
+        request_wrapper * req = safe_instance(L, 1);
+        lua_pushinteger(L, req->m_request->get_content_length());
         return 1;
     }
     
     static int get_header(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        request_wrapper * req = safe_instance(L, 1);
         const char * field_name = luaL_checkstring(L, 2);
-        if(req->m_request.has_header_field(field_name)) 
-            lua_pushstring(L, req->m_request.get_header_field(field_name).get_value());
+        if(req->m_request->has_header_field(field_name)) 
+            lua_pushstring(L, req->m_request->get_header_field(field_name).get_value());
         else lua_pushnil(L);
         return 1;
     }
     
     static int get_uri(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
-        lua_pushstring(L, req->m_request.get_uri());
+        request_wrapper * req = safe_instance(L, 1);
+        lua_pushstring(L, req->m_request->get_uri());
         return 1;
     }
     
     static int get_query_string(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
-        lua_pushstring(L, req->m_request.get_uri_query());
+        request_wrapper * req = safe_instance(L, 1);
+        lua_pushstring(L, req->m_request->get_uri_query());
         return 1;
     }
     
     static int get_host(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
-        lua_pushstring(L, req->m_request.get_host());
+        request_wrapper * req = safe_instance(L, 1);
+        lua_pushstring(L, req->m_request->get_host());
         return 1;
     }
     
-    static void read_content_complete(lua_State * L, int functionRef, stream::char_vector_sink * sink, const http::connection::error & err)
+    static void read_content_complete(int instance, lua_State * L, int functionRef, stream::char_vector_sink * sink, const http::connection::error & err)
     {
-        #ifndef DISABLE_RELOADSCRIPTS
-        if(L!=opened_state) return;
-        #endif
+        if(instance != library_instance) return;
         
         lua_rawgeti(L, LUA_REGISTRYINDEX, functionRef);
         luaL_unref(L, LUA_REGISTRYINDEX, functionRef);
@@ -142,44 +163,44 @@ private:
     
     static int async_read_content(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
+        request_wrapper * req = safe_instance(L, 1);
         
         luaL_checktype(L, 2, LUA_TFUNCTION);
         lua_pushvalue(L, 2);
         int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
         
-        stream::char_vector_sink * sink = new stream::char_vector_sink(req->m_request.get_content_length());
+        stream::char_vector_sink * sink = new stream::char_vector_sink(req->m_request->get_content_length());
         
-        req->m_request.async_read_content(*sink, boost::bind(&request_wrapper::read_content_complete, L, functionRef, sink, _1));
+        req->m_request->async_read_content(*sink, boost::bind(&request_wrapper::read_content_complete, library_instance, L, functionRef, sink, _1));
         
         return 0;
     }
     
     static int get_client_ip(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
-        std::string ip = req->m_request.get_connection().remote_ip_string();
+        request_wrapper * req = safe_instance(L, 1);
+        std::string ip = req->m_request->get_connection().remote_ip_string();
         lua_pushlstring(L, ip.c_str(), ip.length());
         return 1;
     }
     
     static int get_content_type(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
-        const_string content_type = const_string(req->m_request.get_content_type().type());
+        request_wrapper * req = safe_instance(L, 1);
+        const_string content_type = const_string(req->m_request->get_content_type().type());
         lua_pushstring(L, content_type.copy().c_str());
         return 1;
     }
     
     static int get_content_subtype(lua_State * L)
     {
-        request_wrapper * req = reinterpret_cast<request_wrapper *>(luaL_checkudata(L, 1, MT));
-        const_string content_type = const_string(req->m_request.get_content_type().subtype());
+        request_wrapper * req = safe_instance(L, 1);
+        const_string content_type = const_string(req->m_request->get_content_type().subtype());
         lua_pushstring(L, content_type.copy().c_str());
         return 1;
     }
     
-    http::server::request & m_request;
+    http::server::request * m_request;
 };
 
 const char * request_wrapper::MT = "http::server::request";
@@ -196,9 +217,9 @@ public:
     
     static int create_object(lua_State * L)
     {
-        http::server::request & req = request_wrapper::get_request(L, 1);
+        http::server::request * request = request_wrapper::handover_request(L, 1);
         int status_code = luaL_checkint(L, 2);
-        new (lua_newuserdata(L, sizeof(response_wrapper))) response_wrapper(new http::server::response(req, static_cast<http::status>(status_code)));
+        new (lua_newuserdata(L, sizeof(response_wrapper))) response_wrapper(new http::server::response(*request, static_cast<http::status>(status_code)));
         luaL_getmetatable(L, response_wrapper::MT);
         lua_setmetatable(L, -2);
         return 1;
@@ -291,11 +312,9 @@ private:
         return 0;
     }
     
-    void sent_body(lua_State * L, int functionRef, const http::connection::error & err)
+    void sent_body(int instance, lua_State * L, int functionRef, const http::connection::error & err)
     {
-        #ifndef DISABLE_RELOADSCRIPTS
-        if(L!=opened_state) return;
-        #endif
+        if(instance != library_instance) return;
         
         lua_rawgeti(L, LUA_REGISTRYINDEX, functionRef);
         luaL_unref(L, LUA_REGISTRYINDEX, functionRef);
@@ -322,7 +341,7 @@ private:
         lua_pushvalue(L, 2);
         int functionRef = luaL_ref(L, LUA_REGISTRYINDEX);
         
-        res->m_response->async_send_body(body, bodylen, boost::bind(&response_wrapper::sent_body, res, L, functionRef, _1));
+        res->m_response->async_send_body(body, bodylen, boost::bind(&response_wrapper::sent_body, res, library_instance, L, functionRef, _1));
         
         return 0;
     }
@@ -466,7 +485,7 @@ public:
         }
         lua_rawgeti(m_lua, LUA_REGISTRYINDEX, m_get_function);
         
-        request_wrapper::create_object(m_lua, req);
+        request_wrapper::create_object(m_lua, &req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
             event_listeners().log_error("httpserver_resource_get", lua_tostring(m_lua, -1));
@@ -481,13 +500,13 @@ public:
         }
         lua_rawgeti(m_lua, LUA_REGISTRYINDEX, m_put_function);
         
-        request_wrapper::create_object(m_lua, req);
+        request_wrapper::create_object(m_lua, &req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
             event_listeners().log_error("httpserver_resource_put", lua_tostring(m_lua, -1));
     }
     
-    void post_method(http::server::request & req)
+    void post_method(http::server::request &req)
     {
         if(m_post_function == LUA_REFNIL)
         {
@@ -496,7 +515,7 @@ public:
         }
         lua_rawgeti(m_lua, LUA_REGISTRYINDEX, m_post_function);
         
-        request_wrapper::create_object(m_lua, req);
+        request_wrapper::create_object(m_lua, &req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
             event_listeners().log_error("httpserver_resource_post", lua_tostring(m_lua, -1));
@@ -511,7 +530,7 @@ public:
         }
         lua_rawgeti(m_lua, LUA_REGISTRYINDEX, m_delete_function);
         
-        request_wrapper::create_object(m_lua, req);
+        request_wrapper::create_object(m_lua, &req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
             event_listeners().log_error("httpserver_resource_delete", lua_tostring(m_lua, -1));
@@ -791,19 +810,28 @@ private:
         m_acceptor->bind(ip::tcp::endpoint(ip::address_v4::from_string(ip), atoi(port)));
     }
     
-    void cleanup_client_connection(listener_client_connection * client)
+    void cleanup_client_connection(int instance, listener_client_connection * client)
     {
-        if(client == m_client_tail) m_client_tail = client->prev_client();
-        if(client == m_client_head) m_client_head = client->next_client();
+        if(instance == library_instance)
+        {
+            if(client == m_client_tail) m_client_tail = client->prev_client();
+            if(client == m_client_head) m_client_head = client->next_client();
+        }
         
         delete client;
     }
     
-    void accept_handler(listener_client_connection * client, const error_code & error)
+    void accept_handler(int instance, listener_client_connection * client, const error_code & error)
     {
+        if(instance != library_instance)
+        {
+            delete client;
+            return;
+        }
+        
         if(error)
         {
-            cleanup_client_connection(client);
+            cleanup_client_connection(instance, client);
             
             if(error.value() != error::operation_aborted) 
             {
@@ -822,7 +850,7 @@ private:
             return;
         }
         
-        http::server::request::create(*client, *m_root_resource, boost::bind(&listener::cleanup_client_connection, this, client));
+        http::server::request::create(*client, *m_root_resource, boost::bind(&listener::cleanup_client_connection, this, library_instance, client));
         
         async_accept();
     }
@@ -834,7 +862,7 @@ private:
         if(!m_client_head) m_client_head = client;
         m_client_tail = client;
         
-        m_acceptor->async_accept(*client, boost::bind(&listener::accept_handler, this, client, _1));
+        m_acceptor->async_accept(*client, boost::bind(&listener::accept_handler, this, library_instance, client, _1));
     }
     
     void shutdown()
@@ -875,11 +903,19 @@ private:
 
 const char * listener::MT = "http_server::listener";
 
+static int shutdown_http_server(lua_State *)
+{
+    library_instance++;
+    return 0;
+}
+
 namespace lua{
 namespace module{
 
 void open_http_server(lua_State * L)
 {
+    lua::on_shutdown(L, shutdown_http_server);
+    
     http::register_standard_headers();
     setup_ext_to_ct_map();
     

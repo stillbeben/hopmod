@@ -26,7 +26,8 @@ static bool strncaseeq(const std::pair<const char*,const char*> & s1, const char
 
 request * request::create(connection & conn, resource & handler_dispatcher)
 {
-    return new request(conn, handler_dispatcher);
+    request * r = new request(conn, handler_dispatcher);
+    return r;
 }
 
 void request::destroy(request & req)
@@ -129,9 +130,9 @@ const char * request::get_host()const
     return m_host;
 }
 
-void request::process_header(const char * header, std::size_t header_len, const connection::error & connerr)
+void request::process_header(const char * header, std::size_t header_len, const connection::error & error)
 {
-    if(connerr)
+    if(error)
     {
         m_close_connection = true;
         request::destroy(*this);
