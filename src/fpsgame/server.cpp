@@ -2025,8 +2025,17 @@ namespace server
         
         update_hopmod();
         
-        timer::time_diff_t e = serverupdate_time.usec_elapsed();
-        if(e >= timer_alarm_threshold) std::cout<<"serverupdate timing: "<<e<<" usecs."<<std::endl;
+        timer::time_diff_t elapsed = serverupdate_time.usec_elapsed();
+        if(elapsed >= timer_alarm_threshold)
+        {
+            int timeleft = gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0;
+            
+            std::cerr<<"Detected slowdown in serverupdate(): "
+                     <<elapsed<<" usecs, "
+                     <<numclients(-1, false, true)<<" clients, "
+                     <<timeleft<< " minutes left"
+                     <<std::endl;
+        }
     }
 
     struct crcinfo 
