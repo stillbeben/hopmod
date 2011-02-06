@@ -13,6 +13,7 @@ using namespace boost::asio;
 
 #include <lua.hpp>
 #include "lua/event.hpp"
+#include "module.hpp"
 
 // External
 boost::asio::io_service & get_main_io_service();
@@ -2043,12 +2044,18 @@ private:
 
 const char * netmask_table::MT = "netmask_table";
 
+static int shutdown_net(lua_State *)
+{
+    library_instance++;
+    return 0;
+}
+
 namespace lua{
 namespace module{
 
 void open_net(lua_State * L)
 {
-    library_instance++;
+    lua::on_shutdown(L, shutdown_net);
     
     main_io = &get_main_io_service();
     

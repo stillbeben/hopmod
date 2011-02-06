@@ -48,6 +48,8 @@ void init_lua()
 
 void shutdown_lua()
 {
+    if(!L) return;
+    
     delete event_environment;
     lua_close(L);
     

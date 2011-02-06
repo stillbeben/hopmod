@@ -87,17 +87,24 @@ void started()
     if(!server::smapname[0]) selectnextgame();
 }
 
-void shutdown()
+static int initiate_shutdown(void *)
 {
-    if(boost::this_thread::get_id() != main_thread) return;
-    
     stopgameserver(SHUTDOWN_NORMAL);
     
     event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_NORMAL)));
     signal_shutdown(SHUTDOWN_NORMAL);
     
     stop_restarter();
-    exit(0);
+    
+    // Now wait for the main event loop to process work that is remaining and then exit
+    
+    return 0;
+}
+
+void shutdown()
+{
+    if(boost::this_thread::get_id() != main_thread) return;
+    sched_callback(initiate_shutdown, NULL);
 }
 
 } //namespace server
@@ -108,6 +115,5 @@ void restart_now()
     start_restarter();
     event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_RESTART)));
     signal_shutdown(SHUTDOWN_RESTART);
-    exit(0);
 }
 

@@ -19,7 +19,7 @@ void init_scheduler()
 
 void cancel_free_scheduled(int)
 {
-    free_scheduled.cancel_all();
+    //free_scheduled.cancel_all();
 }
 
 namespace lua{

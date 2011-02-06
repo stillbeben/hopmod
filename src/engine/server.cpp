@@ -194,7 +194,6 @@ io_service & get_main_io_service()
 ip::udp::socket serverhost_socket(main_io_service);
 ip::udp::socket info_socket(main_io_service);
 ip::udp::socket laninfo_socket(main_io_service);
-ip::tcp::socket masterserver_client_socket(main_io_service);
 
 deadline_timer update_timer(main_io_service);
 deadline_timer register_timer(main_io_service);
@@ -204,12 +203,17 @@ void stopgameserver(int)
 {
     kicknonlocalclients(DISC_NONE);
     
+    serverhost_socket.cancel();
+    
     if(serverhost)
     {
         enet_host_flush(serverhost);
         enet_host_destroy(serverhost);
         serverhost = NULL;
     }
+    
+    info_socket.cancel();
+    laninfo_socket.cancel();
     
     if(pongsock != ENET_SOCKET_NULL) enet_socket_destroy(pongsock);
     if(lansock != ENET_SOCKET_NULL) enet_socket_destroy(lansock);
@@ -507,6 +511,9 @@ void update_server(const boost::system::error_code & error)
 {
     if(error) return;
     
+    update_timer.expires_from_now(boost::posix_time::milliseconds(5));
+    update_timer.async_wait(update_server);
+    
     localclients = nonlocalclients = 0;
     loopv(clients) switch(clients[i]->type)
     {
@@ -520,10 +527,7 @@ void update_server(const boost::system::error_code & error)
     
     server::serverupdate();
     
-    update_timer.expires_from_now(boost::posix_time::milliseconds(5));
-    update_timer.async_wait(update_server);
-    
-    check_timeouts();
+    if(serverhost) check_timeouts();
 }
 
 void serverhost_process_event(ENetEvent & event)
@@ -612,13 +616,15 @@ void serverinfo_input(int fd)
 
 void info_input_handler(boost::system::error_code ec, const size_t s)
 {
-    if(!ec) serverinfo_input(pongsock);
+    if(ec) return;
+    serverinfo_input(pongsock);
     info_socket.async_receive(null_buffers(), info_input_handler);
 }
 
 void laninfo_input_handler(boost::system::error_code ec, const size_t s)
 {
-    if(!ec) serverinfo_input(lansock);
+    if(ec) return;
+    serverinfo_input(lansock);
     laninfo_socket.async_receive(null_buffers(), laninfo_input_handler);
 }
 

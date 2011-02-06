@@ -705,12 +705,19 @@ namespace server
         return false;
     }
 
+    void cleanup_fpsgame(int shutdown_type)
+    {
+        aiman::deleteai();
+    }
+
     void serverinit()
     {
         smapname[0] = '\0';
         resetitems();
         
         init_hopmod();
+    
+        signal_shutdown.connect(cleanup_fpsgame);
     }
     
     int numclients(int exclude = -1, bool nospec = true, bool noai = true)
