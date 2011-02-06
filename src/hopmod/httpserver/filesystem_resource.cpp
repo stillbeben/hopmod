@@ -78,29 +78,34 @@ http::server::resource * filesystem_resource::resolve(const const_string & name)
     return new filesystem_resource(absolute_filename, m_index, this);
 }
 
-void finish_send_file(FILE * sourceFile, char * buffer, http::server::response * res)
+void finish_send_file(FILE * sourceFile, char * buffer, http::server::response * response, 
+    filesystem_resource * resource)
 {
-    delete res;
+    delete resource;
+    delete response;
     delete [] buffer;
     fclose(sourceFile);
 }
 
-void send_file(FILE * sourceFile, char * buffer, std::size_t bufferSize, http::server::response * res, const http::connection::error & sendError)
+void send_file(FILE * source_file, char * buffer, std::size_t buffer_size,
+    http::server::response * response, filesystem_resource * resource, 
+    const http::connection::error & error)
 {
-    if(sendError || feof(sourceFile) || ferror(sourceFile))
+    if(error || feof(source_file) || ferror(source_file))
     {
-        finish_send_file(sourceFile, buffer, res);
+        finish_send_file(source_file, buffer, response, resource);
         return;
     }
     
-    std::size_t readSize = fread(buffer, sizeof(char), bufferSize, sourceFile);
-    if(!readSize)
+    std::size_t read_size = fread(buffer, sizeof(char), buffer_size, source_file);
+    if(!read_size)
     {
-        finish_send_file(sourceFile, buffer, res);
+        finish_send_file(source_file, buffer, response, resource);
         return;
     }
     
-    res->async_send_body(buffer, readSize, boost::bind(send_file, sourceFile, buffer, bufferSize, res, _1));
+    response->async_send_body(buffer, read_size, boost::bind(send_file, source_file, buffer, 
+        buffer_size, response, resource, _1));
 }
 
 
@@ -111,6 +116,7 @@ void filesystem_resource::get_method(http::server::request & req)
     if(stat(filename, &file_info) !=0)
     {
         http::server::send_response(req, http::NOT_FOUND);
+        delete this;
         return;
     }
     
@@ -128,6 +134,7 @@ void filesystem_resource::get_method(http::server::request & req)
         if(stat(filename, &file_info) !=0)
         {
             http::server::send_response(req, http::NOT_FOUND);
+            delete this;
             return;
         }
     }
@@ -136,6 +143,7 @@ void filesystem_resource::get_method(http::server::request & req)
     if(!file)
     {
         http::server::send_response(req, http::NOT_FOUND);
+        delete this;
         return;
     }
     
@@ -147,6 +155,7 @@ void filesystem_resource::get_method(http::server::request & req)
         {
             fclose(file);
             http::server::send_response(req, http::NOT_MODIFIED);
+            delete this;
             return;
         }
     }
@@ -165,7 +174,7 @@ void filesystem_resource::get_method(http::server::request & req)
     if(file_info.st_size)
     {
         char * buffer = new char[SEND_BUFFER_SIZE];
-        send_file(file, buffer, SEND_BUFFER_SIZE, res, http::connection::error());
+        send_file(file, buffer, SEND_BUFFER_SIZE, res, this, http::connection::error());
     }
 }
 
