@@ -5,8 +5,6 @@
 
 // Generic Server Events
 extern boost::signal<void (int)> signal_shutdown;
-extern boost::signal<void ()> signal_shutdown_scripting;
-extern boost::signal<void ()> signal_reloadhopmod;
 
 #endif
 

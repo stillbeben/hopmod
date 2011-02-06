@@ -19,7 +19,7 @@ void init_hopmod()
 
     signal_shutdown.connect(boost::bind(&shutdown_lua));
     signal_shutdown.connect(&cleanup_info_files_on_shutdown);
-        
+    
     info_file("log/sauer_server.pid", "%i\n", getpid());
     
     init_scheduler();
@@ -44,7 +44,6 @@ void init_hopmod()
 
 static void reload_hopmod_now()
 {
-    signal_reloadhopmod();
     event_reloadhopmod(event_listeners(), boost::make_tuple());
 
     reloaded = true;
@@ -56,8 +55,6 @@ static void reload_hopmod_now()
     signal_shutdown(SHUTDOWN_RELOAD);
     
     signal_shutdown.disconnect_all_slots();
-    signal_shutdown_scripting.disconnect_all_slots();
-    signal_reloadhopmod.disconnect_all_slots();
 
     init_hopmod();
     server::started();
