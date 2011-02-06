@@ -134,7 +134,7 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "allow_ip", server::add_allowed_ip);
     bind_function(L, T, "shutdown", server::shutdown);
     bind_function(L, T, "restart_now", restart_now);
-    bind_function(L, T, "reloadscripts", reload_hopmod);
+    bind_function(L, T, "reload_lua", reload_hopmod);
 
 	bind_function(L, T, "add_item", server::add_item);
     bind_function(L, T, "add_flag", server::add_flag);
