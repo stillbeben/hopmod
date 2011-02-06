@@ -1,5 +1,6 @@
 local signal_loaded = server.create_event_signal("module-loaded")
 local signal_unloaded = server.create_event_signal("module-unloaded")
+local event_unload = server.create_event_signal("unload")
 
 local started = false
 local modules = {}
@@ -92,6 +93,10 @@ function server.unload_module(name)
     local control = loaded_modules[name]
     if not control then error(string.format("module \"%s\" not found", name)) end
     
+    for _, unload_handler in pairs(control.event_unload_handlers) do
+        unload_handler()
+    end
+    
     if control.unload then
         control.unload()
     end
@@ -130,8 +135,18 @@ local function load_module(name)
     local event_handlers = {}
     local event_signals = {}
     local timers = {}
+    local event_unload_handlers = {}
     
     environment.server.event_handler = function(name, handler)
+        
+        if name == "unload" then
+            event_unload_handlers[#event_unload_handlers + 1] = handler
+            local connection_id = #event_unload_handlers
+            return function()
+                event_unload_handlers[connection_id] = nil
+            end
+        end
+        
         local handlerId = server.event_handler(name, handler)
         event_handlers[#event_handlers + 1] = handlerId
         return handlerId
@@ -182,6 +197,7 @@ local function load_module(name)
     control.event_handlers = event_handlers
     control.event_signals = event_signals
     control.timers = timers
+    control.event_unload_handlers = event_unload_handlers
     control.successful_startup = success
     
     environment.server.event_handler = nil
