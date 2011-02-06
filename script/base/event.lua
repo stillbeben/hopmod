@@ -1,7 +1,8 @@
 
 local connections = {}
+local add_listener, remove_listener
 
-local function add_listener(event_id, listener_function)
+function add_listener(event_id, listener_function)
     
     local listeners = event[event_id]
 
@@ -12,10 +13,22 @@ local function add_listener(event_id, listener_function)
     listeners[#listeners + 1] = listener_function
     
     connections[#connections + 1] = {listeners, #listeners}
-    return #connections
+    
+    local connection_id = #connections
+    
+    return function()
+        return remove_listener(connection_id)
+    end
 end
 
-local function remove_listener(connection_id)
+function remove_listener(connection_id)
+
+    if type(connection_id) == "function" then
+        local disconnector = connection_id
+        disconnector()
+        return
+    end
+    
     local connection = connections[connection_id]
     if not connection then return end
     table.remove(connection[1], connection[2])
