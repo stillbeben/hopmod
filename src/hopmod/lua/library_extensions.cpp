@@ -59,5 +59,12 @@ int open_fifo(lua_State * L)
     }
 }
 
+int usleep(lua_State * L)
+{
+    int usecs = luaL_checkint(L, 1);
+    ::usleep(usecs);
+    return 0;
+}
+
 } //namespace lua
 

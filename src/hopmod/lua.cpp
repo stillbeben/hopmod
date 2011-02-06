@@ -79,6 +79,10 @@ void load_extra_os_functions(lua_State * L)
     lua_pushcfunction(L, lua::open_fifo);
     lua_settable(L, -3);
     
+    lua_pushliteral(L, "usleep");
+    lua_pushcfunction(L, lua::usleep);
+    lua_settable(L, -3);
+    
     lua_pop(L, 1);
 }
 
