@@ -785,14 +785,12 @@ void flushserverhost()
 
 vector<const char *> gameargs;
 
-int prog_argc;
-char * const * prog_argv;
+bool restart_program;
 
 int main(int argc, char* argv[])
 {
-    prog_argc = argc;
-    prog_argv = argv;
- 
+    restart_program = false;
+     
     if(enet_initialize()<0) fatal("Unable to initialise network module");
     atexit(enet_deinitialize);
     enet_time_set(0);
@@ -801,6 +799,11 @@ int main(int argc, char* argv[])
     game::parseoptions(gameargs);
     
     initserver(true, true);
+    
+    if(restart_program)
+    {
+        execv(argv[0], argv);   
+    }
     
     return 0;
 }

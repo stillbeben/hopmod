@@ -90,9 +90,7 @@ static void initiate_shutdown()
     
     event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_NORMAL)));
     signal_shutdown(SHUTDOWN_NORMAL);
-    
-    stop_restarter();
-    
+
     // Now wait for the main event loop to process work that is remaining and then exit
 }
 
@@ -107,8 +105,8 @@ void shutdown()
 void restart_now()
 {
     server::sendservmsg("Server restarting...");
-    start_restarter();
-    event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_RESTART)));
-    signal_shutdown(SHUTDOWN_RESTART);
+    extern bool restart_program;
+    restart_program = true;
+    server::shutdown();
 }
 

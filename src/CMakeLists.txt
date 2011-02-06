@@ -82,7 +82,6 @@ SET(GAME_SERVER_SOURCES
     hopmod/startup.cpp
     hopmod/scheduler.cpp
     hopmod/playerid.cpp
-    hopmod/restarter.cpp
     hopmod/lua.cpp
     hopmod/core_bindings.cpp
     hopmod/events.cpp
