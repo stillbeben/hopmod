@@ -791,7 +791,7 @@ int main(int argc, char* argv[])
 {
     restart_program = false;
      
-    if(enet_initialize()<0) fatal("Unable to initialise network module");
+    if(enet_initialize()<0) fatal("Unable to initialise enet");
     atexit(enet_deinitialize);
     enet_time_set(0);
     
