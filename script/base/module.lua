@@ -139,7 +139,7 @@ local function load_module(name)
     
     environment.server.event_handler = function(name, handler)
         
-        if name == "unload" then
+        if name == "unload" or name == "shutdown" then
             event_unload_handlers[#event_unload_handlers + 1] = handler
             local connection_id = #event_unload_handlers
             return function()
