@@ -405,6 +405,10 @@ function createClientTablesManager(containerElements, server){
         updateTeamScore(team, score);
     });
     
+    server.teams.addListener("scoreflag", function(cn, team, score){
+        updateTeamScore(team, score);
+    });
+    
     addPlayers(server.clients.players);
     
     $.each(server.clients.spectators, function(){
