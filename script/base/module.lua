@@ -88,7 +88,7 @@ server.load_once = server.script
 script = server.script
 load_once = server.load_once
 
-function server.unload_module(name)
+function server.unload(name)
     
     local control = loaded_modules[name]
     if not control then error(string.format("module \"%s\" not found", name)) end
@@ -126,7 +126,7 @@ end
 
 local function unload_all_modules()
     for name in pairs(loaded_modules) do 
-        catch_error(server.unload_module, name, true)
+        catch_error(server.unload, name, true)
     end
 end
 
@@ -257,7 +257,7 @@ end
 server.event_handler("mapchange", function()
     
     for _, name in ipairs(temporary_modules) do
-        server.unload_module(name)
+        server.unload(name)
     end
     
     temporary_modules = {}
