@@ -89,11 +89,22 @@ int player_id(lua_State * L)
 {
     int cn = luaL_checkint(L, 1);
     clientinfo * ci = getinfo(cn);
+        
     luaL_Buffer buffer;
     luaL_buffinit(L, &buffer);
-    uint ip_long = getclientip(get_ci(cn)->clientnum);
-    luaL_addlstring(&buffer, reinterpret_cast<const char *>(&ip_long), sizeof(ip_long));
-    luaL_addlstring(&buffer, ci->name, strlen(ci->name)); 
+    
+    if(ci->state.aitype == AI_NONE)
+    {
+        uint ip_long = getclientip(get_ci(cn)->clientnum);
+        luaL_addlstring(&buffer, reinterpret_cast<const char *>(&ip_long), sizeof(ip_long));
+        luaL_addlstring(&buffer, ci->name, strlen(ci->name)); 
+    }
+    else
+    {
+        luaL_addstring(&buffer, "bot");
+        luaL_addlstring(&buffer, reinterpret_cast<const char *>(&ci->sessionid), sizeof(ci->sessionid));   
+    }
+    
     luaL_pushresult(&buffer);
     return 1;
 }
