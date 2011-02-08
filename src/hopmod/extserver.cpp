@@ -85,10 +85,17 @@ void player_msg(int cn,const char * text)
     get_ci(cn)->sendprivtext(text);
 }
 
-int player_id(int cn)
+int player_id(lua_State * L)
 {
+    int cn = luaL_checkint(L, 1);
     clientinfo * ci = getinfo(cn);
-    return (ci ? ci->playerid : -1);
+    luaL_Buffer buffer;
+    luaL_buffinit(L, &buffer);
+    uint ip_long = getclientip(get_ci(cn)->clientnum);
+    luaL_addlstring(&buffer, reinterpret_cast<const char *>(&ip_long), sizeof(ip_long));
+    luaL_addlstring(&buffer, ci->name, strlen(ci->name)); 
+    luaL_pushresult(&buffer);
+    return 1;
 }
 
 int player_sessionid(int cn)
@@ -778,10 +785,10 @@ int team_size(const char * team)
     return count;
 }
 
-int recorddemo(const char * filename)
+void recorddemo(const char * filename)
 {
-    if(demorecord) return demo_id;
-    else return setupdemorecord(false, filename);
+    if(demorecord) return;
+    else setupdemorecord(false, filename);
 }
 
 int lua_gamemodeinfo(lua_State * L)

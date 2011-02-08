@@ -62,7 +62,7 @@ namespace server
     
     void started();
     int player_sessionid(int);
-    int player_id(int);
+    int player_id(lua_State * L);
     void player_msg(int,const char *);
     const char * player_name(int);
     void player_rename(int, const char *, bool);
@@ -146,7 +146,7 @@ namespace server
     void update_mastermask();
     const char * gamemodename();
     int lua_gamemodeinfo(lua_State *);
-    int recorddemo(const char *);
+    void recorddemo(const char *);
     void enddemorecord();
     void calc_player_ranks();
     void script_set_mastermode(int);

@@ -81,7 +81,6 @@ SET(GAME_SERVER_SOURCES
     fpsgame/server.cpp
     hopmod/startup.cpp
     hopmod/scheduler.cpp
-    hopmod/playerid.cpp
     hopmod/lua.cpp
     hopmod/core_bindings.cpp
     hopmod/events.cpp

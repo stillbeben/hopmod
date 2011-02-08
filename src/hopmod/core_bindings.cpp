@@ -55,7 +55,6 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "player_priv", server::player_privilege);
     bind_function(L, T, "player_priv_code", server::player_privilege_code);
     bind_function(L, T, "player_id", server::player_id);
-    bind_function(L, T, "clear_player_ids", clear_player_ids);
     bind_function(L, T, "player_sessionid", server::player_sessionid);
     bind_function(L, T, "player_ping", server::player_ping);
     bind_function(L, T, "player_ping_update", server::player_ping_update);
