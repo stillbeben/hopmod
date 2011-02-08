@@ -204,7 +204,7 @@ void stopgameserver(int)
     
     boost::system::error_code error;
     
-    serverhost_socket.close(error);
+    serverhost_socket.cancel(error);
     if(error)
         std::cerr<<"Error while trying to close game server socket: "<<error.message()<<std::endl;
     
