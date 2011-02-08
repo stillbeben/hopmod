@@ -708,6 +708,9 @@ namespace server
     void cleanup_fpsgame(int shutdown_type)
     {
         aiman::deleteai();
+        
+        loopv(demos) delete[] demos[i].data;
+        demos.shrink(0);
     }
 
     void serverinit()
@@ -910,28 +913,27 @@ namespace server
     int welcomepacket(packetbuf &p, clientinfo *ci);
     void sendwelcome(clientinfo *ci);
 
-    int setupdemorecord(bool broadcast = true, const char * filename = NULL)
+    void setupdemorecord(bool broadcast = true, const char * filename = NULL)
     {
-        if(!m_mp(gamemode) || m_edit) return -1;
+        if(!m_mp(gamemode) || m_edit) return;
         
         string defaultfilename;
         
         if(!filename || filename[0]=='\0')
         {
-            demo_id = demos.length() + (demos.length()>=MAXDEMOS ? 0 : 1);
             char ftime[32];
             ftime[0]='\0';
             time_t now = time(NULL);
             strftime(ftime,sizeof(ftime),"%0e%b%Y_%H:%M",localtime(&now));
-            formatstring(defaultfilename)("log/demo/%s_%s_%i.dmo",ftime,smapname,demo_id);
+            formatstring(defaultfilename)("log/demo/%s_%s.dmo",ftime,smapname);
             filename = defaultfilename;
         }
         
         demotmp = openfile(filename,"w+b");
-        if(!demotmp || m_edit) return -1;
+        if(!demotmp) return;
         
         stream *f = opengzfile(NULL, "wb", demotmp);
-        if(!f) { DELETEP(demotmp); return -1; } 
+        if(!f) { DELETEP(demotmp); return; } 
 
         if(broadcast) sendservmsg("recording demo");
 
@@ -949,9 +951,7 @@ namespace server
         welcomepacket(p, NULL);
         writedemo(1, p.buf, p.len);
 
-        event_beginrecord(event_listeners(), boost::make_tuple(demo_id, filename));
-
-        return demo_id;
+        event_beginrecord(event_listeners(), boost::make_tuple(0, filename));
     }
 
     void listdemos(int cn)
@@ -2303,7 +2303,6 @@ namespace server
                 }
 
                 ci->playermodel = getint(p);
-                ci->playerid = get_player_id(ci->name, getclientip(ci->clientnum));
                 
                 if(m_demo) enddemoplayback();
                 
@@ -2679,10 +2678,7 @@ namespace server
                 {
                     copystring(ci->name, text);
                     
-                    int futureId = get_player_id(text, getclientip(ci->clientnum));
-                    event_renaming(event_listeners(), boost::make_tuple(ci->clientnum, futureId));
-                    
-                    ci->playerid = futureId;
+                    event_renaming(event_listeners(), boost::make_tuple(ci->clientnum, 0));
                     
                     event_rename(event_listeners(), boost::make_tuple(ci->clientnum, oldname, ci->name));
                     
