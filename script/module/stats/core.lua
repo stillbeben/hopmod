@@ -74,8 +74,6 @@ end
 
 function internal.getPlayerTable(player_id)
     
-    player_id = tonumber(player_id)
-    
     if players[player_id] then 
         return players[player_id]
     end
