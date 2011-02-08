@@ -15,7 +15,8 @@ local function sendServerBanner(cn)
         if sid ~= server.player_sessionid(cn) then return end
         
         server.player_msg(cn, server.motd)
-        server.player_vars(cn).shown_banner = true
+        
+        server.player_set_session_var(cn, "shown_banner", true)
     end)
 end
 
