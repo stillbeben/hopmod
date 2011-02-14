@@ -47,7 +47,7 @@
         putint(q, ci->state.health);
         putint(q, ci->state.armour);
         putint(q, ci->state.gunselect);
-        putint(q, ci->privilege);
+        putint(q, (currentmaster == ci->clientnum ? ci->privilege : PRIV_NONE)); 
         putint(q, ci->state.state);
         uint ip = getclientip(ci->clientnum);
         q.put((uchar*)&ip, 3);
