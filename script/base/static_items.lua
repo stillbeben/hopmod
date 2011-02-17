@@ -1,7 +1,7 @@
 -- (c) 2011 Thomas
 -- Description: Functions for loading map items, flags and bases statically 
 
-local MAPINFO_PATH = "mapinfo/"
+local MAPINFO_PATH = "data/mapinfo/"
 local map = ""
 
 local function file_exists(mapfile)
