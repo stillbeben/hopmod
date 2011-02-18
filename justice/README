@@ -1,7 +1,0 @@
-== How to Build Hopmod ==
-
-See http://hopmod.e-topic.info/index.php5?title=Installation
-
-Or execute the compile script:
-chmod +x compile.sh
-./compile.sh
