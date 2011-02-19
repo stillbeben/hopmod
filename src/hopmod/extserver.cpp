@@ -88,7 +88,7 @@ void player_msg(int cn,const char * text)
 int player_id(lua_State * L)
 {
     int cn = luaL_checkint(L, 1);
-    clientinfo * ci = getinfo(cn);
+    clientinfo * ci = get_ci(cn);
         
     luaL_Buffer buffer;
     luaL_buffinit(L, &buffer);
