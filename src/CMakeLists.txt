@@ -33,7 +33,7 @@ include_directories(
     ${BOOST_INCLUDE_DIRS}
     ${FUNGU_INCLUDE_DIRS})
 
-add_definitions(-Wall -DSTANDALONE ${LSQLITE3_DEFINITIONS})
+add_definitions(-Wall -fsigned-char -DSTANDALONE ${LSQLITE3_DEFINITIONS})
 
 set(SAUERTOOLS_SOURCES
     shared/tools.cpp
