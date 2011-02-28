@@ -52,14 +52,23 @@ set(LUA_MODULES_SOURCES
     hopmod/lua/event.cpp
     hopmod/lua/push_function.cpp
     hopmod/lua/library_extensions.cpp
+    hopmod/lua/pcall.cpp
+    hopmod/lua/push.cpp
+    hopmod/lua/register_class.cpp
     hopmod/lua/modules/module.cpp
-    hopmod/lua/modules/crypto.cpp    
-    hopmod/lua/modules/net.cpp
+    hopmod/lua/modules/crypto.cpp
     hopmod/lua/modules/timer.cpp
     hopmod/lua/modules/geoip.cpp
     hopmod/lua/modules/filesystem.cpp
     hopmod/lua/modules/packlib.c
     hopmod/lua/modules/cubescript.cpp
+    hopmod/lua/modules/net/module.cpp
+    hopmod/lua/modules/net/tcp_socket.cpp
+    hopmod/lua/modules/net/weak_ref.cpp
+    hopmod/lua/modules/net/ipmask.cpp
+    hopmod/lua/modules/net/file_stream.cpp
+    hopmod/lua/modules/net/tcp_acceptor.cpp
+    hopmod/lua/modules/net/resolver.cpp
     hopmod/cubescript/cubescript.cpp
     hopmod/cubescript/lua_command_stack.cpp
     hopmod/cubescript/lua/pcall.cpp

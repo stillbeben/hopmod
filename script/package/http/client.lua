@@ -69,14 +69,12 @@ local function read_body(socket, headers, callback)
         return
     end
     
-    local buffer = net.buffer(content_length)
-    
-    socket:async_read(buffer, function(error_message)
+    socket:async_read(content_length, function(data, error_message)
         if error_message then
             callback(nil, {socket_error = error_message})
             return
         end
-        callback(buffer:to_string())
+        callback(data)
     end)
 end
 
