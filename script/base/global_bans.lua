@@ -11,7 +11,7 @@ local function update()
     http.client.get(URL, function(body, status)
         
         if not body then
-            server.log_error("Failed to download the global ban list")
+            server.log_error("Failed to download the global ban list: " .. status)
         end
         
         local data = Json.Decode(body)
