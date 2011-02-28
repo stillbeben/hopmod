@@ -1,49 +1,36 @@
-require "persistence"
+require "journal"
 
-local IPMASK_VARS_FILE = "log/player_vars"
+local IPMASK_VARS_FILE = "log/player_vars_journal"
 
 local ipmask_vars = {}
 local ipmask_vars_by_ipmask = net.ipmask_table()
 local ipmask_vars_by_name = {}
-local ipmask_vars_store_on_update = true
-
 local player_session_vars = {}
 
-local function store_vars()
-    persistence.store(IPMASK_VARS_FILE .. ".tmp", ipmask_vars, ipmask_vars_by_name)
-    os.rename(IPMASK_VARS_FILE .. ".tmp", IPMASK_VARS_FILE)
-end
-
-server.store_ipvars = store_vars
+local journal_file = journal.writer_open(IPMASK_VARS_FILE)
 
 local function load_vars()
-
-    ipmask_vars, ipmask_vars_by_name = persistence.load(IPMASK_VARS_FILE)
     
-    if not ipmask_vars then
-        ipmask_vars = {}
-        ipmask_vars_by_name = {}
-    end
-    
+    ipmask_vars = {}
     ipmask_vars_by_ipmask = net.ipmask_table()
-    -- Load ipmask_vars_by_ipmask index
-    for ipmask_string, vars in pairs(ipmask_vars) do
-       ipmask_vars_by_ipmask[ipmask_string] = vars 
+    ipmask_vars_by_name = {}
+    
+    local writes, error_message = journal.load(IPMASK_VARS_FILE)
+    
+    if not writes then
+        io.stderr:write(string.format("failed to load stored player variables: %s\n", error_message))
+        return
+    end
+    
+    local set_ip_var = server.set_ip_var
+    
+    for _, write in pairs(writes) do
+        set_ip_var(write[1], write[2], write[3], true)
     end
 end
 
-load_vars()
-
-function server.store_ipvars_on_update(yes)
-    if yes then
-        ipmask_vars_store_on_update = true
-    else
-        ipmask_vars_store_on_update = false
-    end
-end
-
-function server.set_ip_var(ipmask, name, value)
-
+function server.set_ip_var(ipmask, name, value, dont_commit)
+    
     ipmask = net.ipmask(ipmask):to_string() -- Normalized ipmask string representation
     
     local vars = ipmask_vars[ipmask]
@@ -53,27 +40,33 @@ function server.set_ip_var(ipmask, name, value)
         ipmask_vars_by_ipmask[ipmask] = vars
     end
     
-    -- Update ipmask_vars_by_name index
     local existing_value = vars[name]
-    if not existing_value then
-        local instances_array = ipmask_vars_by_name[name]
-        if value then
-            if not instances_array then
-                instances_array = {}
-                ipmask_vars_by_name[name] = instances_array
-            end
-            instances_array[#instances_array + 1] = {ipmask, value}
-        else
-            if instances_array then
-                for index, instance in pairs(instances_array) do
-                    if instance[1] == ipmask then
-                        table.remove(instances_array, index) -- FIXME not working
-                    end
+    
+    if value == existing_value then
+        return
+    end
+    
+    -- Update the ipmask_vars_by_name table
+    if existing_value then
+        if not value then
+            local vars_by_name = ipmask_vars_by_name[name]
+            for index, instance in pairs(vars_by_name) do
+                if instance[1] == ipmask then
+                    table.remove(vars_by_name, index)
                 end
             end
         end
+    else
+        if value then
+            local vars_by_name = ipmask_vars_by_name[name]
+            if not vars_by_name then
+                vars_by_name = {}
+                ipmask_vars_by_name[name] = vars_by_name
+            end
+            vars_by_name[#vars_by_name + 1] = {ipmask, value}
+        end
     end
-    
+        
     vars[name] = value
     
     -- Remove the ipmask key when the vars table becomes empty
@@ -84,8 +77,8 @@ function server.set_ip_var(ipmask, name, value)
         end
     end
     
-    if ipmask_vars_store_on_update then
-        store_vars()
+    if not dont_commit then
+        journal_file:write(ipmask, name, value)
     end
 end
 
@@ -135,4 +128,7 @@ function server.player_vars(cn)
     
     return vars
 end
+
+load_vars()
+
 
