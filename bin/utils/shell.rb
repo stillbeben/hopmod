@@ -34,7 +34,7 @@ def start_shell(hostname, port, command)
         
         puts "Connected to #{hostname}:#{port}"
         
-        label = execute_command(http, "try [get shell_label] [result \"server\"]")
+        label = "server"
         
         if command
             puts "Sending command..."
