@@ -98,7 +98,10 @@ int managed_tcp_socket::create_object(lua_State * L)
 
 int managed_tcp_socket::__gc(lua_State * L)
 {
-    lua::to<managed_tcp_socket>(L, 1)->~target_type();
+    target_type self = *lua::to<managed_tcp_socket>(L, 1);
+    boost::system::error_code ec;
+    self->socket.close(ec);
+    self.~target_type();
     return 0;
 }
 

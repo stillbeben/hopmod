@@ -38,7 +38,10 @@ int tcp_acceptor::create_object(lua_State * L)
 
 int tcp_acceptor::__gc(lua_State * L)
 {
-    lua::to<tcp_acceptor>(L, 1)->~target_type();
+    tcp_acceptor::target_type self = *lua::to<tcp_acceptor>(L, 1);
+    boost::system::error_code ec;
+    self->close(ec);
+    self.~target_type();
     return 0;
 }
 

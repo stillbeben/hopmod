@@ -43,7 +43,10 @@ int file_stream::create_object(lua_State * L)
 
 int file_stream::__gc(lua_State * L)
 {
-    lua::to<file_stream>(L, 1)->~target_type();
+    file_stream::target_type self = *lua::to<file_stream>(L, 1);
+    boost::system::error_code ec;
+    self->close(ec);
+    self.~target_type();
     return 0;
 }
 
