@@ -33,7 +33,7 @@ public:
         
         boost::asio::async_read(stream, m_buffer, boost::asio::transfer_at_least(
             read_size - m_buffer.size()), 
-            boost::bind(&read_stream_buffer::read_complete<ReadHandler>, this, _1, _2, handler));
+            boost::bind(&read_stream_buffer::template read_complete<ReadHandler>, this, _1, _2, handler));
     }
     
     template<typename AsyncReadStream, typename ReadHandler>
@@ -41,7 +41,7 @@ public:
     {
         if(!lock_read(stream, handler)) return;
         boost::asio::async_read_until(stream, m_buffer, delim, boost::bind(
-            &read_stream_buffer::read_complete<ReadHandler>, this, _1, _2, handler));
+            &read_stream_buffer::template read_complete<ReadHandler>, this, _1, _2, handler));
     }
     
     void unlock_read()
