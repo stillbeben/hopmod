@@ -26,7 +26,7 @@ public:
         
         if(read_size < m_buffer.size())
         {
-            stream.io_service().post(boost::bind(&read_stream_buffer<StreamBufferClass, PodType>::read_complete<ReadHandler>, 
+            stream.io_service().post(boost::bind(&read_stream_buffer<StreamBufferClass, PodType>::template read_complete<ReadHandler>, 
                this, boost::system::error_code(), read_size, handler));
             return;
         }
