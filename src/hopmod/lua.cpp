@@ -12,6 +12,7 @@ static void load_extra_os_functions(lua_State *);
 
 static lua_State * L = NULL;
 static lua::event_environment * event_environment = NULL;
+static int lua_stack_size = 0;
 
 void init_lua()
 {
@@ -110,9 +111,15 @@ static void load_lua_modules()
 
 lua::event_environment & event_listeners()
 {
+    lua_stack_size = lua_gettop(L);
     static lua::event_environment unready_event_environment;
     if(!event_environment) return unready_event_environment;
     return *event_environment;
+}
+
+int get_lua_stack_size()
+{
+    return lua_stack_size;
 }
 
 int on_error(lua_State * L)
