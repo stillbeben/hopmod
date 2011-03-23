@@ -12,6 +12,7 @@ lua::event_environment & event_listeners();
 void log_error(lua_State * L, const char * event_name)
 {
     event_listeners().log_error(event_name, lua_tostring(L, -1));
+    lua_pop(L, 1);
 }
 
 boost::asio::io_service & get_main_io_service(lua_State *)
