@@ -145,7 +145,7 @@ void event_environment::add_listener(const char * event_id)
     lua_pushvalue(L, -4);
     lua_settable(L, -3);
     
-    lua_pop(L, 2);
+    lua_pop(L, 3);
 }
 
 void event_environment::add_listener(const char * event_id, lua_CFunction function)
@@ -172,7 +172,7 @@ void event_environment::clear_listeners(const event_base & event)
     lua_pushvalue(L, -3);
     lua_settable(L, -3);
     
-    lua_pop(L, 2);
+    lua_pop(L, 3);
 }
 
 lua_State * event_environment::lua_state()
