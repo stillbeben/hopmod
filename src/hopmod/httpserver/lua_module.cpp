@@ -158,7 +158,10 @@ private:
         delete sink;
         
         if(lua_pcall(L, 1, 0, 0) != 0)
+        {
             event_listeners().log_error("httpserver_async_read_content", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
     }
     
     static int async_read_content(lua_State * L)
@@ -284,7 +287,10 @@ private:
         lua_pushboolean(L, sent);
         
         if(lua_pcall(L, 1, 0, 0) != 0)
+        {
             event_listeners().log_error("httpserver_send_header", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
         
         if(m_content_length == 0) m_response = NULL;
     }
@@ -323,7 +329,10 @@ private:
         lua_pushboolean(L, sent);
         
         if(lua_pcall(L, 1, 0, 0) != 0)
+        {
             event_listeners().log_error("httpserver_send_body", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
         
         delete m_response;
         m_response = NULL;
@@ -466,13 +475,16 @@ public:
         if(lua_pcall(m_lua, 1, 1, 0) != 0)
         {
             event_listeners().log_error("httpserver_resource_resolve", lua_tostring(m_lua, -1));
+            lua_pop(m_lua, 1);
             return NULL;
         }
         else
         {
-            if(!lua_isusertype(m_lua, -1, MT) && !lua_isusertype(m_lua, -1, filesystem_resource_wrapper::MT))
-                return NULL;
-            return reinterpret_cast<resource_wrapper *>(lua_touserdata(m_lua, -1));
+            resource_wrapper * resource = NULL;
+            if(lua_isusertype(m_lua, -1, MT) || lua_isusertype(m_lua, -1, filesystem_resource_wrapper::MT))
+                resource = reinterpret_cast<resource_wrapper *>(lua_touserdata(m_lua, -1));
+            lua_pop(m_lua, 1);
+            return resource;
         }
     }
     
@@ -488,7 +500,10 @@ public:
         request_wrapper::create_object(m_lua, &req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
+        {
             event_listeners().log_error("httpserver_resource_get", lua_tostring(m_lua, -1));
+            lua_pop(m_lua, 1);
+        }
     }
     
     void put_method(http::server::request & req)
@@ -503,7 +518,10 @@ public:
         request_wrapper::create_object(m_lua, &req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
+        {
             event_listeners().log_error("httpserver_resource_put", lua_tostring(m_lua, -1));
+            lua_pop(m_lua, 1);
+        }
     }
     
     void post_method(http::server::request &req)
@@ -518,7 +536,10 @@ public:
         request_wrapper::create_object(m_lua, &req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
+        {
             event_listeners().log_error("httpserver_resource_post", lua_tostring(m_lua, -1));
+            lua_pop(m_lua, 1);
+        }
     }
     
     void delete_method(http::server::request & req)
@@ -533,7 +554,10 @@ public:
         request_wrapper::create_object(m_lua, &req);
         
         if(lua_pcall(m_lua, 1, 0, 0) != 0)
+        {
             event_listeners().log_error("httpserver_resource_delete", lua_tostring(m_lua, -1));
+            lua_pop(m_lua, 1);
+        }
     }
     
     static void register_class(lua_State * L)
@@ -844,6 +868,7 @@ private:
                 if(lua_pcall(m_L, 1, 0, 0) != 0)
                 {
                     event_listeners().log_error("httpserver_accept", lua_tostring(m_L, -1));
+                    lua_pop(m_L, 1);
                 }
             }
             
