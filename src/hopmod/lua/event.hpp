@@ -59,11 +59,11 @@ public:
         
         lua_State * L = environment.push_listeners_table(text_id(), numeric_id());
         assert(L && lua_type(L, -1) == LUA_TTABLE);
-        
+                
         bool using_error_function = environment.push_error_function();
         int error_function = (using_error_function ? lua_gettop(L) : 0);
         
-        lua_pushvalue(L, -2);
+        lua_pushvalue(L, using_error_function ? -2 : -1);
         
         bool prevent_default = false;
         
