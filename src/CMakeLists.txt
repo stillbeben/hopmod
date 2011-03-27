@@ -22,6 +22,17 @@ if(NOT ${ZLIB_EXISTS})
     message(FATAL_ERROR "missing required library: ZLIB")
 endif(NOT ${ZLIB_EXISTS})
 
+find_package(OpenSSL)
+
+if(OPENSSL_FOUND)
+    set(LUA_NET_SSL_SOURCES
+        hopmod/lua/modules/net/ssl_context.cpp
+        hopmod/lua/modules/net/ssl_tcp_stream.cpp)
+    add_definitions(-DKSSL_DEBUG)
+else(OPENSSL_FOUND)
+    add_definitions(-DDISABLE_SSL)
+endif(OPENSSL_FOUND)
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/shared
@@ -31,7 +42,8 @@ include_directories(
     ${ENET_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIRS}
     ${BOOST_INCLUDE_DIRS}
-    ${FUNGU_INCLUDE_DIRS})
+    ${FUNGU_INCLUDE_DIRS}
+    ${OPENSSL_INCLUDE_DIR})
 
 add_definitions(-Wall -fsigned-char -DSTANDALONE ${LSQLITE3_DEFINITIONS})
 
@@ -69,6 +81,7 @@ set(LUA_MODULES_SOURCES
     hopmod/lua/modules/net/file_stream.cpp
     hopmod/lua/modules/net/tcp_acceptor.cpp
     hopmod/lua/modules/net/resolver.cpp
+    ${LUA_NET_SSL_SOURCES}
     hopmod/cubescript/cubescript.cpp
     hopmod/cubescript/lua_command_stack.cpp
     hopmod/cubescript/lua/pcall.cpp
@@ -83,7 +96,8 @@ target_link_libraries(lua_modules
     ${LUA_LIBRARY}
     ${FUNGU_STRING_LIBRARY}
     ${FUNGU_HTTP_LIBRARY}
-    ${LSQLITE3_LIBRARY} )
+    ${LSQLITE3_LIBRARY}
+    ${OPENSSL_LIBRARIES})
 
 SET(GAME_SERVER_SOURCES
     engine/server.cpp

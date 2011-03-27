@@ -6,6 +6,11 @@
 #include "file_stream.hpp"
 #include "resolver.hpp"
 
+#ifndef DISABLE_SSL
+#include "ssl_context.hpp"
+#include "ssl_tcp_stream.hpp"
+#endif
+
 boost::asio::io_service & get_main_io_service();
 lua::event_environment & event_listeners();
 
@@ -42,6 +47,26 @@ void open_net2(lua_State * L)
     };
     
     luaL_register(L, "net", net_funcs);
+    
+#ifndef DISABLE_SSL
+    
+    lua::ssl_context::register_class(L);
+    lua::managed_ssl_tcp_stream::register_class(L);
+    
+    lua_newtable(L);
+    
+    static luaL_Reg ssl_funcs[] = {
+        {"context", lua::ssl_context::create_object},
+        {"tcp_stream", lua::managed_ssl_tcp_stream::create_object}
+    };
+    luaL_register(L, NULL, ssl_funcs);
+    
+    lua::ssl_context::push_constants(L);
+    lua::managed_ssl_tcp_stream::push_constants(L);
+    
+    lua_setfield(L, -2, "ssl");
+#endif
+    
     lua_pop(L, 1);
 }
 
