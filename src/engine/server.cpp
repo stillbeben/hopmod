@@ -524,14 +524,17 @@ void update_server(const boost::system::error_code & error)
 {
     if(error == boost::asio::error::operation_aborted || error) return;
     
-    update_timer.expires_from_now(boost::posix_time::milliseconds(5));
-    update_timer.async_wait(update_server);
-    
     localclients = nonlocalclients = 0;
     loopv(clients) switch(clients[i]->type)
     {
         case ST_LOCAL: localclients++; break;
         case ST_TCPIP: nonlocalclients++; break;
+    }
+    
+    if(nonlocalclients)
+    {
+        update_timer.expires_from_now(boost::posix_time::milliseconds(5));
+        update_timer.async_wait(update_server);
     }
     
     int millis = (int)enet_time_get();
@@ -556,6 +559,13 @@ void serverhost_process_event(ENetEvent & event)
             char hn[1024];
             copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
             printf("client connected (%s)\n", c.hostname);
+            
+            if(!nonlocalclients)
+            {
+                update_timer.cancel();
+                update_server(boost::system::error_code());
+            }
+            
             int reason = server::clientconnect(c.num, c.peer->address.host);
             if(!reason) nonlocalclients++;
             else disconnect_client(c.num, reason);
