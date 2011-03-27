@@ -111,9 +111,9 @@ static void load_lua_modules()
 
 lua::event_environment & event_listeners()
 {
-    lua_stack_size = lua_gettop(L);
     static lua::event_environment unready_event_environment;
     if(!event_environment) return unready_event_environment;
+    lua_stack_size = lua_gettop(L);
     return *event_environment;
 }
 
