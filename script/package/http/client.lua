@@ -101,7 +101,7 @@ local function read_chunked_body(socket, header, callback, body)
     socket:async_read_until("\r\n", function(line, error_message)
     
         if error_message then
-            callback(nil,{socket_error = error_message})
+            callback(nil, {socket_error = error_message})
             return
         end
         
@@ -122,16 +122,14 @@ local function read_chunked_body(socket, header, callback, body)
             return
         end
         
-        local buffer = net.buffer(chunk_size)
-        
-        socket:async_read(buffer, function(error_message)
+        socket:async_read(chunk_size, function(chunk, error_message)
         
             if error_message then
                 callback(nil,{socket_error = error_message})
                 return
             end
             
-            body = body .. buffer:to_string()
+            body = body .. chunk
             
             socket:async_read_until("\r\n", function(empty_line, error_message)
                 
@@ -164,21 +162,40 @@ function get(resource, callback, state)
     
     resource = url.parse(resource)
     
-    if resource.scheme ~= "http" or not resource.host then
-        callback(nil,{http_error = "invalid url"})
+    local support_ssl = net.ssl ~= nil
+    
+    local supported_protocol = {
+        http = true,
+        https = support_ssl
+    }
+    
+    if not supported_protocol[resource.scheme] or not resource.host then
+        callback(nil, {http_error = "invalid url"})
         return
+    end
+    
+    local standard_port = {
+        http = 80,
+        https = 443
+    }
+    
+    local using_https = resource.scheme == "https"
+    local ssl_client_socket = nil
+    local ssl_context = nil
+    
+    if using_https then
+        ssl_context = net.ssl.context(net.ssl.METHOD_SSLV3)
+        ssl_context:set_verify_mode(net.ssl.VERIFY_PEER)
+        ssl_context:load_verify_file("share/cacert.pem")
     end
     
     resource.path = resource.path or "/"
     
     local client = net.tcp_client()
+    local host = resource.host
+    local port = resource.port or standard_port[resource.scheme]
     
-    client:async_connect(resource.host, resource.port or 80, function(error_message)
-        
-        if error_message then
-            callback(nil, {socket_error = error_message})
-            return
-        end
+    local function send_request()
         
         local host_field = resource.host
         if resource.port then
@@ -249,11 +266,40 @@ function get(resource, callback, state)
                             headers = headers
                         })
                         
-                        client:close()
+                        if using_https then
+                            client:async_shutdown(function(error_message)
+                                ssl_client_socket:close()
+                            end)
+                        else
+                            client:close()
+                        end
                     end)
                 end)
             end)
         end)
+    end
+    
+    client:async_connect(host, port, function(error_message)
+        
+        if error_message then
+            callback(nil, {socket_error = error_message})
+            return
+        end
+        
+        if using_https then
+            ssl_client_socket = client
+            client = net.ssl.tcp_stream(client, ssl_context)
+            client:async_handshake(net.ssl.HANDSHAKE_CLIENT, function(error_message)
+                if error_message then
+                    callback(nil, {ssl_error = error_message})
+                    return
+                end
+                send_request()
+            end)
+            return
+        end
+        
+        send_request()
     end)
 end
 
