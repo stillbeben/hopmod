@@ -184,6 +184,10 @@ size_t tx_packets = 0 , rx_packets = 0, tx_bytes = 0, rx_bytes = 0;
 int laststatus = 0; 
 ENetSocket pongsock = ENET_SOCKET_NULL, lansock = ENET_SOCKET_NULL;
 
+size_t info_queries = 0;
+size_t tx_info_bytes = 0;
+size_t rx_info_bytes = 0;
+
 io_service main_io_service;
 
 io_service & get_main_io_service()
@@ -435,6 +439,7 @@ static ENetAddress pongaddr;
 
 void sendserverinforeply(ucharbuf &p)
 {
+    tx_info_bytes += p.length();
     ENetBuffer buf;
     buf.data = p.buf;
     buf.dataLength = p.length();
@@ -632,6 +637,9 @@ void serverinfo_input(int fd)
     int len = enet_socket_receive(fd, &pongaddr, &buf, 1);
     if(len < 0) return;
     
+    info_queries++;
+    rx_info_bytes += len;
+    
     ucharbuf req(pong, len), p(pong, sizeof(pong));
     p.len += len;
     server::serverinforeply(req, p);
@@ -659,9 +667,19 @@ void netstats_handler(const boost::system::error_code & ec)
     
     if(has_stats) 
     {
-        printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, serverhost->totalSentData/60.0f/1024, serverhost->totalReceivedData/60.0f/1024);
+        printf("client traffic: %d remote clients, %.1f send, %.1f rec (KiB/s)\n", nonlocalclients, serverhost->totalSentData/60.0f/1024, serverhost->totalReceivedData/60.0f/1024);
         serverhost->totalSentData = 0;
         serverhost->totalReceivedData = 0;
+    }
+    
+    if(info_queries)
+    {
+        printf("info traffic: %zu queries/sec %.2f send, %.2f rec (KiB/s)\n", info_queries, 
+            tx_info_bytes/60.0f/1024, rx_info_bytes/60.0f/1024);
+        
+        info_queries = 0;
+        rx_info_bytes = 0;
+        tx_info_bytes = 0;
     }
     
     netstats_timer.expires_from_now(boost::posix_time::minutes(1));
