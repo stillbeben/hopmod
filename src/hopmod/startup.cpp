@@ -22,7 +22,6 @@ void init_hopmod()
     
     info_file("log/sauer_server.pid", "%i\n", getpid());
     
-    init_scheduler();
     init_lua();
     
     static const char * INIT_SCRIPT = "script/base/init.lua";
@@ -50,8 +49,6 @@ static void reload_hopmod_now()
 
     event_shutdown(event_listeners(), boost::make_tuple(static_cast<int>(SHUTDOWN_RELOAD)));
     
-    update_scheduler(totalmillis); // Call zero wait handlers
-    
     signal_shutdown(SHUTDOWN_RELOAD);
     
     signal_shutdown.disconnect_all_slots();
@@ -70,7 +67,7 @@ void reload_hopmod()
 
 void update_hopmod()
 {
-    update_scheduler(totalmillis);
+    
 }
 
 namespace server{

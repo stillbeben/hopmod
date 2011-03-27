@@ -1,102 +1,106 @@
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "pch.hpp"
-#endif
-
 #include <boost/bind.hpp>
 #include "hopmod.hpp"
-#include "lib/free_function_scheduler.hpp"
-
-#include <iostream>
-
-static free_function_scheduler free_scheduled;
-void cancel_timer(int);
-static void cancel_free_scheduled(int);
-
-void init_scheduler()
-{
-    signal_shutdown.connect(cancel_free_scheduled, boost::signals::at_front);
-}
-
-void cancel_free_scheduled(int)
-{
-    free_scheduled.cancel_all();
-}
+#include "main_io_service.hpp"
+#include "lua/modules/net/weak_ref.hpp"
+using namespace boost::asio;
 
 namespace lua{
 
-static int call_scheduled_function(lua_State * L, int function_ref, bool repeat)
+static void async_wait_handler(lua_State * L,
+    boost::shared_ptr<deadline_timer> timer, bool repeat, int countdown, lua::weak_ref callback, 
+    const boost::system::error_code & ec)
 {
-    lua_rawgeti(L, LUA_REGISTRYINDEX, function_ref);
+    if(callback.is_expired()) return;
+    callback.get(L);
     
-    lua::event_environment & listeners = event_listeners();
+    if(lua_pcall(L, 0, 1, 0) == 0)
+    {
+        repeat = repeat && lua_type(L, -1) == LUA_TNIL;
+    }
+    else event_listeners().log_error(repeat ? "interval" : "sleep", lua_tostring(L, -1));
     
-    int status = 1;
+    lua_pop(L, 1);
     
     if(repeat)
     {
-        listeners.add_listener("interval");
-        
-        if(event_interval(listeners, boost::make_tuple()))
-            status = -1;
-         
-        listeners.clear_listeners(event_interval);
+        timer->expires_from_now(boost::posix_time::milliseconds(countdown));
+        timer->async_wait(boost::bind(async_wait_handler, L, timer, repeat, countdown, callback, _1));
     }
     else
     {
-        listeners.add_listener("sleep");
-        event_sleep(listeners, boost::make_tuple());
-        
-        listeners.clear_listeners(event_sleep);
-        luaL_unref(L, LUA_REGISTRYINDEX, function_ref);
+        callback.unref(L);
     }
-    
-    return status;
 }
 
-static int schedule_callback(lua_State * L, bool repeat)
+static int deadline_timer_ptr_gc(lua_State * L)
+{
+    boost::weak_ptr<deadline_timer> * timer = reinterpret_cast<boost::weak_ptr<deadline_timer> *>(
+        luaL_checkudata(L, 1, "deadline_timer"));
+    timer->~weak_ptr<deadline_timer>();
+    return 0;
+}
+
+int async_wait(lua_State * L, bool repeat)
 {
     int countdown = luaL_checkint(L, 1);
-    
     luaL_checktype(L, 2, LUA_TFUNCTION);
+    lua_pushvalue(L, 2);
     
-    int function_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+    boost::shared_ptr<deadline_timer> timer(new deadline_timer(get_main_io_service()));
     
-    int id = free_scheduled.schedule(boost::bind(&call_scheduled_function, L, function_ref, repeat), countdown, repeat);
+    timer->expires_from_now(boost::posix_time::milliseconds(countdown));
     
-    lua_pushinteger(L, id);
+    timer->async_wait(boost::bind(async_wait_handler, L, timer, repeat, countdown,
+        lua::weak_ref::create(L), _1));
+    
+    new (lua_newuserdata(L, sizeof(boost::weak_ptr<deadline_timer>))) boost::weak_ptr<deadline_timer>(timer);
+    
+    luaL_newmetatable(L, "deadline_timer");
+    lua_pushliteral(L, "__gc");
+    lua_pushcfunction(L, deadline_timer_ptr_gc);
+    lua_settable(L, -3);
+    lua_setmetatable(L, -2);
+    
     return 1;
 }
 
 int sleep(lua_State * L)
 {
-    return schedule_callback(L, false);
+    return async_wait(L, false);
 }
 
 int interval(lua_State * L)
 {
-    return schedule_callback(L, true);
+    return async_wait(L, true);
+}
+
+int cancel_timer(lua_State * L)
+{
+    boost::weak_ptr<deadline_timer> timer = *reinterpret_cast<boost::weak_ptr<deadline_timer> *>(
+        luaL_checkudata(L, 1, "deadline_timer"));
+    if(timer.expired()) return 0;
+    timer.lock()->cancel();
+    return 0;
 }
 
 } //namespace lua
 
-void sched_callback(int (* fun)(void *),void * closure)
+static void sched_callback_handler(deadline_timer * timer, int (* fun)(void *), void * closure, 
+    const boost::system::error_code & ec)
 {
-    //FIXME memory leak for closure when job is cancelled
-    free_scheduled.schedule(boost::bind(fun, closure), 0);
+    fun(closure);
+    delete timer;
 }
 
 void sched_callback(int (* fun)(void *), void * closure, int delay)
 {
-    free_scheduled.schedule(boost::bind(fun, closure), delay);
+    deadline_timer * timer = new deadline_timer(get_main_io_service());
+    timer->expires_from_now(boost::posix_time::milliseconds(delay));
+    timer->async_wait(boost::bind(sched_callback_handler, timer, fun, closure, _1));
 }
 
-void update_scheduler(int timenow)
+void sched_callback(int (* fun)(void *), void * closure)
 {
-    free_scheduled.update(timenow);
-}
-
-void cancel_timer(int job_id)
-{
-    free_scheduled.cancel(job_id);
+    get_main_io_service().post(boost::bind(fun, closure));
 }
 

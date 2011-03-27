@@ -144,13 +144,9 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "file_exists", file_exists);
     bind_function(L, T, "dir_exists", dir_exists);
     
-    int sched_free_lua_sleep(lua_State *);
-    int sched_free_lua_interval(lua_State *);
-    void cancel_timer(int);
-    
     bind_function(L, T, "sleep", lua::sleep);
     bind_function(L, T, "interval", lua::interval);
-    bind_function(L, T, "cancel_timer", cancel_timer);
+    bind_function(L, T, "cancel_timer", lua::cancel_timer);
     
     bind_function(L, T, "log_event_error", log_event_error);
     
