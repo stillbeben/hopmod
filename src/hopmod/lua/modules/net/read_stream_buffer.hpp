@@ -27,14 +27,14 @@ public:
         if(read_size < m_buffer.size())
         {
             stream.io_service().post(boost::bind(&read_stream_buffer<StreamBufferClass, PodType>::template read_complete<ReadHandler>, 
-               this, read_size, boost::system::error_code(), 0, handler));
+               this, read_size, read_size, boost::system::error_code(), 0, handler));
             return;
         }
         
         boost::asio::async_read(stream, m_buffer, boost::asio::transfer_at_least(
             read_size - m_buffer.size()), 
             boost::bind(&read_stream_buffer::template read_complete<ReadHandler>, this, 
-            m_buffer.size(), _1, _2, handler));
+            m_buffer.size(), read_size, _1, _2, handler));
     }
     
     template<typename AsyncReadStream, typename ReadHandler>
@@ -42,7 +42,7 @@ public:
     {
         if(!lock_read(stream, handler)) return;
         boost::asio::async_read_until(stream, m_buffer, delim, boost::bind(
-            &read_stream_buffer::template read_complete<ReadHandler>, this, 0, _1, _2, handler));
+            &read_stream_buffer::template read_complete<ReadHandler>, this, 0, -1, _1, _2, handler));
     }
     
     void unlock_read()
@@ -66,10 +66,10 @@ private:
     }
     
     template<typename ReadHandler>
-    void read_complete(std::size_t bytes_buffered,
+    void read_complete(std::size_t bytes_buffered, std::size_t max_consume,
         boost::system::error_code ec, std::size_t bytes_transferred, ReadHandler handler)
     {
-        m_consume = bytes_buffered + bytes_transferred;
+        m_consume = std::min(bytes_buffered + bytes_transferred, max_consume);
         handler(ec, boost::asio::buffer_cast<const PodType *>(
             *m_buffer.data().begin()), static_cast<std::size_t>(m_consume/sizeof(PodType)));
         assert(!m_consume);
