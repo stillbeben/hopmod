@@ -117,16 +117,12 @@ function server.player_vars(cn)
     local id = server.player_id(cn)
     if id == -1 then error("invalid cn") end
     
-    local vars = server.ip_vars(server.player_ip(cn))
+    local ip_vars = server.ip_vars(server.player_ip(cn))
     
-    local session_vars = player_session_vars[server.player_sessionid(cn)]
-    if session_vars then
-        for key, value in pairs(session_vars) do
-            vars[key] = value            
-        end
-    end
+    local session_vars = player_session_vars[server.player_sessionid(cn)] or {}
+    setmetatable(session_vars, {__index = ip_vars})
     
-    return vars
+    return session_vars
 end
 
 load_vars()
