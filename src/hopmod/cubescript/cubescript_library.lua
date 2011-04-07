@@ -29,11 +29,12 @@ local function parse_array(input_string, environment, silent_error)
     
     environment = environment or env
     
-    input_string = input_string .. "\n"
+    input_string = (input_string or "") .. "\n"
     
     local parent = {}
     local root = {}
     local node = nil
+    local start_size = 0
     
     local processing = {
         
@@ -46,10 +47,11 @@ local function parse_array(input_string, environment, silent_error)
             else
                 node = root
             end
+            start_size = #node
         end,
         
         push_argument_symbol = function(id)
-            if #node == 0 then
+            if #node == start_size then
                 node[#node + 1] = id
             else
                 node[#node + 1] = env[id]
