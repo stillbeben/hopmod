@@ -168,9 +168,10 @@ server.event_handler("varchanged", function(name)
     
     local hide = {
         next_mode = true,
-        next_map = true
+        next_map = true,
+        display_open = true
     }
-
+    
     if hide[name] then return end
     
     if censored[name] then
