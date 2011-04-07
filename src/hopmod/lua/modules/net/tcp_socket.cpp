@@ -60,6 +60,7 @@ const char * managed_tcp_socket::CLASS_NAME = "managed_tcp_socket";
 int managed_tcp_socket::register_class(lua_State * L){
     static luaL_Reg member_functions[] = {
         {"__gc", &managed_tcp_socket::__gc},
+        {"open", &managed_tcp_socket::open},
         {"close", &managed_tcp_socket::close},
         {"cancel", &managed_tcp_socket::cancel},
         {"shutdown", &managed_tcp_socket::shutdown},
@@ -84,15 +85,6 @@ int managed_tcp_socket::create_object(lua_State * L)
 {   
     managed_tcp_socket::target_type self = *lua::create_object<managed_tcp_socket>(L, 
         boost::shared_ptr<tcp_socket>(new tcp_socket(get_main_io_service(L))));
-    
-    boost::system::error_code ec;
-    self->socket.open(ip::tcp::v4(), ec);
-    if(ec)
-    {
-        luaL_error(L, "%s", ec.message().c_str());
-        return 0;
-    }
-    
     return 1;
 }
 
@@ -102,6 +94,15 @@ int managed_tcp_socket::__gc(lua_State * L)
     boost::system::error_code ec;
     self->socket.close(ec);
     self.~target_type();
+    return 0;
+}
+
+int managed_tcp_socket::open(lua_State * L)
+{
+    target_type self = *lua::to<managed_tcp_socket>(L, 1);
+    boost::system::error_code ec;
+    self->socket.open(ip::tcp::v4(), ec);
+    if(ec) luaL_error(L, "%s", ec.message().c_str());
     return 0;
 }
 

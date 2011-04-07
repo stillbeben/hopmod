@@ -25,6 +25,7 @@ public:
     static int create_object(lua_State * L);
 private:
     static int __gc(lua_State * L);
+    static int open(lua_State * L);
     static int close(lua_State * L);
     static int cancel(lua_State * L);
     static int shutdown(lua_State * L);
