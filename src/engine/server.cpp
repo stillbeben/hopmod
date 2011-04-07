@@ -525,6 +525,13 @@ static void check_timeouts()
     }
 }
 
+static void update_time_vars()
+{
+    int millis = (int)enet_time_get();
+    curtime = millis - totalmillis;
+    lastmillis = totalmillis = millis;
+}
+
 void update_server(const boost::system::error_code & error)
 {
     if(error == boost::asio::error::operation_aborted || error) return;
@@ -542,9 +549,7 @@ void update_server(const boost::system::error_code & error)
         update_timer.async_wait(update_server);
     }
     
-    int millis = (int)enet_time_get();
-    curtime = millis - totalmillis;
-    lastmillis = totalmillis = millis;
+    update_time_vars();
     
     server::serverupdate();
     
@@ -629,6 +634,8 @@ void serverhost_input(boost::system::error_code error,const size_t s)
 
 void serverinfo_input(int fd)
 {
+    if(!nonlocalclients) update_time_vars();
+    
     ENetBuffer buf;
     uchar pong[MAXTRANS];
     
