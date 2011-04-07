@@ -31,8 +31,26 @@ int tcp_acceptor::register_class(lua_State * L){
 
 int tcp_acceptor::create_object(lua_State * L)
 {
-    lua::create_object<tcp_acceptor>(L, boost::shared_ptr<ip::tcp::acceptor>(new
-        ip::tcp::acceptor(get_main_io_service(L))));
+    const char * ip = luaL_checkstring(L, 1);
+    int port = luaL_checkint(L, 2);
+    
+    ip::tcp::endpoint endpoint(ip::address_v4::from_string(ip), port);
+    
+    boost::shared_ptr<ip::tcp::acceptor> acceptor(new ip::tcp::acceptor(get_main_io_service(L)));
+    lua::create_object<tcp_acceptor>(L, acceptor);
+    
+    acceptor->open(endpoint.protocol());
+    acceptor->set_option(ip::tcp::acceptor::reuse_address(true));
+    
+    boost::system::error_code error;
+    acceptor->bind(endpoint, error);
+    if(error)
+    {
+        lua_pushnil(L);
+        lua_pushstring(L, error.message().c_str());
+        return 2;
+    }
+    
     return 1;
 }
 
