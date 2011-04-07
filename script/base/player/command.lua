@@ -1,52 +1,151 @@
-exec("command/_help.lua") -- Load player command descriptions
+player_commands = {}
 
-local player_commands = {}
+--[[
+    The table structure for a player command:
+    {
+        init = function,
+        run = function,
+        unload = function,
+        permission = number,
+        enabled = boolean,
+        help_message = string
+    }
+]]
 
-local function send_command_error(cn, errmsg)
-            
-    local message = "Command error"
+local PLAYER_COMMAND_SCRIPT_DIRECTORIES = {
+    {"script/command", server.PRIV_NONE},
+    {"script/command/master", server.PRIV_MASTER},
+    {"script/command/admin", server.PRIV_ADMIN}
+}
+
+local function merge_player_command(name, command)
     
-    if errmsg then
-        message = message .. ": " .. errmsg .. "."
+    assert(type(name) == "string")
+    assert(type(command) == "table")
+    
+    local existing_command = player_commands[name] or {}
+    
+    if existing_command.enabled then
+        if command.enabled == false and existing_command.unload then
+            existing_command.unload()
+        end
     else
-        message = message .. "!"
+        if command.enabled and existing_command.init then
+            existing_command.init()
+        elseif command.enabled and command.init then
+            command.init()
+        end
+    end
+    
+    for key, value in pairs(command) do
+       existing_command[key] = value 
+    end
+    
+    player_commands[name] = existing_command
+end
+
+local function load_player_command_script(filename, name, permission)
+    
+    local command = {}
+    command.permission = permission or server.PRIV_NONE
+    
+    local chunk, error_message = loadfile(filename)
+    
+    if not chunk then
+        server.log_error(string.format("Error in player command script '%s': %s", filename, error_message))
+        return
+    end
+    
+    local chunk_return, help_parameters, help_message = chunk()
+    local chunk_return_type = type(chunk_return)
+    
+    if chunk_return_type == "function" then
+    
+        command.run = chunk_return
+        
+        command.help_parameters = help_parameters
+        command.help_message = help_message
+        
+    elseif chunk_return_type == "table" then
+    
+        command.init = chunk_return.init
+        command.run = chunk_return.run
+        command.unload = chunk_return.unload
+        
+        command.help_parameters = chunk_return.help_parameters
+        command.help_message = chunk_return.help_message
+        
+    else
+        server.log_error(string.format("Expected player command script '%s' to return a function or table value", filename))
+        return
+    end
+    
+    if command.init then
+        command.init(name, permission)
+    end
+    
+    merge_player_command(name, command)
+end
+
+local function load_player_command_script_directories()
+
+    for _, load_dir in pairs(PLAYER_COMMAND_SCRIPT_DIRECTORIES) do
+        
+        local dir_filename = load_dir[1]
+        local permission = load_dir[2]
+        
+        for file_type, filename in filesystem.dir(dir_filename) do
+            if file_type == filesystem.FILE and string.match(filename, "\.lua$") then
+                local command_name = string.sub(filename, 1, #filename - 4)
+                filename = dir_filename .. "/" .. filename
+                load_player_command_script(filename, command_name, permission) 
+            end
+        end
+    end
+end
+load_player_command_script_directories()
+
+local function is_command_prefix(text)
+    local first_char = string.sub(text, 1, 1)
+    return first_char == "#" or first_char == "!" or first_char == "@"
+end
+
+local function send_command_error(cn, error_message)
+  
+    local output_message = "Command error"
+    if error_message then
+        output_message = output_message .. ": " .. error_message .. "."
+    else
+        output_message = output_message .. "!"
     end
     
     server.player_msg(cn, red(message))
 end
 
-local command_prefixes = {}
-
-local function load_command_prefixes()
-    local array = cubescript.library.parse_array(server.command_prefixes)
-    for _,value in pairs(array) do
-        command_prefixes[value] = true
-    end    
-end
-load_command_prefixes()
-
 server.event_handler("text", function(cn, text)
-    
-    if not command_prefixes[string.sub(text, 1, 1)] then
+
+    if not is_command_prefix(text) then
         return
     end
     
     text = string.sub(text, 2)
     
-    local function array_concat()
-        error("@ not supported in player commands")
+    local function unsupported(char)
+        return function()
+            error(char .. " syntax is not supported in player commands")
+        end
     end
     
-    local function array_get()
-        error("$ not supported in player commands")
-    end
-
-    local arguments, error_message = 
-        cubescript.library.parse_array(text, {["$"] = array_get, ["@"] = array_concat}, true)
-
+    local command_env = {
+        ["$"] = unsupported("$"),
+        ["@"] = unsupported("@")
+    }
+    
+    local arguments, error_message = cubescript.library.parse_array(text, command_env, true)
+    
     if not arguments then
         server.player_msg(cn, red("Command syntax error: " .. error_message))
-        return -1        
+        return -1   
     end
     
     local command_name = arguments[1]
@@ -60,302 +159,74 @@ server.event_handler("text", function(cn, text)
     
     arguments[1] = cn
     
-    local privilege = server.player_priv_code(cn)
-    
-    if not (command.enabled == true) or not command._function then
+    if not (command.enabled == true) or not command.run then
         server.player_msg(cn, red("Command disabled."))
         return -1
     end
     
-    if (command.require_admin == true and privilege < server.PRIV_ADMIN) or (command.require_master == true and privilege < server.PRIV_MASTER) then
+    local privilege = server.player_priv_code(cn)
+    
+    if privilege < command.permission then
         server.player_msg(cn, red("Permission denied."))
         return -1
     end
     
-    local pcallret, success, errmsg = pcall(command._function, unpack(arguments))
-        
-    if pcallret == false then
+    local pcall_status, success, error_message = pcall(command.run, unpack(arguments))
+    
+    if pcall_status == false then
         local message = success  -- success value is the error message returned by pcall
         server.log_error(string.format("The #%s player command failed with error: %s", command_name, message))
         server.player_msg(cn, red("Internal error"))
     end
     
     if success == false then
-        send_command_error(cn, errmsg)
+        send_command_error(cn, error_message)
     end
     
     return -1
 end)
 
-local function create_command(name)
-
-    local command = {
-        name = name,
-        enabled = false,
-        require_admin = false, 
-        require_master = false,
-        _function = nil,
-        control = {}
-    }
-    
-    player_commands[name] = command
-    
-    return command
-end
-
-local function parse_command_list(commandlist)
-    return commandlist:split("[^ \r\n\t]+")
-end
-
-local function set_commands(commandlist, fields)
-
-    for _, cmdname in pairs(parse_command_list(commandlist)) do
-        local command = player_commands[cmdname] or create_command(cmdname)
-        
-        for field_name, field_value in pairs(fields) do
-            command[field_name] = field_value
-        end
-    end
-end
-
-local function foreach_command(commandlist, fun)
-
-    for _, cmdname in ipairs(parse_command_list(commandlist)) do
-        local command = player_commands[cmdname] or create_command(cmdname)
-        fun(command)
-    end
-end
-
-function server.enable_commands(commandlist)
-    
-    set_commands(commandlist, {enabled = true})
-    
-    foreach_command(commandlist, function(command)
-        if command.control.init then command.control.init(command) end
-    end)
-end
-
-function server.disable_commands(commandlist)
-
-    set_commands(commandlist, {enabled = false})
-    
-    foreach_command(commandlist, function(command)
-
-        if command.control.unload then
-			command.control.unload()
-			
-			collectgarbage()
-		end
-    end)
-end
-
-function server.admin_commands(commandlist)
-    return set_commands(commandlist, {require_admin = true})
-end
-
-function server.master_commands(commandlist)
-    return set_commands(commandlist, {require_admin = false, require_master = true})
-end
-
-local function set_priv(command, priv)
-
-    local already_set = command.require_admin or command.require_master
-    if already_set then return end    
-
-    if priv == "admin" then 
-        
-        command.require_admin = true
-        command.require_master = false
-        
-    elseif priv == "master" then 
-        
-        command.require_admin = false
-        command.require_master = true
-        
-    end
-end
-
-local function get_new_command_table(name)
-    
-    local command = player_commands[name] or create_command(name)
-    
-    if command._function then
-        server.log_error(string.format("Overwriting player command '%s'", name))
-    end
-    
-    return command
-end
-
-function player_command_filename(name)
-    return "./script/command/" .. name .. ".lua"
-end
-
-function player_command_script(name, filename, priv)
-    
-    if not filename then
-        filename = player_command_filename(name)
-    end
-    
-    local command = get_new_command_table(name)
-    
-    set_priv(command, priv)
-    
-    local script,err = loadfile(filename)
-    if not script then error(err) end
-    
-    command_info = command
-    
-    command._function = script()
-    
-    if type(command._function) == "table" then
-        
-        command.control = command._function
-        command._function = command.control.run
-        
-        if not command.control.unload or not command.control.init then
-            error(string.format("Player command script '%s' is missing a init or unload function.", filename))
-        end
-
-		if command.enabled == true then
-			command.control.init()
-		end
-    end
-    
-    command_info = nil
-end
-
-function player_command_function(name, func, priv)
-
-    local command = get_new_command_table(name)
-    set_priv(command, priv)
-    command._function = func
-    
-end
-
-function player_command_alias(aliasname, sourcename)
-    player_commands[aliasname] = player_commands[sourcename]
+function player_command_function(name, func, permission)
+    merge_player_command(name, {run = func, permission = permission or 0})
 end
 
 function log_unknown_player_commands()
-
     for name, command in pairs(player_commands) do
-        if not command._function then
+        if not command.run then
             server.log_error(string.format("No function loaded for player command '%s'", name))
         end
     end
-    
 end
 
-function admincmd(...)
+local function merge_command_list(command_list, options)
 
-    local func = arg[1]
-    local cn = arg[2]
-    
-    if tonumber(server.player_priv_code(cn)) < tonumber(server.PRIV_ADMIN) then
-        server.player_msg(cn, red("Permission denied."))
-        return
+    if type(command_list) == "string" then
+        command_list = cubescript.library.parse_array(command_list)
     end
     
-    table.remove(arg,1)
-    
-    return func(unpack(arg))
+    for _, command_name in pairs(command_list) do
+        merge_player_command(command_name, options)
+    end
 end
 
-function mastercmd(...)
-
-    local func = arg[1]
-    local cn = arg[2]
-    
-    if tonumber(server.player_priv_code(cn)) < tonumber(server.PRIV_MASTER) then
-        server.player_msg(cn, red("Permission denied."))
-        return
-    end
-    
-    table.remove(arg,1)
-    
-    return func(unpack(arg))
+function server.enable_commands(command_list)
+    merge_command_list(command_list, {enabled = true})
 end
 
-player_command_function("help", function(cn, command)
+function server.disable_commands(command_list)
+    merge_command_list(command_list, {enabled = false})
+end
 
-    local priv_code = server.player_priv_code(cn)
+function server.admin_commands(command_list)
+    merge_command_list(command_list, {permission = server.PRIV_ADMIN})
+end
 
-    if command then
-        local command_object = player_commands[command]
+function server.master_commands(command_list)
+    merge_command_list(command_list, {permission = server.PRIV_MASTER})
+end
 
-        if not command_object then
-            server.player_msg(cn, "Unknown command")
-            return
-        end
-        
-        local description = player_command_descriptions[command]
-        
-        local access_denied = (command_object.require_master and priv_code < server.PRIV_MASTER) or (command_object.require_admin and priv_code < server.PRIV_ADMIN)
-        
-        if access_denied then
-            server.player_msg(cn, "You don't have permission to get a description of this command")
-            return
-        end
-        
-        if not description then
-            server.player_msg(cn, "Sorry, there is no description for the #" .. command .. " command yet")
-            return
-        end
-        
-        server.player_msg(cn, string.format("#%s %s: %s", command, description[1], green(description[2])))
-        
-        return
-    end
-
-    local output = ""
-    
-    local normal = {}
-    local master = {}
-    local admin = {}
-    
-    for name, command in pairs(player_commands) do
-        if command.enabled then
-            if command.require_admin then
-                if priv_code == server.PRIV_ADMIN then
-                    admin[#admin + 1] = name
-                end
-            elseif command.require_master then
-                if priv_code >= server.PRIV_MASTER then
-                    master[#master + 1] = name
-                end
-            else
-                normal[#normal + 1] = name
-            end
-        end
-    end
-    
-    for _, name in ipairs(normal) do
-        if name ~= "help" then
-            if #output > 0 then output = output .. ", " end
-            output = output .. name
-        end
-    end
-    
-    if priv_code >= server.PRIV_MASTER then
-        for _, name in ipairs(master) do
-            if #output > 0 then output = output .. ", " end
-            output = output .. green(name)
-        end
-    end
-    
-    if priv_code == server.PRIV_ADMIN then
-        for _, name in ipairs(admin) do
-            if #output > 0 then output = output .. ", " end
-            output = output .. orange(name)
-        end
-    end
-    
-    local list_of_commands = output
-    
-    output = "List of commands: " .. list_of_commands .. "\nCommand descriptions: #help <command>"
-    
-    server.player_msg(cn, output)
-end)
-
-player_commands.help.enabled = true
+function is_player_command_enabled(command_name)
+    local command = player_commands[command_name]
+    return command and command.enabled and command.run
+end
 

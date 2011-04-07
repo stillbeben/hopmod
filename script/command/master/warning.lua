@@ -7,7 +7,7 @@
 
 
 local limit = server.warning_limit
-local bantime = round(server.warning_bantime / 1000,0)
+local bantime = round(server.warning_bantime or 1800000 / 1000,0)
 
 local usage = "warning (<cn>|\"<name>\") <text>"
 

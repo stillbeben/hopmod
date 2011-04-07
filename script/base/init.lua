@@ -24,6 +24,7 @@ end)
 gamemodeinfo = server.get_gamemode_info()
 
 -- Code that should not be unloadable
+load_once("base/logging")
 load_once("base/restart")
 load_once("base/player/utils")
 load_once("base/player/vars")
@@ -34,7 +35,7 @@ load_once("base/player/command")
 load_once("base/team/utils")
 load_once("base/setmaster")
 load_once("base/kickban")
-load_once("base/logging")
+
 load_once("base/server_message")
 load_once("base/static_items")
 
@@ -76,7 +77,6 @@ server.event_handler("started", function()
     
     require("geoip").load_geoip_database(server.geoip_db_file)
 
-    load_once("command/_bindings")
     log_unknown_player_commands()
     
     server.log_status("-> Successfully loaded Hopmod")

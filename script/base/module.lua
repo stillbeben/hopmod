@@ -69,7 +69,13 @@ server.find_script = find_script
 
 function server.script(filename)
     
+    local script_name = filename
+
     local filename, scriptRunner = find_script(filename)
+    
+    if not filename then
+        error(string.format("Cannot find script '%s'", script_name))
+    end
     
     if loaded_scripts[filename] then
         return nil
