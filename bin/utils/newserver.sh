@@ -31,6 +31,7 @@ do
     ln -s $d_main/bin/$aa $DEST/bin/$aa
 done
 cp $d_main/bin/server $DEST/bin/
+cp $d_main/bin/monitor $DEST/bin/
 
 ln -s $d_main/lib $DEST/lib
 ln -s $d_main/script $DEST/script
