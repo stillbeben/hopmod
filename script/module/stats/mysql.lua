@@ -1,4 +1,3 @@
-
 require "luasql_mysql"
 
 local servername
@@ -198,4 +197,23 @@ local function commit_game(game, players, teams)
     end
 end
 
-return {open = open, commit_game = commit_game}
+local function player_totals(name)
+	player_totals = execute_statement(string.format("SELECT * FROM playertotals WHERE name = '%s'", name))
+	row = player_totals:fetch ({}, "a")
+    return row
+end
+
+local function find_names_by_ip(ip, exclude_name)
+    find_names_by_ip = execute_statement(string.format("SELECT DISTINCT name FROM players WHERE ipaddr = '%s' ORDER BY name ASC", ip))
+    local names = {}
+	row = find_names_by_ip:fetch ({}, "a")
+    while row do
+        if not exclude_name or exclude_name ~= row.name then
+            names[#names + 1] = row.name
+        end
+		row = find_names_by_ip:fetch (row, "a")
+    end
+    return names
+end
+ 
+return {open = open, commit_game = commit_game, player_totals = player_totals, find_names_by_ip = find_names_by_ip}

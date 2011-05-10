@@ -119,10 +119,10 @@ end
 function table.has_fields(t, ...)
     for index in ipairs(arg) do
         if not t[arg[index]] then
-            print("not have " .. name)
+            print("not have " .. arg[index])
             return false
-        end        
-    end    
+        end
+    end
     return true
 end
 

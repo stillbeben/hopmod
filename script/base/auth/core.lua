@@ -313,7 +313,7 @@ function auth.send_request(cn, domain_id, callback)
     
 end
 
-function auth.query_id(username, domain_id, callback)
+function auth.query_id(user_id, domain_id, callback)
     
     local domain = auth.directory.get_domain(domain_id)
     if not domain then error("unknown domain") end
@@ -326,7 +326,7 @@ function auth.query_id(username, domain_id, callback)
     end
     
     local function send_query()
-        domain.server.connection:query_id(next_request_id, username, domain_id, callback)
+        domain.server.connection:query_id(next_request_id, user_id, domain_id, callback)
         next_request_id = next_request_id + 1
     end
     

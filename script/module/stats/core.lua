@@ -145,7 +145,7 @@ function internal.addPlayer(cn)
         if server.player_vars(cn).stats_auth_name then
             t.auth_name = server.player_vars(cn).stats_auth_name
         else
-            auth.send_auth_request(cn, auth_domain)
+            server.send_auth_request(cn, auth_domain)
         end
     end
     
@@ -279,12 +279,14 @@ function internal.loadAuthHandlers(domain)
         
         if status ~= auth.request_status.SUCCESS then return end
         
-        server.player_vars(cn).stats_auth_name = name
+        server.player_vars(cn).stats_auth_name = user_id
         
         local t = internal.getPlayerTable(server.player_id(cn))
-        t.auth_name = name
+        t.auth_name = user_id
         
-        server.player_msg(cn, "You are logged in as " .. magenta(name) .. ".")
+        if server.stats_tell_auth_name == 1 then
+            server.player_msg(cn, "You are logged in as " .. magenta(user_id) .. ".")
+        end
     end)
 
     function internal.unloadAuthHandlers()

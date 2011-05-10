@@ -7,7 +7,7 @@ server.event_handler("rename", function(cn, old, new)
 	if no_rename_event then return end
 	no_rename_event = true
 	server.sleep(10, function()
-		server.player_rename(cn, old)
+		server.player_rename(cn, old, true)
 		server.player_msg(cn, red() .. "WARNING:" .. white() .. " names are locked!")
 		no_rename_event = false
 	end)
