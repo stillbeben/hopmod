@@ -60,3 +60,4 @@ void prepare_capture_mode()
     capturemode.sendbases();
     loopv(clients) if(clients[i]->state.state==CS_ALIVE) capturemode.entergame(clients[i]);
 }
+
