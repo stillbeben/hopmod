@@ -511,7 +511,7 @@ function server.start_game()
                     server.player_respawn(hah_active_player) -- spawn seek player
                     server.msg(yellow() .. "Seek Player spawned!")
                     can_vote = true
-                    server.changetime(has_time) -- reset time
+                    server.changetime(has_time * 60 * 1000) -- reset time
                     for i, cn_ in ipairs(server.players()) do 
                         check_camper(cn_)
                     end  
