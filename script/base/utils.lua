@@ -1,3 +1,5 @@
+local _ = require "underscore"
+
 function mins(value)
     return value * 1000 * 60
 end
@@ -6,26 +8,17 @@ function secs(value)
     return value * 1000
 end
 
-function concol(colour_code, text)
+function coloured_text(colour_code, text)
     return "\fs\f" .. colour_code .. text .. "\fr"
 end
 
-function bind_concol(colour_code)
-    return function(text)
-        return concol(colour_code, text)
-    end
-end
-
-green    = bind_concol(0)
-info     = bind_concol(1)
-err      = bind_concol(3)
-grey     = bind_concol(4)
-magenta  = bind_concol(5)
-orange   = bind_concol(6)
-gameplay = bind_concol(2)
-red      = bind_concol(3)
-blue     = bind_concol(1)
-yellow   = bind_concol(2)
+green    = _.curry(coloured_text, 1)
+grey     = _.curry(coloured_text, 4)
+magenta  = _.curry(coloured_text, 5)
+orange   = _.curry(coloured_text, 6)
+red      = _.curry(coloured_text, 3)
+blue     = _.curry(coloured_text, 1)
+yellow   = _.curry(coloured_text, 2)
 
 -- Copied from http://lua-users.org/wiki/SimpleRound
 function math.round(num, idp)
@@ -36,10 +29,6 @@ round = math.round
 
 function pack(...)
     return arg
-end
-
-function identity(...)
-    return unpack(arg)
 end
 
 function catch_error(chunk, ...)
@@ -54,9 +43,11 @@ function catch_error(chunk, ...)
 end
 
 function server.eval_lua(str)
-    local func, err = loadstring(str)
-    if not func then error(err) end
-    return func()
+    local chunk, error_message = loadstring(str)
+    if not chunk then 
+        error(error_message)
+    end
+    return chunk()
 end
 
 function server.hashpassword(cn, password)
