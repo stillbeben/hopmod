@@ -1,3 +1,8 @@
+server.event_handler("mapchange", function()
+    gamemodeinfo = server.get_gamemode_info()
+end)
+gamemodeinfo = server.get_gamemode_info()
+
 -- Array of game mode names, used by the map rotation module
 gamemodes = {
     [ 1] = "ffa",

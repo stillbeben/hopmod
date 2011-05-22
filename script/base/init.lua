@@ -12,33 +12,23 @@ add_exec_search_path("script")
 add_exec_search_path("conf")
 
 exec("base/resetvars.cs")
+exec("base/resetvars.lua")
 exec("base/module.lua")
 exec("base/utils.lua")
-
--- Variables that needs to be defined early
-stats_sub_command = {}
-
-server.event_handler("mapchange", function()
-    gamemodeinfo = server.get_gamemode_info()
-end)
-gamemodeinfo = server.get_gamemode_info()
-
--- Code that should not be unloadable
-load_once("base/logging")
-load_once("base/restart")
-load_once("base/player/utils")
-load_once("base/player/vars")
-load_once("base/player/object")
-load_once("base/player/query")
-load_once("base/player/private_vars")
-load_once("base/player/command")
-load_once("base/team/utils")
-load_once("base/setmaster")
-load_once("base/kickban")
-
-load_once("base/server_message")
-load_once("base/static_items")
-
+exec("base/logging.lua")
+exec("base/restart.lua")
+exec("base/player/utils.lua")
+exec("base/player/vars.lua")
+exec("base/player/object.lua")
+exec("base/player/iterators.lua")
+exec("base/player/query.lua")
+exec("base/player/private_vars.lua")
+exec("base/player/command.lua")
+exec("base/team/utils.lua")
+exec("base/setmaster.lua")
+exec("base/kickban.lua")
+exec("base/server_message.lua")
+exec("base/static_items.lua")
 
 server.module("base/maprotation/init.lua")
 server.module("base/normalize")

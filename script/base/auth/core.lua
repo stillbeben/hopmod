@@ -14,8 +14,8 @@ auth.request_status = {
     TIMEOUT = 5             -- not waiting any longer
 }
 
-script("base/auth/directory.lua")
-load_once("base/auth/client.lua")
+exec("base/auth/directory.lua")
+exec("base/auth/client.lua")
 
 local requests = {}
 local next_request_id = 1
