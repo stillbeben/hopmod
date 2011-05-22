@@ -1,44 +1,40 @@
 --[[
     A player command to group all players matching pattern <tag>
-    
-    TODO Improve parameter names
 ]]
 
-local function group_players(arg1,arg2,arg3)
+local function group_players(...)
     
-    if not arg1 then
+    if #arg == 0 then
         return -1
     end
     
+    local all_clients
     local tag
     local team
     
-    if arg1 == "all" then
-        
-        if not arg2 then
-            return -1
-        end
-        
-        tag = arg2
-        
-        if arg3 then
-            team = arg3
+    if #arg == 1 then
+        tag = arg[1]
+    else
+        if arg[1] == "all" then
+            all_clients = true
+            tag = arg[2]
+            team = arg[3]
         else
-            team = tag
+            tag = arg[1]
+            team = arg[2]
         end
-        
+    end
+    
+    if not team then
+        team = tag
+    end
+    
+    
+    if all_clients then
         for spectator in server.gspectators() do
             if string.find(spectator:name(),tag) then
                 spectator:unspec()
             end
-        end
-    else
-        tag = arg1
-        
-        if arg2 then
-            team = arg2
-        else
-            team = tag
         end
     end
     
@@ -49,16 +45,16 @@ local function group_players(arg1,arg2,arg3)
     end
 end
 
-return function(cn, arg1, arg2, arg3)
+return function(cn, ...)
     
     if not gamemodeinfo.teams then
         return
     end
     
-    if not arg1 then
+    if #arg == 0 then
         return false, "#group [all] <tag> [<team>]"
     end
     
-    group_players(arg1, arg2, arg3)
+    group_players(unpack(arg))
 end
 
