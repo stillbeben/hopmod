@@ -86,50 +86,6 @@ function server.name_to_cn_list_matches(cn,name)
     end
 end
 
-function server.group_players(arg1,arg2,arg3)
-
-    if not arg1 then
-        return -1
-    end
-
-    local tag
-    local team
-
-    if arg1 == "all" then
-	if not arg2 then
-            return -1
-	end
-	
-	tag = arg2
-
-	if arg3 then
-            team = arg3
-	else
-            team = tag
-        end
-	
-	for s in server.gspectators() do
-            if string.find(s:name(),tag) then
-                s:unspec()
-            end
-        end
-    else
-        tag = arg1
-
-	if arg2 then
-            team = arg2
-        else
-            team = tag
-        end
-    end
-
-    for p in server.gplayers() do
-        if string.find(p:name(),tag) then
-            p:changeteam(team)
-        end
-    end
-end
-
 function server.is_bot(cn)
     return cn > 127
 end
