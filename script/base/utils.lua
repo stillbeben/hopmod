@@ -42,21 +42,15 @@ function identity(...)
     return unpack(arg)
 end
 
-function return_catch_error(fun, ...)
-
-    local returnvals = pack(pcall(fun, unpack(arg)))
-        
-    if returnvals[1] == false and returnvals[2] then
-        server.log_error(returnvals[2])
+function catch_error(chunk, ...)
+    
+    local pcall_results = pack(pcall(chunk, unpack(arg)))
+    
+    if not pcall_results[0] then
+        server.log_error(pcall_results[1])
     end
     
-    return unpack(returnvals, 1, table.maxn(returnvals))
-end
-
-function catch_error(fun, ...)
-    local returnvals = pack(return_catch_error(fun, unpack(arg)))
-    table.remove(returnvals, 1)
-    return unpack(returnvals, 1, table.maxn(returnvals))
+    return pcall_results
 end
 
 function server.eval_lua(str)
@@ -66,7 +60,7 @@ function server.eval_lua(str)
 end
 
 function server.hashpassword(cn, password)
-	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), password))
+    return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), password))
 end
 
 bind_placeholder = {
