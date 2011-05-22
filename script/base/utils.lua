@@ -126,4 +126,5 @@ dofile("./script/base/utils/gamemode.lua")
 dofile("./script/base/utils/mysql.lua")
 dofile("./script/base/utils/string.lua")
 dofile("./script/base/utils/table.lua")
+dofile("./script/base/utils/validate.lua")
 

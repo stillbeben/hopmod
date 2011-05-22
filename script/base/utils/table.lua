@@ -66,39 +66,6 @@ function list_to_set(list)
     return set
 end
 
-function validate_table(subject_table, schema)
-    
-    local function check_type(object, typename)
-        if type(object) ~= typename then error("expecting " .. typename) end
-    end
-    
-    check_type(subject_table, "table")
-    
-    for _, element in ipairs(schema) do
-        
-        local id = element[1]
-        local typeinfo = element[2]
-        
-        if not id then error("error in table schema") end
-        
-        local lookup = subject_table[id]
-        
-        if lookup == nil then
-            error("missing " .. id)
-        end
-        
-        if typeinfo then
-            if type(typeinfo) == "string" then
-                check_type(lookup, typeinfo)
-            elseif type(typeinfo) == "table" then
-                validate_table(lookup, typeinfo)
-            else
-                error("error in table schema")
-            end
-        end
-    end
-end
-
 function read_only(table)
     local proxy = {}
     setmetatable(proxy, {

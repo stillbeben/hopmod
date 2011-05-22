@@ -22,7 +22,9 @@ end
 
 function clan(description)
 
-    validate_table(description, {name="string", tag_pattern="string"})
+    if not validate(description, {name="string", tag_pattern="string"}) then
+        error("invalid clan information")
+    end
     
     if description.auth
     then
