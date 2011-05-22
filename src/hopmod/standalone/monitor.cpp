@@ -77,21 +77,12 @@ static bool find_program(const std::string & program, std::string & output_filen
 
 int main(int argc, const char ** argv)
 {
-    bool disable_autorestart;
-    
     std::string program;
     std::vector<std::string> program_arguments;
     int max_restarts = -1;
     
     {
         program_arguments::parser p;
-        
-        p.add_option(
-            'd', 
-            "disable-autorestart",
-            "Disable automatic restart of process",
-            disable_autorestart
-        );
         
         p.add_option(
             'm',
@@ -119,12 +110,12 @@ int main(int argc, const char ** argv)
         return 1;
     }
     
-    bool restart;
+    bool repeat = false;
     int count_restarts = 0;
     
     do
     {
-        restart = false;
+        repeat = false;
         
         create_process(program_filename, program_arguments);
         
@@ -142,14 +133,13 @@ int main(int argc, const char ** argv)
                 case SIGFPE:
                 case SIGSEGV:
                 case SIGPIPE:
-                    if(disable_autorestart) break;
-                    restart = true;
+                    repeat = true;
                     break;
                 default:;
             }
         }
     }
-    while(restart && (max_restarts == -1 || ++count_restarts <= max_restarts));
+    while(repeat && (max_restarts == -1 || ++count_restarts <= max_restarts));
     
     return 0;
 }
