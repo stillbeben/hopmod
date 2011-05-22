@@ -127,4 +127,6 @@ dofile("./script/base/utils/mysql.lua")
 dofile("./script/base/utils/string.lua")
 dofile("./script/base/utils/table.lua")
 dofile("./script/base/utils/validate.lua")
+dofile("./script/base/utils/deferred.lua")
+dofile("./script/base/utils/event_emitter.lua")
 
