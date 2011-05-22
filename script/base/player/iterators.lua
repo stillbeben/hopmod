@@ -13,7 +13,7 @@ local function client_iterator_generator(list)
             return nil
         end
         
-        local client_wrapper = server.new_client_object(cn)
+        local client_wrapper = server.Client(cn)
         client_wrapper.index = key
         
         return client_wrapper

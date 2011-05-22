@@ -63,7 +63,7 @@ local function players_selector()
                 for _, cn in ipairs(server.clients()) do
                     for _, predicate in ipairs(predicates) do
                         if predicate(cn) then
-                            selected_players[#selected_players + 1] = server.new_player_object(cn)
+                            selected_players[#selected_players + 1] = server.Client(cn)
                         end
                     end
                 end

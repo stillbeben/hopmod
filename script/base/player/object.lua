@@ -50,15 +50,11 @@ local methods = {
     valid           = function(obj) return server.player_sessionid(obj.cn) == obj.sessionid end
 }
 
-server.player_method = read_only(methods)
-
-function server.new_client_object(cn)
+function server.Client(cn)
     local object = {}
     object.cn = cn
     object.sessionid = server.player_sessionid(cn)
     setmetatable(object, {__index = methods})
     return object
 end
-
-server.new_player_object = server.new_client_object
 
