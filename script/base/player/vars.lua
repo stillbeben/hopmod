@@ -113,7 +113,7 @@ function server.player_set_session_var(cn, name, value)
 end
 
 function server.player_vars(cn)
-
+    
     local id = server.player_id(cn)
     if id == -1 then error("invalid cn") end
     

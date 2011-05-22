@@ -75,3 +75,7 @@ global allow_setmaster 0
 
 global irc_socket_password ""
 
+global ban_lists [
+    "http://hopmod.googlecode.com/svn/data/bans.json"
+]
+

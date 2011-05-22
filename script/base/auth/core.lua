@@ -14,8 +14,8 @@ auth.request_status = {
     TIMEOUT = 5             -- not waiting any longer
 }
 
-exec("base/auth/directory.lua")
-exec("base/auth/client.lua")
+exec("directory.lua")
+exec("client.lua")
 
 local requests = {}
 local next_request_id = 1
@@ -24,7 +24,7 @@ local domain_listeners = {} -- handlers that want to be notified of a challenge 
 local clients = {} -- used to store run-once listeners and challenge cache
 
 local function call_listeners(cn, user_id, domain, status)
-
+    
     local listeners = domain_listeners[domain] or {}
     
     for _, listener in ipairs(listeners) do
@@ -43,7 +43,7 @@ local function call_listeners(cn, user_id, domain, status)
 end
 
 local function complete_request(request, status)
-
+    
     if status == auth.request_status.SUCCESS then
         clients[request.cn].authed[request.domain.id] = request.user_id
     end

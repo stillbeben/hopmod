@@ -1,7 +1,5 @@
-script("base/auth/core.lua")
-script("base/auth/masterauth.lua")
+exec("base/auth/core.lua")
+exec("base/auth/masterauth.lua")
 
-local auth_conf = server.find_script("conf/auth")
-if auth_conf then
-    script(auth_conf)
-end
+exec_if_found("conf/auth.lua")
+

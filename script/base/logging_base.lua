@@ -27,7 +27,7 @@ if not server.is_authserver then
     end
     
     function server.log_error(msg)
-        assert(msg ~= nil)
+        assert(type(msg) == "string")
         io.stderr:write(os.date("[%a %d %b %X] ",os.time()))
         io.stderr:write(msg)
         io.stderr:write("\n")

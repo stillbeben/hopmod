@@ -1,2 +1,2 @@
+exec("stats/init.lua")
 
-load_once("stats/init")

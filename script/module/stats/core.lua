@@ -253,7 +253,7 @@ function internal.commit()
         players = nil
         return
     end
-
+    
     for _, backend in pairs(internal.backends) do
         catch_error(backend.commit_game, game, players, teams)
     end
