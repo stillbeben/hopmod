@@ -129,16 +129,6 @@ function strSplit(str, delim, maxNb)
     return result
 end
 
-function strJoin(delimiter, list)
-  local string = list[1]
-  if #list >= 2 then
-	  for i = 2, #list do 
-		string = string .. delimiter .. list[i] 
-	  end
-  end
-  return string
-end
-
 function string_matches(str, pattern)
     local matches = {}
     for match in string.gmatch(str, pattern) do
