@@ -9,7 +9,11 @@ function secs(value)
 end
 
 function coloured_text(colour_code, text)
-    return "\fs\f" .. colour_code .. text .. "\fr"
+    if text then
+        return "\fs\f" .. colour_code .. text .. "\fr"
+    else
+        return "\fs\f" .. colour_code
+    end
 end
 
 green    = _.curry(coloured_text, 1)
