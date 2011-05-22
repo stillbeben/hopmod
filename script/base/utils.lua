@@ -16,13 +16,14 @@ function coloured_text(colour_code, text)
     end
 end
 
-green    = _.curry(coloured_text, 1)
+green    = _.curry(coloured_text, 0)
+blue     = _.curry(coloured_text, 1)
+yellow   = _.curry(coloured_text, 2)
+red      = _.curry(coloured_text, 3)
 grey     = _.curry(coloured_text, 4)
 magenta  = _.curry(coloured_text, 5)
 orange   = _.curry(coloured_text, 6)
-red      = _.curry(coloured_text, 3)
-blue     = _.curry(coloured_text, 1)
-yellow   = _.curry(coloured_text, 2)
+white    = _.curry(coloured_text, 7)
 
 -- Copied from http://lua-users.org/wiki/SimpleRound
 function math.round(num, idp)
