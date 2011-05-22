@@ -1,4 +1,4 @@
-package.path = package.path .. ";script/package/?.lua"
+package.path = package.path .. ";script/package/?.lua;"
 package.cpath = package.cpath .. ";lib/lib?.so"
 
 dofile("script/base/core_function_overloads.lua")
@@ -28,7 +28,7 @@ load_once("base/logging")
 load_once("base/restart")
 load_once("base/player/utils")
 load_once("base/player/vars")
-load_once("base/player/object_wrapper")
+load_once("base/player/object")
 load_once("base/player/query")
 load_once("base/player/private_vars")
 load_once("base/player/command")
@@ -88,5 +88,4 @@ end)
 
 exec_if_found("conf/server.conf")
 exec("base/saveconf.lua")
-
 
