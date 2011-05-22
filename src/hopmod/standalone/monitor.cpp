@@ -32,9 +32,10 @@ static void create_process(const std::string & program,
 int main(int argc, const char ** argv)
 {
     bool disable_autorestart;
-
+    
     std::string program;
     std::vector<std::string> program_arguments;
+    int max_restarts = -1;
     
     {
         program_arguments::parser p;
@@ -43,15 +44,25 @@ int main(int argc, const char ** argv)
             'd', 
             "disable-autorestart",
             "Disable automatic restart of process",
-            disable_autorestart);
+            disable_autorestart
+        );
+        
+        p.add_option(
+            'm',
+            "max-restarts",
+            "N",
+            "Limit the number of restarts",
+            max_restarts
+        );
         
         p.add_argument("program", program);
         p.add_argument("argument", program_arguments);
         
         p.parse(argc, argv);
     }
-
+    
     bool restart;
+    int count_restarts = 0;
     
     do
     {
@@ -80,7 +91,7 @@ int main(int argc, const char ** argv)
             }
         }
     }
-    while(restart);
+    while(restart && (max_restarts == -1 || ++count_restarts <= max_restarts));
     
     return 0;
 }
