@@ -3,16 +3,18 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <cstdlib>
+#include <cstring>
 
-#include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
-#include <sys/wait.h>
 
 extern char ** environ;
 
-static void create_process(const std::string & program, 
+static void create_process(const std::string & filename, 
                            const std::vector<std::string> & arguments)
 {
     pid_t child_pid = fork();
@@ -21,12 +23,56 @@ static void create_process(const std::string & program,
     if(child_pid == 0)
     {
         char ** argv = new char *[arguments.size() + 2];
-        argv[0] = const_cast<char *>(program.c_str());
         for(size_t i = 0; i < arguments.size(); i++)
-            argv[i + 1] = const_cast<char *>(arguments[i].c_str());
-        argv[arguments.size() + 1] = NULL;
-        if(execve(program.c_str(), argv, environ) == -1) exit(1);
+            argv[i] = const_cast<char *>(arguments[i].c_str());
+        argv[arguments.size()] = NULL;
+        if(execve(filename.c_str(), argv, environ) == -1) exit(1);
     }
+}
+
+static bool file_exists(const std::string & filename)
+{
+    struct stat info;
+    if(stat(filename.c_str(), &info)==0) return !(info.st_mode & S_IFDIR);
+    else return false;
+}
+
+static bool find_program(const std::string & program, std::string & output_filename)
+{
+    if(file_exists(program))
+    {
+        output_filename = program;
+        return true;
+    }
+    
+    const char * search_paths = getenv("PATH");
+    const char * search_paths_begin = search_paths;
+    const char * search_paths_end = search_paths + strlen(search_paths);
+    
+    std::string filename;
+    
+    while(search_paths_begin < search_paths_end)
+    {
+        const char * limit = strstr(search_paths_begin, ":");
+        if(!limit) limit = search_paths_end;
+        
+        filename.reserve(std::max(filename.capacity(), 
+            (limit - search_paths_begin) + program.length() + 1));
+        
+        filename.assign(search_paths_begin, limit);
+        filename.append(1, '/');
+        filename.append(program);
+        
+        if(file_exists(filename))
+        {
+            output_filename = filename;
+            return true;
+        }
+        
+        search_paths_begin = (*limit == ':' ? limit + 1 : limit);
+    }
+    
+    return false;
 }
 
 int main(int argc, const char ** argv)
@@ -55,10 +101,22 @@ int main(int argc, const char ** argv)
             max_restarts
         );
         
-        p.add_argument("program", program);
-        p.add_argument("argument", program_arguments);
+        p.add_argument("PROGRAM-ARGUMENTS", program_arguments);
         
         p.parse(argc, argv);
+    }
+    
+    if(program_arguments.size() == 0)
+    {
+        std::cerr<<"Not enough program arguments"<<std::endl;
+        return 1;
+    }
+    
+    std::string program_filename;
+    if(!find_program(program_arguments[0], program_filename))
+    {
+        std::cout<<program_arguments[0]<<" file not found"<<std::endl;
+        return 1;
     }
     
     bool restart;
@@ -68,7 +126,7 @@ int main(int argc, const char ** argv)
     {
         restart = false;
         
-        create_process(program, program_arguments);
+        create_process(program_filename, program_arguments);
         
         int child_exit_status = 0;
         if(::wait(&child_exit_status) == -1) return 1;
