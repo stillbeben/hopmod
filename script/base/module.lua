@@ -1,147 +1,63 @@
 local signal_loaded = server.create_event_signal("module-loaded")
 local signal_unloaded = server.create_event_signal("module-unloaded")
-local event_unload = server.create_event_signal("unload")
 
 local started = false
 local modules = {}
 local loaded_modules = {}
 local loaded_scripts = {}
+local temporary_modules = {}
 
-local environment = {}
-environment.server = {}
-
-local function createEnvironment()
-    local env = table.deepcopy(environment)
-    setmetatable(env.server, {__index = _G.server, __newindex = _G.server})
-    setmetatable(env, {__index = _G, __newindex = _G})
-    return env
-end
-
-local function run_lua_script(filename)
-    local loaded, errorMessage = loadfile(filename)
-    if not loaded then error(errorMessage) end
-    setfenv(loaded, createEnvironment())
-    return loaded()
-end
-
-local script_extension_handlers = {
-    lua      = run_lua_script,
-    cs       = server.execCubeScriptFile,
-    _default = server.execCubeScriptFile
-}
-
-local script_paths = {
-    [01] = "%s",
-    [02] = "%s.lua",
-    [03] = "%s.cs",
-    [04] = "./script/%s.lua",
-    [05] = "./script/%s",
-    [06] = "./script/module/%s.lua",
-    [07] = "./script/module/%s",
-    [08] = "./script/%s.cs",
-    [09] = "./conf/%s",
-    [10] = "./conf/%s.lua",
-    [11] = "./conf/%s.cs"
-}
-
-local function find_script(filename)
+local function execute_module_script(filename, environment)
     
-    local real_filename
-    
-    for _, path in ipairs(script_paths) do
-        
-        local candidateFilename = string.format(path, filename)
-        
-        if server.file_exists(candidateFilename) then
-            real_filename = candidateFilename
-            break
-        end
+    local chunk, error_message = loadfile(filename)
+    if not chunk then
+        return false, error_message
     end
     
-    if not real_filename then return end
+    setfenv(chunk, environment)
     
-    local extension = string.gmatch(real_filename, "%.(%a+)$")() or "_default"
-    
-    return real_filename, script_extension_handlers[extension]
+    return (function(...) return arg end)(pcall(chunk))
 end
-
-server.find_script = find_script
-
-function server.script(filename)
-    
-    local script_name = filename
-
-    local filename, scriptRunner = find_script(filename)
-    
-    if not filename then
-        error(string.format("Cannot find script '%s'", script_name))
-    end
-    
-    if loaded_scripts[filename] then
-        return nil
-    end
-    
-    loaded_scripts[filename] = true
-    
-    if not scriptRunner then
-        error(string.format("Unrecognized file extension for script \"%s\".", filename))
-    end
-    
-    return scriptRunner(filename)
-end
-
-server.load_once = server.script
-script = server.script
-load_once = server.load_once
 
 function server.unload(name)
     
     local control = loaded_modules[name]
-    if not control then error(string.format("module \"%s\" not found", name)) end
-    
-    for _, unload_handler in pairs(control.event_unload_handlers) do
-        unload_handler()
+    if not control then
+        error(string.format("module '%s' not loaded", name))
     end
     
     if control.unload then
         control.unload()
     end
     
-    for _, handlerId in ipairs(control.event_handlers) do
-        server.cancel_handler(handlerId)
-    end
-    
-    for _, handlerId in ipairs(control.event_signals) do
-        server.cancel_event_signal(handlerId)
-    end
-    
-    for _, handlerId in ipairs(control.timers) do
-        server.cancel_timer(handlerId)
-    end
+    control.cleanup_environment()
     
     loaded_modules[name] = nil
     loaded_scripts[control.filename] = nil
     
     collectgarbage()
     
-    if control.successful_startup then
-        signal_unloaded(name, control.filename)
-        server.log_status("Unloaded module " .. name)
-    end
+    signal_unloaded(name, control.filename)
+    server.log_status("Unloaded module " .. name)
 end
 
 local function unload_all_modules()
     for name in pairs(loaded_modules) do 
-        catch_error(server.unload, name, true)
+        local success, error_message = pcall(server.unload, name)
+        if not success then
+            server.log_error(string.format("Error while unloading module '%s': %s", name, error_message))
+        end
     end
 end
 
-local function load_module(name)
-
+local function create_module_environment()
+    
+    local environment = {server = {}}
+    
     local event_handlers = {}
+    local event_unload_handlers = {}
     local event_signals = {}
     local timers = {}
-    local event_unload_handlers = {}
     
     environment.server.event_handler = function(name, handler)
         
@@ -164,60 +80,82 @@ local function load_module(name)
         return trigger, signalId
     end
     
-    local function timerFunction(timerFunction, countdown, handler)
-        local handlerId = timerFunction(countdown, handler)
-        timers[#timers + 1] = handlerId
-        return handlerId
+    local function add_timer(timer_function, countdown, handler)
+        local handler_id = timer_function(countdown, handler)
+        timers[#timers + 1] = handler_id
+        return handler_id
     end
     
     environment.server.sleep = function(countdown, handler)
-        return timerFunction(server.sleep, countdown, handler)
+        return add_timer(server.sleep, countdown, handler)
     end
     
     environment.server.interval = function(countdown, handler)
-        return timerFunction(server.interval, countdown, handler)
+        return add_timer(server.interval, countdown, handler)
     end
     
-    local filename, runScript = find_script(name)
+    local function cleanup()
+        
+        for _, unload_handler in pairs(event_unload_handlers) do
+            unload_handler()
+        end
+        
+        for _, handler_id in ipairs(event_handlers) do
+            server.cancel_handler(handler_id)
+        end
+        
+        for _, handler_id in ipairs(event_signals) do
+            server.cancel_event_signal(handler_id)
+        end
+        
+        for _, handler_id in ipairs(timers) do
+            server.cancel_timer(handler_id)
+        end
+    end
+    
+    setmetatable(environment, {__index = _G, __newindex = _G})
+    setmetatable(environment.server, {__index = _G.server, __newindex = _G.server})
+    
+    return environment, cleanup
+end
+
+local function load_module(name)
+    
+    local event_handlers = {}
+    local event_signals = {}
+    local timers = {}
+    local event_unload_handlers = {}
+    
+    local filename = find_script(name .. ".lua")
+    if not filename then
+        filename = find_script(name)
+        if not filename then
+            error(string.format("module '%s' not found", name))
+        end
+    end
     
     if loaded_scripts[filename] then
         return
     end
     
-    if not filename then
-        error(string.format("module \"%s\" not found", name))
-    end
+    local environment, cleanup_environment = create_module_environment()
     
-    if not runScript then
-        error(string.format("module \"%s\" is an unknown script type", name))
-    end
-    
-    local success, control = return_catch_error(runScript, filename)
+    local success, control = execute_module_script(filename, environment)
     
     if not success then
-        control = nil
+        cleanup_environment()
+        server.log_error(control)
+        return
     end
     
     control = control or {}
+    control.name = name
     control.filename = filename
-    control.event_handlers = event_handlers
-    control.event_signals = event_signals
-    control.timers = timers
-    control.event_unload_handlers = event_unload_handlers
-    control.successful_startup = success
-    
-    environment.server.event_handler = nil
-    environment.server.create_event_signal = nil
-    environment.server.sleep = nil
-    environment.server.interval = nil
+    control.environment = environment
+    control.cleanup_environment = cleanup_environment
     
     loaded_scripts[filename] = true
     loaded_modules[name] = control
-    
-    if not success then
-        server.unload_module(name)
-        return
-    end
     
     signal_loaded(name, filename)
     
@@ -226,10 +164,8 @@ local function load_module(name)
     end
 end
 
-
-
 local function load_modules_now()
-
+    
     for _, name in ipairs(modules) do
         load_module(name)
     end
@@ -240,16 +176,13 @@ local function load_modules_now()
 end
 
 function server.module(name)
-
+    
     if started == true then
         load_module(name)
     else
         table.insert(modules, name)
     end
-    
 end
-
-local temporary_modules = {}
 
 function server.load_temporary_module(name)
     

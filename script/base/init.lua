@@ -6,10 +6,11 @@ dofile("script/base/event.lua")
 dofile("script/base/server.lua")
 dofile("script/base/cubescript.lua")
 dofile("script/base/serverexec.lua")
--- The exec function is available after cubescript.lua has executed
+-- The exec function becomes available after cubescript.lua has been executed
 
-add_exec_search_path("script")
 add_exec_search_path("conf")
+add_exec_search_path("script")
+add_exec_search_path("script/module")
 
 exec("base/resetvars.cs")
 exec("base/resetvars.lua")
@@ -66,7 +67,7 @@ server.event_handler("started", function()
     server.reload_maprotation()
     
     require("geoip").load_geoip_database(server.geoip_db_file)
-
+    
     log_unknown_player_commands()
     
     server.log_status("-> Successfully loaded Hopmod")

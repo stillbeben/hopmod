@@ -8,7 +8,9 @@ setmetatable(library, {
     end
 })
 
+find_script = library.find_script
 exec = library.exec
+pexec = library.pexec
 exec_if_found = library.exec_if_found
 search_paths = library.exec_search_paths
 exec_handler = library.exec_type

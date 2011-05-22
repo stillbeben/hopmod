@@ -625,7 +625,7 @@ function generate_expression_code(input)
         greater_than_or_equal = comparison_operation(">="),
         _not = not_operation,
         _or = logic_operation("or"),
-        _and = logic_operation("and"),        
+        _and = logic_operation("and"),
         _return = return_statement,
         _if = if_statement,
         loop = loop,
@@ -713,11 +713,7 @@ env["exec_type"] = {
 
 env["exec_search_paths"] = {}
 
-env["exec_stack"] = {}
-
-env["exec"] = function(filename, options)
-
-    options = options or {}
+local function find_script(filename, function_level)
     
     function is_readable(filename)
         local file = io.open(filename)
@@ -727,49 +723,65 @@ env["exec"] = function(filename, options)
         else return false end
     end
     
-    function search_filename(parent_dir, filename)
-        
-        local relative_to_parent = parent_dir .. filename
-        
-        if is_readable(filename) then return filename, "" end
-        if is_readable(relative_to_parent) then return relative_to_parent, parent_dir end
-        
-        local search_paths = env.exec_search_paths
-        for _, path in pairs(search_paths) do
-            local revised = path .. "/" .. filename
-            if is_readable(revised) then return revised, string.match(revised,  "(.*)/.*$") end
-        end
-        
-        return filename, ""
+    if is_readable(filename) then
+        return filename
     end
     
-    local dir = ""
-    local exec_stack = env.exec_stack
-    
-    if string.sub(dir, 1, 1) ~= "/" then
-        local parent_dir = (exec_stack[#exec_stack] and exec_stack[#exec_stack].dir .. "/") or ""
-        filename, dir = search_filename(parent_dir, filename)
-    end
-    
-    if options.return_if_not_found and not is_readable(filename) then
+    -- Absolute filename
+    if string.sub(filename, 1, 1) == "/" then
         return
     end
     
-    local file_type = string.match(filename, "[^.]*$")
-    local exec_script_function = env.exec_type[file_type]
-    
-    if not exec_script_function then
-        error("unknown script file type for '" .. filename .. "'")
+    function get_current_dir(function_level)
+        function_level = function_level or 1
+        function_level = function_level + 2
+        local source = debug.getinfo(function_level).source
+        local source_type = string.sub(source, 1, 1)
+        if source_type == "@" then
+            local dirname = string.match(string.sub(source, 2), "^(.*)(\/[^/]*)$")
+            return dirname
+        end
     end
     
-    exec_stack[#exec_stack + 1] = {
-        filename = filename, 
-        dir = dir
-    }
+    local current_dir = get_current_dir(function_level)
+    if current_dir then
+        local absolute_filename = current_dir .. "/" .. filename
+        if is_readable(absolute_filename) then
+            return absolute_filename
+        end
+    end
     
-    local pcall_results = (function(...) return arg end)(pcall(exec_script_function, filename))
+    local search_paths = env.exec_search_paths
+    for _, path in pairs(search_paths) do
+        local absolute_filename = path .. "/" .. filename
+        if is_readable(absolute_filename) then 
+            return absolute_filename
+        end
+    end
+end
+
+env["find_script"] = find_script
+
+env["exec"] = function(filename, function_level)
     
-    exec_stack[#exec_stack] = nil
+    function_level = function_level or 2
+    
+    local absolute_filename = find_script(filename, function_level)
+    
+    if not absolute_filename then
+        error(string.format("cannot execute '%s': file not found", filename))
+    end
+    
+    filename = absolute_filename
+    
+    local file_type = string.match(filename, "[^.]*$")
+    local executor = env.exec_type[file_type]
+    
+    if not executor then
+        error(string.format("cannot execute '%s': unknown script type"), filename)
+    end
+    
+    local pcall_results = (function(...) return arg end)(pcall(executor, filename))
     
     if pcall_results[1] == false then
         error(pcall_results[2], 0)
@@ -781,8 +793,19 @@ end
 
 local exec = env.exec
 
+env["pexec"] = function(filename)
+    return (function(...) return arg end)(pcall(exec, filename, 3))
+end
+
 env["exec_if_found"] = function(filename)
-    exec(filename, {return_if_not_found = true})
+    
+    filename = find_script(filename, 1)
+    
+    if not filename then
+        return
+    end
+    
+    exec(filename, 2)
 end
 
 return env
