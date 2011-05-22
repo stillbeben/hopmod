@@ -96,7 +96,7 @@ int player_sessionid(int cn)
 
 const char * player_name(int cn){return get_ci(cn)->name;}
 
-void player_rename(int cn, const char * newname, bool pub)
+void player_rename(int cn, const char * newname, bool public_rename)
 {
     char safenewname[MAXNAMELEN + 1];
     filtertext(safenewname, newname, false, MAXNAMELEN);
@@ -125,9 +125,16 @@ void player_rename(int cn, const char * newname, bool pub)
     
     copystring(ci->name, safenewname, MAXNAMELEN+1);
     
-    if (pub) 
-      signal_rename(ci->clientnum, oldname, ci->name);
+    if(public_rename)
+    {
+        int futureId = get_player_id(safenewname, getclientip(ci->clientnum));
+        signal_renaming(ci->clientnum, futureId);
+        ci->playerid = futureId;
+        
+        signal_rename(ci->clientnum, oldname, ci->name);
+    }
 }
+
 std::string player_displayname(int cn)
 {
     clientinfo * ci = get_ci(cn);
