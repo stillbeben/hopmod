@@ -104,3 +104,9 @@ function table.missing_fields(t, ...)
     return missing
 end
 
+function table_append(subject, extra_elements)
+    for i = 1, table.maxn(extra_elements) do
+        subject[#subject + 1] = extra_elements[i]
+    end
+end
+
