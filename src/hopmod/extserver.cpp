@@ -117,7 +117,7 @@ int player_sessionid(int cn)
 
 const char * player_name(int cn){return get_ci(cn)->name;}
 
-void player_rename(int cn, const char * newname, bool pub)
+void player_rename(int cn, const char * newname, bool public_rename)
 {
     char safenewname[MAXNAMELEN + 1];
     filtertext(safenewname, newname, false, MAXNAMELEN);
@@ -146,9 +146,13 @@ void player_rename(int cn, const char * newname, bool pub)
     
     copystring(ci->name, safenewname, MAXNAMELEN+1);
     
-    if (pub)
+    if(public_rename)
     {
-      event_rename(event_listeners(), boost::make_tuple(ci->clientnum, oldname, ci->name));
+        int futureId = get_player_id(safenewname, getclientip(ci->clientnum));
+        event_renaming(ci->clientnum, futureId);
+        ci->playerid = futureId;
+        
+        event_rename(ci->clientnum, oldname, ci->name);
     }
 }
 
