@@ -1,3 +1,5 @@
+local _ = require "underscore"
+
 local is_authserver = (server.is_authserver or 0) == 1
 
 local filename = "server"
@@ -16,7 +18,7 @@ function server.log(msg)
     logfile:flush()
 end
 
-server.event_handler("shutdown", bind(logfile.close, logfile))
+server.event_handler("shutdown", _.curry(logfile.close, logfile))
 
 if not server.is_authserver then
 
