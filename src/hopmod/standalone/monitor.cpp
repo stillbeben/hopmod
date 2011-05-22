@@ -20,10 +20,11 @@ static void create_process(const std::string & program,
     
     if(child_pid == 0)
     {
-        char ** argv = new char *[arguments.size() + 1];
+        char ** argv = new char *[arguments.size() + 2];
+        argv[0] = const_cast<char *>(program.c_str());
         for(size_t i = 0; i < arguments.size(); i++)
-            argv[i] = const_cast<char *>(arguments[i].c_str());
-        argv[arguments.size()] = NULL;
+            argv[i + 1] = const_cast<char *>(arguments[i].c_str());
+        argv[arguments.size() + 1] = NULL;
         if(execve(program.c_str(), argv, environ) == -1) exit(1);
     }
 }
@@ -52,7 +53,8 @@ int main(int argc, const char ** argv)
 
     bool restart;
     
-    do{
+    do
+    {
         restart = false;
         
         create_process(program, program_arguments);
