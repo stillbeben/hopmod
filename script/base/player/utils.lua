@@ -168,19 +168,3 @@ function print_displaynamelist(clientnums)
     return print_list(unpack(names))
 end
 
-function server.admin_msg(msg)
-    for p in server.gclients() do
-        if p:priv_code() == server.PRIV_ADMIN then
-            p:msg(magenta(msg))
-        end
-    end
-end
-
-function server.master_msg(msg)
-    for p in server.gclients() do
-        if p:priv_code() >= server.PRIV_MASTER then
-            p:msg(magenta(msg))
-        end
-    end
-end
-
