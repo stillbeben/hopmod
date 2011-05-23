@@ -16,14 +16,6 @@ end
 
 server.format_duration = format_duration
 
-function string.split(s, pattern)
-    local a = {}
-    for x in string.gmatch(s, pattern) do
-        a[#a+1] = x
-    end
-    return a
-end
-
 function tabulate(text)
     
     local output = ""
