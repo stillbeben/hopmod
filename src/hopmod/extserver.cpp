@@ -118,7 +118,7 @@ void player_rename(int cn, const char * newname, bool public_rename)
     putint(p, ci->clientnum);
     putint(p, switchname_message.length());
     p.put(switchname_message.getbuf(), switchname_message.length());
-    sendpacket(ci->clientnum, 1, p.finalize(), (pub ? -1 : ci->clientnum));
+    sendpacket(ci->clientnum, 1, p.finalize(), (public_rename ? -1 : ci->clientnum));
     
     char oldname[MAXNAMELEN+1];
     copystring(oldname, ci->name, MAXNAMELEN+1);
