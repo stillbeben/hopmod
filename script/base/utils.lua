@@ -47,14 +47,6 @@ function catch_error(chunk, ...)
     return pcall_results
 end
 
-function server.eval_lua(str)
-    local chunk, error_message = loadstring(str)
-    if not chunk then 
-        error(error_message)
-    end
-    return chunk()
-end
-
 function server.hashpassword(cn, password)
     return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), password))
 end
