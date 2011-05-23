@@ -139,7 +139,7 @@ void player_rename(int cn, const char * newname, bool public_rename)
     putint(p, ci->clientnum);
     putint(p, switchname_message.length());
     p.put(switchname_message.getbuf(), switchname_message.length());
-    sendpacket(ci->clientnum, 1, p.finalize(), (pub ? -1 : ci->clientnum));
+    sendpacket(ci->clientnum, 1, p.finalize(), (public_rename ? -1 : ci->clientnum));
     
     char oldname[MAXNAMELEN+1];
     copystring(oldname, ci->name, MAXNAMELEN+1);
@@ -148,11 +148,8 @@ void player_rename(int cn, const char * newname, bool public_rename)
     
     if(public_rename)
     {
-        int futureId = get_player_id(safenewname, getclientip(ci->clientnum));
-        event_renaming(ci->clientnum, futureId);
-        ci->playerid = futureId;
-        
-        event_rename(ci->clientnum, oldname, ci->name);
+        event_renaming(event_listeners(), boost::make_tuple(ci->clientnum, 0));
+        event_rename(event_listeners(), boost::make_tuple(ci->clientnum, oldname, ci->name));
     }
 }
 
