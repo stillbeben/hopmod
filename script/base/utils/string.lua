@@ -121,11 +121,3 @@ function strSplit(str, delim, maxNb)
     return result
 end
 
-function string_matches(str, pattern)
-    local matches = {}
-    for match in string.gmatch(str, pattern) do
-        matches[#matches + 1] = match
-    end
-    return matches
-end
-
