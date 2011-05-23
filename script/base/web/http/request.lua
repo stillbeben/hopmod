@@ -1,6 +1,7 @@
 --[[
     Some utility functions useful for dealing with HTTP requests
 ]]
+local _ = require "underscore"
 
 local function decodeQueryString(value)
     value = http_server.url_decode(value or "")
@@ -17,7 +18,7 @@ end
 local function parseQueryString(query)
     local result = {}
     for param in string.gmatch(query or "", "[^&]+") do
-        local name, value = unpack(string.split(param, "[^=]+"))
+        local name, value = unpack(_.to_array(string.gmatch(param, "[^=]+")))
         local decode = decodeQueryString
         result[decode(name)] = decode(value)
     end
@@ -27,7 +28,7 @@ end
 local function parseCookie(cookie)
     local result = {}
     for param in string.gmatch(cookie or "", "[^; ]+") do
-        local name, value = unpack(string.split(param, "[^=]+"))
+        local name, value = unpack(_.to_array(string.gmatch(param, "[^=]+")))
         local decode = decodeQueryString
         result[decode(name)] = decode(value)
     end
