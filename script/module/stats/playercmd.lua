@@ -25,7 +25,7 @@ end
 
 local function initialize(query_backend)
     
-    if not query_backend or not table.has_fields(query_backend, "player_totals") then
+    if not query_backend or not validate(query_backend, {player_totals = "function"}) then
         server.log_error("Error in stats player command initialization: not given a usable query backend")
         return
     end
