@@ -26,10 +26,14 @@ if not server.is_authserver then
         print(msg)
     end
     
-    function server.log_error(msg)
-        assert(type(msg) == "string")
+    function server.log_error(error_message)
+        
+        if type(error_message) == "table" and type(error_message[1]) == "string" then
+            error_message = error_message[1]
+        end
+        
         io.stderr:write(os.date("[%a %d %b %X] ",os.time()))
-        io.stderr:write(msg)
+        io.stderr:write(error_message)
         io.stderr:write("\n")
         io.stderr:flush()
     end
