@@ -1,6 +1,7 @@
 package.path = package.path .. ";script/package/?.lua;"
 package.cpath = package.cpath .. ";lib/lib?.so"
 
+dofile("script/base/pcall.lua")
 dofile("script/base/core_function_overloads.lua")
 dofile("script/base/event.lua")
 dofile("script/base/server.lua")
