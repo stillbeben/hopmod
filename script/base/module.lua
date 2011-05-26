@@ -16,7 +16,7 @@ local function execute_module_script(filename, environment)
     
     setfenv(chunk, environment)
     
-    return (function(...) return arg end)(pcall(chunk))
+    return (function(...) return unpack(arg) end)(pcall(chunk))
 end
 
 function server.unload(name)
@@ -113,8 +113,8 @@ local function create_module_environment()
         end
     end
     
-    setmetatable(environment, {__index = _G, __newindex = _G})
     setmetatable(environment.server, {__index = _G.server, __newindex = _G.server})
+    setmetatable(environment, {__index = _G, __newindex = _G})
     
     return environment, cleanup
 end
