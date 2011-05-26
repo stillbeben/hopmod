@@ -40,8 +40,8 @@ function catch_error(chunk, ...)
     
     local pcall_results = pack(pcall(chunk, unpack(arg)))
     
-    if not pcall_results[0] then
-        server.log_error(pcall_results[1])
+    if not pcall_results[1] then
+        server.log_error(pcall_results[2])
     end
     
     return pcall_results
