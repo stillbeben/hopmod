@@ -4,7 +4,6 @@ add_subdirectory(boost)
 add_subdirectory(fungu)
 add_subdirectory(lsqlite3-7)
 add_subdirectory(hopmod/standalone/luapp)
-add_subdirectory(authserver EXCLUDE_FROM_ALL)
 add_subdirectory(luasql EXCLUDE_FROM_ALL)
 
 include(CheckLibraryExists)
