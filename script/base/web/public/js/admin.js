@@ -422,7 +422,7 @@ function createPlayerControlLinks(client){
     kick.href="#";
     kick.title="Kick";
     kick.onclick = function(){
-        var yes = confirm("You are you sure you want to kick " + client.name + "(" + client.cn + ")");
+        var yes = confirm("Are you sure you want to kick " + client.name + "(" + client.cn + ")");
         if(yes){
             client.kick(1440);
         }
