@@ -846,13 +846,14 @@ enet_protocol_handle_incoming_commands (ENetHost * host, ENetEvent * event)
     {
        peer = & host -> peers [peerID];
 
-       if (peer -> state == ENET_PEER_STATE_DISCONNECTED ||
-           peer -> state == ENET_PEER_STATE_ZOMBIE ||
-           (host -> receivedAddress.host != peer -> address.host &&
-             peer -> address.host != ENET_HOST_BROADCAST) ||
+       if (peer -> state == ENET_PEER_STATE_DISCONNECTED || 
+           peer -> state == ENET_PEER_STATE_ZOMBIE || 
+           ((host -> receivedAddress.host != peer -> address.host ||
+           host -> receivedAddress.port != peer -> address.port) &&
+           peer -> address.host != ENET_HOST_BROADCAST) ||
            (peer -> outgoingPeerID < ENET_PROTOCOL_MAXIMUM_PEER_ID &&
-            sessionID != peer -> incomingSessionID))
-         return 0;
+           sessionID != peer -> incomingSessionID))
+        return 0;
     }
  
     if (flags & ENET_PROTOCOL_HEADER_FLAG_COMPRESSED)
