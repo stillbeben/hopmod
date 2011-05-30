@@ -1,4 +1,5 @@
 local MAX_TIME = 5
+local READ_SIZE = 256
 
 local file, error_message = os.open_fifo("serverexec")
 
@@ -11,7 +12,7 @@ file_stream = net.file_stream(file)
 
 local function read_expression(existing_code, discard_time_limit)
 
-    file_stream:async_read_some(256, function(new_code, error_message)
+    file_stream:async_read_some(READ_SIZE, function(new_code, error_message)
         
         if not new_code then
             server.log_error("serverexec read error:" .. error_message)

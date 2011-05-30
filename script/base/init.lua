@@ -60,7 +60,7 @@ local function load_module_vars(path)
     end
 end
 
-load_module_vars("./script/module/declare")
+load_module_vars("./script/module/config")
 
 server.event_handler("started", function()
     
