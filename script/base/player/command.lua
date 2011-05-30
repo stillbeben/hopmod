@@ -190,13 +190,7 @@ function player_command_function(name, func, permission)
     merge_player_command(name, {run = func, permission = permission or 0})
 end
 
-function log_unknown_player_commands()
-    for name, command in pairs(player_commands) do
-        if not command.run then
-            server.log_error(string.format("No function loaded for player command '%s'", name))
-        end
-    end
-end
+
 
 local function merge_command_list(command_list, options)
 
@@ -229,4 +223,17 @@ function is_player_command_enabled(command_name)
     local command = player_commands[command_name]
     return command and command.enabled and command.run
 end
+
+server.event_handler("started", function()
+    
+    function log_unknown_player_commands()
+        for name, command in pairs(player_commands) do
+            if not command.run then
+                server.log_error(string.format("No function loaded for player command '%s'", name))
+            end
+        end
+    end
+    
+    log_unknown_player_commands()
+end)
 

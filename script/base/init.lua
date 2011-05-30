@@ -49,8 +49,6 @@ server.event_handler("started", function()
     
     require("geoip").load_geoip_database(server.geoip_db_file)
     
-    log_unknown_player_commands()
-    
     server.log_status("-> Successfully loaded Hopmod")
 end)
 
