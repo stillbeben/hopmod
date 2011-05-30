@@ -65,6 +65,7 @@ set(LUA_MODULES_SOURCES
     hopmod/lua/push_function.cpp
     hopmod/lua/library_extensions.cpp
     hopmod/lua/pcall.cpp
+    hopmod/lua/error_handler.cpp
     hopmod/lua/push.cpp
     hopmod/lua/register_class.cpp
     hopmod/lua/modules/module.cpp

@@ -2,6 +2,7 @@
 #include "hopmod.hpp"
 #include "main_io_service.hpp"
 #include "lua/modules/net/weak_ref.hpp"
+#include "lua/error_handler.hpp"
 using namespace boost::asio;
 
 namespace lua{
@@ -11,15 +12,22 @@ static void async_wait_handler(lua_State * L,
     const boost::system::error_code & ec)
 {
     if(callback.is_expired()) return;
+    
+    lua::get_error_handler(L);
+    int error_function = lua_gettop(L);
+    
     callback.get(L);
     
-    if(lua_pcall(L, 0, 1, 0) == 0)
+    if(lua::pcall(L, 0, 1, error_function) == 0)
     {
         repeat = repeat && lua_type(L, -1) == LUA_TNIL;
     }
-    else event_listeners().log_error(repeat ? "interval" : "sleep", lua_tostring(L, -1));
+    else
+    {
+        event_listeners().log_error(repeat ? "interval" : "sleep", lua_tostring(L, -1));
+    }
     
-    lua_pop(L, 1);
+    lua_pop(L, 2);
     
     if(repeat)
     {

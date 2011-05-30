@@ -1,6 +1,7 @@
 #ifndef LUA_PCALL_HPP
 #define LUA_PCALL_HPP
 
+namespace cubescript{
 namespace lua{
 
 // A lua_pcall function wrapper that uses the function set by set_error_handler() as the error function
@@ -20,6 +21,7 @@ int push_traceback(lua_State * L);
 bool is_callable(lua_State *, int);
 
 } //namespace lua
+} //namespace cubescript
 
 #endif
 

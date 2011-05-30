@@ -4,6 +4,7 @@
 #include "../../register_class.hpp"
 #include "../../to.hpp"
 #include "../../create_object.hpp"
+#include "../../error_handler.hpp"
 #include <boost/asio.hpp>
 using namespace boost::asio;
 #include <boost/system/error_code.hpp>
@@ -17,6 +18,10 @@ static void async_resolve_handler(boost::shared_ptr<ip::tcp::resolver>,
     const boost::system::error_code & ec, ip::tcp::resolver::iterator iterator)
 {
     if(callback.is_expired()) return;
+    
+    lua::get_error_handler(L);
+    int error_function = lua_gettop(L);
+    
     callback.get(L);
     
     if(!ec)
@@ -33,8 +38,10 @@ static void async_resolve_handler(boost::shared_ptr<ip::tcp::resolver>,
     }
     else lua_pushstring(L, ec.message().c_str());
         
-    if(lua_pcall(L, 1, 0, 0) != 0)
+    if(lua_pcall(L, 1, 0, error_function) != 0)
         log_error(L, "async_resolve");
+    
+    lua_pop(L, 1);
     
     callback.unref(L);
 }

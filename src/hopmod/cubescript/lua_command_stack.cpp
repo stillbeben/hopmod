@@ -281,7 +281,7 @@ std::size_t proxy_command_stack::push_command()
     
     lua_rawgeti(m_state, LUA_REGISTRYINDEX, m_push_command);
 
-    if(::lua::pcall(m_state, 0, 1) != 0)
+    if(::cubescript::lua::pcall(m_state, 0, 1) != 0)
         throw command_error("internal error in push command");
     
     return lua_tointeger(m_state, -1);
@@ -296,7 +296,7 @@ void proxy_command_stack::push_argument_symbol(
     lua_rawgeti(m_state, LUA_REGISTRYINDEX, m_push_argument_symbol);
     lua_pushlstring(m_state, value, value_length);
     
-    if(::lua::pcall(m_state, 1, 1) != 0)
+    if(::cubescript::lua::pcall(m_state, 1, 1) != 0)
         throw command_error("internal error in push argument symbol");
 }
 
@@ -310,7 +310,7 @@ void proxy_command_stack::setup_push_argument_call()
 
 void proxy_command_stack::call_push_argument(int nargs, int nresults)
 {
-    if(::lua::pcall(m_state, nargs, nresults) != 0)
+    if(::cubescript::lua::pcall(m_state, nargs, nresults) != 0)
         throw command_error("internal error in push argument");
 }
 
@@ -356,7 +356,7 @@ std::string proxy_command_stack::pop_string()
     
     lua_rawgeti(m_state, LUA_REGISTRYINDEX, m_pop_string);
     
-    if(::lua::pcall(m_state, 0, 1) != 0)
+    if(::cubescript::lua::pcall(m_state, 0, 1) != 0)
         throw command_error("internal error in push argument");
 
     return lua_tostring(m_state, -1);
@@ -370,7 +370,7 @@ void proxy_command_stack::call(std::size_t index)
     lua_rawgeti(m_state, LUA_REGISTRYINDEX, m_call);
     lua_pushinteger(m_state, index);
     
-    if(::lua::pcall(m_state, 1, 0) != 0)
+    if(::cubescript::lua::pcall(m_state, 1, 0) != 0)
         process_error_value(m_state, lua_gettop(m_state));
 }
 

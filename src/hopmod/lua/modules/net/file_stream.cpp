@@ -4,6 +4,8 @@
 #include "../../register_class.hpp"
 #include "../../to.hpp"
 #include "../../create_object.hpp"
+#include "../../pcall.hpp"
+#include "../../error_handler.hpp"
 #include <boost/asio.hpp>
 using namespace boost::asio;
 #include <boost/system/error_code.hpp>
@@ -58,6 +60,10 @@ static void async_read_some_handler(lua_State * L, lua::weak_ref callback, char 
         delete [] char_buffer;
         return;
     }
+    
+    lua::get_error_handler(L);
+    int error_function = lua_gettop(L);
+    
     callback.get(L);
     
     int args = 0;
@@ -74,8 +80,10 @@ static void async_read_some_handler(lua_State * L, lua::weak_ref callback, char 
         args = 2;
     }
     
-    if(lua_pcall(L, args, 0, 0) != 0)
+    if(lua::pcall(L, args, 0, error_function) != 0)
         log_error(L, "async_read_some");
+    
+    lua_pop(L, 1);
     
     callback.unref(L);
     delete [] char_buffer;

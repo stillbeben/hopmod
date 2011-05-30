@@ -29,12 +29,9 @@ int event_base::assign_numeric_id()
     return id;
 }
 
-event_environment::event_environment(lua_State * L,
-                                     void (* log_error_function)(const char *),
-                                     lua_CFunction error_function)
+event_environment::event_environment(lua_State * L, void (* log_error_function)(const char *))
  :m_state(L),
-  m_log_error_function(log_error_function),
-  m_error_function(error_function)
+  m_log_error_function(log_error_function)
 {
     lua_newtable(L);
     lua_pushvalue(L, -1);
@@ -46,7 +43,7 @@ event_environment::event_environment(lua_State * L,
 }
 
 event_environment::event_environment()
- :m_state(NULL), m_log_error_function(NULL), m_error_function(NULL)
+ :m_state(NULL), m_log_error_function(NULL)
 {
     
 }
@@ -100,14 +97,6 @@ lua_State * event_environment::push_listeners_table(const char * text_id, int nu
     lua_replace(m_state, bottom);
     
     return m_state;
-}
-
-bool event_environment::push_error_function()
-{
-    assert(is_ready());
-    if(!m_error_function) return false;
-    lua_pushcfunction(m_state, m_error_function);
-    return true;
 }
 
 void event_environment::log_error(const char * text_id, const char * error_message)

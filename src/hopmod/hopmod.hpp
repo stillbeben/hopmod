@@ -17,12 +17,7 @@ lua_State * get_lua_state();
 lua::event_environment & event_listeners();
 void log_event_error(const char * event_id, const char * error_message);
 
-int get_player_id(const char * name, unsigned long ip);
-void clear_player_ids();
-
 // Scheduler Functions
-void init_scheduler();
-void update_scheduler(int);
 void sched_callback(int (*)(void *),void *);
 void sched_callback(int (*)(void *),void *, int);
 void cancel_timer(int);
@@ -31,9 +26,6 @@ int sleep(lua_State *);
 int interval(lua_State *);
 int cancel_timer(lua_State *);
 } //namespace lua
-
-void start_restarter();
-void stop_restarter();
 
 enum{
     SHUTDOWN_NORMAL,

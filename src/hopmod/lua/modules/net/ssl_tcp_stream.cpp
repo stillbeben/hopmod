@@ -4,6 +4,8 @@
 #include "../../register_class.hpp"
 #include "../../to.hpp"
 #include "../../create_object.hpp"
+#include "../../pcall.hpp"
+#include "../../error_handler.hpp"
 using namespace boost::asio;
 
 namespace lua{
@@ -65,6 +67,10 @@ static void async_handshake_handler(
     const boost::system::error_code & ec)
 {
     if(callback.is_expired()) return;
+    
+    lua::get_error_handler(L);
+    int error_function = lua_gettop(L);
+    
     callback.get(L);
     
     int args = 0;
@@ -75,8 +81,10 @@ static void async_handshake_handler(
         args = 1;
     }
     
-    if(lua_pcall(L, args, 0, 0) != 0) 
+    if(lua::pcall(L, args, 0, error_function) != 0) 
         log_error(L, "async_handshake");
+    
+    lua_pop(L, 1);
     
     callback.unref(L);
 }
@@ -103,6 +111,10 @@ static void async_read_handler(
     const boost::system::error_code & ec, const char * buffer, std::size_t length)
 {
     if(callback.is_expired()) return;
+    
+    lua::get_error_handler(L);
+    int error_function = lua_gettop(L);
+    
     callback.get(L);
     
     int args;
@@ -123,8 +135,11 @@ static void async_read_handler(
         args = 1;
     }
     
-    if(lua_pcall(L, args, 0, 0) != 0) 
+    if(lua::pcall(L, args, 0, error_function) != 0) 
         log_error(L, event_name);
+        
+    lua_pop(L, 1);
+    
     callback.unref(L);
 }
 
@@ -165,6 +180,10 @@ static void async_send_handler(managed_ssl_tcp_stream::target_type, lua_State * 
     delete [] string_copy;
     
     if(callback.is_expired()) return;
+    
+    lua::get_error_handler(L);
+    int error_function = lua_gettop(L);
+    
     callback.get(L);
     
     int args = 0;
@@ -175,8 +194,11 @@ static void async_send_handler(managed_ssl_tcp_stream::target_type, lua_State * 
         args = 1;
     }
     
-    if(lua_pcall(L, args, 0, 0) != 0) 
+    if(lua::pcall(L, args, 0, error_function) != 0) 
         log_error(L, "async_send");
+    
+    lua_pop(L, 1);
+    
     callback.unref(L);
 }
 
@@ -204,6 +226,10 @@ static void async_shutdown_handler(managed_ssl_tcp_stream::target_type managed_s
     lua_State * L, lua::weak_ref callback, const boost::system::error_code & ec)
 {
     if(callback.is_expired()) return;
+    
+    lua::get_error_handler(L);
+    int error_function = lua_gettop(L);
+    
     callback.get(L);
     
     int args = 0;
@@ -214,8 +240,10 @@ static void async_shutdown_handler(managed_ssl_tcp_stream::target_type managed_s
         args = 1;
     }
     
-    if(lua_pcall(L, args, 0, 0) != 0) 
+    if(lua::pcall(L, args, 0, error_function) != 0) 
         log_error(L, "async_shutdown");
+    
+    lua_pop(L, 1);
     
     callback.unref(L);
 }

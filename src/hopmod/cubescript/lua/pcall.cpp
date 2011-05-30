@@ -3,6 +3,7 @@
 
 #define ERROR_HANDLER_KEY "pcall_error_handler"
 
+namespace cubescript{
 namespace lua{
 
 static int error_handler(lua_State * L)
@@ -132,3 +133,5 @@ bool is_callable(lua_State * L, int index)
 }
 
 } //namespace lua
+} //namespace cubescript
+
