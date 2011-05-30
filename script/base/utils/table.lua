@@ -52,14 +52,6 @@ function table.deepcopy(object)
     return _copy(object)
 end
 
-function map_to_array(map)
-    local result = {}
-    for _,v in pairs(map) do
-        table.insert(result, v)
-    end
-    return result
-end
-
 function list_to_set(list)
     local set = {}
     for _,value in ipairs(list) do set[value] = true end
