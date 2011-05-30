@@ -2455,6 +2455,7 @@ namespace server
             
             case N_EDITMODE:
             {
+                if (!m_edit) { disconnect_client(sender, DISC_TAGT); break; }
                 int val = getint(p);
                 if(!ci->local && !m_edit) break;
                 if(val ? ci->state.state!=CS_ALIVE && ci->state.state!=CS_DEAD : ci->state.state!=CS_EDITING) break;
@@ -2774,6 +2775,7 @@ namespace server
 
             case N_EDITENT:
             {
+                if (!m_edit) { disconnect_client(sender, DISC_TAGT); break; }
                 int i = getint(p);
                 loopk(3) getint(p);
                 int type = getint(p);
@@ -2797,6 +2799,7 @@ namespace server
 
             case N_EDITVAR:
             {
+                if (!m_edit) { disconnect_client(sender, DISC_TAGT); break; }
                 int type = getint(p);
                 getstring(text, p);
                 switch(type)
@@ -3060,16 +3063,19 @@ namespace server
             }
 
             case N_COPY:
+                if (!m_edit) { disconnect_client(sender, DISC_TAGT); break; }
                 ci->cleanclipboard();
                 ci->lastclipboard = totalmillis;
                 goto genericmsg;
 
             case N_PASTE:
+                if (!m_edit) { disconnect_client(sender, DISC_TAGT); break; }
                 if(ci->state.state!=CS_SPECTATOR) sendclipboard(ci);
                 goto genericmsg;
 
             case N_CLIPBOARD:
             {
+                if (!m_edit) { disconnect_client(sender, DISC_TAGT); break; }
                 int unpacklen = getint(p), packlen = getint(p); 
                 ci->cleanclipboard(false);
                 if(ci->state.state==CS_SPECTATOR)
