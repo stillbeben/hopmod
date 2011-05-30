@@ -15,8 +15,8 @@ add_exec_search_path("script/module")
 
 exec("base/resetvars.cs")
 exec("base/resetvars.lua")
-exec("base/module.lua")
 exec("base/utils.lua")
+exec("base/module.lua")
 exec("base/logging.lua")
 exec("base/restart.lua")
 exec("base/player/utils.lua")
@@ -42,25 +42,6 @@ server.module("base/register_server")
 server.module("base/web/init")
 server.module("base/teamkills")
 server.module("base/global_bans")
-
--- Load module configuration variables
-local function load_module_vars(path)
-
-    local filesystem = require "filesystem"
-    
-    for filetype, filename in filesystem.dir(path) do
-        
-        local fullfilename = path .. "/" .. filename
-        
-        if (filetype == filesystem.DIRECTORY) and (filename ~= "." and filename ~= "..") then
-            load_module_vars(fullfilename)
-        elseif (filetype == filesystem.FILE or filetype == filesystem.UNKNOWN) and filename:match(".vars$") then
-            exec(fullfilename)
-        end
-    end
-end
-
-load_module_vars("./script/module/config")
 
 server.event_handler("started", function()
     

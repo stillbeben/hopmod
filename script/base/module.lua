@@ -1,3 +1,5 @@
+local MODULE_VARFILES_DIR = "./script/module/config"
+
 local signal_loaded = server.create_event_signal("module-loaded")
 local signal_unloaded = server.create_event_signal("module-unloaded")
 
@@ -204,3 +206,23 @@ end)
 
 server.event_handler("started", load_modules_now)
 server.event_handler("shutdown", unload_all_modules)
+
+-- Load module configuration variables
+local function load_module_vars(path)
+    
+    local filesystem = require "filesystem"
+    
+    for filetype, filename in filesystem.dir(path) do
+        
+        local fullfilename = path .. "/" .. filename
+        
+        if (filetype == filesystem.DIRECTORY) and (filename ~= "." and filename ~= "..") then
+            load_module_vars(fullfilename)
+        elseif (filetype == filesystem.FILE or filetype == filesystem.UNKNOWN) and filename:match(".vars$") then
+            exec(fullfilename)
+        end
+    end
+end
+
+load_module_vars(MODULE_VARFILES_DIR)
+
