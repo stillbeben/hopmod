@@ -1,3 +1,5 @@
+local _ = require "underscore"
+
 function format_filesize(bytes)
     bytes = tonumber(bytes)
     if bytes < 1024 then return bytes .. "B"
@@ -20,11 +22,11 @@ function tabulate(text)
     
     local output = ""
     local cols = {}
-    local rows = text:split("[^\n]+")
+    local rows = _.to_array(string.gmatch(text, "[^\n]+"))
     
     for i in ipairs(rows) do
         
-        rows[i] = string.split(rows[i], "[%w%p/*]+")
+        rows[i] = _.to_array(string.gmatch(rows[i], "[%w%p/*]+"))
         
         for i,col in ipairs(rows[i]) do
             cols[i] = math.max(#col, cols[i] or 0)
