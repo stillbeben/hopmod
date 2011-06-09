@@ -152,12 +152,11 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
 {
     for(int c = *src; c; c = *++src)
     {
-        if(c == '\f')
-        {
+        if(c == '\f') { 
             if(!*++src) break;
             continue;
         }
-        if(isspace(c) ? whitespace : isprint(c))
+        if(c == ' ' ? whitespace : isprint(c)) //NEW c == ' ' instead "isspace(c) to skip whitespaces: TAB LF VT FF CR
         {
             *dst++ = c;
             if(!--len) break;
