@@ -1,19 +1,10 @@
 --[[
-
     A client that sends player auth requests to a Cube 2 master server
     
-    Copyright (C) 2009 Graham Daws
-    
-    MAINTAINER
-        Graham
-    
-    GUIDELINES
-        
-    TODO
-        
+    Copyright (C) 2009-2011 Graham Daws
 ]]
-
 require "net"
+local _ = require "underscore"
 
 local function request_constructor(socket, id, name, domain)
     
@@ -174,11 +165,11 @@ local function client_constructor()
         socket:async_read_until("\n", function(line, errmsg)
             
             if not line then
-                read_error()        
+                read_error()
                 return
             end
            
-            local arguments = line:split("[^ \n]+")
+            local arguments = _.to_array(string.gmatch(line, "[^ \n]+"))
             
             local request_id = tonumber(arguments[2])
             local request = pending_requests[request_id]
