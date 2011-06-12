@@ -65,6 +65,11 @@ function EventEmitter:remove_listener(event_name, callback)
 end
 
 function EventEmitter:listeners(event_name)
-    return self._listeners[event_name]
+    if event_name then
+        return self._listeners[event_name]
+    else
+        return self._listeners
+    end
 end
+
 
