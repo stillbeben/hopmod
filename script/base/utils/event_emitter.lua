@@ -32,6 +32,16 @@ function EventEmitter:on(event_name, callback)
     return #listeners
 end
 
+function EventEmitter:once(event_name, callback)
+    
+    local function once_handler(...)
+        self:remove_listener(event_name, once_handler)
+        callback(unpack(arg))
+    end
+    
+    self:on(event_name, once_handler)
+end
+
 function EventEmitter:remove_listener(event_name, callback)
     
     local listeners = self._listeners[event_name]
@@ -44,11 +54,13 @@ function EventEmitter:remove_listener(event_name, callback)
     
     assert(type(callback) == "function")
     
-    for _, listener in pairs(listeners) do
+    for index, listener in pairs(listeners) do
         if listener == callback then
+            table.remove(listeners, index)
             return true
         end
     end
+    
     return false
 end
 
