@@ -18,6 +18,12 @@ static void async_wait_handler(lua_State * L,
     
     callback.get(L);
     
+    if(ec)
+    {
+        callback.unref(L);
+        return;
+    }
+    
     if(lua::pcall(L, 0, 1, error_function) == 0)
     {
         repeat = repeat && lua_type(L, -1) == LUA_TNIL;
