@@ -29,7 +29,7 @@ if(OPENSSL_FOUND)
         hopmod/lua/modules/net/ssl_tcp_stream.cpp)
     add_definitions(-DKSSL_DEBUG)
 else(OPENSSL_FOUND)
-    add_definitions(-DDISABLE_SSL)
+    add_definitions(-DDISABLE_SSL -DWITHOUT_OPENSSL)
 endif(OPENSSL_FOUND)
 
 include_directories(

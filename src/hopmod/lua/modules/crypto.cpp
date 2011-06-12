@@ -1,5 +1,13 @@
+#include "../register_class.hpp"
+#include "../to.hpp"
+#include "../create_object.hpp"
 #include "../../crypto.hpp"
 #include "../../lib/md5.h"
+
+#ifndef WITHOUT_OPENSSL
+#include <openssl/evp.h>
+#include <openssl/hmac.h>
+#endif
 
 #include <string>
 #include <stdio.h>
@@ -197,6 +205,23 @@ static int answer_challenge(lua_State * L)
 
 } //namespace ecc
 
+static char * hex_encode(const unsigned char * input_begin, const unsigned char * input_end, 
+    char * output_begin, 
+    char * output_end)
+{
+    static const char * hex_digit = "0123456789abcdef";
+    
+    while(input_begin != input_end && output_begin + 1 < output_end)
+    {
+        *(output_begin++) = hex_digit[*input_begin / 16];
+        *(output_begin++) = hex_digit[*input_begin % 16];
+        
+        input_begin++;
+    }
+    
+    return output_begin;
+}
+
 static int md5sum(lua_State * L)
 {
     size_t inputlen = 0;
@@ -212,12 +237,7 @@ static int md5sum(lua_State * L)
     
     assert(sizeof(context.digest[0]) == 1);
     
-    static const char * digitset = "0123456789abcdef";
-    for(unsigned int i = 0, j = 0; i < sizeof(context.digest); i++, j+=2)
-    {
-        output[j] = digitset[context.digest[i] / 16];
-        output[j + 1] = digitset[context.digest[i] % 16];
-    }
+    hex_encode(context.digest, context.digest + sizeof(context.digest), output, output + outputlen);
     
     output[outputlen] = '\0';
     
@@ -234,11 +254,99 @@ static int tigersum(lua_State * L)
     return 1;
 }
 
+#ifndef WITHOUT_OPENSSL
+
+class hmac
+{
+public:
+    typedef HMAC_CTX target_type;
+    static const char * CLASS_NAME;
+    static int register_class(lua_State * L);
+    static int create_object(lua_State * L);
+private:
+    static int __gc(lua_State * L);
+    static int update(lua_State * L);
+    static int digest(lua_State * L);
+};
+
+const char * hmac::CLASS_NAME = "hmac";
+
+int hmac::__gc(lua_State * L)
+{
+    HMAC_CTX_cleanup(lua::to<hmac>(L, 1));
+    return 0;
+}
+
+int hmac::register_class(lua_State * L){
+    static luaL_Reg member_functions[] = {
+        {"__gc", &hmac::__gc},
+        {"update", &hmac::update},
+        {"digest", &hmac::digest},
+        {NULL, NULL}
+    };
+    lua::register_class(L, CLASS_NAME, member_functions);
+    return 0;
+}
+
+int hmac::create_object(lua_State * L)
+{
+    const char * hash_function_name = luaL_checkstring(L, 1);
+    
+    size_t key_len;
+    const char * key = luaL_checklstring(L, 2, &key_len);
+    
+    const EVP_MD * hash_function = EVP_get_digestbyname(hash_function_name);
+    if(!hash_function)
+    {
+        luaL_error(L, "unknown hash function");
+        return 0;
+    }
+    
+    target_type * self = lua::create_object<hmac>(L);
+    
+    HMAC_CTX_init(self);
+    HMAC_Init(self, key, static_cast<int>(key_len), hash_function);
+    
+    return 1;
+}
+
+int hmac::update(lua_State * L)
+{
+    target_type * self = lua::to<hmac>(L, 1);
+    std::size_t data_len;
+    const char * data = luaL_checklstring(L, 2, &data_len);
+    HMAC_Update(self, reinterpret_cast<const unsigned char *>(data), data_len);
+    return 0;
+}
+
+int hmac::digest(lua_State * L)
+{
+    target_type * self = lua::to<hmac>(L, 1);
+    
+    unsigned char * md = new unsigned char[EVP_MAX_MD_SIZE];
+    unsigned int md_len = EVP_MAX_MD_SIZE;
+    
+    HMAC_Final(self, md, &md_len);
+    
+    std::size_t output_len = md_len * 2 + 1;
+    char * output = new char[output_len];
+    char * output_end = hex_encode(md, md + md_len, output, output + output_len);
+    *output_end = '\0';
+    
+    lua_pushstring(L, output);
+    
+    delete [] md;
+    delete [] output;
+    
+    return 1;
+}
+
+#endif
 
 static int shutdown_crypto(lua_State * L)
 {
     fclose(urandom);
-    return 0;   
+    return 0;
 }
 
 namespace lua{
@@ -259,6 +367,9 @@ void open_crypto(lua_State * L)
     static luaL_Reg functions[] = {
         {"md5sum", md5sum},
         {"tigersum", tigersum},
+    #ifndef WITHOUT_OPENSSL
+        {"hmac", hmac::create_object},
+    #endif
         {NULL, NULL}
     };
     
@@ -273,13 +384,15 @@ void open_crypto(lua_State * L)
     
     lua_newtable(L);
     luaL_register(L, NULL, ecc_functions);
-    
     lua_setfield(L, -2, "sauerecc");
-    
     lua_pop(L, 1);
     
     ecc::key::register_class(L);
     ecc::challenge::register_class(L);
+    
+    #ifndef WITHOUT_OPENSSL
+    hmac::register_class(L);
+    #endif
     
     lua::on_shutdown(L, shutdown_crypto);
 }
