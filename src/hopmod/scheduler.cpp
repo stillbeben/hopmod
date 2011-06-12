@@ -50,7 +50,13 @@ static int deadline_timer_ptr_gc(lua_State * L)
 {
     boost::weak_ptr<deadline_timer> * timer = reinterpret_cast<boost::weak_ptr<deadline_timer> *>(
         luaL_checkudata(L, 1, "deadline_timer"));
-    timer->lock()->cancel();
+    
+    if(!timer->expired())
+    {
+        boost::system::error_code ec;
+        timer->lock()->cancel(ec);
+    }
+    
     timer->~weak_ptr<deadline_timer>();
     return 0;
 }
@@ -94,7 +100,8 @@ int cancel_timer(lua_State * L)
     boost::weak_ptr<deadline_timer> timer = *reinterpret_cast<boost::weak_ptr<deadline_timer> *>(
         luaL_checkudata(L, 1, "deadline_timer"));
     if(timer.expired()) return 0;
-    timer.lock()->cancel();
+    boost::system::error_code ec;
+    timer.lock()->cancel(ec);
     return 0;
 }
 
