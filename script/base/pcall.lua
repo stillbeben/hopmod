@@ -15,6 +15,8 @@ local function xpcall_error_handler(error_message)
     end
 end
 
+native_pcall = pcall
+
 pcall = function(func, ...)
     local outer_arg = arg
     return xpcall(function() return func(unpack(outer_arg)) end, xpcall_error_handler)
