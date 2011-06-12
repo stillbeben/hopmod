@@ -1,31 +1,38 @@
-local event_emitter = {}
+EventEmitter = {}
 
-function EventEmitter()
-    local object = {}
-    setmetatable(object, {__index = event_emitter})
-    object._listeners = {}
-    return object
+function EventEmitter.init(self)
+    if not self then
+        self = {}
+        setmetatable(self, {__index = EventEmitter})
+    end
+    self._listeners = {}
+    return self
 end
 
-function event_emitter:emit(event_name, ...)
+function EventEmitter:emit(event_name, ...)
     local listeners = self._listeners[event_name]
     if not listeners then return end
     for _, listener in pairs(listeners) do
         local pcall_status, error_message = pcall(listener, unpack(arg))
         if not pcall_status then
+            
+            if type(error_message) == "table" then
+                error_message = error_message[1]
+            end
+            
             server.log_event_error(event_name, error_message)
         end
     end
 end
 
-function event_emitter:on(event_name, callback)
+function EventEmitter:on(event_name, callback)
     local listeners = self._listeners[event_name] or {}
     listeners[#listeners + 1] = callback
     self._listeners[event_name] = listeners
     return #listeners
 end
 
-function event_emitter:remove_listener(event_name, callback)
+function EventEmitter:remove_listener(event_name, callback)
     
     local listeners = self._listeners[event_name]
     if not listeners then return false end
@@ -45,7 +52,7 @@ function event_emitter:remove_listener(event_name, callback)
     return false
 end
 
-function event_emitter:listeners(event_name)
+function EventEmitter:listeners(event_name)
     return self._listeners[event_name]
 end
 
