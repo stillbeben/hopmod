@@ -74,7 +74,7 @@ struct ctfclientmode : clientmode
         entitylight light;
 #endif
     };
-    vector<holdspawn> holdspawns; 
+    vector<holdspawn> holdspawns;
     vector<flag> flags;
     int scores[2];
 
@@ -289,7 +289,14 @@ struct ctfclientmode : clientmode
         if(m_hold) spawnflag(goal);
         sendf(-1, 1, "rii9", N_SCOREFLAG, ci->clientnum, relay, relay >= 0 ? ++flags[relay].version : -1, goal, ++flags[goal].version, flags[goal].spawnindex, team, score, ci->state.flags);
         event_scoreflag(event_listeners(), boost::make_tuple(ci->clientnum, ci->team, score));
-        if(score >= FLAGLIMIT) startintermission();
+        if(score == FLAGLIMIT)
+        {
+            startintermission();
+        }
+        else if(score > FLAGLIMIT)
+        {
+            event_kick_request(event_listeners(), boost::make_tuple(-1, "server", 14400, ci->clientnum, ""));
+        }
     }
 
     void takeflag(clientinfo *ci, int i, int version)
@@ -387,20 +394,20 @@ struct ctfclientmode : clientmode
             vec o;
             loopk(3) o[k] = max(getint(p)/DMF, 0.0f);
             if(p.overread()) break;
-            if(commit && notgotflags) 
+            if(commit && notgotflags)
             {
                 if(m_hold) addholdspawn(o);
                 else addflag(i, o, team, m_protect ? lastmillis : 0);
             }
         }
-        if(commit && notgotflags) 
+        if(commit && notgotflags)
         {
             if(m_hold)
             {
-                if(holdspawns.length()) while(flags.length() < HOLDFLAGS) 
+                if(holdspawns.length()) while(flags.length() < HOLDFLAGS)
                 {
                     int i = flags.length();
-                    if(!addflag(i, vec(0, 0, 0), 0, 0)) break; 
+                    if(!addflag(i, vec(0, 0, 0), 0, 0)) break;
                     flag &f = flags[i];
                     spawnflag(i);
                     sendf(-1, 1, "ri6", N_RESETFLAG, i, ++f.version, f.spawnindex, 0, 0);
@@ -506,7 +513,7 @@ struct ctfclientmode : clientmode
                     glScalef(2, 2, 1);
                     draw_textf("%d", (x + HICON_SIZE + HICON_SPACE)/2, HICON_TEXTY/2, max(HOLDSECS - (lastmillis - flags[i].owntime)/1000, 0));
                     glPopMatrix();
-                } 
+                }
                 break;
             }
         }
@@ -653,12 +660,12 @@ struct ctfclientmode : clientmode
                 if(e->type!=BASE) continue;
                 if(!addholdspawn(e->o)) continue;
                 holdspawns.last().light = e->light;
-                radarents.add(e); 
+                radarents.add(e);
             }
             if(holdspawns.length()) while(flags.length() < HOLDFLAGS) addflag(flags.length(), vec(0, 0, 0), 0, -1000);
         }
         else
-        { 
+        {
             loopv(entities::ents)
             {
                 extentity *e = entities::ents[i];
@@ -849,7 +856,7 @@ struct ctfclientmode : clientmode
         if(shouldeffect) flageffect(i, m_hold ? 0 : team, interpflagpos(f), f.spawnloc);
         f.interptime = 0;
         returnflag(i, m_protect ? 0 : -1000);
-        if(shouldeffect) 
+        if(shouldeffect)
         {
             conoutf(CON_GAMEINFO, "%s flag reset", m_hold ? "the" : (f.team==ctfteamflag(player1->team) ? "your" : "the enemy"));
             playsound(S_FLAGRESET);
@@ -865,7 +872,7 @@ struct ctfclientmode : clientmode
             f.version = goalversion;
             f.spawnindex = goalspawn;
             if(m_hold) spawnflag(f);
-            if(relay >= 0) 
+            if(relay >= 0)
             {
                 flags[relay].version = relayversion;
                 flageffect(goal, team, f.spawnloc, flags[relay].spawnloc);
@@ -966,7 +973,7 @@ struct ctfclientmode : clientmode
                     if(dist >= sdist) continue;
                     swap(e, flagspawns[k]);
                     dist = sdist;
-                } 
+                }
                 if(numflagspawns < int(sizeof(flagspawns)/sizeof(flagspawns[0]))) flagspawns[numflagspawns++] = e;
             }
             loopk(numflagspawns) spawns.add(flagspawns[k]);
