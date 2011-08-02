@@ -1034,9 +1034,31 @@ struct captureclientmode : clientmode
         enterbases(newteam, ci->state.o);
     }
 
-    void parsebases(ucharbuf &p, bool commit)
+    void parsebases(ucharbuf &p, bool commit, int sender=-1)
     {
         int numbases = getint(p);
+        
+        if (!notgotbases && sender > -1)
+        {
+            bool modified = false;
+            loopi(numbases)
+            {
+                int ammotype = getint(p);
+                vec o;
+                loopk(3) o[k] = max(getint(p)/DMF, 0.0f);
+                if(p.overread()) break;
+                if (!bases.inrange(i) || bases[i].ammotype != ammotype || !veq_equal(bases[i].o, o))
+                {
+                    modified = true;
+                }
+            }
+            if (modified)
+            {
+                event_cheat(event_listeners(), boost::make_tuple(sender, 13, 0));
+            }
+            return;
+        }
+        
         loopi(numbases)
         {
             int ammotype = getint(p);
@@ -1068,7 +1090,7 @@ struct captureclientmode : clientmode
 #elif SERVMODE
 
 case N_BASES:
-    if(smode==&capturemode) capturemode.parsebases(p, (ci->state.state!=CS_SPECTATOR || ci->privilege || ci->local) && !strcmp(ci->clientmap, smapname));
+    if(smode==&capturemode) capturemode.parsebases(p, (ci->state.state!=CS_SPECTATOR || ci->privilege || ci->local) && !strcmp(ci->clientmap, smapname), sender);
     break;
 
 case N_REPAMMO:
