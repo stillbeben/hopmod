@@ -122,6 +122,7 @@ namespace server
     extern void started();
     extern void shutdown();
     extern bool ispaused();
+    extern bool ctftkpenalty;
 }
 
 #endif

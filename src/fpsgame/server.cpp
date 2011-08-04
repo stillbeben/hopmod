@@ -26,9 +26,6 @@ namespace game
     void parseoptions(vector<const char *> &args)
     {   
         loopv(args)
-#ifndef STANDALONE
-            if(!game::clientoption(args[i]))
-#endif
             if(!server::serveroption(args[i]))
                 printf("unknown command-line option: %s", args[i]);
     }
@@ -56,6 +53,8 @@ namespace server
         int     length;
     };
     vector<delayed_sendpacket> delayed_sendpackets;
+  
+    bool ctftkpenalty = true;
     
     struct clientinfo;
     
@@ -155,8 +154,6 @@ namespace server
         float effectiveness;
         int disconnecttime;
         
-        int itemlist, speedhack, speedhack_lag;
-        
         gamestate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), disconnecttime(0) {}
     
         bool isalive(int gamemillis)
@@ -179,8 +176,6 @@ namespace server
             timeplayed = 0;
             effectiveness = 0;
             frags = flags = deaths = suicides = teamkills = shotdamage = explosivedamage = damage = hits = misses = shots = 0;
-            
-            itemlist = speedhack_lag = speedhack = 0;
 
             respawn();
         }
@@ -276,6 +271,8 @@ namespace server
         ENetPacket *getdemo, *getmap, *clipboard;
         int lastclipboard, needclipboard;
         
+        int clientmillis, pingupdates, lastpingsnapshot, speedhack, speedhack_updates;
+        
         freqlimit sv_text_hit;
         freqlimit sv_sayteam_hit;
         freqlimit sv_mapvote_hit;
@@ -286,7 +283,7 @@ namespace server
         freqlimit sv_newmap_hit;
         freqlimit sv_spec_hit;
         std::string disconnect_reason;
-        bool maploaded;
+        int maploaded;
         int rank;
         bool using_reservedslot;
         bool allow_self_unspec;
@@ -365,7 +362,7 @@ namespace server
             lastevent = 0;
             exceeded = 0;
             pushed = 0;
-            maploaded = false;
+            maploaded = 0;
             clientmap[0] = '\0';
             mapcrc = 0;
             warned = false;
@@ -400,6 +397,13 @@ namespace server
             lastpingupdate = 0;
             lastposupdate = 0;
             lag = 0;
+            
+            lastpingsnapshot = 0;
+            speedhack = 0;
+            speedhack_updates = 0;
+            pingupdates = 0;
+            clientmillis = 0;
+            
             aireinit = 0;
             using_reservedslot = false;
             needclipboard = 0;
@@ -538,6 +542,7 @@ namespace server
     };
 
     #define MAXDEMOS 5
+    #define MAXDEMOSIZE (16*1024*1024)
     vector<demofile> demos;
 
     bool demonextmatch = false;
@@ -592,6 +597,12 @@ namespace server
         return (int)a.x == (int)b.x && (int)a.y == (int)b.y && (int)a.z == (int)b.z;
     }
     
+    uint mcrc = 0;
+    vector<entity> ments;
+    vector<server_entity> sents;
+    int sents_type_index[MAXENTTYPES];
+    vector<savedscore> scores;
+    
     struct servmode
     {
         virtual ~servmode() {}
@@ -612,13 +623,14 @@ namespace server
         virtual void changeteam(clientinfo *ci, const char *oldteam, const char *newteam) {}
         virtual void initclient(clientinfo *ci, packetbuf &p, bool connecting) {}
         virtual void update() {}
-        virtual void reset(bool empty) {}
+        virtual void cleanup() {}
+        virtual void setup() {}
+        virtual void newmap() {}
         virtual void intermission() {}
         virtual bool hidefrags() { return false; }
         virtual int getteamscore(const char *team) { return 0; }
         virtual void getteamscores(vector<teamscore> &scores) {}
         virtual bool extinfoteam(const char *team, ucharbuf &p) { return false; }
-        virtual bool setteamscore(const char *, int){ return false; }
     };
 
     #define SERVMODE 1
@@ -670,10 +682,6 @@ namespace server
                 return false;
         }
     }
-    
-    vector<server_entity> sents;
-    int sents_type_index[MAXENTTYPES];
-    vector<savedscore> scores;
 
     int msgsizelookup(int msg)
     {
@@ -717,10 +725,12 @@ namespace server
 
     void sendservmsg(const char *s) { sendf(-1, 1, "ris", N_SERVMSG, s); }
 
-    void resetitems() 
-    { 
-        sents.shrink(0);
-        //cps.reset(); 
+    void resetitems()
+    {
+        mcrc = 0;
+        ments.setsize(0);
+        sents.setsize(0);
+        //cps.reset();
     }
 
     bool serveroption(const char *arg)
@@ -919,7 +929,7 @@ namespace server
 
         if(!demotmp) return;
 
-        int len = demotmp->size();
+        int len = (int)min(demotmp->size(), stream::offset(MAXDEMOSIZE));
         if(demos.length()>=MAXDEMOS)
         {
             delete[] demos[0].data;
@@ -1471,7 +1481,7 @@ namespace server
             putint(p, N_MAPCHANGE);
             sendstring(smapname, p);
             putint(p, gamemode);
-            putint(p, 0);//notgotitems ? 1 : 0
+            putint(p, 1);//notgotitems ? 1 : 0
             if(!ci || (m_timed && smapname[0]))
             {
                 putint(p, N_TIMEUP);
@@ -1586,6 +1596,25 @@ namespace server
         putinitclient(ci, p);
         sendpacket(-1, 1, p.finalize(), ci->clientnum);
     }
+    
+    void loaditems()
+    {
+        resetitems();
+        notgotitems = true;
+    #if 0 // we have our own method in hopmod (static_item_functions.h / static_items.lua / map-info.lua)
+        if(m_edit || !loadents(smapname, ments, &mcrc))
+            return;
+        loopv(ments) if(canspawnitem(ments[i].type))
+        {
+            server_entity se = { NOTUSED, 0, false };
+            while(sents.length()<=i) sents.add(se);
+            sents[i].type = ments[i].type;
+            if(m_mp(gamemode) && delayspawn(sents[i].type)) sents[i].spawntime = spawntime(sents[i].type);
+            else sents[i].spawned = true;
+        }
+        notgotitems = false;
+    #endif
+    }
 
     void changemap(const char *s, int mode,int mins = -1)
     {
@@ -1594,7 +1623,7 @@ namespace server
         
         stopdemo();
         pausegame(false);
-        if(smode) smode->reset(false);
+        if(smode) smode->cleanup();
         aiman::clearai();
         
         mapreload = false;
@@ -1604,8 +1633,7 @@ namespace server
         interm = 0;
         nextexceeded = 0;
         copystring(smapname, s);
-        resetitems();
-        notgotitems = true;
+        loaditems();
         scores.shrink(0);
         loopv(clients)
         {
@@ -1620,7 +1648,6 @@ namespace server
         if(m_capture) smode = &capturemode;
         else if(m_ctf) smode = &ctfmode;
         else smode = NULL;
-        if(smode) smode->reset(false);
 
         if(m_timed && smapname[0]) sendf(-1, 1, "ri2", N_TIMEUP, gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
         loopv(clients)
@@ -1642,6 +1669,8 @@ namespace server
             demonextmatch = false;
             setupdemorecord();
         }
+        
+        if(smode) smode->setup();
         
         event_mapchange(event_listeners(), boost::make_tuple(smapname, modename(gamemode,"unknown")));
         
@@ -2070,18 +2099,14 @@ namespace server
         }
     }
 
-    struct crcinfo 
-    { 
-        int crc, matches; 
+    struct crcinfo
+    {
+        int crc, matches;
 
+        crcinfo() {}
         crcinfo(int crc, int matches) : crc(crc), matches(matches) {}
 
-        static int compare(const crcinfo *x, const crcinfo *y)
-        {
-            if(x->matches > y->matches) return -1;
-            if(x->matches < y->matches) return 1;
-            return 0;
-        }
+        static bool compare(const crcinfo &x, const crcinfo &y) { return x.matches > y.matches; }
     };
 
     void sendservinfo(clientinfo *ci)
@@ -2269,7 +2294,7 @@ namespace server
         loopv(clients)
         {
             clientinfo &e = *clients[i];
-            if(e.clientnum != ci->clientnum && e.needclipboard >= ci->lastclipboard) 
+            if(e.clientnum != ci->clientnum && e.needclipboard - ci->lastclipboard >= 0)
             {
                 if(!flushed) { flushserver(true); flushed = true; }
                 sendpacket(e.clientnum, 1, ci->clipboard);
@@ -2335,7 +2360,7 @@ namespace server
                 }
 
                 ci->playermodel = getint(p);
-                
+
                 if(m_demo) enddemoplayback();
                 
                 connects.removeobj(ci);
@@ -2356,7 +2381,7 @@ namespace server
                 if(currentmaster>=0) masterupdate = true; //FIXME send N_CURRENTMASTER packet directly to client
                 ci->state.lasttimeplayed = lastmillis;
 
-                const char *worst = m_teammode ? chooseworstteam(text, ci) : NULL;
+                const char *worst = m_teammode ? chooseworstteam(NULL, ci) : NULL;
                 copystring(ci->team, worst ? worst : "good", MAXTEAMLEN+1);
                 
                 if(clients.length() == 1 && mapreload) selectnextgame();
@@ -2433,29 +2458,13 @@ namespace server
                     if(cp->state.state==CS_ALIVE && !cp->maploaded && cp->state.aitype == AI_NONE)
                     {
                         cp->lastposupdate = totalmillis - 30;
-                        cp->maploaded = true;
+                        cp->maploaded = gamemillis;
                         event_maploaded(event_listeners(), boost::make_tuple(cp->clientnum));
                     }
                     
-                    if(cp->maploaded)
+                    if(ci->maploaded)
                     {
-                        int &speedhack = cp->state.speedhack;
-                        int &speedhack_lag = cp->state.speedhack_lag;
-                        int lag = totalmillis - cp->lastposupdate;
-                        if (lag <= 20)
-                        {
-                            speedhack++;
-                            speedhack_lag += lag;
-                            if (speedhack >= 60)
-                            {
-                                event_cheat(event_listeners(), boost::make_tuple(ci->clientnum, 6, speedhack_lag / speedhack));
-                            }
-                        }
-                        else
-                        {
-                           // if (speedhack) speedhack--;
-                        }
-                        cp->lag = (std::max(30,cp->lag)*10 + lag)/12;
+                        cp->lag = (std::max(30,cp->lag)*10 + (totalmillis - cp->lastposupdate))/12;
                         cp->lastposupdate = totalmillis;
                     }
                 }
@@ -2642,7 +2651,6 @@ namespace server
 
             case N_SHOOT:
             {
-                if (ci->state.speedhack) ci->state.speedhack--;
                 shotevent *shot = new shotevent;
                 shot->id = getint(p);
                 shot->millis = cq ? cq->geteventmillis(gamemillis, shot->id) : 0;
@@ -2845,16 +2853,8 @@ namespace server
 
             case N_ITEMLIST:
             {   
-                ci->state.itemlist++;
                 int n;
-                
-                if(ci->state.itemlist >= 2)
-                {
-                    while((n = getint(p))>=0 && n<MAXENTS && !p.overread());
-                    event_cheat(event_listeners(), boost::make_tuple(ci->clientnum, 5, 0));
-                    break;
-                }
-                if (!notgotitems && gamemode != 0)
+                if (!notgotitems && gamemode != 1)
                 {
                     bool modified = false;
                     while((n = getint(p))>=0 && n<MAXENTS && !p.overread())
@@ -2938,13 +2938,58 @@ namespace server
 
             case N_PING:
             {
+                int clientmillis = getint(p);
+                
                 if(!ci->maploaded && totalmillis - ci->connectmillis > 2000)
                 {
-                    ci->maploaded = true;
+                    ci->maploaded = gamemillis;
                     event_maploaded(event_listeners(), boost::make_tuple(ci->clientnum));
                 }
-                if(ci) ci->lastpingupdate = totalmillis; 
-                sendf(sender, 1, "i2", N_PONG, getint(p));
+                
+                if(ci) 
+                {
+                    ci->lastpingupdate = totalmillis; 
+                    ci->pingupdates++;
+                    
+                    if (gamemillis - ci->maploaded > 5000 && ci->pingupdates % 20 == 0)
+                    {
+                        if (ci->lastpingsnapshot) 
+                        {
+                            int snapsec = (totalmillis - ci->lastpingsnapshot) / 1000;
+                            if (snapsec)
+                            {
+                                int pingupdates = 20 / snapsec;
+                                if (pingupdates > 6) // 2x from real time
+                                {
+                                    ci->speedhack++;
+                                    ci->speedhack_updates += pingupdates;
+                                }
+                            }
+                            else // more than 20 updates / sec
+                            {
+                                ci->speedhack++;
+                                ci->speedhack_updates += 20; // well it might be more...
+                            }
+                            
+                            if (ci->speedhack >= 20) // trapped 20 times into the detection
+                            {
+                                int speed = (ci->speedhack_updates / ci->speedhack) / 4;
+                                if (speed >= 2)
+                                {
+                                    ci->speedhack = 0;
+                                    ci->speedhack_updates = 0;
+                                    
+                                    event_cheat(event_listeners(), boost::make_tuple(ci->clientnum, 6, speed));
+                                }
+                            }
+                        }
+                        ci->lastpingsnapshot = totalmillis;
+                    }
+                    
+                    ci->clientmillis = clientmillis;
+                }
+                
+                sendf(sender, 1, "i2", N_PONG, clientmillis);
                 break;
             }
 
@@ -3120,7 +3165,7 @@ namespace server
                     smapname[0] = '\0';
                     resetitems();
                     notgotitems = false;
-                    if(smode) smode->reset(true);
+                    if(smode) smode->newmap();
                 }
                 QUEUE_MSG;
                 break;

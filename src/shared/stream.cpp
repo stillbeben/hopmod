@@ -28,8 +28,12 @@ char *makerelpath(const char *dir, const char *file, const char *prefix, const c
         }
     }
     if(cmd) concatstring(tmp, cmd);
-    defformatstring(pname)("%s/%s", dir, file);
-    concatstring(tmp, pname);
+    if(dir)
+    {
+        defformatstring(pname)("%s/%s", dir, file);
+        concatstring(tmp, pname);
+    }
+    else concatstring(tmp, file);
     return tmp;
 }
 
@@ -131,7 +135,7 @@ size_t fixpackagedir(char *dir)
     return len;
 }
 
-void sethomedir(const char *dir)
+/*void sethomedir(const char *dir)
 {
     string pdir;
     copystring(pdir, dir);
@@ -143,7 +147,7 @@ void addpackagedir(const char *dir)
     string pdir;
     copystring(pdir, dir);
     if(fixpackagedir(pdir) > 0) packagedirs.add(newstring(pdir));
-}
+}*/
 
 const char *findfile(const char *filename, const char *mode)
 {
@@ -325,8 +329,8 @@ struct filestream : stream
     bool end() { return feof(file)!=0; }
     long tell() { return ftell(file); }
     bool seek(long offset, int whence) { return fseek(file, offset, whence) >= 0; }
-    int read(void *buf, int len) { return fread(buf, 1, len, file); }
-    int write(const void *buf, int len) { return fwrite(buf, 1, len, file); }
+    int read(void *buf, int len) { return (int)fread(buf, 1, len, file); }
+    int write(const void *buf, int len) { return (int)fwrite(buf, 1, len, file); }
     int getchar() { return fgetc(file); }
     bool putchar(int c) { return fputc(c, file)!=EOF; }
     bool getline(char *str, int len) { return fgets(str, len, file)!=NULL; }
@@ -445,7 +449,7 @@ struct gzstream : stream
     bool open(stream *f, const char *mode, bool needclose, int level)
     {
         if(file) return false;
-        for(; *mode; *mode++)
+        for(; *mode; mode++)
         {
             if(*mode=='r') { reading = true; break; }
             else if(*mode=='w') { writing = true; break; }
