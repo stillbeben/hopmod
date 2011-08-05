@@ -573,14 +573,14 @@ namespace server
     {
         if (!ci) return false;
         int lag = totalmillis - ci->lastposupdate;
-        if ((!ci->state.o.x && !ci->state.o.y && !ci->state.o.z) || lag >= 5000)
+        if (ci->state.o == vec(0, 0, 0) || lag >= 7500)
         {
             event_cheat(event_listeners(), boost::make_tuple(ci->clientnum, 9, lag));
             return true;
         }
         return false;
     }
-    
+
     float distance(vec a, vec b)
     {
         int x = a.x - b.x, y = a.y - b.y, z = a.z - b.z;
@@ -594,7 +594,8 @@ namespace server
     
     bool vec_equal(vec a, vec b)
     {
-        return (int)a.x == (int)b.x && (int)a.y == (int)b.y && (int)a.z == (int)b.z;
+        loopi(3) if ((int)a[i] != (int)b[i]) return false; 
+        return true;
     }
     
     uint mcrc = 0;
@@ -2474,7 +2475,7 @@ namespace server
             case N_SOUND: 
             {
                 int sound = getint(p);
-                if (sound == S_JUMP && is_invisible(sender)) break;
+                if (sound == S_JUMP && is_invisible(cq)) break;
                 
                 if (sound != S_JUMP && sound != S_LAND && sound != S_NOAMMO 
                    && (m_capture && sound != S_ITEMAMMO)) 
@@ -2668,7 +2669,7 @@ namespace server
                     hit.rays = getint(p);
                     loopk(3) hit.dir[k] = getint(p)/DNF;
                 }
-                if (is_invisible(sender))
+                if (is_invisible(cq))
                 {
                     delete shot;
                     break;
@@ -2700,7 +2701,7 @@ namespace server
                     hit.rays = getint(p);
                     loopk(3) hit.dir[k] = getint(p)/DNF;
                 }
-                if (is_invisible(sender))
+                if (is_invisible(cq))
                 {
                     delete exp;
                     break;
@@ -2714,7 +2715,8 @@ namespace server
             case N_ITEMPICKUP:
             {
                 int n = getint(p);
-                if(!cq || is_invisible(sender)) break;
+                if(!cq) break;
+                if(is_invisible(cq)) break;
                 pickupevent *pickup = new pickupevent;
                 pickup->ent = n;
                 cq->addevent(pickup);
