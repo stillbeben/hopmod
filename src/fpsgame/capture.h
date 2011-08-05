@@ -520,11 +520,12 @@ struct captureservmode : servmode
                 if (!bases.inrange(i) || bases[i].ammotype != ammotype || !vec_equal(bases[i].o, o))
                 {
                     modified = true;
+
                 }
             }
             if (modified)
             {
-                event_cheat(event_listeners(), boost::make_tuple(sender, 13, 0));
+                cheat(sender, 13, 0);
             }
             return;
         }
