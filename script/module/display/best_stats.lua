@@ -18,7 +18,7 @@ local stats_record_class = {
             return
         end
         
-        if desc ~= nil then
+    if desc ~= nil then
             if value > object.value then return end
         else
             if value < object.value then return end
@@ -128,7 +128,7 @@ server.event_handler("intermission", function()
             format_message("stolen", best.takeflag), 
             format_message("scored", best.scoreflag),
             format_message("returned", best.returnflag),
-            format_message("flagrun", best.timetrial, " sec."))
+            format_message("flagrun", best.timetrial, " ms"))
         
         if #flagstats_message > 0 then
             server.msg(yellow("Best flag stats, ") .. flagstats_message)
