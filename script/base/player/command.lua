@@ -175,7 +175,7 @@ server.event_handler("text", function(cn, text)
     
     if pcall_status == false then
         local message = success  -- success value is the error message returned by pcall
-        server.log_error(string.format("The #%s player command failed with error: %s", command_name, message))
+        server.log_error(string.format("The #%s player command failed with error: %s", command_name, message[1]))
         server.player_msg(cn, red("Internal error"))
     end
     
