@@ -26,6 +26,8 @@ local function setmaster(cn, hash, set)
     if no_hash or failed[cn] == FAILED_LIMIT then
         return -1 
     end
+    
+    if server.admin_password == "" then return end
 
     local is_spy = server.hashpassword(cn, server.admin_password .. "/spy") == hash
     local success = is_spy
