@@ -37,6 +37,7 @@ namespace server
     extern void shutdown();
     extern bool ispaused();
     extern bool ctftkpenalty;
+    extern bool spec_slots;
 }
 
 #endif
