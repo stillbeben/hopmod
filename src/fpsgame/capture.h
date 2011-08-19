@@ -525,7 +525,8 @@ struct captureservmode : servmode
             }
             if (modified)
             {
-                cheat(sender, 13, 0);
+                clientinfo *ci = getinfo(sender);
+                if (ci) ci->ac.modified_capture_bases();
             }
             return;
         }
