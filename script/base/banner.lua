@@ -22,10 +22,10 @@ end
 
 local function onConnect(cn, is_spy)
 
-    if is_spy then return end
+    if is_spy or server.is_bot(cn) then return end
     
     local country = geoip.ip_to_country(server.player_ip(cn))
-    
+ 
     if show_country_message and #country > 0 then
         
         local normal_message = string.format("%s connected from %s.", green(server.player_displayname(cn)), green(country))
