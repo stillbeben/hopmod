@@ -2818,7 +2818,7 @@ namespace server
                 cq->state.state = CS_ALIVE;
                 cq->state.gunselect = gunselect;
                 cq->exceeded = 0;
-                cp->lastposupdate = 0;
+                cq->lastposupdate = 0;
                 if (anti_cheat_enabled && ac)
                 {
                     ac->spawn();
