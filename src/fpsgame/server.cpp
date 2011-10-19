@@ -2466,6 +2466,7 @@ namespace server
                 }
                 
                 ci->ac.reset(sender);
+                ci->state.lastdeath = -5000;
 
                 ci->playermodel = getint(p);
 
