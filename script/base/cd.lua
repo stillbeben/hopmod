@@ -150,9 +150,9 @@ local function cheat(cn, cheat_type, info, info_str)
     if cheat_type >= 11 and cheat_type <= 13 and not is_known_map(server.map) then
         return
     end
-?  if cheat_type == 19 and not is_known_map(server.map) then
-?  ?  return
-?  end
+    if cheat_type == 19 and not is_known_map(server.map) then
+        return
+    end
 
     if type[cheat_type][2] == nil then return end
 
