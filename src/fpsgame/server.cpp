@@ -2658,11 +2658,11 @@ namespace server
                 int pcn = getint(p), teleport = getint(p), teledest = getint(p);
                 clientinfo *cp = getinfo(pcn);
                 if(!cq) break;
-                anticheat *ac = &cp->ac;
-                if(anti_cheat_enabled && ac->is_player_invisible()) break;
                 if(cp && pcn != sender && cp->ownernum != sender) cp = NULL;
                 if(cp && (!ci->local || demorecord || hasnonlocalclients()) && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
                 {
+                    anticheat *ac = &cp->ac;
+                    if(anti_cheat_enabled && ac->is_player_invisible()) break;
                     flushclientposition(*cp);
                     ac->teleport(teleport);
                     sendf(-1, 0, "ri4x", N_TELEPORT, pcn, teleport, teledest, cp->ownernum); 
@@ -2677,11 +2677,11 @@ namespace server
                 //sendservmsg(debug);
                 clientinfo *cp = getinfo(pcn);
                 if(!cq) break;
-                anticheat *ac = &cp->ac;
-                if(anti_cheat_enabled && ac->is_player_invisible()) break;
                 if(cp && pcn != sender && cp->ownernum != sender) cp = NULL;
                 if(cp && (!ci->local || demorecord || hasnonlocalclients()) && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
                 {
+                    anticheat *ac = &cp->ac;
+                    if(anti_cheat_enabled && ac->is_player_invisible()) break;
                     cp->setpushed();
                     flushclientposition(*cp);
                     ac->jumppad(jumppad);
