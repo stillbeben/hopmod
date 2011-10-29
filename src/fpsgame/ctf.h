@@ -101,6 +101,7 @@ struct ctfservmode : servmode
         f.droptime = 0;
         f.owner = f.dropper = -1;
         f.invistime = invistime;
+        f.droploc = vec(0, 0, 0);
         f.tmillis = -1;
         f.drops = 0;
     }
@@ -276,10 +277,6 @@ struct ctfservmode : servmode
         {
             startintermission();
         }
-        else if(anti_cheat_enabled && score > FLAGLIMIT)
-        {
-            cheat(ci->clientnum, 1, score);
-        }
     }
 
     void takeflag(clientinfo *ci, int i, int version, bool ctfmode)
@@ -288,14 +285,6 @@ struct ctfservmode : servmode
             
         flag &f = flags[i];
         
-        vec flag_location = vec(0, 0, 0);
-        
-        bool flag_dropped = f.dropper > -1;
-        
-        if (m_ctf) flag_location = flag_dropped ? f.droploc : f.spawnloc;
-        if ((m_hold || m_protect) && holdspawns.inrange(f.spawnindex)) 
-            flag_location = flag_dropped ? f.droploc : holdspawns[f.spawnindex].o; 
-
         if((m_hold ? f.spawnindex < 0 : !ctfflagteam(f.team)) || f.owner>=0 || f.version != version || (f.droptime && f.dropper == ci->clientnum)) return;
         int team = ctfteamflag(ci->team);
         if(m_hold || m_protect == (f.team==team))
@@ -322,33 +311,6 @@ struct ctfservmode : servmode
         {
             loopvj(flags) if(flags[j].owner==ci->clientnum) { scoreflag(ci, i, j); break; }
         }
-        
-        #if 0
-        if (anti_cheat_enabled) 
-        {
-            /*
-            float flag_dist = distance(flag_location, ci->state.o); 
-            if (flag_dist >= 250)
-            {
-                defformatstring(debug)("%s -> flag location (%.2f/%.2f/%.2f) / player location (%.2f/%.2f/%.2f) / distance: %.2f / dropped: %s / team flag: %s", 
-                    ci->name,
-                    flag_location.x, 
-                    flag_location.y, 
-                    flag_location.z,
-                    ci->state.o.x,
-                    ci->state.o.y,
-                    ci->state.o.z,
-                    flag_dist,
-                    flag_dropped ? "Yes" : "No",
-                    m_hold || m_protect || !strcmp(ci->team, ctfflagteam(f.team)) ? "Yes" : "No"
-                );
-                sendservmsg(debug);
-                cheat(ci->clientnum, 10, (int)flag_dist);
-            }
-            */
-            ac->check_get_flag(distance(flag_location, ci->state.o));
-        }
-        #endif
     }
 
     void update()
