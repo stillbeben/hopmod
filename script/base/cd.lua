@@ -2,11 +2,7 @@
     CHEATER-DETECTION
 
     Copyright (C) 2011 Thomas
-    
-    TODO:
 
-        HOLD / CTF  -> check score distance
-        
     COMMENTS:
     
         LOGS WITH (TESTING) ARE !!_NOT_!! 100% secure proofs
@@ -28,6 +24,9 @@ local logged = { }
 local debug = false
 local global_log = false
 local kicked = { }
+local deathmillis = { }
+local first_spawn = { }
+
 cheaters = { }
 
 local network_packet_types = "N_CONNECT, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS, N_SHOOT, N_EXPLODE, N_SUICIDE, N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTFX, N_EXPLODEFX, N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH, N_GUNSELECT, N_TAUNT, N_MAPCHANGE, N_MAPVOTE, N_ITEMSPAWN, N_ITEMPICKUP, N_ITEMACC, N_TELEPORT, N_JUMPPAD, N_PING, N_PONG, N_CLIENTPING, N_TIMEUP, N_MAPRELOAD, N_FORCEINTERMISSION, N_SERVMSG, N_ITEMLIST, N_RESUME, N_EDITMODE, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP, N_CLIPBOARD, N_EDITVAR, N_MASTERMODE, N_KICK, N_CLEARBANS, N_CURRENTMASTER, N_SPECTATOR, N_SETMASTER, N_SETTEAM, N_BASES, N_BASEINFO, N_BASESCORE, N_REPAMMO, N_BASEREGEN, N_ANNOUNCE, N_LISTDEMOS, N_SENDDEMOLIST, N_GETDEMO, N_SENDDEMO, N_DEMOPLAYBACK, N_RECORDDEMO, N_STOPDEMO, N_CLEARDEMOS, N_TAKEFLAG, N_RETURNFLAG, N_RESETFLAG, N_INVISFLAG, N_TRYDROPFLAG, N_DROPFLAG, N_SCOREFLAG, N_INITFLAGS, N_SAYTEAM, N_CLIENT, N_AUTHTRY, N_AUTHCHAL, N_AUTHANS, N_REQAUTH, N_PAUSEGAME, N_ADDBOT, N_DELBOT, N_INITAI, N_FROMAI, N_BOTLIMIT, N_BOTBALANCE, N_MAPCRC, N_CHECKMAPS, N_SWITCHNAME, N_SWITCHMODEL, N_SWITCHTEAM, NUMSV"
@@ -175,7 +174,8 @@ local function cheat(cn, cheat_type, info, info_str)
         if cheat_type == 8 then info = sound_type(info) end
         if cheat_type == 14 then info_str = string.format(info_str, gun_type(info)) end
         if cheat_type == 6 or cheat_type == 16 or cheat_type == 17 then info = info / 100000 end
-
+        if cheat_type == 10 then type[cheat_type][2] = info_str; info_str = "" end
+        
         if info_str ~= "" then info_str = " (INFO: " .. info_str .. ")" end
         
         local points = check_points(cn, cheat_type, info)
@@ -222,8 +222,6 @@ end
 
 local is_intermission = false
 
-local first_spawn = { }
-
 server.event_handler("intermission", function()
     is_intermission = true
 end)
@@ -233,6 +231,15 @@ server.event_handler("mapchange", function()
 end)
 server.event_handler("disconnect", function(cn)
     first_spawn[cn] = nil
+    deathsmillis[cn] = nil
+end)
+
+server.event_handler("suicide", function(cn)
+    deathmillis[cn] = server.enet_time_get()
+end)
+
+server.event_handler("frag", function(cn)
+    deathmillis[cn] = server.enet_time_get()
 end)
 
 server.event_handler("spawn", function(cn)
@@ -246,11 +253,11 @@ server.event_handler("spawn", function(cn)
     
     if server.player_connection_time(cn) <= 6 then return end
     
-    local deathmillis = server.player_deathmillis(cn)
+    local deathmillis = deathmillis[cn] or 0
     
     if deathmillis == 0 or server.gamemillis < 5000 then return end
     
-    local spawntime = server.gamemillis - deathmillis
+    local spawntime = server.enet_time_get() - deathmillis
     
     --server.msg(string.format("(%s) spawntime: %d", server.player_name(cn), spawntime))
     
