@@ -1085,6 +1085,8 @@ void player_respawn(int cn)
     try_respawn(ci, ci);
 }
 
+int enet_time_get_() { return (int)enet_time_get(); }
+
 #include <static_item_functions.h>
 
 #endif
