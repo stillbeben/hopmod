@@ -705,6 +705,7 @@ void anti_cheat_parsepacket(int type, clientinfo *ci, clientinfo *cq, packetbuf 
             ac_check_invis;
             ac->check_gun(getint(p));
             ac->shoot();
+            break;
         }
         
         case N_EXPLODE:
