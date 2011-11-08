@@ -12,7 +12,6 @@ return function(cn, tcn, ...)
 			if #text > 0 then
 				text = text .. " "
 			end
-
 			text = text .. item
 		end
 	end

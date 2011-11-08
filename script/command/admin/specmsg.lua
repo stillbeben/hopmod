@@ -4,23 +4,19 @@
 
 ]]
 
+local usage = "#specmsg <text>"
+
 
 return function(cn, ...)
 
-	local text = ""
-
-	for _, item in ipairs(arg) do
-		item = tostring(item)
-		if #item > 0 then
-			if #text > 0 then
-				text = text .. " "
-			end
-			text = text .. item
-		end
-	end
+	local text = table.concat(arg, " ")
+    
+    if not text then
+        return false, usage
+    end
 
 	for client in server.gspectators() do
-		server.player_msg(p.cn,"(" .. green("spec-chat") .. ")  (" .. green(server.player_name(cn)) .. " (" .. magenta(cn) .. ")): " .. text)
+		server.player_msg(p.cn,"(" .. green("spec-message") .. ")  (" .. green(server.player_name(cn)) .. " (" .. magenta(cn) .. ")): " .. text)
 	end
 
 end

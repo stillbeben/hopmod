@@ -4,12 +4,12 @@
 
 ]]
 
+local usage = "#motd \"<text>\""
 
 return function(cn,text)
 
 	if not text then
-
-		return false, "#motd \"<text>\""
+		return false, usage
 	end
 
 	server.motd = text

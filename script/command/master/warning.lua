@@ -11,25 +11,17 @@ local bantime = round(server.warning_bantime or 1800000 / 1000,0)
 
 local usage = "warning (<cn>|\"<name>\") <text>"
 
-
 return function(cn, tcn, ...)
 
 	if not tcn then
 		return false, usage
 	end
 
-	local text = ""
+	local text = table.concat(arg, " ")
 
-	for _, item in ipairs(arg) do
-		item = tostring(item)
-		if #item > 0 then
-			if #text > 0 then
-				text = text .. " "
-			end
-
-			text = text .. item
-		end
-	end
+    if not text then
+        return false, usage
+    end
 
 	if text == "tk" then
 		text = "Stop teamkilling. ONLY RED players are the enemies!"

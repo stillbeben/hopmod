@@ -7,26 +7,22 @@ local msg_info = "#suddendeath [0|off|1|on]"
 
 local function cmd_suddendeath(cn, option)
 
-    if not server.suddendeath
-    then
-	return false, "suddendeath module is not loaded."
+    if not server.suddendeath then
+        return false, "suddendeath module is not loaded."
     end
     
-    if not option
-    then
-	return false, msg_info
+    if not option  then
+        return false, msg_info
     end
     
-    if (option == "0") or (option == "off")
-    then
+    if option == "0" or option == "off" then
         server.suddendeath()
         server.player_msg(cn, "Suddendeath mode disabled. There may be ties.")
-    elseif (option == "1") or (option == "on")
-    then
+    elseif option == "1" or option == "on" then
         server.suddendeath(true)
         server.player_msg(cn, "Suddendeath mode enabled. There will be no ties.")
     else
-	return false, msg_info
+        return false, msg_info
     end
 end
 

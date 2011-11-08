@@ -29,7 +29,6 @@ local function group_players(...)
         team = tag
     end
     
-    
     if all_clients then
         for spectator in server.gspectators() do
             if string.find(spectator:name(),tag) then

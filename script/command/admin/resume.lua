@@ -14,23 +14,18 @@ return function(cn, countdown)
 			server.interval(1000, function()
 
 				if cdown == 0 then
-
 					server.pausegame(false)
 					return -1
-
 				else
-
 					if cdown == 1 then
 						server.msg("game will resume in " .. blue(cdown) .. " sec")
 					else
 						server.msg("game will resume in " .. blue(cdown) .. " secs")
 					end
 					cdown = cdown - 1
-
 				end
-
+                
 			end)
-
 		end
 	end
 

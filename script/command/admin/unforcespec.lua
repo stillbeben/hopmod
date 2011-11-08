@@ -7,7 +7,6 @@
 
 local usage = "#unforcespec <cn>|\"<name>\""
 
-
 return function(cn, tcn)
 
 	if not tcn then

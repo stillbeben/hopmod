@@ -23,24 +23,18 @@ local uinstallHandlers -- function
 local function onActive(cn)
     
     if cn == player1_cn then 
-    
-        player1_ready = true
-        
-    elseif cn == player2_cn then
-    
-        player2_ready = true
-        
+        player1_ready = true 
+    elseif cn == player2_cn then  
+        player2_ready = true   
     end
     
-    if player1_ready and player2_ready then
-        
+    if player1_ready and player2_ready then 
         if suspended then
             server.msg(orange("--[ Game resumed!"))
             suspended = false
         else
             server.msg(orange("--[ Game started!"))
         end
-        
         server.pausegame(false)
     end
 end
@@ -66,11 +60,8 @@ end
 local function onIntermission()
 
     if server.player_score(player1_cn) > server.player_score(player2_cn) then
-    
         server.msg(green("--[ 1on1 Game ended - " .. green(server.player_name(player1_cn)) .. " won the Game!"))       
-    
-    elseif server.player_score(player1_cn) < server.player_score(player2_cn) then
-    
+    elseif server.player_score(player1_cn) < server.player_score(player2_cn) then 
         server.msg(green("--[ 1on1 Game ended - " .. green(server.player_name(player2_cn)) .. " won the Game!"))
     else
         server.msg("--[ 1on1 Game ended - No Winner!")
@@ -100,10 +91,8 @@ local function onDisconnect(cn)
     local id = server.player_id(cn)
 
     if id == player1_id or id == player2_id then 
-    
         server.msg(red("--[ Opponent " .. green(server.player_name(cn)) .. " Disconnected Pausing Game"))
         server.pausegame(true)
-        
         suspended = true
     end
 end
@@ -142,7 +131,7 @@ return function(cn, player1, player2, mode, map)
     end
     
     if player1 == player2 then 
-        server.player_msg(cn, red("player 1 and player 2 have the same CN."))
+       server.player_msg(cn, red("player 1 and player 2 have the same CN."))
        return 
     end
     

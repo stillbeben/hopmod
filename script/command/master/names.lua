@@ -13,7 +13,6 @@ return function(cn, target_cn)
 	end
 
 	if not target_cn then
-
 		return false, "#names <cn>|\"<name>\""
 	end
 

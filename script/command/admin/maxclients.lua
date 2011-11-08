@@ -8,8 +8,10 @@ return function(cn, n)
 
 	n = tonumber(n)
 
-	if n >= server.playercount and n <= 128 then
+	if n >= server.playercount and n <= 128 and n >= 0 then
 		server.maxplayers = n
+    else
+        server.player_msg(cn, string.format("size needs to be >= %d and <= 128", _if(server.playercount > 0, server.playercount, 1)))
 	end
     
 end
