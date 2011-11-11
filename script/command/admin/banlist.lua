@@ -9,7 +9,7 @@ return function(cn)
                 ipmask,
                 vars.ban_reason or "unknown",
                 vars.ban_admin or "unknown",
-                server.format_time_str(vars.ban_expire - os.time())
+                server.format_duration_str(vars.ban_expire - os.time())
 			
 			))
         end 
