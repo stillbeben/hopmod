@@ -1,5 +1,5 @@
 
-local usage =  "#motd \"<text>\"
+local usage =  "#motd \"<text>\""
 
 return function(cn, ip)
 
