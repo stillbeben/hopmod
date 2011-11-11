@@ -1,5 +1,5 @@
 
-local usage =  "#motd \"<text>\""
+local usage = "#unban \"<ip>\""
 
 return function(cn, ip)
 
@@ -7,10 +7,14 @@ return function(cn, ip)
 		return false, usage
 	end
     
-	if tonumber(server.unsetban(ip)) == 1 then
-		server.player_msg(cn, "done, check with #banlist")
-	else
-		server.player_msg(cn, "no matching ban found")
-	end
+    local res = check_ip(ip)
+    
+    if #res == 1 then
+        return false, string.format("Invalid IP (%s )", res[1])
+    end
+    
+	server.unban(ip)
+    
+	server.player_msg(cn, "done, check with #banlist")
 
 end
