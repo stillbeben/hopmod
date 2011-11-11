@@ -28,13 +28,13 @@ def f(server_write, args, nickname, **_):
     server_write('''\
 			code:local cn = tonumber('%s')\
 			if server.valid_cn(cn) then\
-				server.kick(cn, 9999, "%s", "kicked by a remote admin.")\
+				server.kick(cn, 14400, "IRC-Admin", "")\
 			else\
 				sendmsg("player not found")\
 			end\
 			\
 			\
-			''' % args, nickname)
+			''' % args)
 server['kick'] = f
 
 def f(server_write, args, **_):
@@ -84,7 +84,7 @@ def f(server_write, args, **_):
     server_write('''\
 			code:local cn = tonumber('%s');\
 			if server.valid_cn(cn) then\
-				server.disconnect(cn, 10, "disconnect by a admin")\
+				server.disconnect(cn, server.DISC_NORMAL, "")\
 			else\
 				sendmsg("player not found")\
 			end\
