@@ -3,7 +3,7 @@ require "Json"
 
 local URL = "http://hopmod.googlecode.com/svn/data/bans.json"
 local ADMIN = "global"
-local UPDATE = 1000*60*60*24
+local UPDATE = 1000*60*60*1
 
 local bans = {}
 
