@@ -1,7 +1,7 @@
 
 return function(cn) 
     for ipmask, vars in pairs(server.ip_vars()) do
-        if (vars.ban_expire or 0) > os.time() then
+        if (vars.ban_expire or 0) > os.time() and not (vars.is_gban or false) then
             server.player_msg(cn, string.format(
                 "Player: %s IP: %s Reason: %s Admin: %s Time Left: %s",
                     
