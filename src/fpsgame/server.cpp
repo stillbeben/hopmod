@@ -1652,12 +1652,13 @@ namespace server
         sendpacket(-1, 1, p.finalize(), ci->clientnum);
     }
     
+    #include "ents.h"
+    
     void loaditems()
     {
         resetitems();
         notgotitems = true;
-    #if 0 // we have our own method in hopmod (static_item_functions.h / static_items.lua / map-info.lua)
-        if(m_edit || !loadents(smapname, ments, &mcrc))
+        if(m_edit || !e::loadents(smapname, ments, mcrc))
             return;
         loopv(ments) if(canspawnitem(ments[i].type))
         {
@@ -1668,7 +1669,6 @@ namespace server
             else sents[i].spawned = true;
         }
         notgotitems = false;
-    #endif
     }
 
     void changemap(const char *s, int mode,int mins = -1)
