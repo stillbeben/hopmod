@@ -1659,7 +1659,10 @@ namespace server
         resetitems();
         notgotitems = true;
         if(m_edit || !e::loadents(smapname, ments, mcrc))
+        {
+            mcrc = 0;
             return;
+        }
         loopv(ments) if(canspawnitem(ments[i].type))
         {
             server_entity se = { NOTUSED, 0, false, -1 };
