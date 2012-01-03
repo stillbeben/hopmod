@@ -1660,6 +1660,7 @@ namespace server
         notgotitems = true;
         if(m_edit || !e::loadents(smapname, ments, mcrc))
         {
+            std::cout<<"failed to load mapents for map "<<smapname<<std::endl;
             mcrc = 0;
             return;
         }
