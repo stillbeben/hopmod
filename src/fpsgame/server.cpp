@@ -300,8 +300,8 @@ namespace server
         bool using_reservedslot;
         bool allow_self_unspec;
         
-        clientinfo() 
-         : 
+        clientinfo()
+         :
            getdemo(NULL),
            getmap(NULL),
            clipboard(NULL),
@@ -350,7 +350,7 @@ namespace server
         void setexceeded()
         {
             if(state.state==CS_ALIVE && !exceeded && !checkpushed(gamemillis, calcpushrange())) exceeded = gamemillis;
-            scheduleexceeded(); 
+            scheduleexceeded();
         }
             
         void setpushed()
@@ -480,7 +480,7 @@ namespace server
         uint ip;
     };
 
-    namespace aiman 
+    namespace aiman
     {
         extern bool dorefresh, botbalance;
         extern int botlimit;
@@ -567,7 +567,7 @@ namespace server
     timer::time_diff_t timer_alarm_threshold = 1000000;
     
     void *newclientinfo() { return new clientinfo; }
-    void deleteclientinfo(void *ci) { delete (clientinfo *)ci; } 
+    void deleteclientinfo(void *ci) { delete (clientinfo *)ci; }
     
     clientinfo *getinfo(int n)
     {
@@ -582,7 +582,7 @@ namespace server
         if(!ci) luaL_error(get_lua_state(), "invalid cn");
         return ci;
     }
-	
+?  
     bool spec_slots = false;
     
     uint mcrc = 0;
@@ -736,8 +736,8 @@ namespace server
         return msg >= 0 && msg < NUMSV ? sizetable[msg] : -1;
     }
 
-    const char *modename(int n, const char *unknown) 
-    { 
+    const char *modename(int n, const char *unknown)
+    {
         if(m_valid(n)) return gamemodes[n - STARTGAMEMODE].name;
         return unknown;
     }
@@ -915,8 +915,8 @@ namespace server
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
             ci->state.lasttimeplayed = lastmillis;
 
-            loopj(numteams) if(!strcmp(ci->team, teamranks[j].name)) 
-            { 
+            loopj(numteams) if(!strcmp(ci->team, teamranks[j].name))
+            {
                 teamrank &ts = teamranks[j];
                 ts.rank += ci->state.effectiveness/max(ci->state.timeplayed, 1);
                 ts.clients++;
@@ -1018,7 +1018,7 @@ namespace server
         if(!demotmp) return;
         
         stream *f = opengzfile(NULL, "wb", demotmp);
-        if(!f) { DELETEP(demotmp); return; } 
+        if(!f) { DELETEP(demotmp); return; }
 
         if(broadcast) sendservmsg("recording demo");
 
@@ -1065,7 +1065,7 @@ namespace server
             sendservmsg(msg);
         }
     }
-	
+?  
     static void freegetmap(ENetPacket *packet)
     {
         loopv(clients)
@@ -1117,8 +1117,8 @@ namespace server
         if(!demoplayback) formatstring(msg)("could not read demo \"%s\"", file);
         else if(demoplayback->read(&hdr, sizeof(demoheader))!=sizeof(demoheader) || memcmp(hdr.magic, DEMO_MAGIC, sizeof(hdr.magic)))
             formatstring(msg)("\"%s\" is not a demo file", file);
-        else 
-        { 
+        else
+        {
             lilswap(&hdr.version, 2);
             if(hdr.version!=DEMO_VERSION) formatstring(msg)("demo \"%s\" requires an %s version of Cube 2: Sauerbraten", file, hdr.version<DEMO_VERSION ? "older" : "newer");
             else if(hdr.protocol!=PROTOCOL_VERSION) formatstring(msg)("demo \"%s\" requires an %s version of Cube 2: Sauerbraten", file, hdr.protocol<PROTOCOL_VERSION ? "older" : "newer");
@@ -1232,7 +1232,7 @@ namespace server
     {
         uint ip = getclientip(ci->clientnum);
         if(!ip && !ci->local) return *(savedscore *)0;
-        if(!insert) 
+        if(!insert)
         {
             loopv(clients)
             {
@@ -1279,7 +1279,7 @@ namespace server
         if(ci)
         {
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
-            if(type < N_EDITENT || type > N_EDITVAR || !m_edit) 
+            if(type < N_EDITENT || type > N_EDITVAR || !m_edit)
             {
                 if(type != N_POS && ++ci->overflow >= 200) return -2;
             }
@@ -1431,14 +1431,15 @@ namespace server
             int flags = (delayed_sendpackets[0].channel == 1 ? ENET_PACKET_FLAG_RELIABLE : 0);
             ENetPacket * packet = enet_packet_create(delayed_sendpackets[0].data, delayed_sendpackets[0].length, flags | ENET_PACKET_FLAG_NO_ALLOCATE);
             packet->freeCallback = free_packet_data;
-            
+            int specs = 0;
             loopv(clients)
             {
                 clientinfo &ci = *clients[i];
                 if(!ci.is_delayed_spectator() || ci.specmillis + spectator_delay > totalmillis) continue;
                 sendpacket(ci.clientnum, delayed_sendpackets[0].channel, packet);
+                specs++;
             }
-            
+            if(!specs) free(delayed_sendpackets[0].data);
             delayed_sendpackets.remove(0);
         }
         
@@ -1554,7 +1555,7 @@ namespace server
         if(currentmaster >= 0 || mastermode != MM_OPEN)
         {
             clientinfo *m = currentmaster >= 0 ? getinfo(currentmaster) : NULL;
-            if (m && !m->spy) 
+            if (m && !m->spy)
             {
                 putint(p, N_CURRENTMASTER);
                 putint(p, currentmaster);
@@ -1719,7 +1720,7 @@ namespace server
 
         aiman::changemap();
 
-        if(m_demo) 
+        if(m_demo)
         {
             if(clients.length()) setupdemoplayback();
         }
@@ -1869,7 +1870,7 @@ namespace server
         gamestate &ts = target->state;
         ts.dodamage(damage);
         actor->state.damage += damage;
-        sendf(-1, 1, "ri6", N_DAMAGE, target->clientnum, actor->clientnum, damage, ts.armour, ts.health); 
+        sendf(-1, 1, "ri6", N_DAMAGE, target->clientnum, actor->clientnum, damage, ts.armour, ts.health);
         if(target==actor) target->setpushed();
         else if(target!=actor && !hitpush.iszero())
         {
@@ -1985,7 +1986,7 @@ namespace server
         gs.shotdamage += guns[gun].damage*(gs.quadmillis ? 4 : 1)*(gun==GUN_SG ? SGRAYS : 1);
         
         gs.shots++;
-        int old_hits = gs.hits; 
+        int old_hits = gs.hits;
         
         switch(gun)
         {
@@ -2100,7 +2101,7 @@ namespace server
         else if(!gamepaused && (!m_timed || gamemillis < gamelimit))
         {
             processevents();
-            if(curtime) 
+            if(curtime)
             {
                 loopv(sents) if(sents[i].spawntime) // spawn entities when timer reached
                 {
@@ -2127,13 +2128,13 @@ namespace server
         if(nextexceeded && gamemillis > nextexceeded && (!m_timed || gamemillis < gamelimit))
         {
             nextexceeded = 0;
-            loopvrev(clients) 
+            loopvrev(clients)
             {
                 clientinfo &c = *clients[i];
                 if(c.state.aitype != AI_NONE) continue;
                 if(c.checkexceeded())
-                { 
-                    if (anti_cheat_enabled) 
+                {
+                    if (anti_cheat_enabled)
                     {
                         anticheat *ac = &c.ac;
                         if (!ac->ignore_exceed || totalmillis > ac->ignore_exceed)
@@ -2148,8 +2149,8 @@ namespace server
             }
         }
         
-        if(masterupdate) 
-        { 
+        if(masterupdate)
+        {
             clientinfo *m = currentmaster>=0 ? getinfo(currentmaster) : NULL;
             loopv(clients)
             {
@@ -2157,8 +2158,8 @@ namespace server
                 if(clients[i]->privilege) sendf(clients[i]->clientnum, 1, "ri4", N_CURRENTMASTER, clients[i]->clientnum, clients[i]->privilege, mastermode);
                 else sendf(clients[i]->clientnum, 1, "ri4", N_CURRENTMASTER, currentmaster, m ? m->privilege : 0, mastermode);
             }
-            masterupdate = false; 
-        } 
+            masterupdate = false;
+        }
 
         if(gamemillis > next_timeupdate)
         {
@@ -2248,7 +2249,7 @@ namespace server
     
     void cleanup_masterstate(clientinfo *);
 
-    void clientdisconnect(int n,int reason) 
+    void clientdisconnect(int n,int reason)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
 
@@ -2322,7 +2323,7 @@ namespace server
         bool is_admin = ci->privilege == PRIV_ADMIN;
         
         
-        if((is_admin || is_reserved) && reservedslots > 0) 
+        if((is_admin || is_reserved) && reservedslots > 0)
         {
             if(clientcount >= maxclients)
             {
@@ -2475,7 +2476,7 @@ namespace server
                 bool restoredscore = restorescore(ci);
                 bool was_playing = restoredscore && ci->state.state != CS_SPECTATOR && ci->state.disconnecttime > mastermode_mtime;
                 
-                if(mastermode>=MM_LOCKED && !was_playing) 
+                if(mastermode>=MM_LOCKED && !was_playing)
                 {
                     ci->state.state = CS_SPECTATOR;
                     ci->specmillis = totalmillis;
@@ -2526,9 +2527,9 @@ namespace server
         {
             case N_POS:
             {
-                int pcn = getuint(p); 
+                int pcn = getuint(p);
                 bool falling = false;
-                p.get(); 
+                p.get();
                 uint flags = getuint(p);
                 clientinfo *cp = getinfo(pcn);
                 if(cp && pcn != sender && cp->ownernum != sender) cp = NULL;
@@ -2596,7 +2597,7 @@ namespace server
                 if(cp && (!ci->local || demorecord || hasnonlocalclients()) && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
                 {
                     flushclientposition(*cp);
-                    sendf(-1, 0, "ri4x", N_TELEPORT, pcn, teleport, teledest, cp->ownernum); 
+                    sendf(-1, 0, "ri4x", N_TELEPORT, pcn, teleport, teledest, cp->ownernum);
                 }
                 break;
             }
@@ -2694,7 +2695,7 @@ namespace server
             case N_TRYSPAWN:
             #if 0
                 if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (smode && !smode->canspawn(cq))) break;
-                if(!ci->clientmap[0] && !ci->mapcrc) 
+                if(!ci->clientmap[0] && !ci->mapcrc)
                 {
                     ci->mapcrc = -1;
                     checkmaps();
@@ -2784,7 +2785,7 @@ namespace server
                     hit.rays = getint(p);
                     loopk(3) hit.dir[k] = getint(p)/DNF;
                 }
-                if(cq) 
+                if(cq)
                 {
                     cq->addevent(shot);
                     cq->setpushed();
@@ -2849,7 +2850,7 @@ namespace server
                         break;
                     }
                     
-                    if( event_text(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false && 
+                    if( event_text(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false &&
                         !ci->is_delayed_spectator())
                     {
                         QUEUE_AI;
@@ -2881,11 +2882,11 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text, false, MAXNAMELEN);
                 if(!text[0]) copystring(text, "unnamed");
-		        
+?  ?          
                 string oldname;
                 copystring(oldname, ci->name);
                 
-                bool allow_rename = !ci->spy && strcmp(ci->name, text) && 
+                bool allow_rename = !ci->spy && strcmp(ci->name, text) &&
                     event_allow_rename(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false;
                 
                 if(allow_rename)
@@ -2899,7 +2900,7 @@ namespace server
                     QUEUE_INT(N_SWITCHNAME);
                     QUEUE_STR(ci->name);
                 }
-                else 
+                else
                 {
                     if (strcmp(ci->name, text))
                         player_rename(ci->clientnum, oldname, false);
@@ -2923,7 +2924,7 @@ namespace server
                 filtertext(text, text, false, MAXTEAMLEN);
                 if(strcmp(ci->team, text) && m_teammode)
                 {
-                    bool cancel = ci->check_flooding(ci->sv_switchteam_hit,"switching teams") || 
+                    bool cancel = ci->check_flooding(ci->sv_switchteam_hit,"switching teams") ||
                         (smode && !smode->canchangeteam(ci, ci->team, text)) ||
                         event_chteamrequest(event_listeners(), boost::make_tuple(ci->clientnum, ci->team, text));
                     
@@ -2949,7 +2950,7 @@ namespace server
                 int reqmode = getint(p);
                 if(!ci->local && !m_mp(reqmode)) reqmode = 0;
                 if(!ci->check_flooding(ci->sv_mapvote_hit,"map voting") &&
-                   event_mapvote(event_listeners(), boost::make_tuple(ci->clientnum, text, modename(reqmode, "unknown"))) == false) 
+                   event_mapvote(event_listeners(), boost::make_tuple(ci->clientnum, text, modename(reqmode, "unknown"))) == false)
                 {
                     vote(text, reqmode, sender);
                 }
@@ -3034,7 +3035,7 @@ namespace server
                     event_maploaded(event_listeners(), boost::make_tuple(ci->clientnum));
                 }
                 
-                ci->lastpingupdate = totalmillis; 
+                ci->lastpingupdate = totalmillis;
                 ci->clientmillis = clientmillis;
                 
                 sendf(sender, 1, "i2", N_PONG, clientmillis);
@@ -3046,7 +3047,7 @@ namespace server
                 int ping = getint(p);
                 if (ping > 0 && ping < 15000)
                 {
-                    if(ci) 
+                    if(ci)
                     {
                         ci->ac._ping = ci->ping = ping;
                         loopv(ci->bots) ci->bots[i]->ping = ping;
@@ -3137,7 +3138,7 @@ namespace server
                 if(!ci->privilege && !ci->local) break;
                 clientinfo *wi = getinfo(who);
                 if(!wi || !strcmp(wi->team, text) || wi->spy) break;
-                if((!smode || smode->canchangeteam(wi, wi->team, text)) && 
+                if((!smode || smode->canchangeteam(wi, wi->team, text)) &&
                     event_chteamrequest(event_listeners(), boost::make_tuple(wi->clientnum, wi->team, text)) == false)
                 {
                     if(smode && wi->state.state==CS_ALIVE) suicide(wi);
@@ -3297,14 +3298,14 @@ namespace server
 
             case N_CLIPBOARD:
             {
-                int unpacklen = getint(p), packlen = getint(p); 
+                int unpacklen = getint(p), packlen = getint(p);
                 ci->cleanclipboard(false);
                 if(ci->state.state==CS_SPECTATOR)
                 {
                     if(packlen > 0) p.subbuf(packlen);
                     break;
                 }
-                if(packlen <= 0 || packlen > (1<<16) || unpacklen <= 0) 
+                if(packlen <= 0 || packlen > (1<<16) || unpacklen <= 0)
                 {
                     if(packlen > 0) p.subbuf(packlen);
                     packlen = unpacklen = 0;
@@ -3313,12 +3314,12 @@ namespace server
                 putint(q, N_CLIPBOARD);
                 putint(q, ci->clientnum);
                 putint(q, unpacklen);
-                putint(q, packlen); 
+                putint(q, packlen);
                 if(packlen > 0) p.get(q.subbuf(packlen).buf, packlen);
                 ci->clipboard = q.finalize();
                 ci->clipboard->referenceCount++;
                 break;
-            } 
+            }
 
             #define PARSEMESSAGES 1
             #include "capture.h"
@@ -3339,9 +3340,9 @@ namespace server
             default: genericmsg:
             {
                 int size = server::msgsizelookup(type);
-                if(size<=0) { 
+                if(size<=0) {
                     if (anti_cheat_enabled) ci->ac.unknown_packet(type);
-                    else disconnect_client(sender, DISC_TAGT); 
+                    else disconnect_client(sender, DISC_TAGT);
                     return;
                 }
                 loopi(size-1) getint(p);
@@ -3357,8 +3358,8 @@ namespace server
     int laninfoport() { return SAUERBRATEN_LANINFO_PORT; }
     int serverinfoport(int servport) { return servport < 0 ? SAUERBRATEN_SERVINFO_PORT : servport+1; }
     int serverport(int infoport) { return infoport < 0 ? SAUERBRATEN_SERVER_PORT : infoport-1; }
-    const char *defaultmaster() { return "sauerbraten.org"; } 
-    int masterport() { return SAUERBRATEN_MASTER_PORT; } 
+    const char *defaultmaster() { return "sauerbraten.org"; }
+    int masterport() { return SAUERBRATEN_MASTER_PORT; }
     int numchannels() { return 3; }
 
     #include "extinfo.h"
