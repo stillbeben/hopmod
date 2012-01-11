@@ -582,7 +582,7 @@ namespace server
         if(!ci) luaL_error(get_lua_state(), "invalid cn");
         return ci;
     }
-?  
+  
     bool spec_slots = false;
     
     uint mcrc = 0;
@@ -1065,7 +1065,7 @@ namespace server
             sendservmsg(msg);
         }
     }
-?  
+  
     static void freegetmap(ENetPacket *packet)
     {
         loopv(clients)
@@ -2882,7 +2882,7 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text, false, MAXNAMELEN);
                 if(!text[0]) copystring(text, "unnamed");
-?  ?          
+          
                 string oldname;
                 copystring(oldname, ci->name);
                 
