@@ -51,7 +51,7 @@ local function get_map_name(gamemode)
     if not (has_implementation() and implementation.get_map_name) then
         error("missing implementation function: get_map_name")
     end
-    
+
     local map_name = implementation.get_map_name(selection_index, gamemode)
 
     if map_name == server.map then
