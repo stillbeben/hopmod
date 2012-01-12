@@ -2920,7 +2920,7 @@ namespace server
             case N_SWITCHMODEL:
             {
                 int model = getint(p);
-                if(model<0 || model>4) break
+                if(model<0 || model>4) break;
                 ci->playermodel = model;
                 if (ci->spy) break;
                 QUEUE_MSG;
