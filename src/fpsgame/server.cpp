@@ -1280,7 +1280,7 @@ namespace server
         if(type>=N_EDITENT && type<=N_EDITVAR && !m_edit) return -1;
         // server only messages
         static const int servtypes[] = { N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPRELOAD, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTFX, N_EXPLODEFX, N_DIED, N_SPAWNSTATE, N_FORCEDEATH, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_BASESCORE, N_BASEINFO, N_BASEREGEN, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_INVISFLAG, N_CLIENT, N_AUTHCHAL, N_INITAI, N_EXPIRETOKENS, N_DROPTOKENS };
-        if(ci) 
+        if(ci)
         {
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
             if(type < N_EDITENT || type > N_EDITVAR || !m_edit)
@@ -2468,8 +2468,10 @@ namespace server
                 
                 ci->ac.reset(sender);
                 ci->state.lastdeath = -5000;
-
-                ci->playermodel = getint(p);
+                
+                int model = getint(p);
+                if(model<0 || model>4) model = 0;
+                ci->playermodel = model;
 
                 if(m_demo) enddemoplayback();
                 
@@ -2917,7 +2919,9 @@ namespace server
 
             case N_SWITCHMODEL:
             {
-                ci->playermodel = getint(p);
+                int model = getint(p);
+                if(model<0 || model>4) break
+                ci->playermodel = model;
                 if (ci->spy) break;
                 QUEUE_MSG;
                 break;
