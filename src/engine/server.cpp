@@ -148,25 +148,6 @@ void getstring(char *text, ucharbuf &p, int len)
     while(*t++);
 }
 
-#if PROTOCOL > 258
-void filtertext(char *dst, const char *src, bool whitespace, int len)
-{
-    for(int c = uchar(*src); c; c = uchar(*++src))
-    {
-        if(c == '\f')
-        {
-            if(!*++src) break;
-            continue;
-        }
-        if(iscubeprint(c) || (iscubespace(c) && whitespace))
-        {
-            *dst++ = c;
-            if(!--len) break;
-        }
-    }
-    *dst = '\0';
-}
-#else
 void filtertext(char *dst, const char *src, bool whitespace, int len)
 {
     for(int c = *src; c; c = *++src)
@@ -183,7 +164,6 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
     }
     *dst = '\0';
 }
-#endif
 
 
 enum { ST_EMPTY, ST_LOCAL, ST_TCPIP };

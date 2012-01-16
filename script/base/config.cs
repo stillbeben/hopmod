@@ -31,9 +31,6 @@ global allowed_gamemodes [
     "efficiency ctf"
     "efficiency protect"
     "efficiency hold"
-    "insta collect"
-    "efficiency collect"
-    "collect"
 ]
 
 global use_server_maprotation 1

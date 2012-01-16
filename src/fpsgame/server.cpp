@@ -150,13 +150,12 @@ namespace server
         int lastdeath, lastspawn, lifesequence;
         int lastshot;
         projectilestate<8> rockets, grenades;
-        int frags, flags, deaths, suicides, shotdamage, damage, explosivedamage, teamkills, hits, misses, shots, tokens;
+        int frags, flags, deaths, suicides, shotdamage, damage, explosivedamage, teamkills, hits, misses, shots;
         int lasttimeplayed, timeplayed;
         float effectiveness;
         int disconnecttime;
         
         gamestate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), disconnecttime(0) {}
-    
     
         bool isalive(int gamemillis)
         {
@@ -177,7 +176,7 @@ namespace server
 
             timeplayed = 0;
             effectiveness = 0;
-            frags = flags = deaths = suicides = teamkills = shotdamage = explosivedamage = damage = hits = misses = shots = tokens = 0;
+            frags = flags = deaths = suicides = teamkills = shotdamage = explosivedamage = damage = hits = misses = shots = 0;
 
             respawn();
         }
@@ -189,7 +188,6 @@ namespace server
             cam = o;
             lastspawn = -1;
             lastshot = 0;
-            tokens = 0;
         }
 
         void reassign()
@@ -680,11 +678,9 @@ namespace server
     #define SERVMODE 1
     #include "capture.h"
     #include "ctf.h"
-    #include "collect.h"
 
     captureservmode capturemode;
     ctfservmode ctfmode;
-    collectservmode collectmode;
     servmode *smode = NULL;
     
     bool canspawnitem(int type) { return !m_noitems && (type>=I_SHELLS && type<=I_QUAD && (!m_noammo || type<I_SHELLS || type>I_CARTRIDGES)); }
@@ -1279,7 +1275,7 @@ namespace server
         // only allow edit messages in coop-edit mode
         if(type>=N_EDITENT && type<=N_EDITVAR && !m_edit) return -1;
         // server only messages
-        static const int servtypes[] = { N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPRELOAD, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTFX, N_EXPLODEFX, N_DIED, N_SPAWNSTATE, N_FORCEDEATH, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_BASESCORE, N_BASEINFO, N_BASEREGEN, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_INVISFLAG, N_CLIENT, N_AUTHCHAL, N_INITAI, N_EXPIRETOKENS, N_DROPTOKENS };
+        static const int servtypes[] = { N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPRELOAD, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTFX, N_EXPLODEFX, N_DIED, N_SPAWNSTATE, N_FORCEDEATH, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_BASESCORE, N_BASEINFO, N_BASEREGEN, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_INVISFLAG, N_CLIENT, N_AUTHCHAL, N_INITAI };
         if(ci)
         {
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
@@ -1711,7 +1707,6 @@ namespace server
 
         if(m_capture) smode = &capturemode;
         else if(m_ctf) smode = &ctfmode;
-        else if(m_collect) smode = &collectmode;
         else smode = NULL;
 
         if(m_timed && smapname[0]) sendf(-1, 1, "ri2", N_TIMEUP, gamemillis < gamelimit && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
@@ -2381,7 +2376,7 @@ namespace server
 
     void receivefile(int sender, uchar *data, int len)
     {
-        if(!m_edit || len > 4*1024*1024) return;
+        if(!m_edit || len > 1024*1024) return;
         clientinfo *ci = getinfo(sender);
         if(ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) return;
         if(mapdata) DELETEP(mapdata);
@@ -2468,10 +2463,8 @@ namespace server
                 
                 ci->ac.reset(sender);
                 ci->state.lastdeath = -5000;
-                
-                int model = getint(p);
-                if(model<0 || model>4) model = 0;
-                ci->playermodel = model;
+
+                ci->playermodel = getint(p);
 
                 if(m_demo) enddemoplayback();
                 
@@ -2919,9 +2912,7 @@ namespace server
 
             case N_SWITCHMODEL:
             {
-                int model = getint(p);
-                if(model<0 || model>4) break;
-                ci->playermodel = model;
+                ci->playermodel = getint(p);
                 if (ci->spy) break;
                 QUEUE_MSG;
                 break;
@@ -3209,7 +3200,7 @@ namespace server
                     sendf(sender, 1, "ris", N_SERVMSG, "server sending map...");
                     if((ci->getmap = sendfile(sender, 2, mapdata, "ri", N_SENDMAP)))
                         ci->getmap->freeCallback = freegetmap;
-                    ci->needclipboard = totalmillis ? totalmillis : 1;
+                    ci->needclipboard = totalmillis;
                 }
                 break;
 
@@ -3295,7 +3286,7 @@ namespace server
             case N_COPY:
             {
                 ci->cleanclipboard();
-                ci->lastclipboard = totalmillis ? totalmillis : 1;
+                ci->lastclipboard = totalmillis;
                 goto genericmsg;
             }
 
@@ -3333,7 +3324,6 @@ namespace server
             #define PARSEMESSAGES 1
             #include "capture.h"
             #include "ctf.h"
-            #include "collect.h"
             #undef PARSEMESSAGES
             
             case -1:
