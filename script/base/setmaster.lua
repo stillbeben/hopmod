@@ -11,7 +11,7 @@ end
 local function setmaster(cn, hash, set)
 
     if not set then
-         server.unsetpriv(cn)
+        server.unsetpriv(cn)
         return -1
     end
 
@@ -26,19 +26,20 @@ local function setmaster(cn, hash, set)
     if no_hash or failed[cn] == FAILED_LIMIT then
         return -1 
     end
-    
-    if server.admin_password == "" then return end
 
     local is_spy = server.hashpassword(cn, server.admin_password .. "/spy") == hash
-    local success = is_spy
-    if not success then
-        success = server.hashpassword(cn, server.admin_password) == hash
-    end
+    local level = _if(is_spy, server.PRIV_ADMIN, server.PRIV_NONE) -- SPY
+    if level == server.PRIV_NONE then level = _if(server.hashpassword(cn, server.admin_password) == hash, server.PRIV_ADMIN, server.PRIV_NONE) end -- ADMIN
+    if level == server.PRIV_NONE then level = _if(server.hashpassword(cn, server.master_password) == hash, server.PRIV_MASTER, server.PRIV_NONE) end -- MASTER
 
-    if success then
+    if level == server.PRIV_MASTER and server.master_password == "" then level = server.PRIV_NONE end
+    if level == server.PRIV_ADMIN and server.admin_password == "" then level = server.PRIV_NONE end
+
+    if level > server.PRIV_NONE then
         if is_spy then server.setspy(cn, true) end
         if no_master then
-            server.setadmin(cn) 
+            if level == server.PRIV_MASTER then server.setmaster(cn) end
+            if level == server.PRIV_ADMIN then server.setadmin(cn) end
         else
             server.set_invisible_admin(cn)
         end
