@@ -41,7 +41,8 @@ local function setmaster(cn, hash, set)
             if level == server.PRIV_MASTER then server.setmaster(cn) end
             if level == server.PRIV_ADMIN then server.setadmin(cn) end
         else
-            server.set_invisible_admin(cn)
+            if level == server.PRIV_MASTER then server.set_invisible_master(cn) end
+            if level == server.PRIV_ADMIN then server.set_invisible_admin(cn) end
         end
     else
         server.log(string.format("Player: %s(%i) IP: %s -- failed setmaster login!", server.player_name(cn), cn, server.player_ip(cn)))
