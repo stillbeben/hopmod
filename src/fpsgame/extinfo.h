@@ -116,13 +116,8 @@
             case EXT_HOPMOD:
 			{
                 putint(p, EXT_NO_ERROR);
-#ifdef REVISION
-                putint(p, REVISION);
-#else
-                putint(p, -1);
-#endif
-                defformatstring(s)("%s %s", __DATE__, __TIME__);
-                sendstring(s, p);
+                putint(p, revision());
+                sendstring(version(), p);
                 break;
             }	
 
