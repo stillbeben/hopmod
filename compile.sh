@@ -1,4 +1,5 @@
 #!/bin/sh
+export REVISION=`svn info | grep 'Revision: ' | awk '{print $2}'`
 THREADS=`cat /proc/cpuinfo | grep processor | wc -l`
 ARG_LENGTH=$# 
 STRCOMPILE="Compiling"
@@ -21,7 +22,7 @@ STRTHREADS="threads"
 if [ $THREADS = 1 ]; then
   STRTHREADS="thread"
 fi
-echo "$STRCOMPILE Hopmod using $THREADS $STRTHREADS ($BUILDTYPE build)\n"
+echo "$STRCOMPILE Hopmod r$REVISION using $THREADS $STRTHREADS ($BUILDTYPE build)\n"
 TS_START=`date +%s`
 make -j$THREADS 
 make install >> /dev/null

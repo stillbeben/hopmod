@@ -54,7 +54,8 @@ namespace server
     
     extern int spectator_delay;
     
-    int enet_time_get_();
+    int revision();
+    const char *version();
     
     void started();
     int player_sessionid(int);
