@@ -647,7 +647,7 @@ static int cleanupdb(lua_State *L, sdb *db) {
 
 static sdb *lsqlite_getdb(lua_State *L, int index) {
     sdb *db = (sdb*)luaL_checkudata(L, index, sqlite_meta);
-    if (db == NULL) luaL_typerror(L, index, "sqlite database");
+    if (db == NULL) luaL_typeerror(L, index, "sqlite database");
     return db;
 }
 
@@ -679,7 +679,7 @@ static lcontext *lsqlite_make_context(lua_State *L) {
 
 static lcontext *lsqlite_getcontext(lua_State *L, int index) {
     lcontext *ctx = (lcontext*)luaL_checkudata(L, index, sqlite_ctx_meta);
-    if (ctx == NULL) luaL_typerror(L, index, "sqlite context");
+    if (ctx == NULL) luaL_typeerror(L, index, "sqlite context");
     return ctx;
 }
 
@@ -1726,7 +1726,7 @@ static const struct {
 
 /* ======================================================= */
 
-static const luaL_reg dblib[] = {
+static const luaL_Reg dblib[] = {
     {"isopen",              db_isopen               },
     {"last_insert_rowid",   db_last_insert_rowid    },
     {"changes",             db_changes              },
@@ -1762,7 +1762,7 @@ static const luaL_reg dblib[] = {
     {NULL, NULL}
 };
 
-static const luaL_reg vmlib[] = {
+static const luaL_Reg vmlib[] = {
     {"isopen",              dbvm_isopen             },
 
     {"step",                dbvm_step               },
@@ -1808,7 +1808,7 @@ static const luaL_reg vmlib[] = {
     { NULL, NULL }
 };
 
-static const luaL_reg ctxlib[] = {
+static const luaL_Reg ctxlib[] = {
     {"user_data",               lcontext_user_data              },
 
     {"get_aggregate_data",      lcontext_get_aggregate_context  },
@@ -1828,7 +1828,7 @@ static const luaL_reg ctxlib[] = {
     {NULL, NULL}
 };
 
-static const luaL_reg sqlitelib[] = {
+static const luaL_Reg sqlitelib[] = {
     {"version",         lsqlite_version         },
     {"complete",        lsqlite_complete        },
 #ifndef WIN32
@@ -1841,7 +1841,7 @@ static const luaL_reg sqlitelib[] = {
     {NULL, NULL}
 };
 
-static void create_meta(lua_State *L, const char *name, const luaL_reg *lib) {
+static void create_meta(lua_State *L, const char *name, const luaL_Reg *lib) {
     luaL_newmetatable(L, name);
     lua_pushstring(L, "__index");
     lua_pushvalue(L, -2);               /* push metatable */
