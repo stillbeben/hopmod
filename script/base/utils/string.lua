@@ -134,7 +134,7 @@ do
        else
           local Result = {}
           local Lookup = Built[CharSet] or AddLookup(CharSet)
-          local Range = table.getn(Lookup)
+          local Range = #Lookup
           math.randomseed( os.time() )
           for Loop = 1,Length do
 
