@@ -171,7 +171,7 @@ server.event_handler("text", function(cn, text)
         return -1
     end
     
-    local pcall_status, success, error_message = pcall(command.run, unpack(arguments))
+    local pcall_status, success, error_message = pcall(command.run, table.unpack(arguments))
     
     if pcall_status == false then
         local message = success  -- success value is the error message returned by pcall

@@ -260,8 +260,8 @@ static int l_pack(lua_State *L) 		/* pack(s,...) */
 
 int lua_packlibopen(lua_State *L)
 {
- luaL_openlib(L,"bpack",l_pack,0);
- luaL_openlib(L,"bunpack",l_unpack,0);
+ lua_register(L,"bpack",l_pack);
+ lua_register(L,"bunpack",l_unpack);
  return 0;
 }
 

@@ -56,6 +56,6 @@ return function(cn, ...)
         return false, "#group [all] <tag> [<team>]"
     end
     
-    group_players(unpack({...}))
+    group_players(table.unpack({...}))
 end
 
