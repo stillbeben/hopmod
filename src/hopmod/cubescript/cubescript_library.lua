@@ -151,6 +151,7 @@ env["_and"] = env["&&"]
 
 local function generic_arithmetic(binary_function)
     return function(...)
+        local arg = {...}
         local result = binary_function(arg[1], arg[2])
         for i = 3, #arg do
             result = binary_function(result, arg[i])
@@ -175,7 +176,7 @@ env["mul"] = env["*"]
 -- Array (some of these functions also work on strings)
 
 env["array"] = function(...)
-    return arg
+    return {...}
 end
 
 env["parse_array"] = parse_array
@@ -207,7 +208,7 @@ local function implode(pieces, glue)
 end
 
 env["@"] = function(...)
-    return implode(arg)
+    return implode({...})
 end
 
 env["substr"] = function(s, start, length)
@@ -246,6 +247,7 @@ env["strreplace"] = function(s, find, replacement)
 end
 
 env["format"] = function(s, ...)
+    local arg = {...}
     local output = string.gsub(s, "%%[%w_]+", function(id)
         id = string.sub(id, 2)
         local index = tonumber(id)
@@ -266,7 +268,7 @@ env["strlen"] = string.len
 env["strcmp"] = env["="]
 env["strcat"] = env["@"]
 env["concatword"] = env["@"]
-env["concat"] = function(...) return implode(arg, " ") end
+env["concat"] = function(...) return implode({...}, " ") end
 env["implode"] = implode
 
 env["def"] = function(name, value)
@@ -326,7 +328,7 @@ env["to_lua"] = function(parameters, body)
 end
 
 env["call"] = function(func, ...)
-   return func(unpack(arg)) 
+   return func(unpack({...})) 
 end
 
 env["if"] = function(condition, true_body, false_body)
@@ -738,7 +740,7 @@ local function find_script(filename, function_level)
         local source = debug.getinfo(function_level).source
         local source_type = string.sub(source, 1, 1)
         if source_type == "@" then
-            local dirname = string.match(string.sub(source, 2), "^(.*)(\/[^/]*)$")
+            local dirname = string.match(string.sub(source, 2), "^(.*)(/[^/]*)$")
             return dirname
         end
     end
@@ -781,7 +783,7 @@ env["exec"] = function(filename, function_level)
         error(string.format("cannot execute '%s': unknown script type"), filename)
     end
     
-    local pcall_results = (function(...) return arg end)(pcall(executor, filename))
+    local pcall_results = (function(...) return {...} end)(pcall(executor, filename))
     
     if pcall_results[1] == false then
         error(pcall_results[2], 0)
@@ -794,7 +796,7 @@ end
 local exec = env.exec
 
 env["pexec"] = function(filename)
-    return (function(...) return arg end)(pcall(exec, filename, 3))
+    return (function(...) return {...} end)(pcall(exec, filename, 3))
 end
 
 env["exec_if_found"] = function(filename)

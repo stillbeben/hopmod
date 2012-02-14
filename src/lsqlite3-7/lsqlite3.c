@@ -1863,7 +1863,7 @@ LUALIB_API int luaopen_lsqlite3(lua_State *L) {
     sqlite_ctx_meta_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
     /* register (local) sqlite metatable */
-    luaL_openlib(L, "sqlite3", sqlitelib);
+    luaL_openlib(L, "sqlite3", sqlitelib, 0);
 
     {
         int i = 0;
