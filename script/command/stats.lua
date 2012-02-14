@@ -46,6 +46,7 @@ end
 return function(cn, ...)
     
     local sub_command = nil
+    local arg = {...}
     
     if #arg > 0 then
         sub_command = arg[1]

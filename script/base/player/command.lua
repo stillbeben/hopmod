@@ -95,7 +95,7 @@ local function load_player_command_script_directories()
         local permission = load_dir[2]
         
         for file_type, filename in filesystem.dir(dir_filename) do
-            if file_type == filesystem.FILE and string.match(filename, "\.lua$") then
+            if file_type == filesystem.FILE and string.match(filename, ".lua$") then
                 local command_name = string.sub(filename, 1, #filename - 4)
                 filename = dir_filename .. "/" .. filename
                 load_player_command_script(filename, command_name, permission) 

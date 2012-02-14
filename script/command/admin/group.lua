@@ -3,6 +3,8 @@
 ]]
 
 local function group_players(...)
+  
+    local arg = {...}
     
     if #arg == 0 then
         return -1
@@ -50,10 +52,10 @@ return function(cn, ...)
         return
     end
     
-    if #arg == 0 then
+    if #{...} == 0 then
         return false, "#group [all] <tag> [<team>]"
     end
     
-    group_players(unpack(arg))
+    group_players(unpack({...}))
 end
 

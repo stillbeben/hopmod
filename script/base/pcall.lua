@@ -18,7 +18,7 @@ end
 native_pcall = pcall
 
 pcall = function(func, ...)
-    local outer_arg = arg
+    local outer_arg = {...}
     return xpcall(function() return func(unpack(outer_arg)) end, xpcall_error_handler)
 end
 
