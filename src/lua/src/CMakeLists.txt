@@ -60,4 +60,4 @@ install(TARGETS
         ARCHIVE DESTINATION
             ${INSTALL_ARCHIVE_DIR})
 
-add_definitions(-DLUA_COMPAT_ALL)
+add_definitions(-DLUA_COMPAT_MODULE)
