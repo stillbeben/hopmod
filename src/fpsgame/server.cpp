@@ -1275,6 +1275,14 @@ namespace server
 
     int checktype(int type, clientinfo *ci, clientinfo *cq, packetbuf &p)
     {
+    #if 0
+        if(type != N_POS && type != N_PING && type != N_CLIENTPING)
+        {
+            defformatstring(msg)("%s (%d): %d", ci->name, ci->clientnum, type);
+            sendservmsg(msg);
+        }
+    #endif
+    
         if(ci && ci->local) return type;
         // only allow edit messages in coop-edit mode
         if(type>=N_EDITENT && type<=N_EDITVAR && !m_edit) return -1;
@@ -2886,7 +2894,7 @@ namespace server
                 }
                 break;
             }
-
+            
             case N_SWITCHNAME:
             {
                 getstring(text, p);
@@ -3330,6 +3338,13 @@ namespace server
                 if(packlen > 0) p.get(q.subbuf(packlen).buf, packlen);
                 ci->clipboard = q.finalize();
                 ci->clipboard->referenceCount++;
+                break;
+            }
+            
+            case N_SERVCMD:
+            {
+                getstring(text, p);
+                event_servcmd(event_listeners(), boost::make_tuple(ci->clientnum, text));
                 break;
             }
 

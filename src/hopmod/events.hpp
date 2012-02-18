@@ -16,6 +16,7 @@ extern lua::event< boost::tuple<int,const char *,const char *> >            even
 extern lua::event< boost::tuple<int,const char *,const char *> >            event_chteamrequest;
 extern lua::event< boost::tuple<int,const char *> >                         event_text;
 extern lua::event< boost::tuple<int,const char *> >                         event_sayteam;
+extern lua::event< boost::tuple<int,const char *> >                         event_servcmd;
 extern lua::event< boost::tuple<int,const char *,const char *> >            event_mapvote;
 extern lua::event< boost::tuple<int, const char *,const char *> >           event_setmastermode;
 extern lua::event< boost::tuple<int, const char *,const char *> >           event_setmastermode_request;
@@ -50,7 +51,7 @@ extern lua::event< boost::tuple<int,int> >                                  even
 extern lua::event< boost::tuple<const char *,const char *> >                event_votepassed;
 extern lua::event< boost::tuple<int, const char *> >                        event_takeflag;
 extern lua::event< boost::tuple<int, const char *> >                        event_dropflag;
-extern lua::event< boost::tuple<int, const char *, int, int> >                   event_scoreflag;
+extern lua::event< boost::tuple<int, const char *, int, int> >              event_scoreflag;
 extern lua::event< boost::tuple<int, const char *> >                        event_returnflag;
 extern lua::event< boost::tuple<const char *> >                             event_resetflag;
 extern lua::event< boost::tuple<const char *, int> >                        event_scoreupdate;

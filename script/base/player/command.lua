@@ -122,14 +122,15 @@ local function send_command_error(cn, error_message)
     server.player_msg(cn, red(output_message))
 end
 
-server.event_handler("text", function(cn, text)
-
-    if not is_command_prefix(text) then
+local function exec_command(cn, text, force)
+    if not force and not is_command_prefix(text) then
         return
     end
     
-    text = string.sub(text, 2)
-    
+    if is_command_prefix(text) then
+        text = string.sub(text, 2)
+    end
+
     local function unsupported(char)
         return function()
             error(char .. " syntax is not supported in player commands")
@@ -184,6 +185,14 @@ server.event_handler("text", function(cn, text)
     end
     
     return -1
+end
+
+server.event_handler("text", function(cn, text)
+    exec_command(cn, text, false)
+end)
+
+server.event_handler("servcmd", function(cn, text)
+    exec_command(cn, text, true)
 end)
 
 function player_command_function(name, func, permission)
