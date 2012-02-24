@@ -1100,4 +1100,11 @@ const char *version()
     return buf;
 }
 
+const char *extfiltertext(const char *src)
+{
+    static string dst; 
+    filtertext(dst, src);
+    return dst;
+}
+
 #endif

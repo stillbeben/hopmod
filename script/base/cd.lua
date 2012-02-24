@@ -10,7 +10,7 @@
 --]]
 
 local ban_time = 21600 -- 6 hrs
-local kick_msg = string.format("cheating - (bantime: %i minutes)", round(ban_time / 60, 0))
+local kick_msg = string.format("\f3cheating - (bantime: %i minutes)", round(ban_time / 60, 0))
 local min_spawntime = 4950
 local min_scoretime = 3000
 local max_points = 100

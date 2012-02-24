@@ -12,6 +12,7 @@ local logfile = io.open("log/" .. filename .. ".log","a+")
 
 function server.log(msg)
     assert(msg ~= nil)
+    msg = server.filtertext(msg)
     logfile:write(os.date("[%a %d %b %X] ",os.time()))
     logfile:write(msg)
     logfile:write("\n")

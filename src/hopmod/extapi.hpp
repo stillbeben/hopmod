@@ -56,6 +56,7 @@ namespace server
     
     int revision();
     const char *version();
+    const char *extfiltertext(const char *src);
     
     void started();
     int player_sessionid(int);
