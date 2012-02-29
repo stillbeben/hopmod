@@ -177,6 +177,7 @@ namespace server
             timeplayed = 0;
             effectiveness = 0;
             frags = flags = deaths = suicides = teamkills = shotdamage = explosivedamage = damage = hits = misses = shots = 0;
+            lastdeath = 0;
 
             respawn();
         }
@@ -409,7 +410,7 @@ namespace server
             lastpingupdate = 0;
             lastposupdate = 0;
             lag = 0;
-            
+
             ac.reset();
             
             clientmillis = 0;
@@ -2462,7 +2463,6 @@ namespace server
                 }
                 
                 ci->ac.reset(sender);
-                ci->state.lastdeath = -5000;
 
                 ci->playermodel = getint(p);
 
