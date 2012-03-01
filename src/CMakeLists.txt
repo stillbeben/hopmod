@@ -1,3 +1,4 @@
+add_subdirectory(geoip)
 add_subdirectory(enet)
 add_subdirectory(lua)
 add_subdirectory(boost)
@@ -8,14 +9,9 @@ add_subdirectory(luasql EXCLUDE_FROM_ALL)
 
 include(CheckLibraryExists)
 
-check_library_exists(GeoIP GeoIP_open "" GEOIP_EXISTS)
 check_library_exists(z gzopen "" ZLIB_EXISTS)
 check_library_exists(pthread pthread_self "" PTHREAD_EXISTS)
 check_library_exists(rt clock_gettime "" RTLIB_EXISTS)
-
-if(NOT ${GEOIP_EXISTS})
-    message(FATAL_ERROR "missing required library: GeoIP")
-endif(NOT ${GEOIP_EXISTS})
 
 if(NOT ${ZLIB_EXISTS})
     message(FATAL_ERROR "missing required library: ZLIB")
@@ -93,9 +89,9 @@ set(LUA_MODULES_SOURCES
 add_library(lua_modules STATIC ${LUA_MODULES_SOURCES})
 
 target_link_libraries(lua_modules 
-    -lGeoIP
     -pthread sauertools
     ${LUA_LIBRARY}
+    ${GEOIP_LIBRARY}
     ${FUNGU_STRING_LIBRARY}
     ${FUNGU_HTTP_LIBRARY}
     ${LSQLITE3_LIBRARY}
