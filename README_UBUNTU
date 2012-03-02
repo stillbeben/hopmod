@@ -1,0 +1,6 @@
+
+Install the libboost development packages: sudo apt-get install libboost-system1.46-dev libboost-thread1.46-dev libboost-signals1.46-dev
+    (It's important to install <= 1.46, otherwise you will get compile errors).
+    
+then type: sh compile.sh
+

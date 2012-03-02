@@ -1,7 +1,16 @@
 add_subdirectory(geoip)
 add_subdirectory(enet)
 add_subdirectory(lua)
-add_subdirectory(boost)
+if(NOT IS_DIRECTORY /usr/include/boost)
+    add_subdirectory(boost)
+    set(BOOST_LIBS ${BOOST_SIGNALS_LIBRARY} ${BOOST_THREAD_LIBRARY})
+else(NOT IS_DIRECTORY /usr/include/boost)
+    set(BOOST_LIBS
+    -lboost_signals
+    -lboost_thread
+    -lboost_system)
+    set(BOOST_INCLUDE_DIRS /usr/include/boost)
+endif(NOT IS_DIRECTORY /usr/include/boost)
 add_subdirectory(fungu)
 add_subdirectory(lsqlite3-7)
 add_subdirectory(hopmod/standalone/luapp)
@@ -50,7 +59,7 @@ set(SAUERTOOLS_SOURCES
 
 add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 
-target_link_libraries(sauertools -lrt)
+target_link_libraries(sauertools -lrt -lz ${BOOST_LIBS})
 
 set(LUA_MODULES_SOURCES
     hopmod/lib/md5.c
@@ -90,8 +99,8 @@ add_library(lua_modules STATIC ${LUA_MODULES_SOURCES})
 
 target_link_libraries(lua_modules 
     -pthread sauertools
-    ${LUA_LIBRARY}
     ${GEOIP_LIBRARY}
+    ${LUA_LIBRARY}
     ${FUNGU_STRING_LIBRARY}
     ${FUNGU_HTTP_LIBRARY}
     ${LSQLITE3_LIBRARY}
@@ -112,10 +121,9 @@ add_executable(sauer_server ${GAME_SERVER_SOURCES})
 target_link_libraries(sauer_server 
     -lz
     -lrt
+    ${BOOST_LIBS}
     sauertools
     lua_modules
-    ${BOOST_SIGNALS_LIBRARY}
-    ${BOOST_THREAD_LIBRARY}
     ${ENET_LIBRARY})
 
 add_executable(keygen hopmod/standalone/keygen.cpp)
