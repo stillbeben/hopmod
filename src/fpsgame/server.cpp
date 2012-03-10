@@ -609,16 +609,16 @@ namespace server
         clientinfo *ci = getinfo(cn);
         if(!ci || ci->spy == val) return;
 
-        if (val)
+        if(val)
         {
-            if (ci->connected)
+            if(ci->connected)
             {
                 setspectator(ci, val, false);
                 sendf(-1, 1, "ri2", N_CDIS, cn);
                 ci->sendprivtext(RED "You've entered the spy-mode.");
             }
             defformatstring(admin_info)(RED "ADMIN-INFO: %s joined spy-mode.", ci->name);
-            loopv(clients) if (clients[i] != ci && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(admin_info);
+            loopv(clients) if(clients[i] != ci && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(admin_info);
             ci->spy = true;
         }
         else
@@ -630,11 +630,11 @@ namespace server
             event_connect(event_listeners(), boost::make_tuple(ci->clientnum, ci->spy));
             ci->connectmillis = totalmillis;
             ci->sendprivtext(RED "You've left the spy-mode.");
-            if (mastermode <= 1) setspectator(ci, 0);
+            if(mastermode <= 1) setspectator(ci, 0);
             else sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 1);
             sendf(-1, 1, "riisi", N_SETTEAM, cn, ci->team, -1);
             defformatstring(admin_info)(RED "ADMIN-INFO: %s left spy-mode.", ci->name);
-            loopv(clients) if (clients[i] != ci && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(admin_info);            
+            loopv(clients) if(clients[i] != ci && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(admin_info);            
         }
     }
 
@@ -647,14 +647,14 @@ namespace server
     int spy_count()
     {   
         int n = 0;
-        loopv(clients) if (clients[i]->spy) n++;
+        loopv(clients) if(clients[i]->spy) n++;
         return n;
     }
     
     int spec_count()
     {
         int n = 0;
-        loopv(clients) if (clients[i]->state.state == CS_SPECTATOR && !clients[i]->spy) n++;
+        loopv(clients) if(clients[i]->state.state == CS_SPECTATOR && !clients[i]->spy) n++;
         return n;    
     }
     
@@ -1297,7 +1297,7 @@ namespace server
                 if(type != N_POS && ++ci->overflow >= 200) return -2;
             }
         }
-        if (anti_cheat_enabled) anti_cheat_parsepacket(type, ci, cq, p);
+        if(anti_cheat_enabled) anti_cheat_parsepacket(type, ci, cq, p);
         return type;
     }
 
@@ -1516,7 +1516,7 @@ namespace server
         }
         else
         {
-            if (ci->spy) return;
+            if(ci->spy) return;
             putint(p, N_INITCLIENT);
             putint(p, ci->clientnum);
             sendstring(ci->name, p);
@@ -1568,7 +1568,7 @@ namespace server
         if(currentmaster >= 0 || mastermode != MM_OPEN)
         {
             clientinfo *m = currentmaster >= 0 ? getinfo(currentmaster) : NULL;
-            if (m && !m->spy)
+            if(m && !m->spy)
             {
                 putint(p, N_CURRENTMASTER);
                 putint(p, currentmaster);
@@ -1661,7 +1661,7 @@ namespace server
 
     void sendinitclient(clientinfo *ci)
     {
-        if (ci->spy) return;
+        if(ci->spy) return;
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
         putinitclient(ci, p);
         sendpacket(-1, 1, p.finalize(), ci->clientnum);
@@ -1833,7 +1833,7 @@ namespace server
         }
         else
         {
-            if (!ci->spy)
+            if(!ci->spy)
             {
                 defformatstring(msg)("%s suggests %s on map %s (select map to vote)", colorname(ci), modename(reqmode), map);
                 sendservmsg(msg);
@@ -1865,7 +1865,7 @@ namespace server
             return;
         }
 
-        if (anti_cheat_enabled)
+        if(anti_cheat_enabled)
         {
             //anticheat *ac_a = &actor->ac;
             anticheat *ac_t = &target->ac;
@@ -1873,7 +1873,7 @@ namespace server
             ac_t->damage();
 
             float st_dist = distance(actor->state.o, target->state.o);
-            if ((int)st_dist > (guns[gun].range + 50/*tolerance*/))
+            if((int)st_dist > (guns[gun].range + 50/*tolerance*/))
             {
                 defformatstring(cheatinfo)("GUN: %s GUN-RANGE: %i DISTANCE: %.2f", "%s", guns[gun].range, st_dist);
                 actor->ac.out_of_gun_distance_range(gun, cheatinfo);
@@ -2148,10 +2148,10 @@ namespace server
                 if(c.state.aitype != AI_NONE) continue;
                 if(c.checkexceeded())
                 {
-                    if (anti_cheat_enabled)
+                    if(anti_cheat_enabled)
                     {
                         anticheat *ac = &c.ac;
-                        if (!ac->ignore_exceed || totalmillis > ac->ignore_exceed)
+                        if(!ac->ignore_exceed || totalmillis > ac->ignore_exceed)
                         {
                             ac->player_position_exceeded();
                             ac->ignore_exceed = totalmillis + 2500;
@@ -2273,7 +2273,7 @@ namespace server
             disc_reason_msg = (ci->disconnect_reason.length() ? ci->disconnect_reason.c_str() : disconnect_reason(reason));
             defformatstring(discmsg)("client (%s) disconnected because: %s", ci->hostname(), disc_reason_msg);
             printf("%s",discmsg);
-            if (!ci->spy) sendservmsg(discmsg);
+            if(!ci->spy) sendservmsg(discmsg);
         }
         else
         {
@@ -2296,7 +2296,7 @@ namespace server
             
             savescore(ci);
             
-            if (!ci->spy) sendf(-1, 1, "ri2", N_CDIS, n);
+            if(!ci->spy) sendf(-1, 1, "ri2", N_CDIS, n);
             
             clients.removeobj(ci);
             aiman::removeai(ci);
@@ -2351,9 +2351,9 @@ namespace server
         
         int spy_count_ = spy_count();
         int maxclients_ = maxclients;
-        if (spec_slots) maxclients_ += spec_count();
-        if (ci->spy) spy_count_++; // allow connect as "spy" when server is full
-        if (clientcount >= maxclients_ + spy_count_) return DISC_MAXCLIENTS;
+        if(spec_slots) maxclients_ += spec_count();
+        if(ci->spy) spy_count_++; // allow connect as "spy" when server is full
+        if(clientcount >= maxclients_ + spy_count_) return DISC_MAXCLIENTS;
         
         if(serverpass[0])
         {
@@ -2573,7 +2573,7 @@ namespace server
                         if(!ci->local && !m_edit && pos_z >= 180)
                         {
                             cp->setexceeded();
-                            if (anti_cheat_enabled) cq->ac.exceed_position = pos_z;
+                            if(anti_cheat_enabled) cq->ac.exceed_position = pos_z;
                         }
                         cp->position.setsize(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
@@ -2747,7 +2747,7 @@ namespace server
                     event_modmap(event_listeners(), boost::make_tuple(ci->clientnum, text, cq->mapcrc));
                     cq->mapcrc = 1;
                 }
-                if (ci->spy)
+                if(ci->spy)
                 {
                     ci->spy = false;
                     ci->state.state = CS_DEAD;
@@ -2856,7 +2856,7 @@ namespace server
                         break;
                     }
                     
-                    if (ci->spy && !is_command)
+                    if(ci->spy && !is_command)
                     {
                         defformatstring(msg)("\f3REMOTE ADMIN \f0(\f8%s\f0)\f3: \f8%s", ci->name, text);
                         sendservmsg(msg);
@@ -2915,7 +2915,7 @@ namespace server
                 }
                 else
                 {
-                    if (strcmp(ci->name, text))
+                    if(strcmp(ci->name, text))
                         player_rename(ci->clientnum, oldname, false);
                 }
                 
@@ -2926,7 +2926,7 @@ namespace server
             case N_SWITCHMODEL:
             {
                 ci->playermodel = getint(p);
-                if (ci->spy) break;
+                if(ci->spy) break;
                 QUEUE_MSG;
                 break;
             }
@@ -2948,10 +2948,10 @@ namespace server
                         copystring(oldteam, ci->team);
                         copystring(ci->team, text);
                         aiman::changeteam(ci);
-                        if (!ci->spy) sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
+                        if(!ci->spy) sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
                         event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, oldteam, text));
                     }
-                    else if (!ci->spy) sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
+                    else if(!ci->spy) sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
                 }
                 break;
             }
@@ -3058,14 +3058,14 @@ namespace server
             case N_CLIENTPING:
             {
                 int ping = getint(p);
-                if (ping > 0 && ping < 15000)
+                if(ping > 0 && ping < 15000)
                 {
                     if(ci)
                     {
                         ci->ac._ping = ci->ping = ping;
                         loopv(ci->bots) ci->bots[i]->ping = ping;
                     }
-                    if (!ci->spy) QUEUE_MSG;
+                    if(!ci->spy) QUEUE_MSG;
                 }
                 break;
             }
@@ -3341,7 +3341,7 @@ namespace server
             
             case -1:
             {
-                if (anti_cheat_enabled) ci->ac.unknown_packet(-1);
+                if(anti_cheat_enabled) ci->ac.unknown_packet(-1);
                 else disconnect_client(sender, DISC_TAGT);
                 return;
             }
@@ -3354,7 +3354,7 @@ namespace server
             {
                 int size = server::msgsizelookup(type);
                 if(size<=0) {
-                    if (anti_cheat_enabled) ci->ac.unknown_packet(type);
+                    if(anti_cheat_enabled) ci->ac.unknown_packet(type);
                     else disconnect_client(sender, DISC_TAGT);
                     return;
                 }
@@ -3388,7 +3388,7 @@ namespace server
         
         int clients = numclients(-1, false, true);
         int maxclients_ = maxclients;
-        if (spec_slots) maxclients_ += spec_count();
+        if(spec_slots) maxclients_ += spec_count();
         
         putint(p, clients);
         putint(p, 5);                   // number of attrs following
