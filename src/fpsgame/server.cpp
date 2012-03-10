@@ -449,10 +449,10 @@ namespace server
             if(flooding && activity && sendwarning)
             {
                 defformatstring(blockedinfo)(RED "[Flood Protection] You are blocked from %s for another %i second%s.", 
-					activity, 
-					remaining,
-					remaining != 1 ? "s" : ""
-				);
+                    activity, 
+                    remaining,
+                    remaining != 1 ? "s" : ""
+                );
                 sendprivtext(blockedinfo);
             }
             return flooding;
@@ -625,8 +625,8 @@ namespace server
         {
             ci->spy = false;
             sendf(-1, 1, "ri2s2i", N_INITCLIENT, ci->clientnum, ci->name, ci->team, ci->playermodel);
-			extern void sendresume(clientinfo *ci);
-			sendresume(ci);
+            extern void sendresume(clientinfo *ci);
+            sendresume(ci);
             event_connect(event_listeners(), boost::make_tuple(ci->clientnum, ci->spy));
             ci->connectmillis = totalmillis;
             ci->sendprivtext(RED "You've left the spy-mode.");
@@ -637,12 +637,12 @@ namespace server
             loopv(clients) if (clients[i] != ci && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(admin_info);            
         }
     }
-	
+
     inline int spy_cn(clientinfo *ci)
-	{
-		if(ci && ci->spy) return ci->clientnum;
-		return -1;
-	}
+    {
+        if(ci && ci->spy) return ci->clientnum;
+        return -1;
+    }
     
     int spy_count()
     {   
