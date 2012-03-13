@@ -141,11 +141,12 @@
                     putint(p, EXT_HOPMOD);
                     putint(p, EXT_HOPMOD_VERSION);
                     putint(p, revision());
+                    sendstring(version(), p);
                 }
-                sendstring(version(), p);
                 break;
             }
-
+    
+            /* hopmod extension */
             case EXT_HOPMOD:
             {
                 putint(p, EXT_NO_ERROR);
