@@ -1,7 +1,7 @@
 #!/bin/sh
 export REVISION=`svn info | grep 'Revision: ' | awk '{print $2}'`
 THREADS=1
-if [ -d "/proc" ]; then
+if [ `uname -s` = "Linux" -a -d "/proc" ]; then
     THREADS=`cat /proc/cpuinfo | grep processor | wc -l`
 fi
 ARG_LENGTH=$# 
