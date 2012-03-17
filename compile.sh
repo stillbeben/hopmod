@@ -1,6 +1,9 @@
 #!/bin/sh
 export REVISION=`svn info | grep 'Revision: ' | awk '{print $2}'`
-THREADS=`cat /proc/cpuinfo | grep processor | wc -l`
+THREADS=1
+if [ -d "/proc" ]; then
+    THREADS=`cat /proc/cpuinfo | grep processor | wc -l`
+fi
 ARG_LENGTH=$# 
 STRCOMPILE="Compiling"
 COMPILEDIR="release_build"
