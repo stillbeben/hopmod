@@ -395,7 +395,6 @@ void disconnect_client_now(int n, int reason)
     clients[n]->peer->data = NULL;
     server::deleteclientinfo(clients[n]->info);
     clients[n]->info = NULL;
-    clients[n]->num = n;
 }
 
 void disconnect_client(int n, int reason)
@@ -407,7 +406,6 @@ void disconnect_client(int n, int reason)
     clients[n]->peer->data = NULL;
     server::deleteclientinfo(clients[n]->info);
     clients[n]->info = NULL;
-    clients[n]->num = n;
 }
 
 void kicknonlocalclients(int reason)
