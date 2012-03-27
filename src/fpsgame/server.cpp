@@ -32,6 +32,7 @@ namespace game
 }
 
 extern ENetAddress masteraddress;
+extern void assign_new_cn(int n);
 
 namespace server
 {
@@ -623,18 +624,27 @@ namespace server
         concatstring(tmp, msg);
         loopv(clients) if(clients[i] != exclude && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(tmp);
     }
-            
-    
+
     #define MAXSPIES 5
     
-    int spycn = rnd(INT_MAX - MAXCLIENTS - MAXBOTS - MAXSPIES) + 1;    
+    int spycn = rnd(INT_MAX - ((MAXCLIENTS - MAXBOTS) * 2) - MAXSPIES) + 1;    
     vector<clientinfo *> spies;
     void real_cn(int &n) { n = spies[n-spycn]->n; }
+    void change_real_cn(void *info, int n)
+    { 
+        clientinfo *ci = (clientinfo *)info;
+        ci->n = n;
+    }
+    int spy_cns(vector<int> &cns) { loopv(spies) cns.add(spies[i]->n); return cns.length(); }
     
     void sendresume(clientinfo *ci);
     void sendinitclient(clientinfo *ci);
     void sendservinfo(clientinfo *ci);
     bool restorescore(clientinfo *ci);
+    void sendspawn(clientinfo *ci);
+
+    template<class T>
+    void sendstate(gamestate &gs, T &p);
     
     void set_spy(int cn, bool val)
     {
@@ -667,18 +677,23 @@ namespace server
             if(ci->messages.length() > 0) ci->messages.shrink(0);
             ci->spy = false;
             spies.remove(spycn - ci->clientnum);
-            ci->clientnum = ci->n;
+            assign_new_cn(ci->n);
+            ci->clientnum = ci->ownernum = ci->n;
             sendservinfo(ci);
             sendinitclient(ci);
             if(restorescore(ci)) sendresume(ci);
             event_connect(event_listeners(), boost::make_tuple(ci->clientnum, ci->spy));
             ci->connectmillis = totalmillis;
             ci->sendprivtext(RED "You've left the spy-mode.");
-            if(mastermode <= 1) setspectator(ci, 0);
+            if(mastermode <= 1)
+            {
+                ci->state.state = CS_ALIVE;
+                sendspawn(ci);
+            }
             else sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 1);
             sendf(-1, 1, "riisi", N_SETTEAM, cn, ci->team, -1);
+            if(ci->privilege) sendf(-1, 1, "ri4", N_CURRENTMASTER, ci->clientnum, ci->privilege, mastermode);
             admin_msg(ci, "%s left the spy-mode.", ci->name);
-            masterupdate = true;
         }
     }
 

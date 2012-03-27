@@ -395,6 +395,7 @@ void disconnect_client_now(int n, int reason)
     clients[n]->peer->data = NULL;
     server::deleteclientinfo(clients[n]->info);
     clients[n]->info = NULL;
+    clients[n]->num = n;
 }
 
 void disconnect_client(int n, int reason)
@@ -406,6 +407,7 @@ void disconnect_client(int n, int reason)
     clients[n]->peer->data = NULL;
     server::deleteclientinfo(clients[n]->info);
     clients[n]->info = NULL;
+    clients[n]->num = n;
 }
 
 void kicknonlocalclients(int reason)
@@ -427,17 +429,116 @@ void localclienttoserver(int chan, ENetPacket *packet)
     if(c) process(packet, c->num, chan);
 }
 
+void moveclient(client *oldclient, client *newclient)
+{
+    int num = newclient->num;
+    memcpy(newclient, oldclient, sizeof(client));
+    newclient->num = num;
+    if(newclient->type == ST_EMPTY) newclient->type = ST_TCPIP;
+    if(newclient->peer) newclient->peer->data = newclient;
+    oldclient->type = ST_EMPTY;
+    oldclient->info = NULL;
+    oldclient->peer = NULL;
+    server::change_real_cn(newclient->info, newclient->num);
+}
+
+void assign_new_cn(int n)
+{
+    if(n+1 == clients.length()) return;
+    client *oci = clients[n];
+    vector<int> v_spy_cns;
+    int spy_count = server::spy_cns(v_spy_cns);
+    loopv(clients) 
+    {
+        if(i == n) continue;
+        loopj(spy_count)
+        {
+            if(clients[i]->num == v_spy_cns[j])
+            {
+                client *spy_ci = clients[i];
+                moveclient(oci, clients[i]);
+                loopvk(clients) if(clients[k]->type == ST_EMPTY)
+                {
+                    moveclient(spy_ci, clients[i]);
+                    return;
+                }
+                client *c = new client;
+                c->num = clients.length();
+                moveclient(spy_ci, c);
+                clients.add(c);
+                return;
+                break;
+            }
+        }
+        if(clients[i]->type == ST_EMPTY)
+        {
+            moveclient(oci, clients[i]);
+            return;
+        }
+    }
+    client *c = new client;
+    c->num = clients.length();
+    moveclient(oci, c);
+    clients.add(c);
+}
+
 client &addclient()
 {
-    loopv(clients) if(clients[i]->type==ST_EMPTY)
+    vector<int> v_spy_cns;
+    int spy_count = server::spy_cns(v_spy_cns);
+    loopv(clients) 
     {
-        clients[i]->info = server::newclientinfo();
-        return *clients[i];
+        loopvj(v_spy_cns)
+        {
+            if(clients[i]->num == v_spy_cns[j])
+            {
+                client *spy_ci = clients[i];
+                loopvk(clients) if(clients[k]->type == ST_EMPTY)
+                {
+                    moveclient(spy_ci, clients[k]);
+                    clients[i]->info = server::newclientinfo();
+                    return *clients[i];
+                }
+                client *c = new client;
+                c->num = clients.length();
+                moveclient(spy_ci, c);
+                clients.add(c);
+                clients[i]->info = server::newclientinfo();
+                return *clients[i];
+                break;
+            }
+        }
+        if(clients[i]->type==ST_EMPTY)
+        {
+            clients[i]->info = server::newclientinfo();
+            return *clients[i];
+        }
+    }
+    vector<client *> tmp;
+    if(spy_count > 0)
+    {
+        loopi(spy_count)
+        {
+            for(int j = v_spy_cns.length()-1; j >= 0; j--)
+            {
+                if(clients[j]->num == v_spy_cns[i]) tmp.add(clients.remove(j));
+            }
+        }
     }
     client *c = new client;
     c->num = clients.length();
     c->info = server::newclientinfo();
     clients.add(c);
+    if(spy_count > 0)
+    {
+        loopvrev(tmp)
+        {
+            client *c = new client;
+            c->num = clients.length();
+            moveclient(tmp[i], c);
+            clients.add(c);
+        }
+    }
     return *c;
 }
 
@@ -610,7 +711,7 @@ void serverhost_process_event(ENetEvent & event)
             c.peer->data = &c;
             char hn[1024];
             copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
-            printf("client connected (%s)\n", c.hostname);
+            printf("client connected (%s) (%d)\n", c.hostname, c.num);
             
             if(!nonlocalclients)
             {
@@ -898,4 +999,5 @@ int main(int argc, char* argv[])
     
     return 0;
 }
+
 
