@@ -635,7 +635,6 @@ namespace server
     void sendinitclient(clientinfo *ci);
     void sendservinfo(clientinfo *ci);
     bool restorescore(clientinfo *ci);
-    void admin_msg(clientinfo *exclude, const char *fmt, ...);
     
     void set_spy(int cn, bool val)
     {
