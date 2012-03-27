@@ -611,6 +611,20 @@ namespace server
     
     extern void setspectator(clientinfo * spinfo, bool val, bool broadcast=true);
     
+    void admin_msg(clientinfo *exclude, const char *fmt, ...)
+    {
+        string msg;
+        va_list args;
+        va_start(args, fmt);
+        vformatstring(msg, fmt, args);
+        va_end(args);
+        string tmp;
+        copystring(tmp, RED "ADMIN-INFO: " BLUE);
+        concatstring(tmp, msg);
+        loopv(clients) if(clients[i] != exclude && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(tmp);
+    }
+            
+    
     #define MAXSPIES 5
     
     int spycn = rnd(INT_MAX - MAXCLIENTS - MAXBOTS - MAXSPIES) + 1;    
@@ -621,6 +635,7 @@ namespace server
     void sendinitclient(clientinfo *ci);
     void sendservinfo(clientinfo *ci);
     bool restorescore(clientinfo *ci);
+    void admin_msg(clientinfo *exclude, const char *fmt, ...);
     
     void set_spy(int cn, bool val)
     {
@@ -642,8 +657,7 @@ namespace server
                 sendf(-1, 1, "ri2", N_CDIS, cn);
                 ci->sendprivtext(RED "You've entered the spy-mode.");
             }
-            defformatstring(admin_info)(RED "ADMIN-INFO: %s joined the spy-mode.", ci->name);
-            loopv(clients) if(clients[i] != ci && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(admin_info);
+            admin_msg(ci, "%s joined the spy-mode.", ci->name);
             ci->spy = true;
             ci->clientnum = spycn + spies.length();
             spies.add(ci);
@@ -664,8 +678,7 @@ namespace server
             if(mastermode <= 1) setspectator(ci, 0);
             else sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 1);
             sendf(-1, 1, "riisi", N_SETTEAM, cn, ci->team, -1);
-            defformatstring(admin_info)(RED "ADMIN-INFO: %s left the spy-mode.", ci->name);
-            loopv(clients) if(clients[i] != ci && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(admin_info);
+            admin_msg(ci, "%s left the spy-mode.", ci->name);
             masterupdate = true;
         }
     }
@@ -2290,7 +2303,11 @@ namespace server
     void clientdisconnect(int n,int reason)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
-        if(ci->spy) spies.remove(ci->clientnum - spycn);
+        if(ci->spy) 
+        {
+            admin_msg(ci, "%s left the spy-mode.", ci->name);
+            spies.remove(ci->clientnum - spycn);
+        }
         
         const char * disc_reason_msg = "normal";
         if(reason != DISC_NONE || ci->disconnect_reason.length())
