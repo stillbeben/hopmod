@@ -42,8 +42,6 @@ namespace server
     extern int anti_cheat_system_rev;
     extern uint mcrc;
     extern void real_cn(int &n);
-    int spy_cns(vector<int> &cns);
-    void change_real_cn(void *info, int n);
     extern int spycn;
 }
 
