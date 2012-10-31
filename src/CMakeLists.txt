@@ -1,6 +1,5 @@
 add_subdirectory(enet)
 add_subdirectory(lua)
-add_subdirectory(boost)
 add_subdirectory(fungu)
 add_subdirectory(lsqlite3-7)
 add_subdirectory(hopmod/standalone/luapp)
