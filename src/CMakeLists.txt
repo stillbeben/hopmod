@@ -117,8 +117,9 @@ target_link_libraries(sauer_server
     -lrt
     sauertools
     lua_modules
-    ${BOOST_SIGNALS_LIBRARY}
-    ${BOOST_THREAD_LIBRARY}
+    -lboost_signals
+    -lboost_thread
+    -lboost_system
     ${ENET_LIBRARY})
 
 add_executable(keygen hopmod/standalone/keygen.cpp)

@@ -10,7 +10,7 @@ include_directories(
 
 add_executable(luapp luapp.cpp ../../lua.cpp)
 
-target_link_libraries(luapp ${LUA_LIBRARY} ${BOOST_SYSTEM_LIBRARY} ${FUNGU_STRING_LIBRARY} ${FUNGU_HTTP_LIBRARY} lua_modules -lrt)
+target_link_libraries(luapp ${LUA_LIBRARY} -lboost_system ${FUNGU_STRING_LIBRARY} ${FUNGU_HTTP_LIBRARY} lua_modules -lrt)
 
 install(TARGETS luapp RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}/utils)
 
