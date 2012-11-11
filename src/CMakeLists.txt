@@ -39,7 +39,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ENET_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIRS}
-    ${BOOST_INCLUDE_DIRS}
     ${FUNGU_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR})
 
