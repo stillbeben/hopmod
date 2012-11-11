@@ -58,7 +58,8 @@ namespace aiman
                 copystring(oldteam, bot->team, MAXTEAMLEN+1);
                 copystring(bot->team, t.team, MAXTEAMLEN+1);
                 sendf(-1, 1, "riisi", N_SETTEAM, bot->clientnum, bot->team, 0);
-                signal_reteam(bot->clientnum, oldteam, bot->team);
+                
+                event_reteam(event_listeners(), boost::make_tuple(bot->clientnum, oldteam, bot->team));
             }
             else teams.remove(0, 1);
         }
@@ -73,7 +74,7 @@ namespace aiman
 
     static inline bool validaiclient(clientinfo *ci)
     {
-        return ci->clientnum >= 0 && ci->state.aitype == AI_NONE && (ci->state.state!=CS_SPECTATOR || ci->local || ci->privilege);
+        return ci->clientnum >= 0 && ci->state.aitype == AI_NONE && (ci->state.state!=CS_SPECTATOR || ci->local || ci->privilege) && !ci->spy;
     }
     
 	clientinfo *findaiclient(clientinfo *exclude = NULL)
@@ -131,9 +132,11 @@ namespace aiman
 		ci->connected = true;
         ci->playerid = next_botid--;
         ci->sessionid = (rnd(0x1000000)*((totalmillis%10000)+1))&0xFFFFFF;
+        ci->lastposupdate = totalmillis;
+        ci->ac.reset(ci->clientnum);
         dorefresh = true;
         
-        signal_connect(ci->clientnum);
+        event_connect(event_listeners(), boost::make_tuple(ci->clientnum, false));
         
 		return ci;
 	}
@@ -144,8 +147,8 @@ namespace aiman
         if(!bots.inrange(cn)) return;
         if(smode) smode->leavegame(ci, true);
         sendf(-1, 1, "ri2", N_CDIS, ci->clientnum);
-        signal_botleft(ci->clientnum);
-        signal_disconnect(ci->clientnum,"");
+        event_botleft(event_listeners(), boost::make_tuple(ci->clientnum));
+        event_disconnect(event_listeners(), boost::make_tuple(ci->clientnum, ""));
         clientinfo *owner = (clientinfo *)getclientinfo(ci->ownernum);
         if(owner) owner->bots.removeobj(ci);
         clients.removeobj(ci);
@@ -179,12 +182,12 @@ namespace aiman
 		}
 	}
 
-	void shiftai(clientinfo *ci, clientinfo *owner)
+	void shiftai(clientinfo *ci, clientinfo *owner = NULL)
 	{
         clientinfo *prevowner = (clientinfo *)getclientinfo(ci->ownernum);
         if(prevowner) prevowner->bots.removeobj(ci);
 		if(!owner) { ci->aireinit = 0; ci->ownernum = -1; }
-		else { ci->aireinit = 2; ci->ownernum = owner->clientnum; owner->bots.add(ci); }
+		else if(ci->clientnum != owner->clientnum) { ci->aireinit = 2; ci->ownernum = owner->clientnum; owner->bots.add(ci); }
         dorefresh = true;
 	}
 
@@ -245,14 +248,20 @@ namespace aiman
         if(!ci->local && !ci->privilege) return;
         clientinfo * boti = addai(skill, !ci->local && ci->privilege < PRIV_ADMIN ? botlimit : -1);
         if(!boti) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to create or assign bot");
-        else signal_addbot(ci->clientnum, skill, boti->clientnum);
+        else
+        {
+            event_addbot(event_listeners(), boost::make_tuple(ci->clientnum, skill, boti->clientnum));
+        }
 	}
     
 	void reqdel(clientinfo *ci)
 	{
         if(!ci->local && !ci->privilege) return;
         if(!deleteai()) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to remove any bots");
-        else signal_delbot(ci->clientnum);
+        else
+        {
+            event_delbot(event_listeners(), boost::make_tuple(ci->clientnum));
+        }
 	}
 
     void setbotlimit(clientinfo *ci, int limit)

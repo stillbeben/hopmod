@@ -76,8 +76,8 @@ local text_event = server.event_handler("text", block_text)
 local sayteam_event = server.event_handler("sayteam", block_text)
 
 local function unload()
-    server.unref("mute")
-    server.unref("unmute")
+    server.mute = nil
+    server.unmute = nil
 end
 
 return {unload = unload}

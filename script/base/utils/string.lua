@@ -1,3 +1,5 @@
+local _ = require "underscore"
+
 function format_filesize(bytes)
     bytes = tonumber(bytes)
     if bytes < 1024 then return bytes .. "B"
@@ -16,35 +18,63 @@ end
 
 server.format_duration = format_duration
 
-function formatcol(col, text)
-    if text then return "\fs\f" .. col .. text .. "\fr" else return "\f" ..col end
-end
+function format_duration_str(seconds, table)
 
-function red(text) return formatcol(3,text) end
-function orange(text) return formatcol(6, text) end
-function green(text) return formatcol(0, text) end
-function white(text) return formatcol(9, text) end
-function yellow(text) return formatcol(2, text) end
-function magenta(text) return formatcol(5, text) end
-function blue(text) return formatcol(1, text) end
+    local periods = { }
+    
+    periods[1] = { "centuries", 3155692600 }
+    periods[2] = { "decades", 315569260 }
+    periods[3] = { "years", 31556926 }
+    periods[4] = { "months", 2629743 }
+    periods[5] = { "weeks", 604800 }
+    periods[6] = { "days", 86400 }
+    periods[7] = { "hours", 3600 }
+    periods[8] = { "minutes", 60 }
+    periods[9] = { "seconds", 1 }
 
-function string.split(s, pattern)
-    local a = {}
-    for x in string.gmatch(s, pattern) do
-        a[#a+1] = x
+    local durations = { }
+    
+    for _, p in ipairs(periods) do
+        local period = p[1]
+        local seconds_in_period = p[2]
+        
+        if seconds >= seconds_in_period then
+            local time = math.floor(seconds / seconds_in_period)
+            seconds = seconds - (time * seconds_in_period)
+            durations[#durations + 1] = { period, time }
+        end
     end
-    return a
+    
+    if table then return durations end
+
+    local formatted_time = ""
+    
+    for _, p in ipairs(durations) do
+        local period = p[1]
+        local time = p[2]     
+        formatted_time = string.format(
+            "%s %d %s",
+            formatted_time,
+            time,
+            _if(time == 1, string.sub(period, 1, string.len(period) - 1), period)
+        )
+    end
+    
+    return string.sub(formatted_time, 2, string.len(formatted_time))
+    
 end
+
+server.format_duration_str = format_duration_str
 
 function tabulate(text)
     
     local output = ""
     local cols = {}
-    local rows = text:split("[^\n]+")
+    local rows = _.to_array(string.gmatch(text, "[^\n]+"))
     
     for i in ipairs(rows) do
         
-        rows[i] = string.split(rows[i], "[%w%p/*]+")
+        rows[i] = _.to_array(string.gmatch(rows[i], "[%w%p/*]+"))
         
         for i,col in ipairs(rows[i]) do
             cols[i] = math.max(#col, cols[i] or 0)
@@ -65,7 +95,7 @@ end
 
 function print_list(...)
     local output = ""
-    for _, item in ipairs(arg) do
+    for _, item in ipairs({...}) do
         item = tostring(item)
         if #item > 0 then
             if #output > 0 then output = output .. ", " end
@@ -104,7 +134,7 @@ do
        else
           local Result = {}
           local Lookup = Built[CharSet] or AddLookup(CharSet)
-          local Range = table.getn(Lookup)
+          local Range = #Lookup
           math.randomseed( os.time() )
           for Loop = 1,Length do
 
@@ -114,42 +144,6 @@ do
           return table.concat(Result)
        end
     end
-end
-
-
--- Lua 5.1+ base64 v3.0 (c) 2009 by Alex Kloss <alexthkloss@web.de>
--- licensed under the terms of the LGPL2
--- character table string
-local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
-
--- encoding
-function base64_encode(data)
-    return ((data:gsub('.', function(x) 
-        local r,b='',x:byte()
-        for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
-        return r;
-    end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
-        if (#x < 6) then return '' end
-        local c=0
-        for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
-        return b:sub(c+1,c+1)
-    end)..({ '', '==', '=' })[#data%3+1])
-end
-
--- decoding
-function base64_decode(data)
-    data = string.gsub(data, '[^'..b..'=]', '')
-    return (data:gsub('.', function(x)
-        if (x == '=') then return '' end
-        local r,f='',(b:find(x)-1)
-        for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
-        return r;
-    end):gsub('%d%d%d?%d?%d?%d?%d?%d?', function(x)
-        if (#x ~= 8) then return '' end
-        local c=0
-        for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
-        return string.char(c)
-    end))
 end
 
 function strSplit(str, delim, maxNb)
@@ -164,7 +158,7 @@ function strSplit(str, delim, maxNb)
     local pat = "(.-)" .. delim .. "()"
     local nb = 0
     local lastPos
-    for part, pos in string.gfind(str, pat) do
+    for part, pos in string.gmatch(str, pat) do
         nb = nb + 1
         result[nb] = part
         lastPos = pos
@@ -177,12 +171,3 @@ function strSplit(str, delim, maxNb)
     return result
 end
 
-function strJoin(delimiter, list)
-  local string = list[1]
-  if #list >= 2 then
-	  for i = 2, #list do 
-		string = string .. delimiter .. list[i] 
-	  end
-  end
-  return string
-end

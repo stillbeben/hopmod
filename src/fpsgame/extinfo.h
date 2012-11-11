@@ -47,7 +47,7 @@
         putint(q, ci->state.health);
         putint(q, ci->state.armour);
         putint(q, ci->state.gunselect);
-        putint(q, ci->privilege);
+        putint(q, (!ci->hide_privilege ? ci->privilege : PRIV_NONE)); 
         putint(q, ci->state.state);
         uint ip = getclientip(ci->clientnum);
         q.put((uchar*)&ip, 3);
@@ -109,14 +109,15 @@
         {
             case EXT_UPTIME:
             {
-                putint(p, uint(totalmillis)/1000); //in seconds
+                putint(p, totalsecs); //in seconds
                 break;
             }
 			
             case EXT_HOPMOD:
 			{
-                putint(p, EXT_ERROR);
-                putint(p, extcmd); 
+                putint(p, EXT_NO_ERROR);
+                putint(p, revision());
+                sendstring(version(), p);
                 break;
             }	
 
@@ -128,7 +129,7 @@
                 if(cn >= 0)
                 {
                     loopv(clients) if(clients[i]->clientnum == cn) { ci = clients[i]; break; }
-                    if(!ci)
+                    if(!ci || ci->spy)
                     {
                         putint(p, EXT_ERROR); //client requested by id was not found
                         sendserverinforeply(p);
@@ -141,11 +142,11 @@
                 ucharbuf q = p; //remember buffer position
                 putint(q, EXT_PLAYERSTATS_RESP_IDS); //send player ids following
                 if(ci) putint(q, ci->clientnum);
-                else loopv(clients) putint(q, clients[i]->clientnum);
+                else loopv(clients) if(!clients[i]->spy) putint(q, clients[i]->clientnum);
                 sendserverinforeply(q);
             
                 if(ci) extinfoplayer(p, ci);
-                else loopv(clients) extinfoplayer(p, clients[i]);
+                else loopv(clients) if(!clients[i]->spy) extinfoplayer(p, clients[i]);
                 return;
             }
 

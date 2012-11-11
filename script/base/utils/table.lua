@@ -52,51 +52,10 @@ function table.deepcopy(object)
     return _copy(object)
 end
 
-function map_to_array(map)
-    local result = {}
-    for _,v in pairs(map) do
-        table.insert(result, v)
-    end
-    return result
-end
-
 function list_to_set(list)
     local set = {}
     for _,value in ipairs(list) do set[value] = true end
     return set
-end
-
-function validate_table(subject_table, schema)
-    
-    local function check_type(object, typename)
-        if type(object) ~= typename then error("expecting " .. typename) end
-    end
-    
-    check_type(subject_table, "table")
-    
-    for _, element in ipairs(schema) do
-        
-        local id = element[1]
-        local typeinfo = element[2]
-        
-        if not id then error("error in table schema") end
-        
-        local lookup = subject_table[id]
-        
-        if lookup == nil then
-            error("missing " .. id)
-        end
-        
-        if typeinfo then
-            if type(typeinfo) == "string" then
-                check_type(lookup, typeinfo)
-            elseif type(typeinfo) == "table" then
-                validate_table(lookup, typeinfo)
-            else
-                error("error in table schema")
-            end
-        end
-    end
 end
 
 function read_only(table)
@@ -116,24 +75,20 @@ function table.wrapped_index(t, index, offset)
     return t[index % #t + (offset or 0)]
 end
 
-function table.has_fields(t, ...)
-    for index in ipairs(arg) do
-        if not t[arg[index]] then
-            print("not have " .. arg[index])
-            return false
-        end
-    end
-    return true
-end
-
 function table.missing_fields(t, ...)
     table.remove(arg)
     local missing = {}
-    for index in ipairs(arg) do
+    for index in ipairs({...}) do
         if not t[arg[index]] then
             missing[#missing + 1] = name
         end        
     end
     return missing
+end
+
+function table_append(subject, extra_elements)
+    for i = 1, table.maxn(extra_elements) do
+        subject[#subject + 1] = extra_elements[i]
+    end
 end
 

@@ -14,8 +14,8 @@ auth.request_status = {
     TIMEOUT = 5             -- not waiting any longer
 }
 
-script("base/auth/directory.lua")
-load_once("base/auth/client.lua")
+exec("directory.lua")
+exec("client.lua")
 
 local requests = {}
 local next_request_id = 1
@@ -23,8 +23,20 @@ local next_request_id = 1
 local domain_listeners = {} -- handlers that want to be notified of a challenge completion for a domain
 local clients = {} -- used to store run-once listeners and challenge cache
 
-local function call_listeners(cn, user_id, domain, status)
+local function init_client_state(cn)
+    
+    if clients[cn] == nil then
+        clients[cn] = {
+            listeners = {},
+            has_key   = {},
+            authed    = {},
+            requests  = {},
+        }
+    end
+end
 
+local function call_listeners(cn, user_id, domain, status)
+    
     local listeners = domain_listeners[domain] or {}
     
     for _, listener in ipairs(listeners) do
@@ -43,9 +55,17 @@ local function call_listeners(cn, user_id, domain, status)
 end
 
 local function complete_request(request, status)
-
+    
     if status == auth.request_status.SUCCESS then
         clients[request.cn].authed[request.domain.id] = request.user_id
+    end
+    
+    if not server.player_has_joined_game(request.cn) then
+        if status == auth.request_status.SUCCESS then
+            server.player_join_game(request.cn)
+        else
+            server.player_reject_join_game(request.cn)
+        end
     end
     
     request.remote_request = nil
@@ -151,7 +171,9 @@ function internal.send_request(cn, user_id, domain)
 end
 
 local function start_auth_challenge(cn, user_id, domain)
-
+    
+    init_client_state(cn)
+    
     local domain_id = domain
     
     domain = auth.directory.get_domain(domain)
@@ -235,19 +257,8 @@ server.event_handler("auth_challenge_response", function(cn, request_id, answer)
 
 end)
 
-local function initClientTable(cn)
-
-    clients[cn] = {
-        listeners = {},
-        has_key   = {},
-        authed    = {},
-        requests  = {},
-    }
-    
-end
-
 server.event_handler("connect", function(cn)
-    initClientTable(cn)
+    init_client_state(cn)
 end)
 
 server.event_handler("disconnect", function(cn)
@@ -313,7 +324,7 @@ function auth.send_request(cn, domain_id, callback)
     
 end
 
-function auth.query_id(user_id, domain_id, callback)
+function auth.query_id(username, domain_id, callback)
     
     local domain = auth.directory.get_domain(domain_id)
     if not domain then error("unknown domain") end
@@ -326,7 +337,7 @@ function auth.query_id(user_id, domain_id, callback)
     end
     
     local function send_query()
-        domain.server.connection:query_id(next_request_id, user_id, domain_id, callback)
+        domain.server.connection:query_id(next_request_id, username, domain_id, callback)
         next_request_id = next_request_id + 1
     end
     

@@ -6,6 +6,7 @@
 extern int curtime;                     // current frame time
 extern int lastmillis;                  // last time
 extern int totalmillis;                 // total elapsed time
+extern uint totalsecs;
 extern int gamespeed, paused;
 
 enum
@@ -327,6 +328,7 @@ extern ENetPacket *sendfile(int cn, int chan, stream *file, const char *format =
 extern void sendpacket(int cn, int chan, ENetPacket *packet, int exclude = -1);
 extern void flushserver(bool force);
 extern int getnumclients();
+extern int getservermtu();
 extern uint getclientip(int n);
 extern void putint(ucharbuf &p, int n);
 extern void putint(packetbuf &p, int n);

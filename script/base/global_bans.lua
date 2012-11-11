@@ -1,9 +1,15 @@
 require "http.client"
 require "Json"
+--[[
+    You can checkout the bans in a readable form here:
+    
+        http://83.169.44.106/hopmod/view_bans.php
+        
+--]]
 
-local URL = "http://hopmod.googlecode.com/svn/data/bans.json"
+local URL = "http://83.169.44.106/hopmod/gbans.php"
 local ADMIN = "global"
-local UPDATE = 1000*60*60*24
+local UPDATE = 1000*60*60*0.5
 
 local bans = {}
 
@@ -11,7 +17,7 @@ local function update()
     http.client.get(URL, function(body, status)
         
         if not body then
-            server.log_error("Failed to the latest download global ban list")
+            server.log_error("Failed to download the global ban list: " .. status)
         end
         
         local data = Json.Decode(body)
@@ -23,17 +29,21 @@ local function update()
             
             updated_bans[ban.address] = true
             
-            if not bans[ban.address] then
-                server.ban(ban.address, -1, ADMIN)
+            if not server.is_banned(ban.address) then
+                local bantime = tonumber(ban.expire) or -1
+                if bantime ~= -1 then bantime = bantime - os.time(os.date("!*t")) end
+                local reason = ban.reason or "global ban"
+                server.ban(ban.address, bantime, ADMIN, reason, nil, true)
                 change = true
             end
             
             bans[ban.address] = nil
         end
         
-        for address in pairs(bans) do
+        local subtracted_bans = bans
+        for address in pairs(subtracted_bans) do
             server.unban(address)
-            change = false
+            change = true
         end
         
         bans = updated_bans

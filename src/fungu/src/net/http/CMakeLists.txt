@@ -15,7 +15,7 @@ include_directories(${FUNGU_INCLUDE_DIRS} ${BOOST_INCLUDE_DIR})
 
 add_library(${FUNGU_HTTP_LIBRARY} STATIC ${SOURCES})
 
-target_link_libraries(${FUNGU_HTTP_LIBRARY} ${FUNGU_STRING_LIBRARY} ${FUNGU_SCRIPT_LIBRARY} -pthread ${BOOST_SYSTEM_LIBRARY})
+target_link_libraries(${FUNGU_HTTP_LIBRARY} ${FUNGU_STRING_LIBRARY} -pthread ${BOOST_SYSTEM_LIBRARY})
 
 install(TARGETS 
             ${FUNGU_HTTP_LIBRARY}

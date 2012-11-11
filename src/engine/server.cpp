@@ -148,15 +148,39 @@ void getstring(char *text, ucharbuf &p, int len)
     while(*t++);
 }
 
+//HOPMOD
+static inline bool is_bad_char(uchar c)
+{
+    return c == '\r' || c == '\n' || (c >= 11 && c <= 13);
+}
+//END HOPMOD
+
 void filtertext(char *dst, const char *src, bool whitespace, int len)
 {
-    for(int c = *src; c; c = *++src)
+    for(int c = uchar(*src); c; c = uchar(*++src))
     {
-        switch(c)
+        if(c == '\f')
         {
-        case '\f': ++src; continue;
+            if(!*++src) break;
+            continue;
         }
-        if(isspace(c) ? whitespace : isprint(c))
+        //HOPMOD
+        bool f = false;
+        while(c)
+        {
+            if(is_bad_char(c)) f = true;
+            else break;
+            c = *++src;
+        }
+        if(f)
+        {
+            *dst++ = ' ';
+            if(!--len) break;
+            if(!is_bad_char(c)) *src--;
+            continue;
+        }
+        //END HOPMOD
+        if(iscubeprint(c) || (iscubespace(c) && whitespace))
         {
             *dst++ = c;
             if(!--len) break;
@@ -184,6 +208,10 @@ size_t tx_packets = 0 , rx_packets = 0, tx_bytes = 0, rx_bytes = 0;
 int laststatus = 0; 
 ENetSocket pongsock = ENET_SOCKET_NULL, lansock = ENET_SOCKET_NULL;
 
+size_t info_queries = 0;
+size_t tx_info_bytes = 0;
+size_t rx_info_bytes = 0;
+
 io_service main_io_service;
 
 io_service & get_main_io_service()
@@ -194,15 +222,27 @@ io_service & get_main_io_service()
 ip::udp::socket serverhost_socket(main_io_service);
 ip::udp::socket info_socket(main_io_service);
 ip::udp::socket laninfo_socket(main_io_service);
-ip::tcp::socket masterserver_client_socket(main_io_service);
 
 deadline_timer update_timer(main_io_service);
-deadline_timer register_timer(main_io_service);
 deadline_timer netstats_timer(main_io_service);
 
 void stopgameserver(int)
 {
     kicknonlocalclients(DISC_NONE);
+    
+    boost::system::error_code error;
+    
+    serverhost_socket.cancel(error);
+    if(error)
+        std::cerr<<"Error while trying to close game server socket: "<<error.message()<<std::endl;
+    
+    info_socket.close(error);
+    if(error)
+        std::cerr<<"Error while trying to close server info socket: "<<error.message()<<std::endl;
+    
+    laninfo_socket.close(error);
+    if(error)
+        std::cerr<<"Error while trying to close the server info lan socket: "<<error.message()<<std::endl;
     
     if(serverhost)
     {
@@ -215,14 +255,20 @@ void stopgameserver(int)
     if(lansock != ENET_SOCKET_NULL) enet_socket_destroy(lansock);
     pongsock = lansock = ENET_SOCKET_NULL;
     
-    update_timer.cancel();
-    register_timer.cancel();
-    netstats_timer.cancel();
+    update_timer.cancel(error);
+    if(error)
+        std::cerr<<"Error while trying to stop the update timer: "<<error.message()<<std::endl;
+    
+    netstats_timer.cancel(error);
+    if(error)
+        std::cerr<<"Error while trying to stop the net stats timer: "<<error.message()<<std::endl;
+    
 }
 
 void process(ENetPacket *packet, int sender, int chan);
 //void disconnect_client(int n, int reason);
 
+int getservermtu() { return serverhost ? serverhost->mtu : -1; }
 void *getclientinfo(int i) { return !clients.inrange(i) || clients[i]->type==ST_EMPTY ? NULL : clients[i]->info; }
 ENetPeer *getclientpeer(int i) { return clients.inrange(i) && clients[i]->type==ST_TCPIP ? clients[i]->peer : NULL; }
 int getnumclients()        { return clients.length(); }
@@ -418,6 +464,7 @@ static ENetAddress pongaddr;
 
 void sendserverinforeply(ucharbuf &p)
 {
+    tx_info_bytes += p.length();
     ENetBuffer buf;
     buf.data = p.buf;
     buf.dataLength = p.length();
@@ -503,9 +550,26 @@ static void check_timeouts()
     }
 }
 
+uint totalsecs = 0;
+
+static void update_time_vars()
+{
+    int millis = (int)enet_time_get();
+    curtime = millis - totalmillis;
+    lastmillis = totalmillis = millis;
+    
+    static int lastsec = 0;
+    if(totalmillis - lastsec >= 1000) 
+    {
+        int cursecs = (totalmillis - lastsec) / 1000;
+        totalsecs += cursecs;
+        lastsec += cursecs * 1000;
+    }
+}
+
 void update_server(const boost::system::error_code & error)
 {
-    if(error) return;
+    if(error == boost::asio::error::operation_aborted || error) return;
     
     localclients = nonlocalclients = 0;
     loopv(clients) switch(clients[i]->type)
@@ -514,16 +578,17 @@ void update_server(const boost::system::error_code & error)
         case ST_TCPIP: nonlocalclients++; break;
     }
     
-    int millis = (int)enet_time_get();
-    curtime = millis - totalmillis;
-    lastmillis = totalmillis = millis;
+    if(nonlocalclients)
+    {
+        update_timer.expires_from_now(boost::posix_time::milliseconds(5));
+        update_timer.async_wait(update_server);
+    }
+    
+    update_time_vars();
     
     server::serverupdate();
     
-    update_timer.expires_from_now(boost::posix_time::milliseconds(5));
-    update_timer.async_wait(update_server);
-    
-    check_timeouts();
+    if(serverhost) check_timeouts();
 }
 
 void serverhost_process_event(ENetEvent & event)
@@ -539,6 +604,13 @@ void serverhost_process_event(ENetEvent & event)
             char hn[1024];
             copystring(c.hostname, (enet_address_get_host_ip(&c.peer->address, hn, sizeof(hn))==0) ? hn : "unknown");
             printf("client connected (%s)\n", c.hostname);
+            
+            if(!nonlocalclients)
+            {
+                update_timer.cancel();
+                update_server(boost::system::error_code());
+            }
+            
             int reason = server::clientconnect(c.num, c.peer->address.host);
             if(!reason) nonlocalclients++;
             else disconnect_client(c.num, reason);
@@ -571,26 +643,34 @@ void serverhost_process_event(ENetEvent & event)
     }
 }
 
+
+void serverhost_input(boost::system::error_code error,const size_t s);
+
 void service_serverhost()
 {
     ENetEvent event;
-    while(enet_host_service(serverhost, &event, 0) == 1)
+    
+    int status;
+    while((status = enet_host_service(serverhost, &event, 0)) == 1)
     {
         serverhost_process_event(event);
     }
     
     if(server::sendpackets()) enet_host_flush(serverhost); //treat EWOULDBLOCK as packet loss
+    
+    if(status != -1) serverhost_socket.async_receive(null_buffers(), serverhost_input);
 }
 
 void serverhost_input(boost::system::error_code error,const size_t s)
 {
     if(error) return;
     service_serverhost();
-    serverhost_socket.async_receive(null_buffers(), serverhost_input);
 }
 
 void serverinfo_input(int fd)
 {
+    if(!nonlocalclients) update_time_vars();
+    
     ENetBuffer buf;
     uchar pong[MAXTRANS];
     
@@ -599,6 +679,9 @@ void serverinfo_input(int fd)
     int len = enet_socket_receive(fd, &pongaddr, &buf, 1);
     if(len < 0) return;
     
+    info_queries++;
+    rx_info_bytes += len;
+    
     ucharbuf req(pong, len), p(pong, sizeof(pong));
     p.len += len;
     server::serverinforeply(req, p);
@@ -606,13 +689,15 @@ void serverinfo_input(int fd)
 
 void info_input_handler(boost::system::error_code ec, const size_t s)
 {
-    if(!ec) serverinfo_input(pongsock);
+    if(ec) return;
+    serverinfo_input(pongsock);
     info_socket.async_receive(null_buffers(), info_input_handler);
 }
 
 void laninfo_input_handler(boost::system::error_code ec, const size_t s)
 {
-    if(!ec) serverinfo_input(lansock);
+    if(ec) return;
+    serverinfo_input(lansock);
     laninfo_socket.async_receive(null_buffers(), laninfo_input_handler);
 }
 
@@ -624,9 +709,19 @@ void netstats_handler(const boost::system::error_code & ec)
     
     if(has_stats) 
     {
-        printf("status: %d remote clients, %.1f send, %.1f rec (K/sec)\n", nonlocalclients, serverhost->totalSentData/60.0f/1024, serverhost->totalReceivedData/60.0f/1024);
+        printf("client traffic: %d remote clients, %.1f send, %.1f rec (KiB/s)\n", nonlocalclients, serverhost->totalSentData/60.0f/1024, serverhost->totalReceivedData/60.0f/1024);
         serverhost->totalSentData = 0;
         serverhost->totalReceivedData = 0;
+    }
+    
+    if(info_queries)
+    {
+        printf("info traffic: %zu queries/sec %.2f send, %.2f rec (KiB/s)\n", info_queries, 
+            tx_info_bytes/60.0f/1024, rx_info_bytes/60.0f/1024);
+        
+        info_queries = 0;
+        rx_info_bytes = 0;
+        tx_info_bytes = 0;
     }
     
     netstats_timer.expires_from_now(boost::posix_time::minutes(1));
@@ -773,15 +868,13 @@ void flushserverhost()
 
 vector<const char *> gameargs;
 
-int prog_argc;
-char * const * prog_argv;
+bool restart_program;
 
 int main(int argc, char* argv[])
 {
-    prog_argc = argc;
-    prog_argv = argv;
- 
-    if(enet_initialize()<0) fatal("Unable to initialise network module");
+    restart_program = false;
+     
+    if(enet_initialize()<0) fatal("Unable to initialise enet");
     atexit(enet_deinitialize);
     enet_time_set(0);
     
@@ -789,6 +882,11 @@ int main(int argc, char* argv[])
     game::parseoptions(gameargs);
     
     initserver(true, true);
+    
+    if(restart_program)
+    {
+        execv(argv[0], argv);   
+    }
     
     return 0;
 }

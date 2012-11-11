@@ -44,7 +44,7 @@ local function createListener(events)
     
     local function dequeueEvents()
         
-        if not listener.request or #listener.queue == 0 then
+        if not listener or not listener.request or #listener.queue == 0 then
             return
         end
     

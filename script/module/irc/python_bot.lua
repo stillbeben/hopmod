@@ -228,10 +228,7 @@ server.event_handler("mapvote", function(cn, map, mode)
     sendmsg(string.format(irc_color_orange("MAPVOTE: ")..irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_orange("MODE: ")..irc_color_neon("%s ")..irc_color_orange("MAP: ")..irc_color_neon("%s"),server.player_name(cn),cn,mode,map))
 end)
 
-local MAPNAME = ""
-
 server.event_handler("mapchange", function(map, mode)
-    MAPNAME = map
     local playerstats = ""
     local sc = tonumber(server.speccount)
     local pc = tonumber(server.playercount) - sc
@@ -239,7 +236,7 @@ server.event_handler("mapchange", function(map, mode)
     if sc > 0 then playerstats = playerstats .. " " .. tostring(sc) .. " spectators" end
     
     if sendmsg ~= nil then
-	sendmsg(string.format(irc_color_light_green("NEWGAME: ")..irc_color_orange("MODE: ")..irc_color_neon("%s ")..irc_color_orange("MAP: ")..irc_color_neon("%s")..irc_color_purple(" %i")..irc_color_neon(" Players"), map, mode, #server.clients()))
+	sendmsg(string.format(irc_color_light_green("NEWGAME: ")..irc_color_orange("MODE: ")..irc_color_neon("%s ")..irc_color_orange("MAP: ")..irc_color_neon("%s")..irc_color_purple(" %i")..irc_color_neon(" Players"), mode, map, #server.clients()))
     end
 end)
 

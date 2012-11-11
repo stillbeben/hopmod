@@ -5,7 +5,6 @@ set(FUNGU_STRING_LIBRARY fungu_string
 
 add_library(${FUNGU_STRING_LIBRARY} STATIC string.cpp)
 
-add_subdirectory(script)
 add_subdirectory(net)
 
 install(TARGETS

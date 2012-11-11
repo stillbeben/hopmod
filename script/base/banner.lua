@@ -15,14 +15,17 @@ local function sendServerBanner(cn)
         if sid ~= server.player_sessionid(cn) then return end
         
         server.player_msg(cn, server.motd)
-        server.player_vars(cn).shown_banner = true
+        
+        server.player_set_session_var(cn, "shown_banner", true)
     end)
 end
 
-local function onConnect(cn)
+local function onConnect(cn, is_spy)
 
-    local country = geoip.ip_to_country(server.player_ip(cn))
+    if is_spy or server.is_bot(cn) then return end
     
+    local country = geoip.ip_to_country(server.player_ip(cn))
+ 
     if show_country_message and #country > 0 then
         
         local normal_message = string.format("%s connected from %s.", green(server.player_displayname(cn)), green(country))

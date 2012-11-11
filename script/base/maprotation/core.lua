@@ -51,7 +51,7 @@ local function get_map_name(gamemode)
     if not (has_implementation() and implementation.get_map_name) then
         error("missing implementation function: get_map_name")
     end
-    
+
     local map_name = implementation.get_map_name(selection_index, gamemode)
 
     if map_name == server.map then
@@ -137,7 +137,7 @@ local function load_from_lists(var_prefix)
         
         for _, mapname in pairs(provisional) do
             
-            if supported_maps[mapname] then
+            if supported_map(mapname) then
                 rotation[#rotation + 1] = mapname
             else
                 server.log_error(string.format("Excluding unknown map %s in %s maps rotation.", mapname, varname))

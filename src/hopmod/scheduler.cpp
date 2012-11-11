@@ -1,142 +1,128 @@
-#ifdef BOOST_BUILD_PCH_ENABLED
-#include "pch.hpp"
-#endif
-
+#include <boost/bind.hpp>
 #include "hopmod.hpp"
-#include "free_function_scheduler.hpp"
+#include "main_io_service.hpp"
+#include "lua/modules/net/weak_ref.hpp"
+#include "lua/error_handler.hpp"
+using namespace boost::asio;
 
-#include <fungu/script.hpp>
-#include <fungu/script/lua/lua_function.hpp>
-using namespace fungu;
+namespace lua{
 
-static free_function_scheduler free_scheduled;
-
-static int sched_free_lua_function(lua_State * L, bool);
-static inline int sched_free_lua_sleep(lua_State *);
-static inline int sched_free_lua_interval(lua_State *);
-static script::any sched_free_cs_function(bool, script::env_object::call_arguments &, script::env_frame *);
-static void cancel_free_scheduled(int);
-static void cancel_timer(int);
-
-void init_scheduler()
+static void async_wait_handler(lua_State * L,
+    boost::shared_ptr<deadline_timer> timer, bool repeat, int countdown, lua::weak_ref callback, 
+    const boost::system::error_code & ec)
 {
-    static script::function<script::raw_function_type> free_sleep(boost::bind(sched_free_cs_function, false, _1, _2));
-    get_script_env().bind_global_object(&free_sleep, FUNGU_OBJECT_ID("sleep"));
+    if(callback.is_expired()) return;
     
-    static script::function<script::raw_function_type> free_interval(boost::bind(sched_free_cs_function, true, _1, _2));
-    get_script_env().bind_global_object(&free_interval, FUNGU_OBJECT_ID("interval"));
+    lua::get_error_handler(L);
+    int error_function = lua_gettop(L);
     
-    static script::function<void (int)> cancel_timer_func(cancel_timer);
-    get_script_env().bind_global_object(&cancel_timer_func, FUNGU_OBJECT_ID("cancel_timer"));
+    callback.get(L);
     
-    register_lua_function(sched_free_lua_sleep, "sleep");
-    register_lua_function(sched_free_lua_interval, "interval");
-    
-    signal_shutdown.connect(cancel_free_scheduled, boost::signals::at_front);
-}
-
-void cancel_free_scheduled(int)
-{
-    free_scheduled.cancel_all();
-}
-
-int call_lua_function(script::env_object::shared_ptr func, script::env * e)
-{
-    try
+    if(ec)
     {
-        script::env_frame frame(e);
-        std::vector<script::any> args;
-        script::callargs empty(args);
-        return script::lexical_cast<int>(func->call(empty,&frame));
+        callback.unref(L);
+        return;
     }
-    catch(script::error err)
+    
+    if(lua::pcall(L, 0, 1, error_function) == 0)
     {
-        script::source_context * ctx = (e->get_source_context() ? e->get_source_context()->clone() : NULL);
-        report_script_error(new script::error_trace(err,const_string(), ctx));
-        return -1;
+        repeat = repeat && lua_type(L, -1) == LUA_TNIL;
     }
-    catch(script::error_trace * errinfo)
+    else
     {
-        report_script_error(errinfo);
-        return -1;
+        event_listeners().log_error(repeat ? "interval" : "sleep", lua_tostring(L, -1));
+    }
+    
+    lua_pop(L, 2);
+    
+    if(repeat)
+    {
+        timer->expires_from_now(boost::posix_time::milliseconds(countdown));
+        timer->async_wait(boost::bind(async_wait_handler, L, timer, repeat, countdown, callback, _1));
+    }
+    else
+    {
+        callback.unref(L);
     }
 }
 
-int sched_free_lua_function(lua_State * L, bool repeat)
+static int deadline_timer_ptr_gc(lua_State * L)
+{
+    boost::weak_ptr<deadline_timer> * timer = reinterpret_cast<boost::weak_ptr<deadline_timer> *>(
+        luaL_checkudata(L, 1, "deadline_timer"));
+    
+    if(!timer->expired())
+    {
+        boost::system::error_code ec;
+        timer->lock()->cancel(ec);
+    }
+    
+    timer->~weak_ptr<deadline_timer>();
+    return 0;
+}
+
+int async_wait(lua_State * L, bool repeat)
 {
     int countdown = luaL_checkint(L, 1);
     luaL_checktype(L, 2, LUA_TFUNCTION);
     lua_pushvalue(L, 2);
     
-    script::env_object::shared_ptr luaFunctionObject = new script::lua::lua_function(L);
-    luaFunctionObject->set_adopted();
+    boost::shared_ptr<deadline_timer> timer(new deadline_timer(get_main_io_service()));
     
-    int id = free_scheduled.schedule(boost::bind(call_lua_function, luaFunctionObject, &get_script_env()), countdown, repeat);
-    lua_pushinteger(L, id);
+    timer->expires_from_now(boost::posix_time::milliseconds(countdown));
+    
+    timer->async_wait(boost::bind(async_wait_handler, L, timer, repeat, countdown,
+        lua::weak_ref::create(L), _1));
+    
+    new (lua_newuserdata(L, sizeof(boost::weak_ptr<deadline_timer>))) boost::weak_ptr<deadline_timer>(timer);
+    
+    luaL_newmetatable(L, "deadline_timer");
+    lua_pushliteral(L, "__gc");
+    lua_pushcfunction(L, deadline_timer_ptr_gc);
+    lua_settable(L, -3);
+    lua_setmetatable(L, -2);
+    
     return 1;
 }
 
-int sched_free_lua_sleep(lua_State * L)
+int sleep(lua_State * L)
 {
-    return sched_free_lua_function(L, false);
+    return async_wait(L, false);
 }
 
-int sched_free_lua_interval(lua_State * L)
+int interval(lua_State * L)
 {
-    return sched_free_lua_function(L, true);
+    return async_wait(L, true);
 }
 
-int call_cs_function(script::code_block code, script::env * e)
+int cancel_timer(lua_State * L)
 {
-    script::env_frame frame(e);
-    
-    try
-    {
-        return script::lexical_cast<int>(code.eval_each_expression(&frame));
-    }
-    catch(script::error err)
-    {
-        report_script_error(new script::error_trace(err,const_string(),code.get_source_context()->clone()));
-        return -1;
-    }
-    catch(script::error_trace * errinfo)
-    {
-        report_script_error(errinfo);
-        return -1;
-    }
+    boost::weak_ptr<deadline_timer> timer = *reinterpret_cast<boost::weak_ptr<deadline_timer> *>(
+        luaL_checkudata(L, 1, "deadline_timer"));
+    if(timer.expired()) return 0;
+    boost::system::error_code ec;
+    timer.lock()->cancel(ec);
+    return 0;
 }
 
-script::any sched_free_cs_function(bool repeat, script::env_object::call_arguments & args, script::env_frame * frame)
-{
-    script::callargs_serializer cs(args, frame);
-    
-    int countdown = cs.deserialize(args.front(),type_tag<int>());
-    args.pop_front();
-    
-    script::code_block code = cs.deserialize(args.front(),type_tag<script::code_block>());
-    args.pop_front();
-    
-    int id = free_scheduled.schedule(boost::bind(call_cs_function, code, frame->get_env()), countdown, repeat);
-    return id;
-}
+} //namespace lua
 
-void sched_callback(int (* fun)(void *),void * closure)
+static void sched_callback_handler(deadline_timer * timer, int (* fun)(void *), void * closure, 
+    const boost::system::error_code & ec)
 {
-    //FIXME memory leak for closure when job is cancelled
-    free_scheduled.schedule(boost::bind(fun, closure), 0);
+    fun(closure);
+    delete timer;
 }
 
 void sched_callback(int (* fun)(void *), void * closure, int delay)
 {
-    free_scheduled.schedule(boost::bind(fun, closure), delay);
+    deadline_timer * timer = new deadline_timer(get_main_io_service());
+    timer->expires_from_now(boost::posix_time::milliseconds(delay));
+    timer->async_wait(boost::bind(sched_callback_handler, timer, fun, closure, _1));
 }
 
-void update_scheduler(int timenow)
+void sched_callback(int (* fun)(void *), void * closure)
 {
-    free_scheduled.update(timenow);
+    get_main_io_service().post(boost::bind(fun, closure));
 }
 
-static void cancel_timer(int job_id)
-{
-    free_scheduled.cancel(job_id);
-}

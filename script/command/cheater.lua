@@ -16,7 +16,6 @@ end
 local function run(cn,cheat)
 
 	if not cheat then
-
 		return false, usage
 	end
 
@@ -48,7 +47,6 @@ local function run(cn,cheat)
 	server.player_vars(cn).cheater[cheat] = cheat_report
 
 	if cheat_report > 4 then
-
 		server.player_msg(cn,orange("Don't spam with the #cheater command or you will be ignored."))
 	end
 

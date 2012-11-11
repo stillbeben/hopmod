@@ -120,7 +120,7 @@ local function open(settings)
     find_names_by_ip = db:prepare("SELECT DISTINCT name FROM players WHERE ipaddr = :ipaddr ORDER BY name ASC")
     if not find_names_by_ip then return nil, db:error_message() end
     
-    server.stats_db_absolute_filename = server.PWD .. "/" .. settings.filename
+    server.stats_db_absolute_filename = os.getcwd() .. "/" .. settings.filename
     
     return true
 end

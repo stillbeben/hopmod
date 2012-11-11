@@ -74,8 +74,6 @@ end
 
 function internal.getPlayerTable(player_id)
     
-    player_id = tonumber(player_id)
-    
     if players[player_id] then 
         return players[player_id]
     end
@@ -145,7 +143,7 @@ function internal.addPlayer(cn)
         if server.player_vars(cn).stats_auth_name then
             t.auth_name = server.player_vars(cn).stats_auth_name
         else
-            server.send_auth_request(cn, auth_domain)
+            auth.send_auth_request(cn, auth_domain)
         end
     end
     
@@ -255,7 +253,7 @@ function internal.commit()
         players = nil
         return
     end
-
+    
     for _, backend in pairs(internal.backends) do
         catch_error(backend.commit_game, game, players, teams)
     end
@@ -279,14 +277,12 @@ function internal.loadAuthHandlers(domain)
         
         if status ~= auth.request_status.SUCCESS then return end
         
-        server.player_vars(cn).stats_auth_name = user_id
+        server.player_vars(cn).stats_auth_name = name
         
         local t = internal.getPlayerTable(server.player_id(cn))
-        t.auth_name = user_id
+        t.auth_name = name
         
-        if server.stats_tell_auth_name == 1 then
-            server.player_msg(cn, "You are logged in as " .. magenta(user_id) .. ".")
-        end
+        server.player_msg(cn, "You are logged in as " .. magenta(name) .. ".")
     end)
 
     function internal.unloadAuthHandlers()

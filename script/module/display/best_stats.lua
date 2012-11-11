@@ -2,13 +2,15 @@
     Display best player stats at intermission
     
     Copyright (C) 2009 Graham Daws
+    
+    01/08/2011 Thomas: use score() instead of frags(), better kpd calculation, use client way for accuracy
 ]]
 
 local stats = server.player_vars_table(server.player_id)
 
 local stats_record_class = {
     
-    update = function(object, cn, value)
+    update = function(object, cn, value, desc)
         
         if not object.value then
             object.value = value
@@ -16,7 +18,11 @@ local stats_record_class = {
             return
         end
         
-        if value < object.value then return end
+    if desc ~= nil then
+            if value > object.value then return end
+        else
+            if value < object.value then return end
+        end
         
         if value == object.value then
             table.insert(object.cn, cn)
@@ -42,7 +48,8 @@ local best = {
     accuracy   = {},
     takeflag   = {},
     scoreflag  = {},
-    returnflag = {}
+    returnflag = {},
+    timetrial  = {}
 }
 
 for _, subobject in pairs(best) do
@@ -59,12 +66,12 @@ server.event_handler("intermission", function()
     local function update_stats(player)
     
         local cn = player.cn
-        local qualify = player:frags() > round(server.gamemillis / 60000); -- game duration in mins
+        local qualify = player:score() > round(server.gamemillis / 60000); -- game duration in mins
         
         if qualify then
-            best.accuracy:update(cn, player:accuracy())
-            best.frags:update(cn, player:frags())
-            best.kpd:update(cn, player:frags() - player:deaths())
+            best.accuracy:update(cn, player:accuracy2())
+            best.frags:update(cn, player:score())
+            best.kpd:update(cn, player:score() - player:deaths())
         end
         
         if check_ctf_stats then
@@ -74,6 +81,12 @@ server.event_handler("intermission", function()
             best.takeflag:update(cn, player_stats.takeflag or 0)
             best.scoreflag:update(cn, player_stats.scoreflag or 0)
             best.returnflag:update(cn, player_stats.returnflag or 0)
+            
+            local timetrial = player_stats.timetrial or 0
+            if timetrial > 0 then
+                best.timetrial:update(cn, timetrial, true)
+            end
+            
         end
         
     end
@@ -83,12 +96,15 @@ server.event_handler("intermission", function()
     end
     
     for b in server.gbots() do
-	update_stats(b)
+        update_stats(b)
     end
     
     if best.kpd.value then
         local cn = best.kpd.cn[1]
-        best.kpd.value = round((server.player_frags(cn)+1)/(server.player_deaths(cn)+1), 2)
+        local frags = server.player_score(cn)
+        local deaths = server.player_deaths(cn)
+        if deaths == 0 then deaths = 1 end
+        best.kpd.value = round(frags / deaths, 2)
     end
     
     local function format_message(record_name, record, append)
@@ -111,7 +127,8 @@ server.event_handler("intermission", function()
         local flagstats_message = print_list(
             format_message("stolen", best.takeflag), 
             format_message("scored", best.scoreflag),
-            format_message("returned", best.returnflag))
+            format_message("returned", best.returnflag),
+            format_message("flagrun", best.timetrial, " ms"))
         
         if #flagstats_message > 0 then
             server.msg(yellow("Best flag stats, ") .. flagstats_message)
@@ -130,9 +147,14 @@ server.event_handler("takeflag", function(cn)
     player_stats.takeflag = (player_stats.takeflag or 0) + 1
 end)
 
-server.event_handler("scoreflag", function(cn)
+server.event_handler("scoreflag", function(cn, _, __, timetrial)
     local player_stats = stats.vars(cn)
     player_stats.scoreflag = (player_stats.scoreflag or 0) + 1
+    player_stats.timetrial = (player_stats.timetrial or 0)
+    if timetrial == 0 then return end
+    if player_stats.timetrial == 0 or player_stats.timetrial > timetrial then
+        player_stats.timetrial = timetrial
+    end
 end)
 
 server.event_handler("returnflag", function(cn)

@@ -1,3 +1,8 @@
+server.event_handler("mapchange", function()
+    gamemodeinfo = server.get_gamemode_info()
+end)
+gamemodeinfo = server.get_gamemode_info()
+
 -- Array of game mode names, used by the map rotation module
 gamemodes = {
     [ 1] = "ffa",
@@ -19,7 +24,10 @@ gamemodes = {
     [17] = "insta hold",
     [18] = "efficiency ctf",
     [19] = "efficiency protect",
-    [20] = "efficiency hold"
+    [20] = "efficiency hold",
+    [21] = "efficiency collect",
+    [22] = "insta collect",
+    [23] = "collect"
 }
 
 do
@@ -61,7 +69,10 @@ do
         ["eprotect"]		= "efficiency protect",
         ["efficiencyhold"]	= "efficiency hold",
         ["effichold"]		= "efficiency hold",
-        ["ehold"]		= "efficiency hold"
+        ["ehold"]		= "efficiency hold",
+        ["effichold"]		= "efficiency hold",
+        ["ecollect"]		= "efficiency collect",
+        ["icollect"]	= "insta collect"
     }
     
     function server.parse_mode(mode)
@@ -94,7 +105,10 @@ do
         ["insta hold"]          = true,
         ["efficiency ctf"]      = true,
         ["efficiency protect"]  = true,
-        ["efficiency hold"]     = true
+        ["efficiency hold"]     = true,
+        ["insta collect"]       = true,
+        ["collect"]             = true,
+        ["efficiency collect"]  = true
     }
         
     function server.valid_gamemode(input)

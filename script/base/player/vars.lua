@@ -1,109 +1,94 @@
-require "Json"
-require "net"
+require "journal"
 
-local VARS_FILE = "log/vars"
-local MINIMUM_UPDATE_INTERVAL = 1000 * 60 * 60
+local IPMASK_VARS_FILE = "log/player_vars_journal"
 
-local variablesByIp = {}
-local ipVariableNamesIndex = {}
-local variablesByIpIndex = net.ipmask_table()
-local variablesById = {}
+local ipmask_vars = {}
+local ipmask_vars_by_ipmask = net.ipmask_table()
+local ipmask_vars_by_name = {}
+local player_session_vars = {}
 
-for _, cn in ipairs(server.clients()) do
-    local id = server.player_id(cn)
-    variablesById[id] = {}
-end
+local journal_file = journal.writer_open(IPMASK_VARS_FILE)
 
-local lastsave = 0
-
-local function checkValue(value)
-    if type(value) == "function" or type(value) == "userdata" then error("cannot store value of a " .. type(value) .. " type") end
-end
-
-local function saveVars()
+local function load_vars()
     
-    local tmpfilename = VARS_FILE .. os.time()
+    ipmask_vars = {}
+    ipmask_vars_by_ipmask = net.ipmask_table()
+    ipmask_vars_by_name = {}
     
-    local file = io.open(tmpfilename, "w")
-    if not file then
-        server.log_error("Unable to save player vars")
+    local writes, error_message = journal.load(IPMASK_VARS_FILE)
+    
+    if not writes then
+        io.stderr:write(string.format("failed to load stored player variables: %s\n", error_message))
+        return
     end
-    file:write(Json.Encode(variablesByIp))
-    file:close()
     
-    os.remove(VARS_FILE .. ".bck")
-    os.rename(VARS_FILE, VARS_FILE .. ".bck")
-    os.remove(VARS_FILE)
-    os.rename(tmpfilename, VARS_FILE)
-end
-
-local function loadVars()
-
-    local file = io.open(VARS_FILE)
-    if not file then return end
-    variablesByIp = Json.Decode(file:read("*a")) or {}
-    file:close()
+    local set_ip_var = server.set_ip_var
     
-    for key, value in pairs(variablesByIp) do
-        if not empty(value) then
-            variablesByIpIndex[key] = value
-        else
-            variablesByIp[key] = nil
-        end
+    for _, write in pairs(writes) do
+        set_ip_var(write[1], write[2], write[3], true)
     end
 end
 
-function server.player_vars(cn)
-    local id = server.player_id(cn)
-    if id == -1 then error("invalid cn") end
-    local vars = variablesById[id]
-    return vars
-end
-
-function server.set_ip_var(ipmask, name, value)
+function server.set_ip_var(ipmask, name, value, dont_commit)
     
-    ipmask = net.ipmask(ipmask)
+    ipmask = net.ipmask(ipmask):to_string() -- Normalized ipmask string representation
     
-    local matches = variablesByIpIndex[ipmask]
-    local vars = matches[#matches]
-    
-    ipmask = ipmask:to_string()
-    
+    local vars = ipmask_vars[ipmask]
     if not vars then
         vars = {}
-        variablesByIp[ipmask] = vars
-        variablesByIpIndex[ipmask] = vars
+        ipmask_vars[ipmask] = vars
+        ipmask_vars_by_ipmask[ipmask] = vars
     end
     
-    vars[name] = value
+    local existing_value = vars[name]
     
-    -- Add variable instance to the variable names index
-    local instances = ipVariableNamesIndex[name]
-    if not instances then
-        instances = {}
-        ipVariableNamesIndex[name] = instances
+    if value == existing_value then
+        return
     end
-    instances[#instances + 1] = {ipmask, value, vars}
     
-    -- Set as player variable for matching players currently connected
-    for client in server.gclients() do
-        if net.ipmask(ipmask) == net.ipmask(client:iplong()) then
-            variablesById[client:id()][name] = value
+    -- Update the ipmask_vars_by_name table
+    if existing_value then
+        if not value then
+            local vars_by_name = ipmask_vars_by_name[name]
+            for index, instance in pairs(vars_by_name) do
+                if instance[1] == ipmask then
+                    table.remove(vars_by_name, index)
+                end
+            end
+        end
+    else
+        if value then
+            local vars_by_name = ipmask_vars_by_name[name]
+            if not vars_by_name then
+                vars_by_name = {}
+                ipmask_vars_by_name[name] = vars_by_name
+            end
+            vars_by_name[#vars_by_name + 1] = {ipmask, value}
         end
     end
-end
-
-function server.ip_var_instances(name)
-    return ipVariableNamesIndex[name]
+        
+    vars[name] = value
+    
+    -- Remove the ipmask key when the vars table becomes empty
+    if not value then
+        if next(vars) == nil then
+            ipmask_vars[ipmask] = nil
+            ipmask_vars_by_ipmask[ipmask] = nil   
+        end
+    end
+    
+    if not dont_commit then
+        journal_file:write(ipmask, name, value)
+    end
 end
 
 function server.ip_vars(ipmask)
-
+    
     if not ipmask then
-        return variablesByIp
+        return ipmask_vars
     end
     
-    local matches = variablesByIpIndex[ipmask]
+    local matches = ipmask_vars_by_ipmask[ipmask]
     local vars = {}
     for _, match in ipairs(matches) do
         for key, value in pairs(match) do
@@ -113,32 +98,33 @@ function server.ip_vars(ipmask)
     return vars
 end
 
-server.event_handler("connect", function(cn)
+function server.ip_var_instances(name)
+    return ipmask_vars_by_name[name] or {}
+end
 
-    local id = server.player_id(cn)
-    variablesById[id] = variablesById[id] or {}
+function server.player_set_session_var(cn, name, value)
+    local session_id = server.player_sessionid(cn)
+    local session_vars = player_session_vars[session_id]
+    if not session_vars then
+        session_vars = {}
+        player_session_vars[session_id] = session_vars
+    end
+    session_vars[name] = value
+end
+
+function server.player_vars(cn)
     
-    local matches = variablesByIpIndex[net.ipmask(server.player_iplong(cn))]
-    local vars = variablesById[id]
-    for _, match in ipairs(matches) do
-        for key, value in pairs(match) do
-            vars[key] = value
-        end
-    end
-end)
+    local id = server.player_id(cn)
+    if id == -1 then error("invalid cn") end
+    
+    local ip_vars = server.ip_vars(server.player_ip(cn))
+    
+    local session_vars = player_session_vars[server.player_sessionid(cn)] or {}
+    setmetatable(session_vars, {__index = ip_vars})
+    
+    return session_vars
+end
 
-server.event_handler("renaming", function(cn, futureId)
-    local currentId = server.player_id(cn)
-    variablesById[futureId] = variablesById[currentId]
-    variablesById[currentId] = nil
-end)
+load_vars()
 
-server.event_handler("disconnect", function()
-    if server.playercount == 0 and server.uptime - lastsave > MINIMUM_UPDATE_INTERVAL then
-        saveVars()
-        lastsave = server.uptime
-    end
-end)
 
-server.event_handler("started", loadVars)
-server.event_handler("shutdown", saveVars)

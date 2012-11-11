@@ -1,31 +1,48 @@
--- Module to Prevent Players from using offensive names
--- Add names to conf/name_bans.txt!
--- (c) 2010 Thomas
+--[[
+    Module to Prevent Players from using offensive names
+    
+    Add names to conf/name_bans.txt!
+    
+    (c) 2010 Thomas
+    
+    Changelog
+        24/05/2011 - Tell the renamed client that they have been renamed (GD)
+        24/05/2011 - Check file is open before reading (GD)
+        24/05/2011 - Disable pattern matching (GD)
+        24/05/2011 - Use underscore library
+        
+    TODO
+        * Use binary search
+]]
 
+local _ = require "underscore"
 
-local fhandle = io.open("conf/name_bans.txt")
-local banned_names = string.split(fhandle:read("*a"), "[^ ]+")
-fhandle:close()
+local file = io.open("conf/name_bans.txt")
+if not file then
+    error("file not found: 'conf/name_bans.txt'")
+end
+
+local banned_names = _.map(string.gmatch(file:read("*a"), "[^ \n]+"), string.upper)
+
+file:close()
 
 local function is_banned_name(name)
-	local name = string.upper(name)
-	for _, ban_name in ipairs(banned_names) do
-		local ban_name = string.upper(ban_name)
-		if string.find(name, ban_name) then
-			return true
-		end
-	end
-	return false
+    name = string.upper(name)
+    return _.any(banned_names, function(banned_name)
+        return string.find(name, banned_name, 1, true) ~= nil
+    end)
 end
 
 server.event_handler("connecting", function(cn, ip, name)
-	if is_banned_name(name) then
-		return -1
-	end
+    if is_banned_name(name) then
+        return -1
+    end
 end)
 
 server.event_handler("rename", function(cn, old, new)
-	if is_banned_name(new) then
-		server.player_rename(cn, "unnamed", true)
-	end
+    if is_banned_name(new) then
+        server.player_rename(cn, "unnamed", true)
+        server.player_msg(cn, red(string.format("'%s' is a banned name", new))
+    end
 end)
+

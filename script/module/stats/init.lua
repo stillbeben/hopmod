@@ -16,16 +16,12 @@ if using_sqlite then
         
         commit_backends.sqlite3 = dofile("./script/module/stats/sqlite3.lua")
         
-        local is_open, error_message = catch_error(commit_backends.sqlite3.open, {
+        catch_error(commit_backends.sqlite3.open, {
             filename = server.stats_db_filename, 
             schemafile = "./script/module/stats/schema.sql",
             exclusive_locking = server.stats_sqlite_exclusive_locking,
             synchronous = server.stats_sqlite_synchronous
         })
-        
-        if not is_open then
-            error(error_message) -- log but don't throw
-        end
     end)()
 end
 

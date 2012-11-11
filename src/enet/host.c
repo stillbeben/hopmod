@@ -38,6 +38,7 @@ enet_host_create (const ENetAddress * address, size_t peerCount, size_t channelL
     host = (ENetHost *) enet_malloc (sizeof (ENetHost));
     if (host == NULL)
       return NULL;
+    memset (host, 0, sizeof (ENetHost));
 
     host -> peers = (ENetPeer *) enet_malloc (peerCount * sizeof (ENetPeer));
     if (host -> peers == NULL)
@@ -210,6 +211,7 @@ enet_host_connect (ENetHost * host, const ENetAddress * address, size_t channelC
         channel -> outgoingReliableSequenceNumber = 0;
         channel -> outgoingUnreliableSequenceNumber = 0;
         channel -> incomingReliableSequenceNumber = 0;
+        channel -> incomingUnreliableSequenceNumber = 0;
 
         enet_list_clear (& channel -> incomingReliableCommands);
         enet_list_clear (& channel -> incomingUnreliableCommands);

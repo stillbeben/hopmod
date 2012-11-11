@@ -1,3 +1,5 @@
+local _ = require "underscore"
+
 local is_authserver = (server.is_authserver or 0) == 1
 
 local filename = "server"
@@ -16,7 +18,7 @@ function server.log(msg)
     logfile:flush()
 end
 
-server.event_handler("shutdown", bind(logfile.close, logfile))
+server.event_handler("shutdown", _.curry(logfile.close, logfile))
 
 if not server.is_authserver then
 
@@ -24,10 +26,14 @@ if not server.is_authserver then
         print(msg)
     end
     
-    function server.log_error(msg)
-        assert(msg ~= nil)
+    function server.log_error(error_message)
+        
+        if type(error_message) == "table" and type(error_message[1]) == "string" then
+            error_message = error_message[1]
+        end
+        
         io.stderr:write(os.date("[%a %d %b %X] ",os.time()))
-        io.stderr:write(msg)
+        io.stderr:write(error_message)
         io.stderr:write("\n")
         io.stderr:flush()
     end

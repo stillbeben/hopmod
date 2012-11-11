@@ -32,6 +32,11 @@ function Teams(server){
         eventDispatcher.signalEvent("scoreupdate", team, score);
     });
     
+    event_handler("scoreflag", function(cn, team, score){
+        self.score[team] = score;
+        eventDispatcher.signalEvent("scoreflag", cn, team, score);
+    });
+    
     event_handler("mapchange", function(map, gamemode){
         self.score = {};
         if(GamemodeInfo[gamemode].teams){

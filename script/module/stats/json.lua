@@ -1,5 +1,5 @@
-
-require "Json"
+local Json = require "Json"
+local _ = require "Underscore"
 
 local function commit_game(game, players, teams)
 
@@ -10,7 +10,7 @@ local function commit_game(game, players, teams)
     
     local root = {}
     root.game = game
-    root.players = map_to_array(players)
+    root.players = _.values(players)
     root.teams = teams
     
     file:write(Json.Encode(root))

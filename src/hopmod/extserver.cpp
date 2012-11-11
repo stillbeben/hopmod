@@ -24,7 +24,7 @@ struct disconnect_info
 static int execute_disconnect(void * info_vptr)
 {
     disconnect_info * info = reinterpret_cast<disconnect_info *>(info_vptr);
-    clientinfo * ci = reinterpret_cast<clientinfo *>(getclientinfo(info->cn));
+    clientinfo * ci = getinfo(info->cn);
     if(!ci || ci->sessionid != info->session_id)
     {
         delete info;
@@ -36,7 +36,7 @@ static int execute_disconnect(void * info_vptr)
     return 0;
 }
 
-void disconnect(int cn, int code, const std::string & reason)
+void disconnect(int cn, int code, std::string reason)
 {
     clientinfo * ci = get_ci(cn);
 
@@ -54,7 +54,10 @@ void changetime(int remaining)
     gamelimit = gamemillis + remaining;
     if(remaining > 0) sendf(-1, 1, "ri2", N_TIMEUP, remaining / 1000);
     next_timeupdate = gamemillis + (remaining % (60*1000));
-    if(gamemillis < next_timeupdate) signal_timeupdate(get_minutes_left(), get_seconds_left());
+    if(gamemillis < next_timeupdate)
+    {
+        event_timeupdate(event_listeners(), boost::make_tuple(get_minutes_left(), get_seconds_left()));
+    }
 }
 
 int get_minutes_left()
@@ -82,10 +85,28 @@ void player_msg(int cn,const char * text)
     get_ci(cn)->sendprivtext(text);
 }
 
-int player_id(int cn)
+int player_id(lua_State * L)
 {
-    clientinfo * ci = getinfo(cn);
-    return (ci ? ci->playerid : -1);
+    int cn = luaL_checkint(L, 1);
+    clientinfo * ci = get_ci(cn);
+        
+    luaL_Buffer buffer;
+    luaL_buffinit(L, &buffer);
+    
+    if(ci->state.aitype == AI_NONE)
+    {
+        uint ip_long = getclientip(get_ci(cn)->clientnum);
+        luaL_addlstring(&buffer, reinterpret_cast<const char *>(&ip_long), sizeof(ip_long));
+        luaL_addlstring(&buffer, ci->name, strlen(ci->name)); 
+    }
+    else
+    {
+        luaL_addstring(&buffer, "bot");
+        luaL_addlstring(&buffer, reinterpret_cast<const char *>(&ci->sessionid), sizeof(ci->sessionid));   
+    }
+    
+    luaL_pushresult(&buffer);
+    return 1;
 }
 
 int player_sessionid(int cn)
@@ -127,11 +148,8 @@ void player_rename(int cn, const char * newname, bool public_rename)
     
     if(public_rename)
     {
-        int futureId = get_player_id(safenewname, getclientip(ci->clientnum));
-        signal_renaming(ci->clientnum, futureId);
-        ci->playerid = futureId;
-        
-        signal_rename(ci->clientnum, oldname, ci->name);
+        event_renaming(event_listeners(), boost::make_tuple(ci->clientnum, 0));
+        event_rename(event_listeners(), boost::make_tuple(ci->clientnum, oldname, ci->name));
     }
 }
 
@@ -183,12 +201,12 @@ const char * player_team(int cn)
 
 const char * player_ip(int cn)
 {
-    return get_ci(cn)->hostname();
+    return get_ci(get_ci(cn)->ownernum)->hostname();
 }
 
 unsigned long player_iplong(int cn)
 {
-    return ntohl(getclientip(get_ci(cn)->clientnum));
+    return ntohl(getclientip(get_ci(get_ci(cn)->ownernum)->clientnum));
 }
 
 int player_status_code(int cn)
@@ -210,6 +228,23 @@ int player_lag(int cn)
 {
     return get_ci(cn)->lag;
 }
+
+int player_real_lag(int cn)
+{
+    return totalmillis - get_ci(cn)->lastposupdate;
+}
+
+int player_maploaded(int cn)
+{
+    return get_ci(cn)->maploaded;
+}
+
+int player_deathmillis(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return ci->state.lastdeath;
+}
+
 
 int player_frags(int cn)
 {
@@ -296,6 +331,30 @@ int player_accuracy(int cn)
     return static_cast<int>(roundf(static_cast<float>(hits)/std::max(shots,1)*100));
 }
 
+int player_accuracy2(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return static_cast<int>(roundf(static_cast<float>(ci->state.damage*100/max(ci->state.shotdamage,1))));
+}
+
+bool player_is_spy(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return ci->spy;
+}
+
+int player_clientmillis(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return ci->clientmillis;
+}
+
+int player_timetrial(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    return ci->timetrial >= 0 ? ci->timetrial : -1;
+}
+
 int player_privilege_code(int cn)
 {
     return get_ci(cn)->privilege;
@@ -303,12 +362,7 @@ int player_privilege_code(int cn)
 
 const char * player_privilege(int cn)
 {
-    switch(get_ci(cn)->privilege)
-    {
-        case PRIV_MASTER: return "master";
-        case PRIV_ADMIN: return "admin";
-        default: return "none";
-    }
+    return privname(get_ci(cn)->privilege);
 }
 
 const char * player_status(int cn)
@@ -382,10 +436,13 @@ bool player_changeteam(int cn,const char * newteam)
     clientinfo * ci = get_ci(cn);
     
     if(!m_teammode || (smode && !smode->canchangeteam(ci, ci->team, newteam)) ||
-        signal_chteamrequest(cn, ci->team, newteam) == -1) return false;
+        event_chteamrequest(event_listeners(), boost::make_tuple(cn, ci->team, newteam))) 
+    {
+        return false;
+    }
     
     if(smode || ci->state.state==CS_ALIVE) suicide(ci);
-    signal_reteam(ci->clientnum, ci->team, newteam);
+    event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, ci->team, newteam));
     
     copystring(ci->team, newteam, MAXTEAMLEN+1);
     sendf(-1, 1, "riis", N_SETTEAM, cn, newteam);
@@ -398,7 +455,28 @@ bool player_changeteam(int cn,const char * newteam)
 int player_rank(int cn){return get_ci(cn)->rank;}
 bool player_isbot(int cn){return get_ci(cn)->state.aitype != AI_NONE;}
 
-int player_mapcrc(int cn){return get_ci(cn)->mapcrc;}
+bool player_has_joined_game(int cn)
+{
+    return get_ci(cn)->connected;
+}
+
+void player_join_game(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    if(!ci->connected)
+    {
+        connected(ci);
+    }
+}
+
+void player_reject_join_game(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    if(!ci->connected)
+    {
+        disconnect_client(cn, ci->connectauth);   
+    }
+}
 
 void changemap(const char * map,const char * mode = "",int mins = -1)
 {
@@ -479,111 +557,115 @@ int player_pos(lua_State * L)
     return 3;
 }
 
-std::vector<float> player_pos(int cn)
+bool hasmaster()
 {
-    vec pos = get_ci(cn)->state.o;
-    std::vector<float> result(3);
-    result[0] = pos.x;
-    result[1] = pos.y;
-    result[2] = pos.z;
-    return result;
+    bool hasmaster = false;
+    loopv(clients) if(clients[i]->privilege >= PRIV_MASTER) hasmaster = true;
+    return hasmaster;
+}
+
+void cleanup_masterstate()
+{
+    if(!hasmaster())
+    {
+        mastermode = display_open ? MM_OPEN : MM_AUTH;
+        allowedips.shrink(0);
+        if(gamepaused) pausegame(false);
+    }
 }
 
 void cleanup_masterstate(clientinfo * master)
 {
-    int cn = master->clientnum;
+    cleanup_masterstate();
+    if(master->state.state==CS_SPECTATOR) aiman::removeai(master);
+}
+
+void send_currentmaster(){
     
-    if(cn == mastermode_owner)
+    packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+    
+    putint(p, N_CURRENTMASTER);
+    putint(p, mastermode);
+    
+    loopv(clients) if(clients[i]->privilege >= PRIV_MASTER && !clients[i]->hide_privilege)
     {
-        mastermode = MM_OPEN;
-        mastermode_owner = -1;
-        mastermode_mtime = totalmillis;
-        allowedips.setsize(0);
+        putint(p, clients[i]->clientnum);
+        putint(p, clients[i]->privilege);
     }
     
-    if(gamepaused && cn == pausegame_owner) pausegame(false);
+    putint(p, -1);
     
-    if(master->state.state==CS_SPECTATOR) aiman::removeai(master);
+    sendpacket(-1, 1, p.finalize());
 }
 
 void unsetmaster()
 {
-    if(currentmaster != -1)
+    loopv(clients)
     {
-        clientinfo * master = getinfo(currentmaster);
+        clientinfo * master = clients[i];
+        if(master->privilege != PRIV_MASTER) continue;
         
-        defformatstring(msg)("The server has revoked your %s privilege.", privname(master->privilege));
+        defformatstring(msg)("The server has revoked your master privilege.");
         master->sendprivtext(msg);
         
-        int old_priv = master->privilege;
-        master->privilege = 0;
-        int oldmaster = currentmaster;
-        currentmaster = -1;
-        masterupdate = true;
+        master->privilege = PRIV_NONE;
         
-        cleanup_masterstate(master);
-        
-        signal_privilege(oldmaster, old_priv, PRIV_NONE);
+        event_privilege(event_listeners(), boost::make_tuple(master->clientnum, static_cast<int>(PRIV_MASTER), static_cast<int>(PRIV_NONE)));
     }
+    
+    cleanup_masterstate();
+    send_currentmaster();
 }
 
 void unset_player_privilege(int cn)
 {
-    if(currentmaster == cn)
-    {
-        unsetmaster();
-        return;
-    }
-    
     clientinfo * ci = get_ci(cn);
     if(ci->privilege == PRIV_NONE) return;
     
     int old_priv = ci->privilege;
     ci->privilege = PRIV_NONE;
-    sendf(ci->clientnum, 1, "ri4", N_CURRENTMASTER, ci->clientnum, PRIV_NONE, mastermode);
     
     cleanup_masterstate(ci);
+    send_currentmaster();
     
-    signal_privilege(cn, old_priv, PRIV_NONE);
+    event_privilege(event_listeners(), boost::make_tuple(cn, old_priv, static_cast<int>(PRIV_NONE)));
 }
 
 void set_player_privilege(int cn, int priv_code, bool public_priv = false)
 {
     clientinfo * player = get_ci(cn);
     
+    public_priv = !player->spy && public_priv;
+    
     if(player->privilege == priv_code) return;
     if(priv_code == PRIV_NONE) unset_player_privilege(cn);
-    
-    if(cn == currentmaster && !public_priv)
-    {
-        currentmaster = -1;
-        masterupdate = true;
-    }
-    
+        
     int old_priv = player->privilege;
     player->privilege = priv_code;
     
-    if(public_priv)
+    if(!public_priv)
     {
-        currentmaster = cn;
-        masterupdate = true;
-    }
-    else
-    {
-        sendf(player->clientnum, 1, "ri4", N_CURRENTMASTER, player->clientnum, player->privilege, mastermode);
+        player->hide_privilege = true;
     }
     
     const char * change = (old_priv < player->privilege ? "raised" : "lowered");
     defformatstring(msg)("The server has %s your privilege to %s.", change, privname(priv_code));
     player->sendprivtext(msg);
     
-    signal_privilege(cn, old_priv, player->privilege);
+    send_currentmaster();
+    
+    event_privilege(event_listeners(), boost::make_tuple(cn, old_priv, player->privilege));
 }
 
 bool set_player_master(int cn)
 {
     set_player_privilege(cn, PRIV_MASTER, true);
     return true;
+}
+
+void set_player_auth(int cn)
+{
+    set_player_privilege(cn, PRIV_AUTH, true);
 }
 
 void set_player_admin(int cn)
@@ -617,7 +699,7 @@ static void execute_addbot(int skill)
 {
     clientinfo * owner = aiman::addai(skill, -1);
     if(!owner) return;
-    signal_addbot(-1, skill, owner->clientnum);
+    event_addbot(event_listeners(), boost::make_tuple(-1, skill, owner->clientnum));
     return;
 }
 
@@ -637,7 +719,7 @@ static void execute_deletebot(int cn)
 void deletebot(int cn)
 {
     if(get_ci(cn)->state.aitype == AI_NONE) 
-        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("not a bot player")));
+        luaL_error(get_lua_state(), "not a bot player");
     get_main_io_service().post(boost::bind(&execute_deletebot, cn));
 }
 
@@ -788,10 +870,10 @@ int team_size(const char * team)
     return count;
 }
 
-int recorddemo(const char * filename)
+void recorddemo(const char * filename)
 {
-    if(demorecord) return demo_id;
-    else return setupdemorecord(false, filename);
+    if(demorecord) return;
+    else setupdemorecord(false, filename);
 }
 
 int lua_gamemodeinfo(lua_State * L)
@@ -850,7 +932,7 @@ int lua_gamemodeinfo(lua_State * L)
 
 bool selectnextgame()
 {
-    signal_setnextgame();
+    event_setnextgame(event_listeners(), boost::make_tuple());
     if(next_gamemode[0] && next_mapname[0])
     {
         int next_gamemode_code = modecode(next_gamemode);
@@ -866,7 +948,7 @@ bool selectnextgame()
         else
         {
             std::cerr<<next_gamemode<<" game mode is unrecognised."<<std::endl;
-            sendf(-1, 1, "ri", N_MAPRELOAD);
+            //sendf(-1, 1, "ri", N_MAPRELOAD);
         }
         return true;
     }else return false;
@@ -927,6 +1009,8 @@ void calc_player_ranks()
 
 void script_set_mastermode(int value)
 {
+    int old_mastermode = mastermode;
+    
     mastermode = value;
     mastermode_owner = -1;
     mastermode_mtime = totalmillis;
@@ -935,13 +1019,20 @@ void script_set_mastermode(int value)
     {
         loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
     }
+    
+    event_setmastermode(event_listeners(), boost::make_tuple(-1, mastermodename(old_mastermode), mastermodename(value)));
+}
+
+int get_mastermode()
+{
+    return mastermode;
 }
 
 void add_allowed_ip(const char * hostname)
 {
     ENetAddress addr;
     if(enet_address_set_host(&addr, hostname) != 0)
-        throw fungu::script::error(fungu::script::OPERATION_ERROR, boost::make_tuple(std::string("invalid hostname given")));
+        luaL_error(get_lua_state(), "invalid hostname given");
     allowedips.add(addr.host);
 }
 
@@ -1006,11 +1097,8 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     }
     if(cq->state.lastdeath)
     {
-        int delay = signal_respawnrequest(cq->clientnum, cq->state.lastdeath);
-        
-        if(delay > 0)
+        if(event_respawnrequest(event_listeners(), boost::make_tuple(cq->clientnum, cq->state.lastdeath)))
         {
-            sched_callback(deferred_respawn_request, new player_token(cq), delay);
             return;
         }
         
@@ -1019,6 +1107,27 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     }
     cleartimedevents(cq);
     sendspawn(cq);
+}
+
+void player_respawn(int cn)
+{
+    clientinfo * ci = getinfo(cn);
+    try_respawn(ci, ci);
+}
+
+int revision()
+{
+#if defined(REVISION) && (REVISION + 0)
+    return REVISION;
+#endif
+    return -1;
+}
+
+const char *version()
+{
+    static char buf[40];
+    formatstring(buf)("%s %s", __TIME__, __DATE__);
+    return buf;
 }
 
 #endif

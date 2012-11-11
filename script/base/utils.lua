@@ -1,3 +1,30 @@
+local _ = require "underscore"
+
+function mins(value)
+    return value * 1000 * 60
+end
+
+function secs(value)
+    return value * 1000
+end
+
+function coloured_text(colour_code, text)
+    if text then
+        return "\fs\f" .. colour_code .. text .. "\fr"
+    else
+        return "\fs\f" .. colour_code
+    end
+end
+
+green    = _.curry(coloured_text, 0)
+blue     = _.curry(coloured_text, 1)
+yellow   = _.curry(coloured_text, 2)
+red      = _.curry(coloured_text, 3)
+grey     = _.curry(coloured_text, 4)
+magenta  = _.curry(coloured_text, 5)
+orange   = _.curry(coloured_text, 6)
+white    = _.curry(coloured_text, 7)
+
 -- Copied from http://lua-users.org/wiki/SimpleRound
 function math.round(num, idp)
   local mult = 10^(idp or 0)
@@ -6,81 +33,22 @@ end
 round = math.round
 
 function pack(...)
-    return arg
+    return {...}
 end
 
-function identity(...)
-    return unpack(arg)
-end
-
-function return_catch_error(fun, ...)
-
-    local returnvals = pack(pcall(fun, unpack(arg)))
-        
-    if returnvals[1] == false and returnvals[2] then
-        server.log_error(returnvals[2])
+function catch_error(chunk, ...)
+    
+    local pcall_results = {pcall(chunk, ...)}
+    
+    if not pcall_results[1] then
+        server.log_error(pcall_results[2])
     end
     
-    return unpack(returnvals, 1, table.maxn(returnvals))
-end
-
-function catch_error(fun, ...)
-    local returnvals = pack(return_catch_error(fun, unpack(arg)))
-    table.remove(returnvals, 1)
-    return unpack(returnvals, 1, table.maxn(returnvals))
-end
-
-function server.eval_lua(str)
-    local func, err = loadstring(str)
-    if not func then error(err) end
-    return func()
+    return pcall_results
 end
 
 function server.hashpassword(cn, password)
-	return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), password))
-end
-
-bind_placeholder = {
-
-    is_bind_placeholder = true,
-    
-    create = function(index)
-        local obj = {index=index}
-        setmetatable(obj, bind_placeholder)
-        return obj
-    end,
-    
-    detected = function(obj)
-        local mt = getmetatable(obj)
-        return mt and mt.is_bind_placeholder
-    end
-}
-
-_1 = bind_placeholder.create(1)
-_2 = bind_placeholder.create(2)
-_3 = bind_placeholder.create(2)
-_4 = bind_placeholder.create(4)
-_5 = bind_placeholder.create(5)
-_6 = bind_placeholder.create(6)
-
-function bind(func, ...)
-
-    local bind_args = arg
-    
-    return function(...)
-    
-        local call_args = {}
-        
-        for index, value in pairs(bind_args) do
-            if bind_placeholder.detected(value) then
-                call_args[index] = arg[value.index]
-            else
-                call_args[index] = value
-            end
-        end
-        
-        return func(unpack(call_args, 1, table.maxn(bind_args)))
-    end
+    return crypto.tigersum(string.format("%i %i %s", cn, server.player_sessionid(cn), password))
 end
 
 function _if(expr, true_value, false_value)
@@ -91,10 +59,27 @@ function _if(expr, true_value, false_value)
     end
 end
 
+setfenv = setfenv or function(f, t)
+    f = (type(f) == 'function' and f or debug.getinfo(f + 1, 'f').func)
+    local name
+    local up = 0
+    repeat
+        up = up + 1
+        name = debug.getupvalue(f, up)
+    until name == '_ENV' or name == nil
+    if name then
+        debug.upvaluejoin(f, up, function() return name end, 1)  -- useunique upvalue
+        debug.setupvalue(f, up, t)
+    end
+end 
+
 dofile("./script/base/utils/apps.lua")
 dofile("./script/base/utils/file.lua")
 dofile("./script/base/utils/gamemode.lua")
 dofile("./script/base/utils/mysql.lua")
 dofile("./script/base/utils/string.lua")
 dofile("./script/base/utils/table.lua")
-
+dofile("./script/base/utils/validate.lua")
+dofile("./script/base/utils/deferred.lua")
+dofile("./script/base/utils/event_emitter.lua")
+dofile("./script/base/utils/network.lua")
