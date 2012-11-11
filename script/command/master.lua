@@ -23,21 +23,10 @@ local function run(cn)
                 return
             end
             
-            local admin_present = server.master ~= -1 and server.player_priv_code(server.master) == server.PRIV_ADMIN
+            server.setmaster(cn)
             
-            if not admin_present then
-                
-                if (server.player_priv_code(cn) > 0) then
-                    server.unsetpriv(cn)
-                end
-                
-                server.setmaster(cn)
-                
-                server.msg(server.player_displayname(cn) .. " claimed master as '" .. magenta(user_id) .. "'")
-                server.log(string.format("%s playing as %s(%i) used auth to claim master.", user_id, server.player_name(cn), cn))
-            else
-                server.player_msg(cn,red("An admin or master is already there."))
-            end
+            server.msg(server.player_displayname(cn) .. " claimed master as '" .. magenta(user_id) .. "'")
+            server.log(string.format("%s playing as %s(%i) used auth to claim master.", user_id, server.player_name(cn), cn))
         end)
     end
 end

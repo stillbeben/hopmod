@@ -7,10 +7,10 @@
 
 #ifdef anticheat_helper_func
 
-bool anti_cheat_enabled = true;
+bool anti_cheat_enabled = false;
 bool anti_cheat_add_log_to_demo = true;
 int anti_cheat_system_rev = 3;
-	
+
 void cheat(int cn, int cheat, int info1, const char *info2)
 {
 	if (!anti_cheat_enabled) return;

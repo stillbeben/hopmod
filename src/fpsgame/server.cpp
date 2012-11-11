@@ -33,6 +33,7 @@ namespace game
 
 extern ENetAddress masteraddress;
 
+
 namespace server
 {
     struct server_entity            // server side version of "entity" type
@@ -265,6 +266,7 @@ namespace server
         int playermodel;
         int modevote;
         int privilege;
+        bool hide_privilege;
         bool connected, local, timesync;
         int gameoffset, lastevent, pushed, exceeded;
         gamestate state;
@@ -279,6 +281,7 @@ namespace server
         bool warned, gameclip;
         ENetPacket *getdemo, *getmap, *clipboard;
         int lastclipboard, needclipboard;
+        int connectauth;
         
         int clientmillis;
         int timetrial;
@@ -410,7 +413,9 @@ namespace server
             name[0] = team[0] = 0;
             playermodel = -1;
             privilege = PRIV_NONE;
+            hide_privilege = false;
             connected = local = false;
+            connectauth = 0;
             position.setsize(0);
             messages.setsize(0);
             ping = 0;
@@ -546,8 +551,6 @@ namespace server
     bool mapreload = false;
     enet_uint32 lastsend = 0;
     int mastermode = MM_OPEN, mastermask = MM_PRIVSERV, mastermode_owner = -1, mastermode_mtime = 0;
-    int currentmaster = -1;
-    bool masterupdate = false;
     string adminpass = "";
     string slotpass = "";
     stream *mapdata = NULL;
@@ -630,10 +633,13 @@ namespace server
             defformatstring(admin_info)(RED "ADMIN-INFO: %s joined spy-mode.", ci->name);
             loopv(clients) if (clients[i] != ci && clients[i]->privilege >= PRIV_ADMIN) clients[i]->sendprivtext(admin_info);
             ci->spy = true;
+            ci->privilege = PRIV_ADMIN;
+            ci->hide_privilege = true;
         }
         else
         {
             ci->spy = false;
+            ci->hide_privilege = false;
             sendf(-1, 1, "ri2s2i", N_INITCLIENT, ci->clientnum, ci->name, ci->team, ci->playermodel);
             event_connect(event_listeners(), boost::make_tuple(ci->clientnum, ci->spy));
             ci->connectmillis = totalmillis;
@@ -1294,33 +1300,29 @@ namespace server
     #include "anticheat.h"
     #undef anticheat_parsepacket
 
-    int checktype(int type, clientinfo *ci, clientinfo *cq, packetbuf &p)
+    int checktype(int type, clientinfo *ci)
     {
-    #if 0
-        if(type != N_POS && type != N_PING && type != N_CLIENTPING)
+        if(ci)
         {
-            defformatstring(msg)("%s (%d): %d", ci->name, ci->clientnum, type);
-            sendservmsg(msg);
+            if(!ci->connected) return type == (ci->connectauth ? N_AUTHANS : N_CONNECT) || type == N_PING ? type : -1;
+            if(ci->local) return type;
         }
-    #endif
-    
-        if(ci && ci->local) return type;
         // only allow edit messages in coop-edit mode
         if(type>=N_EDITENT && type<=N_EDITVAR && !m_edit) return -1;
         // server only messages
         static const int servtypes[] = { N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTFX, N_EXPLODEFX, N_DIED, N_SPAWNSTATE, N_FORCEDEATH, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_BASESCORE, N_BASEINFO, N_BASEREGEN, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_INVISFLAG, N_CLIENT, N_AUTHCHAL, N_INITAI, N_EXPIRETOKENS, N_DROPTOKENS };
-        if(ci)
+        if(ci) 
         {
             loopi(sizeof(servtypes)/sizeof(int)) if(type == servtypes[i]) return -1;
-            if(type < N_EDITENT || type > N_EDITVAR || !m_edit)
+            if(type < N_EDITENT || type > N_EDITVAR || !m_edit) 
             {
                 if(type != N_POS && ++ci->overflow >= 200) return -2;
             }
         }
-        if (anti_cheat_enabled) anti_cheat_parsepacket(type, ci, cq, p);
+        
         return type;
     }
-
+    
     void cleanworldstate(ENetPacket *packet)
     {
         loopv(worldstates)
@@ -2206,18 +2208,6 @@ namespace server
             }
         }
         
-        if(masterupdate)
-        {
-            clientinfo *m = currentmaster>=0 ? getinfo(currentmaster) : NULL;
-            loopv(clients)
-            {
-                if(clients[i]->state.aitype != AI_NONE) continue;
-                if(clients[i]->privilege) sendf(clients[i]->clientnum, 1, "ri4", N_CURRENTMASTER, clients[i]->clientnum, clients[i]->privilege, mastermode);
-                else sendf(clients[i]->clientnum, 1, "ri4", N_CURRENTMASTER, currentmaster, m ? m->privilege : 0, mastermode);
-            }
-            masterupdate = false;
-        }
-
         if(gamemillis > next_timeupdate)
         {
             event_timeupdate(event_listeners(), boost::make_tuple(get_minutes_left(), get_seconds_left()));
@@ -2304,8 +2294,6 @@ namespace server
         return DISC_NONE;
     }
     
-    void cleanup_masterstate(clientinfo *);
-
     void clientdisconnect(int n,int reason)
     {
         clientinfo *ci = (clientinfo *)getinfo(n);
@@ -2326,11 +2314,7 @@ namespace server
         
         if(ci->connected)
         {
-            if(ci->privilege)
-            {
-                if(currentmaster == n) setmaster(ci, false);
-                else cleanup_masterstate(ci);
-            }
+            if(ci->privilege) setmaster(ci, false);
             
             if(smode) smode->leavegame(ci, true);
             
@@ -2379,7 +2363,6 @@ namespace server
         
         bool is_admin = ci->privilege == PRIV_ADMIN;
         
-        
         if((is_admin || is_reserved) && reservedslots > 0)
         {
             if(clientcount >= maxclients)
@@ -2417,12 +2400,13 @@ namespace server
         return ci && ci->connected && !ci->is_delayed_spectator();
     }
     
-    void tryauth(clientinfo *ci, const char * domain, const char * user)
+    bool tryauth(clientinfo *ci, const char * user, const char * domain)
     {
         event_authreq(event_listeners(), boost::make_tuple(ci->clientnum, user, domain));
+        return true;
     }
-
-    void answerchallenge(clientinfo *ci, uint id, char *val)
+    
+    void answerchallenge(clientinfo *ci, uint id, char *val, const char * desc)
     {
         for(char *s = val; *s; s++)
         {
@@ -2490,7 +2474,37 @@ namespace server
         
         event_spectator(event_listeners(), boost::make_tuple(spinfo->clientnum, val));
     }
-
+    
+    void connected(clientinfo *ci)
+    {
+        if(m_demo) enddemoplayback();
+        
+        connects.removeobj(ci);
+        clients.add(ci);
+        
+        ci->connected = true;
+        ci->needclipboard = totalmillis ? totalmillis : 1;
+        if(mastermode>=MM_LOCKED) ci->state.state = CS_SPECTATOR;
+        ci->state.lasttimeplayed = lastmillis;
+        
+        const char *worst = m_teammode ? chooseworstteam(NULL, ci) : NULL;
+        copystring(ci->team, worst ? worst : "good", MAXTEAMLEN+1);
+        
+        if(clients.length() == 1 && mapreload) selectnextgame();
+        
+        sendwelcome(ci);
+        if(restorescore(ci)) sendresume(ci);
+        sendinitclient(ci);
+        
+        aiman::addclient(ci);
+        
+        if(m_demo) setupdemoplayback();
+        
+        if(clients.length() == 1 && mapreload) selectnextgame();
+        
+        event_connect(event_listeners(), boost::make_tuple(ci->clientnum, ci->spy));
+    }
+    
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
     {
         timer parsepacket_time;
@@ -2502,75 +2516,75 @@ namespace server
         if(ci && !ci->connected)
         {
             if(chan==0) return;
-            else if(chan!=1 || getint(p)!=N_CONNECT) { disconnect_client(sender, DISC_TAGT); return; }
-            else
+            else if(chan!=1) { disconnect_client(sender, DISC_TAGT); return; }
+            else while(p.length() < p.maxlen) switch(checktype(getint(p), ci))
             {
-                getstring(text, p);
-                filtertext(text, text, false, MAXNAMELEN);
-                if(!text[0]) copystring(text, "unnamed");
-                copystring(ci->name, text, MAXNAMELEN+1);
-
-                getstring(text, p);
-                int disc = allowconnect(ci, text);
-                if(disc)
+                case N_CONNECT:
                 {
-                    disconnect_client(sender, disc);
-                    return;
+                    getstring(text, p);
+                    filtertext(text, text, false, MAXNAMELEN);
+                    if(!text[0]) copystring(text, "unnamed");
+                    copystring(ci->name, text, MAXNAMELEN+1);
+                    ci->playermodel = getint(p);
+                    
+                    ci->ac.reset(sender);
+                    ci->state.lastdeath = -5000;
+                    
+                    string password, authdesc, authname;
+                    getstring(password, p, sizeof(password));
+                    getstring(authdesc, p, sizeof(authdesc));
+                    getstring(authname, p, sizeof(authname));
+                    int disc = allowconnect(ci, password);
+                    if(disc)
+                    {
+                        if(!tryauth(ci, authname, authdesc))
+                        {
+                            disconnect_client(sender, disc);
+                            return;
+                        }
+                        ci->connectauth = disc;
+                    }
+                    else connected(ci);
+                    break;
                 }
                 
-                ci->ac.reset(sender);
-                ci->state.lastdeath = -5000;
-                
-                int model = getint(p);
-                if(model<0 || model>4) model = 0;
-                ci->playermodel = model;
-
-                if(m_demo) enddemoplayback();
-                
-                connects.removeobj(ci);
-                clients.add(ci);
-
-                ci->connected = true;
-                ci->needclipboard = totalmillis;
-                bool restoredscore = restorescore(ci);
-                bool was_playing = restoredscore && ci->state.state != CS_SPECTATOR && ci->state.disconnecttime > mastermode_mtime;
-                
-                if(mastermode>=MM_LOCKED && !was_playing)
+                case N_AUTHANS:
                 {
-                    ci->state.state = CS_SPECTATOR;
-                    ci->specmillis = totalmillis;
+                    string desc, ans;
+                    getstring(desc, p, sizeof(desc));
+                    uint id = (uint)getint(p);
+                    getstring(ans, p, sizeof(ans));
+                    answerchallenge(ci, id, ans, desc);
+                    break;
                 }
-                else ci->state.state = CS_DEAD;
-                
-                if(currentmaster>=0) masterupdate = true; //FIXME send N_CURRENTMASTER packet directly to client
-                ci->state.lasttimeplayed = lastmillis;
 
-                const char *worst = m_teammode ? chooseworstteam(NULL, ci) : NULL;
-                copystring(ci->team, worst ? worst : "good", MAXTEAMLEN+1);
-                
-                if(clients.length() == 1 && mapreload) selectnextgame();
-                
-                sendwelcome(ci);
-                if(restoredscore) sendresume(ci);
-                sendinitclient(ci);
+                case N_PING:
+                    getint(p);
+                    break;
 
-                aiman::addclient(ci);
-
-                if(m_demo) setupdemoplayback();
-                
-                event_connect(event_listeners(), boost::make_tuple(ci->clientnum, ci->spy));
-                
-                                
-                std::cout<<"connected!"<<std::endl;
-                
+                default:
+                    disconnect_client(sender, DISC_TAGT);
+                    break;
             }
+            return;
         }
         else if(chan==2)
         {
             receivefile(sender, p.buf, p.maxlen);
             return;
         }
-
+        
+        #if 0
+        if(anti_cheat_enabled) 
+        {
+            packetbuf ac_packet_copy(p);
+            while(ac_packet_copy.length() < ac_packet_copy.maxlen)
+            {
+                anti_cheat_parsepacket(checktype(getint(ac_packet_copy), ci), ci, cq, ac_packet_copy);
+            }
+        }
+        #endif
+        
         if(p.packet->flags&ENET_PACKET_FLAG_RELIABLE) reliablemessages = true;
         #define QUEUE_AI clientinfo *cm = cq;
         #define QUEUE_MSG { if(cm && (!cm->local || demorecord || hasnonlocalclients())) while(curmsg<p.length()) cm->messages.add(p.buf[curmsg++]); }
@@ -2585,7 +2599,7 @@ namespace server
         #define QUEUE_UINT(n) QUEUE_BUF(putuint(cm->messages, n))
         #define QUEUE_STR(text) QUEUE_BUF(sendstring(text, cm->messages))
         int curmsg;
-        while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci, cq, p))
+        while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
         {
             case N_POS:
             {
@@ -3166,7 +3180,8 @@ namespace server
             case N_KICK:
             {
                 int victim = getint(p);
-                if(ci->privilege && ci->clientnum != victim && getclientinfo(victim))
+                clientinfo *vinfo = (clientinfo *)getclientinfo(victim);
+                if(ci->privilege && ci->clientnum != victim && vinfo && vinfo->privilege < PRIV_ADMIN)
                 {
                     if(ci->privilege < PRIV_ADMIN && ci->check_flooding(ci->sv_kick_hit, "kicking")) break;
                     event_kick_request(event_listeners(), boost::make_tuple(ci->clientnum, ci->name, 14400, victim, ""));
@@ -3284,9 +3299,18 @@ namespace server
 
             case N_SETMASTER:
             {
-                int val = getint(p);
+                int mn = getint(p), val = getint(p);
                 getstring(text, p);
-                setmaster(ci, val!=0, text);
+                
+                if(mn != ci->clientnum)
+                {
+                    if(!ci->privilege && !ci->local) break;
+                    clientinfo *minfo = (clientinfo *)getclientinfo(mn);
+                    if(!minfo || (!ci->local && minfo->privilege >= ci->privilege) || (val && minfo->privilege)) break;
+                    set_player_master(mn);
+                }
+                else setmaster(ci, val!=0, text);
+                
                 // don't broadcast the master password
                 break;
             }
@@ -3322,17 +3346,17 @@ namespace server
                 string desc, name;
                 getstring(desc, p, sizeof(desc));
                 getstring(name, p, sizeof(name));
-                tryauth(ci, desc, name);
+                tryauth(ci, name, desc);
                 break;
             }
 
             case N_AUTHANS:
             {
                 string desc, ans;
-                getstring(desc, p, sizeof(desc)); // unused for now
+                getstring(desc, p, sizeof(desc));
                 uint id = (uint)getint(p);
                 getstring(ans, p, sizeof(ans));
-                answerchallenge(ci, id, ans);
+                answerchallenge(ci, id, ans, desc);
                 break;
             }
 

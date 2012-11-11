@@ -362,12 +362,7 @@ int player_privilege_code(int cn)
 
 const char * player_privilege(int cn)
 {
-    switch(get_ci(cn)->privilege)
-    {
-        case PRIV_MASTER: return "master";
-        case PRIV_ADMIN: return "admin";
-        default: return "none";
-    }
+    return privname(get_ci(cn)->privilege);
 }
 
 const char * player_status(int cn)
@@ -539,60 +534,76 @@ int player_pos(lua_State * L)
     return 3;
 }
 
+bool hasmaster()
+{
+    bool hasmaster = false;
+    loopv(clients) if(clients[i]->privilege >= PRIV_MASTER) hasmaster = true;
+    return hasmaster;
+}
+
+void cleanup_masterstate()
+{
+    if(!hasmaster())
+    {
+        mastermode = display_open ? MM_OPEN : MM_AUTH;
+        allowedips.shrink(0);
+        if(gamepaused) pausegame(false);
+    }
+}
+
 void cleanup_masterstate(clientinfo * master)
 {
-    int cn = master->clientnum;
+    cleanup_masterstate();
+    if(master->state.state==CS_SPECTATOR) aiman::removeai(master);
+}
+
+void send_currentmaster(){
     
-    if(cn == mastermode_owner)
+    packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+    
+    putint(p, N_CURRENTMASTER);
+    putint(p, mastermode);
+    
+    loopv(clients) if(clients[i]->privilege >= PRIV_MASTER && !clients[i]->hide_privilege)
     {
-        mastermode = MM_OPEN;
-        mastermode_owner = -1;
-        mastermode_mtime = totalmillis;
-        allowedips.setsize(0);
+        putint(p, clients[i]->clientnum);
+        putint(p, clients[i]->privilege);
     }
     
-    if(gamepaused && cn == pausegame_owner) pausegame(false);
+    putint(p, -1);
     
-    if(master->state.state==CS_SPECTATOR) aiman::removeai(master);
+    sendpacket(-1, 1, p.finalize());
 }
 
 void unsetmaster()
 {
-    if(currentmaster != -1)
+    loopv(clients)
     {
-        clientinfo * master = getinfo(currentmaster);
+        clientinfo * master = clients[i];
+        if(master->privilege != PRIV_MASTER) continue;
         
-        defformatstring(msg)("The server has revoked your %s privilege.", privname(master->privilege));
+        defformatstring(msg)("The server has revoked your master privilege.");
         master->sendprivtext(msg);
         
-        int old_priv = master->privilege;
-        master->privilege = 0;
-        int oldmaster = currentmaster;
-        currentmaster = -1;
-        masterupdate = true;
+        master->privilege = PRIV_NONE;
         
-        cleanup_masterstate(master);
-        
-        event_privilege(event_listeners(), boost::make_tuple(oldmaster, old_priv, static_cast<int>(PRIV_NONE)));
+        event_privilege(event_listeners(), boost::make_tuple(master->clientnum, static_cast<int>(PRIV_MASTER), static_cast<int>(PRIV_NONE)));
     }
+    
+    cleanup_masterstate();
+    send_currentmaster();
 }
 
 void unset_player_privilege(int cn)
 {
-    if(currentmaster == cn)
-    {
-        unsetmaster();
-        return;
-    }
-    
     clientinfo * ci = get_ci(cn);
     if(ci->privilege == PRIV_NONE) return;
     
     int old_priv = ci->privilege;
     ci->privilege = PRIV_NONE;
-    sendf(ci->clientnum, 1, "ri4", N_CURRENTMASTER, ci->clientnum, PRIV_NONE, mastermode);
     
     cleanup_masterstate(ci);
+    send_currentmaster();
     
     event_privilege(event_listeners(), boost::make_tuple(cn, old_priv, static_cast<int>(PRIV_NONE)));
 }
@@ -605,29 +616,20 @@ void set_player_privilege(int cn, int priv_code, bool public_priv = false)
     
     if(player->privilege == priv_code) return;
     if(priv_code == PRIV_NONE) unset_player_privilege(cn);
-    
-    if(cn == currentmaster && !public_priv)
-    {
-        currentmaster = -1;
-        masterupdate = true;
-    }
-    
+        
     int old_priv = player->privilege;
     player->privilege = priv_code;
     
-    if(public_priv)
+    if(!public_priv)
     {
-        currentmaster = cn;
-        masterupdate = true;
-    }
-    else
-    {
-        sendf(player->clientnum, 1, "ri4", N_CURRENTMASTER, player->clientnum, player->privilege, mastermode);
+        player->hide_privilege = true;
     }
     
     const char * change = (old_priv < player->privilege ? "raised" : "lowered");
     defformatstring(msg)("The server has %s your privilege to %s.", change, privname(priv_code));
     player->sendprivtext(msg);
+    
+    send_currentmaster();
     
     event_privilege(event_listeners(), boost::make_tuple(cn, old_priv, player->privilege));
 }
@@ -636,6 +638,11 @@ bool set_player_master(int cn)
 {
     set_player_privilege(cn, PRIV_MASTER, true);
     return true;
+}
+
+void set_player_auth(int cn)
+{
+    set_player_privilege(cn, PRIV_AUTH, true);
 }
 
 void set_player_admin(int cn)

@@ -26,10 +26,6 @@ local function run(cn)
 		        return
 	        end
 	        
-	        if server.player_priv_code(cn) > 0 then
-		        server.unsetpriv(cn)
-	        end
-	        
 	        server.setadmin(cn)
 	        
 	        server.msg(server.player_displayname(cn) .. " claimed admin as '" .. magenta(user_id) .. "'")

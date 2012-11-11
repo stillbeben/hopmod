@@ -7,7 +7,7 @@ local temporary_bans = {}
 local function kick_banned_players(ipmask, bantime, admin, reason)
 
     for _, cn in ipairs(server.clients()) do
-        if net.ipmask(server.player_iplong(cn)) == net.ipmask(ipmask) then
+        if net.ipmask(server.player_iplong(cn)) == net.ipmask(ipmask) and server.player_priv_code(cn) < server.PRIV_ADMIN then
             server.disconnect(cn, server.DISC_KICK, reason)
             kick_signal(cn, bantime, admin or "", reason or "")
         end
@@ -15,12 +15,12 @@ local function kick_banned_players(ipmask, bantime, admin, reason)
 end
 
 function server.kick(cn, bantime, admin, reason)
-
+    
     if server.player_isbot(cn) then
         server.delbot(cn)
         return
     end
-
+    
     if not bantime then 
         bantime = SHORT_BANTIME
     else
@@ -33,8 +33,6 @@ function server.kick(cn, bantime, admin, reason)
 end
 
 function server.ban(ipmask, bantime, admin, reason, name, gban)
-
-    
 
     if not bantime or bantime == -1 then
         bantime = VERY_LONG_BANTIME
@@ -107,7 +105,12 @@ server.event_handler("clearbans_request", function()
 end)
 
 server.event_handler("kick_request", function(admin_cn, admin_name, bantime, target, reason)
-    server.kick(target, bantime, admin_name, reason)
+    
+    if server.player_priv_code(admin_cn) > server.player_priv_code(target) then
+        server.kick(target, bantime, admin_name, reason)
+    else
+        server.player_msg(red(string.format("Kick player request denied")))
+    end
 end)
 
 server.event_handler("started", function()
