@@ -455,6 +455,29 @@ bool player_changeteam(int cn,const char * newteam)
 int player_rank(int cn){return get_ci(cn)->rank;}
 bool player_isbot(int cn){return get_ci(cn)->state.aitype != AI_NONE;}
 
+bool player_has_joined_game(int cn)
+{
+    return get_ci(cn)->connected;
+}
+
+void player_join_game(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    if(!ci->connected)
+    {
+        connected(ci);
+    }
+}
+
+void player_reject_join_game(int cn)
+{
+    clientinfo * ci = get_ci(cn);
+    if(!ci->connected)
+    {
+        disconnect_client(cn, ci->connectauth);   
+    }
+}
+
 void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);

@@ -2537,7 +2537,7 @@ namespace server
                     int disc = allowconnect(ci, password);
                     if(disc)
                     {
-                        if(!tryauth(ci, authname, authdesc))
+                        if(!serverauth[0] || strcmp(serverauth, authdesc) || !tryauth(ci, authname, authdesc))
                         {
                             disconnect_client(sender, disc);
                             return;

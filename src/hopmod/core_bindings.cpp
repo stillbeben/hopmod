@@ -99,6 +99,9 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "player_unfreeze", server::player_unfreeze);
     bind_function(L, T, "player_connection_time", server::player_connection_time);
     bind_function(L, T, "player_respawn", server::player_respawn);
+    bind_function(L, T, "player_has_joined_game", server::player_has_joined_game);
+    bind_function(L, T, "player_join_game", server::player_join_game);
+    bind_function(L, T, "player_reject_join_game", server::player_reject_join_game);
     bind_function(L, T, "disconnect", server::disconnect);
     bind_function(L, T, "force_spec", server::player_force_spec);
     bind_function(L, T, "spec", server::player_spec);
@@ -351,6 +354,7 @@ void bind_core_variables(lua_State * L, int T)
     bind_var(L, T, "servername", server::serverdesc);
     bind_ro_var(L, T, "map", server::smapname);
     bind_var(L, T, "server_password", server::serverpass);
+    bind_var(L, T, "server_auth_domain", server::serverauth);
     bind_prop(L, T, "timeleft", server::get_minutes_left, server::set_minutes_left);
     bind_prop(L, T, "seconds_left", server::get_seconds_left, server::set_seconds_left);
     bind_var(L, T, "intermission", server::interm);

@@ -22,6 +22,7 @@ namespace server
     extern string serverdesc;
     extern string smapname;
     extern string serverpass;
+    extern string serverauth;
     extern string adminpass;
     extern string slotpass;
     extern int currentmaster;
@@ -99,6 +100,9 @@ namespace server
     int player_clientmillis(int);
     int player_timetrial(int);
     int player_connection_time(int);
+    bool player_has_joined_game(int);
+    void player_join_game(int);
+    void player_reject_join_game(int);
     int player_timeplayed(int);
     int player_win(int);
     void player_force_spec(int);
