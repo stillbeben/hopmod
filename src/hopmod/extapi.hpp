@@ -107,8 +107,10 @@ namespace server
     void spec_all();
     int player_bots(int);
     int player_pos(lua_State *);
+    bool hasmaster();
     void unsetmaster();
     bool set_player_master(int);
+    void set_player_auth(int);
     void set_player_admin(int);
     void player_slay(int);
     bool player_changeteam(int,const char *);
