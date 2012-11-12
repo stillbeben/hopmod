@@ -5,6 +5,9 @@ add_subdirectory(lsqlite3-7)
 add_subdirectory(hopmod/standalone/luapp)
 add_subdirectory(luasql EXCLUDE_FROM_ALL)
 
+find_package(Boost COMPONENTS date_time signals system thread REQUIRED)
+find_package(OpenSSL)
+
 include(CheckLibraryExists)
 
 check_library_exists(GeoIP GeoIP_open "" GEOIP_EXISTS)
@@ -20,16 +23,16 @@ if(NOT ${ZLIB_EXISTS})
     message(FATAL_ERROR "missing required library: ZLIB")
 endif(NOT ${ZLIB_EXISTS})
 
-find_package(OpenSSL)
+option(WITH_OPENSSL "Enable SSL support" ON)
 
-if(OPENSSL_FOUND)
+if(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
     set(LUA_NET_SSL_SOURCES
         hopmod/lua/modules/net/ssl_context.cpp
         hopmod/lua/modules/net/ssl_tcp_stream.cpp)
     add_definitions(-DKSSL_DEBUG)
-else(OPENSSL_FOUND)
+else(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
     add_definitions(-DDISABLE_SSL -DWITHOUT_OPENSSL)
-endif(OPENSSL_FOUND)
+endif(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
