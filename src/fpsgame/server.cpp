@@ -208,7 +208,6 @@ namespace server
         int maxhealth, frags, flags, deaths, suicides, teamkills, shotdamage, explosivedamage, damage, hits, misses, shots;
         int timeplayed;
         float effectiveness;
-        int state;
         int disconnecttime;
         
         void save(gamestate &gs)
@@ -227,7 +226,6 @@ namespace server
             hits = gs.hits;
             misses = gs.misses;
             shots = gs.shots;
-            state = gs.state;
             disconnecttime = gs.disconnecttime;
         }
 
@@ -248,7 +246,6 @@ namespace server
             gs.hits = hits;
             gs.misses = misses;
             gs.shots = shots;
-            gs.state = state;
             gs.disconnecttime = disconnecttime;
         }
     };
