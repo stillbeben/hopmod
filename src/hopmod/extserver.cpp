@@ -1007,20 +1007,26 @@ void calc_player_ranks()
     return calc_player_ranks(NULL);
 }
 
-void script_set_mastermode(int value)
+void set_mastermode(int value)
 {
-    int old_mastermode = mastermode;
+    if(value == mastermode)
+    {
+        return;
+    }
+    
+    int prev_mastermode = mastermode;
     
     mastermode = value;
-    mastermode_owner = -1;
-    mastermode_mtime = totalmillis;
-    allowedips.setsize(0);
+    allowedips.shrink(0);
+    
     if(mastermode >= MM_PRIVATE)
     {
         loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
     }
     
-    event_setmastermode(event_listeners(), boost::make_tuple(-1, mastermodename(old_mastermode), mastermodename(value)));
+    event_setmastermode(event_listeners(), boost::make_tuple(-1, mastermodename(prev_mastermode), mastermodename(mastermode)));
+    
+    sendf(-1, 1, "rii", N_MASTERMODE, mastermode);
 }
 
 int get_mastermode()
