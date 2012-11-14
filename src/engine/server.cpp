@@ -176,7 +176,7 @@ void filtertext(char *dst, const char *src, bool whitespace, int len)
         {
             *dst++ = ' ';
             if(!--len) break;
-            if(!is_bad_char(c)) *src--;
+            if(!is_bad_char(c)) src--;
             continue;
         }
         //END HOPMOD
