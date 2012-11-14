@@ -1,29 +1,22 @@
-add_subdirectory(enet)
-add_subdirectory(lua)
-add_subdirectory(fungu)
-add_subdirectory(lsqlite3-7)
-add_subdirectory(hopmod/standalone/luapp)
-add_subdirectory(luasql EXCLUDE_FROM_ALL)
+find_package(Boost COMPONENTS signals system thread REQUIRED)
 
-find_package(Boost COMPONENTS date_time signals system thread REQUIRED)
-find_package(OpenSSL)
+option(WITH_GEOIP "Enable GeoIP support" ON)
+find_package(GeoIP)
 
-include(CheckLibraryExists)
-
-check_library_exists(GeoIP GeoIP_open "" GEOIP_EXISTS)
-check_library_exists(z gzopen "" ZLIB_EXISTS)
-check_library_exists(pthread pthread_self "" PTHREAD_EXISTS)
-check_library_exists(rt clock_gettime "" RTLIB_EXISTS)
-
-if(NOT ${GEOIP_EXISTS})
-    message(FATAL_ERROR "missing required library: GeoIP")
-endif(NOT ${GEOIP_EXISTS})
-
-if(NOT ${ZLIB_EXISTS})
-    message(FATAL_ERROR "missing required library: ZLIB")
-endif(NOT ${ZLIB_EXISTS})
+if(GeoIP_FOUND)
+    if(WITH_GEOIP)
+    add_definitions(-DWITH_GEOIP)
+    set(GEOIP_INCLUDE_DIRS ${GeoIP_INCLUDE_DIRS})
+    set(GEOIP_LIBRARY ${GeoIP_LIBRARY})
+endif(WITH_GEOIP)
+else(GeoIP_FOUND)
+    if(WITH_GEOIP)
+        message(FATAL_ERROR "missing required library: GeoIP. To build without GeoIP support use option -DWITH_GEOIP=No")
+    endif(WITH_GEOIP)
+endif(GeoIP_FOUND)
 
 option(WITH_OPENSSL "Enable SSL support" ON)
+find_package(OpenSSL)
 
 if(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
     set(LUA_NET_SSL_SOURCES
@@ -34,6 +27,22 @@ else(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
     add_definitions(-DDISABLE_SSL -DWITHOUT_OPENSSL)
 endif(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
 
+include(CheckLibraryExists)
+check_library_exists(pthread pthread_self "" PTHREAD_EXISTS)
+check_library_exists(rt clock_gettime "" RTLIB_EXISTS)
+
+check_library_exists(z gzopen "" ZLIB_EXISTS)
+if(NOT ${ZLIB_EXISTS})
+    message(FATAL_ERROR "missing required library: ZLIB")
+endif(NOT ${ZLIB_EXISTS})
+
+add_subdirectory(enet)
+add_subdirectory(lua)
+add_subdirectory(fungu)
+add_subdirectory(lsqlite3-7)
+add_subdirectory(hopmod/standalone/luapp)
+add_subdirectory(luasql EXCLUDE_FROM_ALL)
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/shared
@@ -43,7 +52,8 @@ include_directories(
     ${ENET_INCLUDE_DIRS}
     ${LUA_INCLUDE_DIRS}
     ${FUNGU_INCLUDE_DIRS}
-    ${OPENSSL_INCLUDE_DIR})
+    ${OPENSSL_INCLUDE_DIR}
+    ${GEOIP_INCLUDE_DIRS})
 
 add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION} -DLUA_COMPAT_MODULE ${LSQLITE3_DEFINITIONS})
 
@@ -94,9 +104,9 @@ set(LUA_MODULES_SOURCES
 add_library(lua_modules STATIC ${LUA_MODULES_SOURCES})
 
 target_link_libraries(lua_modules 
-    -lGeoIP
     -pthread sauertools
     ${LUA_LIBRARY}
+    ${GEOIP_LIBRARY}
     ${FUNGU_STRING_LIBRARY}
     ${FUNGU_HTTP_LIBRARY}
     ${LSQLITE3_LIBRARY}
@@ -143,4 +153,3 @@ install(TARGETS
 install(FILES 
         hopmod/cubescript/cubescript_library.lua 
     DESTINATION ${PROJECT_SOURCE_DIR}/script/package)
-
