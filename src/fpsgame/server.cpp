@@ -2571,17 +2571,6 @@ namespace server
             return;
         }
         
-        #if 0
-        if(anti_cheat_enabled) 
-        {
-            packetbuf ac_packet_copy(p);
-            while(ac_packet_copy.length() < ac_packet_copy.maxlen)
-            {
-                anti_cheat_parsepacket(checktype(getint(ac_packet_copy), ci), ci, cq, ac_packet_copy);
-            }
-        }
-        #endif
-        
         if(p.packet->flags&ENET_PACKET_FLAG_RELIABLE) reliablemessages = true;
         #define QUEUE_AI clientinfo *cm = cq;
         #define QUEUE_MSG { if(cm && (!cm->local || demorecord || hasnonlocalclients())) while(curmsg<p.length()) cm->messages.add(p.buf[curmsg++]); }
@@ -2596,7 +2585,8 @@ namespace server
         #define QUEUE_UINT(n) QUEUE_BUF(putuint(cm->messages, n))
         #define QUEUE_STR(text) QUEUE_BUF(sendstring(text, cm->messages))
         int curmsg;
-        while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci))
+        while((curmsg = p.length()) < p.maxlen && (type = checktype(getint(p), ci)) && anti_cheat_parsepacket(type, ci, cq, p)) 
+        switch(type)
         {
             case N_POS:
             {
