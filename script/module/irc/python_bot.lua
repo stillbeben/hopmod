@@ -111,7 +111,7 @@ local function process_irc_command(data)
 		end
 		
 		local code = string.gsub(tmp, "code:", "")
-		local tmp_tonumber = tonumber; tonumber = function(str) local num = tmp_tonumber(str); if num == nil then return -1 else return num end end; local tmp_os_exec = os.execute; os.execute = nil; local pcallret, success, errmsg = pcall(loadstring(check_inject(code))); os.execute = tmp_os_exec; tonumber = tmp_tonumber
+		local tmp_tonumber = tonumber; tonumber = function(str) local num = tmp_tonumber(str); if num == nil then return -1 else return num end end; local tmp_os_exec = os.execute; os.execute = nil; local pcallret, success, errmsg = pcall(load(check_inject(code))); os.execute = tmp_os_exec; tonumber = tmp_tonumber
 				
 		if success ~= nil then
 			sendmsg("command failed.")
