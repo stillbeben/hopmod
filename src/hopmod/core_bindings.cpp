@@ -411,6 +411,6 @@ void bind_core_variables(lua_State * L, int T)
     
     bind_var(L, T, "mapcrc", server::mcrc);
 
-    bind_prop<int>(L, T, "mastermode", server::get_mastermode, server::script_set_mastermode);
+    bind_prop<int>(L, T, "mastermode", server::get_mastermode, server::set_mastermode);
 }
 
