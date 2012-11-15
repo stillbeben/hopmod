@@ -57,6 +57,11 @@ include_directories(
 
 add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION} -DLUA_COMPAT_MODULE ${LSQLITE3_DEFINITIONS})
 
+IF(NOT CMAKE_BUILD_TYPE STREQUAL "DEBUG") 
+    add_definitions( -O3)
+ENDIF(NOT CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+
+
 set(SAUERTOOLS_SOURCES
     shared/tools.cpp
     shared/stream.cpp
