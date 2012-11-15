@@ -662,14 +662,14 @@ class anticheat
 #define ac_check_sender if (ca->clientnum != ci->clientnum && ca->ownernum != ci->clientnum) break;
 #define ac_check_invis if ((ca->state.state == CS_ALIVE || ca->state.state == CS_LAGGED) && ac->is_player_invisible()) ci->state.state = CS_LAGGED;
 
-bool anti_cheat_parsepacket(int type, clientinfo *ci, clientinfo *cq, packetbuf p)
+void anti_cheat_parsepacket(int type, clientinfo *ci, clientinfo *cq, packetbuf p)
 {
     #if PROTOCOL_VERSION != AC_PROTOCOL_VERSION
     throw;
     #endif
     
     if (!anti_cheat_enabled)
-        return true; //don't change this!
+        return;
  
     clientinfo *ca = cq ? cq : ci;
     anticheat *ac = &ca->ac;
@@ -950,8 +950,6 @@ bool anti_cheat_parsepacket(int type, clientinfo *ci, clientinfo *cq, packetbuf 
         
         default:;
     }
-    
-    return true;
 }
 
 void ac_parseflags(ucharbuf &p, bool commit, clientinfo *ci)

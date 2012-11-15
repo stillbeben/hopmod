@@ -1297,7 +1297,7 @@ namespace server
     #include "anticheat.h"
     #undef anticheat_parsepacket
 
-    int checktype(int type, clientinfo *ci)
+    int checktype(int type, clientinfo *ci, clientinfo *cq, packetbuf &p) //NEW (thomas): clientinfo *cq, packetbuf &p
     {
         if(ci)
         {
@@ -1316,6 +1316,8 @@ namespace server
                 if(type != N_POS && ++ci->overflow >= 200) return -2;
             }
         }
+        
+        anti_cheat_parsepacket(type, ci, cq, p);
         
         return type;
     }
@@ -2514,7 +2516,7 @@ namespace server
         {
             if(chan==0) return;
             else if(chan!=1) { disconnect_client(sender, DISC_TAGT); return; }
-            else while(p.length() < p.maxlen) switch(checktype(getint(p), ci))
+            else while(p.length() < p.maxlen) switch(checktype(getint(p), ci, NULL, p))
             {
                 case N_CONNECT:
                 {
@@ -2585,8 +2587,7 @@ namespace server
         #define QUEUE_UINT(n) QUEUE_BUF(putuint(cm->messages, n))
         #define QUEUE_STR(text) QUEUE_BUF(sendstring(text, cm->messages))
         int curmsg;
-        while((curmsg = p.length()) < p.maxlen && (type = checktype(getint(p), ci)) && anti_cheat_parsepacket(type, ci, cq, p)) 
-        switch(type)
+        while((curmsg = p.length()) < p.maxlen) switch(type = checktype(getint(p), ci, cq, p))
         {
             case N_POS:
             {
