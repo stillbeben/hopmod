@@ -109,7 +109,7 @@ server.event_handler("kick_request", function(admin_cn, admin_name, bantime, tar
     if server.player_priv_code(admin_cn) > server.player_priv_code(target) then
         server.kick(target, bantime, admin_name, reason)
     else
-        server.player_msg(red(string.format("Kick player request denied")))
+        server.player_msg(admin_cn, red(string.format("Kick player request denied")))
     end
 end)
 
