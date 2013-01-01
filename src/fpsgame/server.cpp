@@ -3237,7 +3237,7 @@ namespace server
                 int victim = getint(p);
                 getstring(text, p);
                 filtertext(text, text);
-                clientinfo *vinfo = (clientinfo *)getclientinfo(victim);
+                clientinfo *vinfo = getinfo(victim);
                 if(ci->privilege && ci->clientnum != victim && vinfo && vinfo->privilege < PRIV_ADMIN)
                 {
                     if(ci->privilege < PRIV_ADMIN && ci->check_flooding(ci->sv_kick_hit, "kicking")) break;
