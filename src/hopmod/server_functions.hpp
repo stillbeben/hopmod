@@ -172,8 +172,8 @@ namespace server
     int lua_spec_list(lua_State *);
     int lua_bot_list(lua_State *);
     int lua_client_list(lua_State *);
-
-    bool selectnextgame();
+    
+    bool rotatemap();
     
     void suicide(int);
     

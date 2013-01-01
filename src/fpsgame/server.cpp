@@ -1885,9 +1885,27 @@ namespace server
         next_timeupdate = 0; //as soon as possible
     }
     
-    void rotatemap(bool next)
+    bool rotatemap()
     {
-        selectnextgame();
+        event_setnextgame(event_listeners(), boost::make_tuple());
+        if(next_gamemode[0] && next_mapname[0])
+        {
+            int next_gamemode_code = modecode(next_gamemode);
+            if(m_mp(next_gamemode_code))
+            {
+                mapreload = false;
+                changemap(next_mapname, next_gamemode_code, next_gametime);
+                next_gamemode[0] = '\0';
+                next_mapname[0] = '\0';
+                next_gametime = -1;
+            }
+            else
+            {
+                std::cerr<<next_gamemode<<" game mode is unrecognised."<<std::endl;
+                //sendf(-1, 1, "ri", N_MAPRELOAD);
+            }
+            return true;
+        }else return false;
     }
     
     struct votecount
@@ -1929,7 +1947,7 @@ namespace server
                 event_votepassed(event_listeners(), boost::make_tuple(best->map, modename(best->mode)));
                 changemap(best->map, best->mode);
             }
-            else rotatemap(true);
+            else rotatemap();
         }
     }
     
@@ -1939,10 +1957,7 @@ namespace server
         if(!map[0] && !m_check(mode, M_EDIT)) 
         {
             if(smapname[0]) map = smapname;
-            else
-            {
-                selectnextgame();
-            }
+            else rotatemap();
         }
         if(hasnonlocalclients()) sendservmsgf("local player forced %s on map %s", modename(mode), map[0] ? map : "[new map]");
         changemap(map, mode);
@@ -2588,7 +2603,7 @@ namespace server
         const char *worst = m_teammode ? chooseworstteam(NULL, ci) : NULL;
         copystring(ci->team, worst ? worst : "good", MAXTEAMLEN+1);
         
-        if(clients.length() == 1 && mapreload) selectnextgame();
+        if(clients.length() == 1 && mapreload) rotatemap();
         
         sendwelcome(ci);
         if(restorescore(ci)) sendresume(ci);
@@ -2598,7 +2613,7 @@ namespace server
         
         if(m_demo) setupdemoplayback();
         
-        if(clients.length() == 1 && mapreload) selectnextgame();
+        if(clients.length() == 1 && mapreload) rotatemap();
         
         event_connect(event_listeners(), boost::make_tuple(ci->clientnum, ci->spy));
     }

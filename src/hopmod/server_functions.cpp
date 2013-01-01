@@ -916,29 +916,6 @@ int lua_gamemodeinfo(lua_State * L)
     return 1;
 }
 
-bool selectnextgame()
-{
-    event_setnextgame(event_listeners(), boost::make_tuple());
-    if(next_gamemode[0] && next_mapname[0])
-    {
-        int next_gamemode_code = modecode(next_gamemode);
-        if(m_mp(next_gamemode_code))
-        {
-            mapreload = false;
-            changemap(next_mapname, next_gamemode_code, next_gametime);
-            next_gamemode[0] = '\0';
-            next_mapname[0] = '\0';
-            next_gametime = -1;
-        }
-        else
-        {
-            std::cerr<<next_gamemode<<" game mode is unrecognised."<<std::endl;
-            //sendf(-1, 1, "ri", N_MAPRELOAD);
-        }
-        return true;
-    }else return false;
-}
-
 void send_auth_challenge(int cn, int id, const char * domain, const char * challenge)
 {
     clientinfo * ci = get_ci(cn);

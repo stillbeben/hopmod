@@ -75,7 +75,7 @@ namespace server{
 void started()
 {
     event_started(event_listeners(), boost::make_tuple());
-    if(!server::smapname[0]) selectnextgame();
+    if(!server::smapname[0]) rotatemap();
 }
 
 static void initiate_shutdown()
