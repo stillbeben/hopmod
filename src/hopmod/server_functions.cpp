@@ -1,7 +1,3 @@
-/*
-    This file is included from and is a part of "fpsgame/server.cpp".
-*/
-#ifdef INCLUDE_EXTSERVER_CPP
 
 int sv_text_hit_length = 0;
 int sv_sayteam_hit_length = 0;
@@ -1124,4 +1120,3 @@ const char *version()
     return buf;
 }
 
-#endif
