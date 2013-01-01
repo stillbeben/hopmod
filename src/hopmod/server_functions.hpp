@@ -10,6 +10,8 @@ extern "C"{
 
 namespace server
 {
+    struct clientinfo;
+    
     namespace aiman
     {
         extern int botlimit;
@@ -53,7 +55,25 @@ namespace server
     
     extern int spectator_delay;
     
-    struct clientinfo;
+    namespace message{
+        
+        namespace resend_time{
+            
+            extern int text;
+            extern int sayteam;
+            extern int mapvote;
+            extern int switchname;
+            extern int switchteam;
+            extern int kick;
+            extern int remip;
+            extern int newmap;
+            extern int spec;
+            
+        } //namespace resend_time
+        
+        bool limit(clientinfo *, int * millis, int resend_time, const char * message_type);
+        
+    } //namespace message
     
     void started();
     int player_sessionid(int);
@@ -177,24 +197,12 @@ namespace server
     
     void suicide(int);
     
-    // Flood protection vars
-    extern int sv_text_hit_length;
-    extern int sv_sayteam_hit_length;
-    extern int sv_mapvote_hit_length;
-    extern int sv_switchname_hit_length;
-    extern int sv_switchteam_hit_length;
-    extern int sv_kick_hit_length;
-    extern int sv_remip_hit_length;
-    extern int sv_newmap_hit_length;
-    extern int sv_spec_hit_length;
-    
     void sendservmsg(const char *);
     
     void send_auth_challenge(int,int,const char *,const char *);
     void send_auth_request(int, const char *);
     
     bool send_item(int item_code, int recipient);
-    
     
     void try_respawn(clientinfo * ci, clientinfo * cq);
     

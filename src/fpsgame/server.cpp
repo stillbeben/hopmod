@@ -288,35 +288,36 @@ namespace server
         bool spy;
         int last_lag;
         
-        freqlimit sv_text_hit;
-        freqlimit sv_sayteam_hit;
-        freqlimit sv_mapvote_hit;
-        freqlimit sv_switchname_hit;
-        freqlimit sv_switchteam_hit;
-        freqlimit sv_kick_hit;
-        freqlimit sv_remip_hit;
-        freqlimit sv_newmap_hit;
-        freqlimit sv_spec_hit;
+        int n_text_millis;
+        int n_sayteam_millis;
+        int n_mapvote_millis;
+        int n_switchname_millis;
+        int n_switchteam_millis;
+        int n_kick_millis;
+        int n_remip_millis;
+        int n_newmap_millis;
+        int n_spec_millis;
+        
         std::string disconnect_reason;
         int maploaded;
         int rank;
         bool using_reservedslot;
         bool allow_self_unspec;
         
-        clientinfo()
-         :
-           getdemo(NULL),
-           getmap(NULL),
-           clipboard(NULL),
-           sv_text_hit(sv_text_hit_length),
-           sv_sayteam_hit(sv_sayteam_hit_length),
-           sv_mapvote_hit(sv_mapvote_hit_length),
-           sv_switchname_hit(sv_switchname_hit_length),
-           sv_switchteam_hit(sv_switchteam_hit_length),
-           sv_kick_hit(sv_kick_hit_length),
-           sv_remip_hit(sv_remip_hit_length),
-           sv_newmap_hit(sv_newmap_hit_length),
-           sv_spec_hit(sv_spec_hit_length)
+        clientinfo():
+            getdemo(NULL),
+            getmap(NULL),
+            clipboard(NULL),
+            n_text_millis(0),
+            n_sayteam_millis(0),
+            n_mapvote_millis(0),
+            n_switchname_millis(0),
+            n_switchteam_millis(0),
+            n_kick_millis(0),
+            n_remip_millis(0),
+            n_newmap_millis(0),
+            n_spec_millis(0) 
+        
         { reset(); }
         
         ~clientinfo() { events.deletecontents(); cleanclipboard(); }
@@ -449,18 +450,6 @@ namespace server
         {
             if(state.aitype != AI_NONE) return;//TODO assert(false) to catch bugs
             sendf(clientnum, 1, "ris", N_SERVMSG, text);
-        }
-        
-        bool check_flooding(freqlimit & hit, const char * activity = NULL, bool sendwarning = true)
-        {
-            uint remaining = hit.next(totalmillis);
-            bool flooding = remaining > 0;
-            if(flooding && activity && sendwarning)
-            {
-                defformatstring(blockedinfo)(RED "[Flood Protection] You are blocked from %s for another %i seconds.", activity, static_cast<int>(std::ceil(remaining/1000.0)));
-                sendprivtext(blockedinfo);
-            }
-            return flooding;
         }
         
         const char * hostname()const
@@ -2991,7 +2980,7 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text);
                 
-                if(ci && (ci->privilege == PRIV_ADMIN || !ci->check_flooding(ci->sv_text_hit,"sending text")))
+                if(ci && (ci->privilege == PRIV_ADMIN || !message::limit(ci, &ci->n_text_millis, message::resend_time::text, "N_TEXT")))
                 {
                     bool is_command = text[0] == '#';
                     
@@ -3021,7 +3010,7 @@ namespace server
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                if(!ci || !cq || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_teammode || !cq->team[0] || ci->check_flooding(ci->sv_sayteam_hit,"sending text") || ci->spy) break;
+                if(!ci || !cq || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_teammode || !cq->team[0] || message::limit(ci, &ci->n_sayteam_millis, message::resend_time::sayteam, "N_SAYTEAM") || ci->spy) break;
                 if(event_sayteam(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false)
                 {
                     loopv(clients)
@@ -3084,7 +3073,7 @@ namespace server
                 
                 bool allow = m_teammode && text[0] && strcmp(ci->team, text) && 
                     (!smode || smode->canchangeteam(ci, ci->team, text)) &&
-                    !ci->check_flooding(ci->sv_switchteam_hit, "switching teams") &&
+                    !message::limit(ci, &ci->n_switchname_millis, message::resend_time::switchteam, "N_SWITCHTEAM") &&
                     event_chteamrequest(event_listeners(), boost::make_tuple(ci->clientnum, ci->team, text)) == false;
                 
                 if(allow && addteaminfo(text))
@@ -3106,7 +3095,7 @@ namespace server
                 filtertext(text, text);
                 int reqmode = getint(p);
                 if(!ci->local && !m_mp(reqmode)) reqmode = 0;
-                if(!ci->check_flooding(ci->sv_mapvote_hit,"map voting") &&
+                if(!message::limit(ci, &ci->n_mapvote_millis, message::resend_time::mapvote, "N_MAPVOTE") &&
                    event_mapvote(event_listeners(), boost::make_tuple(ci->clientnum, text, modename(reqmode, "unknown"))) == false)
                 {
                     vote(text, reqmode, sender);
@@ -3255,7 +3244,7 @@ namespace server
                 clientinfo *vinfo = getinfo(victim);
                 if(ci->privilege && ci->clientnum != victim && vinfo && vinfo->privilege < PRIV_ADMIN)
                 {
-                    if(ci->privilege < PRIV_ADMIN && ci->check_flooding(ci->sv_kick_hit, "kicking")) break;
+                    if(ci->privilege < PRIV_ADMIN && message::limit(ci, &ci->n_kick_millis, message::resend_time::kick, "N_KICK")) break;
                     event_kick_request(event_listeners(), boost::make_tuple(ci->clientnum, ci->name, 14400, victim, ""));
                 }
                 break;
@@ -3265,7 +3254,7 @@ namespace server
             {
                 int spectator = getint(p), val = getint(p);
                 bool self = spectator == sender;
-                if(!ci->privilege && (!self || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED) || (ci->state.state == CS_SPECTATOR && !val && !ci->allow_self_unspec) || ci->check_flooding(ci->sv_spec_hit, "switching"))) break;
+                if(!ci->privilege && (!self || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED) || (ci->state.state == CS_SPECTATOR && !val && !ci->allow_self_unspec) || message::limit(ci, &ci->n_spec_millis, message::resend_time::spec, "N_SPECTATOR"))) break;
                 clientinfo *spinfo = (clientinfo *)getclientinfo(spectator); // no bots
                 if(!spinfo) break;
                 if(val && spinfo != ci && spinfo->privilege && ci->privilege < PRIV_ADMIN)
@@ -3357,7 +3346,7 @@ namespace server
             {
                 int size = getint(p);
                 if(!ci->privilege && !ci->local && ci->state.state==CS_SPECTATOR) break;
-                if(ci->check_flooding(ci->sv_newmap_hit, "newmapping")) break;
+                if(message::limit(ci, &ci->n_newmap_millis, message::resend_time::newmap, "N_NEWMAP")) break;
                 if(size>=0)
                 {
                     smapname[0] = '\0';
