@@ -85,7 +85,6 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "player_accuracy2", server::player_accuracy2);
     bind_function(L, T, "player_is_spy", server::player_is_spy);
     bind_function(L, T, "player_clientmillis", server::player_clientmillis);
-    bind_function(L, T, "player_timetrial", server::player_timetrial);
     bind_function(L, T, "player_timeplayed", server::player_timeplayed);
     bind_function(L, T, "player_win", server::player_win);
     bind_function(L, T, "player_slay", server::player_slay);
@@ -133,7 +132,7 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "teamsize", server::team_size);
     
     bind_function(L, T, "get_gamemode_info", server::lua_gamemodeinfo);
-    bind_function(L, T, "pausegame", server::pausegame);
+    bind_function(L, T, "pausegame", (void (*)(bool))server::pausegame);
     
     bind_function(L, T, "msg", server::sendservmsg);
 

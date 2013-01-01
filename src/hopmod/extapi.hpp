@@ -55,6 +55,8 @@ namespace server
     
     extern int spectator_delay;
     
+    struct clientinfo;
+    
     int revision();
     const char *version();
     
@@ -140,6 +142,8 @@ namespace server
     int team_size(const char *);
     
     void pausegame(bool);
+    void pausegame(bool, clientinfo *);
+    
     void kick(int cn,int time,const std::string & admin,const std::string & reason);
     void disconnect(int cn, int code, std::string reason);
     void changetime(int remaining);
@@ -199,7 +203,7 @@ namespace server
     
     bool send_item(int item_code, int recipient);
     
-    struct clientinfo;
+    
     void try_respawn(clientinfo * ci, clientinfo * cq);
     
 } //namespace server

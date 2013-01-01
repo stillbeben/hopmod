@@ -668,6 +668,13 @@ template <class T> struct vector
         if(ulen) downheap(0);
         return e;
     }
+    
+    template<class K> 
+    int htfind(const K &key)
+    {
+        loopi(ulen) if(htcmp(key, buf[i])) return i;
+        return -1;
+    }
 };
 
 static inline uint hthash(const char *key)

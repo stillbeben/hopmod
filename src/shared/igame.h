@@ -36,6 +36,7 @@ namespace server
     extern void started();
     extern void shutdown();
     extern bool ispaused();
+    extern int scaletime(int t);
     extern bool ctftkpenalty;
     extern bool spec_slots;
     extern bool anti_cheat_enabled;

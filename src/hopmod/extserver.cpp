@@ -349,12 +349,6 @@ int player_clientmillis(int cn)
     return ci->clientmillis;
 }
 
-int player_timetrial(int cn)
-{
-    clientinfo * ci = get_ci(cn);
-    return ci->timetrial >= 0 ? ci->timetrial : -1;
-}
-
 int player_privilege_code(int cn)
 {
     return get_ci(cn)->privilege;
@@ -482,7 +476,6 @@ void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);
     if(!m_mp(gmode)) gmode = gamemode;
-    sendf(-1, 1, "risii", N_MAPCHANGE, map, gmode, 1);
     changemap(map,gmode,mins);
 }
 
@@ -936,7 +929,6 @@ bool selectnextgame()
         if(m_mp(next_gamemode_code))
         {
             mapreload = false;
-            sendf(-1, 1, "risii", N_MAPCHANGE, next_mapname, next_gamemode_code, 1);
             changemap(next_mapname, next_gamemode_code, next_gametime);
             next_gamemode[0] = '\0';
             next_mapname[0] = '\0';
@@ -1098,14 +1090,13 @@ void try_respawn(clientinfo * ci, clientinfo * cq)
     {
         ci->mapcrc = -1;
     }
-    if(cq->state.lastdeath)
+    if(cq->state.deadflush)
     {
         if(event_respawnrequest(event_listeners(), boost::make_tuple(cq->clientnum, cq->state.lastdeath)))
         {
             return;
         }
-        
-        flushevents(cq, cq->state.lastdeath + DEATHMILLIS);
+        flushevents(cq, cq->state.deadflush);
         cq->state.respawn();
     }
     cleartimedevents(cq);
