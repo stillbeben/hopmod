@@ -55,9 +55,6 @@ namespace server
     
     struct clientinfo;
     
-    int revision();
-    const char *version();
-    
     void started();
     int player_sessionid(int);
     int player_id(lua_State * L);
@@ -190,9 +187,6 @@ namespace server
     extern int sv_remip_hit_length;
     extern int sv_newmap_hit_length;
     extern int sv_spec_hit_length;
-    
-    void crash_handler(int signal);
-    void restore_server(const char * filename);
     
     void sendservmsg(const char *);
     
