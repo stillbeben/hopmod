@@ -2325,8 +2325,6 @@ namespace server
         
         anti_cheat_serverupdate();
         
-        update_hopmod();
-        
         timer::time_diff_t elapsed = serverupdate_time.usec_elapsed();
         if(elapsed >= timer_alarm_threshold)
         {
