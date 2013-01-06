@@ -70,7 +70,7 @@ set(SAUERTOOLS_SOURCES
 
 add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 
-target_link_libraries(sauertools -lrt -lz)
+target_link_libraries(sauertools -lrt -lz ${ENET_LIBRARY})
 
 set(LUA_MODULES_SOURCES
     hopmod/lib/md5.c
