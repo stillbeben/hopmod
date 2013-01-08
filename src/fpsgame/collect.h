@@ -287,12 +287,12 @@ struct collectclientmode : clientmode
     {
         droptokens(ci, !actor || isteam(actor->team, ci->team));
     }
-
+    
     bool canspawn(clientinfo *ci, bool connecting)
     {
-        return connecting || !ci->state.lastdeath || lastmillis-ci->state.lastdeath >= RESPAWNSECS*1000;
+        return connecting || !ci->state.lastdeath || gamemillis+curtime-ci->state.lastdeath >= RESPAWNSECS*1000;
     }
-
+    
     bool canchangeteam(clientinfo *ci, const char *oldteam, const char *newteam)
     {
         return collectteambase(newteam) > 0;
