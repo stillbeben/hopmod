@@ -410,8 +410,6 @@ void sched_next_update()
 
 void update_server(const boost::system::error_code & error = boost::system::error_code())
 {
-    if(error == boost::asio::error::operation_aborted || error) return;
-    
     if(nonlocalclients > 0) sched_next_update();
     
     update_time();
