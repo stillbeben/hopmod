@@ -19,7 +19,7 @@ local function setmaster(cn, hash, set)
     
     if no_hash and server.allow_setmaster == 1 then
         
-        if not hasmaster() then
+        if not server.hasmaster() then
             server.setmaster(cn)
         else
             server.player_msg(cn, red("Master is already claimed."))
