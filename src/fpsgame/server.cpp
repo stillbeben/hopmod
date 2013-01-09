@@ -3414,7 +3414,7 @@ namespace server
                 string desc, name;
                 getstring(desc, p, sizeof(desc));
                 getstring(name, p, sizeof(name));
-                int victim = getint(p);
+                /*int victim = */getint(p);
                 getstring(text, p);
                 filtertext(text, text);
                 

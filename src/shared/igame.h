@@ -42,6 +42,7 @@ namespace server
     extern bool anti_cheat_enabled;
     extern int anti_cheat_system_rev;
     extern uint mcrc;
+    extern int gamespeed;
 }
 
 #endif

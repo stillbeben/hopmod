@@ -176,6 +176,8 @@ local function cheat(cn, cheat_type, info, info_str)
     end
 
     if type[cheat_type][2] == nil then return end
+    
+    if server.gamespeed ~= 100 then return end
 
     local logmsg =
         string.format("CHEATER: %s IP: %s PING: %i LAG: %i GAMEMODE: %s MAP: %s CHEAT: ",
@@ -274,9 +276,8 @@ server.event_handler("spawn", function(cn)
     end 
 
     if not gamemode_has_respawn_wait_time() then return end
-    
-    if server.player_connection_time(cn) <= 6 then return end
-    
+    if server.player_connection_time(cn) <= 6 then return end    
+
     local deathmillis = deathmillis[cn] or 0
     
     if deathmillis == 0 or server.gamemillis < 5000 then return end
