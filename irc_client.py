@@ -97,6 +97,7 @@ class HMIRCClient(irc.IRCClient):
             irc.IRCClient.msg(self, channel, line)
 
     def privmsg(self, user, channel, msg):
+        global servers
         servers = dict([(a,b) for a,b in self.factory.controller.servers.iteritems() if b.get('client')])
         if msg[0] in PREFIXES:
 
@@ -116,6 +117,7 @@ class HMIRCClient(irc.IRCClient):
                 reactor.callLater(0.0, self.commands[command], **command_args)
                 return
 
+            log.msg('%s -> %s: %s' % (user, command, args))
             for server_name in servers:
                 if user.split('!')[0] in self.admins and (command == server_name or command == 'all'):
                     server_command, _, n_args = args.partition(' ')
@@ -123,12 +125,12 @@ class HMIRCClient(irc.IRCClient):
                     if server_command in commands.server:
                         command_args['nickname']     = nickname
                         command_args['args']         = n_args
-                        def server_write(message):
-                            servers[server_name]['client'].sendLine(('%s%s %s' % (CHANNEL_DELIM, target, message)).replace('\n', ' '))
+                        cmd = """def server_write(message):
+                            servers['%s']['client'].sendLine(('%%s%%s %%s' %% (CHANNEL_DELIM, '%s', message)).replace('\\n', ' '))""" % (server_name, target)
+                        exec cmd
                         command_args['server_write'] = server_write
 
                         reactor.callLater(0.0, commands.server[server_command], **command_args)
-                        log.msg('%s -> %s: %s' % (user, command, args))
 
         if channel[0] != '#':
             log.msg('%s: %s' % (user, msg))
