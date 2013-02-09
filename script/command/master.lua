@@ -2,22 +2,24 @@
     A player command to raise privilege to master
 ]]
 
-local domains = table_unique(server.parse_list(server["master_domains"]))
+local domains = {}
 
-if not domains then
-    server.log_error("master command: no domains set")
-    return
+local function init() 
+    domains = table_unique(server.parse_list(server["master_domains"]))
 end
 
-local function init() end
 local function unload() end
 
 local function run(cn)
 
+    if not domains or #domains == 0 then
+        server.player_msg(cn, red("Cannot execute master command: no domains set"))
+        return
+    end
     local sid = server.player_sessionid(cn)
 
     for _, domain in pairs(domains) do
-        auth.send_request(cn, master_domain, function(cn, user_id, domain, status)
+        auth.send_request(cn, domain, function(cn, user_id, domain, status)
 
             if not (sid == server.player_sessionid(cn)) or not (status == auth.request_status.SUCCESS) then
                 return
