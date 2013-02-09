@@ -205,6 +205,7 @@ void bind_core_constants(lua_State * L, int T)
 
     bind_function(L, T, "PRIV_NONE", get_constant<PRIV_NONE>);
     bind_function(L, T, "PRIV_MASTER", get_constant<PRIV_MASTER>);
+    bind_function(L, T, "PRIV_AUTH", get_constant<PRIV_AUTH>);
     bind_function(L, T, "PRIV_ADMIN", get_constant<PRIV_ADMIN>);
 
     bind_function(L, T, "GREEN_ARMOUR", get_constant<A_GREEN>);
