@@ -76,7 +76,7 @@ do
     }
     
     function server.parse_mode(mode)
-        if not get_gamemode_info(mode) then
+        if not server.get_gamemode_info(mode) then
             return mode_aliases[mode] 
         else
             return mode
