@@ -108,15 +108,12 @@ server.event_handler("connect", check_name)
 
 server.event_handler("rename", check_name)
 
-if server.file_exists("conf/clans")
-then
-    script("conf/clans")
-end
+exec_if_found("conf/clans.lua")
 
 
 return {unload = function()
 
-    server.unref("is_clan_registrated")
+    server.is_clan_registrated = nil
     
     for p in server.gall()
     do
