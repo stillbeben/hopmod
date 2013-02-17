@@ -103,7 +103,12 @@ void set_seconds_left(int seconds)
 
 void player_msg(int cn,const char * text)
 {
-    get_ci(cn)->sendprivtext(text);
+    get_ci(cn)->sendprivtext(decodeutf8(text).c_str());
+}
+
+void server_msg(const char * text)
+{
+    sendservmsg(decodeutf8(text).c_str());
 }
 
 int player_id(lua_State * L)
@@ -118,7 +123,8 @@ int player_id(lua_State * L)
     {
         uint ip_long = getclientip(get_ci(cn)->clientnum);
         luaL_addlstring(&buffer, reinterpret_cast<const char *>(&ip_long), sizeof(ip_long));
-        luaL_addlstring(&buffer, ci->name, strlen(ci->name)); 
+        std::string utf8name = encodeutf8(ci->name);
+        luaL_addlstring(&buffer, utf8name.c_str(), utf8name.length()); 
     }
     else
     {
@@ -141,12 +147,14 @@ int player_ownernum(int cn)
     return get_ci(cn)->ownernum;
 }
 
-const char * player_name(int cn){return get_ci(cn)->name;}
+std::string player_name(int cn) {
+    return encodeutf8(get_ci(cn)->name);
+}
 
 void player_rename(int cn, const char * newname, bool public_rename)
 {
     char safenewname[MAXNAMELEN + 1];
-    filtertext(safenewname, newname, false, MAXNAMELEN);
+    filtertext(safenewname, decodeutf8(newname).c_str(), false, MAXNAMELEN);
     if(!safenewname[0]) copystring(safenewname, "unnamed", MAXNAMELEN + 1);
     
     clientinfo * ci = get_ci(cn);
@@ -175,7 +183,7 @@ void player_rename(int cn, const char * newname, bool public_rename)
     if(public_rename)
     {
         event_renaming(event_listeners(), boost::make_tuple(ci->clientnum, 0));
-        event_rename(event_listeners(), boost::make_tuple(ci->clientnum, oldname, ci->name));
+        event_rename(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(oldname).c_str(), encodeutf8(ci->name).c_str()));
     }
 }
 
@@ -186,7 +194,7 @@ std::string player_displayname(int cn)
     std::string output;
     output.reserve(MAXNAMELEN + 5);
     
-    output = ci->name;
+    output = encodeutf8(ci->name);
     
     bool is_bot = ci->state.aitype != AI_NONE;
     bool duplicate = false;
@@ -219,10 +227,10 @@ std::string player_displayname(int cn)
     return output;
 }
 
-const char * player_team(int cn)
+std::string player_team(int cn)
 {
     if(!m_teammode) return "";
-    return get_ci(cn)->team;
+    return encodeutf8(get_ci(cn)->team);
 }
 
 const char * player_ip(int cn)
@@ -454,18 +462,20 @@ void player_slay(int cn)
 bool player_changeteam(int cn,const char * newteam)
 {
     clientinfo * ci = get_ci(cn);
+    std::string newteam8bit = decodeutf8(newteam);
+    std::string oldteam = encodeutf8(ci->team);
     
-    if(!m_teammode || (smode && !smode->canchangeteam(ci, ci->team, newteam)) ||
-        event_chteamrequest(event_listeners(), boost::make_tuple(cn, ci->team, newteam))) 
+    if(!m_teammode || (smode && !smode->canchangeteam(ci, ci->team, newteam8bit.c_str())) ||
+        event_chteamrequest(event_listeners(), boost::make_tuple(cn, oldteam.c_str(), newteam))) 
     {
         return false;
     }
     
     if(smode || ci->state.state==CS_ALIVE) suicide(ci);
-    event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, ci->team, newteam));
+    event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, oldteam.c_str(), newteam));
     
-    copystring(ci->team, newteam, MAXTEAMLEN+1);
-    sendf(-1, 1, "riis", N_SETTEAM, cn, newteam);
+    copystring(ci->team, newteam8bit.c_str(), MAXTEAMLEN+1);
+    sendf(-1, 1, "riis", N_SETTEAM, cn, newteam8bit.c_str());
     
     if(ci->state.aitype == AI_NONE) aiman::dorefresh = true;
     
@@ -502,7 +512,8 @@ void changemap(const char * map,const char * mode = "",int mins = -1)
 {
     int gmode = (mode[0] ? modecode(mode) : gamemode);
     if(!m_mp(gmode)) gmode = gamemode;
-    changemap(map,gmode,mins);
+    std::string map8bit = decodeutf8(map);
+    changemap(map8bit.c_str(),gmode,mins);
 }
 
 int getplayercount()
@@ -523,11 +534,13 @@ int getspeccount()
 void team_msg(const char * team,const char * msg)
 {
     if(!m_teammode) return;
+    std::string team8bit = decodeutf8(team);
+    std::string msg8bit = decodeutf8(msg);
     loopv(clients)
     {
         clientinfo *t = clients[i];
-        if(t->state.state==CS_SPECTATOR || t->state.aitype != AI_NONE || strcmp(t->team, team)) continue;
-        t->sendprivtext(msg);
+        if(t->state.state==CS_SPECTATOR || t->state.aitype != AI_NONE || strcmp(t->team, team8bit.c_str())) continue;
+        t->sendprivtext(msg8bit.c_str());
     }
 }
 
@@ -801,7 +814,7 @@ int lua_client_list(lua_State * L){return lua::make_client_list(L, &is_any);}
 std::vector<std::string> get_teams()
 {
     std::set<std::string> teams;
-    loopv(clients) teams.insert(clients[i]->team);
+    loopv(clients) teams.insert(encodeutf8(clients[i]->team));
     std::vector<std::string> result;
     std::copy(teams.begin(),teams.end(),std::back_inserter(result));
     return result;
@@ -833,9 +846,10 @@ int get_team_score(const char * team)
 
 std::vector<int> get_team_players(const char * team)
 {
+    std::string team8bit = decodeutf8(team);
     std::vector<int> result;
     loopv(clients)
-        if(clients[i]->state.state != CS_SPECTATOR && clients[i]->state.aitype == AI_NONE && !strcmp(clients[i]->team,team))
+        if(clients[i]->state.state != CS_SPECTATOR && clients[i]->state.aitype == AI_NONE && !strcmp(clients[i]->team,team8bit.c_str()))
             result.push_back(clients[i]->clientnum);
     return result;
 }
@@ -882,7 +896,8 @@ int team_draw(const char * team)
 int team_size(const char * team)
 {
     int count = 0;
-    loopv(clients) if(strcmp(clients[i]->team, team)==0) count++;
+    std::string team8bit = decodeutf8(team);
+    loopv(clients) if(strcmp(clients[i]->team, team8bit.c_str())==0) count++;
     return count;
 }
 

@@ -176,6 +176,71 @@ done:
     return dst - dstbuf;
 }
 
+std::string decodeutf8(std::string src) {
+    std::string dst;
+    dst.reserve(src.length()); // may be more than needed
+
+    std::string::iterator iter = src.begin();
+    while (iter != src.end()) {
+        unsigned char c = *iter; // must be unsigned for correct integer comparison
+        if (c < 0x80) { // ASCII char
+            dst += c;
+        } else if (c >= 0xC0) { // multi-byte char
+            unsigned int uni;
+            if (c >= 0xE0) {
+                if (c >= 0xF0) {
+                    uni = c & 0x7;
+                    if (++iter == src.end()) break; 
+                    c = *iter;
+                    if ((c & 0xC0) != 0x80) continue;
+                    uni = (uni<<6) | (c & 0x3F);
+                } else { 
+                    uni = c & 0xF; 
+                }
+                if (++iter == src.end()) break; 
+                c = *iter; 
+                if ((c & 0xC0) != 0x80) continue;
+                uni = (uni<<6) | (c & 0x3F);
+            } else { 
+                uni = c & 0x1F;
+            }
+            if (++iter == src.end()) break; 
+            c = *iter; 
+            if ((c & 0xC0) != 0x80) continue;
+            uni = (uni<<6) | (c & 0x3F);
+            c = uni2cube(uni);
+            if(!c) continue;
+            dst += c;
+        }
+        ++iter;
+    }
+    return dst;
+}
+
+std::string encodeutf8(std::string src) {
+    std::string dst;
+    dst.reserve(src.length()); // min. length, may be longer
+    for (unsigned int i=0; i<src.size(); i++) {
+        unsigned int uni = cube2uni(src[i]);
+        if (uni < 0x80) { // ASCII char
+            dst += uni;
+        } else if (uni < 0x800) { // 2-byte char
+            dst += 0xC0 | (uni>>6);
+            dst += 0x80 | (uni & 0x3F);
+        } else if (uni < 0x10000) { // 3-byte char
+            dst += 0xE0 | (uni>>12);
+            dst += 0x80 | (uni>>6 & 0x3F);
+            dst += 0x80 | (uni & 0x3F);
+        } else if (uni < 0x110000) { // 4-byte char (no longer exist yet)
+            dst += 0xF0 | (uni>>18);
+            dst += 0x80 | (uni>>12 & 0x3F);
+            dst += 0x80 | (uni>>6 & 0x3F);
+            dst += 0x80 | (uni & 0x3F);
+        }
+    } 
+    return dst;
+}
+
 ///////////////////////// file system ///////////////////////
 
 #ifdef WIN32

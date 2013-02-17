@@ -1792,7 +1792,7 @@ namespace server
         notgotitems = true;
         if(m_edit || !e::loadents(smapname, ments, mcrc))
         {
-            std::cerr<<"failed to load mapents for map "<<smapname<<std::endl;
+            std::cerr << "failed to load mapents for map " << encodeutf8(smapname) << std::endl;
             mcrc = 0;
             return;
         }
@@ -1870,7 +1870,7 @@ namespace server
         
         loopv(clients) clients[i]->ac.reset();
         
-        event_mapchange(event_listeners(), boost::make_tuple(smapname, modename(gamemode,"unknown")));
+        event_mapchange(event_listeners(), boost::make_tuple(encodeutf8(smapname).c_str(), modename(gamemode,"unknown")));
         
         next_timeupdate = 0; //as soon as possible
     }
@@ -1891,7 +1891,7 @@ namespace server
             }
             else
             {
-                std::cerr<<next_gamemode<<" game mode is unrecognised."<<std::endl;
+                std::cerr << encodeutf8(next_gamemode) << " game mode is unrecognised." << std::endl;
                 //sendf(-1, 1, "ri", N_MAPRELOAD);
             }
             return true;
@@ -1934,7 +1934,7 @@ namespace server
             if(best && (best->count > (force ? 1 : maxvotes/2)))
             {
                 sendservmsg(force ? "vote passed by default" : "vote passed by majority");
-                event_votepassed(event_listeners(), boost::make_tuple(best->map, modename(best->mode)));
+                event_votepassed(event_listeners(), boost::make_tuple(encodeutf8(best->map).c_str(), modename(best->mode)));
                 changemap(best->map, best->mode);
             }
             else rotatemap();
@@ -2402,7 +2402,7 @@ namespace server
         if(reason != DISC_NONE || ci->disconnect_reason.length())
         {
             disc_reason_msg = (ci->disconnect_reason.length() ? ci->disconnect_reason.c_str() : disconnect_reason(reason));
-            defformatstring(discmsg)("client (%s) disconnected because: %s", ci->hostname(), disc_reason_msg);
+            defformatstring(discmsg)("client (%s) disconnected because: %s", ci->hostname(), decodeutf8(disc_reason_msg).c_str());
             printf("%s\n",discmsg);
             if (!ci->spy) sendservmsg(discmsg);
         }
@@ -2458,7 +2458,7 @@ namespace server
         
         ci->spy = false;
         
-        if(event_connecting(event_listeners(), boost::make_tuple(ci->clientnum, ci->hostname(), ci->name, pwd, is_reserved)))
+        if(event_connecting(event_listeners(), boost::make_tuple(ci->clientnum, ci->hostname(), encodeutf8(ci->name).c_str(), pwd, is_reserved)))
         {
             return DISC_IPBAN;
         }
@@ -2504,7 +2504,7 @@ namespace server
     
     bool tryauth(clientinfo *ci, const char * user, const char * domain)
     {
-        event_authreq(event_listeners(), boost::make_tuple(ci->clientnum, user, domain));
+        event_authreq(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(user).c_str(), domain));
         return true;
     }
     
@@ -2836,7 +2836,7 @@ namespace server
                 
                 if(!m_edit && mcrc && (uint)mcrc != (uint)ci->mapcrc)
                 {
-                    event_modmap(event_listeners(), boost::make_tuple(ci->clientnum, text, crc));
+                    event_modmap(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(ci->clientmap).c_str(), ci->mapcrc));
                     sendservmsgf("%s is using a modified map", colorname(ci, ci->name));
                 }
                 break;
@@ -2849,6 +2849,7 @@ namespace server
                     clientinfo *ci = clients[i];
                     if(ci->mapcrc && (uint)mcrc != (uint)ci->mapcrc)
                     {
+                        event_modmap(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(ci->clientmap).c_str(), ci->mapcrc));
                         sendservmsgf("%s is using a modified map", colorname(ci, ci->name));
                     }
                 }
@@ -2876,8 +2877,8 @@ namespace server
                 if(!cq || (cq->state.state!=CS_ALIVE && cq->state.state!=CS_DEAD) || ls!=cq->state.lifesequence || cq->state.lastspawn<0) break;
                 if(!cq->mapcrc && cq->state.aitype == AI_NONE)
                 {
-                    sendservmsgf("%s is using a modified map", colorname(ci, ci->name));
-                    event_modmap(event_listeners(), boost::make_tuple(ci->clientnum, text, cq->mapcrc));
+                    event_modmap(event_listeners(), boost::make_tuple(cq->clientnum, encodeutf8(cq->clientmap).c_str(), cq->mapcrc));
+                    sendservmsgf("%s is using a modified map", colorname(cq, cq->name));
                     cq->mapcrc = 1;
                 }
                 if (ci->spy)
@@ -2995,7 +2996,7 @@ namespace server
                         break;
                     }
                     
-                    if( event_text(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false &&
+                    if( event_text(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(text).c_str())) == false &&
                         !ci->is_delayed_spectator())
                     {
                         QUEUE_AI;
@@ -3011,7 +3012,7 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text);
                 if(!ci || !cq || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_teammode || !cq->team[0] || message::limit(ci, &ci->n_sayteam_millis, message::resend_time::sayteam, "N_SAYTEAM") || ci->spy) break;
-                if(event_sayteam(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false)
+                if(event_sayteam(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(text).c_str())) == false)
                 {
                     loopv(clients)
                     {
@@ -3028,12 +3029,13 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text, false, MAXNAMELEN);
                 if(!text[0]) copystring(text, "unnamed");
+                std::string newname = encodeutf8(text);
           
                 string oldname;
                 copystring(oldname, ci->name);
                 
                 bool allow_rename = !ci->spy && strcmp(ci->name, text) &&
-                    event_allow_rename(event_listeners(), boost::make_tuple(ci->clientnum, text)) == false;
+                    event_allow_rename(event_listeners(), boost::make_tuple(ci->clientnum, newname.c_str())) == false;
                 
                 if(allow_rename)
                 {
@@ -3041,7 +3043,7 @@ namespace server
                     
                     event_renaming(event_listeners(), boost::make_tuple(ci->clientnum, 0));
                     
-                    event_rename(event_listeners(), boost::make_tuple(ci->clientnum, oldname, ci->name));
+                    event_rename(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(oldname).c_str(), newname.c_str()));
                     
                     QUEUE_INT(N_SWITCHNAME);
                     QUEUE_STR(ci->name);
@@ -3070,20 +3072,20 @@ namespace server
             {
                 getstring(text, p);
                 filtertext(text, text, false, MAXTEAMLEN);
+                std::string newteam = encodeutf8(text);
+                std::string oldteam = encodeutf8(ci->team);
                 
                 bool allow = m_teammode && text[0] && strcmp(ci->team, text) && 
                     (!smode || smode->canchangeteam(ci, ci->team, text)) &&
                     !message::limit(ci, &ci->n_switchname_millis, message::resend_time::switchteam, "N_SWITCHTEAM") &&
-                    event_chteamrequest(event_listeners(), boost::make_tuple(ci->clientnum, ci->team, text)) == false;
+                    event_chteamrequest(event_listeners(), boost::make_tuple(ci->clientnum, oldteam.c_str(), newteam.c_str())) == false;
                 
                 if(allow && addteaminfo(text))
                 {
                     if(ci->state.state==CS_ALIVE) suicide(ci);
-                    string oldteam;
-                    copystring(oldteam, ci->team);
                     copystring(ci->team, text);
                     aiman::changeteam(ci);
-                    event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, oldteam, text));
+                    event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, oldteam.c_str(), newteam.c_str()));
                     if(!ci->spy) sendf(-1, 1, "riisi", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
                 }
                 break;
@@ -3096,7 +3098,7 @@ namespace server
                 int reqmode = getint(p);
                 if(!ci->local && !m_mp(reqmode)) reqmode = 0;
                 if(!message::limit(ci, &ci->n_mapvote_millis, message::resend_time::mapvote, "N_MAPVOTE") &&
-                   event_mapvote(event_listeners(), boost::make_tuple(ci->clientnum, text, modename(reqmode, "unknown"))) == false)
+                   event_mapvote(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(text).c_str(), modename(reqmode, "unknown"))) == false)
                 {
                     vote(text, reqmode, sender);
                 }
@@ -3245,7 +3247,7 @@ namespace server
                 if(ci->privilege && ci->clientnum != victim && vinfo && vinfo->privilege < PRIV_ADMIN)
                 {
                     if(ci->privilege < PRIV_ADMIN && message::limit(ci, &ci->n_kick_millis, message::resend_time::kick, "N_KICK")) break;
-                    event_kick_request(event_listeners(), boost::make_tuple(ci->clientnum, ci->name, 14400, victim, text));
+                    event_kick_request(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(ci->name).c_str(), 14400, victim, encodeutf8(text).c_str()));
                 }
                 break;
             }
@@ -3275,13 +3277,15 @@ namespace server
                 filtertext(text, text, false, MAXTEAMLEN);
                 if(!ci->privilege && !ci->local) break;
                 clientinfo *wi = getinfo(who);
+                std::string newteam = encodeutf8(text);
+                std::string oldteam = encodeutf8(wi->team);
                 if(!m_teammode || !text[0] || !wi || !strcmp(wi->team, text)) break;
                 if((!smode || smode->canchangeteam(wi, wi->team, text)) && 
-                    event_chteamrequest(event_listeners(), boost::make_tuple(wi->clientnum, wi->team, text)) == false &&
+                    event_chteamrequest(event_listeners(), boost::make_tuple(wi->clientnum, oldteam.c_str(), newteam.c_str())) == false &&
                     addteaminfo(text))
                 {
                     if(smode && wi->state.state==CS_ALIVE) suicide(wi);
-                    event_reteam(event_listeners(), boost::make_tuple(wi->clientnum, wi->team, text));
+                    event_reteam(event_listeners(), boost::make_tuple(wi->clientnum, oldteam.c_str(), newteam.c_str()));
                     copystring(wi->team, text, MAXTEAMLEN+1);
                 }
                 aiman::changeteam(wi);
@@ -3493,7 +3497,7 @@ namespace server
             case N_SERVCMD:
             {
                 getstring(text, p);
-                event_servcmd(event_listeners(), boost::make_tuple(ci->clientnum, text));
+                event_servcmd(event_listeners(), boost::make_tuple(ci->clientnum, encodeutf8(text).c_str()));
                 break;
             }
 

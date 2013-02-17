@@ -2,6 +2,7 @@
 
 #ifndef _TOOLS_H
 #define _TOOLS_H
+#include <string>
 
 #ifdef NULL
 #undef NULL
@@ -1158,6 +1159,8 @@ static inline uchar uni2cube(int c)
 }
 extern int decodeutf8(uchar *dst, int dstlen, uchar *src, int srclen, int *carry = NULL);
 extern int encodeutf8(uchar *dstbuf, int dstlen, uchar *srcbuf, int srclen, int *carry = NULL);
+extern std::string decodeutf8(std::string src);
+extern std::string encodeutf8(std::string src);
 
 extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL, const char *cmd = NULL);
 extern char *path(char *s);

@@ -135,7 +135,7 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "get_gamemode_info", server::lua_gamemodeinfo);
     bind_function(L, T, "pausegame", (void (*)(bool))server::pausegame);
     
-    bind_function(L, T, "msg", server::sendservmsg);
+    bind_function(L, T, "msg", server::server_msg);
 
     bind_function(L, T, "changetime", server::changetime);
     bind_function(L, T, "changemap", server::changemap);
@@ -251,14 +251,14 @@ static int string_accessor(lua_State * L)
     if(lua_gettop(L) > 0) // Set variable
     {
         if(READ_ONLY) luaL_error(L, "variable is read-only");
-        copystring(var, lua_tostring(L, 1));
+        copystring(var, decodeutf8(lua_tostring(L, 1)).c_str());
         event_varchanged(event_listeners(), boost::make_tuple(lua_tostring(L, lua_upvalueindex(2))));
         return 0;
     }
     else // Get variable
     {
         if(WRITE_ONLY) luaL_error(L, "variable is write-only");
-        lua::push(L, var);
+        lua::push(L, encodeutf8(var));
         return 1;
     }
 }
