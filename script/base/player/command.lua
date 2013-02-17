@@ -139,6 +139,7 @@ local function exec_command(cn, text, force)
         text = string.sub(text, 2)
     end
 
+    --[[ 
     local function unsupported(char)
         return function()
             error(char .. " syntax is not supported in player commands")
@@ -151,6 +152,20 @@ local function exec_command(cn, text, force)
     }
     
     local arguments, error_message = cubescript.library.parse_array(text, command_env, true)
+    ]]
+
+    local arguments = {}
+    local quotecount = 0
+    for token in string.gmatch(text, '[^"]+') do
+           if quotecount % 2 == 0 then
+               for word in string.gmatch(token, '[^%s]+') do
+                   table.insert(arguments, word)
+               end
+           else
+               table.insert(arguments, token)
+           end
+           quotecount = quotecount + 1
+    end
     
     if not arguments then
         server.player_msg(cn, red("Command syntax error: " .. error_message))
