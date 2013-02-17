@@ -773,6 +773,7 @@ namespace server
             case PRIV_ADMIN: return "admin";
             case PRIV_AUTH: return "auth";
             case PRIV_MASTER: return "master";
+            case PRIV_NONE: return "none";
             default: return "unknown";
         }
     }
