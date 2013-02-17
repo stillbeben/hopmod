@@ -3245,7 +3245,7 @@ namespace server
                 if(ci->privilege && ci->clientnum != victim && vinfo && vinfo->privilege < PRIV_ADMIN)
                 {
                     if(ci->privilege < PRIV_ADMIN && message::limit(ci, &ci->n_kick_millis, message::resend_time::kick, "N_KICK")) break;
-                    event_kick_request(event_listeners(), boost::make_tuple(ci->clientnum, ci->name, 14400, victim, ""));
+                    event_kick_request(event_listeners(), boost::make_tuple(ci->clientnum, ci->name, 14400, victim, text));
                 }
                 break;
             }
