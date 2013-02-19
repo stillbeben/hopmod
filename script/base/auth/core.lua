@@ -313,7 +313,7 @@ function auth.send_request(cn, domain_id, callback)
     
     local session_id = server.player_sessionid(cn)
     
-    server.sleep(5000, function()
+    server.sleep(30000, function()
         
         if session_id ~= server.player_sessionid(cn) then return end
         
