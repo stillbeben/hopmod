@@ -11,4 +11,3 @@ Arguments:
 
 Debug Build: sh compile.sh 0 debug
 Recompile: sh compile.sh 1 [debug]
-
