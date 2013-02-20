@@ -10,6 +10,7 @@
 #define EXT_TEAMSCORE                   2
 
 #define EXT_HOPMOD                      -2 // Case to identify Hopmod based servers
+#define EXT_HOPMOD_VERSION              1  // bump when changing hopmod related extensions
 
 /*
     Client:
@@ -82,6 +83,13 @@
         }
         loopv(scores) extinfoteamscore(p, scores[i].team, scores[i].score);
     }
+    
+    static inline const char *buildtime()
+    {
+        static string buf = {0};
+        if(!buf[0]) formatstring(buf)("%s %s", hopmod::build_date(), hopmod::build_time());
+        return buf;
+    }
 
     void extserverinforeply(ucharbuf &req, ucharbuf &p)
     {
@@ -96,6 +104,23 @@
             case EXT_UPTIME:
             {
                 putint(p, totalsecs); //in seconds
+                /* hopmod extension */
+                if(req.remaining() && req.get() > 0)
+                {
+                    putint(p, EXT_HOPMOD);
+                    putint(p, EXT_HOPMOD_VERSION);
+                    putint(p, hopmod::revision());
+                    sendstring(buildtime(), p);
+                }
+                break;
+            }
+    
+            /* hopmod extension */
+            case EXT_HOPMOD:
+            {
+                putint(p, EXT_NO_ERROR);
+                putint(p, hopmod::revision());
+                sendstring(buildtime(), p);
                 break;
             }
 
