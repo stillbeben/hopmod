@@ -607,7 +607,7 @@ bool hasmaster()
 
 void cleanup_masterstate()
 {
-    if(!hasmaster())
+    if(reset_mm && !hasmaster())
     {
         mastermode = display_open ? MM_OPEN : MM_AUTH;
         allowedips.shrink(0);
