@@ -162,7 +162,9 @@ server.event_handler("connect", function (cn)
 
     if country == "" then country = "unknown" end
 
-    sendmsg(string.format(irc_color_orange("CONNECT: ")..irc_color_green("%s ")..irc_color_grey("(%i) ")..irc_color_orange("COUNTRY: ")..irc_color_brown("%s"),server.player_name(cn),cn,country)) 
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_orange("CONNECT: ")..irc_color_green("%s ")..irc_color_grey("(%i) ")..irc_color_orange("COUNTRY: ")..irc_color_brown("%s"),server.player_name(cn),cn,country)) 
+    end
 end)
 
 
@@ -184,7 +186,9 @@ server.event_handler("disconnect", function (cn,reason)
 		reason = "normal"
     end
 
-    sendmsg(string.format(irc_color_orange("DISCONNECT: ")..irc_color_green("%s ")..irc_color_grey("(%i) ")..irc_color_orange("REASON: ")..irc_color_brown("%s"), server.player_name(cn), cn, reason))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_orange("DISCONNECT: ")..irc_color_green("%s ")..irc_color_grey("(%i) ")..irc_color_orange("REASON: ")..irc_color_brown("%s"), server.player_name(cn), cn, reason))
+    end
 end)
 
 server.event_handler("kick", function(cn, bantime, admin, reason)
@@ -195,15 +199,21 @@ server.event_handler("kick", function(cn, bantime, admin, reason)
     local action_tag = "kicked"
     if tonumber(bantime) < 0 then action_tag = "kicked and permanently banned" end
     
-    sendmsg(string.format(irc_color_red("%s(cn:%i/ip:%s) was %s by %s reason: %s"),irc_bold(server.player_name(cn)),cn,server.player_ip(cn),action_tag,irc_bold(admin),reason_tag))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_red("%s(cn:%i/ip:%s) was %s by %s reason: %s"),irc_bold(server.player_name(cn)),cn,server.player_ip(cn),action_tag,irc_bold(admin),reason_tag))
+    end
 end)
 
 server.event_handler("rename",function(cn, oldname, newname)
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("renamed to ")..irc_color_orange("%s"),oldname,cn,newname))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("renamed to ")..irc_color_orange("%s"),oldname,cn,newname))
+    end
 end)
 
 server.event_handler("reteam",function(cn, oldteam, newteam)
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("switched to team ")..irc_color_orange("%s"),server.player_name(cn),cn,newteam))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("switched to team ")..irc_color_orange("%s"),server.player_name(cn),cn,newteam))
+    end
 end)
 
 server.event_handler("text", function(cn, msg)
@@ -217,15 +227,21 @@ server.event_handler("text", function(cn, msg)
     
     local mute_tag = ""
     if server.is_muted(cn) then mute_tag = "(muted)" end
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i): ")..irc_color_neon("%s%s"),server.player_name(cn),cn,mute_tag,msg))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i): ")..irc_color_neon("%s%s"),server.player_name(cn),cn,mute_tag,msg))
+    end
 end)
 
 server.event_handler("sayteam", function(cn, msg)
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i)[team]: ")..irc_color_neon("%s"),server.player_name(cn),cn,msg))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i)[team]: ")..irc_color_neon("%s"),server.player_name(cn),cn,msg))
+    end
 end)
 
 server.event_handler("mapvote", function(cn, map, mode)
-    sendmsg(string.format(irc_color_orange("MAPVOTE: ")..irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_orange("MODE: ")..irc_color_neon("%s ")..irc_color_orange("MAP: ")..irc_color_neon("%s"),server.player_name(cn),cn,mode,map))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_orange("MAPVOTE: ")..irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_orange("MODE: ")..irc_color_neon("%s ")..irc_color_orange("MAP: ")..irc_color_neon("%s"),server.player_name(cn),cn,mode,map))
+    end
 end)
 
 server.event_handler("mapchange", function(map, mode)
@@ -241,7 +257,9 @@ server.event_handler("mapchange", function(map, mode)
 end)
 
 server.event_handler("setmastermode", function(cn, oldmode, newmode)
-    sendmsg(string.format("\0034MM\003    Mastermode changed to %s",newmode))
+    if sendmsg ~= nil then
+        sendmsg(string.format("\0034MM\003    Mastermode changed to %s",newmode))
+    end
 end)
 
 server.event_handler("masterchange", function(cn, value)
@@ -249,13 +267,17 @@ server.event_handler("masterchange", function(cn, value)
     local action_tag = "claimed"
     if tonumber(value) == 0 then action_tag = "relinquished" end
 
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("claimed ")..irc_color_blue("%s"), server.player_name(cn), cn, action_tag, server.player_priv(cn)))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("claimed ")..irc_color_blue("%s"), server.player_name(cn), cn, action_tag, server.player_priv(cn)))
+    end
 end)
 
 server.sleep(1, function()
 	auth.listener("", function(cn, user_id, domain, status)
 		if status ~= auth.request_status.SUCCESS then return end
-		sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("claimed ")..irc_color_blue("master ")..irc_color_brown("as ")..irc_color_grey("'")..irc_color_pink("%s")..irc_color_grey("'"), server.player_name(cn), cn, user_id))
+                if sendmsg ~= nil then
+		    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("claimed ")..irc_color_blue("master ")..irc_color_brown("as ")..irc_color_grey("'")..irc_color_pink("%s")..irc_color_grey("'"), server.player_name(cn), cn, user_id))
+                end
 	end)
 end)
 
@@ -264,36 +286,56 @@ server.event_handler("spectator", function(cn, value)
     local action_tag = "joined"
     if tonumber(value) == 0 then action_tag = "left" end
     
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("%s ")..irc_color_blue("spectators"),server.player_name(cn),cn,action_tag))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("%s ")..irc_color_blue("spectators"),server.player_name(cn),cn,action_tag))
+    end
 end)
 
-server.event_handler("gamepaused", function() sendmsg(irc_color_grey("game is ")..irc_color_brown("paused")) end)
-server.event_handler("gameresumed", function() sendmsg(irc_color_grey("game is ")..irc_color_brown("resumed")) end)
+server.event_handler("gamepaused", function() 
+    if sendmsg ~= nil then
+        sendmsg(irc_color_grey("game is ")..irc_color_brown("paused")) 
+    end
+end)
+server.event_handler("gameresumed", function() 
+    if sendmsg ~= nil then
+        sendmsg(irc_color_grey("game is ")..irc_color_brown("resumed")) 
+    end
+end)
 
 server.event_handler("addbot", function(cn,skill,owner)
     local addedby = "server"
     if cn ~= -1 then addedby = server.player_name(cn) end
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("added a bot with the skill of ")..irc_color_orange("%i"), addedby, cn, skill))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("added a bot with the skill of ")..irc_color_orange("%i"), addedby, cn, skill))
+    end
 end)
 
 server.event_handler("delbot", function(cn)
-    sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("deleted a bot"),server.player_name(cn),cn))
+    if sendmsg ~= nil then
+        sendmsg(string.format(irc_color_blue("%s ")..irc_color_grey("(%i) ")..irc_color_brown("deleted a bot"),server.player_name(cn),cn))
+    end
 end)
 
 server.sleep(1, function()
-	server.event_handler("beginrecord", function(id,filename)
-		sendmsg(string.format("recording demo (%s)",filename))
-	end)
+    server.event_handler("beginrecord", function(id,filename)
+        if sendmsg ~= nil then
+            sendmsg(string.format("recording demo (%s)",filename))
+        end
+    end)
 
-	server.event_handler("endrecord", function(id, size)
-	   sendmsg(string.format("end of demorecord (%s file size)",format_filesize(tonumber(size))))
-	end)
+    server.event_handler("endrecord", function(id, size)
+        if sendmsg ~= nil then
+            sendmsg(string.format("end of demorecord (%s file size)",format_filesize(tonumber(size))))
+        end
+    end)
 end)
 
 server.event_handler("checkmaps", function(cn)
-	local modified_clients = server.modified_map_clients()
-    for sessionid, cn in pairs(modified_clients) do
-		sendmsg(string.format(irc_color_red("%s(cn:%i/map:%s/ip:%s) is using a modified map"),server.player_name(cn),cn, server.map, server.player_ip(cn)))
+    local modified_clients = server.modified_map_clients()
+    if sendmsg ~= nil then
+        for sessionid, cn in pairs(modified_clients) do
+                    sendmsg(string.format(irc_color_red("%s(cn:%i/map:%s/ip:%s) is using a modified map"),server.player_name(cn),cn, server.map, server.player_ip(cn)))
+        end
     end
 end)
 
@@ -336,7 +378,7 @@ local function get_best_stats(time)
 end
 
 server.event_handler("timeupdate", function(time) -- post game stats each minute
-    if #server.clients() >= 1 then
+    if #server.clients() >= 1 and sendmsg ~= nil then
         sendmsg(get_best_stats(time))
     end
     return -1
