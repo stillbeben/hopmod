@@ -167,6 +167,8 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "version", hopmod::build_date);
     bind_function(L, T, "build_date", hopmod::build_date);
     bind_function(L, T, "build_time", hopmod::build_time);
+    // pureascii: don't use bind_prop with setter as long as it breaks the getter
+    bind_function(L, T, "set_mastermode", server::set_mastermode);
     
 }
 
@@ -362,8 +364,11 @@ void bind_core_variables(lua_State * L, int T)
     bind_ro_var(L, T, "map", server::smapname);
     bind_var(L, T, "server_password", server::serverpass);
     bind_var(L, T, "server_auth_domain", server::serverauth);
-    bind_prop(L, T, "timeleft", server::get_minutes_left, server::set_minutes_left);
-    bind_prop(L, T, "seconds_left", server::get_seconds_left, server::set_seconds_left);
+    // pureascii: don't use bind_prop with setter as long as it breaks the getter
+    //bind_prop(L, T, "timeleft", server::get_minutes_left, server::set_minutes_left);
+    //bind_prop(L, T, "seconds_left", server::get_seconds_left, server::set_seconds_left);
+    bind_prop<int>(L, T, "timeleft", server::get_minutes_left, NULL);
+    bind_prop<int>(L, T, "seconds_left", server::get_seconds_left, NULL);
     bind_var(L, T, "intermission", server::interm);
     bind_ro_var(L, T, "uptime", totalmillis);
     bind_ro_var(L, T, "gamemillis", server::gamemillis);
@@ -419,6 +424,8 @@ void bind_core_variables(lua_State * L, int T)
     
     bind_var(L, T, "mapcrc", server::mcrc);
 
-    bind_prop<int>(L, T, "mastermode", server::get_mastermode, server::set_mastermode);
+    // pureascii: don't use bind_prop with setter as long as it breaks the getter
+    //bind_prop<int>(L, T, "mastermode", server::get_mastermode, server::set_mastermode);
+    bind_prop<int>(L, T, "mastermode", server::get_mastermode, NULL);
 }
 
