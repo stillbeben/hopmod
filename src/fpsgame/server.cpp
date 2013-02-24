@@ -2990,7 +2990,7 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text);
                 
-                if(ci && (ci->privilege == PRIV_ADMIN || !message::limit(ci, &ci->n_text_millis, message::resend_time::text, "N_TEXT")))
+                if(ci && (ci->privilege == PRIV_ADMIN || !message::limit(ci, &ci->n_text_millis, message::resend_time::text, "text")))
                 {
                     bool is_command = text[0] == '#';
                     
@@ -3022,7 +3022,7 @@ namespace server
             {
                 getstring(text, p);
                 filtertext(text, text);
-                if(!ci || !cq || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_teammode || !cq->team[0] || message::limit(ci, &ci->n_sayteam_millis, message::resend_time::sayteam, "N_SAYTEAM") || ci->spy) break;
+                if(!ci || !cq || (ci->state.state==CS_SPECTATOR && !ci->privilege) || !m_teammode || !cq->team[0] || message::limit(ci, &ci->n_sayteam_millis, message::resend_time::sayteam, "team chat") || ci->spy) break;
                 convert2utf8 utf8text(text);
                 if(event_sayteam(event_listeners(), boost::make_tuple(ci->clientnum, utf8text.str())) == false)
                 {
@@ -3047,6 +3047,7 @@ namespace server
                 copystring(oldname, ci->name);
                 
                 bool allow_rename = !ci->spy && strcmp(ci->name, text) &&
+                    !message::limit(ci, &ci->n_switchname_millis, message::resend_time::switchname, "name change") &&
                     event_allow_rename(event_listeners(), boost::make_tuple(ci->clientnum, newnameutf8.str())) == false;
                 
                 if(allow_rename)
@@ -3090,7 +3091,7 @@ namespace server
                 
                 bool allow = m_teammode && text[0] && strcmp(ci->team, text) && 
                     (!smode || smode->canchangeteam(ci, ci->team, text)) &&
-                    !message::limit(ci, &ci->n_switchname_millis, message::resend_time::switchteam, "N_SWITCHTEAM") &&
+                    !message::limit(ci, &ci->n_switchteam_millis, message::resend_time::switchteam, "team change") &&
                     event_chteamrequest(event_listeners(), boost::make_tuple(ci->clientnum, oldteamutf8.str(), newteamutf8.str())) == false;
                 
                 if(allow && addteaminfo(text))
@@ -3111,7 +3112,7 @@ namespace server
                 int reqmode = getint(p);
                 if(!ci->local && !m_mp(reqmode)) reqmode = 0;
                 convert2utf8 utf8text(text);
-                if(!message::limit(ci, &ci->n_mapvote_millis, message::resend_time::mapvote, "N_MAPVOTE") &&
+                if(!message::limit(ci, &ci->n_mapvote_millis, message::resend_time::mapvote, "mapvote") &&
                    event_mapvote(event_listeners(), boost::make_tuple(ci->clientnum, utf8text.str(), modename(reqmode, "unknown"))) == false)
                 {
                     vote(text, reqmode, sender);
@@ -3260,7 +3261,7 @@ namespace server
                 clientinfo *vinfo = getinfo(victim);
                 if(ci->privilege && ci->clientnum != victim && vinfo && vinfo->privilege < PRIV_ADMIN)
                 {
-                    if(ci->privilege < PRIV_ADMIN && message::limit(ci, &ci->n_kick_millis, message::resend_time::kick, "N_KICK")) break;
+                    if(ci->privilege < PRIV_ADMIN && message::limit(ci, &ci->n_kick_millis, message::resend_time::kick, "kick")) break;
                     convert2utf8 utf8name(ci->name);
                     convert2utf8 utf8text(text);
                     event_kick_request(event_listeners(), boost::make_tuple(ci->clientnum, utf8name.str(), 14400, victim, utf8text.str()));
@@ -3272,7 +3273,7 @@ namespace server
             {
                 int spectator = getint(p), val = getint(p);
                 bool self = spectator == sender;
-                if(!ci->privilege && (!self || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED) || (ci->state.state == CS_SPECTATOR && !val && !ci->allow_self_unspec) || message::limit(ci, &ci->n_spec_millis, message::resend_time::spec, "N_SPECTATOR"))) break;
+                if(!ci->privilege && (!self || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED) || (ci->state.state == CS_SPECTATOR && !val && !ci->allow_self_unspec) || message::limit(ci, &ci->n_spec_millis, message::resend_time::spec, "spectator status change"))) break;
                 clientinfo *spinfo = (clientinfo *)getclientinfo(spectator); // no bots
                 if(!spinfo) break;
                 if(val && spinfo != ci && spinfo->privilege && ci->privilege < PRIV_ADMIN)
@@ -3366,7 +3367,7 @@ namespace server
             {
                 int size = getint(p);
                 if(!ci->privilege && !ci->local && ci->state.state==CS_SPECTATOR) break;
-                if(message::limit(ci, &ci->n_newmap_millis, message::resend_time::newmap, "N_NEWMAP")) break;
+                if(message::limit(ci, &ci->n_newmap_millis, message::resend_time::newmap, "map change")) break;
                 if(size>=0)
                 {
                     smapname[0] = '\0';
