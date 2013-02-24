@@ -1029,6 +1029,11 @@ void calc_player_ranks()
 
 void set_mastermode(int value)
 {
+    set_mastermode_cn(value, -1);
+}
+
+void set_mastermode_cn(int value, int cn)
+{
     if(value == mastermode)
     {
         return;
@@ -1044,7 +1049,7 @@ void set_mastermode(int value)
         loopv(clients) allowedips.add(getclientip(clients[i]->clientnum));
     }
     
-    event_setmastermode(event_listeners(), boost::make_tuple(-1, mastermodename(prev_mastermode), mastermodename(mastermode)));
+    event_setmastermode(event_listeners(), boost::make_tuple(cn, mastermodename(prev_mastermode), mastermodename(mastermode)));
     
     sendf(-1, 1, "rii", N_MASTERMODE, mastermode);
 }
