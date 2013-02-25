@@ -17,8 +17,10 @@ return function(cn, target)
 		return false, "CN is not valid"
 	end
 
-	server.unsetmaster()
+	server.unsetpriv(cn)
 	server.player_msg(target, server.player_displayname(cn) .. " has passed master privilege to you.")
-	server.setmaster(target)
+        if not (server.player_priv_code(target) >= server.PRIV_MASTER) then
+            server.setmaster(target)
+        end
 
 end
