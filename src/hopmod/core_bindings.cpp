@@ -89,6 +89,7 @@ void bind_core_functions(lua_State * L, int T)
     bind_function(L, T, "player_win", server::player_win);
     bind_function(L, T, "player_slay", server::player_slay);
     bind_function(L, T, "player_suicide", (void (*)(int))server::suicide);
+    bind_function(L, T, "player_servcmd", server::player_servcmd);
     bind_function(L, T, "changeteam", server::player_changeteam);
     bind_function(L, T, "player_bots", server::player_bots);
     bind_function(L, T, "player_rank", server::player_rank);
