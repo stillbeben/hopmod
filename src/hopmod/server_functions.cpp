@@ -1074,6 +1074,7 @@ void suicide(int cn)
 
 void player_servcmd(int cn, const char *string)
 {
+    if(!get_ci(cn)) return;
     sendf(cn, 1, "ris", N_SERVCMD, string);
 }
 
