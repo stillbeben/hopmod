@@ -1840,7 +1840,14 @@ namespace server
         sendf(-1, 1, "risii", N_MAPCHANGE, smapname, gamemode, 1);
         
         clearteaminfo();
-        if(m_teammode && reassignteams) autoteam();
+        if(m_teammode)
+        {
+            if(reassignteams) autoteam();
+            else
+            {
+                loopv(clients) addteaminfo(clients[i]->team);
+            }
+        }
 
         if(m_capture) smode = &capturemode;
         else if(m_ctf) smode = &ctfmode;

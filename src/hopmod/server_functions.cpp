@@ -474,7 +474,7 @@ bool player_changeteam(int cn,const char * newteam)
     convert2utf8 oldteamutf8(ci->team);
 
     if(!m_teammode || (smode && !smode->canchangeteam(ci, ci->team, newteamcubeenc.str())) ||
-        event_chteamrequest(event_listeners(), boost::make_tuple(cn, oldteamutf8.str(), newteam))) 
+        event_chteamrequest(event_listeners(), boost::make_tuple(cn, oldteamutf8.str(), newteam)) || !addteaminfo(newteamcubeenc.str()))
     {
         return false;
     }
