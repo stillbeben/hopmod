@@ -41,7 +41,7 @@ add_subdirectory(lua)
 add_subdirectory(fungu)
 add_subdirectory(lsqlite3-8)
 add_subdirectory(hopmod/standalone/luapp)
-add_subdirectory(luasql EXCLUDE_FROM_ALL)
+add_subdirectory(luasql)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
