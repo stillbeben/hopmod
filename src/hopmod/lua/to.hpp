@@ -3,6 +3,12 @@
 
 #include <cassert>
 
+inline int luaL_typeerror (lua_State *L, int narg, const char *tname) {
+  const char *msg = lua_pushfstring(L, "%s expected, got %s",
+                                    tname, luaL_typename(L, narg));
+  return luaL_argerror(L, narg, msg);
+}
+
 namespace lua{
 
 // Checks that the value at the given index is a WrapperClass type and then returns a pointer to the object

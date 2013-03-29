@@ -37,8 +37,8 @@
 -- Intialize package --
 -----------------------
 
-local P = { }
-lunit = P
+--e52 local P = { }
+--e52 lunit = P
 
 -- Import
 local type = type
@@ -54,15 +54,16 @@ local error = error
 local setmetatable = setmetatable
 local rawset = rawset
 local orig_assert = assert
-local getfenv = getfenv
-local setfenv = setfenv
+--e52 local getfenv = getfenv
+--e52 local setfenv = setfenv
 local tostring = tostring
 
 
 -- Start package scope
-setfenv(1, P)
+--e52 setfenv(1, P)
 
-
+--e52 
+local _ENV = {}
 
 
 --------------------------------
@@ -452,10 +453,12 @@ function run()
   -- Count Test Cases and Tests --
   --------------------------------
   
-  stats.testcases = table.getn(testcases)
+  --e52 stats.testcases = table.getn(testcases)
+  stats.testcases = #testcases
   
   for _, tc in ipairs(testcases) do
-    stats_inc("tests" , table.getn(tc.__lunit_tests))
+    --e52 stats_inc("tests" , table.getn(tc.__lunit_tests))
+    stats_inc("tests" , #tc.__lunit_tests)
   end
   
   ------------------
@@ -575,7 +578,8 @@ function run_testcase(tc)
   ---------------------------------
   
   print()
-  print("#### Running '"..tc.__lunit_name.."' ("..table.getn(tc.__lunit_tests).." Tests)...")
+  --e52 print("#### Running '"..tc.__lunit_name.."' ("..table.getn(tc.__lunit_tests).." Tests)...")
+  print("#### Running '"..tc.__lunit_name.."' ("..#tc.__lunit_tests.." Tests)...")
   
   for _, testname in ipairs(tc.__lunit_tests) do
     if setup(testname) then
@@ -597,18 +601,19 @@ end
 -- Import function --
 ---------------------
 
-function import(name)
+
+function import(name, user_env)
   
   do_assert(is_string(name), "lunit.import() expects a single string as argument")
   
-  local user_env = getfenv(2)
+  --e52 local user_env = getfenv(2)
   
   --------------------------------------------------
   -- Installs a specific function in the user env --
   --------------------------------------------------
   
   local function install(funcname)
-    user_env[funcname] = P[funcname]
+    user_env[funcname] = _ENV[funcname]
   end
   
   
@@ -617,7 +622,7 @@ function import(name)
   ----------------------------------------------------------
   
   local function install_pattern(pattern)
-    for funcname, _ in pairs(P) do
+    for funcname, _ in pairs(_ENV) do
       if string.find(funcname, pattern) then
         install(funcname)
       end
@@ -666,14 +671,12 @@ end
 -- Installs a private environment on the caller --
 --------------------------------------------------
 
-function setprivfenv()
+function makeprivfenv()
   local new_env = { }
-  local new_env_mt = { __index = getfenv(2) }
+  local new_env_mt = { __index = _ENV }
   setmetatable(new_env, new_env_mt)
-  setfenv(2, new_env)
+  return new_env
 end
-
-
 
 
 --------------------------------------------------
@@ -688,6 +691,6 @@ function stats_inc(varname, value)
   stats[varname] = stats[varname] + (value or 1)
 end
 
-
-
+--e52 
+return _ENV
 

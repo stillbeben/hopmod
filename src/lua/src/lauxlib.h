@@ -14,6 +14,8 @@
 
 #include "lua.h"
 
+
+
 /* extra error code for `luaL_load' */
 #define LUA_ERRFILE     (LUA_ERRERR+1)
 
@@ -22,6 +24,7 @@ typedef struct luaL_Reg {
   const char *name;
   lua_CFunction func;
 } luaL_Reg;
+
 
 LUALIB_API void (luaL_checkversion_) (lua_State *L, lua_Number ver);
 #define luaL_checkversion(L)	luaL_checkversion_(L, LUA_VERSION_NUM)
@@ -206,11 +209,4 @@ LUALIB_API void (luaL_openlib) (lua_State *L, const char *libname,
 
 #endif
 
-//HOPMOD
-/*
- * Readded some functions in which were either removed or marked as deprecated
- */
-LUALIB_API int (luaL_pushtype) (lua_State *L, int narg); 
-LUALIB_API int (luaL_typeerror) (lua_State *L, int narg, const char *tname);
-//END HOPMOD
 

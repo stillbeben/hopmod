@@ -1,4 +1,4 @@
-require("lsqlite3")
+local sqlite3 = require("lsqlite3")
 
 local width = 78
 local function line(pref, suff)

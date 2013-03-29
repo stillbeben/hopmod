@@ -1,16 +1,4 @@
-<?xml version="1.0" ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<title>LuaSQLite 3</title>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<link rev="made" href="mailto:_postfix@neige.apple.com" />
-</head>
-
-<body style="background-color: white">
-
-
-<!-- INDEX BEGIN -->
+<nowiki>
 <div name="index">
 <p><a name="__index__"></a></p>
 
@@ -113,7 +101,6 @@
 
 <hr name="index" />
 </div>
-<!-- INDEX END -->
 
 <p>
 </p>
@@ -168,7 +155,7 @@ also show some example use.</p>
 from Michael's <strong>lua-sqlite3</strong> module, and more unit tests added by 
 Doug Currie.</p>
 <p>The distribution also contains some functional tests by Tiago.</p>
-<p>This version of <code>lsqlite3</code> was tested with SQLite 3.4.2.</p>
+<p>This version of <code>lsqlite3</code> was tested with SQLite 3.7.3.</p>
 <p>
 </p>
 <hr />
@@ -930,7 +917,7 @@ documentation</strong> <a href="http://www.sqlite.org/">http://www.sqlite.org/</
 </p>
 <hr />
 <h1><a name="version">VERSION</a></h1>
-<p>This is <code>lsqlite3</code> subversion 6, also known as &quot;devel-0.6&quot;.</p>
+<p>This is <code>lsqlite3</code> subversion 8, also known as &quot;devel-0.8&quot;.</p>
 <p>
 </p>
 <hr />
@@ -947,7 +934,7 @@ making it available.</p>
 <pre>
     /************************************************************************
     * lsqlite3                                                              *
-    * Copyright (C) 2002-2007 Tiago Dionizio, Doug Currie                   *
+    * Copyright (C) 2002-2011 Tiago Dionizio, Doug Currie                   *
     * All rights reserved.                                                  *
     * Author    : Tiago Dionizio &lt;tiago.dionizio@ist.utl.pt&gt;                *
     * Author    : Doug Currie &lt;doug.currie@alum.mit.edu&gt;                    *
@@ -971,8 +958,6 @@ making it available.</p>
     * CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,  *
     * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE     *
     * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                *
-    ************************************************************************/</pre>
-
-</body>
-
-</html>
+    ************************************************************************/
+</pre>
+</nowiki>

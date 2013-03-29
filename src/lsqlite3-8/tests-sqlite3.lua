@@ -27,29 +27,47 @@
 --]]--------------------------------------------------------------------------
 
 
-require "lsqlite3"
+local sqlite3 = require "lsqlite3"
 
-require "lunit"
+local os = os
 
-lunit.setprivfenv()
-lunit.import "assertions"
-lunit.import "checks"
+local lunit = require "lunitx"
 
+local tests_sqlite3
 
+if _VERSION >= 'Lua 5.2' then 
 
+    tests_sqlite3 = lunit.module('tests-sqlite3','seeall')
+    _ENV = tests_sqlite3
+    
+else
 
+    module('tests_sqlite3', lunit.testcase, package.seeall)
+    tests_sqlite3 = _M
+    
+end
+
+-- compat
+
+function lunit_wrap (name, fcn)
+   tests_sqlite3['test_o_'..name] = fcn
+end
+
+function lunit_TestCase (name)
+   return lunit.module(name,'seeall')
+end
 
 
 -------------------------------
 -- Basic open and close test --
 -------------------------------
 
-lunit.wrap("open_memory", function()
+lunit_wrap("open_memory", function()
   local db = assert_userdata( sqlite3.open_memory() )
   assert( db:close() )
 end)
 
-lunit.wrap("open", function()
+lunit_wrap("open", function()
   local filename = "/tmp/__lua-sqlite3-20040906135849." .. os.time()
   local db = assert_userdata( sqlite3.open(filename) )
   assert( db:close() )
@@ -62,18 +80,18 @@ end)
 -- Presence of db member functions --
 -------------------------------------
 
-local db_funcs = lunit.TestCase("Database Member Functions")
+local db_funcs = lunit_TestCase("Database Member Functions")
 
-function db_funcs:setup()
-  self.db = assert( sqlite3.open_memory() )
+function db_funcs.setup()
+  db_funcs.db = assert( sqlite3.open_memory() )
 end
 
-function db_funcs:teardown()
-  assert( self.db:close() )
+function db_funcs.teardown()
+  assert( db_funcs.db:close() )
 end
 
-function db_funcs:test()
-  local db = self.db
+function db_funcs.test()
+  local db = db_funcs.db
   assert_function( db.close )
   assert_function( db.exec )
 --e  assert_function( db.irows )
@@ -95,21 +113,21 @@ end
 -- Presence of stmt member functions --
 ---------------------------------------
 
-local stmt_funcs = lunit.TestCase("Statement Member Functions")
+local stmt_funcs = lunit_TestCase("Statement Member Functions")
 
-function stmt_funcs:setup()
-  self.db = assert( sqlite3.open_memory() )
-  self.stmt = assert( self.db:prepare("CREATE TABLE test (id, content)") )
+function stmt_funcs.setup()
+  stmt_funcs.db = assert( sqlite3.open_memory() )
+  stmt_funcs.stmt = assert( stmt_funcs.db:prepare("CREATE TABLE test (id, content)") )
 end
 
-function stmt_funcs:teardown()
---e-  assert( self.stmt:close() )
-  assert( self.stmt:finalize() ) --e+
-  assert( self.db:close() )
+function stmt_funcs.teardown()
+--e-  assert( stmt_funcs.stmt:close() )
+  assert( stmt_funcs.stmt:finalize() ) --e+
+  assert( stmt_funcs.db:close() )
 end
 
-function stmt_funcs:test()
-  local stmt = self.stmt
+function stmt_funcs.test()
+  local stmt = stmt_funcs.stmt
 --e  assert_function( stmt.close )
   assert_function( stmt.reset )
 --e  assert_function( stmt.exec )
@@ -160,56 +178,56 @@ end
 -- Tests basics --
 ------------------
 
-local basics = lunit.TestCase("Basics")
+local basics = lunit_TestCase("Basics")
 
-function basics:setup()
-  self.db = assert_userdata( sqlite3.open_memory() )
+function basics.setup()
+  basics.db = assert_userdata( sqlite3.open_memory() )
 end
 
-function basics:teardown()
-  assert_number( self.db:close() )
+function basics.teardown()
+  assert_number( basics.db:close() )
 end
 
-function basics:create_table()
-  assert_number( self.db:exec("CREATE TABLE test (id, name)") )
+function basics.create_table()
+  assert_number( basics.db:exec("CREATE TABLE test (id, name)") )
 end
 
-function basics:drop_table()
-  assert_number( self.db:exec("DROP TABLE test") )
+function basics.drop_table()
+  assert_number( basics.db:exec("DROP TABLE test") )
 end
 
-function basics:insert(id, name)
-  assert_number( self.db:exec("INSERT INTO test VALUES ("..id..", '"..name.."')") )
+function basics.insert(id, name)
+  assert_number( basics.db:exec("INSERT INTO test VALUES ("..id..", '"..name.."')") )
 end
 
-function basics:update(id, name)
-  assert_number( self.db:exec("UPDATE test SET name = '"..name.."' WHERE id = "..id) )
+function basics.update(id, name)
+  assert_number( basics.db:exec("UPDATE test SET name = '"..name.."' WHERE id = "..id) )
 end
 
-function basics:test_create_drop()
-  self:create_table()
-  self:drop_table()
+function basics.test_create_drop()
+  basics.create_table()
+  basics.drop_table()
 end
 
-function basics:test_multi_create_drop()
-  self:create_table()
-  self:drop_table()
-  self:create_table()
-  self:drop_table()
+function basics.test_multi_create_drop()
+  basics.create_table()
+  basics.drop_table()
+  basics.create_table()
+  basics.drop_table()
 end
 
-function basics:test_insert()
-  self:create_table()
-  self:insert(1, "Hello World")
-  self:insert(2, "Hello Lua")
-  self:insert(3, "Hello sqlite3")
+function basics.test_insert()
+  basics.create_table()
+  basics.insert(1, "Hello World")
+  basics.insert(2, "Hello Lua")
+  basics.insert(3, "Hello sqlite3")
 end
 
-function basics:test_update()
-  self:create_table()
-  self:insert(1, "Hello Home")
-  self:insert(2, "Hello Lua")
-  self:update(1, "Hello World")
+function basics.test_update()
+  basics.create_table()
+  basics.insert(1, "Hello Home")
+  basics.insert(2, "Hello Lua")
+  basics.update(1, "Hello World")
 end
 
 
@@ -217,7 +235,7 @@ end
 -- Statement Column Info Tests --
 ---------------------------------
 
-lunit.wrap("Column Info Test", function()
+lunit_wrap("Column Info Test", function()
   local db = assert_userdata( sqlite3.open_memory() )
   assert_number( db:exec("CREATE TABLE test (id INTEGER, name TEXT)") )
   local stmt = assert_userdata( db:prepare("SELECT * FROM test") )
@@ -244,22 +262,22 @@ end)
 -- Statement Tests --
 ---------------------
 
-st = lunit.TestCase("Statement Tests")
+st = lunit_TestCase("Statement Tests")
 
-function st:setup()
-  self.db = assert( sqlite3.open_memory() )
-  assert_equal( sqlite3.OK, self.db:exec("CREATE TABLE test (id, name)") )
-  assert_equal( sqlite3.OK, self.db:exec("INSERT INTO test VALUES (1, 'Hello World')") )
-  assert_equal( sqlite3.OK, self.db:exec("INSERT INTO test VALUES (2, 'Hello Lua')") )
-  assert_equal( sqlite3.OK, self.db:exec("INSERT INTO test VALUES (3, 'Hello sqlite3')") )
+function st.setup()
+  st.db = assert( sqlite3.open_memory() )
+  assert_equal( sqlite3.OK, st.db:exec("CREATE TABLE test (id, name)") )
+  assert_equal( sqlite3.OK, st.db:exec("INSERT INTO test VALUES (1, 'Hello World')") )
+  assert_equal( sqlite3.OK, st.db:exec("INSERT INTO test VALUES (2, 'Hello Lua')") )
+  assert_equal( sqlite3.OK, st.db:exec("INSERT INTO test VALUES (3, 'Hello sqlite3')") )
 end
 
-function st:teardown()
-  assert_equal( sqlite3.OK, self.db:close() )
+function st.teardown()
+  assert_equal( sqlite3.OK, st.db:close() )
 end
 
-function st:check_content(expected)
-  local stmt = assert( self.db:prepare("SELECT * FROM test ORDER BY id") )
+function st.check_content(expected)
+  local stmt = assert( st.db:prepare("SELECT * FROM test ORDER BY id") )
   local i = 0
   for row in stmt:rows() do
     i = i + 1
@@ -272,138 +290,138 @@ function st:check_content(expected)
   assert_number( stmt:finalize() )
 end
 
-function st:test_setup()
-  assert_pass(function() self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3" } end)
-  assert_error(function() self:check_content{ "Hello World", "Hello Lua" } end)
-  assert_error(function() self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "To much" } end)
-  assert_error(function() self:check_content{ "Hello World", "Hello Lua", "Wrong" } end)
-  assert_error(function() self:check_content{ "Hello World", "Wrong", "Hello sqlite3" } end)
-  assert_error(function() self:check_content{ "Wrong", "Hello Lua", "Hello sqlite3" } end)
+function st.test_setup()
+  assert_pass(function() st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3" } end)
+  assert_error(function() st.check_content{ "Hello World", "Hello Lua" } end)
+  assert_error(function() st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "To much" } end)
+  assert_error(function() st.check_content{ "Hello World", "Hello Lua", "Wrong" } end)
+  assert_error(function() st.check_content{ "Hello World", "Wrong", "Hello sqlite3" } end)
+  assert_error(function() st.check_content{ "Wrong", "Hello Lua", "Hello sqlite3" } end)
 end
 
-function st:test_questionmark_args()
-  local stmt = assert_userdata( self.db:prepare("INSERT INTO test VALUES (?, ?)")  )
+function st.test_questionmark_args()
+  local stmt = assert_userdata( st.db:prepare("INSERT INTO test VALUES (?, ?)")  )
   assert_number( stmt:bind_values(0, "Test") )
   assert_error(function() stmt:bind_values("To few") end)
   assert_error(function() stmt:bind_values(0, "Test", "To many") end)
 end
 
-function st:test_questionmark()
-  local stmt = assert_userdata( self.db:prepare("INSERT INTO test VALUES (?, ?)")  )
+function st.test_questionmark()
+  local stmt = assert_userdata( st.db:prepare("INSERT INTO test VALUES (?, ?)")  )
   assert_number( stmt:bind_values(4, "Good morning") )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
   assert_number( stmt:bind_values(5, "Foo Bar") )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
   assert_number( stmt:finalize() )
 end
 
 --[===[
-function st:test_questionmark_multi()
-  local stmt = assert_userdata( self.db:prepare([[
+function st.test_questionmark_multi()
+  local stmt = assert_userdata( st.db:prepare([[
     INSERT INTO test VALUES (?, ?); INSERT INTO test VALUES (?, ?) ]]))
   assert( stmt:bind_values(5, "Foo Bar", 4, "Good morning") )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
   assert_number( stmt:finalize() )
 end
 ]===]
 
-function st:test_identifiers()
-  local stmt = assert_userdata( self.db:prepare("INSERT INTO test VALUES (:id, :name)")  )
+function st.test_identifiers()
+  local stmt = assert_userdata( st.db:prepare("INSERT INTO test VALUES (:id, :name)")  )
   assert_number( stmt:bind_values(4, "Good morning") )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
   assert_number( stmt:bind_values(5, "Foo Bar") )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
   assert_number( stmt:finalize() )
 end
 
 --[===[
-function st:test_identifiers_multi()
-  local stmt = assert_table( self.db:prepare([[
+function st.test_identifiers_multi()
+  local stmt = assert_table( st.db:prepare([[
     INSERT INTO test VALUES (:id1, :name1); INSERT INTO test VALUES (:id2, :name2) ]]))
   assert( stmt:bind_values(5, "Foo Bar", 4, "Good morning") )
   assert( stmt:exec() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
 end
 ]===]
 
-function st:test_identifiers_names()
-  --local stmt = assert_userdata( self.db:prepare({"name", "id"}, "INSERT INTO test VALUES (:id, $name)")  )
-  local stmt = assert_userdata( self.db:prepare("INSERT INTO test VALUES (:id, $name)")  )
+function st.test_identifiers_names()
+  --local stmt = assert_userdata( st.db:prepare({"name", "id"}, "INSERT INTO test VALUES (:id, $name)")  )
+  local stmt = assert_userdata( st.db:prepare("INSERT INTO test VALUES (:id, $name)")  )
   assert_number( stmt:bind_names({name="Good morning", id=4}) )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
   assert_number( stmt:bind_names({name="Foo Bar", id=5}) )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
   assert_number( stmt:finalize() )
 end
 
 --[===[
 function st:test_identifiers_multi_names()
-  local stmt = assert_table( self.db:prepare( {"name", "id1", "id2"},[[
+  local stmt = assert_table( st.db:prepare( {"name", "id1", "id2"},[[
     INSERT INTO test VALUES (:id1, $name); INSERT INTO test VALUES ($id2, :name) ]]))
   assert( stmt:bind_values("Hoho", 4, 5) )
   assert( stmt:exec() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Hoho", "Hoho" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Hoho", "Hoho" }
 end
 ]===]
 
-function st:test_colon_identifiers_names()
-  local stmt = assert_userdata( self.db:prepare("INSERT INTO test VALUES (:id, :name)")  )
+function st.test_colon_identifiers_names()
+  local stmt = assert_userdata( st.db:prepare("INSERT INTO test VALUES (:id, :name)")  )
   assert_number( stmt:bind_names({name="Good morning", id=4}) )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
   assert_number( stmt:bind_names({name="Foo Bar", id=5}) )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
   assert_number( stmt:finalize() )
 end
 
 --[===[
 function st:test_colon_identifiers_multi_names()
-  local stmt = assert_table( self.db:prepare( {":name", ":id1", ":id2"},[[
+  local stmt = assert_table( st.db:prepare( {":name", ":id1", ":id2"},[[
     INSERT INTO test VALUES (:id1, $name); INSERT INTO test VALUES ($id2, :name) ]]))
   assert( stmt:bind_values("Hoho", 4, 5) )
   assert( stmt:exec() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Hoho", "Hoho" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Hoho", "Hoho" }
 end
 
 
-function st:test_dollar_identifiers_names()
-  local stmt = assert_table( self.db:prepare({"$name", "$id"}, "INSERT INTO test VALUES (:id, $name)")  )
+function st.test_dollar_identifiers_names()
+  local stmt = assert_table( st.db:prepare({"$name", "$id"}, "INSERT INTO test VALUES (:id, $name)")  )
   assert_table( stmt:bind_values("Good morning", 4) )
   assert_table( stmt:exec() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning" }
   assert_table( stmt:bind_values("Foo Bar", 5) )
   assert_table( stmt:exec() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Good morning", "Foo Bar" }
 end
 
-function st:test_dollar_identifiers_multi_names()
-  local stmt = assert_table( self.db:prepare( {"$name", "$id1", "$id2"},[[
+function st.test_dollar_identifiers_multi_names()
+  local stmt = assert_table( st.db:prepare( {"$name", "$id1", "$id2"},[[
     INSERT INTO test VALUES (:id1, $name); INSERT INTO test VALUES ($id2, :name) ]]))
   assert( stmt:bind_values("Hoho", 4, 5) )
   assert( stmt:exec() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Hoho", "Hoho" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3", "Hoho", "Hoho" }
 end
 ]===]
 
-function st:test_bind_by_names()
-  local stmt = assert_userdata( self.db:prepare("INSERT INTO test VALUES (:id, :name)")  )
+function st.test_bind_by_names()
+  local stmt = assert_userdata( st.db:prepare("INSERT INTO test VALUES (:id, :name)")  )
   local args = { }
   args.id = 5
   args.name = "Hello girls"
@@ -415,7 +433,7 @@ function st:test_bind_by_names()
   assert( stmt:bind_names(args) )
   assert_number( stmt:step() )
   assert_number( stmt:reset() )
-  self:check_content{ "Hello World", "Hello Lua", "Hello sqlite3",  "Hello boys", "Hello girls" }
+  st.check_content{ "Hello World", "Hello Lua", "Hello sqlite3",  "Hello boys", "Hello girls" }
   assert_number( stmt:finalize() )
 end
 
@@ -425,19 +443,19 @@ end
 -- Tests binding of arguments --
 --------------------------------
 
-b = lunit.TestCase("Binding Tests")
+b = lunit_TestCase("Binding Tests")
 
-function b:setup()
-  self.db = assert( sqlite3.open_memory() )
-  assert_number( self.db:exec("CREATE TABLE test (id, name, u, v, w, x, y, z)") )
+function b.setup()
+  b.db = assert( sqlite3.open_memory() )
+  assert_number( b.db:exec("CREATE TABLE test (id, name, u, v, w, x, y, z)") )
 end
 
-function b:teardown()
-  assert_number( self.db:close() )
+function b.teardown()
+  assert_number( b.db:close() )
 end
 
-function b:test_auto_parameter_names()
-  local stmt = assert_userdata( self.db:prepare("INSERT INTO test VALUES(:a, $b, :a2, :b2, $a, :b, $a3, $b3)") )
+function b.test_auto_parameter_names()
+  local stmt = assert_userdata( b.db:prepare("INSERT INTO test VALUES(:a, $b, :a2, :b2, $a, :b, $a3, $b3)") )
   local parameters = assert_number( stmt:bind_parameter_count() )
   assert_equal( 8, parameters )
   assert_equal( ":a", stmt:bind_parameter_name(1) )
@@ -450,8 +468,8 @@ function b:test_auto_parameter_names()
   assert_equal( "$b3", stmt:bind_parameter_name(8) )
 end
 
-function b:test_auto_parameter_names()
-  local stmt = assert_userdata( self.db:prepare("INSERT INTO test VALUES($a, $b, $a2, $b2, $a, $b, $a3, $b3)") )
+function b.test_auto_parameter_names()
+  local stmt = assert_userdata( b.db:prepare("INSERT INTO test VALUES($a, $b, $a2, $b2, $a, $b, $a3, $b3)") )
   local parameters = assert_number( stmt:bind_parameter_count() )
   assert_equal( 6, parameters )
   assert_equal( "$a", stmt:bind_parameter_name(1) )
@@ -462,14 +480,14 @@ function b:test_auto_parameter_names()
   assert_equal( "$b3", stmt:bind_parameter_name(6) )
 end
 
-function b:test_no_parameter_names_1()
-  local stmt = assert_userdata( self.db:prepare([[ SELECT * FROM test ]]))
+function b.test_no_parameter_names_1()
+  local stmt = assert_userdata( b.db:prepare([[ SELECT * FROM test ]]))
   local parameters = assert_number( stmt:bind_parameter_count() )
   assert_equal( 0, (parameters) )
 end
 
-function b:test_no_parameter_names_2()
-  local stmt = assert_userdata( self.db:prepare([[ INSERT INTO test VALUES(?, ?, ?, ?, ?, ?, ?, ?) ]]))
+function b.test_no_parameter_names_2()
+  local stmt = assert_userdata( b.db:prepare([[ INSERT INTO test VALUES(?, ?, ?, ?, ?, ?, ?, ?) ]]))
   local parameters = assert_number( stmt:bind_parameter_count() )
   assert_equal( 8, (parameters) )
   assert_nil( stmt:bind_parameter_name(1) )
@@ -491,21 +509,21 @@ end
 -- Test for bugs reported --
 ----------------------------
 
-bug = lunit.TestCase("Bug-Report Tests")
+bug = lunit_TestCase("Bug-Report Tests")
 
-function bug:setup()
-  self.db = assert( sqlite3.open_memory() )
+function bug.setup()
+  bug.db = assert( sqlite3.open_memory() )
 end
 
-function bug:teardown()
-  assert_number( self.db:close() )
+function bug.teardown()
+  assert_number( bug.db:close() )
 end
 
 --[===[
-function bug:test_1()
-  self.db:exec("CREATE TABLE test (id INTEGER PRIMARY KEY, value TEXT)")
+function bug.test_1()
+  bug.db:exec("CREATE TABLE test (id INTEGER PRIMARY KEY, value TEXT)")
   
-  local query = assert_userdata( self.db:prepare("SELECT id FROM test WHERE value=?") )
+  local query = assert_userdata( bug.db:prepare("SELECT id FROM test WHERE value=?") )
   
   assert_table ( query:bind_values("1") )
   assert_nil   ( query:first_cols() )
@@ -514,7 +532,7 @@ function bug:test_1()
 end
 ]===]
 
-function bug:test_nils()   -- appeared in lua-5.1 (holes in arrays)
+function bug.test_nils()   -- appeared in lua-5.1 (holes in arrays)
   local function check(arg1, arg2, arg3, arg4, arg5)
     assert_equal(1, arg1)
     assert_equal(2, arg2)
@@ -523,17 +541,17 @@ function bug:test_nils()   -- appeared in lua-5.1 (holes in arrays)
     assert_nil(arg5)
   end
   
-  self.db:create_function("test_nils", 5, function(arg1, arg2, arg3, arg4, arg5)
+  bug.db:create_function("test_nils", 5, function(arg1, arg2, arg3, arg4, arg5)
     check(arg1, arg2, arg3, arg4, arg5)
   end, {})
   
-  assert_number( self.db:exec([[ SELECT test_nils(1, 2, NULL, 4, NULL) ]]) )
+  assert_number( bug.db:exec([[ SELECT test_nils(1, 2, NULL, 4, NULL) ]]) )
   
-  for arg1, arg2, arg3, arg4, arg5 in self.db:urows([[ SELECT 1, 2, NULL, 4, NULL ]])
+  for arg1, arg2, arg3, arg4, arg5 in bug.db:urows([[ SELECT 1, 2, NULL, 4, NULL ]])
   do check(arg1, arg2, arg3, arg4, arg5) 
   end
   
-  for row in self.db:rows([[ SELECT 1, 2, NULL, 4, NULL ]])
+  for row in bug.db:rows([[ SELECT 1, 2, NULL, 4, NULL ]])
   do assert_table( row ) 
      check(row[1], row[2], row[3], row[4], row[5])
   end
@@ -543,9 +561,9 @@ end
 -- Test for collation fun --
 ----------------------------
 
-colla = lunit.TestCase("Collation Tests")
+colla = lunit_TestCase("Collation Tests")
 
-function colla:setup()
+function colla.setup()
     local function collate(s1,s2)
         -- if p then print("collation callback: ",s1,s2) end
         s1=s1:lower()
@@ -554,9 +572,9 @@ function colla:setup()
         elseif s1<s2 then return -1
         else return 1 end
     end
-    self.db = assert( sqlite3.open_memory() )
-    assert_nil(self.db:create_collation('CINSENS',collate))
-    self.db:exec[[
+    colla.db = assert( sqlite3.open_memory() )
+    assert_nil(colla.db:create_collation('CINSENS',collate))
+    colla.db:exec[[
       CREATE TABLE test(id INTEGER PRIMARY KEY,content COLLATE CINSENS);
       INSERT INTO test VALUES(NULL,'hello world');
       INSERT INTO test VALUES(NULL,'Buenos dias');
@@ -567,16 +585,16 @@ function colla:setup()
     ]]
 end
 
-function colla:teardown()
-  assert_number( self.db:close() )
+function colla.teardown()
+  assert_number( colla.db:close() )
 end
 
-function colla:test()
+function colla.test()
     --for row in db:nrows('SELECT * FROM test') do
     --  print(row.id,row.content)
     --end
     local n = 0
-    for row in self.db:nrows('SELECT * FROM test WHERE content="hElLo wOrLd"') do
+    for row in colla.db:nrows('SELECT * FROM test WHERE content="hElLo wOrLd"') do
       -- print(row.id,row.content)
       assert_equal (row.content:lower(), "hello world")
       n = n + 1
@@ -584,4 +602,3 @@ function colla:test()
     assert_equal (n, 3)
 end
 
-lunit.run()

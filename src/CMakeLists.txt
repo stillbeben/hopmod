@@ -39,7 +39,7 @@ endif(NOT ${ZLIB_EXISTS})
 add_subdirectory(enet)
 add_subdirectory(lua)
 add_subdirectory(fungu)
-add_subdirectory(lsqlite3-7)
+add_subdirectory(lsqlite3-8)
 add_subdirectory(hopmod/standalone/luapp)
 add_subdirectory(luasql EXCLUDE_FROM_ALL)
 

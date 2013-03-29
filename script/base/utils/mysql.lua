@@ -1,4 +1,5 @@
 mysql = {}
+local luasql = require "luasql_mysql"
 
 -- Copied from http://lua-users.org/wiki/GenericInputAlgorithms
 function mysql.rows(cursor)
@@ -69,8 +70,6 @@ local function install_db(connection)
 end
 
 function mysql.open(connection, install)
-
-    require "luasql_mysql"
     
     connection.handler = luasql.mysql():connect(connection.settings.database, connection.settings.username, connection.settings.password, connection.settings.hostname, connection.settings.port)
     
