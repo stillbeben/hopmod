@@ -137,7 +137,7 @@ namespace server
     void set_player_auth(int);
     void set_player_admin(int);
     void player_slay(int);
-    bool player_changeteam(int,const char *);
+    bool player_changeteam(int,const char *, bool);
     int player_rank(int);
     bool player_isbot(int);
     void set_player_private_admin(int);
