@@ -1,5 +1,5 @@
 #!/bin/sh
-export REVISION=`svn info | grep 'Revision: ' | awk '{print $2}'`
+export REVISION=`svn info --xml | grep -m 1 -E 'revision *\= *"[0-9]+" *>' | grep -oE '[0-9]+'`
 : ${THREADS:=`cat /proc/cpuinfo | grep processor | wc -l`}
 ARG_LENGTH=$# 
 STRCOMPILE="Compiling"
@@ -17,15 +17,15 @@ if [ "$ARG_LENGTH" -gt 0 -a "$1" = 1 ]; then
 fi
 [ -d $COMPILEDIR ] || mkdir $COMPILEDIR
 cd $COMPILEDIR
-cmake $COMPILEFLAGS .. >> /dev/null
+cmake $COMPILEFLAGS ..
 STRTHREADS="threads"
 if [ $THREADS = 1 ]; then
   STRTHREADS="thread"
 fi
-echo "$STRCOMPILE Hopmod r$REVISION using $THREADS $STRTHREADS ($BUILDTYPE build)\n"
+echo "$STRCOMPILE Hopmod r$REVISION using $THREADS $STRTHREADS ($BUILDTYPE build)"
 TS_START=`date +%s`
 make -j$THREADS 
 make install >> /dev/null
 TS_END=`date +%s`
 TS_DIFF=`echo $TS_END $TS_START | awk '{print $1 - $2}'`
-echo "\nTook $TS_DIFF Seconds"
+echo "Took $TS_DIFF Seconds"
