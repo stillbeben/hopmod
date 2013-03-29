@@ -467,7 +467,7 @@ void player_slay(int cn)
     sendf(-1, 1, "ri2", N_FORCEDEATH, cn);
 }
 
-bool player_changeteam(int cn,const char * newteam)
+bool player_changeteam(int cn,const char * newteam, bool dosuicide)
 {
     clientinfo * ci = get_ci(cn);
     convert2cube newteamcubeenc(newteam);
@@ -479,7 +479,7 @@ bool player_changeteam(int cn,const char * newteam)
         return false;
     }
     
-    if(smode || ci->state.state==CS_ALIVE) suicide(ci);
+    if(dosuicide && (smode || ci->state.state==CS_ALIVE)) suicide(ci);
     event_reteam(event_listeners(), boost::make_tuple(ci->clientnum, oldteamutf8.str(), newteam));
     
     copystring(ci->team, newteamcubeenc.str(), MAXTEAMLEN+1);
