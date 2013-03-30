@@ -193,7 +193,7 @@ local function start_auth_challenge(cn, user_id, domain)
     
     if not domain.server.remote then
         
-        local user = domain:get_user(user_id)
+        local user = domain.users[user_id]
         
         if not user then
             call_listeners(cn, user_id, domain_id, auth.request_status.CHALLENGE_FAILED)
@@ -330,7 +330,7 @@ function auth.query_id(user_id, domain_id, callback)
     if not domain then error("unknown domain") end
     
     if not domain.server.remote then
-        local user = domain:get_user(user_id)
+        local user = domain.users[user_id]
         local found = user ~= nil
         callback(found)
         return

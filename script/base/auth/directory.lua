@@ -6,11 +6,6 @@ local function get_domain(id)
     return domains[id]
 end
 
-local function get_user(domain, id)
-    if not domain.users then return nil end
-    return domain.users[id]
-end
-
 local function check_add_table(description, required_fields)
     
     if type(description) ~= "table" then 
@@ -35,13 +30,12 @@ local function add_domain(description)
     check_add_table(description, {"id"})
     
     local server = servers[description.server]
-    if not server then error("server not found") end
-
-    description.server = server
+    
+    if server then description.server = server
+    else description.server = {remote = false} end
     
     if not description.server.remote then
-        description.users = {}
-        description.get_user = get_user
+        description.users = description.users or {}
     end
     
     domains[description.id] = description
