@@ -19,6 +19,7 @@ local methods = {
     score           = function(obj) return server.player_score(obj.cn) end,
     deaths          = function(obj) return server.player_deaths(obj.cn) end,
     suicides        = function(obj) return server.player_suicides(obj.cn) end,
+    suicide         = function(obj, countdeath) return server.player_suicide(obj.cn, countdeath) end,
     teamkills       = function(obj) return server.player_teamkills(obj.cn) end,
     damage          = function(obj) return server.player_damage(obj.cn) end,
     damagewasted    = function(obj) return server.player_damagewasted(obj.cn) end,

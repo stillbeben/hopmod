@@ -2072,15 +2072,15 @@ namespace server
         }
     }
     
-    void suicide(clientinfo *ci)
+    void suicide(clientinfo *ci, bool countdeath = true)
     {
         gamestate &gs = ci->state;
         if(gs.state!=CS_ALIVE) return;
         int fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
-        ci->state.frags += fragvalue;
-        ci->state.deaths++;
+        ci->state.frags += fragvalue * countdeath;
+        ci->state.deaths += countdeath;
         teaminfo *t = m_teammode ? teaminfos.access(ci->team) : NULL;
-        if(t) t->frags += fragvalue;
+        if(t && countdeath) t->frags += fragvalue;
         sendf(-1, 1, "ri5", N_DIED, ci->clientnum, ci->clientnum, gs.frags, t ? t->frags : 0);
         ci->position.setsize(0);
         if(smode) smode->died(ci, NULL);
