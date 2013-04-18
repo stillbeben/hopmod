@@ -199,7 +199,7 @@ namespace server
     
     bool rotatemap();
     
-    void suicide(int, bool);
+    void suicide(int);
     void player_servcmd(int cn, const char *string);
     
     void sendservmsg(const char *);

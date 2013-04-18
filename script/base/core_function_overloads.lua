@@ -19,8 +19,3 @@ core.changeteam = function(cn, team, suicide)
     real_changeteam(cn, team, suicide)
 end
 
-local real_player_suicide = core.player_suicide
-core.player_suicide = function(cn, countdeath)
-    if countdeath == nil then countdeath = true end
-    real_player_suicide(cn, countdeath)
-end

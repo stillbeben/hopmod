@@ -1069,9 +1069,9 @@ void add_allowed_ip(const char * hostname)
     allowedips.add(addr.host);
 }
 
-void suicide(int cn, bool countdeath)
+void suicide(int cn)
 {
-    suicide(get_ci(cn), countdeath);
+    suicide(get_ci(cn));
 }
 
 void player_servcmd(int cn, const char *string)
