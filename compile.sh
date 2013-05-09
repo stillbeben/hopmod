@@ -1,6 +1,11 @@
 #!/bin/sh
 export REVISION=`svn info --xml | grep -m 1 -E 'revision *\= *"[0-9]+" *>' | grep -oE '[0-9]+'`
-: ${THREADS:=`cat /proc/cpuinfo | grep processor | wc -l`}
+case "$(uname -s)" in
+  *Darwin*|*BSD*)
+    : ${THREADS:=$(sysctl -n hw.ncpu)} ;;
+  *)
+    : ${THREADS:=`cat /proc/cpuinfo | grep processor | wc -l`} ;;
+esac
 ARG_LENGTH=$# 
 STRCOMPILE="Compiling"
 COMPILEDIR="release_build"

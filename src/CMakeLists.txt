@@ -1,5 +1,6 @@
 find_package(Boost COMPONENTS signals system thread REQUIRED)
 
+option(WITH_LUASQL "Enable LuaSQL support" ON)
 option(WITH_GEOIP "Enable GeoIP support" ON)
 find_package(GeoIP)
 
@@ -29,7 +30,10 @@ endif(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
 
 include(CheckLibraryExists)
 check_library_exists(pthread pthread_self "" PTHREAD_EXISTS)
-check_library_exists(rt clock_gettime "" RTLIB_EXISTS)
+
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+    check_library_exists(rt clock_gettime "" RTLIB_EXISTS)
+endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
 check_library_exists(z gzopen "" ZLIB_EXISTS)
 if(NOT ${ZLIB_EXISTS})
@@ -41,7 +45,10 @@ add_subdirectory(lua)
 add_subdirectory(fungu)
 add_subdirectory(lsqlite3-8)
 add_subdirectory(hopmod/standalone/luapp)
-add_subdirectory(luasql)
+
+if(WITH_LUASQL)
+    add_subdirectory(luasql)
+endif(WITH_LUASQL)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -70,7 +77,14 @@ set(SAUERTOOLS_SOURCES
 
 add_library(sauertools STATIC ${SAUERTOOLS_SOURCES})
 
-target_link_libraries(sauertools -lrt -lz ${ENET_LIBRARY})
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(sauertools -lrt)
+else(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+find_library(coreServices CoreServices)
+    target_link_libraries(sauertools ${coreServices})
+endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+
+target_link_libraries(sauertools -lz ${ENET_LIBRARY})
 
 set(LUA_MODULES_SOURCES
     hopmod/lib/md5.c
@@ -108,8 +122,12 @@ set(LUA_MODULES_SOURCES
 
 add_library(lua_modules STATIC ${LUA_MODULES_SOURCES})
 
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_link_libraries(lua_modules -pthread)
+endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+
 target_link_libraries(lua_modules 
-    -pthread sauertools
+    sauertools
     ${LUA_LIBRARY}
     ${GEOIP_LIBRARY}
     ${FUNGU_STRING_LIBRARY}
@@ -129,9 +147,12 @@ SET(GAME_SERVER_SOURCES
 
 add_executable(sauer_server ${GAME_SERVER_SOURCES})
 
+if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+    target_link_libraries(sauer_server -lrt)
+endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
+
 target_link_libraries(sauer_server 
     -lz
-    -lrt
     sauertools
     lua_modules
     -lboost_signals
@@ -145,16 +166,16 @@ target_link_libraries(keygen sauertools)
 add_executable(monitor hopmod/standalone/monitor.cpp hopmod/lib/program_arguments.cpp)
 
 install(TARGETS 
-        sauer_server
-        monitor
+    sauer_server
+    monitor
     RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR} 
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} 
     ARCHIVE DESTINATION ${INSTALL_ARCHIVE_DIR})
 
 install(TARGETS 
-        keygen
+    keygen
     RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR}/utils)
 
 install(FILES 
-        hopmod/cubescript/cubescript_library.lua 
+    hopmod/cubescript/cubescript_library.lua 
     DESTINATION ${PROJECT_SOURCE_DIR}/script/package)
