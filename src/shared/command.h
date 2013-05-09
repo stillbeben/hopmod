@@ -10,6 +10,7 @@ enum { NO_OVERRIDE = INT_MAX, OVERRIDDEN = 0 };
 
 enum { IDF_PERSIST = 1<<0, IDF_OVERRIDE = 1<<1 };
 
+#if 0
 struct identstack
 {
     char *action;
@@ -173,4 +174,5 @@ extern void result(const char *s);
 //#define ICALL(n, a) { char *args[] = a; icom_##n.run(args); }
 //
 
+#endif
 #endif
