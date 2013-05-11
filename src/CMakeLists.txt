@@ -1,6 +1,5 @@
 find_package(Boost COMPONENTS signals system thread REQUIRED)
 
-option(WITH_LUASQL "Enable LuaSQL support" ON)
 option(WITH_GEOIP "Enable GeoIP support" ON)
 find_package(GeoIP)
 
@@ -46,9 +45,7 @@ add_subdirectory(fungu)
 add_subdirectory(lsqlite3-8)
 add_subdirectory(hopmod/standalone/luapp)
 
-if(WITH_LUASQL)
-    add_subdirectory(luasql)
-endif(WITH_LUASQL)
+add_subdirectory(luasql EXCLUDE_FROM_ALL)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
