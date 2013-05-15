@@ -11,12 +11,12 @@ STRCOMPILE="Compiling"
 COMPILEDIR="release_build"
 COMPILEFLAGS=""
 BUILDTYPE="release"
-if [ "$ARG_LENGTH" -gt 1 -a "$2" = "debug" ]; then
+if [ "$2" = "debug" ]; then
   COMPILEDIR="debug-build"
   COMPILEFLAGS="-D CMAKE_BUILD_TYPE=DEBUG"
   BUILDTYPE="debug"
 fi
-if [ "$ARG_LENGTH" -gt 0 -a "$1" = 1 ]; then
+if [ "$1" = 1 ]; then
   STRCOMPILE="Recompiling"
   rm -rf $COMPILEDIR
 fi
