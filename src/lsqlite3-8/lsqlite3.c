@@ -32,6 +32,8 @@
 
 #define LUA_LIB
 #include "lua.h"
+
+#define LUA_COMPAT_MODULE
 #include "lauxlib.h"
 
 // luaL_typeerror always used with arg at ndx == NULL
