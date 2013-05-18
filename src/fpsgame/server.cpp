@@ -2710,7 +2710,7 @@ namespace server
 
                 default:
                     disconnect_client(sender, DISC_TAGT);
-                    break;
+                    return;
             }
             return;
         }
