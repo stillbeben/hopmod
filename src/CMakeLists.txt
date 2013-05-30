@@ -48,7 +48,7 @@ add_subdirectory(hopmod/standalone/luapp)
 find_package(MYSQL)
 
 if(MYSQL_FOUND)
-add_subdirectory(luasql EXCLUDE_FROM_ALL)
+add_subdirectory(luasql)
 endif(MYSQL_FOUND) 
 
 include_directories(
