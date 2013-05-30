@@ -45,7 +45,11 @@ add_subdirectory(fungu)
 add_subdirectory(lsqlite3-8)
 add_subdirectory(hopmod/standalone/luapp)
 
+find_package(MYSQL)
+
+if(MYSQL_FOUND)
 add_subdirectory(luasql EXCLUDE_FROM_ALL)
+endif(MYSQL_FOUND) 
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}

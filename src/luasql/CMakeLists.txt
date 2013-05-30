@@ -1,5 +1,3 @@
-find_package(MYSQL)
-
 set(LUASQL_MYSQL_LIBRARY luasql_mysql CACHE INTERNAL "luasql_mysql library")
 
 include_directories(${LUA_INCLUDE_DIRS} ${MYSQL_INCLUDE_DIR})
