@@ -2546,10 +2546,10 @@ namespace server
         return ci && ci->connected && !ci->is_delayed_spectator();
     }
     
-    bool tryauth(clientinfo *ci, const char * user, const char * domain)
+    bool tryauth(clientinfo *ci, const char * user, const char * domain, int kickcn = -1)
     {
         convert2utf8 utf8user(user);
-        event_authreq(event_listeners(), boost::make_tuple(ci->clientnum, utf8user.str(), domain));
+        event_authreq(event_listeners(), boost::make_tuple(ci->clientnum, utf8user.str(), domain, kickcn));
         return true;
     }
     
@@ -3475,12 +3475,12 @@ namespace server
                 string desc, name;
                 getstring(desc, p, sizeof(desc));
                 getstring(name, p, sizeof(name));
-                /*int victim = */getint(p);
+                int victim = getint(p);
                 getstring(text, p);
                 filtertext(text, text);
-                
-                // TODO implement
-                
+
+                tryauth(ci, name, desc, victim);
+
                 break;
             }
             
