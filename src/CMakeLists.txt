@@ -64,6 +64,7 @@ include_directories(
     ${GEOIP_INCLUDE_DIRS})
 
 add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION} -DLUA_COMPAT_MODULE ${LSQLITE3_DEFINITIONS})
+add_definitions(-DBOOST_SIGNALS_NO_DEPRECATION_WARNING)
 
 IF(NOT CMAKE_BUILD_TYPE STREQUAL "DEBUG") 
     add_definitions( -O3)
