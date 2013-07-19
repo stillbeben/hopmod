@@ -311,7 +311,7 @@ template<int BI_DIGITS> struct bigint
         int dig = (n-1)/BI_DIGIT_BITS;
         n = ((n-1) % BI_DIGIT_BITS)+1;
         digit carry = digit(x.digits[dig]>>n);
-        for(int i = dig+1; i < x.len; i++)
+        for(int i = dig+1; i < x.len && i < BI_DIGIT_BITS; i++)
         {
             digit tmp = x.digits[i];
             digits[i-dig-1] = digit((tmp<<(BI_DIGIT_BITS-n)) | carry);
