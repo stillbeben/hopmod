@@ -16,24 +16,6 @@ fi
 
 v_system=$(uname)
 
-f_starter=$(basename $0)
-d_main=
-
-if `echo $v_system | grep -q "BSD"` || `echo $v_system | grep -q "Darwin"`
-then
-    d_main=$(dirname $(cd $(dirname $0) ; pwd))
-else
-    d_main=$(dirname $(dirname $(readlink -f $0)))
-fi
-
-cd $d_main
-
-if [ ! -d bin ] || [ ! -d log ] || [ ! -d conf ] || [ ! -d script ]
-then
-    echo "Incomplete Installation! bin/, log/, conf/ or script/ are missing."
-    exit 1
-fi
-
 ################################################################################
 
 . bin/env.sh
@@ -309,7 +291,7 @@ case "$1" in
 	echo "       $0 password 'new password'"
     ;;
     *)
-        exec $d_main/bin/$f_starter start $*
+        exec ./bin/server start $*
     ;;
 esac
 
