@@ -4,7 +4,7 @@ add_definitions(-DNO_EVENTS -DNO_CORE_TABLE)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/../../../shared
     ${CMAKE_CURRENT_SOURCE_DIR}/../../
-    ${LUA_INCLUDE_DIRS}
+    ${LUA_INCLUDE_DIR}
     ${BOOST_INCLUDE_DIRS}
     ${FUNGU_INCLUDE_DIRS})
 

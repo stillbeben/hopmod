@@ -1,4 +1,5 @@
 find_package(Boost COMPONENTS signals system thread REQUIRED)
+find_package(Lua52 REQUIRED)
 
 option(WITH_GEOIP "Enable GeoIP support" ON)
 find_package(GeoIP)
@@ -40,16 +41,8 @@ if(NOT ${ZLIB_EXISTS})
 endif(NOT ${ZLIB_EXISTS})
 
 add_subdirectory(enet)
-add_subdirectory(lua)
 add_subdirectory(fungu)
-add_subdirectory(lsqlite3-8)
 add_subdirectory(hopmod/standalone/luapp)
-
-find_package(MYSQL)
-
-if(MYSQL_FOUND)
-add_subdirectory(luasql)
-endif(MYSQL_FOUND) 
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -58,12 +51,12 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/hopmod
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${ENET_INCLUDE_DIRS}
-    ${LUA_INCLUDE_DIRS}
+    ${LUA_INCLUDE_DIR}
     ${FUNGU_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
     ${GEOIP_INCLUDE_DIRS})
 
-add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION} -DLUA_COMPAT_MODULE ${LSQLITE3_DEFINITIONS})
+add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION} -DLUA_COMPAT_MODULE)
 add_definitions(-DBOOST_SIGNALS_NO_DEPRECATION_WARNING)
 
 IF(NOT CMAKE_BUILD_TYPE STREQUAL "DEBUG") 
@@ -134,7 +127,6 @@ target_link_libraries(lua_modules
     ${GEOIP_LIBRARY}
     ${FUNGU_STRING_LIBRARY}
     ${FUNGU_HTTP_LIBRARY}
-    ${LSQLITE3_LIBRARY}
     ${OPENSSL_LIBRARIES})
 
 SET(GAME_SERVER_SOURCES
