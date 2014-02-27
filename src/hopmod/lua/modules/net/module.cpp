@@ -1,3 +1,4 @@
+#include "lua/lua_compat_module.hpp"
 #include <lua.hpp>
 #include "../../event.hpp"
 #include "tcp_socket.hpp"

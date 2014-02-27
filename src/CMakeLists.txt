@@ -1,5 +1,12 @@
 find_package(Boost COMPONENTS signals system thread REQUIRED)
-find_package(Lua52 REQUIRED)
+find_package(Lua REQUIRED)
+
+include(CheckLibraryExists)
+SET(CMAKE_REQUIRED_LIBRARIES ${LUA_LIBRARIES})
+check_library_exists(${LUA_LIBRARY} lua_rawlen "" LUA52_CONFIRMED)
+if("${LUA52_CONFIRMED}" STREQUAL "")
+    message(FATAL_ERROR "FindLua.cmake is actually selecting an older version of Lua. Dunno what to do about that.")
+endif("${LUA52_CONFIRMED}" STREQUAL "")
 
 option(WITH_GEOIP "Enable GeoIP support" ON)
 find_package(GeoIP)
@@ -28,7 +35,6 @@ else(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
     add_definitions(-DDISABLE_SSL -DWITHOUT_OPENSSL)
 endif(WITH_OPENSSL AND OPENSSL_FOUND AND OPENSSL_INCLUDE_DIR)
 
-include(CheckLibraryExists)
 check_library_exists(pthread pthread_self "" PTHREAD_EXISTS)
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
@@ -50,7 +56,7 @@ include_directories(
     ${OPENSSL_INCLUDE_DIR}
     ${GEOIP_INCLUDE_DIRS})
 
-add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION} -DLUA_COMPAT_MODULE)
+add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION})
 add_definitions(-DBOOST_SIGNALS_NO_DEPRECATION_WARNING)
 
 IF(NOT CMAKE_BUILD_TYPE STREQUAL "DEBUG") 
@@ -81,6 +87,7 @@ set(LUA_MODULES_SOURCES
     hopmod/net/address.cpp
     hopmod/net/address_mask.cpp
     hopmod/net/address_prefix.cpp
+    hopmod/lua/lua_compat_module.cpp
     hopmod/lua/event.cpp
     hopmod/lua/push_function.cpp
     hopmod/lua/library_extensions.cpp

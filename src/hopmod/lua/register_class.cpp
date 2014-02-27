@@ -1,3 +1,4 @@
+#include "lua/lua_compat_module.hpp"
 #include "lua/register_class.hpp"
 
 namespace lua{

@@ -19,6 +19,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
 */
+#include "lua/lua_compat_module.hpp"
 #include "lua_command_stack.hpp"
 #include "lua/pcall.hpp"
 #include <sstream>
