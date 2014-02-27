@@ -87,7 +87,6 @@ set(LUA_MODULES_SOURCES
     hopmod/net/address.cpp
     hopmod/net/address_mask.cpp
     hopmod/net/address_prefix.cpp
-    hopmod/lua/lua_compat_module.cpp
     hopmod/lua/event.cpp
     hopmod/lua/push_function.cpp
     hopmod/lua/library_extensions.cpp
