@@ -35,11 +35,6 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     check_library_exists(rt clock_gettime "" RTLIB_EXISTS)
 endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
-check_library_exists(z gzopen "" ZLIB_EXISTS)
-if(NOT ${ZLIB_EXISTS})
-    message(FATAL_ERROR "missing required library: ZLIB")
-endif(NOT ${ZLIB_EXISTS})
-
 add_subdirectory(enet)
 add_subdirectory(fungu)
 add_subdirectory(hopmod/standalone/luapp)
