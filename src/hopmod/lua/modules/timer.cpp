@@ -1,7 +1,6 @@
 #include "../../utils.hpp"
 
 #include <ctime>
-#include "lua/lua_compat_module.hpp"
 #include <lua.hpp>
 #include "lua/event.hpp"
 lua::event_environment & event_listeners();

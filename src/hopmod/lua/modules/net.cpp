@@ -11,7 +11,6 @@ using namespace boost::asio;
 #include "../../net/prefix_tree.hpp"
 #include <boost/bind/protect.hpp>
 
-#include "lua/lua_compat_module.hpp"
 #include <lua.hpp>
 #include "lua/event.hpp"
 #include "module.hpp"

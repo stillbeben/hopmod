@@ -1,6 +1,5 @@
 #include <cassert>
 #include <lua.hpp>
-#include "lua/lua_compat_module.hpp"
 #include <iostream>
 #include "core_bindings.hpp"
 #include "events.hpp"
@@ -18,7 +17,6 @@ static int lua_stack_size = 0;
 void init_lua()
 {
     L = luaL_newstate();
-    lua_compat_module_init(L);
     luaL_openlibs(L);
     
     load_extra_os_functions(L);

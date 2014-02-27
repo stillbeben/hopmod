@@ -1,4 +1,3 @@
-#include "lua/lua_compat_module.hpp"
 #include<lua.hpp>
 
 #ifdef WITH_GEOIP

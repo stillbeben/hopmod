@@ -1,4 +1,3 @@
-#include "lua/lua_compat_module.hpp"
 #include "../../cubescript/cubescript.hpp"
 #include "../../cubescript/lua_command_stack.hpp"
 

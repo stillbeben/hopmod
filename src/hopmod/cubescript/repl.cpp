@@ -3,7 +3,6 @@
 #include <readline/history.h>
 #include <iostream>
 #include <string>
-#include "lua/lua_compat_module.hpp"
 #include "cubescript.hpp"
 #include "lua_command_stack.hpp"
 #include "lua/pcall.hpp"

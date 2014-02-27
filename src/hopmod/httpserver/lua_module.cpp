@@ -1,4 +1,3 @@
-#include "lua/lua_compat_module.hpp"
 #include <fungu/net/http/connection.hpp>
 #include <fungu/net/http/request_line.hpp>
 #include <fungu/net/http/header.hpp>
