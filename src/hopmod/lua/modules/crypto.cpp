@@ -1,3 +1,4 @@
+#include "lua/lua_compat_module.hpp"
 #include "../register_class.hpp"
 #include "../to.hpp"
 #include "../create_object.hpp"
