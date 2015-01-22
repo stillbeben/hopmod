@@ -1,12 +1,5 @@
-find_package(Boost COMPONENTS signals system thread REQUIRED)
-find_package(Lua REQUIRED)
-
 include(CheckLibraryExists)
-SET(CMAKE_REQUIRED_LIBRARIES ${LUA_LIBRARIES})
-check_library_exists(${LUA_LIBRARY} lua_rawlen "" LUA52_CONFIRMED)
-if("${LUA52_CONFIRMED}" STREQUAL "")
-    message(FATAL_ERROR "FindLua.cmake is actually selecting an older version of Lua. Dunno what to do about that.")
-endif("${LUA52_CONFIRMED}" STREQUAL "")
+find_package(Boost COMPONENTS signals system thread REQUIRED)
 
 option(WITH_GEOIP "Enable GeoIP support" ON)
 find_package(GeoIP)
@@ -42,8 +35,16 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
 add_subdirectory(enet)
+add_subdirectory(lua)
 add_subdirectory(fungu)
+add_subdirectory(lsqlite3-8)
 add_subdirectory(hopmod/standalone/luapp)
+
+find_package(MYSQL)
+
+if(MYSQL_FOUND)
+add_subdirectory(luasql)
+endif(MYSQL_FOUND) 
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
@@ -51,12 +52,12 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/fpsgame
     ${CMAKE_CURRENT_SOURCE_DIR}/hopmod
     ${ENET_INCLUDE_DIRS}
-    ${LUA_INCLUDE_DIR}
+    ${LUA_INCLUDE_DIRS}
     ${FUNGU_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
     ${GEOIP_INCLUDE_DIRS})
 
-add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION})
+add_definitions(-Wall -fsigned-char -DSTANDALONE -DREVISION=$ENV{REVISION} -DLUA_COMPAT_MODULE ${LSQLITE3_DEFINITIONS})
 add_definitions(-DBOOST_SIGNALS_NO_DEPRECATION_WARNING)
 
 IF(NOT CMAKE_BUILD_TYPE STREQUAL "DEBUG") 
@@ -127,6 +128,7 @@ target_link_libraries(lua_modules
     ${GEOIP_LIBRARY}
     ${FUNGU_STRING_LIBRARY}
     ${FUNGU_HTTP_LIBRARY}
+    ${LSQLITE3_LIBRARY}
     ${OPENSSL_LIBRARIES})
 
 SET(GAME_SERVER_SOURCES
